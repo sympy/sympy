@@ -89,6 +89,12 @@ def test_interval_inequality():
     assert (interval(5, 8) > interval(2, 3)) == (True, True)
     assert (interval(2, 5) > interval(1, 3)) == (None, True)
     assert (interval(2, 3) > interval(3.1, 5)) == (False, True)
+
+    assert (interval(-1, 1) == 0) == (None, True)
+    assert (interval(-1, 1) == 2) == (False, True)
+    assert (interval(-1, 1) != 0) == (None, True)
+    assert (interval(-1, 1) != 2) == (True, True)
+
     assert (interval(3, 5) > 2) == (True, True)
     assert (interval(3, 5) < 2) == (False, True)
     assert (interval(1, 5) < 2) == (None, True)

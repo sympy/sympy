@@ -22,10 +22,10 @@ def test_re():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
 
-    assert re(nan) == nan
+    assert re(nan) is nan
 
-    assert re(oo) == oo
-    assert re(-oo) == -oo
+    assert re(oo) is oo
+    assert re(-oo) is -oo
 
     assert re(0) == 0
 
@@ -70,7 +70,7 @@ def test_re():
     assert re(a * (2 + b*I)) == 2*a
 
     assert re((1 + sqrt(a + b*I))/2) == \
-        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
+        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + S.Half
 
     assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
     assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
@@ -82,11 +82,11 @@ def test_re():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
-    assert re(S.ComplexInfinity) == S.NaN
+    assert re(S.ComplexInfinity) is S.NaN
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
-    assert re(A) == (S(1)/2) * (A + conjugate(A))
+    assert re(A) == (S.Half) * (A + conjugate(A))
 
     A = Matrix([[1 + 4*I,2],[0, -3*I]])
     assert re(A) == Matrix([[1, 2],[0, 0]])
@@ -118,10 +118,10 @@ def test_im():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
 
-    assert im(nan) == nan
+    assert im(nan) is nan
 
-    assert im(oo*I) == oo
-    assert im(-oo*I) == -oo
+    assert im(oo*I) is oo
+    assert im(-oo*I) is -oo
 
     assert im(0) == 0
 
@@ -179,12 +179,12 @@ def test_im():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
-    assert im(S.ComplexInfinity) == S.NaN
+    assert im(S.ComplexInfinity) is S.NaN
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
 
-    assert im(A) == (S(1)/(2*I)) * (A - conjugate(A))
+    assert im(A) == (S.One/(2*I)) * (A - conjugate(A))
 
     A = Matrix([[1 + 4*I, 2],[0, -3*I]])
     assert im(A) == Matrix([[4, 0],[0, -3]])
@@ -206,7 +206,7 @@ def test_sign():
     assert sign(3*I) == I
     assert sign(-3*I) == -I
     assert sign(0) == 0
-    assert sign(nan) == nan
+    assert sign(nan) is nan
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
@@ -328,15 +328,15 @@ def test_as_real_imag():
     # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
-        ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
-     (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
+        ((re(x)**2 + im(x)**2)**Rational(1, 4)*cos(atan2(im(x), re(x))/2),
+     (re(x)**2 + im(x)**2)**Rational(1, 4)*sin(atan2(im(x), re(x))/2))
 
     # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
                (a**2 + b**2)**Rational(
-                   1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
+                   1, 4)*cos(atan2(b, a)/2)/2 + S.Half,
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
@@ -372,8 +372,8 @@ def test_Abs():
     assert Abs(-1) == 1
     assert Abs(I) == 1
     assert Abs(-I) == 1
-    assert Abs(nan) == nan
-    assert Abs(zoo) == oo
+    assert Abs(nan) is nan
+    assert Abs(zoo) is oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
@@ -404,7 +404,7 @@ def test_Abs():
     assert Abs(x)**-3 == Abs(x)/(x**4)
     assert Abs(x**3) == x**2*Abs(x)
     assert Abs(I**I) == exp(-pi/2)
-    assert Abs((4 + 5*I)**(6 + 7*I)) == 68921*exp(-7*atan(S(5)/4))
+    assert Abs((4 + 5*I)**(6 + 7*I)) == 68921*exp(-7*atan(Rational(5, 4)))
     y = Symbol('y', real=True)
     assert Abs(I**y) == 1
     y = Symbol('y')
@@ -524,10 +524,10 @@ def test_Abs_properties():
     assert Abs(f).is_extended_nonnegative is True
 
     z = Symbol('z', complex=True, zero=False)
-    assert Abs(z).is_real is None
+    assert Abs(z).is_real is True # since complex implies finite
     assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
-    assert Abs(z).is_positive is None
+    assert Abs(z).is_positive is True
     assert Abs(z).is_extended_positive is True
     assert Abs(z).is_zero is False
 
@@ -572,17 +572,17 @@ def test_abs():
 
 
 def test_arg():
-    assert arg(0) == nan
+    assert arg(0) is nan
     assert arg(1) == 0
     assert arg(-1) == pi
     assert arg(I) == pi/2
     assert arg(-I) == -pi/2
     assert arg(1 + I) == pi/4
-    assert arg(-1 + I) == 3*pi/4
+    assert arg(-1 + I) == pi*Rational(3, 4)
     assert arg(1 - I) == -pi/4
     assert arg(exp_polar(4*pi*I)) == 4*pi
     assert arg(exp_polar(-7*pi*I)) == -7*pi
-    assert arg(exp_polar(5 - 3*pi*I/4)) == -3*pi/4
+    assert arg(exp_polar(5 - 3*pi*I/4)) == pi*Rational(-3, 4)
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
@@ -931,7 +931,7 @@ def test_issue_6167_6151():
     e = big*one - big + eps
     from sympy import simplify
     assert sign(simplify(e)) == 1
-    for xi in (111, 11, 1, S(1)/10):
+    for xi in (111, 11, 1, Rational(1, 10)):
         assert sign(e.subs(x, xi)) == 1
 
 

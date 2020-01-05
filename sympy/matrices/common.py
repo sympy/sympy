@@ -10,15 +10,18 @@ from collections import defaultdict
 from inspect import isfunction
 
 from sympy.assumptions.refine import refine
+from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
+from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
-from sympy.simplify import simplify as _simplify
+from sympy.polys import cancel, together
+from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -272,8 +275,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         row
-        col_op
-        col_swap
+        sympy.matrices.dense.MutableDenseMatrix.col_op
+        sympy.matrices.dense.MutableDenseMatrix.col_swap
         col_del
         col_join
         col_insert
@@ -556,8 +559,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         col
-        row_op
-        row_swap
+        sympy.matrices.dense.MutableDenseMatrix.row_op
+        sympy.matrices.dense.MutableDenseMatrix.row_swap
         row_del
         row_join
         row_insert
@@ -1317,7 +1320,7 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        is_diagonalizable
+        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
@@ -1753,7 +1756,7 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
@@ -1805,23 +1808,52 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
     def permute(self, perm, orientation='rows', direction='forward'):
-        """Permute the rows or columns of a matrix by the given list of swaps.
+        r"""Permute the rows or columns of a matrix by the given list of
+        swaps.
 
         Parameters
         ==========
 
-        perm : a permutation.  This may be a list swaps (e.g., `[[1, 2], [0, 3]]`),
-            or any valid input to the `Permutation` constructor, including a `Permutation()`
-            itself.  If `perm` is given explicitly as a list of indices or a `Permutation`,
-            `direction` has no effect.
-        orientation : ('rows' or 'cols') whether to permute the rows or the columns
-        direction : ('forward', 'backward') whether to apply the permutations from
-            the start of the list first, or from the back of the list first
+        perm : Permutation, list, or list of lists
+            A representation for the permutation.
+
+            If it is ``Permutation``, it is used directly with some
+            resizing with respect to the matrix size.
+
+            If it is specified as list of lists,
+            (e.g., ``[[0, 1], [0, 2]]``), then the permutation is formed
+            from applying the product of cycles. The direction how the
+            cyclic product is applied is described in below.
+
+            If it is specified as a list, the list should represent
+            an array form of a permutation. (e.g., ``[1, 2, 0]``) which
+            would would form the swapping function
+            `0 \mapsto 1, 1 \mapsto 2, 2\mapsto 0`.
+
+        orientation : 'rows', 'cols'
+            A flag to control whether to permute the rows or the columns
+
+        direction : 'forward', 'backward'
+            A flag to control whether to apply the permutations from
+            the start of the list first, or from the back of the list
+            first.
+
+            For example, if the permutation specification is
+            ``[[0, 1], [0, 2]]``,
+
+            If the flag is set to ``'forward'``, the cycle would be
+            formed as `0 \mapsto 2, 2 \mapsto 1, 1 \mapsto 0`.
+
+            If the flag is set to ``'backward'``, the cycle would be
+            formed as `0 \mapsto 1, 1 \mapsto 2, 2 \mapsto 0`.
+
+            If the argument ``perm`` is not in a form of list of lists,
+            this flag takes no effect.
 
         Examples
         ========
@@ -1842,7 +1874,42 @@ class MatrixOperations(MatrixRequired):
         [0, 0, 1],
         [1, 0, 0]])
 
+        Notes
+        =====
+
+        If a bijective function
+        `\sigma : \mathbb{N}_0 \rightarrow \mathbb{N}_0` denotes the
+        permutation.
+
+        If the matrix `A` is the matrix to permute, represented as
+        a horizontal or a vertical stack of vectors:
+
+        .. math::
+            A =
+            \begin{bmatrix}
+            a_0 \\ a_1 \\ \vdots \\ a_{n-1}
+            \end{bmatrix} =
+            \begin{bmatrix}
+            \alpha_0 & \alpha_1 & \cdots & \alpha_{n-1}
+            \end{bmatrix}
+
+        If the matrix `B` is the result, the permutation of matrix rows
+        is defined as:
+
+        .. math::
+            B := \begin{bmatrix}
+            a_{\sigma(0)} \\ a_{\sigma(1)} \\ \vdots \\ a_{\sigma(n-1)}
+            \end{bmatrix}
+
+        And the permutation of matrix columns is defined as:
+
+        .. math::
+            B := \begin{bmatrix}
+            \alpha_{\sigma(0)} & \alpha_{\sigma(1)} &
+            \cdots & \alpha_{\sigma(n-1)}
+            \end{bmatrix}
         """
+        from sympy.combinatorics import Permutation
 
         # allow british variants and `columns`
         if direction == 'forwards':
@@ -1859,29 +1926,23 @@ class MatrixOperations(MatrixRequired):
             raise TypeError("orientation='{}' is an invalid kwarg. "
                             "Try 'rows' or 'cols'".format(orientation))
 
+        if not isinstance(perm, (Permutation, Iterable)):
+            raise ValueError(
+                "{} must be a list, a list of lists, "
+                "or a SymPy permutation object.".format(perm))
+
         # ensure all swaps are in range
         max_index = self.rows if orientation == 'rows' else self.cols
         if not all(0 <= t <= max_index for t in flatten(list(perm))):
             raise IndexError("`swap` indices out of range.")
 
-        # see if we are a list of pairs
-        try:
-            assert len(perm[0]) == 2
-            # we are a list of swaps, so `direction` matters
-            if direction == 'backward':
-                perm = reversed(perm)
-
-            # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explicit mapping ourselves XXX Bug #12479
-            mapping = list(range(max_index))
-            for (i, j) in perm:
-                mapping[i], mapping[j] = mapping[j], mapping[i]
-            perm = mapping
-        except (TypeError, AssertionError, IndexError):
-            pass
-
-        from sympy.combinatorics import Permutation
-        perm = Permutation(perm, size=max_index)
+        if perm and not isinstance(perm, Permutation) and \
+            isinstance(perm[0], Iterable):
+            if direction == 'forward':
+                perm = list(reversed(perm))
+            perm = Permutation(perm, size=max_index)
+        else:
+            perm = Permutation(perm, size=max_index)
 
         if orientation == 'rows':
             return self._eval_permute_rows(perm)
@@ -1889,7 +1950,8 @@ class MatrixOperations(MatrixRequired):
             return self._eval_permute_cols(perm)
 
     def permute_cols(self, swaps, direction='forward'):
-        """Alias for `self.permute(swaps, orientation='cols', direction=direction)`
+        """Alias for
+        ``self.permute(swaps, orientation='cols', direction=direction)``
 
         See Also
         ========
@@ -1899,7 +1961,8 @@ class MatrixOperations(MatrixRequired):
         return self.permute(swaps, orientation='cols', direction=direction)
 
     def permute_rows(self, swaps, direction='forward'):
-        """Alias for `self.permute(swaps, orientation='rows', direction=direction)`
+        """Alias for
+        ``self.permute(swaps, orientation='rows', direction=direction)``
 
         See Also
         ========
@@ -2079,18 +2142,14 @@ class MatrixArithmetic(MatrixRequired):
 
     def _eval_matrix_mul(self, other):
         def entry(i, j):
+            vec = [self[i,k]*other[k,j] for k in range(self.cols)]
             try:
-                return sum(self[i,k]*other[k,j] for k in range(self.cols))
-            except TypeError:
-                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                return Add(*vec)
+            except (TypeError, SympifyError):
+                # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
-                # initially, and for a matrix, that is a mix of a scalar and
-                # a matrix, which raises a TypeError. Fall back to a
-                # block-matrix-safe way to multiply if the `sum` fails.
-                ret = self[i, 0]*other[0, j]
-                for k in range(1, self.cols):
-                    ret += self[i, k]*other[k, j]
-                return ret
+                # Fall back to a safe way to multiply if the `Add` fails.
+                return reduce(lambda a, b: a + b, vec)
 
         return self._new(self.rows, other.cols, entry)
 
@@ -2105,10 +2164,43 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_pow_by_recursion(self, num):
         if num == 1:
             return self
+
         if num % 2 == 1:
-            return self * self._eval_pow_by_recursion(num - 1)
-        ret = self._eval_pow_by_recursion(num // 2)
-        return ret * ret
+            a, b = self, self._eval_pow_by_recursion(num - 1)
+        else:
+            a = b = self._eval_pow_by_recursion(num // 2)
+
+        return a.multiply(b)
+
+    def _eval_pow_by_recursion_mulsimp(self, num, dotprodsimp=None, prevsimp=None):
+        if dotprodsimp and prevsimp is None:
+            prevsimp = [True]*len(self)
+
+        if num == 1:
+            return self
+
+        if num % 2 == 1:
+            a, b = self, self._eval_pow_by_recursion_mulsimp(num - 1,
+                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+        else:
+            a = b = self._eval_pow_by_recursion_mulsimp(num // 2,
+                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+
+        m = a.multiply(b, dotprodsimp=False)
+
+        if not dotprodsimp:
+            return m
+
+        lenm  = len(m)
+        elems = [None]*lenm
+
+        for i in range(lenm):
+            if prevsimp[i]:
+                elems[i], prevsimp[i] = _dotprodsimp(m[i], withsimp=True)
+            else:
+                elems[i] = m[i]
+
+        return m._new(m.rows, m.cols, elems)
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2192,6 +2284,21 @@ class MatrixArithmetic(MatrixRequired):
 
         matrix_multiply_elementwise
         """
+
+        return self.multiply(other)
+
+    def multiply(self, other, dotprodsimp=None):
+        """Same as __mul__() but with optional simplification.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+        """
+
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2202,7 +2309,11 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other)
+            m = self._eval_matrix_mul(other)
+            if dotprodsimp:
+                return m.applyfunc(_dotprodsimp)
+            return m
+
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
@@ -2216,11 +2327,59 @@ class MatrixArithmetic(MatrixRequired):
 
         return NotImplemented
 
+    def multiply_elementwise(self, other):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
+        Matrix([
+        [  0, 10, 200],
+        [300, 40,   5]])
+
+        See Also
+        ========
+
+        sympy.matrices.matrices.MatrixBase.cross
+        sympy.matrices.matrices.MatrixBase.dot
+        multiply
+        """
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
+
+        return self._eval_matrix_mul_elementwise(other)
+
     def __neg__(self):
         return self._eval_scalar_mul(-1)
 
     @call_highest_priority('__rpow__')
     def __pow__(self, exp):
+        """Return self**exp a scalar or symbol."""
+
+        return self.pow(exp)
+
+    def pow(self, exp, dotprodsimp=None, jordan=None):
+        """Return self**exp a scalar or symbol.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation.
+
+        jordan : bool, optional
+            If left as None then Jordan form exponentiation will be used under
+            certain conditions, True specifies that jordan_pow should always
+            be used if possible and False means it should not be used unless
+            it is the only way to calculate the power.
+        """
+
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2245,16 +2404,22 @@ class MatrixArithmetic(MatrixRequired):
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
+            elif jordan_pow is not None and (jordan or \
+                    (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
-                    return jordan_pow(exp)
+                    return jordan_pow(exp, dotprodsimp=dotprodsimp)
                 except MatrixError:
-                    pass
-            return a._eval_pow_by_recursion(exp)
+                    if jordan:
+                        raise
+
+            if dotprodsimp is not None:
+                return a._eval_pow_by_recursion_mulsimp(exp, dotprodsimp=dotprodsimp)
+            else:
+                return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp)
+                return jordan_pow(exp, dotprodsimp=dotprodsimp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
@@ -2314,32 +2479,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         return self.__div__(other)
-
-    def multiply_elementwise(self, other):
-        """Return the Hadamard product (elementwise product) of A and B
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> A.multiply_elementwise(B)
-        Matrix([
-        [  0, 10, 200],
-        [300, 40,   5]])
-
-        See Also
-        ========
-
-        cross
-        dot
-        multiply
-        """
-        if self.shape != other.shape:
-            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
-
-        return self._eval_matrix_mul_elementwise(other)
 
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,

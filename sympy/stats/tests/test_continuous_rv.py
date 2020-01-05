@@ -3,7 +3,8 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re,
-                   im, lambdify, hyper, diff, Or, Mul, sign)
+                   im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
+                   factorial, binomial, erfi, besselj)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
@@ -14,9 +15,9 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
-                         Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
+                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
@@ -27,7 +28,6 @@ from sympy.utilities.randtest import verify_numerically as tn
 oo = S.Infinity
 
 x, y, z = map(Symbol, 'xyz')
-
 
 def test_single_normal():
     mu = Symbol('mu', real=True)
@@ -138,7 +138,6 @@ def test_cdf():
 
     Z = Exponential('z', 1)
     f = cdf(Z)
-    z = Symbol('z')
     assert f(z) == Piecewise((1 - exp(-z), z >= 0), (0, True))
 
 
@@ -151,12 +150,12 @@ def test_characteristic_function():
     Y = Normal('y', 1, 1)
     cf = characteristic_function(Y)
     assert cf(0) == 1
-    assert cf(1) == exp(I - S(1)/2)
+    assert cf(1) == exp(I - S.Half)
 
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert cf(1).expand() == S(25)/26 + 5*I/26
+    assert cf(1).expand() == Rational(25, 26) + I*Rational(5, 26)
 
     X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
@@ -166,7 +165,12 @@ def test_characteristic_function():
     X = ExGaussian('x', 0, 1, 1)
     cf = characteristic_function(X)
     assert cf(0) == 1
-    assert cf(1) == (1 + I)*exp(-S(1)/2)/2
+    assert cf(1) == (1 + I)*exp(Rational(-1, 2))/2
+
+    L = Levy('x', 0, 1)
+    cf = characteristic_function(L)
+    assert cf(0) == 1
+    assert cf(1) == exp(-sqrt(2)*sqrt(-I))
 
 
 def test_moment_generating_function():
@@ -179,9 +183,9 @@ def test_moment_generating_function():
     assert mgf == hyper((a,), (a + b,), t)
 
     mgf = moment_generating_function(Chi('x', a))(t)
-    assert mgf == sqrt(2)*t*gamma(a/2 + S(1)/2)*\
-        hyper((a/2 + S(1)/2,), (S(3)/2,), t**2/2)/gamma(a/2) +\
-        hyper((a/2,), (S(1)/2,), t**2/2)
+    assert mgf == sqrt(2)*t*gamma(a/2 + S.Half)*\
+        hyper((a/2 + S.Half,), (Rational(3, 2),), t**2/2)/gamma(a/2) +\
+        hyper((a/2,), (S.Half,), t**2/2)
 
     mgf = moment_generating_function(ChiSquared('x', a))(t)
     assert mgf == (1 - 2*t)**(-a/2)
@@ -246,9 +250,9 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 1) == hyper((2,), (3,), 1)/2
 
     mgf = moment_generating_function(Chi('x', 1))(t)
-    assert mgf.diff(t).subs(t, 1) == sqrt(2)*hyper((1,), (S(3)/2,), S(1)/2
-    )/sqrt(pi) + hyper((S(3)/2,), (S(3)/2,), S(1)/2) + 2*sqrt(2)*hyper((2,),
-    (S(5)/2,), S(1)/2)/(3*sqrt(pi))
+    assert mgf.diff(t).subs(t, 1) == sqrt(2)*hyper((1,), (Rational(3, 2),), S.Half
+    )/sqrt(pi) + hyper((Rational(3, 2),), (Rational(3, 2),), S.Half) + 2*sqrt(2)*hyper((2,),
+    (Rational(5, 2),), S.Half)/(3*sqrt(pi))
 
     mgf = moment_generating_function(ChiSquared('x', 1))(t)
     assert mgf.diff(t).subs(t, 1) == I
@@ -279,7 +283,7 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 0) == beta(1, 1)
 
     mgf = moment_generating_function(Normal('x', 0, 1))(t)
-    assert mgf.diff(t).subs(t, 1) == exp(S(1)/2)
+    assert mgf.diff(t).subs(t, 1) == exp(S.Half)
 
     mgf = moment_generating_function(Pareto('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 0) == expint(1, 0)
@@ -309,7 +313,6 @@ def test_moment_generating_function():
 
 
 def test_sample_continuous():
-    z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
@@ -318,7 +321,6 @@ def test_sample_continuous():
 
 
 def test_ContinuousRV():
-    x = Symbol('x')
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
     X = ContinuousRV(x, pdf)
@@ -345,8 +347,8 @@ def test_benini():
     alpha = Symbol("alpha", positive=True)
     beta = Symbol("beta", positive=True)
     sigma = Symbol("sigma", positive=True)
-
     X = Benini('x', alpha, beta, sigma)
+
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
@@ -363,17 +365,13 @@ def test_benini():
     sigma = Symbol("sigma", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
-
 def test_beta():
     a, b = symbols('alpha beta', positive=True)
-
     B = Beta('x', a, b)
 
     assert pspace(B).domain.set == Interval(0, 1)
-
-    dens = density(B)
-    x = Symbol('x')
-    assert dens(x) == x**(a - 1)*(1 - x)**(b - 1) / beta(a, b)
+    assert characteristic_function(B)(x) == hyper((a,), (a + b,), I*x)
+    assert density(B)(x) == x**(a - 1)*(1 - x)**(b - 1)/beta(a, b)
 
     assert simplify(E(B)) == a / (a + b)
     assert simplify(variance(B)) == a*b / (a**3 + 3*a**2*b + a**2 + 3*a*b**2 + 2*a*b + b**3 + b**2)
@@ -387,7 +385,7 @@ def test_beta():
 def test_beta_noncentral():
     a, b = symbols('a b', positive=True)
     c = Symbol('c', nonnegative=True)
-    _k = Symbol('k')
+    _k = Dummy('k')
 
     X = BetaNoncentral('x', a, b, c)
 
@@ -396,8 +394,9 @@ def test_beta_noncentral():
     dens = density(X)
     z = Symbol('z')
 
-    assert str(dens(z)) == ("Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/"
-    "(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))")
+    res = Sum( z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/
+               (beta(_k + a, b)*factorial(_k)), (_k, 0, oo))
+    assert dens(z).dummy_eq(res)
 
     # BetaCentral should not raise if the assumptions
     # on the symbols can not be determined
@@ -418,6 +417,7 @@ def test_beta_noncentral():
 
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
+
     betap = Symbol("beta", positive=True)
 
     X = BetaPrime('x', alpha, betap)
@@ -437,6 +437,9 @@ def test_cauchy():
     p = Symbol("p", positive=True)
 
     X = Cauchy('x', x0, gamma)
+    # Tests the characteristic function
+    assert characteristic_function(X)(x) == exp(-gamma*Abs(x) + I*x*x0)
+
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
     assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
@@ -446,10 +449,19 @@ def test_cauchy():
 
 
 def test_chi():
+    from sympy import I
     k = Symbol("k", integer=True)
 
     X = Chi('x', k)
     assert density(X)(x) == 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
+
+    # Tests the characteristic function
+    assert characteristic_function(X)(x) == sqrt(2)*I*x*gamma(k/2 + S(1)/2)*hyper((k/2 + S(1)/2,),
+                                            (S(3)/2,), -x**2/2)/gamma(k/2) + hyper((k/2,), (S(1)/2,), -x**2/2)
+
+    # Tests the moment generating function
+    assert moment_generating_function(X)(x) == sqrt(2)*x*gamma(k/2 + S(1)/2)*hyper((k/2 + S(1)/2,),
+                                                (S(3)/2,), x**2/2)/gamma(k/2) + hyper((k/2,), (S(1)/2,), x**2/2)
 
     k = Symbol("k", integer=True, positive=False)
     raises(ValueError, lambda: Chi('x', k))
@@ -479,15 +491,18 @@ def test_chi_noncentral():
 
 def test_chi_squared():
     k = Symbol("k", integer=True)
-
     X = ChiSquared('x', k)
+
+    # Tests the characteristic function
+    assert characteristic_function(X)(x) == ((-2*I*x + 1)**(-k/2))
+
     assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
     assert cdf(X)(x) == Piecewise((lowergamma(k/2, x/2)/gamma(k/2), x >= 0), (0, True))
     assert E(X) == k
     assert variance(X) == 2*k
 
     X = ChiSquared('x', 15)
-    assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
+    assert cdf(X)(3) == -14873*sqrt(6)*exp(Rational(-3, 2))/(5005*sqrt(pi)) + erf(sqrt(6)/2)
 
     k = Symbol("k", integer=True, positive=False)
     raises(ValueError, lambda: ChiSquared('x', k))
@@ -538,7 +553,7 @@ def test_exgaussian():
 
     # Note: actual_output simplifies to expected_output.
     # Ideally cdf(X)(z) would return expected_output
-    # expected_output = (erf(sqrt(2)*(l*s**2 + m - z)/(2*s)) - 1)*exp(l*(l*s**2 + 2*m - 2*z)/2)/2 - erf(sqrt(2)*(m - z)/(2*s))/2 + S(1)/2
+    # expected_output = (erf(sqrt(2)*(l*s**2 + m - z)/(2*s)) - 1)*exp(l*(l*s**2 + 2*m - 2*z)/2)/2 - erf(sqrt(2)*(m - z)/(2*s))/2 + S.Half
     u = l*(z - m)
     v = l*s
     GaussianCDF1 = cdf(Normal('x', 0, v))(u)
@@ -566,7 +581,7 @@ def test_exponential():
     assert kurtosis(X) == smoment(X, 4)
     assert smoment(2*X, 4) == smoment(X, 4)
     assert moment(X, 3) == 3*2*1/rate**3
-    assert P(X > 0) == S(1)
+    assert P(X > 0) is S.One
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
     assert quantile(X)(p) == -log(1-p)/rate
@@ -594,6 +609,7 @@ def test_f_distribution():
     d2 = Symbol("d2", positive=True)
 
     X = FDistribution("x", d1, d2)
+
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
@@ -634,11 +650,16 @@ def test_gamma():
     theta = Symbol("theta", positive=True)
 
     X = Gamma('x', k, theta)
+
+    # Tests characteristic function
+    assert characteristic_function(X)(x) == ((-I*theta*x + 1)**(-k))
+
     assert density(X)(x) == x**(k - 1)*theta**(-k)*exp(-x/theta)/gamma(k)
     assert cdf(X, meijerg=True)(z) == Piecewise(
             (-k*lowergamma(k, 0)/gamma(k + 1) +
                 k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
             (0, True))
+
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
@@ -653,7 +674,6 @@ def test_gamma():
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
     b = Symbol("b", positive=True)
-
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
@@ -670,6 +690,7 @@ def test_gompertz():
     eta = Symbol("eta", positive=True)
 
     X = Gompertz("x", b, eta)
+
     assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
     assert cdf(X)(x) == 1 - exp(eta)*exp(-eta*exp(b*x))
     assert diff(cdf(X)(x), x) == density(X)(x)
@@ -689,7 +710,6 @@ def test_gumbel():
     assert cdf(X)(x).expand() == \
     exp(-exp(mu/beta)*exp(-x/beta))
 
-
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
     b = Symbol("b", positive=True)
@@ -706,9 +726,31 @@ def test_laplace():
     b = Symbol("b", positive=True)
 
     X = Laplace('x', mu, b)
+
+    #Tests characteristic_function
+    assert characteristic_function(X)(x) == (exp(I*mu*x)/(b**2*x**2 + 1))
+
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
+
+def test_levy():
+    mu = Symbol("mu", real=True)
+    c = Symbol("c", positive=True)
+
+    X = Levy('x', mu, c)
+    assert X.pspace.domain.set == Interval(mu, oo)
+    assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+    assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
+
+    mu = Symbol("mu", real=False)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
+    c = Symbol("c", nonpositive=True)
+    raises(ValueError, lambda: Levy('x',mu,c))
+
+    mu = Symbol("mu", real=True)
+    raises(ValueError, lambda: Levy('x',mu,c))
 
 def test_logistic():
     mu = Symbol("mu", real=True)
@@ -716,9 +758,14 @@ def test_logistic():
     p = Symbol("p", positive=True)
 
     X = Logistic('x', mu, s)
+
+    #Tests characteristics_function
+    assert characteristic_function(X)(x) == \
+           (Piecewise((pi*s*x*exp(I*mu*x)/sinh(pi*s*x), Ne(x, 0)), (1, True)))
+
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
-    assert quantile(X)(p) == mu - s*log(-S(1) + 1/p)
+    assert quantile(X)(p) == mu - s*log(-S.One + 1/p)
 
 def test_loglogistic():
     a, b = symbols('a b')
@@ -753,6 +800,7 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
+
     for i in range(3):
         X = LogNormal('x', i, 1)
         assert sample(X) in X.pspace.domain.set
@@ -765,9 +813,14 @@ def test_lognormal():
     X = LogNormal('x', mu, sigma)
     assert density(X)(x) == (sqrt(2)*exp(-(-mu + log(x))**2
                                     /(2*sigma**2))/(2*x*sqrt(pi)*sigma))
+    # Tests cdf
+    assert cdf(X)(x) == Piecewise(
+                        (erf(sqrt(2)*(-mu + log(x))/(2*sigma))/2
+                        + S(1)/2, x > 0), (0, True))
 
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
+
 
 
 def test_maxwell():
@@ -793,7 +846,7 @@ def test_nakagami():
     assert simplify(E(X)) == (sqrt(mu)*sqrt(omega)
                                             *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X)) == (
-    omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
+    omega - omega*gamma(mu + S.Half)**2/(gamma(mu)*gamma(mu + 1)))
     assert cdf(X)(x) == Piecewise(
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
@@ -839,7 +892,15 @@ def test_pareto():
     X = Pareto('x', xm, alpha)
 
     dens = density(X)
-    x = Symbol('x')
+
+    #Tests cdf function
+    assert cdf(X)(x) == \
+           Piecewise((-x**(-beta - 5)*xm**(beta + 5) + 1, x >= xm), (0, True))
+
+    #Tests characteristic_function
+    assert characteristic_function(X)(x) == \
+           ((-I*x*xm)**(beta + 5)*(beta + 5)*uppergamma(-beta - 5, -I*x*xm))
+
     assert dens(x) == x**(-(alpha + 1))*xm**(alpha)*(alpha)
 
     assert simplify(E(X)) == alpha*xm/(alpha-1)
@@ -858,11 +919,41 @@ def test_pareto_numeric():
     # Skewness tests too slow. Try shortcutting function?
 
 
+def test_PowerFunction():
+    alpha = Symbol("alpha", nonpositive=True)
+    a, b = symbols('a, b', real=True)
+    raises (ValueError, lambda: PowerFunction('x', alpha, a, b))
+
+    a, b = symbols('a, b', real=False)
+    raises (ValueError, lambda: PowerFunction('x', alpha, a, b))
+
+    alpha = Symbol("alpha", positive=True)
+    a, b = symbols('a, b', real=True)
+    raises (ValueError, lambda: PowerFunction('x', alpha, 5, 2))
+
+    X = PowerFunction('X', 2, a, b)
+    assert density(X)(z) == (-2*a + 2*z)/(-a + b)**2
+    assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) -
+        2*a*z/(a**2 - 2*a*b + b**2) + z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+
+    X = PowerFunction('X', 2, 0, 1)
+    assert density(X)(z) == 2*z
+    assert cdf(X)(z) == Piecewise((z**2, z >= 0), (0,True))
+    assert E(X) == Rational(2,3)
+    assert P(X < 0) == 0
+    assert P(X < 1) == 1
+
+
 def test_raised_cosine():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
 
     X = RaisedCosine("x", mu, s)
+
+    #Tests characteristics_function
+    assert characteristic_function(X)(x) == \
+           Piecewise((exp(-I*pi*mu/s)/2, Eq(x, -pi/s)), (exp(I*pi*mu/s)/2, Eq(x, pi/s)), (pi**2*exp(I*mu*x)*sin(s*x)/(s*x*(-s**2*x**2 + pi**2)), True))
+
     assert density(X)(x) == (Piecewise(((cos(pi*(x - mu)/s) + 1)/(2*s),
                           And(x <= mu + s, mu - s <= x)), (0, True)))
 
@@ -871,12 +962,36 @@ def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
 
     X = Rayleigh('x', sigma)
+
+    #Tests characteristic_function
+    assert characteristic_function(X)(x) == (-sqrt(2)*sqrt(pi)*sigma*x*(erfi(sqrt(2)*sigma*x/2) - I)*exp(-sigma**2*x**2/2)/2 + 1)
+
     assert density(X)(x) ==  x*exp(-x**2/(2*sigma**2))/sigma**2
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
     assert cdf(X)(x) == 1 - exp(-x**2/(2*sigma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+def test_reciprocal():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+
+    X = Reciprocal('x', a, b)
+    assert density(X)(x) == 1/(x*(-log(a) + log(b)))
+    assert cdf(X)(x) == Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+    X = Reciprocal('x', 5, 30)
+
+    assert E(X) == 25/(log(30) - log(5))
+    assert P(X < 4) == S.Zero
+    assert P(X < 20) == log(20) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
+    assert cdf(X)(10) == log(10) / (log(30) - log(5)) - log(5) / (log(30) - log(5))
+
+    a = symbols('a', nonpositive=True)
+    raises(ValueError, lambda: Reciprocal('x', a, b))
+
+    a = symbols('a', positive=True)
+    b = symbols('b', positive=True)
+    raises(ValueError, lambda: Reciprocal('x', a + b, a))
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
@@ -889,10 +1004,9 @@ def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S(1)/2)/(sqrt(nu)*beta(S(1)/2, nu/2))
-    assert cdf(X)(x) == S(1)/2 + x*gamma(nu/2 + S(1)/2)*hyper((S(1)/2, nu/2 + S(1)/2),
-                                (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
-
+    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S.Half)/(sqrt(nu)*beta(S.Half, nu/2))
+    assert cdf(X)(x) == S.Half + x*gamma(nu/2 + S.Half)*hyper((S.Half, nu/2 + S.Half),
+                                (Rational(3, 2),), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
 
 def test_trapezoidal():
     a = Symbol("a", real=True)
@@ -907,9 +1021,9 @@ def test_trapezoidal():
                                       (0, True))
 
     X = Trapezoidal('x', 0, 1, 2, 3)
-    assert E(X) == S(3)/2
-    assert variance(X) == S(5)/12
-    assert P(X < 2) == S(3)/4
+    assert E(X) == Rational(3, 2)
+    assert variance(X) == Rational(5, 12)
+    assert P(X < 2) == Rational(3, 4)
 
 def test_triangular():
     a = Symbol("a")
@@ -920,12 +1034,21 @@ def test_triangular():
     assert str(density(X)(x)) == ("Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)), (a <= x) & (c > x)), "
     "(2/(-a + b), Eq(c, x)), ((2*b - 2*x)/((-a + b)*(b - c)), (b >= x) & (c < x)), (0, True))")
 
+    #Tests moment_generating_function
+    assert moment_generating_function(X)(x).expand() == \
+    ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
 
 def test_quadratic_u():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
 
     X = QuadraticU("x", a, b)
+    Y = QuadraticU("x", 1, 2)
+
+    # Tests _moment_generating_function
+    assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
+    assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
+
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
@@ -945,13 +1068,13 @@ def test_uniform():
 
     z = Symbol('z')
     p = density(X)(z)
-    assert p.subs(z, 3.7) == S(1)/2
+    assert p.subs(z, 3.7) == S.Half
     assert p.subs(z, -1) == 0
     assert p.subs(z, 6) == 0
 
     c = cdf(X)
     assert c(2) == 0 and c(3) == 0
-    assert c(S(7)/2) == S(1)/4
+    assert c(Rational(7, 2)) == Rational(1, 4)
     assert c(5) == 1 and c(6) == 1
 
 @XFAIL
@@ -972,12 +1095,21 @@ def test_uniform_P():
 
 def test_uniformsum():
     n = Symbol("n", integer=True)
-    _k = Symbol("k")
+    _k = Dummy("k")
     x = Symbol("x")
 
     X = UniformSum('x', n)
-    assert str(density(X)(x)) == ("Sum((-1)**_k*(-_k + x)**(n - 1)"
-    "*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)")
+    res = Sum((-1)**_k*(-_k + x)**(n - 1)*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)
+    assert density(X)(x).dummy_eq(res)
+
+    #Tests set functions
+    assert X.pspace.domain.set == Interval(0, n)
+
+    #Tests the characteristic_function
+    assert characteristic_function(X)(x) == (-I*(exp(I*x) - 1)/x)**n
+
+    #Tests the moment_generating_function
+    assert moment_generating_function(X)(x) == ((exp(x) - 1)/x)**n
 
 
 def test_von_mises():
@@ -997,14 +1129,14 @@ def test_weibull():
 
     assert E(X).expand() == a * gamma(1 + 1/b)
     assert variance(X).expand() == (a**2 * gamma(1 + 2/b) - E(X)**2).expand()
-    assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**(S(3)/2)
+    assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**Rational(3, 2)
     assert simplify(kurtosis(X)) == (-3*gamma(1 + 1/b)**4 +\
         6*gamma(1 + 1/b)**2*gamma(1 + 2/b) - 4*gamma(1 + 1/b)*gamma(1 + 3/b) + gamma(1 + 4/b))/(gamma(1 + 1/b)**2 - gamma(1 + 2/b))**2
 
 def test_weibull_numeric():
     # Test for integers and rationals
     a = 1
-    bvals = [S.Half, 1, S(3)/2, 5]
+    bvals = [S.Half, 1, Rational(3, 2), 5]
     for b in bvals:
         X = Weibull('x', a, b)
         assert simplify(E(X)) == expand_func(a * gamma(1 + 1/S(b)))
@@ -1019,6 +1151,11 @@ def test_wignersemicircle():
     X = WignerSemicircle('x', R)
     assert density(X)(x) == 2*sqrt(-x**2 + R**2)/(pi*R**2)
     assert E(X) == 0
+
+
+    #Tests ChiNoncentralDistribution
+    assert characteristic_function(X)(x) == \
+           Piecewise((2*besselj(1, R*x)/(R*x), Ne(x, 0)), (1, True))
 
 
 def test_prefab_sampling():
@@ -1065,7 +1202,7 @@ def test_unevaluated():
     assert str(P(X > 0, evaluate=False)) == ("Integral(sqrt(2)*exp(-_z**2/2)/"
     "(2*sqrt(pi)), (_z, 0, oo))")
 
-    assert P(X > 0, X**2 < 1, evaluate=False) == S(1)/2
+    assert P(X > 0, X**2 < 1, evaluate=False) == S.Half
 
 
 def test_probability_unevaluated():
@@ -1082,7 +1219,7 @@ def test_density_unevaluated():
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
-    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
+    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.Half
     assert isinstance(nd.sample(), float) or nd.sample().is_Number
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
@@ -1124,8 +1261,8 @@ def test_difficult_univariate():
 def test_issue_10003():
     X = Exponential('x', 3)
     G = Gamma('g', 1, 2)
-    assert P(X < -1) == S.Zero
-    assert P(G < -1) == S.Zero
+    assert P(X < -1) is S.Zero
+    assert P(G < -1) is S.Zero
 
 
 @slow
@@ -1154,7 +1291,6 @@ def test_precomputed_characteristic_functions():
     def test_cf(dist, support_lower_limit, support_upper_limit):
         pdf = density(dist)
         t = Symbol('t')
-        x = Symbol('x')
 
         # first function is the hardcoded CF of the distribution
         cf1 = lambdify([t], characteristic_function(dist)(t), 'mpmath')
@@ -1210,11 +1346,10 @@ def test_long_precomputed_cdf():
 
 def test_issue_13324():
     X = Uniform('X', 0, 1)
-    assert E(X, X > Rational(1, 2)) == Rational(3, 4)
-    assert E(X, X > 0) == Rational(1, 2)
+    assert E(X, X > S.Half) == Rational(3, 4)
+    assert E(X, X > 0) == S.Half
 
 def test_FiniteSet_prob():
-    x = symbols('x')
     E = Exponential('E', 3)
     N = Normal('N', 5, 7)
     assert P(Eq(E, 1)) is S.Zero
@@ -1224,7 +1359,6 @@ def test_FiniteSet_prob():
 def test_prob_neq():
     E = Exponential('E', 4)
     X = ChiSquared('X', 4)
-    x = symbols('x')
     assert P(Ne(E, 2)) == 1
     assert P(Ne(X, 4)) == 1
     assert P(Ne(X, 4)) == 1
@@ -1234,14 +1368,14 @@ def test_prob_neq():
 def test_union():
     N = Normal('N', 3, 2)
     assert simplify(P(N**2 - N > 2)) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + S(3)/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/4)/2 + Rational(3, 2)
     assert simplify(P(N**2 - 4 > 0)) == \
-        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + S(3)/2
+        -erf(5*sqrt(2)/4)/2 - erfc(sqrt(2)/4)/2 + Rational(3, 2)
 
 def test_Or():
     N = Normal('N', 0, 1)
     assert simplify(P(Or(N > 2, N < 1))) == \
-        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + S(3)/2
+        -erf(sqrt(2))/2 - erfc(sqrt(2)/2)/2 + Rational(3, 2)
     assert P(Or(N < 0, N < 1)) == P(N < 1)
     assert P(Or(N > 0, N < 0)) == 1
 

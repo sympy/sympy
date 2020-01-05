@@ -38,6 +38,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
+        del x
     assert dotest(s)
 
 

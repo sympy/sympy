@@ -6,7 +6,7 @@ from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.function import UndefinedFunction
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
@@ -374,22 +374,22 @@ class SeqBase(Basic):
 class EmptySequence(with_metaclass(Singleton, SeqBase)):
     """Represents an empty sequence.
 
-    The empty sequence is available as a
-    singleton as ``S.EmptySequence``.
+    The empty sequence is also available as a singleton as
+    ``S.EmptySequence``.
 
     Examples
     ========
 
-    >>> from sympy import S, SeqPer, oo
+    >>> from sympy import EmptySequence, SeqPer, oo
     >>> from sympy.abc import x
-    >>> S.EmptySequence
-    EmptySequence()
-    >>> SeqPer((1, 2), (x, 0, 10)) + S.EmptySequence
+    >>> EmptySequence
+    EmptySequence
+    >>> SeqPer((1, 2), (x, 0, 10)) + EmptySequence
     SeqPer((1, 2), (x, 0, 10))
-    >>> SeqPer((1, 2)) * S.EmptySequence
-    EmptySequence()
-    >>> S.EmptySequence.coeff_mul(-1)
-    EmptySequence()
+    >>> SeqPer((1, 2)) * EmptySequence
+    EmptySequence
+    >>> EmptySequence.coeff_mul(-1)
+    EmptySequence
     """
 
     @property
@@ -987,12 +987,12 @@ class SeqAdd(SeqExprOp):
     Examples
     ========
 
-    >>> from sympy import S, oo, SeqAdd, SeqPer, SeqFormula
+    >>> from sympy import EmptySequence, oo, SeqAdd, SeqPer, SeqFormula
     >>> from sympy.abc import n
-    >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), S.EmptySequence)
+    >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), EmptySequence)
     SeqPer((1, 2), (n, 0, oo))
     >>> SeqAdd(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
-    EmptySequence()
+    EmptySequence
     >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2, (n, 0, oo)))
     SeqAdd(SeqFormula(n**2, (n, 0, oo)), SeqPer((1, 2), (n, 0, oo)))
     >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2))
@@ -1005,7 +1005,7 @@ class SeqAdd(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)
@@ -1096,12 +1096,12 @@ class SeqMul(SeqExprOp):
     Examples
     ========
 
-    >>> from sympy import S, oo, SeqMul, SeqPer, SeqFormula
+    >>> from sympy import EmptySequence, oo, SeqMul, SeqPer, SeqFormula
     >>> from sympy.abc import n
-    >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), S.EmptySequence)
-    EmptySequence()
+    >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), EmptySequence)
+    EmptySequence
     >>> SeqMul(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
-    EmptySequence()
+    EmptySequence
     >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2))
     SeqMul(SeqFormula(n**2, (n, 0, oo)), SeqPer((1, 2), (n, 0, oo)))
     >>> SeqMul(SeqFormula(n**3), SeqFormula(n**2))
@@ -1114,7 +1114,7 @@ class SeqMul(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)

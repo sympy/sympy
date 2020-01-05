@@ -26,5 +26,38 @@ from .expressions import (
     Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace,
     Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols, Adjoint,
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
-    diagonalize_vector, DiagonalizeVector, DiagonalMatrix, DiagonalOf, trace,
-    DotProduct, kronecker_product, KroneckerProduct, OneMatrix)
+    diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
+    DotProduct, kronecker_product, KroneckerProduct,
+    PermutationMatrix, MatrixPermute)
+
+__all__ = [
+    'ShapeError', 'NonSquareMatrixError',
+
+    'GramSchmidt', 'casoratian', 'diag', 'eye', 'hessian', 'jordan_cell',
+    'list2numpy', 'matrix2numpy', 'matrix_multiply_elementwise', 'ones',
+    'randMatrix', 'rot_axis1', 'rot_axis2', 'rot_axis3', 'symarray',
+    'wronskian', 'zeros',
+
+    'MutableDenseMatrix',
+
+    'DeferredVector', 'MatrixBase',
+
+    'Matrix', 'MutableMatrix',
+
+    'MutableSparseMatrix',
+
+    'banded',
+
+    'ImmutableDenseMatrix', 'ImmutableSparseMatrix',
+
+    'ImmutableMatrix', 'SparseMatrix',
+
+    'MatrixSlice', 'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix',
+    'Identity', 'Inverse', 'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr',
+    'MatrixSymbol', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',
+    'blockcut', 'block_collapse', 'matrix_symbols', 'Adjoint',
+    'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
+    'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
+    'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
+    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
+]

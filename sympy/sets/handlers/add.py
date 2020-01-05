@@ -1,29 +1,31 @@
-"""
-FIXME: set_add or set_sub (Interval, Infinity or NegativeInfinity) is firstly damaged.
-        It was fixed according incomplete evidence. Please be careful when using it.
-"""
 
-from sympy import symbols, S
+from sympy import symbols, S, oo
+
 from sympy.core import Basic, Expr
 from sympy.core.numbers import Infinity, NegativeInfinity
 from sympy.multipledispatch import dispatch
 from sympy.sets import Interval, FiniteSet
 
+
+
+# XXX: The functions in this module are clearly not tested and are broken in a
+# number of ways.
+
 _x, _y = symbols("x y")
 
 
 @dispatch(Basic, Basic)
-def _set_add(x, y):
+def _set_add(x, y): # noqa:F811
     return None
 
 
 @dispatch(Expr, Expr)
-def _set_add(x, y):
-    return x + y
+def _set_add(x, y): # noqa:F811
+    return x+y
 
 
 @dispatch(Interval, Interval)
-def _set_add(x, y):
+def _set_add(x, y): # noqa:F811
     """
     Additions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -33,31 +35,30 @@ def _set_add(x, y):
 
 
 @dispatch(Interval, Infinity)
-def _set_add(x, y):
-    if x.start == S.NegativeInfinity:
-        return Interval(S.NegativeInfinity, S.Infinity)
-    return FiniteSet(S.Infinity)
-
+def _set_add(x, y): # noqa:F811
+    if x.start is S.NegativeInfinity:
+        return Interval(-oo, oo)
+    return FiniteSet({S.Infinity})
 
 @dispatch(Interval, NegativeInfinity)
-def _set_add(x, y):
-    if x.end == S.Infinity:
-        return Interval(S.NegativeInfinity, S.Infinity)
-    return FiniteSet(S.NegativeInfinity)
+def _set_add(x, y): # noqa:F811
+    if x.end is S.Infinity:
+        return Interval(-oo, oo)
+    return FiniteSet({S.NegativeInfinity})
 
 
 @dispatch(Basic, Basic)
-def _set_sub(x, y):
+def _set_sub(x, y): # noqa:F811
     return None
 
 
 @dispatch(Expr, Expr)
-def _set_sub(x, y):
-    return x - y
+def _set_sub(x, y): # noqa:F811
+    return x-y
 
 
 @dispatch(Interval, Interval)
-def _set_sub(x, y):
+def _set_sub(x, y): # noqa:F811
     """
     Subtractions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -67,14 +68,13 @@ def _set_sub(x, y):
 
 
 @dispatch(Interval, Infinity)
-def _set_sub(x, y):
-    if x.end is S.Infinity:
-        return Interval(S.NegativeInfinity, S.Infinity)
-    return FiniteSet(S.NegativeInfinity)
-
+def _set_sub(x, y): # noqa:F811
+    if x.start is S.NegativeInfinity:
+        return Interval(-oo, oo)
+    return FiniteSet(-oo)
 
 @dispatch(Interval, NegativeInfinity)
-def _set_sub(x, y):
+def _set_sub(x, y): # noqa:F811
     if x.start is S.NegativeInfinity:
-        return Interval(S.NegativeInfinity, S.Infinity)
-    return FiniteSet(S.Infinity)
+        return Interval(-oo, oo)
+    return FiniteSet(-oo)

@@ -29,13 +29,13 @@ def solve_poly_inequality(poly, rel):
     >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
-    [{0}]
+    [FiniteSet(0)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
     [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
-    [{-1}, {1}]
+    [FiniteSet(-1), FiniteSet(1)]
 
     See Also
     ========
@@ -141,7 +141,7 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
     ... ((Poly(-x + 1), Poly(1, x)), '<=')]])
-    {1}
+    FiniteSet(1)
 
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
@@ -417,19 +417,19 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
     NotImplementedError
         The solution of the inequality cannot be determined due to limitation
-        in `solvify`.
+        in :func:`sympy.solvers.solveset.solvify`.
 
     Notes
     =====
 
     Currently, we cannot solve all the inequalities due to limitations in
-    `solvify`. Also, the solution returned for trigonometric inequalities
+    :func:`sympy.solvers.solveset.solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
 
     See Also
     ========
 
-    solvify: solver returning solveset solutions with solve's output API
+    sympy.solvers.solveset.solvify: solver returning solveset solutions with solve's output API
 
     Examples
     ========
@@ -487,7 +487,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     else:
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
-        if period is S.Zero:
+        if period == S.Zero:
             e = expand_mul(e)
             const = expr.func(e, 0)
             if const is S.true:

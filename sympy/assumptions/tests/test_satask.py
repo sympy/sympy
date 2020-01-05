@@ -1,6 +1,6 @@
 from sympy.assumptions.satask import satask
 
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
+from sympy import S, symbols, Q, assuming, Implies, MatrixSymbol, I, pi
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -200,7 +200,7 @@ def test_odd_satask():
 
 def test_integer():
     assert satask(Q.integer(1)) is True
-    assert satask(Q.integer(Rational(1, 2))) is False
+    assert satask(Q.integer(S.Half)) is False
 
     assert satask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x + y), Q.integer(x)) is None

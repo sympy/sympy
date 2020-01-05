@@ -1,6 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
-from sympy.core.singleton import S, Singleton, SingletonRegistry
+from sympy.core.singleton import S, Singleton
 
 from sympy.core.compatibility import with_metaclass, exec_
 
@@ -83,5 +83,5 @@ def test_names_in_namespace():
             # Accessible by -oo
             continue
 
-        # Use is here because of complications with ==
-        assert any(getattr(S, name) is i or type(getattr(S, name)) is i for i in d.values()), name
+        # Use is here to ensure it is the exact same object
+        assert any(getattr(S, name) is i for i in d.values()), name

@@ -655,7 +655,15 @@ def given(expr, condition=None, **kwargs):
             if temp == True:
                 return True
             if temp != False:
-                sums += expr.subs(rv, res)
+                # XXX: This seems nonsensical but preserves existing behaviour
+                # after the change that Relational is no longer a subclass of
+                # Expr. Here expr is sometimes Relational and sometimes Expr
+                # but we are trying to add them with +=. This needs to be
+                # fixed somehow.
+                if sums == 0 and isinstance(expr, Relational):
+                    sums = expr.subs(rv, res)
+                else:
+                    sums += expr.subs(rv, res)
         if sums == 0:
             return False
         return sums
@@ -1112,9 +1120,13 @@ def quantile(expr, evaluate=True, **kwargs):
 
 def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses lambdify for computation. This is fast but does not always work.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition:
         ps = pspace(Tuple(expr, condition))
@@ -1158,9 +1170,13 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
 def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses subs for computation. This is slow but almost always works.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition is not None:
         ps = pspace(Tuple(expr, condition))

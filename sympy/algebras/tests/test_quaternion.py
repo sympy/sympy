@@ -4,22 +4,24 @@ from sympy import symbols, re, im, I, Abs, Symbol, \
 from sympy.algebras.quaternion import Quaternion
 from sympy.utilities.pytest import raises
 
-x, y, z, w = symbols("x y z w")
+w, x, y, z = symbols('w:z')
+phi = symbols('phi')
 
 def test_quaternion_construction():
-    q = Quaternion(x, y, z, w)
-    assert q + q == Quaternion(2*x, 2*y, 2*z, 2*w)
+    q = Quaternion(w, x, y, z)
+    assert q + q == Quaternion(2*w, 2*x, 2*y, 2*z)
 
-    q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
-    assert q2 == Quaternion(Rational(1, 2), Rational(1, 2),
-                            Rational(1, 2), Rational(1, 2))
+    q2 = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3),
+                                    pi*Rational(2, 3))
+    assert q2 == Quaternion(S.Half, S.Half,
+                            S.Half, S.Half)
 
-    M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
+    M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
-    assert q3 == Quaternion(sqrt(2)*sqrt(cos(x) + 1)/2, 0, 0, sqrt(-2*cos(x) + 2)/2)
+    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(-2*cos(phi) + 2)/2)
 
     nc = Symbol('nc', commutative=False)
-    raises(ValueError, lambda: Quaternion(x, y, nc, w))
+    raises(ValueError, lambda: Quaternion(w, x, nc, z))
 
 
 def test_quaternion_complex_real_addition():
@@ -28,16 +30,16 @@ def test_quaternion_complex_real_addition():
     # This symbol is not complex:
     c = symbols("c", commutative=False)
 
-    q = Quaternion(x, y, z, w)
-    assert a + q == Quaternion(x + re(a), y + im(a), z, w)
-    assert 1 + q == Quaternion(1 + x, y, z, w)
-    assert I + q == Quaternion(x, 1 + y, z, w)
-    assert b + q == Quaternion(x + b, y, z, w)
+    q = Quaternion(w, x, y, z)
+    assert a + q == Quaternion(w + re(a), x + im(a), y, z)
+    assert 1 + q == Quaternion(1 + w, x, y, z)
+    assert I + q == Quaternion(w, 1 + x, y, z)
+    assert b + q == Quaternion(w + b, x, y, z)
     raises(ValueError, lambda: c + q)
     raises(ValueError, lambda: q * c)
     raises(ValueError, lambda: c * q)
 
-    assert -q == Quaternion(-x, -y, -z, -w)
+    assert -q == Quaternion(-w, -x, -y, -z)
 
     q1 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
     q2 = Quaternion(1, 4, 7, 8)
@@ -56,20 +58,20 @@ def test_quaternion_complex_real_addition():
 
 
 def test_quaternion_functions():
-    q = Quaternion(x, y, z, w)
+    q = Quaternion(w, x, y, z)
     q1 = Quaternion(1, 2, 3, 4)
     q0 = Quaternion(0, 0, 0, 0)
 
-    assert conjugate(q) == Quaternion(x, -y, -z, -w)
+    assert conjugate(q) == Quaternion(w, -x, -y, -z)
     assert q.norm() == sqrt(w**2 + x**2 + y**2 + z**2)
-    assert q.normalize() == Quaternion(x, y, z, w) / sqrt(w**2 + x**2 + y**2 + z**2)
-    assert q.inverse() == Quaternion(x, -y, -z, -w) / (w**2 + x**2 + y**2 + z**2)
+    assert q.normalize() == Quaternion(w, x, y, z) / sqrt(w**2 + x**2 + y**2 + z**2)
+    assert q.inverse() == Quaternion(w, -x, -y, -z) / (w**2 + x**2 + y**2 + z**2)
     assert q.inverse() == q.pow(-1)
     raises(ValueError, lambda: q0.inverse())
-    assert q.pow(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
-    assert q**(2) == Quaternion(-w**2 + x**2 - y**2 - z**2, 2*x*y, 2*x*z, 2*w*x)
-    assert q1.pow(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
-    assert q1**(-2) == Quaternion(-S(7)/225, -S(1)/225, -S(1)/150, -S(2)/225)
+    assert q.pow(2) == Quaternion(w**2 - x**2 - y**2 - z**2, 2*w*x, 2*w*y, 2*w*z)
+    assert q**(2) == Quaternion(w**2 - x**2 - y**2 - z**2, 2*w*x, 2*w*y, 2*w*z)
+    assert q1.pow(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
+    assert q1**(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1.pow(-0.5) == NotImplemented
     raises(TypeError, lambda: q1**(-0.5))
 
@@ -95,7 +97,7 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
-    assert Quaternion.rotate_point((1, 1, 1), q1) == (S(1) / 5, 1, S(7) / 5)
+    assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
     n = Symbol('n')
     raises(TypeError, lambda: q1**n)
     n = Symbol('n', integer=True)
@@ -110,14 +112,14 @@ def test_quaternion_conversions():
                                    4 * sqrt(29)/29),
                                    2 * acos(sqrt(30)/30))
 
-    assert q1.to_rotation_matrix() == Matrix([[-S(2)/3, S(2)/15, S(11)/15],
-                                     [S(2)/3, -S(1)/3, S(2)/3],
-                                     [S(1)/3, S(14)/15, S(2)/15]])
+    assert q1.to_rotation_matrix() == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15)],
+                                              [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
+                                              [Rational(1, 3), Rational(14, 15), Rational(2, 15)]])
 
-    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[-S(2)/3, S(2)/15, S(11)/15, S(4)/5],
-                                                  [S(2)/3, -S(1)/3, S(2)/3, S(0)],
-                                                       [S(1)/3, S(14)/15, S(2)/15, -S(2)/5],
-                                                  [S(0), S(0), S(0), S(1)]])
+    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15), Rational(4, 5)],
+                                                       [Rational(2, 3), Rational(-1, 3), Rational(2, 3), S.Zero],
+                                                       [Rational(1, 3), Rational(14, 15), Rational(2, 15), Rational(-2, 5)],
+                                                       [S.Zero, S.Zero, S.Zero, S.One]])
 
     theta = symbols("theta", real=True)
     q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))
@@ -146,11 +148,11 @@ def test_quaternion_rotation_iss1593():
     https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
     for the correct definition
     """
-    q = Quaternion(cos(x/2), sin(x/2), 0, 0)
+    q = Quaternion(cos(phi/2), sin(phi/2), 0, 0)
     assert(trigsimp(q.to_rotation_matrix()) == Matrix([
-                [1,      0,      0],
-                [0, cos(x), -sin(x)],
-                [0, sin(x), cos(x)]]))
+                [1,        0,         0],
+                [0, cos(phi), -sin(phi)],
+                [0, sin(phi),  cos(phi)]]))
 
 
 def test_quaternion_multiplication():

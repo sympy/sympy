@@ -32,6 +32,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
+# Enable warnings for all bad cross references. These are turned into errors
+# with the -W flag in the Makefile.
+nitpicky = True
+
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
@@ -39,6 +43,14 @@ autodoc_inherit_docstrings = False
 # As explained in the link using latest.js will get the latest version even
 # though it says 2.7.5.
 mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML-full'
+
+# See https://www.sympy.org/sphinx-math-dollar/
+mathjax_config = {
+    'tex2jax': {
+        'inlineMath': [ ["\\(","\\)"] ],
+        'displayMath': [["\\[","\\]"] ],
+    },
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

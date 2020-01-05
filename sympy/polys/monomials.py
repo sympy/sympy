@@ -118,10 +118,10 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         if min_degree > max_degree:
             return
         if not variables or max_degree == 0:
-            yield S(1)
+            yield S.One
             return
         # Force to list in case of passed tuple or other incompatible collection
-        variables = list(variables) + [S(1)]
+        variables = list(variables) + [S.One]
         if all(variable.is_commutative for variable in variables):
             monomials_list_comm = []
             for item in combinations_with_replacement(variables, max_degree):

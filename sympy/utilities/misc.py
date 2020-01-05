@@ -436,8 +436,9 @@ def translate(s, a, b=None, c=None):
 
     mr = {}
     if a is None:
-        assert c is None
-        if not b:
+        if c is not None:
+            raise ValueError('c should be None when a=None is passed, instead got %s' % c)
+        if b is None:
             return s
         c = b
         a = b = ''
@@ -453,8 +454,8 @@ def translate(s, a, b=None, c=None):
                 a, b = [''.join(i) for i in list(zip(*short.items()))]
             else:
                 a = b = ''
-        else:
-            assert len(a) == len(b)
+        elif len(a) != len(b):
+            raise ValueError('oldchars and newchars have different lengths')
     if PY3:
         if c:
             s = s.translate(maketrans('', '', c))

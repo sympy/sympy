@@ -635,7 +635,7 @@ def gf_sub_mul(f, g, h, p, K):
 
 def gf_expand(F, p, K):
     """
-    Expand results of :func:`factor` in ``GF(p)[x]``.
+    Expand results of :func:`~.factor` in ``GF(p)[x]``.
 
     Examples
     ========

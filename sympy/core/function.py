@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 from __future__ import print_function, division
 
 from .add import Add
-from .assumptions import ManagedProperties, _assume_defined
+from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
@@ -46,7 +46,7 @@ from .sympify import sympify
 
 from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.core.containers import Tuple, Dict
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -237,9 +237,9 @@ class FunctionClass(ManagedProperties):
         corresponding set will be returned:
 
         >>> Function('f', nargs=1).nargs
-        {1}
+        FiniteSet(1)
         >>> Function('f', nargs=(2, 1)).nargs
-        {1, 2}
+        FiniteSet(1, 2)
 
         The undefined function, after application, also has the nargs
         attribute; the actual number of arguments is always available by
@@ -276,7 +276,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         from sympy.sets.sets import FiniteSet
 
         args = list(map(sympify, args))
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
         # WildFunction (and anything else like it) may have nargs defined
         # and we throw that value away here
         options.pop('nargs', None)
@@ -334,7 +334,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
             def eval(cls, arg):
                 if arg is S.NaN:
                     return S.NaN
-                if arg is S.Zero: return S.Zero
+                if arg.is_zero: return S.Zero
                 if arg.is_positive: return S.One
                 if arg.is_negative: return S.NegativeOne
                 if isinstance(arg, Mul):
@@ -410,7 +410,7 @@ class Function(Application, Expr):
     ...     @classmethod
     ...     def eval(cls, x):
     ...         if x.is_Number:
-    ...             if x is S.Zero:
+    ...             if x.is_zero:
     ...                 return S.One
     ...             elif x is S.Infinity:
     ...                 return S.Zero
@@ -469,7 +469,7 @@ class Function(Application, Expr):
                 'plural': 's'*(min(cls.nargs) != 1),
                 'given': n})
 
-        evaluate = options.get('evaluate', global_evaluate[0])
+        evaluate = options.get('evaluate', global_parameters.evaluate)
         result = super(Function, cls).__new__(cls, *args, **options)
         if evaluate and isinstance(result, cls) and result.args:
             pr2 = min(cls._should_evalf(a) for a in result.args)
@@ -529,16 +529,6 @@ class Function(Application, Expr):
             i = 0 if isinstance(cls.nargs, Naturals0) else 10000
 
         return 4, i, name
-
-    @property
-    def is_commutative(self):
-        """
-        Returns whether the function is commutative.
-        """
-        if all(getattr(t, 'is_commutative') for t in self.args):
-            return True
-        else:
-            return False
 
     def _eval_evalf(self, prec):
 
@@ -609,7 +599,7 @@ class Function(Application, Expr):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)
@@ -620,9 +610,6 @@ class Function(Application, Expr):
 
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
-
-    def _eval_is_complex(self):
-        return fuzzy_and(a.is_complex for a in self.args)
 
     def as_base_exp(self):
         """
@@ -875,6 +862,20 @@ class AppliedUndef(Function):
         return True
 
 
+class UndefSageHelper(object):
+    """
+    Helper to facilitate Sage conversion.
+    """
+    def __get__(self, ins, typ):
+        import sage.all as sage
+        if ins is None:
+            return lambda: sage.function(typ.__name__)
+        else:
+            args = [arg._sage_() for arg in ins.args]
+            return lambda : sage.function(ins.__class__.__name__)(*args)
+
+_undef_sage_helper = UndefSageHelper()
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -909,6 +910,7 @@ class UndefinedFunction(FunctionClass):
         __dict__['__module__'] = None
         obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         obj.name = name
+        obj._sage_ = _undef_sage_helper
         return obj
 
     def __instancecheck__(cls, instance):
@@ -960,7 +962,7 @@ class WildFunction(Function, AtomicExpr):
 
     >>> F = WildFunction('F', nargs=2)
     >>> F.nargs
-    {2}
+    FiniteSet(2)
     >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
@@ -971,7 +973,7 @@ class WildFunction(Function, AtomicExpr):
 
     >>> F = WildFunction('F', nargs=(1, 2))
     >>> F.nargs
-    {1, 2}
+    FiniteSet(1, 2)
     >>> f(x).match(F)
     {F_: f(x)}
     >>> f(x, y).match(F)
@@ -1213,7 +1215,7 @@ class Derivative(Expr):
         Derivative(f(x), x)*Derivative(f(f(x)), f(x))
 
         Such an expression will present the same ambiguities as arise
-        when dealing with any other product, like `2*x`, so `_diff_wrt`
+        when dealing with any other product, like ``2*x``, so ``_diff_wrt``
         is False:
 
         >>> Derivative(f(f(x)), x)._diff_wrt
@@ -1225,7 +1227,7 @@ class Derivative(Expr):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer, MatrixExpr
-        from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.tensor.array import Array, NDimArray
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
@@ -2427,7 +2429,7 @@ def diff(f, *symbols, **kwargs):
     ========
 
     Derivative
-    sympy.geometry.util.idiff: computes the derivative implicitly
+    idiff: computes the derivative implicitly
 
     """
     if hasattr(f, 'diff'):
@@ -2753,7 +2755,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ========
 
     expand_log, expand_mul, expand_multinomial, expand_complex, expand_trig,
-    expand_power_base, expand_power_exp, expand_func, hyperexpand
+    expand_power_base, expand_power_exp, expand_func, sympy.simplify.hyperexpand.hyperexpand
 
     """
     # don't modify this; modify the Expr.expand method
@@ -2892,7 +2894,8 @@ def expand_complex(expr, deep=True):
 
     See Also
     ========
-    Expr.as_real_imag
+
+    sympy.core.expr.Expr.as_real_imag
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
@@ -3201,8 +3204,13 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
+    from sympy import MatrixBase
 
     kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+
+    if isinstance(expr, MatrixBase):
+        return expr.applyfunc(lambda e: nfloat(e, **kw))
+
     # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
@@ -3233,6 +3241,10 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         return rv
     elif rv.is_Atom:
         return rv
+    elif rv.is_Relational:
+        args_nfloat = (nfloat(arg, **kw) for arg in rv.args)
+        return rv.func(*args_nfloat)
+
 
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have

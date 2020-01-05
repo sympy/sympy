@@ -12,6 +12,8 @@ from sympy.combinatorics import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.core.compatibility import string_types
+from sympy.utilities.magic import pollute
+from sympy import symbols
 
 from itertools import product
 
@@ -383,7 +385,7 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        if self.order() == S.Infinity:
+        if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
         if self._perm_isomorphism:

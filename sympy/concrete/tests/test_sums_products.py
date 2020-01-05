@@ -211,7 +211,7 @@ def test_arithmetic_sums():
     assert summation(cos(n), (n, -2, 1)) == cos(-2) + cos(-1) + cos(0) + cos(1)
     assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
     assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
-    assert summation(k, (k, 0, oo)) == oo
+    assert summation(k, (k, 0, oo)) is oo
     assert summation(k, (k, Range(1, 11))) == 55
 
 
@@ -230,9 +230,9 @@ def test_polynomial_sums():
 def test_geometric_sums():
     assert summation(pi**n, (n, 0, b)) == (1 - pi**(b + 1)) / (1 - pi)
     assert summation(2 * 3**n, (n, 0, b)) == 3**(b + 1) - 1
-    assert summation(Rational(1, 2)**n, (n, 1, oo)) == 1
+    assert summation(S.Half**n, (n, 1, oo)) == 1
     assert summation(2**n, (n, 0, b)) == 2**(b + 1) - 1
-    assert summation(2**n, (n, 1, oo)) == oo
+    assert summation(2**n, (n, 1, oo)) is oo
     assert summation(2**(-n), (n, 1, oo)) == 1
     assert summation(3**(-n), (n, 4, oo)) == Rational(1, 54)
     assert summation(2**(-4*n + 3), (n, 1, oo)) == Rational(8, 15)
@@ -242,13 +242,13 @@ def test_geometric_sums():
     assert summation(x**n, (n, 0, oo)) == \
         Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
 
-    assert summation(-2**n, (n, 0, oo)) == -oo
+    assert summation(-2**n, (n, 0, oo)) is -oo
     assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
 
     # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
-    assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
-    assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S(1)/2
+    assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - Rational(4, 3)
+    assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S.Half
     assert summation(y**x, (x, a, b)) == \
         Piecewise((-a + b + 1, Eq(y, 1)), ((y**a - y**(b + 1))/(-y + 1), True))
     assert summation((-2)**(y*x + 2), (x, 0, n)) == \
@@ -256,7 +256,7 @@ def test_geometric_sums():
                     ((-(-2)**(y*(n + 1)) + 1)/(-(-2)**y + 1), True))
 
     # issue 8251:
-    assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) == oo
+    assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) is oo
 
     #issue 9908:
     assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
@@ -274,16 +274,16 @@ def test_geometric_sums():
     assert result == 99999
     assert result.is_Float
 
-    result = Sum(Rational(1, 2)**n, (n, 1, oo)).doit()
+    result = Sum(S.Half**n, (n, 1, oo)).doit()
     assert result == 1
     assert not result.is_Float
 
     result = Sum(Rational(3, 5)**n, (n, 1, oo)).doit()
-    assert result == S(3)/2
+    assert result == Rational(3, 2)
     assert not result.is_Float
 
-    assert Sum(1.0**n, (n, 1, oo)).doit() == oo
-    assert Sum(2.43**n, (n, 1, oo)).doit() == oo
+    assert Sum(1.0**n, (n, 1, oo)).doit() is oo
+    assert Sum(2.43**n, (n, 1, oo)).doit() is oo
 
     # Issue 13979
     i, k, q = symbols('i k q', integer=True)
@@ -303,7 +303,7 @@ def test_harmonic_sums():
 
 
 def test_composite_sums():
-    f = Rational(1, 2)*(7 - 6*n + Rational(1, 7)*n**3)
+    f = S.Half*(7 - 6*n + Rational(1, 7)*n**3)
     s = summation(f, (n, a, b))
     assert not isinstance(s, Sum)
     A = 0
@@ -321,9 +321,9 @@ def test_hypergeometric_sums():
 
 def test_other_sums():
     f = m**2 + m*exp(m)
-    g = 3*exp(S(3)/2)/2 + exp(S(1)/2)/2 - exp(-S(1)/2)/2 - 3*exp(-S(3)/2)/2 + 5
+    g = 3*exp(Rational(3, 2))/2 + exp(S.Half)/2 - exp(Rational(-1, 2))/2 - 3*exp(Rational(-3, 2))/2 + 5
 
-    assert summation(f, (m, -S(3)/2, S(3)/2)) == g
+    assert summation(f, (m, Rational(-3, 2), Rational(3, 2))) == g
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
 
 fac = factorial
@@ -402,9 +402,9 @@ def test_euler_maclaurin():
     # Not exact
     assert Sum(k**6, (k, a, b)).euler_maclaurin(0, 2)[1] != 0
     # Numerical test
-    for m, n in [(2, 4), (2, 20), (10, 20), (18, 20)]:
+    for mi, ni in [(2, 4), (2, 20), (10, 20), (18, 20)]:
         A = Sum(1/k**3, (k, 1, oo))
-        s, e = A.euler_maclaurin(m, n)
+        s, e = A.euler_maclaurin(mi, ni)
         assert abs((s - zeta(3)).evalf()) < e.evalf()
 
     raises(ValueError, lambda: Sum(1, (x, 0, 1), (k, 0, 1)).euler_maclaurin())
@@ -490,7 +490,7 @@ def test_wallis_product():
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2 - 1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
-    R = pi*gamma(b + 1)**2/(2*gamma(b + S(1)/2)*gamma(b + S(3)/2))
+    R = pi*gamma(b + 1)**2/(2*gamma(b + S.Half)*gamma(b + Rational(3, 2)))
     assert simplify(A.doit()) == R
     assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
@@ -581,7 +581,7 @@ def test_Sum_doit():
     assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
-           3 * Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
+           3 * Piecewise((1, And(1 <= k, k <= 3)), (0, True))
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
            f(1) + f(2) + f(3)
     assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
@@ -589,7 +589,7 @@ def test_Sum_doit():
 
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)
-    pw = Piecewise((1, And(S(1) <= n, n <= nmax)), (0, True))
+    pw = Piecewise((1, And(1 <= n, n <= nmax)), (0, True))
     assert Sum(pw, (n, 1, nmax)).doit() == Sum(Piecewise((1, nmax >= n),
                     (0, True)), (n, 1, nmax))
 
@@ -644,7 +644,7 @@ def test_hypersum():
     assert simplify(summation((-1)**n*x**(2*n + 1) /
         factorial(2*n + 1), (n, 3, oo))) == -x + sin(x) + x**3/6 - x**5/120
 
-    assert summation(1/(n + 2)**3, (n, 1, oo)) == -S(9)/8 + zeta(3)
+    assert summation(1/(n + 2)**3, (n, 1, oo)) == Rational(-9, 8) + zeta(3)
     assert summation(1/n**4, (n, 1, oo)) == pi**4/90
 
     s = summation(x**n*n, (n, -oo, 0))
@@ -751,8 +751,8 @@ def test_noncommutativity_honoured():
 
 
 def test_issue_4171():
-    assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
-    assert summation(2*k + 1, (k, 0, oo)) == oo
+    assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) is oo
+    assert summation(2*k + 1, (k, 0, oo)) is oo
 
 
 def test_issue_6273():
@@ -937,7 +937,7 @@ def test_issue_2787():
 
 
 def test_issue_4668():
-    assert summation(1/n, (n, 2, oo)) == oo
+    assert summation(1/n, (n, 2, oo)) is oo
 
 
 def test_matrix_sum():
@@ -1003,7 +1003,7 @@ def test_is_convergent():
 
     # p-series test --
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
-    assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(1/n**Rational(6, 5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
     assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
 
@@ -1048,7 +1048,7 @@ def test_is_convergent():
     assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
     assert Sum(eq, (x, 1, 2)).is_convergent() is S.true
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
-    assert Sum(1/(x**(S(1)/2)), (x, 1, oo)).is_convergent() is S.false
+    assert Sum(1/(x**S.Half), (x, 1, oo)).is_convergent() is S.false
 
 
 def test_is_absolutely_convergent():
@@ -1312,12 +1312,12 @@ def test_issue_8016():
 
 @XFAIL
 def test_issue_14313():
-    assert Sum((S(1)/2)**floor(n/2), (n, 1, oo)).is_convergent()
+    assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
 
 @XFAIL
 def test_issue_14871():
-    assert Sum((S(1)/10)**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
+    assert Sum((Rational(1, 10))**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
 
 
 def test_issue_17165():

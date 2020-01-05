@@ -1,5 +1,6 @@
-from multipledispatch import dispatch
-from multipledispatch.utils import raises
+from sympy.multipledispatch import dispatch
+from sympy.multipledispatch.conflict import AmbiguityWarning
+from sympy.utilities.pytest import raises, XFAIL, warns
 from functools import partial
 
 test_namespace = dict()
@@ -10,15 +11,15 @@ dispatch = partial(dispatch, namespace=test_namespace)
 
 def test_singledispatch():
     @dispatch(int)
-    def f(x):
+    def f(x): # noqa:F811
         return x + 1
 
     @dispatch(int)
-    def g(x):
+    def g(x): # noqa:F811
         return x + 2
 
     @dispatch(float)
-    def f(x):
+    def f(x): # noqa:F811
         return x - 1
 
     assert f(1) == 2
@@ -30,11 +31,11 @@ def test_singledispatch():
 
 def test_multipledispatch(benchmark):
     @dispatch(int, int)
-    def f(x, y):
+    def f(x, y): # noqa:F811
         return x + y
 
     @dispatch(float, float)
-    def f(x, y):
+    def f(x, y): # noqa:F811
         return x - y
 
     assert f(1, 2) == 3
@@ -50,11 +51,11 @@ class E(C): pass
 
 def test_inheritance():
     @dispatch(A)
-    def f(x):
+    def f(x): # noqa:F811
         return 'a'
 
     @dispatch(B)
-    def f(x):
+    def f(x): # noqa:F811
         return 'b'
 
     assert f(A()) == 'a'
@@ -64,11 +65,11 @@ def test_inheritance():
 
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
-    def f(x, y):
+    def f(x, y): # noqa:F811
         return type(x), type(y)
 
     @dispatch(A, B)
-    def f(x, y):
+    def f(x, y): # noqa:F811
         return 0
 
     assert f(A(), A()) == (A, A)
@@ -80,11 +81,11 @@ def test_inheritance_and_multiple_dispatch():
 
 def test_competing_solutions():
     @dispatch(A)
-    def h(x):
+    def h(x): # noqa:F811
         return 1
 
     @dispatch(C)
-    def h(x):
+    def h(x): # noqa:F811
         return 2
 
     assert h(D()) == 2
@@ -92,11 +93,11 @@ def test_competing_solutions():
 
 def test_competing_multiple():
     @dispatch(A, B)
-    def h(x, y):
+    def h(x, y): # noqa:F811
         return 1
 
     @dispatch(C, B)
-    def h(x, y):
+    def h(x, y): # noqa:F811
         return 2
 
     assert h(D(), B()) == 2
@@ -104,12 +105,14 @@ def test_competing_multiple():
 
 def test_competing_ambiguous():
     @dispatch(A, C)
-    def f(x, y):
+    def f(x, y): # noqa:F811
         return 2
 
-    @dispatch(C, A)
-    def f(x, y):
-        return 2
+    with warns(AmbiguityWarning):
+        @dispatch(C, A)
+        def f(x, y): # noqa:F811
+            return 2
+
 
     assert f(A(), C()) == f(C(), A()) == 2
     # assert raises(Warning, lambda : f(C(), C()))
@@ -117,13 +120,13 @@ def test_competing_ambiguous():
 
 def test_caching_correct_behavior():
     @dispatch(A)
-    def f(x):
+    def f(x): # noqa:F811
         return 1
 
     assert f(C()) == 1
 
     @dispatch(C)
-    def f(x):
+    def f(x): # noqa:F811
         return 2
 
     assert f(C()) == 2
@@ -131,7 +134,7 @@ def test_caching_correct_behavior():
 
 def test_union_types():
     @dispatch((A, C))
-    def f(x):
+    def f(x): # noqa:F811
         return 1
 
     assert f(A()) == 1
@@ -159,7 +162,7 @@ Fails
 def test_dispatch_on_dispatch():
     @dispatch(A)
     @dispatch(C)
-    def q(x):
+    def q(x): # noqa:F811
         return 1
 
     assert q(A()) == 1
@@ -170,15 +173,15 @@ def test_dispatch_on_dispatch():
 def test_methods():
     class Foo(object):
         @dispatch(float)
-        def f(self, x):
+        def f(self, x): # noqa:F811
             return x - 1
 
         @dispatch(int)
-        def f(self, x):
+        def f(self, x): # noqa:F811
             return x + 1
 
         @dispatch(int)
-        def g(self, x):
+        def g(self, x): # noqa:F811
             return x + 3
 
 
@@ -191,11 +194,11 @@ def test_methods():
 def test_methods_multiple_dispatch():
     class Foo(object):
         @dispatch(A, A)
-        def f(x, y):
+        def f(x, y): # noqa:F811
             return 1
 
         @dispatch(A, C)
-        def f(x, y):
+        def f(x, y): # noqa:F811
             return 2
 
 

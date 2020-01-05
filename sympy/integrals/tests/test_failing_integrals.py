@@ -1,8 +1,8 @@
 # A collection of failing integrals from the issues.
 
 from sympy import (
-    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, I
+    integrate, I, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
+    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
@@ -34,14 +34,14 @@ def test_issue_4511():
     # If current answer is simplified, 1 - cos(x) + x is obtained.
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
-            -2/(tan((S(1)/2)*x)**2 + 1) + x]
+            -2/(tan((S.Half)*x)**2 + 1) + x]
 
 
 @XFAIL
 def test_integrate_DiracDelta_fails():
     # issue 6427
     assert integrate(integrate(integrate(
-        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
+        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S.Half
 
 
 @XFAIL
@@ -167,7 +167,7 @@ def test_issue_14716():
     # Mathematica can not solve it either, but
     # integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1)).transform(x, y - 5).doit()
     # works
-    # assert i == -log(S(11)/2)/pi - Si(11*pi/2)/pi + Si(6*pi)/pi
+    # assert i == -log(Rational(11, 2))/pi - Si(pi*Rational(11, 2))/pi + Si(6*pi)/pi
 
 
 @XFAIL
@@ -217,7 +217,7 @@ def test_issue_11845b():
 
 @XFAIL
 def test_issue_11813():
-    assert not integrate((a - x)**(-S(1)/2)*x, (x, 0, a)).has(Integral)
+    assert not integrate((a - x)**Rational(-1, 2)*x, (x, 0, a)).has(Integral)
 
 
 @XFAIL

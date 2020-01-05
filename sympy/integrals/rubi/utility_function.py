@@ -1866,7 +1866,7 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, n, p = tuple([match[i] for i in keys])
             if IntegerQ(m/n):
-                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) == S.NaN:
+                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) is S.NaN:
                     return expr
                 else:
                     return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
@@ -1880,7 +1880,7 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, d, n = tuple([match[i] for i in keys])
             if IntegerQ(m) and ZeroQ(b*c - a*d):
-                if u*b**m/d**m*(c + d*x)**(m + n) == S.NaN:
+                if u*b**m/d**m*(c + d*x)**(m + n) is S.NaN:
                     return expr
                 else:
                     return u*b**m/d**m*(c + d*x)**(m + n)

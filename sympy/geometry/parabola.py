@@ -183,7 +183,7 @@ class Parabola(GeometrySet):
         The eccentricity for every Parabola is 1 by definition.
 
         """
-        return S(1)
+        return S.One
 
     def equation(self, x='x', y='y'):
         """The equation of the parabola.

@@ -22,7 +22,7 @@ def test_DiracDelta():
     assert DiracDelta(i) == 0
     assert DiracDelta(j) == 0
     assert DiracDelta(k) == 0
-    assert DiracDelta(nan) == nan
+    assert DiracDelta(nan) is nan
     assert DiracDelta(0).func is DiracDelta
     assert DiracDelta(x).func is DiracDelta
     # FIXME: this is generally undefined @ x=0
@@ -83,10 +83,10 @@ def test_heaviside():
     assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
-    assert Heaviside(nan) == nan
+    assert Heaviside(nan) is nan
 
     assert Heaviside(0, x) == x
-    assert Heaviside(0, nan) == nan
+    assert Heaviside(0, nan) is nan
     assert Heaviside(x, None) == Heaviside(x)
     assert Heaviside(0, None) == Heaviside(0)
 
@@ -161,5 +161,5 @@ def test_issue_15923():
         Piecewise((0, x <= 0), (1, True)))
     assert Heaviside(x).rewrite(Piecewise, H0=1) == (
         Piecewise((0, x < 0), (1, True)))
-    assert Heaviside(x).rewrite(Piecewise, H0=S(1)/2) == (
-        Piecewise((0, x < 0), (S(1)/2, Eq(x, 0)), (1, x > 0)))
+    assert Heaviside(x).rewrite(Piecewise, H0=S.Half) == (
+        Piecewise((0, x < 0), (S.Half, Eq(x, 0)), (1, x > 0)))

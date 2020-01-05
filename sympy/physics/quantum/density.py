@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
+from sympy import Tuple, Add, Mul, Matrix, log, expand, S
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -304,7 +304,7 @@ def fidelity(state1, state2):
     state1 = represent(state1) if isinstance(state1, Density) else state1
     state2 = represent(state2) if isinstance(state2, Density) else state2
 
-    if (not isinstance(state1, Matrix) or not isinstance(state2, Matrix)):
+    if not isinstance(state1, Matrix) or not isinstance(state2, Matrix):
         raise ValueError("state1 and state2 must be of type Density or Matrix "
                          "received type=%s for state1 and type=%s for state2" %
                          (type(state1), type(state2)))
@@ -313,5 +313,6 @@ def fidelity(state1, state2):
         raise ValueError("The dimensions of both args should be equal and the "
                          "matrix obtained should be a square matrix")
 
-    sqrt_state1 = state1**Rational(1, 2)
-    return Tr((sqrt_state1*state2*sqrt_state1)**Rational(1, 2)).doit()
+    sqrt_state1 = state1**S.Half
+    return Tr((sqrt_state1 * state2 * sqrt_state1)**S.Half).doit()
+

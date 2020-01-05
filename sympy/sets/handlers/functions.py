@@ -1,12 +1,12 @@
 from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
 from sympy.core import Expr, Add
 from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
-from sympy.core.mod import Mod
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
                         EmptySet, Intersection, Range)
 from sympy.sets.fancysets import Integers, Naturals, Reals
+from sympy.functions.elementary.exponential import match_real_imag
 
 
 _x, _y = symbols("x y")
@@ -15,15 +15,15 @@ FunctionUnion = (FunctionClass, Lambda)
 
 
 @dispatch(FunctionClass, Set)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return None
 
 @dispatch(FunctionUnion, FiniteSet)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return FiniteSet(*map(f, x))
 
 @dispatch(Lambda, Interval)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
     from sympy.core.function import diff, Lambda
@@ -112,7 +112,7 @@ def _set_function(f, x):
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
 @dispatch(FunctionClass, Interval)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
@@ -120,11 +120,11 @@ def _set_function(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Union)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return Union(*(imageset(f, arg) for arg in x.args))
 
 @dispatch(FunctionUnion, Intersection)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
@@ -132,16 +132,16 @@ def _set_function(f, x):
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, EmptySet)
-def _set_function(f, x):
+@dispatch(FunctionUnion, type(EmptySet))
+def _set_function(f, x): # noqa:F811
     return x
 
 @dispatch(FunctionUnion, Set)
-def _set_function(f, x):
+def _set_function(f, x): # noqa:F811
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @dispatch(FunctionUnion, Range)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     from sympy.core.function import expand_mul
     if not self:
         return S.EmptySet
@@ -166,7 +166,7 @@ def _set_function(f, self):
         return imageset(x, F, Range(self.size))
 
 @dispatch(FunctionUnion, Integers)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
         return
@@ -189,28 +189,34 @@ def _set_function(f, self):
     match = expr.match(a*n + b)
     if match and match[a]:
         # canonical shift
-        b = match[b]
-        if abs(match[a]) == 1:
+        a, b = match[a], match[b]
+        if a in [1, -1]:
+            # drop integer addends in b
             nonint = []
             for bi in Add.make_args(b):
                 if not bi.is_integer:
                     nonint.append(bi)
             b = Add(*nonint)
-        if b.is_number and match[a].is_real:
-            mod = b % match[a]
-            reps = dict([(m, m.args[0]) for m in mod.atoms(Mod)
-                if not m.args[0].is_real])
-            mod = mod.xreplace(reps)
-            expr = match[a]*n + mod
-        else:
-            expr = match[a]*n + b
+        if b.is_number and a.is_real:
+            # avoid Mod for complex numbers, #11391
+            br, bi = match_real_imag(b)
+            if br and br.is_comparable and a.is_comparable:
+                br %= a
+                b = br + S.ImaginaryUnit*bi
+        elif b.is_number and a.is_imaginary:
+            br, bi = match_real_imag(b)
+            ai = a/S.ImaginaryUnit
+            if bi and bi.is_comparable and ai.is_comparable:
+                bi %= ai
+                b = br + S.ImaginaryUnit*bi
+        expr = a*n + b
 
     if expr != f.expr:
         return ImageSet(Lambda(n, expr), S.Integers)
 
 
 @dispatch(FunctionUnion, Naturals)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
         return
@@ -237,7 +243,7 @@ def _set_function(f, self):
 
 
 @dispatch(FunctionUnion, Reals)
-def _set_function(f, self):
+def _set_function(f, self): # noqa:F811
     expr = f.expr
     if not isinstance(expr, Expr):
         return

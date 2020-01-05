@@ -1,7 +1,5 @@
-from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
+from sympy import sqrt, root, Symbol, sqrtdenest, Integral, cos, Rational, I
 from sympy.simplify.sqrtdenest import _subsets as subsets
-from sympy.simplify.sqrtdenest import _sqrt_match
-from sympy.core.expr import unchanged
 from sympy.utilities.pytest import slow
 
 r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10,
@@ -15,9 +13,9 @@ def test_sqrtdenest():
         sqrt(r2): sqrt(r2),
         sqrt(5 + r7): sqrt(5 + r7),
         sqrt(3 + sqrt(5 + 2*r7)):
-         3*r2*(5 + 2*r7)**(S(1)/4)/(2*sqrt(6 + 3*r7)) +
-         r2*sqrt(6 + 3*r7)/(2*(5 + 2*r7)**(S(1)/4)),
-        sqrt(3 + 2*r3): 3**(S(3)/4)*(r6/2 + 3*r2/2)/3}
+         3*r2*(5 + 2*r7)**Rational(1, 4)/(2*sqrt(6 + 3*r7)) +
+         r2*sqrt(6 + 3*r7)/(2*(5 + 2*r7)**Rational(1, 4)),
+        sqrt(3 + 2*r3): 3**Rational(3, 4)*(r6/2 + 3*r2/2)/3}
     for i in d:
         assert sqrtdenest(i) == d[i]
 
@@ -73,7 +71,7 @@ def test_sqrtdenest_rec():
     assert sqrtdenest(sqrt(-8*r2 - 2*r5 + 18)) == -r10 + 1 + r2 + r5
     assert sqrtdenest(sqrt(8*r2 + 2*r5 - 18)) == \
         sqrt(-1)*(-r10 + 1 + r2 + r5)
-    assert sqrtdenest(sqrt(8*r2/3 + 14*r5/3 + S(154)/9)) == \
+    assert sqrtdenest(sqrt(8*r2/3 + 14*r5/3 + Rational(154, 9))) == \
         -r10/3 + r2 + r5 + 3
     assert sqrtdenest(sqrt(sqrt(2*r6 + 5) + sqrt(2*r7 + 8))) == \
         sqrt(1 + r2 + r3 + r7)
@@ -183,11 +181,13 @@ def test_issue_5653():
         sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))
 
 def test_issue_12420():
-    I = S.ImaginaryUnit
-    assert _sqrt_match(4 + I) == []
     assert sqrtdenest((3 - sqrt(2)*sqrt(4 + 3*I) + 3*I)/2) == I
     e = 3 - sqrt(2)*sqrt(4 + I) + 3*I
     assert sqrtdenest(e) == e
 
 def test_sqrt_ratcomb():
     assert sqrtdenest(sqrt(1 + r3) + sqrt(3 + 3*r3) - sqrt(10 + 6*r3)) == 0
+
+def test_issue_18041():
+    e = -sqrt(-2 + 2*sqrt(3)*I)
+    assert sqrtdenest(e) == -1 - sqrt(3)*I

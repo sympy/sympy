@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Discrete Fourier Transform, Number Theoretic Transform,
 Walsh Hadamard Transform, Mobius Transform
@@ -322,12 +320,12 @@ ifwht.__doc__ = fwht.__doc__
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                    Möbius Transform for Subset Lattice                     #
+#                    Mobius Transform for Subset Lattice                     #
 #                                                                            #
 #----------------------------------------------------------------------------#
 
 def _mobius_transform(seq, sgn, subset):
-    r"""Utility function for performing Möbius Transform using
+    r"""Utility function for performing Mobius Transform using
     Yate's Dynamic Programming method"""
 
     if not iterable(seq):
@@ -366,7 +364,7 @@ def _mobius_transform(seq, sgn, subset):
 
 def mobius_transform(seq, subset=True):
     r"""
-    Performs the Möbius Transform for subset lattice with indices of
+    Performs the Mobius Transform for subset lattice with indices of
     sequence as bitmasks.
 
     The indices of each argument, considered as bit strings, correspond
@@ -380,9 +378,9 @@ def mobius_transform(seq, subset=True):
     ==========
 
     seq : iterable
-        The sequence on which Möbius Transform is to be applied.
+        The sequence on which Mobius Transform is to be applied.
     subset : bool
-        Specifies if Möbius Transform is applied by enumerating subsets
+        Specifies if Mobius Transform is applied by enumerating subsets
         or supersets of the given set.
 
     Examples

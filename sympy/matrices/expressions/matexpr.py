@@ -129,9 +129,9 @@ class MatrixExpr(Expr):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.Zero:
+        elif other == S.Zero:
             return Identity(self.rows)
-        elif other is S.One:
+        elif other == S.One:
             return self
         return MatPow(self, other).doit(deep=False)
 
@@ -173,7 +173,7 @@ class MatrixExpr(Expr):
 
     def as_real_imag(self):
         from sympy import I
-        real = (S(1)/2) * (self + self._eval_conjugate())
+        real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*I)
         return (real, im)
 
@@ -627,6 +627,8 @@ def get_postprocessor(cls):
                 # manipulate them like non-commutative scalars.
                 return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
 
+        if mat_class == MatAdd:
+            return mat_class(*matrices).doit(deep=False)
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
 

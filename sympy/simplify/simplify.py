@@ -6,12 +6,14 @@ from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, range, as_int
-from sympy.core.evaluate import global_evaluate
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
+from sympy.core.parameters import global_parameters
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, \
+    nfloat, expand_mul, expand_multinomial
 from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold, re
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
@@ -95,7 +97,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) is None
     True
 
     """
@@ -376,12 +378,12 @@ def signsimp(expr, evaluate=None):
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
     expr = sympify(expr)
-    if not isinstance(expr, Expr) or expr.is_Atom:
+    if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
     e = sub_post(sub_pre(expr))
-    if not isinstance(e, Expr) or e.is_Atom:
+    if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
         return e.func(*[signsimp(a, evaluate) for a in e.args])
@@ -431,7 +433,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     single argument as an expression and return a number such that if
     expression ``a`` is more complex than expression ``b``, then
     ``measure(a) > measure(b)``.  The default measure function is
-    :func:`count_ops`, which returns the total number of operations in the
+    :func:`~.count_ops`, which returns the total number of operations in the
     expression.
 
     For example, if ``ratio=1``, ``simplify`` output can't be longer
@@ -549,7 +551,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         inverse=kwargs.get('inverse', inverse),
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
-    if isinstance(expr, Expr) and expr.is_zero and expr*0 is S.Zero:
+    if isinstance(expr, Expr) and expr.is_zero and expr*0 == S.Zero:
         return S.Zero
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
@@ -614,9 +616,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
 
-    # hyperexpand automatically only works on hypergeometric terms
-    expr = hyperexpand(expr)
-
     # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):
         # Fold into a single Piecewise
@@ -644,6 +643,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                     # As all expressions have been simplified above with the
                     # complete simplify, nothing more needs to be done here
                     return expr
+
+    # hyperexpand automatically only works on hypergeometric terms
+    # Do this after the Piecewise part to avoid recursive expansion
+    expr = hyperexpand(expr)
 
     if expr.has(KroneckerDelta):
         expr = kroneckersimp(expr)
@@ -1277,7 +1280,7 @@ def besselsimp(expr):
 
     def expander(fro):
         def repl(nu, z):
-            if (nu % 1) == S(1)/2:
+            if (nu % 1) == S.Half:
                 return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))
@@ -1959,3 +1962,157 @@ def nc_simplify(expr, deep=True):
     else:
         simp = simp.doit(inv_expand=False)
     return simp
+
+
+def dotprodsimp(expr, withsimp=False):
+    """Simplification for a sum of products targeted at the kind of blowup that
+    occurs during summation of products. Intended to reduce expression blowup
+    during matrix multiplication or other similar operations.
+
+    Parameters
+    ==========
+
+    withsimp : bool, optional
+        Specifies whether a flag should be returned along with the expression
+        to indicate roughly whether simplification was successful. It is used
+        in ``MatrixArithmetic._eval_pow_by_recursion`` to avoid attempting to
+        simplify an expression repetitively which does not simplify.
+    """
+
+    from sympy.core.operations import LatticeOp
+
+    def _count_ops_alg(expr):
+        """Optimized count algebraic operations with no recursion into
+        non-algebraic args that ``core.function.count_ops`` does.
+        """
+
+        ops  = 0
+        args = [expr]
+
+        while args:
+            a = args.pop()
+
+            if a.is_Rational:
+                if a is not S.One: # -1/3 = NEG + DIV
+                    ops += bool (a.p < 0) + bool (a.q != 1)
+
+            elif a.is_Mul:
+                if _coeff_isneg(a):
+                    ops += 1
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+
+                n, d = fraction(a)
+
+                if n.is_Integer:
+                    ops += 1 + bool (n < 0)
+                    args.append(d) # won't be -Mul but could be Add
+
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                    ops += 1
+                    args.append(n) # could be -Mul
+
+                else:
+                    ops += len(a.args) - 1
+                    args.extend(a.args)
+
+            elif a.is_Add:
+                laargs = len(a.args)
+                negs   = 0
+
+                for ai in a.args:
+                    if _coeff_isneg(ai):
+                        negs += 1
+                        ai    = -ai
+                    args.append(ai)
+
+                ops += laargs - (negs != laargs) # -x - y = NEG + SUB
+
+            elif a.is_Pow:
+                ops += 1
+                args.append(a.base)
+
+            elif isinstance(a, LatticeOp):
+                ops += len(a.args) - 1
+                args.extend(a.args)
+
+        return ops
+
+    def _nonalg_subs_dummies(expr, dummies):
+        """Substitute dummy variables for non-algebraic expressions to avoid
+        evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
+        """
+
+        if not expr.args:
+            return expr
+
+        if expr.is_Add or expr.is_Mul or expr.is_Pow:
+            args = None
+
+            for i, a in enumerate(expr.args):
+                c = _nonalg_subs_dummies(a, dummies)
+
+                if c is a:
+                    continue
+
+                if args is None:
+                    args = list(expr.args)
+
+                args[i] = c
+
+            if args is None:
+                return expr
+
+            return expr.func(*args)
+
+        return dummies.setdefault(expr, Dummy())
+
+    simplified = False # doesn't really mean simplified, rather "can simplify again"
+
+    if isinstance(expr, Expr) and not expr.is_Relational:
+        # XXX: Should really count ops of initial expression and compare to
+        # expand_mul to see if simplification was done but that can be good bit
+        # slower for large initial expressions and this seems to work.
+        expr     = expand_mul(expr) # this and the following expand should not be combined
+        exprops  = _count_ops_alg(expr)
+        expr2    = expand_multinomial(expr)
+        expr2ops = _count_ops_alg(expr2)
+
+        if expr2ops < exprops:
+            expr       = expr2
+            exprops    = expr2ops
+            simplified = True
+
+        if exprops >= 6: # empirically tested cutoff for expensive simplification
+            dummies = {}
+            expr2   = _nonalg_subs_dummies(expr, dummies)
+
+            if expr2 is expr or _count_ops_alg(expr2) >= 6: # check again after substitution
+                expr3 = cancel(expr2)
+
+                if expr3 != expr2:
+                    expr       = expr3.subs([(d, e) for e, d in dummies.items()])
+                    simplified = True
+
+        # very special case: x/(x-1) - 1/(x-1) -> 1
+        elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
+                expr.args [1].is_Mul and expr.args [0].args [-1].is_Pow and
+                expr.args [1].args [-1].is_Pow and
+                expr.args [0].args [-1].exp is S.NegativeOne and
+                expr.args [1].args [-1].exp is S.NegativeOne):
+
+            expr2    = together (expr)
+            expr2ops = _count_ops_alg(expr2)
+
+            if expr2ops < exprops:
+                expr       = expr2
+                simplified = True
+
+        else:
+            simplified = True
+
+    return (expr, simplified) if withsimp else expr

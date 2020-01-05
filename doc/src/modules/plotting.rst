@@ -295,3 +295,8 @@ directly. However a polygon can be plotted through a loop as follows.
 
     In [8]: for i in range(len(t.sides)):
        ....:    p[i] = t.sides[i]
+
+Plotting with ASCII art
+-----------------------
+
+.. autofunction:: sympy.plotting.textplot.textplot

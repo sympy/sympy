@@ -11,18 +11,28 @@ import warnings
 from sympy.core.compatibility import get_function_name, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+
 try:
-    import py
-    from _pytest.python_api import raises
-    from _pytest.recwarn import warns
-    from _pytest.outcomes import skip, Failed
+    import pytest
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
 
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
-if not USE_PYTEST:
+if USE_PYTEST:
+    raises = pytest.raises
+    warns = pytest.warns
+    skip = pytest.skip
+    XFAIL = pytest.mark.xfail
+    SKIP = pytest.mark.skip
+    slow = pytest.mark.slow
+    nocache_fail = pytest.mark.nocache_fail
+
+else:
+    # Not using pytest so define the things that would have been imported from
+    # there.
+
     def raises(expectedException, code=None):
         """
         Tests that ``code`` raises the exception ``expectedException``.
@@ -138,7 +148,7 @@ if not USE_PYTEST:
         raise Skipped(str)
 
     def SKIP(reason):
-        """Similar to :func:`skip`, but this is a decorator. """
+        """Similar to ``skip()``, but this is a decorator. """
         def wrapper(func):
             def func_wrapper():
                 raise Skipped(reason)
@@ -157,6 +167,10 @@ if not USE_PYTEST:
         func_wrapper = functools.update_wrapper(func_wrapper, func)
         func_wrapper.__wrapped__ = func
         return func_wrapper
+
+    def nocache_fail(func):
+        "Dummy decorator for marking tests that fail when cache is disabled"
+        return func
 
     @contextlib.contextmanager
     def warns(warningcls, **kwargs):
@@ -194,20 +208,6 @@ if not USE_PYTEST:
                    ' The list of emitted warnings is: %s.'
                    ) % (warningcls, [w.message for w in warnrec])
             raise Failed(msg)
-
-
-else:
-    XFAIL = py.test.mark.xfail
-    slow = py.test.mark.slow
-
-    def SKIP(reason):
-        def skipping(func):
-            @functools.wraps(func)
-            def inner(*args, **kwargs):
-                skip(reason)
-            return inner
-
-        return skipping
 
 
 @contextlib.contextmanager

@@ -144,7 +144,7 @@ class factorial(CombinatorialFunction):
         n = sympify(n)
 
         if n.is_Number:
-            if n is S.Zero:
+            if n.is_zero:
                 return S.One
             elif n is S.Infinity:
                 return S.Infinity
@@ -339,7 +339,11 @@ class subfactorial(CombinatorialFunction):
             return S.One
         elif n == 1:
             return S.Zero
-        return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
+        else:
+            z1, z2 = 1, 0
+            for i in range(2, n + 1):
+                z1, z2 = z2, (i - 1)*(z2 + z1)
+            return z2
 
     @classmethod
     def eval(cls, arg):
@@ -553,7 +557,7 @@ class RisingFactorial(CombinatorialFunction):
         elif x is S.One:
             return factorial(k)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -692,7 +696,7 @@ class FallingFactorial(CombinatorialFunction):
         elif k.is_integer and x == k:
             return factorial(x)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -1010,9 +1014,9 @@ class binomial(CombinatorialFunction):
             k = n - k
 
         if k.is_Integer:
-            if k == S.Zero:
+            if k.is_zero:
                 return S.One
-            elif k < 0:
+            elif k.is_negative:
                 return S.Zero
             else:
                 n, result = self.args[0], 1

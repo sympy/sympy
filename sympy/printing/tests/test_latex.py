@@ -1,3 +1,5 @@
+from sympy.tensor.toperators import PartialDerivative
+
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
@@ -7,7 +9,7 @@ from sympy import (
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
-    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
+    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
@@ -37,10 +39,12 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree, radian, kg, meter, gibibyte, microgram, second
+from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
-from sympy.combinatorics.permutations import Cycle, Permutation
+from sympy.combinatorics.permutations import \
+    Cycle, Permutation, AppliedPermutation
+from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
@@ -197,6 +201,13 @@ def test_latex_permutation():
     assert latex(Permutation(2, 4)*Permutation(5)) == \
         r"\left( 2\; 4\right)\left( 5\right)"
     assert latex(Permutation(5)) == r"\left( 5\right)"
+
+    assert latex(Permutation(0, 1), perm_cyclic=False) == \
+        r"\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}"
+    assert latex(Permutation(0, 1)(2, 3), perm_cyclic=False) == \
+        r"\begin{pmatrix} 0 & 1 & 2 & 3 \\ 1 & 0 & 3 & 2 \end{pmatrix}"
+    assert latex(Permutation(), perm_cyclic=False) == \
+        r"\left( \right)"
 
 
 def test_latex_Float():
@@ -1020,9 +1031,14 @@ def test_latex_ImageSet():
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
     y = Symbol('y')
+
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
     assert latex(imgset) == \
-        r"\left\{x + y\; |\; x \in \left\{1, 2, 3\right\}, y \in \left\{3, 4\right\}\right\}"
+        r"\left\{x + y\; |\; x \in \left\{1, 2, 3\right\} , y \in \left\{3, 4\right\}\right\}"
+
+    imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
+    assert latex(imgset) == \
+        r"\left\{x + y\; |\; \left( x, \  y\right) \in \left\{1, 2, 3\right\} \times \left\{3, 4\right\}\right\}"
 
 
 def test_latex_ConditionSet():
@@ -1793,7 +1809,7 @@ def test_ElementwiseApplyFunction():
     from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
-    assert latex(expr) == r"{\sin}_{\circ}\left({X^{T} X}\right)"
+    assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
     assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
 
@@ -2010,6 +2026,15 @@ def test_greek_symbols():
     assert latex(Symbol('vartheta')) == r'\vartheta'
 
 
+def test_fancyset_symbols():
+    assert latex(S.Rationals) == '\\mathbb{Q}'
+    assert latex(S.Naturals) == '\\mathbb{N}'
+    assert latex(S.Naturals0) == '\\mathbb{N}_0'
+    assert latex(S.Integers) == '\\mathbb{Z}'
+    assert latex(S.Reals) == '\\mathbb{R}'
+    assert latex(S.Complexes) == '\\mathbb{C}'
+
+
 @XFAIL
 def test_builtin_without_args_mismatched_names():
     assert latex(CosineTransform) == r'\mathcal{COS}'
@@ -2034,7 +2059,7 @@ def test_Mul():
     assert latex(e) == r'- 2 \left(x + 1\right)'
     e = Mul(2, x + 1, evaluate=False)
     assert latex(e) == r'2 \left(x + 1\right)'
-    e = Mul(S.One/2, x + 1, evaluate=False)
+    e = Mul(S.Half, x + 1, evaluate=False)
     assert latex(e) == r'\frac{x + 1}{2}'
     e = Mul(y, x + 1, evaluate=False)
     assert latex(e) == r'y \left(x + 1\right)'
@@ -2067,17 +2092,6 @@ def test_issue_8470():
     from sympy.parsing.sympy_parser import parse_expr
     e = parse_expr("-B*A", evaluate=False)
     assert latex(e) == r"A \left(- B\right)"
-
-
-def test_issue_7117():
-    # See also issue #5031 (hence the evaluate=False in these).
-    e = Eq(x + 1, 2*x)
-    q = Mul(2, e, evaluate=False)
-    assert latex(q) == r"2 \left(x + 1 = 2 x\right)"
-    q = Add(6, e, evaluate=False)
-    assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
-    q = Pow(e, 2, evaluate=False)
-    assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
 
 
 def test_issue_15439():
@@ -2288,6 +2302,21 @@ def test_latex_printer_tensor():
     expr = TensorElement(K(i, j, -k, -l), {i: 3})
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
 
+    expr = PartialDerivative(A(i), A(i))
+    assert latex(expr) == r"\frac{\partial}{\partial {A{}^{L_{0}}}}{A{}^{L_{0}}}"
+
+    expr = PartialDerivative(A(-i), A(-j))
+    assert latex(expr) == r"\frac{\partial}{\partial {A{}_{j}}}{A{}_{i}}"
+
+    expr = PartialDerivative(K(i, j, -k, -l), A(m), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}^{m}} \partial {A{}_{n}}}{K{}^{ij}{}_{kl}}"
+
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}_{j}} \partial {A{}_{n}}}{\left(A{}_{i} + B{}_{i}\right)}"
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}_{j}} \partial {A{}_{n}}}{\left(3A{}_{i}\right)}"
+
 
 def test_multiline_latex():
     a, b, c, d, e, f = symbols('a b c d e f')
@@ -2342,14 +2371,15 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos
+    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
-    sol = ConditionSet(Tuple(x, a), FiniteSet(sin(a*x), cos(a*x)), S.Complexes)
+    sol = ConditionSet(
+        Tuple(x, a), Eq(sin(a*x), 0) & Eq(cos(a*x), 0), S.Complexes**2)
     assert latex(sol) == \
-        r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in '\
-        r'\mathbb{C} \wedge \left\{\sin{\left(a x \right)}, \cos{\left(a x '\
-        r'\right)}\right\} \right\}'
+        r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in ' \
+        r'\mathbb{C}^{2} \wedge \sin{\left(a x \right)} = 0 \wedge ' \
+        r'\cos{\left(a x \right)} = 0 \right\}'
 
 
 def test_trace():
@@ -2408,6 +2438,21 @@ def test_MatrixSymbol_bold():
 
     A = MatrixSymbol("A_k", 3, 3)
     assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+
+
+def test_AppliedPermutation():
+    p = Permutation(0, 1, 2)
+    x = Symbol('x')
+    assert latex(AppliedPermutation(p, x)) == \
+        r'\sigma_{\left( 0\; 1\; 2\right)}(x)'
+
+
+def test_PermutationMatrix():
+    p = Permutation(0, 1, 2)
+    assert latex(PermutationMatrix(p)) == r'P_{\left( 0\; 1\; 2\right)}'
+    p = Permutation(0, 3)(1, 2)
+    assert latex(PermutationMatrix(p)) == \
+        r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
 
 
 def test_imaginary_unit():
@@ -2501,3 +2546,8 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
+
+
+def test_issue_17857():
+    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
+    assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'

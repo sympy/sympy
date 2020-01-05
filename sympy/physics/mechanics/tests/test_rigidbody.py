@@ -112,3 +112,16 @@ def test_pendulum_angular_momentum():
 
     assert (4 * m * a**2 / 3 * q.diff() * R.z -
             S.angular_momentum(O, R).express(R)) == 0
+
+
+def test_parallel_axis():
+    N = ReferenceFrame('N')
+    m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
+    Io = inertia(N, Ix, Iy, Iz)
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    R = RigidBody('R', o, N, m, (Io, o))
+    Ip = R.parallel_axis(p)
+    Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
+                          Iz + m * (a**2 + b**2), ixy=-m * a * b)
+    assert Ip == Ip_expected

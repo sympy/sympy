@@ -1,4 +1,4 @@
-from sympy.core.numbers import comp
+from sympy.core.numbers import comp, Rational
 from sympy.physics.optics.utils import (refraction_angle, fresnel_coefficients,
         deviation, brewster_angle, critical_angle, lens_makers_formula,
         mirror_formula, lens_formula, hyperfocal_distance,
@@ -10,8 +10,6 @@ from sympy import symbols, sqrt, Matrix, oo
 from sympy.geometry.point import Point3D
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
-
-from sympy.core import S
 
 from sympy.utilities.pytest import raises
 
@@ -58,7 +56,7 @@ def test_refraction_angle():
     assert refraction_angle(r1, 1, 1, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, m1, 1.33, plane=P) == \
-        Ray3D(Point3D(0, 0, 0), Point3D(S(100)/133, S(100)/133, -789378201649271*sqrt(3)/1000000000000000))
+        Ray3D(Point3D(0, 0, 0), Point3D(Rational(100, 133), Rational(100, 133), -789378201649271*sqrt(3)/1000000000000000))
     assert refraction_angle(r1, 1, m2, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, n1, n2, plane=P) == \
@@ -142,13 +140,13 @@ def test_mirror_formula():
     assert mirror_formula(focal_length=f, v=v) == f*v/(-f + v)
     assert mirror_formula(u=u, v=v) == u*v/(u + v)
     assert mirror_formula(u=oo, v=v) == v
-    assert mirror_formula(u=oo, v=oo) == oo
+    assert mirror_formula(u=oo, v=oo) is oo
     assert mirror_formula(focal_length=oo, u=u) == -u
     assert mirror_formula(u=u, v=oo) == u
-    assert mirror_formula(focal_length=oo, v=oo) == oo
+    assert mirror_formula(focal_length=oo, v=oo) is oo
     assert mirror_formula(focal_length=f, v=oo) == f
     assert mirror_formula(focal_length=oo, v=v) == -v
-    assert mirror_formula(focal_length=oo, u=oo) == oo
+    assert mirror_formula(focal_length=oo, u=oo) is oo
     assert mirror_formula(focal_length=f, u=oo) == f
     assert mirror_formula(focal_length=oo, u=u) == -u
     raises(ValueError, lambda: mirror_formula(focal_length=f, u=u, v=v))
@@ -160,13 +158,13 @@ def test_lens_formula():
     assert lens_formula(focal_length=f, v=v) == f*v/(f - v)
     assert lens_formula(u=u, v=v) == u*v/(u - v)
     assert lens_formula(u=oo, v=v) == v
-    assert lens_formula(u=oo, v=oo) == oo
+    assert lens_formula(u=oo, v=oo) is oo
     assert lens_formula(focal_length=oo, u=u) == u
     assert lens_formula(u=u, v=oo) == -u
-    assert lens_formula(focal_length=oo, v=oo) == -oo
+    assert lens_formula(focal_length=oo, v=oo) is -oo
     assert lens_formula(focal_length=oo, v=v) == v
     assert lens_formula(focal_length=f, v=oo) == -f
-    assert lens_formula(focal_length=oo, u=oo) == oo
+    assert lens_formula(focal_length=oo, u=oo) is oo
     assert lens_formula(focal_length=oo, u=u) == u
     assert lens_formula(focal_length=f, u=oo) == f
     raises(ValueError, lambda: lens_formula(focal_length=f, u=u, v=v))

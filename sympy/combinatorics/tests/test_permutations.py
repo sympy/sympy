@@ -1,10 +1,16 @@
 from itertools import permutations
 
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.numbers import Integer
+from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
-from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_rmul, _af_rmuln, Cycle)
-from sympy.utilities.pytest import raises
+from sympy.core.singleton import S
+from sympy.combinatorics.permutations import \
+    Permutation, _af_parity, _af_rmul, _af_rmuln, AppliedPermutation, Cycle
+from sympy.printing import sstr, srepr, pretty, latex
+from sympy.utilities.pytest import raises, warns_deprecated_sympy
+
 
 rmul = Permutation.rmul
 a = Symbol('a', integer=True)
@@ -20,6 +26,8 @@ def test_Permutation():
     assert p(list(range(p.size))) == list(p)
     # call as function
     assert list(p(1, 2)) == [0, 2, 1, 3]
+    raises(TypeError, lambda: p(-1))
+    raises(TypeError, lambda: p(5))
     # conversion to list
     assert list(p) == list(range(4))
     assert Permutation(size=4) == Permutation(3)
@@ -439,8 +447,19 @@ def test_from_sequence():
         Permutation(4)(0, 2)(1, 3)
 
 
+def test_resize():
+    p = Permutation(0, 1, 2)
+    assert p.resize(5) == Permutation(0, 1, 2, size=5)
+    assert p.resize(4) == Permutation(0, 1, 2, size=4)
+    assert p.resize(3) == p
+    raises(ValueError, lambda: p.resize(2))
+
+    p = Permutation(0, 1, 2)(3, 4)(5, 6)
+    assert p.resize(3) == Permutation(0, 1, 2)
+    raises(ValueError, lambda: p.resize(4))
+
+
 def test_printing_cyclic():
-    Permutation.print_cyclic = True
     p1 = Permutation([0, 2, 1])
     assert repr(p1) == 'Permutation(1, 2)'
     assert str(p1) == '(1 2)'
@@ -452,16 +471,91 @@ def test_printing_cyclic():
 
 
 def test_printing_non_cyclic():
-    Permutation.print_cyclic = False
+    from sympy.printing import sstr, srepr
     p1 = Permutation([0, 1, 2, 3, 4, 5])
-    assert repr(p1) == 'Permutation([], size=6)'
-    assert str(p1) == 'Permutation([], size=6)'
+    assert srepr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
+    assert sstr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
     p2 = Permutation([0, 1, 2])
-    assert repr(p2) == 'Permutation([0, 1, 2])'
-    assert str(p2) == 'Permutation([0, 1, 2])'
+    assert srepr(p2, perm_cyclic=False) == 'Permutation([0, 1, 2])'
+    assert sstr(p2, perm_cyclic=False) == 'Permutation([0, 1, 2])'
 
     p3 = Permutation([0, 2, 1])
-    assert repr(p3) == 'Permutation([0, 2, 1])'
-    assert str(p3) == 'Permutation([0, 2, 1])'
+    assert srepr(p3, perm_cyclic=False) == 'Permutation([0, 2, 1])'
+    assert sstr(p3, perm_cyclic=False) == 'Permutation([0, 2, 1])'
     p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
-    assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'
+    assert srepr(p4, perm_cyclic=False) == 'Permutation([0, 1, 3, 2], size=8)'
+
+
+def test_deprecated_print_cyclic():
+    p = Permutation(0, 1, 2)
+    try:
+        Permutation.print_cyclic = True
+        with warns_deprecated_sympy():
+            assert sstr(p) == '(0 1 2)'
+        with warns_deprecated_sympy():
+            assert srepr(p) == 'Permutation(0, 1, 2)'
+        with warns_deprecated_sympy():
+            assert pretty(p) == '(0 1 2)'
+        with warns_deprecated_sympy():
+            assert latex(p) == r'\left( 0\; 1\; 2\right)'
+
+        Permutation.print_cyclic = False
+        with warns_deprecated_sympy():
+            assert sstr(p) == 'Permutation([1, 2, 0])'
+        with warns_deprecated_sympy():
+            assert srepr(p) == 'Permutation([1, 2, 0])'
+        with warns_deprecated_sympy():
+            assert pretty(p, use_unicode=False) == '/0 1 2\\\n\\1 2 0/'
+        with warns_deprecated_sympy():
+            assert latex(p) == \
+                r'\begin{pmatrix} 0 & 1 & 2 \\ 1 & 2 & 0 \end{pmatrix}'
+    finally:
+        Permutation.print_cyclic = None
+
+
+def test_permutation_equality():
+    a = Permutation(0, 1, 2)
+    b = Permutation(0, 1, 2)
+    assert Eq(a, b) is S.true
+    c = Permutation(0, 2, 1)
+    assert Eq(a, c) is S.false
+
+    d = Permutation(0, 1, 2, size=4)
+    assert unchanged(Eq, a, d)
+    e = Permutation(0, 2, 1, size=4)
+    assert unchanged(Eq, a, e)
+
+    i = Permutation()
+    assert unchanged(Eq, i, 0)
+    assert unchanged(Eq, 0, i)
+
+
+def test_issue_17661():
+    c1 = Cycle(1,2)
+    c2 = Cycle(1,2)
+    assert c1 == c2
+    assert repr(c1) == 'Cycle(1, 2)'
+    assert c1 == c2
+
+
+def test_permutation_apply():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    assert p.apply(0) == 1
+    assert isinstance(p.apply(0), Integer)
+    assert p.apply(x) == AppliedPermutation(p, x)
+    assert AppliedPermutation(p, x).subs(x, 0) == 1
+
+    x = Symbol('x', integer=False)
+    raises(NotImplementedError, lambda: p.apply(x))
+    x = Symbol('x', negative=True)
+    raises(NotImplementedError, lambda: p.apply(x))
+
+
+def test_AppliedPermutation():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    raises(ValueError, lambda: AppliedPermutation((0, 1, 2), x))
+    assert AppliedPermutation(p, 1, evaluate=True) == 2
+    assert AppliedPermutation(p, 1, evaluate=False).__class__ == \
+        AppliedPermutation

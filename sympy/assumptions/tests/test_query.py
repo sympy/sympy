@@ -1032,9 +1032,9 @@ def test_bounded():
     assert ask(Q.finite(2**x)) is None
     assert ask(Q.finite(2**x), Q.finite(x)) is True
     assert ask(Q.finite(x**x)) is None
-    assert ask(Q.finite(Rational(1, 2) ** x)) is None
-    assert ask(Q.finite(Rational(1, 2) ** x), Q.positive(x)) is True
-    assert ask(Q.finite(Rational(1, 2) ** x), Q.negative(x)) is None
+    assert ask(Q.finite(S.Half ** x)) is None
+    assert ask(Q.finite(S.Half ** x), Q.positive(x)) is True
+    assert ask(Q.finite(S.Half ** x), Q.negative(x)) is None
     assert ask(Q.finite(2**x), Q.negative(x)) is True
     assert ask(Q.finite(sqrt(x))) is None
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
@@ -1500,7 +1500,7 @@ def test_imaginary():
     assert ask(Q.imaginary(exp(pi*I/2, evaluate=False))) is True
 
     # issue 7886
-    assert ask(Q.imaginary(Pow(x, S.One/4)), Q.real(x) & Q.negative(x)) is False
+    assert ask(Q.imaginary(Pow(x, Rational(1, 4))), Q.real(x) & Q.negative(x)) is False
 
 
 def test_integer():
@@ -1918,8 +1918,8 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/31)))) is True
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/pi)))) is False
+    assert ask(Q.algebraic((1 + I*sqrt(3)**Rational(17, 31)))) is True
+    assert ask(Q.algebraic((1 + I*sqrt(3)**(17/pi)))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2080,7 +2080,7 @@ def test_compute_known_facts():
                       Implies(Q.real, Q.complex))
     known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
 
-    s = compute_known_facts(known_facts, known_facts_keys)
+    compute_known_facts(known_facts, known_facts_keys)
 
 
 @slow
@@ -2247,3 +2247,25 @@ def test_autosimp_used_to_fail():
     assert ask(Q.imaginary(0**(-I))) is False
     assert ask(Q.real(0**I)) is False
     assert ask(Q.real(0**(-I))) is False
+
+
+def test_custom_AskHandler():
+    from sympy.assumptions import register_handler, ask, Q
+    from sympy.assumptions.handlers import AskHandler
+    from sympy.logic.boolalg import conjuncts
+    from sympy import Symbol
+
+    class MersenneHandler(AskHandler):
+        @staticmethod
+        def Integer(expr, assumptions):
+            from sympy import log
+            if ask(Q.integer(log(expr + 1, 2))):
+                return True
+        @staticmethod
+        def Symbol(expr, assumptions):
+            if expr in conjuncts(assumptions):
+                return True
+    register_handler('mersenne', MersenneHandler)
+
+    n = Symbol('n', integer=True)
+    assert ask(Q.mersenne(n), Q.mersenne(n))

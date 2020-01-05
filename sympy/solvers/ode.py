@@ -24,7 +24,7 @@ specific hint.  See also the docstring on
     - :py:meth:`~sympy.solvers.ode.infinitesimals` - Returns the infinitesimals
       of the Lie group of point transformations of an ODE, such that it is
       invariant.
-    - :py:meth:`~sympy.solvers.ode_checkinfsol` - Checks if the given infinitesimals
+    - :py:meth:`~sympy.solvers.ode.checkinfsol` - Checks if the given infinitesimals
       are the actual infinitesimals of a first order ODE.
 
     These are the non-solver helper functions that are for internal use.  The
@@ -82,7 +82,7 @@ hint, and it has its own function, named ``ode_<hint>``.  That function takes
 in the ODE and any match expression gathered by
 :py:meth:`~sympy.solvers.ode.classify_ode` and returns a solved result.  If
 this result has any integrals in it, the hint function will return an
-unevaluated :py:class:`~sympy.integrals.Integral` class.
+unevaluated :py:class:`~sympy.integrals.integrals.Integral` class.
 :py:meth:`~sympy.solvers.ode.dsolve`, which is the user wrapper function
 around all of this, will then call :py:meth:`~sympy.solvers.ode.odesimp` on
 the result, which, among other things, will attempt to solve the equation for
@@ -176,8 +176,7 @@ the main SymPy documentation.  Be sure to make the Sphinx documentation by
 running ``make html`` from within the doc directory to verify that the
 docstring formats correctly.
 
-If your solution method involves integrating, use :py:meth:`Integral()
-<sympy.integrals.integrals.Integral>` instead of
+If your solution method involves integrating, use :py:obj:`~.Integral` instead of
 :py:meth:`~sympy.core.expr.Expr.integrate`.  This allows the user to bypass
 hard/slow integration by using the ``_Integral`` variant of your hint.  In
 most cases, calling :py:meth:`sympy.core.basic.Basic.doit` will integrate your
@@ -193,7 +192,7 @@ to solve the solution for you, so you do not need to do that.  Lastly, if your
 ODE has a common simplification that can be applied to your solutions, you can
 add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
-have many :py:meth:`~sympy.functions.log` terms, so
+have many :obj:`~sympy.functions.elementary.exponential.log` terms, so
 :py:meth:`~sympy.solvers.ode.odesimp` calls
 :py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write
 the arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
@@ -235,6 +234,8 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import islice
 
+from sympy.functions import hyper
+
 from sympy.core import Add, S, Mul, Pow, oo, Rational
 from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
 from sympy.core.containers import Tuple
@@ -256,7 +257,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
-                         PolynomialError, lcm, roots)
+                         PolynomialError, lcm, roots, gcd)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -310,6 +311,8 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_linear_bessel",
+    "2nd_hypergeometric",
+    "2nd_hypergeometric_Integral",
     "nth_order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
@@ -388,7 +391,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
     in eq already.
     """
 
-    if isinstance(eq, Expr):
+    if isinstance(eq, (Expr, Eq)):
         eq = [eq]
     elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
@@ -699,10 +702,10 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # attempt to solve for func, and apply any other hint specific
         # simplifications
         sols = solvefunc(eq, func, order, match)
-        if isinstance(sols, Expr):
-            rv =  odesimp(eq, sols, func, hint)
-        else:
+        if iterable(sols):
             rv = [odesimp(eq, s, func, hint) for s in sols]
+        else:
+            rv =  odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
@@ -717,7 +720,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         if len(rv) == 1:
             rv = rv[0]
     if ics and not 'power_series' in hint:
-        if isinstance(rv, Expr):
+        if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
         else:
@@ -873,7 +876,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     ``_Integral``
 
         If a classification has ``_Integral`` at the end, it will return the
-        expression with an unevaluated :py:class:`~sympy.integrals.Integral`
+        expression with an unevaluated :py:class:`~.Integral`
         class in it.  Note that a hint may do this anyway if
         :py:meth:`~sympy.core.expr.Expr.integrate` cannot do the integral,
         though just using an ``_Integral`` will do so much faster.  Indeed, an
@@ -885,14 +888,15 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         impossible integral.  Try using an ``_Integral`` hint or
         ``all_Integral`` to get it return something.
 
-        Note that some hints do not have ``_Integral`` counterparts.  This is
-        because :py:meth:`~sympy.solvers.ode.integrate` is not used in solving
-        the ODE for those method. For example, `n`\th order linear homogeneous
-        ODEs with constant coefficients do not require integration to solve,
-        so there is no ``nth_linear_homogeneous_constant_coeff_Integrate``
-        hint. You can easily evaluate any unevaluated
-        :py:class:`~sympy.integrals.Integral`\s in an expression by doing
-        ``expr.doit()``.
+        Note that some hints do not have ``_Integral`` counterparts. This is
+        because :py:func:`~sympy.integrals.integrals.integrate` is not used in
+        solving the ODE for those method. For example, `n`\th order linear
+        homogeneous ODEs with constant coefficients do not require integration
+        to solve, so there is no
+        ``nth_linear_homogeneous_constant_coeff_Integrate`` hint. You can
+        easily evaluate any unevaluated
+        :py:class:`~sympy.integrals.integrals.Integral`\s in an expression by
+        doing ``expr.doit()``.
 
     Ordinals
 
@@ -1372,6 +1376,13 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if not check.has(oo, NaN, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
+                        # For Hypergeometric solutions.
+                _r = {}
+                _r.update(r)
+                rn = match_2nd_hypergeometric(_r, func)
+                if rn:
+                    matching_hints["2nd_hypergeometric"] = rn
+                    matching_hints["2nd_hypergeometric_Integral"] = rn
             # If the ODE has regular singular point at x0 and is of the form
             # Eq((x)**2*Derivative(y(x), x, x) + x*Derivative(y(x), x) +
             # (a4**2*x**(2*p)-n**2)*y(x) thus Bessel's equation
@@ -1455,7 +1466,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r is not None:
             coeff = r[order]
             factor = x**order / coeff
-            r_rescaled = {i: factor*r[i] for i in r}
+            r_rescaled = {i: factor*r[i] for i in r if i != 'trialset'}
+
+        # XXX: Mixing up the trialset with the coefficients is error-prone.
+        # These should be separated as something like r['coeffs'] and
+        # r['trialset']
 
         if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
                 r_rescaled if i != 'trialset' and i >= 0):
@@ -1481,6 +1496,247 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
+def equivalence(max_num_pow, dem_pow):
+    # this function is made for checking the equivalence with 2F1 type of equation.
+    # max_num_pow is the value of maximum power of x in numerator
+    # and dem_pow is list of powers of different factor of form (a*x b).
+    # reference from table 1 in paper - "Non-Liouvillian solutions for second order
+    # linear ODEs" by L. Chan, E.S. Cheb-Terrab.
+    # We can extend it for 1F1 and 0F1 type also.
+
+    if max_num_pow == 2:
+        if dem_pow in [[2, 2], [2, 2, 2]]:
+            return "2F1"
+    elif max_num_pow == 1:
+        if dem_pow in [[1, 2, 2], [2, 2, 2], [1, 2], [2, 2]]:
+            return "2F1"
+    elif max_num_pow == 0:
+        if dem_pow in [[1, 1, 2], [2, 2], [1 ,2, 2], [1, 1], [2], [1, 2], [2, 2]]:
+            return "2F1"
+
+    return None
+
+def equivalence_hypergeometric(A, B, func):
+
+    from sympy import factor
+
+    # This method for finding the equivalence is only for 2F1 type.
+    # We can extend it for 1F1 and 0F1 type also.
+    x = func.args[0]
+
+    # making given equation in normal form
+    I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
+
+    # computing shifted invariant(J1) of the equation
+    J1 = factor(cancel(x**2*I1 + S(1)/4))
+    num, dem = J1.as_numer_denom()
+    num = powdenest(expand(num))
+    dem = powdenest(expand(dem))
+    pow_num = set()
+    pow_dem = set()
+    # this function will compute the different powers of variable(x) in J1.
+    # then it will help in finding value of k. k is power of x such that we can express
+    # J1 = x**k * J0(x**k) then all the powers in J0 become integers.
+    def _power_counting(num):
+        _pow = {0}
+        for val in num:
+            if val.has(x):
+                if isinstance(val, Pow) and val.as_base_exp()[0] == x:
+                    _pow.add(val.as_base_exp()[1])
+                elif val == x:
+                    _pow.add(val.as_base_exp()[1])
+                else:
+                    _pow.update(_power_counting(val.args))
+        return _pow
+
+    pow_num = _power_counting((num, ))
+    pow_dem = _power_counting((dem, ))
+    pow_dem.update(pow_num)
+
+    _pow = pow_dem
+    k = gcd(_pow)
+
+    # computing I0 of the given equation
+    I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))), force=True)
+    I0 = factor(cancel(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
+    num, dem = I0.as_numer_denom()
+
+    max_num_pow = max(_power_counting((num, )))
+    dem_args = dem.args
+    sing_point = []
+    dem_pow = []
+    # calculating singular point of I0.
+    for arg in dem_args:
+        if arg.has(x):
+            if isinstance(arg, Pow):
+                # (x-a)**n
+                dem_pow.append(arg.as_base_exp()[1])
+                sing_point.append(list(roots(arg.as_base_exp()[0], x).keys())[0])
+            else:
+                # (x-a) type
+                dem_pow.append(arg.as_base_exp()[1])
+                sing_point.append(list(roots(arg, x).keys())[0])
+
+    dem_pow.sort()
+    # checking if equivalence is exists or not.
+
+    if equivalence(max_num_pow, dem_pow) == "2F1":
+        return {'I0':I0, 'k':k, 'sing_point':sing_point, 'type':"2F1"}
+    else:
+        return None
+
+def ode_2nd_hypergeometric(eq, func, order, match):
+
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy import factor
+    x = func.args[0]
+    C0, C1 = get_numbered_constants(eq, num=2)
+    a = match['a']
+    b = match['b']
+    c = match['c']
+
+    A = match['A']
+    # B = match['B']
+
+    sol = None
+    if match['type'] == "2F1":
+        if c.is_integer == False:
+            sol = C0*hyper([a, b], [c], x) + C1*hyper([a-c+1, b-c+1], [2-c], x)*x**(1-c)
+        elif c == 1:
+            y2 = Integral(exp(Integral((-(a+b+1)*x + c)/(x**2-x), x))/(hyperexpand(hyper([a, b], [c], x))**2), x)*hyper([a, b], [c], x)
+            sol = C0*hyper([a, b], [c], x) + C1*y2
+        elif (c-a-b).is_integer == False:
+            sol = C0*hyper([a, b], [1+a+b-c], 1-x) + C1*hyper([c-a, c-b], [1+c-a-b], 1-x)*(1-x)**(c-a-b)
+
+        if sol is None:
+            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+                + " the hypergeometric method")
+
+        # applying transformation in the solution
+        subs = match['mobius']
+        dtdx = simplify(1/(subs.diff(x)))
+        _B = ((a + b + 1)*x - c).subs(x, subs)*dtdx
+        _B = factor(_B + ((x**2 -x).subs(x, subs))*(dtdx.diff(x)*dtdx))
+        _A = factor((x**2 - x).subs(x, subs)*(dtdx**2))
+        e = exp(logcombine(Integral(cancel(_B/(2*_A)), x), force=True))
+        sol = sol.subs(x, match['mobius'])
+        sol = sol.subs(x, x**match['k'])
+        e = e.subs(x, x**match['k'])
+
+        if not A.is_zero:
+            e1 = Integral(A/2, x)
+            e1 = exp(logcombine(e1, force=True))
+            sol = cancel((e/e1)*x**((-match['k']+1)/2))*sol
+            sol = Eq(func, sol)
+            return sol
+
+        sol = cancel((e)*x**((-match['k']+1)/2))*sol
+        sol = Eq(func, sol)
+
+    return sol
+
+def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
+
+    from sympy import factor
+    x = func.args[0]
+    a = Wild("a")
+    b = Wild("b")
+    c = Wild("c")
+    t = Wild("t")
+    s = Wild("s")
+    r = Wild("r")
+    alpha = Wild("alpha")
+    beta = Wild("beta")
+    gamma = Wild("gamma")
+    delta = Wild("delta")
+
+    rn = {'type':None}
+    # I0 of the standerd 2F1 equation.
+    I0 = ((a-b+1)*(a-b-1)*x**2 + 2*((1-a-b)*c + 2*a*b)*x + c*(c-2))/(4*x**2*(x-1)**2)
+    if sing_point != [0, 1]:
+        # If singular point is [0, 1] then we have standerd equation.
+        eqs = []
+        sing_eqs = [-beta/alpha, -delta/gamma, (delta-beta)/(alpha-gamma)]
+        # making equations for the finding the mobius transformation
+        for i in range(3):
+            if i<len(sing_point):
+                eqs.append(Eq(sing_eqs[i], sing_point[i]))
+            else:
+                eqs.append(Eq(1/sing_eqs[i], 0))
+        # solving above equations for the mobius transformation
+        _beta = -alpha*sing_point[0]
+        _delta = -gamma*sing_point[1]
+        _gamma = alpha
+        if len(sing_point) == 3:
+            _gamma = (_beta + sing_point[2]*alpha)/(sing_point[2] - sing_point[1])
+        mob = (alpha*x + beta)/(gamma*x + delta)
+        mob = mob.subs(beta, _beta)
+        mob = mob.subs(delta, _delta)
+        mob = mob.subs(gamma, _gamma)
+        mob = cancel(mob)
+        t = (beta - delta*x)/(gamma*x - alpha)
+        t = cancel(((t.subs(beta, _beta)).subs(delta, _delta)).subs(gamma, _gamma))
+    else:
+        mob = x
+        t = x
+
+    # applying mobius transformation in I to make it into I0.
+    I = I.subs(x, t)
+    I = I*(t.diff(x))**2
+    I = factor(I)
+    dict_I = {x**2:0, x:0, 1:0}
+    I0_num, I0_dem = I0.as_numer_denom()
+    # collecting coeff of (x**2, x), of the standerd equation.
+    # substituting (a-b) = s, (a+b) = r
+    dict_I0 = {x**2:s**2 - 1, x:(2*(1-r)*c + (r+s)*(r-s)), 1:c*(c-2)}
+    # collecting coeff of (x**2, x) from I0 of the given equation.
+    dict_I.update(collect(expand(cancel(I*I0_dem)), [x**2, x], evaluate=False))
+    eqs = []
+    # We are comparing the coeff of powers of different x, for finding the values of
+    # parameters of standerd equation.
+    for key in [x**2, x, 1]:
+        eqs.append(Eq(dict_I[key], dict_I0[key]))
+
+    # We can have many possible roots for the equation.
+    # I am selecting the root on the basis that when we have
+    # standard equation eq = x*(x-1)*f(x).diff(x, 2) + ((a+b+1)*x-c)*f(x).diff(x) + a*b*f(x)
+    # then root should be a, b, c.
+
+    _c = 1 - factor(sqrt(1+eqs[2].lhs))
+    if not _c.has(Symbol):
+        _c = min(list(roots(eqs[2], c)))
+    _s = factor(sqrt(eqs[0].lhs + 1))
+    _r = _c - factor(sqrt(_c**2 + _s**2 + eqs[1].lhs - 2*_c))
+    _a = (_r + _s)/2
+    _b = (_r - _s)/2
+
+    rn = {'a':simplify(_a), 'b':simplify(_b), 'c':simplify(_c), 'k':k, 'mobius':mob, 'type':"2F1"}
+
+    return rn
+
+
+def match_2nd_hypergeometric(r, func):
+
+    x = func.args[0]
+    a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
+    b3 = Wild('b3', exclude=[func, func.diff(x), func.diff(x, 2)])
+    c3 = Wild('c3', exclude=[func, func.diff(x), func.diff(x, 2)])
+
+    A = cancel(r[b3]/r[a3])
+    B = cancel(r[c3]/r[a3])
+
+    d = equivalence_hypergeometric(A, B, func)
+    rn = None
+    if d:
+        if d['type'] == "2F1":
+            rn = match_2nd_2F1_hypergeometric(d['I0'], d['k'], d['sing_point'], func)
+            if rn is not None:
+                rn.update({'A':A, 'B':B})
+
+   # We can extend it for 1F1 and 0F1 type also.
+
+    return rn
 
 def match_2nd_linear_bessel(r, func):
 
@@ -1768,7 +2024,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
     r['b1'] = -fc[0,x(t),0]/fc[0,x(t),1] ; r['b2'] = -fc[1,x(t),0]/fc[1,y(t),1]
     r['c1'] = -fc[0,y(t),0]/fc[0,x(t),1] ; r['c2'] = -fc[1,y(t),0]/fc[1,y(t),1]
-    forcing = [S(0),S(0)]
+    forcing = [S.Zero,S.Zero]
     for i in range(2):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t)):
@@ -1846,7 +2102,7 @@ def check_linear_2eq_order2(eq, func, func_coef):
     r['c1'] = fc[0,y(t),1] ; r['c2'] = fc[1,y(t),1]
     r['d1'] = fc[0,x(t),0] ; r['d2'] = fc[1,x(t),0]
     r['e1'] = fc[0,y(t),0] ; r['e2'] = fc[1,y(t),0]
-    const = [S(0), S(0)]
+    const = [S.Zero, S.Zero]
     for i in range(2):
         for j in Add.make_args(eq[i]):
             if not (j.has(x(t)) or j.has(y(t))):
@@ -1859,7 +2115,7 @@ def check_linear_2eq_order2(eq, func, func_coef):
             return "type2"
 
         elif all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2 d1 d2 e1 e1'.split()):
-            p = [S(0), S(0)] ; q = [S(0), S(0)]
+            p = [S.Zero, S.Zero] ; q = [S.Zero, S.Zero]
             for n, e in enumerate([r['f1'], r['f2']]):
                 if e.has(t):
                     tpart = e.as_independent(t, Mul)[1]
@@ -1938,7 +2194,7 @@ def check_linear_3eq_order1(eq, func, func_coef):
     r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
     r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
     r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
-    forcing = [S(0), S(0), S(0)]
+    forcing = [S.Zero, S.Zero, S.Zero]
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
@@ -2254,7 +2510,7 @@ def odesimp(ode, eq, func, hint):
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
 
-    It also attempts to integrate any :py:class:`~sympy.integrals.Integral`\s
+    It also attempts to integrate any :py:class:`~sympy.integrals.integrals.Integral`\s
     in the expression, if the hint is not an ``_Integral`` hint.
 
     This function should have no effect on expressions returned by
@@ -2511,9 +2767,30 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             return checkodesol(ode, eqs, order=order,
                 solve_for_func=False)
 
+    x = func.args[0]
+
+    # Handle series solutions here
+    if sol.has(Order):
+        assert sol.lhs == func
+        Oterm = sol.rhs.getO()
+        solrhs = sol.rhs.removeO()
+
+        Oexpr = Oterm.expr
+        assert isinstance(Oexpr, Pow)
+        sorder = Oexpr.exp
+        assert Oterm == Order(x**sorder)
+
+        odesubs = (ode.lhs-ode.rhs).subs(func, solrhs).doit().expand()
+
+        neworder = Order(x**(sorder - order))
+        odesubs = odesubs + neworder
+        assert odesubs.getO() == neworder
+        residual = odesubs.removeO()
+
+        return (residual == 0, residual)
+
     s = True
     testnum = 0
-    x = func.args[0]
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the
@@ -2641,7 +2918,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
       a solution returned by ``dsolve(ode, func, simplify=False``).
     - If ``sol`` is not solved for ``func``, then base the result on the
       length of ``sol``, as computed by ``len(str(sol))``.
-    - If ``sol`` has any unevaluated :py:class:`~sympy.integrals.Integral`\s,
+    - If ``sol`` has any unevaluated :py:class:`~sympy.integrals.integrals.Integral`\s,
       this will automatically be considered less simple than any of the above.
 
     This function returns an integer such that if solution A is simpler than
@@ -2662,7 +2939,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     | ``func``                                     |                   |
     +----------------------------------------------+-------------------+
     | ``sol`` contains an                          | ``oo``            |
-    | :py:class:`~sympy.integrals.Integral`        |                   |
+    | :obj:`~sympy.integrals.integrals.Integral`   |                   |
     +----------------------------------------------+-------------------+
 
     ``oo`` here means the SymPy infinity, which should compare greater than
@@ -3115,8 +3392,8 @@ def _ode_factorable_match(eq, func, x0):
     r = None
     if isinstance(eqs, Pow):
         # if f(x)**p=0 then f(x)=0 (p>0)
-        if (expr.exp).is_positive:
-            eq = expr.base
+        if eqs.exp.is_positive:
+            eq = eqs.base
         if isinstance(eq, Pow):
             return None
         else:
@@ -3470,8 +3747,8 @@ def homogeneous_order(eq, *symbols):
     or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
-    :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
-    :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
 
     Symbols can be functions, but every argument of the function must be a
     symbol, and the arguments of the function that appear in the expression
@@ -3898,10 +4175,10 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
                             seriesdict[term] = i + 1
                             break
                 else:
-                    seriesdict[term] = S(0)
+                    seriesdict[term] = S.Zero
 
     # Stripping of terms so that the sum starts with the same number.
-    teq = S(0)
+    teq = S.Zero
     suminit = seriesdict.values()
     rkeys = seriesdict.keys()
     req = Add(*rkeys)
@@ -4062,7 +4339,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
         else:
             term = series(term, n=1, x0=x0)
             if isinstance(term, Order):
-                indicial.append(S(0))
+                indicial.append(S.Zero)
             else:
                 for arg in term.args:
                     if not arg.has(x):
@@ -4103,7 +4380,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
                 power = int(key.name[1:])
                 finalseries1 += serdict1[key]*(x - x0)**power
             finalseries1 = (x - x0)**m1*finalseries1
-            finalseries2 = S(0)
+            finalseries2 = S.Zero
             if serdict2:
                 for key in serdict2:
                     power = int(key.name[1:])
@@ -4183,7 +4460,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
         # Fill in with zeros, if coefficients are zero.
         for i in range(n + 1):
             if (i,) not in dict_:
-                dict_[(i,)] = S(0)
+                dict_[(i,)] = S.Zero
         serlist.append(dict_)
 
     pseries = serlist[0]
@@ -4203,7 +4480,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             if num:
                 return False
             else:
-                frobdict[numsyms[i]] = S(0)
+                frobdict[numsyms[i]] = S.Zero
         else:
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
@@ -4565,7 +4842,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     are returned, based on expansions with Euler's formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
     to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be returned
+    :py:obj:`~.ComplexRootOf` instance will be returned
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -4639,7 +4916,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     charroots = defaultdict(int)
     for root in chareqroots:
         charroots[root] += 1
-    gsol = S(0)
+    gsol = S.Zero
     # We need keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
     ln = log
@@ -5201,7 +5478,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     constants) as `e^{a x} \left(C_1 \cos(b x) + C_2 \sin(b x)\right)`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be return
+    :py:class:`~sympy.polys.rootoftools.ComplexRootOf` instance will be return
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -6118,7 +6395,6 @@ def ode_lie_group(eq, func, order, match):
 
     """
 
-    f = func.func
     x = func.args[0]
     df = func.diff(x)
 
@@ -6389,7 +6665,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: S(0), eta: fx}
+            inf = {xi: S.Zero, eta: fx}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -6403,7 +6679,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: S(0), eta: fy.subs(y, func)}
+            inf = {xi: S.Zero, eta: fy.subs(y, func)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -6417,7 +6693,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: fx, eta: S(0)}
+            inf = {xi: fx, eta: S.Zero}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -6431,7 +6707,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: fy.subs(y, func), eta: S(0)}
+            inf = {xi: fy.subs(y, func), eta: S.Zero}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -6488,7 +6764,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
         gysyms = gy.free_symbols
         if x not in gysyms:
             gy = exp(integrate(gy, y))
-            inf = {eta: S(0), xi: (fx*gy).subs(y, func)}
+            inf = {eta: S.Zero, xi: (fx*gy).subs(y, func)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -6504,7 +6780,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
             gy = exp(integrate(gy, y))
             etaval = fx*gy
             etaval = (etaval.subs([(x, u1), (y, x)])).subs(u1, y)
-            inf = {eta: etaval.subs(y, func), xi: S(0)}
+            inf = {eta: etaval.subs(y, func), xi: S.Zero}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -6735,9 +7011,9 @@ def lie_heuristic_function_sum(match, comp=False):
                     if etaval.is_Mul:
                         etaval = Mul(*[arg for arg in etaval.args if arg.has(x, y)])
                     if odefac == hinv:  # Inverse ODE
-                        inf = {eta: etaval.subs(y, func), xi : S(0)}
+                        inf = {eta: etaval.subs(y, func), xi : S.Zero}
                     else:
-                        inf = {xi: etaval.subs(y, func), eta : S(0)}
+                        inf = {xi: etaval.subs(y, func), eta : S.Zero}
                     if not comp:
                         return [inf]
                     else:
@@ -6925,11 +7201,11 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
             etatry = -1/frac
             pde = etatry.diff(x) + etatry.diff(y)*h - hx - etatry*hy
             if not simplify(pde):
-                return [{xi: S(1), eta: etatry.subs(y, func)}]
+                return [{xi: S.One, eta: etatry.subs(y, func)}]
             xitry = -frac
             pde = -xitry.diff(x)*h -xitry.diff(y)*h**2 - xitry*hx -hy
             if not simplify(expand(pde)):
-                return [{xi: xitry.subs(y, func), eta: S(1)}]
+                return [{xi: xitry.subs(y, func), eta: S.One}]
 
 
 def lie_heuristic_abaco2_unique_general(match, comp=False):
@@ -7059,9 +7335,9 @@ def lie_heuristic_linear(match, comp=False):
                     coeffdict[xypart] += rem
             else:
                 if term not in coeffdict:
-                    coeffdict[term] = S(1)
+                    coeffdict[term] = S.One
                 else:
-                    coeffdict[term] += S(1)
+                    coeffdict[term] += S.One
 
     sollist = coeffdict.values()
     soldict = solve(sollist, symlist)
@@ -7100,7 +7376,7 @@ def sysode_linear_2eq_order1(match_):
     r['c'] = -fc[1,x(t),0]/fc[1,y(t),1]
     r['b'] = -fc[0,y(t),0]/fc[0,x(t),1]
     r['d'] = -fc[1,y(t),0]/fc[1,y(t),1]
-    forcing = [S(0),S(0)]
+    forcing = [S.Zero,S.Zero]
     for i in range(2):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t)):
@@ -7537,7 +7813,7 @@ def sysode_linear_2eq_order2(match_):
     r['b1'] = -fc[0,y(t),1]/fc[0,x(t),2] ; r['b2'] = -fc[1,y(t),1]/fc[1,y(t),2]
     r['c1'] = -fc[0,x(t),0]/fc[0,x(t),2] ; r['c2'] = -fc[1,x(t),0]/fc[1,y(t),2]
     r['d1'] = -fc[0,y(t),0]/fc[0,x(t),2] ; r['d2'] = -fc[1,y(t),0]/fc[1,y(t),2]
-    const = [S(0), S(0)]
+    const = [S.Zero, S.Zero]
     for i in range(2):
         for j in Add.make_args(eq[i]):
             if not (j.has(x(t)) or j.has(y(t))):

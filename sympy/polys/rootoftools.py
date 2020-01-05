@@ -126,7 +126,7 @@ def _imag_count_of_factor(f):
 def rootof(f, x, index=None, radicals=True, expand=True):
     """An indexed root of a univariate polynomial.
 
-    Returns either a ``ComplexRootOf`` object or an explicit
+    Returns either a :obj:`ComplexRootOf` object or an explicit
     expression involving radicals.
 
     Parameters
@@ -221,17 +221,17 @@ class ComplexRootOf(RootOf):
 
     After evaluation it is now
 
-    >>. r._get_interval()
+    >>> r._get_interval() # doctest: +SKIP
     (-165/169, -206/211)
 
-    To reset all intervals for a given polynomial, the `_reset` method
+    To reset all intervals for a given polynomial, the :meth:`_reset` method
     can be called from any CRootOf instance of the polynomial:
 
     >>> r._reset()
     >>> r._get_interval()
     (-1, 0)
 
-    The `eval_approx` method will also find the root to a given
+    The :meth:`eval_approx` method will also find the root to a given
     precision but the interval is not modified unless the search
     for the root fails to converge within the root bounds. And
     the secant method is used to find the root. (The ``evalf``
@@ -280,9 +280,10 @@ class ComplexRootOf(RootOf):
 
     See Also
     ========
+
     eval_approx
     eval_rational
-    _eval_evalf
+
     """
 
     __slots__ = ['index']
@@ -656,6 +657,9 @@ class ComplexRootOf(RootOf):
         return roots
 
     def _reset(self):
+        """
+        Reset all intervals
+        """
         self._all_roots(self.poly, use_cache=False)
 
     @classmethod
@@ -749,6 +753,7 @@ class ComplexRootOf(RootOf):
 
         See Also
         ========
+
         _reset
         """
         global _reals_cache, _complexes_cache

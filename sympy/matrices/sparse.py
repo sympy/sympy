@@ -3,7 +3,9 @@ from __future__ import division, print_function
 import copy
 from collections import defaultdict
 
-from sympy.core.compatibility import Callable, as_int, is_sequence, range
+from sympy.core import SympifyError, Add
+from sympy.core.compatibility import Callable, as_int, is_sequence, range, \
+    reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
@@ -99,8 +101,9 @@ class SparseMatrix(MatrixBase):
 
     See Also
     ========
-    sympy.matrices.common.diag
-    sympy.matrices.dense.Matrix
+    DenseMatrix
+    MutableSparseMatrix
+    ImmutableSparseMatrix
     """
 
     def __new__(cls, *args, **kwargs):
@@ -460,8 +463,9 @@ class SparseMatrix(MatrixBase):
 
     def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
+
         if not isinstance(other, SparseMatrix):
-            return self*self._new(other)
+            other = self._new(other)
 
         # if we made it here, we're both sparse matrices
         # create quick lookups for rows and cols
@@ -479,8 +483,15 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    val = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
-                    smat[row, col] = val
+                    vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
+                    try:
+                        smat[row, col] = Add(*vec)
+                    except (TypeError, SympifyError):
+                        # Some matrices don't work with `sum` or `Add`
+                        # They don't work with `sum` because `sum` tries to add `0`
+                        # Fall back to a safe way to multiply if the `Add` fails.
+                        smat[row, col] = reduce(lambda a, b: a + b, vec)
+
         return self._new(self.rows, other.cols, smat)
 
     def _eval_row_insert(self, irow, other):
@@ -719,8 +730,8 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        col_op
-        row_list
+        sympy.matrices.sparse.MutableSparseMatrix.col_op
+        sympy.matrices.sparse.SparseMatrix.row_list
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
@@ -832,8 +843,8 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        row_op
-        col_list
+        sympy.matrices.sparse.MutableSparseMatrix.row_op
+        sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
             sorted(list(self._smat.keys()), key=lambda k: list(k))]

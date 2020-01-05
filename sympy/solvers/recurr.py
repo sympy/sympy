@@ -226,7 +226,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             D = p.subs(n, a + k)
 
             for i in range(1, k + 1):
-                B *= -Rational(k - i + 1, i)
+                B *= Rational(i - k - 1, i)
                 D += B * p.subs(n, a + k - i)
 
             return D
