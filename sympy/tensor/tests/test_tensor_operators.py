@@ -136,10 +136,10 @@ def test_expand_partial_derivative_sum_rule():
         PartialDerivative(A(i), tau)\
         + PartialDerivative(B(i), tau)
     expr1ac = PartialDerivative(A(i) + B(i) + C(i), tau)
-    assert expr1ac._expand_partial_derivative() ==\
-        PartialDerivative(A(i), tau)\
-        + PartialDerivative(B(i), tau)\
-        + PartialDerivative(C(i), tau)
+    assert (expr1ac._expand_partial_derivative() ==
+            PartialDerivative(A(i), tau)
+            + PartialDerivative(B(i), tau)
+            + PartialDerivative(C(i), tau))
 
     # check sum rule for D(tensor, D(j))
     expr1ba = PartialDerivative(A(i), D(j))
