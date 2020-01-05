@@ -315,4 +315,3 @@ def fidelity(state1, state2):
 
     sqrt_state1 = state1**S.Half
     return Tr((sqrt_state1 * state2 * sqrt_state1)**S.Half).doit()
-
