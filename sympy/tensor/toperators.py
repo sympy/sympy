@@ -1,4 +1,4 @@
-from sympy import tensorproduct, MutableDenseNDimArray, S
+from sympy import MutableDenseNDimArray, S
 from sympy.tensor.tensor import (TensExpr, TensMul, TensorIndex)
 
 
