@@ -6656,7 +6656,12 @@ def cancel(f, *gens, **args):
     c, P, Q = F.cancel(G)
 
     if not isinstance(f, (tuple, Tuple)):
-        return c*(P.as_expr()/Q.as_expr())
+        # checks if there is only I as a Generator
+        if I in opt.gens and len(opt.gens) == 1:
+            return f
+        else:
+            return c*(P.as_expr()/Q.as_expr())
+
     else:
         if not opt.polys:
             return c, P.as_expr(), Q.as_expr()
