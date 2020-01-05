@@ -3335,6 +3335,10 @@ def encipher_xor(message, key):
     Examples
     ========
 
+    >>> from sympy.crypto.crypto import encipher_xor
+    >>> encipher_xor("THISISASTRING", "ABCD")
+    '150a0a170811021715100a0a06'
+
     Parameters
     ==========
 
@@ -3367,6 +3371,10 @@ def decipher_xor(ciphertext, key):
 
     Examples
     ========
+
+    >>> from sympy.crypto.crypto import decipher_xor
+    >>> decipher_xor("150a0a170811021715100a0a06", "ABCD")
+    'THISISASTRING'
 
     Parameters
     ==========
