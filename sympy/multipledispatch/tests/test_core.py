@@ -9,6 +9,7 @@ orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
 
 
+@XFAIL
 def test_singledispatch():
     @dispatch(int)
     def f(x): # noqa:F811
@@ -29,7 +30,7 @@ def test_singledispatch():
     assert raises(NotImplementedError, lambda: f('hello'))
 
 
-def test_multipledispatch(benchmark):
+def test_multipledispatch():
     @dispatch(int, int)
     def f(x, y): # noqa:F811
         return x + y
@@ -63,6 +64,7 @@ def test_inheritance():
     assert f(C()) == 'a'
 
 
+@XFAIL
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
     def f(x, y): # noqa:F811
@@ -104,6 +106,9 @@ def test_competing_multiple():
 
 
 def test_competing_ambiguous():
+    test_namespace = dict()
+    dispatch = partial(orig_dispatch, namespace=test_namespace)
+
     @dispatch(A, C)
     def f(x, y): # noqa:F811
         return 2
@@ -112,7 +117,6 @@ def test_competing_ambiguous():
         @dispatch(C, A)
         def f(x, y): # noqa:F811
             return 2
-
 
     assert f(A(), C()) == f(C(), A()) == 2
     # assert raises(Warning, lambda : f(C(), C()))

@@ -2,7 +2,6 @@ from warnings import warn
 import inspect
 from .conflict import ordering, ambiguities, super_signature, AmbiguityWarning
 from .utils import expand_tuples
-from .variadic import Variadic, isvariadic
 import itertools as itl
 
 
@@ -27,72 +26,19 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
+_unresolved_dispatchers = set()
+_resolve = [True]
+
+
 def halt_ordering():
-    """Deprecated interface to temporarily disable ordering.
-    """
-    warn(
-        'halt_ordering is deprecated, you can safely remove this call.',
-        DeprecationWarning,
-    )
+    _resolve[0] = False
 
 
 def restart_ordering(on_ambiguity=ambiguity_warn):
-    """Deprecated interface to temporarily resume ordering.
-    """
-    warn(
-        'restart_ordering is deprecated, if you would like to eagerly order'
-        'the dispatchers, you should call the ``reorder()`` method on each'
-        ' dispatcher.',
-        DeprecationWarning,
-    )
-
-
-def variadic_signature_matches_iter(types, full_signature):
-    """Check if a set of input types matches a variadic signature.
-
-    Notes
-    -----
-    The algorithm is as follows:
-
-    Initialize the current signature to the first in the sequence
-
-    For each type in `types`:
-        If the current signature is variadic
-            If the type matches the signature
-                yield True
-            Else
-                Try to get the next signature
-                If no signatures are left we can't possibly have a match
-                    so yield False
-        Else
-            yield True if the type matches the current signature
-            Get the next signature
-    """
-    sigiter = iter(full_signature)
-    sig = next(sigiter)
-    for typ in types:
-        matches = issubclass(typ, sig)
-        yield matches
-        if not isvariadic(sig):
-            # we're not matching a variadic argument, so move to the next
-            # element in the signature
-            sig = next(sigiter)
-    else:
-        try:
-            sig = next(sigiter)
-        except StopIteration:
-            assert isvariadic(sig)
-            yield True
-        else:
-            # We have signature items left over, so all of our arguments
-            # haven't matched
-            yield False
-
-
-def variadic_signature_matches(types, full_signature):
-    # No arguments always matches a variadic signature
-    assert full_signature
-    return all(variadic_signature_matches_iter(types, full_signature))
+    _resolve[0] = True
+    while _unresolved_dispatchers:
+        dispatcher = _unresolved_dispatchers.pop()
+        dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
 class Dispatcher(object):
@@ -103,7 +49,7 @@ class Dispatcher(object):
     Examples
     --------
 
-    >>> from multipledispatch import dispatch
+    >>> from sympy.multipledispatch import dispatch
     >>> @dispatch(int)
     ... def f(x):
     ...     return x + 1
@@ -117,18 +63,19 @@ class Dispatcher(object):
     >>> f(3.0)
     2.0
     """
-    __slots__ = '__name__', 'name', 'funcs', '_ordering', '_cache', 'doc'
+    __slots__ = '__name__', 'name', 'funcs', 'ordering', '_cache', 'doc'
 
     def __init__(self, name, doc=None):
         self.name = self.__name__ = name
-        self.funcs = {}
+        self.funcs = dict()
+        self._cache = dict()
+        self.ordering = []
         self.doc = doc
 
-        self._cache = {}
-
     def register(self, *types, **kwargs):
-        """ register dispatcher with new implementation
+        """ Register dispatcher with new implementation
 
+        >>> from sympy.multipledispatch.dispatcher import Dispatcher
         >>> f = Dispatcher('f')
         >>> @f.register(int)
         ... def inc(x):
@@ -152,10 +99,10 @@ class Dispatcher(object):
         >>> f([1, 2, 3])
         [3, 2, 1]
         """
-        def _df(func):
+        def _(func):
             self.add(types, func, **kwargs)
             return func
-        return _df
+        return _
 
     @classmethod
     def get_func_params(cls, func):
@@ -165,7 +112,7 @@ class Dispatcher(object):
 
     @classmethod
     def get_func_annotations(cls, func):
-        """ get annotations of function positional parameters
+        """ Get annotations of function positional parameters
         """
         params = cls.get_func_params(func)
         if params:
@@ -183,9 +130,10 @@ class Dispatcher(object):
             if all(ann is not Parameter.empty for ann in annotations):
                 return annotations
 
-    def add(self, signature, func):
+    def add(self, signature, func, on_ambiguity=ambiguity_warn):
         """ Add new types/method pair to dispatcher
 
+        >>> from sympy.multipledispatch import Dispatcher
         >>> D = Dispatcher('add')
         >>> D.add((int, int), lambda x, y: x + y)
         >>> D.add((float, float), lambda x, y: x + y)
@@ -210,13 +158,11 @@ class Dispatcher(object):
         # Handle union types
         if any(isinstance(typ, tuple) for typ in signature):
             for typs in expand_tuples(signature):
-                self.add(typs, func)
+                self.add(typs, func, on_ambiguity)
             return
 
-        new_signature = []
-
-        for index, typ in enumerate(signature, start=1):
-            if not isinstance(typ, (type, list)):
+        for typ in signature:
+            if not isinstance(typ, type):
                 str_sig = ', '.join(c.__name__ if isinstance(c, type)
                                     else str(c) for c in signature)
                 raise TypeError("Tried to dispatch on non-type: %s\n"
@@ -224,44 +170,18 @@ class Dispatcher(object):
                                 "In function: %s" %
                                 (typ, str_sig, self.name))
 
-            # handle variadic signatures
-            if isinstance(typ, list):
-                if index != len(signature):
-                    raise TypeError(
-                        'Variadic signature must be the last element'
-                    )
-
-                if len(typ) != 1:
-                    raise TypeError(
-                        'Variadic signature must contain exactly one element. '
-                        'To use a variadic union type place the desired types '
-                        'inside of a tuple, e.g., [(int, str)]'
-                    )
-                new_signature.append(Variadic[typ[0]])
-            else:
-                new_signature.append(typ)
-
-        self.funcs[tuple(new_signature)] = func
+        self.funcs[signature] = func
+        self.reorder(on_ambiguity=on_ambiguity)
         self._cache.clear()
 
-        try:
-            del self._ordering
-        except AttributeError:
-            pass
-
-    @property
-    def ordering(self):
-        try:
-            return self._ordering
-        except AttributeError:
-            return self.reorder()
-
     def reorder(self, on_ambiguity=ambiguity_warn):
-        self._ordering = od = ordering(self.funcs)
-        amb = ambiguities(self.funcs)
-        if amb:
-            on_ambiguity(self, amb)
-        return od
+        if _resolve[0]:
+            self.ordering = ordering(self.funcs)
+            amb = ambiguities(self.funcs)
+            if amb:
+                on_ambiguity(self, amb)
+        else:
+            _unresolved_dispatchers.add(self)
 
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args])
@@ -285,25 +205,21 @@ class Dispatcher(object):
                     return func(*args, **kwargs)
                 except MDNotImplementedError:
                     pass
-
-            raise NotImplementedError(
-                "Matching functions for "
-                "%s: <%s> found, but none completed successfully" % (
-                    self.name, str_signature(types),
-                ),
-            )
+            raise NotImplementedError("Matching functions for "
+                                      "%s: <%s> found, but none completed successfully"
+                                      % (self.name, str_signature(types)))
 
     def __str__(self):
         return "<dispatched %s>" % self.name
     __repr__ = __str__
 
     def dispatch(self, *types):
-        """Deterimine appropriate implementation for this type signature
+        """ Deterimine appropriate implementation for this type signature
 
         This method is internal.  Users should call this object as a function.
         Implementation resolution occurs within the ``__call__`` method.
 
-        >>> from multipledispatch import dispatch
+        >>> from sympy.multipledispatch import dispatch
         >>> @dispatch(int)
         ... def inc(x):
         ...     return x + 1
@@ -316,7 +232,7 @@ class Dispatcher(object):
         None
 
         See Also:
-          ``multipledispatch.conflict`` - module to determine resolution order
+            ``sympy.multipledispatch.conflict`` - module to determine resolution order
         """
 
         if types in self.funcs:
@@ -328,16 +244,11 @@ class Dispatcher(object):
             return None
 
     def dispatch_iter(self, *types):
-
         n = len(types)
         for signature in self.ordering:
             if len(signature) == n and all(map(issubclass, types, signature)):
                 result = self.funcs[signature]
                 yield result
-            elif len(signature) and isvariadic(signature[-1]):
-                if variadic_signature_matches(types, signature):
-                    result = self.funcs[signature]
-                    yield result
 
     def resolve(self, types):
         """ Deterimine appropriate implementation for this type signature
@@ -357,7 +268,7 @@ class Dispatcher(object):
     def __setstate__(self, d):
         self.name = d['name']
         self.funcs = d['funcs']
-        self._ordering = ordering(self.funcs)
+        self.ordering = ordering(self.funcs)
         self._cache = dict()
 
     @property
@@ -413,7 +324,6 @@ class MethodDispatcher(Dispatcher):
     See Also:
         Dispatcher
     """
-    __slots__ = ('obj', 'cls')
 
     @classmethod
     def get_func_params(cls, func):
@@ -438,6 +348,7 @@ class MethodDispatcher(Dispatcher):
 def str_signature(sig):
     """ String representation of type signature
 
+    >>> from sympy.multipledispatch.dispatcher import str_signature
     >>> str_signature((int, float))
     'int, float'
     """
