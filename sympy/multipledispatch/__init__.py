@@ -9,4 +9,3 @@ __all__ = [
 
     'Dispatcher', 'halt_ordering', 'restart_ordering', 'MDNotImplementedError',
 ]
-
