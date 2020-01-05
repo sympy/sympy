@@ -1,4 +1,4 @@
-from sympy import Symbol
+from sympy import Symbol, Number, sympify
 from sympy import tensorproduct, MutableDenseNDimArray, S
 from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul)
 
@@ -115,10 +115,13 @@ class PartialDerivative(TensExpr):
                 terms = []
                 mulargs = list(obj.expr.args)
                 for ind in range(len(mulargs)):
-                    d = self.func(mulargs[ind], *obj.variables)._expand_partial_derivative()
-                    terms.append(TensMul(*(mulargs[:ind]
-                                           + [d]
-                                           + mulargs[(ind + 1):])))
+                    if not isinstance(sympify(mulargs[ind]), Number):
+                        # a number coefficient is not considered for
+                        # expansion of PartialDerivative
+                        d = self.func(mulargs[ind], *obj.variables)._expand_partial_derivative()
+                        terms.append(TensMul(*(mulargs[:ind]
+                                               + [d]
+                                               + mulargs[(ind + 1):])))
                 result = TensAdd.fromiter(terms)
             else:
                 # derivative with respect to multiple variables
