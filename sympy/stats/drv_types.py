@@ -126,8 +126,8 @@ class HermiteDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(a1, a2):
-        _value_check(a1.is_positive or a1.is_zero, 'Parameter a1 must be >= 0.')
-        _value_check(a2.is_positive or a2.is_zero, 'Parameter a2 must be >= 0.')
+        _value_check(a1.is_nonnegative, 'Parameter a1 must be >= 0.')
+        _value_check(a2.is_nonnegative, 'Parameter a2 must be >= 0.')
 
     def pdf(self, k):
         a1, a2 = self.a1, self.a2
