@@ -31,6 +31,8 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
+from typing import List, Set
+
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
@@ -1958,20 +1960,20 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
     @property
     @abstractmethod
     def nocoeff(self):
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @property
     @abstractmethod
     def coeff(self):
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @abstractmethod
     def get_indices(self):
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @abstractmethod
     def get_free_indices(self):  # type: () -> List[TensorIndex]
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @abstractmethod
     def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
