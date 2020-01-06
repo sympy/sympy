@@ -1111,12 +1111,15 @@ class MatrixProperties(MatrixRequired):
                         yield self[i, j].is_zero
         return fuzzy_and(pred())
 
-    # _eval_is_hermitian is called by some general sympy
-    # routines and has a different *args signature.  Make
-    # sure the names don't clash by adding `_matrix_` in name.
-    def _eval_is_matrix_hermitian(self, simpfunc):
-        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
-        return mat.is_zero
+    def _eval_is_hermitian_matrix(self):
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    if i == j:
+                        yield self[i, j].is_real
+                    else:
+                        yield (self[i, j] - self[j, i].conjugate()).is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_Identity(self):
         def dirac(i, j):
@@ -1308,11 +1311,8 @@ class MatrixProperties(MatrixRequired):
         return self._eval_is_diagonal()
 
     @property
-    def is_hermitian(self, simplify=True):
+    def is_hermitian(self):
         """Checks if the matrix is Hermitian.
-
-        In a Hermitian matrix element i,j is the complex conjugate of
-        element j,i.
 
         Examples
         ========
@@ -1320,30 +1320,42 @@ class MatrixProperties(MatrixRequired):
         >>> from sympy.matrices import Matrix
         >>> from sympy import I
         >>> from sympy.abc import x
+
+        An example of a Hermitian matrix:
+
         >>> a = Matrix([[1, I], [-I, 1]])
-        >>> a
-        Matrix([
-        [ 1, I],
-        [-I, 1]])
         >>> a.is_hermitian
         True
-        >>> a[0, 0] = 2*I
+
+        An example of a non-Hermitian matrix:
+
+        >>> a = Matrix([[2*I, I], [-I, 1]])
         >>> a.is_hermitian
         False
-        >>> a[0, 0] = x
+
+        An example of a logically undecidable matrix:
+
+        >>> a = Matrix([[x, I], [-I, 1]])
         >>> a.is_hermitian
-        >>> a[0, 1] = a[1, 0]*I
+
+        An example of a matrix with a logically decidable non-hermitian
+        pairs:
+
+        >>> a = Matrix([[x, 1], [-I, 1]])
         >>> a.is_hermitian
         False
+
+        Notes
+        =====
+
+        In a Hermitian matrix $M$, the element $M_{i, j}$ is the complex
+        conjugate of element $M_{j, i}$. This also implies that all
+        diagonal entries are real.
         """
         if not self.is_square:
             return False
 
-        simpfunc = simplify
-        if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
-
-        return self._eval_is_matrix_hermitian(simpfunc)
+        return self._eval_is_hermitian_matrix()
 
     @property
     def is_Identity(self):

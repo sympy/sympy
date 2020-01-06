@@ -4112,7 +4112,7 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
+        if hermitian and self.is_hermitian is False:
             raise ValueError("Matrix must be Hermitian.")
         if not hermitian and not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
