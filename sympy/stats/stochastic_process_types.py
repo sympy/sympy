@@ -3,13 +3,12 @@ from __future__ import print_function, division
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, symbols,
-                   linsolve, eye, Or, Not, Intersection,
+                   linsolve, eye, Or, Not, Intersection, Add,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, binomial, sympify, Piecewise)
+                   Ge, sympify, Piecewise)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
-from sympy.stats.drv import DiscreteDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.stochastic_process import StochasticPSpace
@@ -864,7 +863,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         sym = _symbol_converter(sym)
         state_space = _set_converter([success, failure])
         return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
-                             success, failure)
+                             sympify(success), sympify(failure))
 
 
     def _rvindexed_subs(self, expr, condition=None):
