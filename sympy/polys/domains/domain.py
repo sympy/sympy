@@ -48,12 +48,12 @@ class Domain(object):
     rep = None
     alias = None
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
     def has_Field(self):
         return self.is_Field
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
     def has_Ring(self):
         return self.is_Ring

@@ -1065,7 +1065,9 @@ class Xor(BooleanFunction):
             obj._argset = frozenset(argset)
             return obj
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe it can be computed in __new__?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))
@@ -1334,7 +1336,9 @@ class Equivalent(BooleanFunction):
         obj._argset = _args
         return obj
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe it can be computed in __new__?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))

@@ -65,7 +65,7 @@ class Set(Basic):
     is_empty = None
     is_finite_set = None
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is S.EmptySet or is_empty",
             issue=16946, deprecated_since_version="1.5")
     def is_EmptySet(self):
@@ -1187,11 +1187,6 @@ class Union(Set, LatticeOp, EvalfMixin):
         obj._argset = frozenset(args)
         return obj
 
-    @property
-    @cacheit
-    def args(self):
-        return self._args
-
     def _complement(self, universe):
         # DeMorgan's Law
         return Intersection(s.complement(universe) for s in self.args)
@@ -1359,11 +1354,6 @@ class Intersection(Set, LatticeOp):
         obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
         return obj
-
-    @property
-    @cacheit
-    def args(self):
-        return self._args
 
     @property
     def is_iterable(self):
@@ -1646,7 +1636,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     is_finite_set = True
     is_FiniteSet = True
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is S.EmptySet or is_empty",
             issue=16946, deprecated_since_version="1.5")
     def is_EmptySet(self):

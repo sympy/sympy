@@ -459,7 +459,9 @@ class LatticeOp(AssocOp):
         else:
             return frozenset([sympify(expr)])
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe _argset can just be sorted in the constructor?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))
