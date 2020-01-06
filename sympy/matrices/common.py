@@ -1218,69 +1218,48 @@ class MatrixProperties(MatrixRequired):
 
     @property
     def is_anti_symmetric(self):
-        """Check if matrix M is an antisymmetric matrix,
-        that is, M is a square matrix with all M[i, j] == -M[j, i].
-
-        When ``simplify=True`` (default), the sum M[i, j] + M[j, i] is
-        simplified before testing to see if it is zero. By default,
-        the SymPy simplify function is used. To use a custom function
-        set simplify to a function that accepts a single argument which
-        returns a simplified expression. To skip simplification, set
-        simplify to False but note that although this will be faster,
-        it may induce false negatives.
+        """Check if the matrix is an anti-symmetric matrix
 
         Examples
         ========
 
+        An example of an anti-symmetric matrix
+
         >>> from sympy import Matrix, symbols
-        >>> m = Matrix(2, 2, [0, 1, -1, 0])
-        >>> m
-        Matrix([
-        [ 0, 1],
-        [-1, 0]])
-        >>> m.is_anti_symmetric()
+        >>> m = Matrix([[0, 1], [-1, 0]])
+        >>> m.is_anti_symmetric
         True
+
+        An example of a logically undecidable matrix:
+
         >>> x, y = symbols('x y')
-        >>> m = Matrix(2, 3, [0, 0, x, -y, 0, 0])
-        >>> m
-        Matrix([
-        [ 0, 0, x],
-        [-y, 0, 0]])
-        >>> m.is_anti_symmetric()
-        False
+        >>> m = Matrix([[0, x], [y, 0]])
+        >>> m.is_anti_symmetric
 
-        >>> from sympy.abc import x, y
-        >>> m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
-        ...                   -(x + 1)**2 , 0, x*y,
-        ...                   -y, -x*y, 0])
+        An example of a matrix that can be logically decided, but
+        should be simplified.
 
-        Simplification of matrix elements is done by default so even
-        though two elements which should be equal and opposite wouldn't
-        pass an equality test, the matrix is still reported as
-        anti-symmetric:
-
-        >>> m[0, 1] == -m[1, 0]
-        False
-        >>> m.is_anti_symmetric()
+        >>> m = Matrix([
+        ...     [0, x**2 + 2*x + 1, y],
+        ...     [-(x + 1)**2 , 0, x*y],
+        ...     [-y, -x*y, 0]])
+        >>> m.is_anti_symmetric
+        >>> m.expand().is_anti_symmetric
         True
 
-        If 'simplify=False' is used for the case when a Matrix is already
-        simplified, this will speed things up. Here, we see that without
-        simplification the matrix does not appear anti-symmetric:
+        Notes
+        =====
 
-        >>> m.is_anti_symmetric(simplify=False)
-        False
+        A matrix $M$ is a anti-symmetric matrix if all
+        $M_{i, j} = -M_{j, i}$. It may also imply that the all diagonal
+        entries are zero.
 
-        But if the matrix were already expanded, then it would appear
-        anti-symmetric and simplification in the is_anti_symmetric routine
-        is not needed:
-
-        >>> m = m.expand()
-        >>> m.is_anti_symmetric(simplify=False)
-        True
+        The return value can be a fuzzy value ``None`` if some pairs are
+        logically undetermined. You can try out using ``simplify`` or
+        ``expand`` to the matrix if you face such issues,
+        or otherwise, try to build up the full logic programmatically
+        and simplify some logically undecidable pairs.
         """
-        # accept custom simplification
-
         if not self.is_square:
             return False
 
