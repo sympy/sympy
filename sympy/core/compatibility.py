@@ -61,6 +61,8 @@ __all__ = [
     'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
 ]
 
+from typing import Tuple, Type, Any
+
 import sys
 PY3 = sys.version_info[0] > 2
 
@@ -927,7 +929,4 @@ else:
         return decorating_function
     ### End of backported lru_cache
 
-try:
-    from time import clock
-except ImportError: # Python 3.8+
-    from time import perf_counter as clock
+from time import perf_counter as clock

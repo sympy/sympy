@@ -28,7 +28,7 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-_unresolved_dispatchers : Set['Dispatcher'] = set()
+_unresolved_dispatchers = set() # type: Set[Dispatcher]
 _resolve = [True]
 
 
