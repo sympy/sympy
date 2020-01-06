@@ -258,7 +258,7 @@ class Dimension(Expr):
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
-        from sympy.physics.units.unitsystem.si import dimsys_default
+        from sympy.physics.units.systems.si import dimsys_default
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
             issue=13336,
@@ -277,7 +277,7 @@ class Dimension(Expr):
         if self.name == 1:
             return True
         if dimensional_dependencies is None:
-            from sympy.physics.units.unitsystem.si import dimsys_default
+            from sympy.physics.units.systems.si import dimsys_default
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
                 issue=13336,
