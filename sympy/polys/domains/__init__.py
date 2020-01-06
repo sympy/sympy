@@ -1,10 +1,10 @@
 """Implementation of mathematical domains. """
 
 __all__ = ['Domain', 'FiniteField', 'IntegerRing', 'RationalField',
-        'RealField', 'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
-        'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
-        'GMPYRationalField', 'AlgebraicField', 'PolynomialRing',
-        'FractionField', 'ExpressionDomain', 'PythonRational']
+           'RealField', 'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
+           'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
+           'GMPYRationalField', 'AlgebraicField', 'PolynomialRing',
+           'FractionField', 'ExpressionDomain', 'PythonRational']
 
 from .domain import Domain
 from .finitefield import FiniteField
