@@ -1650,7 +1650,7 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
 
 def test_sympy__stats__stochastic_process_types__BernoulliProcess():
     from sympy.stats.stochastic_process_types import BernoulliProcess
-    assert _test_args(BernoulliProcess("B", 1, 0, 0.5))
+    assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
 
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace

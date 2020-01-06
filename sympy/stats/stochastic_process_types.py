@@ -152,7 +152,7 @@ class StochasticProcess(Basic):
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
         pdf = Lambda(tuple(args),
-                    expr=Mul.fromiter(arg.pspace.process.pmf(arg) for arg in args))
+                    expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
@@ -789,7 +789,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     >>> from sympy.stats import BernoulliProcess, P, E
     >>> from sympy import Eq, Gt, Lt
-    >>> B = BernoulliProcess("B", success=1, failure=0, p=0.7)
+    >>> B = BernoulliProcess("B",p=0.7, success=1, failure=0)
 
     >>> B.state_space
     FiniteSet(0, 1)
@@ -856,7 +856,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def failure(self):
         return self.args[5]
 
-    def __new__(cls, sym, success, failure, p):
+    def __new__(cls, sym, p, success=1, failure=0):
         if p > 1 or p < 0:
             raise ValueError("Probability must be in between 0 and 1")
         p = sympify(p)
@@ -865,6 +865,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
                              sympify(success), sympify(failure))
 
+    def __getattribute__(self, name):
+        if name == 'density':
+            return self.pmf
+        return object.__getattribute__(self, name)
 
     def _rvindexed_subs(self, expr, condition=None):
         """

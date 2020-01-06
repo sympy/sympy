@@ -139,13 +139,13 @@ def test_ContinuousMarkovChain():
 
 def test_BernoulliProcess():
 
-    B = BernoulliProcess("B", success=1, failure=0, p=0.6)
+    B = BernoulliProcess("B", p=0.6, success=1, failure=0)
     assert B.state_space == FiniteSet(0, 1)
     assert B.index_set == S.Naturals0
     assert B.success == 1
     assert B.failure == 0
 
-    X = BernoulliProcess("X", success='H', failure='T', p=0.6)
+    X = BernoulliProcess("X", p=0.6, success='H', failure='T')
     assert X.state_space == FiniteSet('H', 'T')
     H, T = symbols("H,T")
     assert str(E(X[1]+X[2]*X[3])) == str(0.36*H**2 + 0.48*H*T + 0.6*H + 0.16*T**2 + 0.4*T)
@@ -153,9 +153,10 @@ def test_BernoulliProcess():
     t = symbols('t', positive=True, integer=True)
     assert isinstance(B[t], RandomIndexedSymbol)
 
-    raises (ValueError, lambda: BernoulliProcess("X", 1, 0, 1.1))
+    raises (ValueError, lambda: BernoulliProcess("X",p=1.1, success=1, failure=0))
     raises(NotImplementedError, lambda: B(t))
 
+    raises (IndexError, lambda: B[-3])
     assert B.joint_distribution(B[3], B[9]) == JointDistributionHandmade(Lambda((B[3], B[9]),
                 Piecewise((0.6, Eq(B[3], 1)), (0.4, Eq(B[3], 0)), (0, True))
                 *Piecewise((0.6, Eq(B[9], 1)), (0.4, Eq(B[9], 0)), (0, True))))
@@ -176,8 +177,14 @@ def test_BernoulliProcess():
     assert E(2 * B[1] + B[2]).round(2) == Float(1.80, 3)
     assert E(2 * B[1] + B[2] + 5).round(2) == Float(6.80, 3)
     assert E(B[2] * B[4] + B[10]).round(2) == Float(0.96, 2)
+    assert E(B[2] > 0, Eq(B[1],1) & Eq(B[2],1)).round(2) == Float(0.60,2)
     assert P(B[1] > 0).round(2) == Float(0.60, 2)
     assert P(B[1] < 1).round(2) == Float(0.40, 2)
     assert P(B[1] > 0, B[2] <= 1).round(2) == Float(0.60, 2)
     assert P(B[12] * B[5] > 0).round(2) == Float(0.36, 2)
     assert P(B[12] * B[5] > 0, B[4] < 1).round(2) == Float(0.36, 2)
+    assert P(Eq(B[2], 1), B[2] > 0) == 1
+    assert P(Eq(B[5], 3)) == 0
+    assert P(Eq(B[1], 1), B[1] < 0) == 0
+    raises (ValueError, lambda: P(3))
+    raises (ValueError, lambda: P(B[3] > 0, 3))
