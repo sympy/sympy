@@ -29,7 +29,7 @@ class Expr(Basic, EvalfMixin):
     sympy.core.basic.Basic
     """
 
-    __slots__ = []
+    __slots__ = ()
 
     is_scalar = True  # self derivative is 1
 
@@ -3796,7 +3796,7 @@ class AtomicExpr(Atom, Expr):
     is_number = False
     is_Atom = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def _eval_derivative(self, s):
         if self == s:

@@ -1366,7 +1366,7 @@ def evalf(x, prec, options):
 class EvalfMixin(object):
     """Mixin class adding evalf capabililty."""
 
-    __slots__ = []
+    __slots__ = ()
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """

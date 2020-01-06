@@ -55,7 +55,7 @@ class Label(String):
 
 class goto(Token):
     """ Represents goto in C """
-    __slots__ = ['label']
+    __slots__ = ('label',)
     _construct_label = Label
 
 
@@ -92,7 +92,7 @@ class PostIncrement(Basic):
 
 class struct(Node):
     """ Represents a struct in C """
-    __slots__ = ['name', 'declarations']
+    __slots__ = ('name', 'declarations')
     defaults = {'name': none}
     _construct_name = String
 

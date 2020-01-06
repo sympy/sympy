@@ -587,7 +587,7 @@ class Number(AtomicExpr):
     is_number = True
     is_Number = True
 
-    __slots__ = []
+    __slots__ = ()
 
     # Used to make max(x._prec, y._prec) return x._prec when only x is a float
     _prec = -1
@@ -1019,7 +1019,7 @@ class Float(Number):
     >>> _.is_Float
     False
     """
-    __slots__ = ['_mpf_', '_prec']
+    __slots__ = ('_mpf_', '_prec')
 
     # A Float represents many real numbers,
     # both rational and irrational.
@@ -1591,7 +1591,7 @@ class Rational(Number):
     is_rational = True
     is_number = True
 
-    __slots__ = ['p', 'q']
+    __slots__ = ('p', 'q')
 
     is_Rational = True
 
@@ -2076,7 +2076,7 @@ class Integer(Rational):
 
     is_Integer = True
 
-    __slots__ = ['p']
+    __slots__ = ('p',)
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
@@ -2436,7 +2436,7 @@ converter[int] = Integer
 class AlgebraicNumber(Expr):
     """Class for representing algebraic numbers in SymPy. """
 
-    __slots__ = ['rep', 'root', 'alias', 'minpoly']
+    __slots__ = ('rep', 'root', 'alias', 'minpoly')
 
     is_AlgebraicNumber = True
     is_algebraic = True
@@ -2563,14 +2563,14 @@ class RationalConstant(Rational):
     Derived classes must define class attributes p and q and should probably all
     be singletons.
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
 
 class IntegerConstant(Integer):
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -2604,7 +2604,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_number = True
     is_comparable = True
 
-    __slots__ = []
+    __slots__ = ()
 
     @staticmethod
     def __abs__():
@@ -2666,7 +2666,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     p = 1
     q = 1
 
-    __slots__ = []
+    __slots__ = ()
 
     @staticmethod
     def __abs__():
@@ -2719,7 +2719,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     p = -1
     q = 1
 
-    __slots__ = []
+    __slots__ = ()
 
     @staticmethod
     def __abs__():
@@ -2774,7 +2774,7 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     p = 1
     q = 2
 
-    __slots__ = []
+    __slots__ = ()
 
     @staticmethod
     def __abs__():
@@ -2828,7 +2828,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_extended_positive = True
     is_prime = False
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -2996,7 +2996,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_number = True
     is_prime = False
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -3201,7 +3201,7 @@ class NaN(with_metaclass(Singleton, Number)):
     is_negative = None
     is_number = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -3302,7 +3302,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_complex = False
     is_extended_real = False
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -3351,7 +3351,7 @@ class NumberSymbol(AtomicExpr):
     is_finite = True
     is_number = True
 
-    __slots__ = []
+    __slots__ = ()
 
     is_NumberSymbol = True
 
@@ -3436,7 +3436,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     is_algebraic = False
     is_transcendental = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def _latex(self, printer):
         return r"e"
@@ -3518,7 +3518,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     is_algebraic = False
     is_transcendental = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def _latex(self, printer):
         return r"\pi"
@@ -3579,7 +3579,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     is_algebraic = True
     is_transcendental = False
 
-    __slots__ = []
+    __slots__ = ()
 
     def _latex(self, printer):
         return r"\phi"
@@ -3651,7 +3651,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     is_algebraic = True
     is_transcendental = False
 
-    __slots__ = []
+    __slots__ = ()
 
     def _latex(self, printer):
         return r"\text{TribonacciConstant}"
@@ -3711,7 +3711,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     is_irrational = None
     is_number = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def _latex(self, printer):
         return r"\gamma"
@@ -3767,7 +3767,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     is_irrational = None
     is_number = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def __int__(self):
         return 0
@@ -3826,7 +3826,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     is_algebraic = True
     is_transcendental = False
 
-    __slots__ = []
+    __slots__ = ()
 
     def _latex(self, printer):
         return printer._settings['imaginary_unit_latex']

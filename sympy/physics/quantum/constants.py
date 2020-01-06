@@ -39,7 +39,7 @@ class HBar(with_metaclass(Singleton, NumberSymbol)):
     is_negative = False
     is_irrational = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def _as_mpf_val(self, prec):
         return mlib.from_float(1.05457162e-34, prec)

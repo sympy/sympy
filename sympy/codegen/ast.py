@@ -171,7 +171,7 @@ class Token(Basic):
     in the class attribute ``not_in_args`` are not passed to :class:`~.Basic`.
     """
 
-    __slots__ = []
+    __slots__ = ()
     defaults = {}
     not_in_args = []
     indented_args = ['body']
@@ -829,7 +829,7 @@ class For(Token):
         ))
     ))
     """
-    __slots__ = ['target', 'iterable', 'body']
+    __slots__ = ('target', 'iterable', 'body')
     _construct_target = staticmethod(_sympify)
 
     @classmethod
@@ -873,7 +873,7 @@ class String(Token):
     String('foo')
 
     """
-    __slots__ = ['text']
+    __slots__ = ('text',)
     not_in_args = ['text']
     is_Atom = True
 
@@ -914,7 +914,7 @@ class Node(Token):
 
     """
 
-    __slots__ = ['attrs']
+    __slots__ = ('attrs',)
 
     defaults = {'attrs': Tuple()}
 
@@ -980,7 +980,7 @@ class Type(Token):
     .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
-    __slots__ = ['name']
+    __slots__ = ('name',)
 
     _construct_name = String
 
@@ -1105,12 +1105,12 @@ class Type(Token):
 
 class IntBaseType(Type):
     """ Integer base type, contains no size information. """
-    __slots__ = ['name']
+    __slots__ = ('name',)
     cast_nocheck = lambda self, i: Integer(int(i))
 
 
 class _SizedIntType(IntBaseType):
-    __slots__ = ['name', 'nbits']
+    __slots__ = ('name', 'nbits',)
 
     _construct_nbits = Integer
 
@@ -1189,7 +1189,7 @@ class FloatType(FloatBaseType):
     ValueError: Maximum value for data type smaller than new value.
     """
 
-    __slots__ = ['name', 'nbits', 'nmant', 'nexp']
+    __slots__ = ('name', 'nbits', 'nmant', 'nexp',)
 
     _construct_nbits = _construct_nmant = _construct_nexp = Integer
 
@@ -1338,7 +1338,7 @@ class Attribute(Token):
     >>> a.parameters == (1, 2, 3)
     True
     """
-    __slots__ = ['name', 'parameters']
+    __slots__ = ('name', 'parameters')
     defaults = {'parameters': Tuple()}
     _construct_name = String
     _construct_parameters = staticmethod(_mk_Tuple)
@@ -1404,7 +1404,7 @@ class Variable(Node):
 
     """
 
-    __slots__ = ['symbol', 'type', 'value'] + Node.__slots__
+    __slots__ = ('symbol', 'type', 'value') + Node.__slots__
     defaults = dict(chain(Node.defaults.items(), {
         'type': untyped,
         'value': none
@@ -1545,7 +1545,7 @@ class Element(Token):
     'x[i*l + j*m + k*n + o]'
 
     """
-    __slots__ = ['symbol', 'indices', 'strides', 'offset']
+    __slots__ = ('symbol', 'indices', 'strides', 'offset')
     defaults = {'strides': none, 'offset': none}
     _construct_symbol = staticmethod(sympify)
     _construct_indices = staticmethod(lambda arg: Tuple(*arg))
@@ -1577,7 +1577,7 @@ class Declaration(Token):
     >>> z.variable.value == NoneToken()  # OK
     True
     """
-    __slots__ = ['variable']
+    __slots__ = ('variable',)
     _construct_variable = Variable
 
 
@@ -1608,7 +1608,7 @@ class While(Token):
     ... ])
 
     """
-    __slots__ = ['condition', 'body']
+    __slots__ = ('condition', 'body')
     _construct_condition = staticmethod(lambda cond: _sympify(cond))
 
     @classmethod
@@ -1629,7 +1629,7 @@ class Scope(Token):
         When passed an iterable it is used to instantiate a CodeBlock.
 
     """
-    __slots__ = ['body']
+    __slots__ = ('body',)
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1662,7 +1662,7 @@ class Stream(Token):
     print("x", file=sys.stderr)
 
     """
-    __slots__ = ['name']
+    __slots__ = ('name',)
     _construct_name = String
 
 stdout = Stream('stdout')
@@ -1688,7 +1688,7 @@ class Print(Token):
 
     """
 
-    __slots__ = ['print_args', 'format_string', 'file']
+    __slots__ = ('print_args', 'format_string', 'file')
     defaults = {'format_string': none, 'file': none}
 
     _construct_print_args = staticmethod(_mk_Tuple)
@@ -1722,7 +1722,7 @@ class FunctionPrototype(Node):
 
     """
 
-    __slots__ = ['return_type', 'name', 'parameters', 'attrs']
+    __slots__ = ('return_type', 'name', 'parameters', 'attrs')
 
     _construct_return_type = Type
     _construct_name = String
@@ -1776,7 +1776,7 @@ class FunctionDefinition(FunctionPrototype):
     }
     """
 
-    __slots__ = FunctionPrototype.__slots__[:-1] + ['body', 'attrs']
+    __slots__ = FunctionPrototype.__slots__[:-1] + ('body', 'attrs')
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1815,7 +1815,7 @@ class FunctionCall(Token, Expr):
     foo(bar, baz)
 
     """
-    __slots__ = ['name', 'function_args']
+    __slots__ = ('name', 'function_args')
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))

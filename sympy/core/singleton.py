@@ -77,7 +77,7 @@ class SingletonRegistry(Registry):
     ``Integer.__div__``, which knows how to return a ``Rational``.
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     # Also allow things like S(5)
     __call__ = staticmethod(sympify)

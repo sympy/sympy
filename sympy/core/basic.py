@@ -56,10 +56,10 @@ class Basic(with_metaclass(ManagedProperties)):
     (x,)
 
     """
-    __slots__ = ['_mhash',              # hash value
+    __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
                  '_assumptions'
-                ]
+                )
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -1837,7 +1837,7 @@ class Atom(Basic):
 
     is_Atom = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:

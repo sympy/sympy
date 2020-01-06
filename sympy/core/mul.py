@@ -90,7 +90,7 @@ def _unevaluated_Mul(*args):
 
 class Mul(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Mul = True
 

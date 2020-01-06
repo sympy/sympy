@@ -53,7 +53,7 @@ class Relational(Boolean, EvalfMixin):
     Eq(y, x**2 + x)
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     is_Relational = True
 
@@ -465,7 +465,7 @@ class Equality(Relational):
     """
     rel_op = '=='
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Equality = True
 
@@ -713,7 +713,7 @@ class Unequality(Relational):
     """
     rel_op = '!='
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
@@ -760,7 +760,7 @@ class _Inequality(Relational):
     comparing two real numbers.
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)

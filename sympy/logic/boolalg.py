@@ -57,7 +57,7 @@ def as_Boolean(e):
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
-    __slots__ = []
+    __slots__ = ()
 
     def __and__(self, other):
         """Overloading for & operator"""

@@ -515,7 +515,7 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    __slots__ = ['z', 'z_r', 'wavelen']
+    __slots__ = ('z', 'z_r', 'wavelen')
 
     def __new__(cls, wavelen, z, **kwargs):
         wavelen, z = map(sympify, (wavelen, z))

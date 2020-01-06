@@ -761,7 +761,7 @@ from threading import RLock
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 
 class _HashedSeq(list):
-    __slots__ = 'hashvalue'
+    __slots__ = ('hashvalue',)
 
     def __init__(self, tup, hash=hash):
         self[:] = tup

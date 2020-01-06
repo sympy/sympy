@@ -16,7 +16,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
 
     mod, dom, sym, _parent = None, None, None, None
 
-    __slots__ = ['val']
+    __slots__ = ('val',)
 
     def parent(self):
         return self._parent
