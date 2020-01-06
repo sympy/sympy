@@ -74,24 +74,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of {}".format(self.__class__))
 
-    def _eval_Eq(self, other):
-        """Helper method for Equality with matrices.
-
-        Relational automatically converts matrices to ImmutableDenseMatrix
-        instances, so this method only applies here.  Returns True if the
-        matrices are definitively the same, False if they are definitively
-        different, and None if undetermined (e.g. if they contain Symbols).
-        Returning None triggers default handling of Equalities.
-
-        """
-        if not hasattr(other, 'shape') or self.shape != other.shape:
-            return S.false
-        if isinstance(other, MatrixExpr) and not isinstance(
-                other, ImmutableDenseMatrix):
-            return None
-        diff = self - other
-        return sympify(diff.is_zero)
-
     def _eval_extract(self, rowsList, colsList):
         # self._mat is a Tuple.  It is slightly faster to index a
         # tuple over a Tuple, so grab the internal tuple directly
@@ -118,13 +100,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
             reals_only=reals_only, **kwargs)
     is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
-
-
-# This is included after the class definition as a workaround for issue 7213.
-# See https://github.com/sympy/sympy/issues/7213
-# the object is non-zero
-# See https://github.com/sympy/sympy/issues/7213
-ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero
 
 # make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
 ImmutableMatrix = ImmutableDenseMatrix
@@ -175,8 +150,6 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
 
     def __hash__(self):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
-
-    _eval_Eq = ImmutableDenseMatrix._eval_Eq
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
         return super(ImmutableSparseMatrix, self).is_diagonalizable(

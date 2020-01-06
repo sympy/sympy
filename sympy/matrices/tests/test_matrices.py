@@ -3077,17 +3077,17 @@ def test_zeros_eye():
 
 
 def test_is_zero():
-    assert Matrix().is_zero
-    assert Matrix([[0, 0], [0, 0]]).is_zero
-    assert zeros(3, 4).is_zero
-    assert not eye(3).is_zero
-    assert Matrix([[x, 0], [0, 0]]).is_zero == None
-    assert SparseMatrix([[x, 0], [0, 0]]).is_zero == None
-    assert ImmutableMatrix([[x, 0], [0, 0]]).is_zero == None
-    assert ImmutableSparseMatrix([[x, 0], [0, 0]]).is_zero == None
-    assert Matrix([[x, 1], [0, 0]]).is_zero == False
+    assert Matrix().is_zero_matrix
+    assert Matrix([[0, 0], [0, 0]]).is_zero_matrix
+    assert zeros(3, 4).is_zero_matrix
+    assert eye(3).is_zero_matrix is False
+    assert Matrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert SparseMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert ImmutableMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert ImmutableSparseMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
+    assert Matrix([[x, 1], [0, 0]]).is_zero_matrix is False
     a = Symbol('a', nonzero=True)
-    assert Matrix([[a, 0], [0, 0]]).is_zero == False
+    assert Matrix([[a, 0], [0, 0]]).is_zero_matrix is False
 
 
 def test_rotation_matrices():

@@ -1156,12 +1156,12 @@ class MatrixProperties(MatrixRequired):
                         yield (self[i, j] - self[j, i]).is_zero
         return fuzzy_and(pred())
 
-    def _eval_is_zero(self):
-        if any(i.is_zero == False for i in self):
-            return False
-        if any(i.is_zero is None for i in self):
-            return None
-        return True
+    def _eval_is_zero_matrix(self):
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    yield self[i, j].is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_upper_hessenberg(self):
         def pred():
@@ -1595,13 +1595,8 @@ class MatrixProperties(MatrixRequired):
         return self._eval_is_upper()
 
     @property
-    def is_zero(self):
+    def is_zero_matrix(self):
         """Checks if a matrix is a zero matrix.
-
-        A matrix is zero if every element is zero.  A matrix need not be square
-        to be considered zero.  The empty matrix is zero by the principle of
-        vacuous truth.  For a matrix that may or may not be zero (e.g.
-        contains a symbol), this will be None
 
         Examples
         ========
@@ -1613,17 +1608,26 @@ class MatrixProperties(MatrixRequired):
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
         >>> e = Matrix([[x, 0], [0, 0]])
-        >>> a.is_zero
+        >>> a.is_zero_matrix
         True
-        >>> b.is_zero
+        >>> b.is_zero_matrix
         True
-        >>> c.is_zero
+        >>> c.is_zero_matrix
         False
-        >>> d.is_zero
+        >>> d.is_zero_matrix
         True
-        >>> e.is_zero
+        >>> e.is_zero_matrix
+
+        Notes
+        =====
+
+        A matrix is zero if every element is zero.  A matrix need not be
+        square to be considered zero.
+        The empty matrix is zero by the principle of vacuous truth.
+        For a matrix that may or may not be zero
+        (e.g. contains a symbol), this will be ``None``.
         """
-        return self._eval_is_zero()
+        return self._eval_is_zero_matrix()
 
     def values(self):
         """Return non-zero values of self."""

@@ -12,9 +12,10 @@ from sympy.core.compatibility import (
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
-from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_bool
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
@@ -1248,7 +1249,7 @@ class MatrixSubspaces(MatrixReductions):
         ret = []
         # make sure we start with a non-zero vector
         vecs = list(vecs)
-        while len(vecs) > 0 and vecs[0].is_zero:
+        while len(vecs) > 0 and vecs[0].is_zero_matrix:
             if rankcheck is False:
                 del vecs[0]
             else:
@@ -1257,7 +1258,7 @@ class MatrixSubspaces(MatrixReductions):
 
         for vec in vecs:
             perp = perp_to_subspace(vec, ret)
-            if not perp.is_zero:
+            if not perp.is_zero_matrix:
                 ret.append(perp)
             elif rankcheck is True:
                 raise ValueError(
@@ -2576,6 +2577,27 @@ class MatrixBase(MatrixDeprecated,
     def __ne__(self, other):
         return not self == other
 
+    def _eval_Eq(self, other):
+        other = self._sympify(other)
+        if not other.is_Matrix:
+            if other.is_scalar:
+                return S.false
+            return None
+
+        if self.shape != other.shape:
+            return S.false
+
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    yield fuzzy_bool(Eq(self[i, j], other[i, j]))
+
+        result = fuzzy_and(pred())
+        if result is True:
+            return S.true
+        elif result is False:
+            return S.false
+
     def _diagonal_solve(self, rhs):
         """Helper function of function diagonal_solve, without the error
         checks, to be used privately.
@@ -3724,7 +3746,7 @@ class MatrixBase(MatrixDeprecated,
 
         # check for existence of solutions
         # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, :].is_zero:
+        if not v[rank:, :].is_zero_matrix:
             raise ValueError("Linear system has no solution")
 
         # Get index of free symbols (free parameters)
@@ -4841,7 +4863,7 @@ class MatrixBase(MatrixDeprecated,
         This routine can apply for both cases by checking the shape
         and have small decision.
         """
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         if self.rows >= self.cols:
@@ -4856,7 +4878,7 @@ class MatrixBase(MatrixDeprecated,
         rank matrices, and each matrix can take pseudoinverse
         individually.
         """
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         B, C = self.rank_decomposition()
@@ -4872,7 +4894,7 @@ class MatrixBase(MatrixDeprecated,
         This routine can sometimes fail if SymPy's eigenvalue
         computation is not reliable.
         """
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         A = self
@@ -4946,7 +4968,7 @@ class MatrixBase(MatrixDeprecated,
 
         """
         # Trivial case: pseudoinverse of all-zero matrix is its transpose.
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         if method == 'RD':
