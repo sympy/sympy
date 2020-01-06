@@ -218,6 +218,10 @@ def test_trigsimp_issue_4032():
 def test_trigsimp_issue_7761():
     assert trigsimp(cosh(pi/4)) == cosh(pi/4)
 
+def test_trigsimp_issue_17633():
+    a,b,c = symbols( 'a,b,c', real = True )
+    x = 4 * b * sin(a) ** 3 - 3 * b * sin(a) + b * sin(3*a)
+    assert trigsimp(x - c) == -c
 
 def test_trigsimp_noncommutative():
     x, y = symbols('x,y')
