@@ -1164,9 +1164,18 @@ class MatrixProperties(MatrixRequired):
         return True
 
     def _eval_is_upper_hessenberg(self):
-        return all(self[i, j].is_zero
-                   for i in range(2, self.rows)
-                   for j in range(min(self.cols, (i - 1))))
+        def pred():
+            for i in range(2, self.rows):
+                for j in range(min(self.cols, (i - 1))):
+                    yield self[i, j].is_zero
+        return fuzzy_and(pred())
+
+    def _eval_is_upper(self):
+        def pred():
+            for i in range(1, self.rows):
+                for j in range(min(self.cols, i)):
+                    yield self[i, j].is_zero
+        return fuzzy_and(pred())
 
     def _eval_values(self):
         return [i for i in self if not i.is_zero]
@@ -1465,8 +1474,9 @@ class MatrixProperties(MatrixRequired):
         """
         return self.rows == self.cols
 
+    @property
     def is_symbolic(self):
-        """Checks if any elements contain Symbols.
+        """Checks if any matrix elements contain Symbols.
 
         Examples
         ========
@@ -1474,7 +1484,7 @@ class MatrixProperties(MatrixRequired):
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.is_symbolic()
+        >>> M.is_symbolic
         True
 
         """
@@ -1489,15 +1499,15 @@ class MatrixProperties(MatrixRequired):
 
         >>> from sympy import Matrix
         >>> m = Matrix([[0, 1], [1, 2]])
-        >>> m.is_symmetric()
+        >>> m.is_symmetric
         True
 
         >>> m = Matrix([[0, 1], [2, 0]])
-        >>> m.is_symmetric()
+        >>> m.is_symmetric
         False
 
         >>> m = Matrix([[0, 0, 0], [0, 0, 0]])
-        >>> m.is_symmetric()
+        >>> m.is_symmetric
         False
 
         >>> from sympy.abc import x, y
@@ -1505,9 +1515,8 @@ class MatrixProperties(MatrixRequired):
         ...     [1, x**2 + 2*x + 1, y],
         ...     [(x + 1)**2 , 2, 0],
         ...     [y, 0, 3]])
-        >>> m.is_symmetric()
-        None
-        >>> m.expand().is_symmetric()
+        >>> m.is_symmetric
+        >>> m.expand().is_symmetric
         True
 
         Notes
@@ -1525,22 +1534,23 @@ class MatrixProperties(MatrixRequired):
     def is_upper_hessenberg(self):
         """Checks if the matrix is the upper-Hessenberg form.
 
-        The upper hessenberg matrix has zero entries
-        below the first subdiagonal.
-
         Examples
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> a = Matrix([[1, 4, 2, 3], [3, 4, 1, 7], [0, 2, 3, 4], [0, 0, 1, 3]])
-        >>> a
-        Matrix([
-        [1, 4, 2, 3],
-        [3, 4, 1, 7],
-        [0, 2, 3, 4],
-        [0, 0, 1, 3]])
+        >>> a = Matrix([
+        ...     [1, 4, 2, 3],
+        ...     [3, 4, 1, 7],
+        ...     [0, 2, 3, 4],
+        ...     [0, 0, 1, 3]])
         >>> a.is_upper_hessenberg
         True
+
+        Notes
+        =====
+
+        The upper hessenberg matrix has zero entries below the first
+        subdiagonal.
 
         See Also
         ========
@@ -1552,38 +1562,28 @@ class MatrixProperties(MatrixRequired):
 
     @property
     def is_upper(self):
-        """Check if matrix is an upper triangular matrix. True can be returned
-        even if the matrix is not square.
+        """Check if matrix is an upper triangular matrix.
 
         Examples
         ========
 
         >>> from sympy import Matrix
-        >>> m = Matrix(2, 2, [1, 0, 0, 1])
-        >>> m
-        Matrix([
-        [1, 0],
-        [0, 1]])
+        >>> m = Matrix([[1, 0], [0, 1]])
         >>> m.is_upper
         True
 
-        >>> m = Matrix(4, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5, 0, 0, 0])
-        >>> m
-        Matrix([
-        [5, 1, 9],
-        [0, 4, 6],
-        [0, 0, 5],
-        [0, 0, 0]])
+        >>> m = Matrix([[5, 1, 9], [0, 4, 6], [0, 0, 5], [0, 0, 0]])
         >>> m.is_upper
         True
 
-        >>> m = Matrix(2, 3, [4, 2, 5, 6, 1, 1])
-        >>> m
-        Matrix([
-        [4, 2, 5],
-        [6, 1, 1]])
+        >>> m = Matrix([[4, 2, 5], [6, 1, 1]])
         >>> m.is_upper
         False
+
+        Notes
+        =====
+
+        ``True`` can be returned even if the matrix is not square.
 
         See Also
         ========
@@ -1592,9 +1592,7 @@ class MatrixProperties(MatrixRequired):
         is_diagonal
         is_upper_hessenberg
         """
-        return all(self[i, j].is_zero
-                   for i in range(1, self.rows)
-                   for j in range(min(i, self.cols)))
+        return self._eval_is_upper()
 
     @property
     def is_zero(self):
