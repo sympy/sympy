@@ -8,7 +8,7 @@ def test_Singleton():
     global instantiated
     instantiated = 0
 
-    class MySingleton(with_metaclass(Singleton, Basic)):
+    class MySingleton(Basic, metaclass=Singleton):
         def __new__(cls):
             global instantiated
             instantiated += 1
@@ -31,12 +31,12 @@ def test_Singleton():
     assert MySingleton_sub() is MySingleton_sub()
 
 def test_singleton_redefinition():
-    class TestSingleton(with_metaclass(Singleton, Basic)):
+    class TestSingleton(Basic, metaclass=Singleton):
         pass
 
     assert TestSingleton() is S.TestSingleton
 
-    class TestSingleton(with_metaclass(Singleton, Basic)):
+    class TestSingleton(Basic, metaclass=Singleton):
         pass
 
     assert TestSingleton() is S.TestSingleton

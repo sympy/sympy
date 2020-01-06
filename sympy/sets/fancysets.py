@@ -20,7 +20,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import cartes
 
 
-class Rationals(with_metaclass(Singleton, Set)):
+class Rationals(Set, metaclass=Singleton):
     """
     Represents the rational numbers. This set is also available as
     the Singleton, S.Rationals.
@@ -69,7 +69,7 @@ class Rationals(with_metaclass(Singleton, Set)):
         return S.Reals
 
 
-class Naturals(with_metaclass(Singleton, Set)):
+class Naturals(Set, metaclass=Singleton):
     """
     Represents the natural numbers (or counting numbers) which are all
     positive integers starting from 1. This set is also available as
@@ -160,7 +160,7 @@ class Naturals0(Naturals):
         return Range(oo).is_superset(other)
 
 
-class Integers(with_metaclass(Singleton, Set)):
+class Integers(Set, metaclass=Singleton):
     """
     Represents all integers: positive, negative and zero. This set is also
     available as the Singleton, S.Integers.
@@ -231,7 +231,7 @@ class Integers(with_metaclass(Singleton, Set)):
         return Range(-oo, oo).is_superset(other)
 
 
-class Reals(with_metaclass(Singleton, Interval)):
+class Reals(Interval, metaclass=Singleton):
     """
     Represents all real numbers
     from negative infinity to positive infinity,
@@ -1390,7 +1390,7 @@ class PolarComplexRegion(ComplexRegion):
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 
 
-class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
+class Complexes(CartesianComplexRegion, metaclass=Singleton):
     """
     The Set of all complex numbers
 

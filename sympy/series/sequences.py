@@ -371,7 +371,7 @@ class SeqBase(Basic):
                     d -= coeffs[i]*gfvar**(i+1)
                 return coeffs, simplify(factor(n)/factor(d))
 
-class EmptySequence(with_metaclass(Singleton, SeqBase)):
+class EmptySequence(SeqBase, metaclass=Singleton):
     """Represents an empty sequence.
 
     The empty sequence is also available as a singleton as

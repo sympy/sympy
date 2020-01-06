@@ -1852,7 +1852,7 @@ class _TensorMetaclass(ManagedProperties, ABCMeta):
     pass
 
 
-class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
+class TensExpr(Expr, metaclass=_TensorMetaclass):
     """
     Abstract base class for tensor expressions
 

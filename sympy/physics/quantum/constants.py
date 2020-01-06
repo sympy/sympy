@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class HBar(with_metaclass(Singleton, NumberSymbol)):
+class HBar(NumberSymbol, metaclass=Singleton):
     """Reduced Plank's constant in numerical and symbolic form [1]_.
 
     Examples

@@ -222,7 +222,7 @@ class BooleanAtom(Boolean):
     # \\\
 
 
-class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
+class BooleanTrue(BooleanAtom, metaclass=Singleton):
     """
     SymPy version of True, a singleton that can be accessed via S.true.
 
@@ -341,7 +341,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
         return S.UniversalSet
 
 
-class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
+class BooleanFalse(BooleanAtom, metaclass=Singleton):
     """
     SymPy version of False, a singleton that can be accessed via S.false.
 

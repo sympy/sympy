@@ -137,7 +137,7 @@ class Singleton(ManagedProperties):
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> from sympy.core.compatibility import with_metaclass
-        >>> class MySingleton(with_metaclass(Singleton, Basic)):
+        >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()
         False

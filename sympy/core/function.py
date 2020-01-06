@@ -267,7 +267,7 @@ class FunctionClass(ManagedProperties):
         return cls.__name__
 
 
-class Application(with_metaclass(FunctionClass, Basic)):
+class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
 

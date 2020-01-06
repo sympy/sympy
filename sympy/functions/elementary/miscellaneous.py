@@ -31,7 +31,7 @@ def _minmax_as_Piecewise(op, *args):
     return Piecewise(*ec)
 
 
-class IdentityFunction(with_metaclass(Singleton, Lambda)):
+class IdentityFunction(Lambda, metaclass=Singleton):
     """
     The identity function
 

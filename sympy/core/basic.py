@@ -26,7 +26,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(with_metaclass(ManagedProperties)):
+class Basic(metaclass=ManagedProperties):
     """
     Base class for all objects in SymPy.
 
