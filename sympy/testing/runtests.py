@@ -1525,7 +1525,7 @@ class SymPyDocTests(object):
             if module == 'matplotlib':
                 matplotlib = import_module(
                     'matplotlib',
-                    __import__kwargs={'fromlist':
+                    import_kwargs={'fromlist':
                                       ['pyplot', 'cm', 'collections']},
                     min_module_version='1.0.0', catch=(RuntimeError,))
                 if matplotlib is None:

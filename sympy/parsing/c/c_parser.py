@@ -2,7 +2,7 @@ from __future__ import unicode_literals, print_function
 from sympy.external import import_module
 import os
 
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 """
 This module contains all the necessary Classes and Function used to Parse C and

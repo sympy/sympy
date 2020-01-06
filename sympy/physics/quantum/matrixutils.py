@@ -32,7 +32,7 @@ if not np:
 else:
     numpy_ndarray = np.ndarray
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 if not scipy:
     class scipy_sparse_matrix(object):
         pass

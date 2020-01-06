@@ -13,15 +13,15 @@ LaTeXParser = LaTeXLexer = MathErrorListener = None
 
 try:
     LaTeXParser = import_module('sympy.parsing.latex._antlr.latexparser',
-                                __import__kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
+                                import_kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
     LaTeXLexer = import_module('sympy.parsing.latex._antlr.latexlexer',
-                               __import__kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
+                               import_kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
 except Exception:
     pass
 
 ErrorListener = import_module('antlr4.error.ErrorListener',
                               warn_not_installed=True,
-                              __import__kwargs={'fromlist': ['ErrorListener']}
+                              import_kwargs={'fromlist': ['ErrorListener']}
                               )
 
 

@@ -3,7 +3,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 lfortran = import_module('lfortran')
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if not lfortran and not cin:
     class SymPyExpression(object):

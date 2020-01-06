@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 np = import_module('numpy')
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):

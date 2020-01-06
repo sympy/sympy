@@ -19,7 +19,7 @@ from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
-numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Beam(object):
     """
