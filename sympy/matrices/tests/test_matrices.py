@@ -2118,15 +2118,15 @@ def test_creation_args():
 
 def test_diagonal_symmetrical():
     m = Matrix(2, 2, [0, 1, 1, 0])
-    assert not m.is_diagonal()
+    assert m.is_diagonal is False
     assert m.is_symmetric()
     assert m.is_symmetric(simplify=False)
 
     m = Matrix(2, 2, [1, 0, 0, 1])
-    assert m.is_diagonal()
+    assert m.is_diagonal is True
 
     m = diag(1, 2, 3)
-    assert m.is_diagonal()
+    assert m.is_diagonal is True
     assert m.is_symmetric()
 
     m = Matrix(3, 3, [1, 0, 0, 0, 2, 0, 0, 0, 3])
@@ -2134,13 +2134,13 @@ def test_diagonal_symmetrical():
 
     m = Matrix(2, 3, zeros(2, 3))
     assert not m.is_symmetric()
-    assert m.is_diagonal()
+    assert m.is_diagonal is True
 
-    m = Matrix(((5, 0), (0, 6), (0, 0)))
-    assert m.is_diagonal()
+    m = Matrix([[5, 0], [0, 6], [0, 0]])
+    assert m.is_diagonal is True
 
-    m = Matrix(((5, 0, 0), (0, 6, 0)))
-    assert m.is_diagonal()
+    m = Matrix([[5, 0, 0], [0, 6, 0]])
+    assert m.is_diagonal is True
 
     m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2, 2, 0, y, 0, 3])
     assert m.is_symmetric()
@@ -2189,8 +2189,8 @@ def test_diagonalization():
     for i in P:
         assert i.as_numer_denom()[1] == 1
 
-    m = Matrix(2, 2, [1, 0, 0, 0])
-    assert m.is_diagonal()
+    m = Matrix([[1, 0], [0, 0]])
+    assert m.is_diagonal is True
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
@@ -2752,12 +2752,16 @@ def test_LDLdecomposition():
     A = Matrix(((1, 5), (5, 1)))
     L, D = A.LDLdecomposition(hermitian=False)
     assert L * D * L.T == A
+
     A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     L, D = A.LDLdecomposition()
     assert L * D * L.T == A
     assert L.is_lower
-    assert L == Matrix([[1, 0, 0], [ Rational(3, 5), 1, 0], [Rational(-1, 5), Rational(1, 3), 1]])
-    assert D.is_diagonal()
+    assert L == Matrix([
+        [1, 0, 0],
+        [Rational(3, 5), 1, 0],
+        [Rational(-1, 5), Rational(1, 3), 1]])
+    assert D.is_diagonal is True
     assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     L, D = A.LDLdecomposition()

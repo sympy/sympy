@@ -1104,11 +1104,12 @@ class MatrixProperties(MatrixRequired):
         return fuzzy_and(pred())
 
     def _eval_is_diagonal(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i != j and self[i, j]:
-                    return False
-        return True
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    if i != j:
+                        yield self[i, j].is_zero
+        return fuzzy_and(pred())
 
     # _eval_is_hermitian is called by some general sympy
     # routines and has a different *args signature.  Make
@@ -1265,38 +1266,36 @@ class MatrixProperties(MatrixRequired):
 
         return self._eval_is_anti_symmetric()
 
+    @property
     def is_diagonal(self):
-        """Check if matrix is diagonal,
-        that is matrix in which the entries outside the main diagonal are all zero.
+        """Check if the matrix is diagonal.
 
         Examples
         ========
 
-        >>> from sympy import Matrix, diag
-        >>> m = Matrix(2, 2, [1, 0, 0, 2])
-        >>> m
-        Matrix([
-        [1, 0],
-        [0, 2]])
-        >>> m.is_diagonal()
+        An example of a square diagonal matrix:
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[1, 0], [0, 2]])
+        >>> m.is_diagonal
         True
 
-        >>> m = Matrix(2, 2, [1, 1, 0, 2])
-        >>> m
-        Matrix([
-        [1, 1],
-        [0, 2]])
-        >>> m.is_diagonal()
+        An example of a rectangular diagonal matrix:
+
+        >>> m = Matrix([[1, 0, 0], [0, 2, 0]])
+        >>> m.is_diagonal
+        True
+
+        An example of a non-diagonal matrix:
+
+        >>> m = Matrix([[1, 1], [0, 2]])
+        >>> m.is_diagonal
         False
 
-        >>> m = diag(1, 2, 3)
-        >>> m
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
-        >>> m.is_diagonal()
-        True
+        Notes
+        =====
+
+        This does not check whether a matrix is square.
 
         See Also
         ========
@@ -2375,7 +2374,7 @@ class MatrixArithmetic(MatrixRequired):
             return a
 
         diagonal = getattr(a, 'is_diagonal', None)
-        if diagonal is not None and diagonal():
+        if diagonal:
             return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
 
         if exp.is_Number and exp % 1 == 0:
