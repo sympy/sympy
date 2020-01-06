@@ -30,6 +30,11 @@ from .expressions import (
     DotProduct, kronecker_product, KroneckerProduct,
     PermutationMatrix, MatrixPermute)
 
+from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
+    det, minor, minor_submatrix, _find_reasonable_pivot,
+    _find_reasonable_pivot_naive, _eval_berkowitz_toeplitz_matrix,
+    _eval_det_bareiss, _eval_det_berkowitz, _eval_det_lu)
+
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
 
@@ -60,4 +65,9 @@ __all__ = [
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
+
+    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'minor',
+    'minor_submatrix', '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
+    '_eval_berkowitz_toeplitz_matrix', '_eval_det_bareiss', '_eval_det_berkowitz',
+    '_eval_det_lu',
 ]
