@@ -1973,6 +1973,10 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
     def get_free_indices(self):  # type: () -> List[TensorIndex]
         raise NotImplemented("abstract method")
 
+    @abstractmethod
+    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+        raise NotImplemented("abstract method")
+
     def fun_eval(self, *index_tuples):
         deprecate_fun_eval()
         return self.substitute_indices(*index_tuples)
@@ -2317,6 +2321,10 @@ class TensAdd(TensExpr, AssocOp):
     def get_free_indices(self):  # type: () -> List[TensorIndex]
         return self.free_indices
 
+    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+        newargs = [arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args]
+        return self.func(*newargs)
+
     @memoize_property
     def rank(self):
         if isinstance(self.args[0], TensExpr):
@@ -2376,7 +2384,7 @@ class TensAdd(TensExpr, AssocOp):
         def sort_key(t):
             if not isinstance(t, TensExpr):
                 return [], [], []
-            if hasattr(t, "_index_structure"):
+            if hasattr(t, "_index_structure") and hasattr(t, "components"):
                 x = get_index_structure(t)
                 return t.components, x.free, x.dum
             return [], [], []
@@ -2816,6 +2824,11 @@ class Tensor(TensExpr):
         """
         return self._index_structure.get_free_indices()
 
+    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> Tensor
+        # TODO: this could be optimized by only swapping the indices
+        # instead of visiting the whole expression tree:
+        return self.xreplace(repl)
+
     def as_base_exp(self):
         return self, S.One
 
@@ -3198,7 +3211,9 @@ class TensMul(TensExpr, AssocOp):
                 replacements[pos1contra][-old_index] = -dummy
                 indices[pos2cov] = dummy
                 indices[pos2contra] = -dummy
-            args = [arg.xreplace(repl) for arg, repl in zip(args, replacements)]
+            args = [
+                arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg
+                for arg, repl in zip(args, replacements)]
 
         dum = TensMul._dummy_data_to_dum(dummy_data)
         return args, indices, free, dum
@@ -3398,6 +3413,9 @@ class TensMul(TensExpr, AssocOp):
         [m2]
         """
         return self._index_structure.get_free_indices()
+
+    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+        return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
     def split(self):
         """
@@ -3902,6 +3920,10 @@ class TensorElement(TensExpr):
 
     def get_free_indices(self):
         return self._free_indices
+
+    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+        # TODO: can be improved:
+        return self.xreplace(repl)
 
     def get_indices(self):
         return self.get_free_indices()

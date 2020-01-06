@@ -66,6 +66,7 @@ def test_tensor_partial_deriv():
 
 
 def test_replace_arrays_partial_derivative():
+
     x, y, z, t = symbols("x y z t")
 
     # d(A^i)/d(A_j) = d(g^ik A_k)/d(A_j) = g^ik delta_jk
@@ -122,6 +123,14 @@ def test_replace_arrays_partial_derivative():
     expr = A(j)*A(-j) + expr
     assert expr.get_indices() == [L_0, -L_0, L_1, -L_1]
     assert expr.get_free_indices() == []
+
+    expr = A(i)*(B(j)*PartialDerivative(C(-j), D(i)) + C(j)*PartialDerivative(D(-j), B(i)))
+    assert expr.get_indices() == [L_0, L_1, -L_1, -L_0]
+    assert expr.get_free_indices() == []
+
+    expr = A(i)*PartialDerivative(C(-j), D(i))
+    assert expr.get_indices() == [L_0, -j, -L_0]
+    assert expr.get_free_indices() == [-j]
 
 
 @XFAIL
