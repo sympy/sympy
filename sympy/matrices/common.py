@@ -1438,10 +1438,6 @@ class MatrixProperties(MatrixRequired):
     def is_square(self):
         """Checks if a matrix is square.
 
-        A matrix is square if the number of rows equals the number of columns.
-        The empty matrix is square by definition, since the number of rows and
-        the number of columns are both zero.
-
         Examples
         ========
 
@@ -1455,6 +1451,13 @@ class MatrixProperties(MatrixRequired):
         True
         >>> c.is_square
         True
+
+        Notes
+        =====
+
+        A matrix is square if the number of rows equals the number of
+        columns. The empty matrix is square by definition, since the
+        number of rows and the number of columns are both zero.
         """
         return self.rows == self.cols
 
