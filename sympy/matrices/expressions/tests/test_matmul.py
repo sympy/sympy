@@ -52,9 +52,13 @@ def test_factor_in_front():
 
 def test_remove_ids():
     assert remove_ids(MatMul(A, Identity(m), B, evaluate=False)) == \
-                      MatMul(A, B, evaluate=False)
+        MatMul(A, B, evaluate=False)
     assert null_safe(remove_ids)(MatMul(Identity(n), evaluate=False)) == \
-                                 MatMul(Identity(n), evaluate=False)
+        MatMul(Identity(n), evaluate=False)
+
+    x = symbols('x', commutative=False)
+    assert remove_ids(MatMul(x, Identity(3), evaluate=False)).args == \
+        (x, Identity(3))
 
 
 def test_combine_powers():
@@ -136,7 +140,6 @@ def test_matmul_args_cnc():
     assert MatMul(n, A, A.T).args_cnc() == [[n], [A, A.T]]
     assert MatMul(A, A.T).args_cnc() == [[], [A, A.T]]
 
-@XFAIL
 def test_matmul_args_cnc_symbols():
     # Not currently supported
     a, b = symbols('a b', commutative=False)

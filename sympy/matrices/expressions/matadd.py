@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core.compatibility import reduce
 from operator import add
 
-from sympy.core import Add, Basic, sympify
+from sympy.core import Add, Basic, S, sympify
 from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
@@ -89,8 +89,16 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
-factor_of = lambda arg: arg.as_coeff_mmul()[0]
-matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
+def factor_of(arg):
+    if arg.is_Matrix:
+        return arg._as_commutative_coeff_mmul()[0]
+    return S.One
+
+def matrix_of(arg):
+    if arg.is_Matrix:
+        return unpack(arg._as_commutative_coeff_mmul()[1])
+    return arg
+
 def combine(cnt, mat):
     if cnt == 1:
         return mat

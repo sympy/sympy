@@ -315,7 +315,7 @@ class StrPrinter(Printer):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_MatMul(self, expr):
-        c, m = expr.as_coeff_mmul()
+        c, m = expr._as_commutative_coeff_mmul()
         if c.is_number and c < 0:
             expr = _keep_coeff(-c, m)
             sign = "-"
