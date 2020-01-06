@@ -1122,23 +1122,28 @@ class MatrixProperties(MatrixRequired):
         return fuzzy_and(pred())
 
     def _eval_is_Identity(self):
-        def dirac(i, j):
-            if i == j:
-                return 1
-            return 0
-
-        return all(self[i, j] == dirac(i, j) for i in range(self.rows) for j in
-                   range(self.cols))
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    if i == j:
+                        yield (self[i, j] - 1).is_zero
+                    else:
+                        yield self[i, j].is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_lower_hessenberg(self):
-        return all(self[i, j].is_zero
-                   for i in range(self.rows)
-                   for j in range(i + 2, self.cols))
+        def pred():
+            for i in range(self.rows):
+                for j in range(i+2, self.cols):
+                    yield self[i, j].is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_lower(self):
-        return all(self[i, j].is_zero
-                   for i in range(self.rows)
-                   for j in range(i + 1, self.cols))
+        def pred():
+            for i in range(self.rows):
+                for j in range(i+1, self.cols):
+                    yield self[i, j].is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_symbolic(self):
         return self.has(Symbol)
@@ -1367,22 +1372,23 @@ class MatrixProperties(MatrixRequired):
     def is_lower_hessenberg(self):
         r"""Checks if the matrix is in the lower-Hessenberg form.
 
-        The lower hessenberg matrix has zero entries
-        above the first superdiagonal.
-
         Examples
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> a = Matrix([[1, 2, 0, 0], [5, 2, 3, 0], [3, 4, 3, 7], [5, 6, 1, 1]])
-        >>> a
-        Matrix([
-        [1, 2, 0, 0],
-        [5, 2, 3, 0],
-        [3, 4, 3, 7],
-        [5, 6, 1, 1]])
+        >>> a = Matrix([
+        ...     [1, 2, 0, 0],
+        ...     [5, 2, 3, 0],
+        ...     [3, 4, 3, 7],
+        ...     [5, 6, 1, 1]])
         >>> a.is_lower_hessenberg
         True
+
+        Notes
+        =====
+
+        The lower hessenberg matrix has zero entries
+        above the first superdiagonal.
 
         See Also
         ========
@@ -1394,39 +1400,30 @@ class MatrixProperties(MatrixRequired):
 
     @property
     def is_lower(self):
-        """Check if matrix is a lower triangular matrix. True can be returned
-        even if the matrix is not square.
+        """Check if matrix is a lower triangular matrix.
 
         Examples
         ========
 
         >>> from sympy import Matrix
-        >>> m = Matrix(2, 2, [1, 0, 0, 1])
-        >>> m
-        Matrix([
-        [1, 0],
-        [0, 1]])
+        >>> m = Matrix([[1, 0], [0, 1]])
         >>> m.is_lower
         True
 
-        >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4 , 0, 6, 6, 5])
-        >>> m
-        Matrix([
-        [0, 0, 0],
-        [2, 0, 0],
-        [1, 4, 0],
-        [6, 6, 5]])
+        >>> m = Matrix([[0, 0, 0], [2, 0, 0], [1, 4, 0], [6, 6, 5]])
         >>> m.is_lower
         True
+
+        An example of a logically undecidable matrix:
 
         >>> from sympy.abc import x, y
-        >>> m = Matrix(2, 2, [x**2 + y, y**2 + x, 0, x + y])
-        >>> m
-        Matrix([
-        [x**2 + y, x + y**2],
-        [       0,    x + y]])
+        >>> m = Matrix([[x, y], [0, y]])
         >>> m.is_lower
-        False
+
+        Notes
+        =====
+
+        ``True`` can be returned even if the matrix is not square.
 
         See Also
         ========
