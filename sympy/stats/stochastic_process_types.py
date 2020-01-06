@@ -153,7 +153,7 @@ class StochasticProcess(Basic):
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
         pdf = Lambda(tuple(args),
-                    expr=Mul.fromiter(arg.pspace.process._pdf(arg) for arg in args))
+                    expr=Mul.fromiter(arg.pspace.process.pmf(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
@@ -781,13 +781,16 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     ==========
 
     sym: Symbol/string_types
+    success: Event of success
+    failure: Event of failure
     p: Proability of getting success
 
     Examples
     ========
 
     >>> from sympy.stats import BernoulliProcess, P, E
-    >>> B = BernoulliProcess("B", 0.7)
+    >>> from sympy import Eq, Gt, Lt
+    >>> B = BernoulliProcess("B", success=1, failure=0, p=0.7)
 
     >>> B.state_space
     FiniteSet(0, 1)
@@ -795,11 +798,27 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> (B.p).round(2)
     0.70
 
-    >>> (B.probability_r_success(ntrials=5, rsuccess=5,evaluate=True)).round(2)
-    0.17
+    >>> B.success
+    1
 
-    >>> (B.probability_of_rth_success(ntrial=5, rsuccess=3)).round(2)
-    0.19
+    >>> B.failure
+    0
+
+    >>> X = B[1] + B[2] + B[3]
+    >>> P(Eq(X, 0)).round(2)
+    0.03
+
+    >>> P(Eq(X, 2)).round(2)
+    0.44
+
+    >>> P(Eq(X, 4)).round(2)
+    0
+
+    >>> P(Gt(X, 1)).round(2)
+    0.78
+
+    >>> P(Eq(B[1], 0) & Eq(B[2], 1) & Eq(B[3], 0) & Eq(B[4], 1)).round(2)
+    0.04
 
     >>> B.joint_distribution(B[1], B[2])
     JointDistributionHandmade(Lambda((B[1], B[2]), Piecewise((0.7, Eq(B[1], 1)),
@@ -830,85 +849,25 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def distribution(self):
         return self.args[2]
 
-    def __new__(cls, sym, p):
+    @property
+    def success(self):
+        return self.args[4]
+
+    @property
+    def failure(self):
+        return self.args[5]
+
+    def __new__(cls, sym, success, failure, p):
         if p > 1 or p < 0:
             raise ValueError("Probability must be in between 0 and 1")
         p = sympify(p)
         sym = _symbol_converter(sym)
-        state_space = _set_converter([0,1])
-        return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p)
-
-    def probability_of_rth_success(self, ntrial, rsuccess):
-        """
-        Computes the probability of `rth` success in `nth` trail.
-
-        Parameters
-        ==========
-
-        ntrial: Positive Integer (ntrial > 1),
-          Represents the `nth` trial.
-        rsuccess: Positive Integer (rsuccess >= 1),
-          Represents `rth` success event (rsuccess <= ntrial).
-
-        Returns
-        =======
-
-        Probability that `rth` success occurs on `nth` trial.
-
-        """
-        if not (S(rsuccess).is_Integer and S(ntrial).is_Integer):
-            raise ValueError("nth-trial and rth-success must be Positive Integers.")
-
-        if not (rsuccess <= ntrial and rsuccess >= 1 and ntrial > 1):
-            raise ValueError("0 =< rth-success <= nth-trial, nth-trial > 1. ")
-
-        return (binomial(ntrial - 1, rsuccess - 1) * self.p**rsuccess
-                * (1 - self.p)**(ntrial - rsuccess))
+        state_space = _set_converter([success, failure])
+        return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
+                             success, failure)
 
 
-    def probability_r_success(self, ntrials, rsuccess, evaluate=True):
-        """
-        Computes the probability of `r` success events among the `n` trials.
-
-        P(Eq(B[1], x[1]), Eq(B[2], x[2]), Eq(B[3], x[3]), . . . , Eq(B[n], x[n]))
-                                                = p**r * (1-p)**(n-r)
-
-        Parameters
-        ==========
-
-        ntrials: Positive Integer,
-          Represents number of trials.
-        rsuccess: Positive Integer including 0, by default is None
-          Represents total number of success events (rsuccess <= ntrials).
-        evaluate: Boolean, by default is False
-          Computes the result numerically.
-
-        Returns
-        =======
-        Proability of getting `r` success in `n` trials
-            If evaluate is True
-        Distribution of getting `r` success in `n` trials
-            If evaluate is False
-
-        """
-        if evaluate:
-            if not (S(ntrials).is_Integer and S(rsuccess).is_Integer):
-                raise ValueError("ntrials and rsuccess must be postive Integers.")
-
-            if not (rsuccess <= ntrials and rsuccess >= 0):
-                raise ValueError("rsuccess <= ntrials and  ntrials, \
-                                     rsuccess must be positive Integers.")
-
-            return self.p**rsuccess * (1 - self.p)**(ntrials - rsuccess)
-
-        else:
-            if not (S(ntrials).is_Integer and ntrials > 0):
-                raise ValueError("ntrials must be a positive Integer.")
-            r = symbols('r', natural=True)
-            pmf = (self.p**r) * (1 - self.p)**(ntrials - r)
-            return DiscreteDistributionHandmade(pmf, set = FiniteSet(*range(ntrials+1)))
-
-    def _rvindexed_subs(self, expr, condition):
+    def _rvindexed_subs(self, expr, condition=None):
         """
         Substitutes the RandomIndexedSymbol with the RandomSymbol with
         same name, distribution and probability as RandomIndexedSymbol.
@@ -916,18 +875,24 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         """
         from sympy.stats import Bernoulli
         rvs_expr = random_symbols(expr)
-        swapdict_expr = {}
-        for rv in rvs_expr:
-            newrv = Bernoulli(rv.name, p=rv.pspace.process.p)
-            swapdict_expr[rv] = newrv
-        expr = expr.subs(swapdict_expr)
+        if len(rvs_expr) != 0:
+            swapdict_expr = {}
+            for rv in rvs_expr:
+                if isinstance(rv, RandomIndexedSymbol):
+                    newrv = Bernoulli(rv.name,p=rv.pspace.process.p,
+                                      succ = self.success, fail= self.failure)
+                    swapdict_expr[rv] = newrv
+            expr = expr.subs(swapdict_expr)
         rvs_cond = random_symbols(condition)
-        swapdict_cond = {}
-        if condition is not None:
-            for rv in rvs_cond:
-                newrv = Bernoulli(rv.name, p=rv.pspace.process.p)
-                swapdict_cond[rv] = newrv
-            condition = condition.subs(swapdict_cond)
+        if len(rvs_cond)!=0:
+            swapdict_cond = {}
+            if condition is not None:
+                for rv in rvs_cond:
+                    if isinstance(rv, RandomIndexedSymbol):
+                        newrv = Bernoulli(rv.name,p=rv.pspace.process.p,
+                                          succ = self.success, fail= self.failure)
+                        swapdict_cond[rv] = newrv
+                condition = condition.subs(swapdict_cond)
         return expr, condition
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
@@ -949,8 +914,18 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Expectation of the RandomIndexedSymbol.
 
         """
-        newexpr, newcondition = self._rvindexed_subs(expr, condition)
-        return E(expr=newexpr, condition=newcondition, evaluate=evaluate, **kwargs)
+        new_expr, new_condition = self._rvindexed_subs(expr, condition)
+        from sympy.stats import pspace
+        new_pspace = pspace(new_expr)
+        if new_condition is not None:
+            from sympy.stats import given
+            new_expr = given(new_expr, new_condition)
+        if new_expr.is_Add:  # As E is Linear
+            return Add(*[new_pspace.compute_expectation(
+                        expr=arg, evaluate=evaluate, **kwargs)
+                        for arg in new_expr.args])
+        return new_pspace.compute_expectation(
+                new_expr, evaluate=evaluate, **kwargs)
 
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
@@ -967,11 +942,41 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         =======
         Probability of the condition.
         """
-        newcondition, newgiven_condition = self._rvindexed_subs(condition, given_condition)
-        return P(condition=newcondition, given_condition=newgiven_condition,
-                 evaluate=evaluate, **kwargs)
+        new_condition, new_givencondition = self._rvindexed_subs(condition, given_condition)
 
-    def _pdf(self, x):
-        return Piecewise((self.p, Eq(x, 1)),
-                         (1 - self.p, Eq(x, 0)),
+        if isinstance(new_givencondition, RandomSymbol):
+            condrv = random_symbols(new_condition)
+            if len(condrv) == 1 and condrv[0] == new_givencondition:
+                from sympy.stats.frv_types import BernoulliDistribution
+                return BernoulliDistribution(probability(new_condition), 0, 1)
+            from sympy.stats.rv import dependent
+            if any([dependent(rv, new_givencondition) for rv in condrv]):
+                from sympy.stats.symbolic_probability import Probability
+                return Probability(new_condition, new_givencondition)
+            else:
+                return self.probability(new_condition)
+
+        if new_givencondition is not None and \
+                not isinstance(new_givencondition, (Relational, Boolean)):
+            raise ValueError("%s is not a relational or combination of relationals"
+                    % (new_givencondition))
+        if new_givencondition is False:
+            return S.Zero
+        if new_condition is True:
+            return S.One
+        if new_condition is False:
+            return S.Zero
+        if not isinstance(new_condition, (Relational, Boolean)):
+            raise ValueError("%s is not a relational or combination of relationals"
+                    % (new_condition))
+        if new_givencondition is not None:  # If there is a condition
+        # Recompute on new conditional expr
+            from sympy.stats.rv import given
+            return self.probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
+        from sympy.stats.rv import pspace
+        return pspace(new_condition).probability(new_condition, **kwargs)
+
+    def pmf(self, x):
+        return Piecewise((self.p, Eq(x, self.success)),
+                         (1 - self.p, Eq(x, self.failure)),
                          (S.Zero, True))
