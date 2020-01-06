@@ -8,6 +8,7 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
+from typing import Dict, Type
 
 
 def _torf(args):
@@ -219,7 +220,7 @@ def fuzzy_nand(args):
 class Logic(object):
     """Logical expression"""
     # {} 'op' -> LogicClass
-    op_2class = {}
+    op_2class = {}  # type: Dict[str, Type[Logic]]
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
