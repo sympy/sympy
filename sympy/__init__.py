@@ -259,6 +259,7 @@ evalf._create_evalf_table()
 from .deprecated import C, ClassRegistry, class_registry
 
 __all__ = [
+    # sympy.core
     'sympify', 'SympifyError', 'cacheit', 'Basic', 'Atom',
     'preorder_traversal', 'S', 'Expr', 'AtomicExpr', 'UnevaluatedExpr',
     'Symbol', 'Wild', 'Dummy', 'symbols', 'var', 'Number', 'Float',
@@ -275,13 +276,16 @@ __all__ = [
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
     'EulerGamma', 'GoldenRatio', 'TribonacciConstant',
 
+    # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
     'Implies', 'Equivalent', 'ITE', 'POSform', 'SOPform', 'simplify_logic',
     'bool_map', 'true', 'false', 'satisfiable',
 
+    # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
     'ask', 'register_handler', 'remove_handler', 'refine',
 
+    # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
     'total_degree', 'degree_list', 'LC', 'LM', 'LT', 'pdiv', 'prem', 'pquo',
     'pexquo', 'div', 'rem', 'quo', 'exquo', 'half_gcdex', 'gcdex', 'invert',
@@ -317,10 +321,12 @@ __all__ = [
     'apart', 'apart_list', 'assemble_partfrac_list', 'Options', 'ring',
     'xring', 'vring', 'sring', 'field', 'xfield', 'vfield', 'sfield',
 
+    # sympy.series
     'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
     'residue', 'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence', 'SeqAdd',
     'SeqMul', 'fourier_series', 'fps', 'difference_delta', 'limit_seq',
 
+    # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
     'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
@@ -348,6 +354,7 @@ __all__ = [
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
     'mathieus', 'mathieuc', 'mathieusprime', 'mathieucprime',
 
+    # sympy.ntheory
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
     'isprime', 'divisors', 'proper_divisors', 'factorint', 'multiplicity',
@@ -365,12 +372,15 @@ __all__ = [
     'continued_fraction_reduce', 'continued_fraction_convergents',
     'continued_fraction', 'egyptian_fraction',
 
+    # sympy.concrete
     'product', 'Product', 'summation', 'Sum',
 
+    # sympy.discrete
     'fft', 'ifft', 'ntt', 'intt', 'fwht', 'ifwht', 'mobius_transform',
     'inverse_mobius_transform', 'convolution', 'covering_product',
     'intersecting_product',
 
+    # sympy.simplify
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
     'posify', 'besselsimp', 'kroneckersimp', 'signsimp', 'bottom_up',
     'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'use', 'epath', 'EPath',
@@ -378,12 +388,14 @@ __all__ = [
     'fraction', 'numer', 'denom', 'trigsimp', 'exptrigsimp', 'powsimp',
     'powdenest', 'combsimp', 'gammasimp', 'ratsimp', 'ratsimpmodprime',
 
+    # sympy.sets
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
     'Intersection', 'imageset', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
     'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
     'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
 
+    # sympy.solvers
     'solve', 'solve_linear_system', 'solve_linear_system_LU',
     'solve_undetermined_coeffs', 'nsolve', 'solve_linear', 'checksol',
     'det_quick', 'inv_quick', 'check_assumptions', 'failing_assumptions',
@@ -397,6 +409,7 @@ __all__ = [
     'solve_univariate_inequality', 'decompogen', 'solveset', 'linsolve',
     'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'Complexes',
 
+    # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',
     'eye', 'hessian', 'jordan_cell', 'list2numpy', 'matrix2numpy',
     'matrix_multiply_elementwise', 'ones', 'randMatrix', 'rot_axis1',
@@ -413,12 +426,14 @@ __all__ = [
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',
     'MatrixPermute',
 
+    # sympy.geometry
     'Point', 'Point2D', 'Point3D', 'Line', 'Ray', 'Segment', 'Line2D',
     'Segment2D', 'Ray2D', 'Line3D', 'Segment3D', 'Ray3D', 'Plane', 'Ellipse',
     'Circle', 'Polygon', 'RegularPolygon', 'Triangle', 'rad', 'deg',
     'are_similar', 'centroid', 'convex_hull', 'idiff', 'intersection',
     'closest_points', 'farthest_points', 'GeometryError', 'Curve', 'Parabola',
 
+    # sympy.utilities
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'postorder_traversal',
     'interactive_traversal', 'prefixes', 'postfixes', 'sift',
@@ -427,6 +442,7 @@ __all__ = [
     'source', 'threaded', 'xthreaded', 'public', 'memoize_property', 'test',
     'doctest', 'timed',
 
+    # sympy.integrals
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',
     'inverse_mellin_transform', 'MellinTransform', 'InverseMellinTransform',
     'laplace_transform', 'inverse_laplace_transform', 'LaplaceTransform',
@@ -438,22 +454,27 @@ __all__ = [
     'hankel_transform', 'inverse_hankel_transform', 'HankelTransform',
     'InverseHankelTransform', 'singularityintegrate',
 
+    # sympy.tensor
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
     'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
     'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
     'Array', 'DenseNDimArray', 'SparseNDimArray',
 
+    # sympy.parsing
     'parse_expr',
 
+    # sympy.calculus
     'euler_equations', 'singularities', 'is_increasing',
     'is_strictly_increasing', 'is_decreasing', 'is_strictly_decreasing',
     'is_monotonic', 'finite_diff_weights', 'apply_finite_diff',
     'as_finite_diff', 'differentiate_finite', 'periodicity', 'not_empty_in',
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
+    # sympy.algebras
     'Quaternion',
 
+    # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',
     'pprint_try_use_unicode', 'latex', 'print_latex', 'multiline_latex',
     'mathml', 'print_mathml', 'python', 'print_python', 'pycode', 'ccode',
@@ -463,12 +484,15 @@ __all__ = [
     'preview', 'srepr', 'print_tree', 'StrPrinter', 'sstr', 'sstrrepr',
     'TableForm', 'dotprint', 'maple_code', 'print_maple_code',
 
+    # sympy.plotting
     'plot', 'textplot', 'plot_backends', 'plot_implicit', 'plot_parametric',
 
+    # sympy.interactive
     'init_session', 'init_printing',
 
+    # sympy.testing
     'test', 'doctest',
 
-    # deprecated:
+    # sympy.deprecated:
     'C', 'ClassRegistry', 'class_registry',
 ]
