@@ -14,7 +14,7 @@ Todo:
 * Write some tests/examples!
 """
 
-from __future__ import print_function, division
+from typing import List, Dict
 
 from sympy import Mul
 from sympy.external import import_module
@@ -35,15 +35,15 @@ __all__ = [
 
 np = import_module('numpy')
 matplotlib = import_module(
-    'matplotlib', __import__kwargs={'fromlist': ['pyplot']},
+    'matplotlib', import_kwargs={'fromlist': ['pyplot']},
     catch=(RuntimeError,))  # This is raised in environments that have no display.
 
 if not np or not matplotlib:
-    class CircuitPlot(object):
+    class CircuitPlot(object): # type: ignore
         def __init__(*args, **kwargs):
             raise ImportError('numpy or matplotlib not available.')
 
-    def circuit_plot(*args, **kwargs):
+    def circuit_plot(c, nqubits, **kwargs):
         raise ImportError('numpy or matplotlib not available.')
 else:
     pyplot = matplotlib.pyplot
@@ -62,8 +62,8 @@ else:
         control_radius = 0.05
         not_radius = 0.15
         swap_delta = 0.05
-        labels = []
-        inits = {}
+        labels: List[str] = []
+        inits: Dict[str, str] = {}
         label_buffer = 0.5
 
         def __init__(self, c, nqubits, **kwargs):
