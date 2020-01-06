@@ -383,7 +383,7 @@ def test_sparse_matrix():
     ])
 
     # symmetric
-    assert not a.is_symmetric(simplify=False)
+    assert a.is_symmetric is False
 
     # test_cofactor
     assert sparse_eye(3) == sparse_eye(3).cofactor_matrix()

@@ -359,7 +359,7 @@ class SparseMatrix(MatrixBase):
 
         """
         dps = _dotprodsimp if dotprodsimp else lambda x: x
-        sym = self.is_symmetric()
+        sym = self.is_symmetric
         M = self.as_mutable()
         I = M.eye(M.rows)
         if not sym:
@@ -462,15 +462,6 @@ class SparseMatrix(MatrixBase):
         if len(self._smat) == self.rows*self.cols:
             zhas = False
         return any(self[key].has(*patterns) for key in self._smat) or zhas
-
-    def _eval_is_Identity(self):
-        if not all(self[i, i] == 1 for i in range(self.rows)):
-            return False
-        return len(self._smat) == self.rows
-
-    def _eval_is_symmetric(self, simpfunc):
-        diff = (self - self.T).applyfunc(simpfunc)
-        return len(diff.values()) == 0
 
     def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
@@ -717,7 +708,7 @@ class SparseMatrix(MatrixBase):
         """
 
         from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
+        if self.is_symmetric is not True:
             raise ValueError('Cholesky decomposition applies only to '
                 'symmetric matrices.')
         M = self.as_mutable()._cholesky_sparse(dotprodsimp=dotprodsimp)
@@ -781,7 +772,7 @@ class SparseMatrix(MatrixBase):
 
         """
         from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
+        if self.is_symmetric is not True:
             raise ValueError('LDL decomposition applies only to '
                 'symmetric matrices.')
         L, D = self.as_mutable()._LDL_sparse(dotprodsimp=dotprodsimp)

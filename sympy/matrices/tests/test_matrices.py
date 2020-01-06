@@ -598,18 +598,6 @@ def test_issue_17247_expression_blowup_31():
         [1 - x, x + 1,     0, x + 1],
         [    0, 1 - x, x + 1,     0],
         [    0,     0,     0, x + 1]])
-    assert M.LDLsolve(ones(4, 1), dotprodsimp=True) == Matrix([
-        [(x + 1)/(4*x)],
-        [(x - 1)/(4*x)],
-        [(x + 1)/(4*x)],
-        [    1/(x + 1)]])
-
-def test_issue_17247_expression_blowup_32():
-    M = Matrix([
-        [x + 1, 1 - x,     0,     0],
-        [1 - x, x + 1,     0, x + 1],
-        [    0, 1 - x, x + 1,     0],
-        [    0,     0,     0, x + 1]])
     assert M.LUsolve(ones(4, 1), dotprodsimp=True) == Matrix([
         [(x + 1)/(4*x)],
         [(x - 1)/(4*x)],
@@ -2117,44 +2105,46 @@ def test_creation_args():
 
 
 def test_diagonal_symmetrical():
-    m = Matrix(2, 2, [0, 1, 1, 0])
+    m = Matrix([[0, 1], [1, 0]])
     assert m.is_diagonal is False
-    assert m.is_symmetric()
-    assert m.is_symmetric(simplify=False)
+    assert m.is_symmetric is True
 
-    m = Matrix(2, 2, [1, 0, 0, 1])
+    m = Matrix([[1, 0], [0, 1]])
     assert m.is_diagonal is True
+    assert m.is_symmetric is True
 
     m = diag(1, 2, 3)
     assert m.is_diagonal is True
-    assert m.is_symmetric()
+    assert m.is_symmetric is True
 
-    m = Matrix(3, 3, [1, 0, 0, 0, 2, 0, 0, 0, 3])
+    m = Matrix([[1, 0, 0], [0, 2, 0], [0, 0, 3]])
     assert m == diag(1, 2, 3)
 
-    m = Matrix(2, 3, zeros(2, 3))
-    assert not m.is_symmetric()
+    m = Matrix.zeros(2, 3)
     assert m.is_diagonal is True
+    assert m.is_symmetric is False
 
     m = Matrix([[5, 0], [0, 6], [0, 0]])
     assert m.is_diagonal is True
+    assert m.is_symmetric is False
 
     m = Matrix([[5, 0, 0], [0, 6, 0]])
     assert m.is_diagonal is True
+    assert m.is_symmetric is False
 
-    m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2, 2, 0, y, 0, 3])
-    assert m.is_symmetric()
-    assert not m.is_symmetric(simplify=False)
-    assert m.expand().is_symmetric(simplify=False)
+    m = Matrix([[1, x**2 + 2*x + 1, y], [(x + 1)**2, 2, 0], [y, 0, 3]])
+    assert m.is_diagonal is None
+    assert m.is_symmetric is None
+    assert m.expand().is_symmetric is True
 
 
 def test_diagonalization():
     m = Matrix([[1, 2+I], [2-I, 3]])
     assert m.is_diagonalizable()
 
-    m = Matrix(3, 2, [-3, 1, -3, 20, 3, 10])
+    m = Matrix([[-3, 1], [-3, 20], [3, 10]])
     assert not m.is_diagonalizable()
-    assert not m.is_symmetric()
+    assert m.is_symmetric is False
     raises(NonSquareMatrixError, lambda: m.diagonalize())
 
     # diagonalizable
@@ -2163,14 +2153,14 @@ def test_diagonalization():
     assert P == eye(3)
     assert D == m
 
-    m = Matrix(2, 2, [0, 1, 1, 0])
-    assert m.is_symmetric()
+    m = Matrix([[0, 1], [1, 0]])
+    assert m.is_symmetric is True
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
-    m = Matrix(2, 2, [1, 0, 0, 3])
-    assert m.is_symmetric()
+    m = Matrix([[1, 0], [0, 3]])
+    assert m.is_symmetric is True
     assert m.is_diagonalizable()
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
@@ -2215,8 +2205,8 @@ def test_diagonalization():
 
     # symbolic
     a, b, c, d = symbols('a b c d')
-    m = Matrix(2, 2, [a, c, c, b])
-    assert m.is_symmetric()
+    m = Matrix([[a, c], [c, b]])
+    assert m.is_symmetric is True
     assert m.is_diagonalizable()
 
 

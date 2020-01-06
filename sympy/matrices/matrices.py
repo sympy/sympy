@@ -1672,11 +1672,10 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             return False
 
-        if all(e.is_real for e in self) and self.is_symmetric():
+        if all(e.is_real for e in self) and self.is_symmetric:
             return True
 
-        if all(e.is_complex for e in self) and self.is_hermitian \
-            and not reals_only:
+        if all(e.is_complex for e in self) and self.is_hermitian:
             return True
 
         return self.is_diagonalizable_with_eigen(reals_only=reals_only,
@@ -3002,7 +3001,7 @@ class MatrixBase(MatrixDeprecated,
         pinv_solve
         """
         hermitian = True
-        if self.is_symmetric():
+        if self.is_symmetric:
             hermitian = False
             L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.is_hermitian:
@@ -3086,9 +3085,9 @@ class MatrixBase(MatrixDeprecated,
 
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
+        if hermitian and self.is_hermitian is not True:
             raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
+        if not hermitian and self.is_symmetric is not True:
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
 
@@ -3369,7 +3368,7 @@ class MatrixBase(MatrixDeprecated,
 
         M, n = self[:, :], self.rows
         work = zeros(n)
-        if self.is_symmetric():
+        if self.is_symmetric:
             return work
 
         for i in range(1, n):
@@ -4112,9 +4111,9 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and self.is_hermitian is False:
+        if hermitian and self.is_hermitian is not True:
             raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
+        if not hermitian and self.is_symmetric is not True:
             raise ValueError("Matrix must be symmetric.")
         return self._LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
 
@@ -4156,7 +4155,7 @@ class MatrixBase(MatrixDeprecated,
         pinv_solve
         """
         hermitian = True
-        if self.is_symmetric():
+        if self.is_symmetric:
             hermitian = False
             L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
         elif self.is_hermitian:

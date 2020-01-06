@@ -1148,9 +1148,13 @@ class MatrixProperties(MatrixRequired):
     def _eval_is_symbolic(self):
         return self.has(Symbol)
 
-    def _eval_is_symmetric(self, simpfunc):
-        mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i]))
-        return mat.is_zero
+    def _eval_is_symmetric(self):
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    if i != j:
+                        yield (self[i, j] - self[j, i]).is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_zero(self):
         if any(i.is_zero == False for i in self):
@@ -1476,69 +1480,46 @@ class MatrixProperties(MatrixRequired):
         """
         return self._eval_is_symbolic()
 
-    def is_symmetric(self, simplify=True):
-        """Check if matrix is symmetric matrix,
-        that is square matrix and is equal to its transpose.
-
-        By default, simplifications occur before testing symmetry.
-        They can be skipped using 'simplify=False'; while speeding things a bit,
-        this may however induce false negatives.
+    @property
+    def is_symmetric(self):
+        """Check if matrix is a symmetric matrix.
 
         Examples
         ========
 
         >>> from sympy import Matrix
-        >>> m = Matrix(2, 2, [0, 1, 1, 2])
-        >>> m
-        Matrix([
-        [0, 1],
-        [1, 2]])
+        >>> m = Matrix([[0, 1], [1, 2]])
         >>> m.is_symmetric()
         True
 
-        >>> m = Matrix(2, 2, [0, 1, 2, 0])
-        >>> m
-        Matrix([
-        [0, 1],
-        [2, 0]])
+        >>> m = Matrix([[0, 1], [2, 0]])
         >>> m.is_symmetric()
         False
 
-        >>> m = Matrix(2, 3, [0, 0, 0, 0, 0, 0])
-        >>> m
-        Matrix([
-        [0, 0, 0],
-        [0, 0, 0]])
+        >>> m = Matrix([[0, 0, 0], [0, 0, 0]])
         >>> m.is_symmetric()
         False
 
         >>> from sympy.abc import x, y
-        >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
-        >>> m
-        Matrix([
-        [         1, x**2 + 2*x + 1, y],
-        [(x + 1)**2,              2, 0],
-        [         y,              0, 3]])
+        >>> m = Matrix([
+        ...     [1, x**2 + 2*x + 1, y],
+        ...     [(x + 1)**2 , 2, 0],
+        ...     [y, 0, 3]])
         >>> m.is_symmetric()
+        None
+        >>> m.expand().is_symmetric()
         True
 
-        If the matrix is already simplified, you may speed-up is_symmetric()
-        test by using 'simplify=False'.
+        Notes
+        =====
 
-        >>> bool(m.is_symmetric(simplify=False))
-        False
-        >>> m1 = m.expand()
-        >>> m1.is_symmetric(simplify=False)
-        True
+        In a symmetric matrix $M$, the element $M_{i, j}$ is the element
+        $M_{j, i}$.
         """
-        simpfunc = simplify
-        if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
-
         if not self.is_square:
             return False
 
-        return self._eval_is_symmetric(simpfunc)
+        return self._eval_is_symmetric()
 
     @property
     def is_upper_hessenberg(self):
