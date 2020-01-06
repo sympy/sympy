@@ -69,7 +69,7 @@ matrix:
       sudo: true
       env:
         - TEST_PY2_IMPORT="true"
-      python: 3.7
+    - python: 3.7
       dist: xenial
       sudo: true
       env:
