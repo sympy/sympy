@@ -1202,7 +1202,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r is None and 'factorable' not in matching_hints:
             roots = solve(reduced_eq, df)
             if roots:
-                meq = Mul(*[(df - i) for i in roots])
+                meq = Mul(*[(df - i) for i in roots])*Dummy()
                 m = _ode_factorable_match(meq, func, kwargs.get('x0', 0))
                 matching_hints['factorable'] = m
         if r:
