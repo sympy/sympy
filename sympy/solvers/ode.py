@@ -6341,8 +6341,7 @@ def _ode_lie_group( s, func, order, match):
 
     match = {'h': h, 'y': y}
 
-    # This is done so that if:
-    # a] any heuristic raises a ValueError
+    # This is done so that if any heuristic raises a ValueError
     # another heuristic can be used.
     sol = None
     for heuristic in heuristics:
@@ -6355,9 +6354,9 @@ def ode_lie_group(eq, func, order, match):
     r"""
     This hint implements the Lie group method of solving first order differential
     equations. The aim is to convert the given differential equation from the
-    given coordinate given system into another coordinate system where it becomes
-    invariant under the one-parameter Lie group of translations. The converted ODE is
-    quadrature and can be solved easily. It makes use of the
+    given coordinate system into another coordinate system where it becomes
+    invariant under the one-parameter Lie group of translations. The converted
+    ODE can be easily solved by quadrature. It makes use of the
     :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
     infinitesimals of the transformation.
 
@@ -6409,28 +6408,26 @@ def ode_lie_group(eq, func, order, match):
     except NotImplementedError:
         eqsol = []
 
-    desols = []
+    desols = set()
     for s in eqsol:
         sol = _ode_lie_group(s, func, order, match=match)
         if sol:
-            desols.extend(sol)
+            desols.update(sol)
 
-    if desols == []:
+    if not desols:
         raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
             + " the lie group method")
-    return desols
+    return list(ordered(desols))
 
 def _lie_group_remove(coords):
     r"""
     This function is strictly meant for internal use by the Lie group ODE solving
-    method. It replaces arbitrary functions returned by pdsolve with either 0 or 1 or the
-    args of the arbitrary function.
+    method. It replaces arbitrary functions returned by pdsolve as follows:
 
-    The algorithm used is:
-    1] If coords is an instance of an Undefined Function, then the args are returned
-    2] If the arbitrary function is present in an Add object, it is replaced by zero.
-    3] If the arbitrary function is present in an Mul object, it is replaced by one.
-    4] If coords has no Undefined Function, it is returned as it is.
+    1] If coords is an arbitrary function, then its argument is returned.
+    2] An arbitrary function in an Add object is replaced by zero.
+    3] An arbitrary function in a Mul object is replaced by one.
+    4] If there is no arbitrary function coords is returned unchanged.
 
     Examples
     ========
@@ -6445,7 +6442,7 @@ def _lie_group_remove(coords):
     >>> eq = F(x**2*y)
     >>> _lie_group_remove(eq)
     x**2*y
-    >>> eq = y**2*x + F(x**3)
+    >>> eq = x*y**2 + F(x**3)
     >>> _lie_group_remove(eq)
     x*y**2
     >>> eq = (F(x**3) + y)*x**4

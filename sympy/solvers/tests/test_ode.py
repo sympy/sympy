@@ -3780,3 +3780,5 @@ def test_issue_15889():
         f(x), C1**2/4 - C1*x/2 + x**2/4)
     assert dsolve(f(x).diff(x)**2 - f(x)**2) == [
         Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    assert dsolve(f(x).diff(x)**2 - f(x)**3, hint='lie_group') == Eq(
+        f(x), 4/(C1**2 + 2*C1*x + x**2))
