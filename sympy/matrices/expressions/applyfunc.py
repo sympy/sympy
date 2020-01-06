@@ -1,6 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
 from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
-from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, _sympify
 
 

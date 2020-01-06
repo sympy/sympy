@@ -1,4 +1,4 @@
-from sympy import tensorproduct, MutableDenseNDimArray
+from sympy import MutableDenseNDimArray, S
 from sympy.tensor.tensor import (TensExpr, TensMul, TensorIndex)
 
 
@@ -52,6 +52,14 @@ class PartialDerivative(TensExpr):
         obj._free = free
         obj._dum = dum
         return obj
+
+    @property
+    def coeff(self):
+        return S.One
+
+    @property
+    def nocoeff(self):
+        return self
 
     @classmethod
     def _contract_indices_for_derivative(cls, expr, variables):

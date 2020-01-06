@@ -296,7 +296,7 @@ if cin:
             if (c_ret_type == 'void'):
                 ret_type = none
             elif(c_ret_type == 'int'):
-                ret_type = type = IntBaseType(String('integer'))
+                ret_type = IntBaseType(String('integer'))
             elif (c_ret_type == 'float'):
                 ret_type = FloatBaseType(String('real'))
             else:

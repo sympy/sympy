@@ -4,7 +4,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, N, atan, erfi, besselj)
+                   factorial, binomial, erfi, besselj)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
@@ -17,13 +17,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
-                         Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
+                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
-from sympy.stats.crv_types import (NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution,
-                                  ParetoDistribution, RaisedCosineDistribution, BeniniDistribution, BetaDistribution,
-                                  CauchyDistribution, GammaInverseDistribution, LogNormalDistribution, StudentTDistribution,
-                                  QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution, ReciprocalDistribution)
+from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -437,7 +434,6 @@ def test_betaprime():
 def test_cauchy():
     x0 = Symbol("x0")
     gamma = Symbol("gamma", positive=True)
-    t = Symbol('t')
     p = Symbol("p", positive=True)
 
     X = Cauchy('x', x0, gamma)
@@ -921,6 +917,31 @@ def test_pareto_numeric():
     assert E(X) == alpha*xm/S(alpha - 1)
     assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
     # Skewness tests too slow. Try shortcutting function?
+
+
+def test_PowerFunction():
+    alpha = Symbol("alpha", nonpositive=True)
+    a, b = symbols('a, b', real=True)
+    raises (ValueError, lambda: PowerFunction('x', alpha, a, b))
+
+    a, b = symbols('a, b', real=False)
+    raises (ValueError, lambda: PowerFunction('x', alpha, a, b))
+
+    alpha = Symbol("alpha", positive=True)
+    a, b = symbols('a, b', real=True)
+    raises (ValueError, lambda: PowerFunction('x', alpha, 5, 2))
+
+    X = PowerFunction('X', 2, a, b)
+    assert density(X)(z) == (-2*a + 2*z)/(-a + b)**2
+    assert cdf(X)(z) == Piecewise((a**2/(a**2 - 2*a*b + b**2) -
+        2*a*z/(a**2 - 2*a*b + b**2) + z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+
+    X = PowerFunction('X', 2, 0, 1)
+    assert density(X)(z) == 2*z
+    assert cdf(X)(z) == Piecewise((z**2, z >= 0), (0,True))
+    assert E(X) == Rational(2,3)
+    assert P(X < 0) == 0
+    assert P(X < 1) == 1
 
 
 def test_raised_cosine():

@@ -40,7 +40,6 @@ CACHE = _cache()
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from sympy.core.compatibility import lru_cache
 from functools import update_wrapper
 
 try:
@@ -62,6 +61,7 @@ try:
     lru_cache = fastcache.clru_cache
 
 except ImportError:
+    from sympy.core.compatibility import lru_cache
 
     def __cacheit(maxsize):
         """caching decorator.
