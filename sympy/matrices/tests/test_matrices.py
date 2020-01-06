@@ -3282,22 +3282,19 @@ def test_dual():
 
 
 def test_anti_symmetric():
-    assert Matrix([1, 2]).is_anti_symmetric() is False
-    m = Matrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
-    assert m.is_anti_symmetric() is True
-    assert m.is_anti_symmetric(simplify=False) is False
-    assert m.is_anti_symmetric(simplify=lambda x: x) is False
+    assert Matrix([1, 2]).is_anti_symmetric is False
 
-    # tweak to fail
-    m[2, 1] = -m[2, 1]
-    assert m.is_anti_symmetric() is False
-    # untweak
-    m[2, 1] = -m[2, 1]
+    m = Matrix([[0, 2, 3], [-2, 0, 4], [-3, -4, 0]])
+    assert m.is_anti_symmetric is True
+    m = Matrix([[1, 2, 3], [-2, 0, 4], [-3, -4, 0]])
+    assert m.is_anti_symmetric is False
 
-    m = m.expand()
-    assert m.is_anti_symmetric(simplify=False) is True
-    m[0, 0] = 1
-    assert m.is_anti_symmetric() is False
+    m = ImmutableMatrix([
+        [0, x**2 + 2*x + 1, y],
+        [-(x + 1)**2, 0, x*y],
+        [-y, -x*y, 0]])
+    assert m.is_anti_symmetric is None
+    assert m.expand().is_anti_symmetric is True
 
 
 def test_normalize_sort_diogonalization():

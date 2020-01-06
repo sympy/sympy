@@ -15,6 +15,7 @@ from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
+from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -1092,10 +1093,15 @@ class MatrixProperties(MatrixRequired):
     def _eval_has(self, *patterns):
         return any(a.has(*patterns) for a in self)
 
-    def _eval_is_anti_symmetric(self, simpfunc):
-        if not all(simpfunc(self[i, j] + self[j, i]).is_zero for i in range(self.rows) for j in range(self.cols)):
-            return False
-        return True
+    def _eval_is_anti_symmetric(self):
+        def pred():
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    if i == j:
+                        yield self[i, j].is_zero
+                    else:
+                        yield (self[i, j] + self[j, i]).is_zero
+        return fuzzy_and(pred())
 
     def _eval_is_diagonal(self):
         for i in range(self.rows):
@@ -1210,7 +1216,8 @@ class MatrixProperties(MatrixRequired):
         """
         return self._eval_has(*patterns)
 
-    def is_anti_symmetric(self, simplify=True):
+    @property
+    def is_anti_symmetric(self):
         """Check if matrix M is an antisymmetric matrix,
         that is, M is a square matrix with all M[i, j] == -M[j, i].
 
@@ -1273,13 +1280,11 @@ class MatrixProperties(MatrixRequired):
         True
         """
         # accept custom simplification
-        simpfunc = simplify
-        if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
             return False
-        return self._eval_is_anti_symmetric(simpfunc)
+
+        return self._eval_is_anti_symmetric()
 
     def is_diagonal(self):
         """Check if matrix is diagonal,
