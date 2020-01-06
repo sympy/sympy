@@ -4,6 +4,8 @@ from __future__ import print_function, division
 
 __all__ = ["Options"]
 
+from typing import List, Optional
+
 from sympy.core import S, Basic, sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
@@ -17,15 +19,15 @@ import re
 class Option(object):
     """Base class for all kinds of options. """
 
-    option = None
+    option = None  # type: Optional[str]
 
     is_Flag = False
 
-    requires = []
-    excludes = []
+    requires = []  # type: List[str]
+    excludes = []  # type: List[str]
 
-    after = []
-    before = []
+    after = []  # type: List[str]
+    before = []  # type: List[str]
 
     @classmethod
     def default(cls):
