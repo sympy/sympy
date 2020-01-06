@@ -3342,8 +3342,10 @@ def encipher_xor(message, key):
     Parameters
     ==========
 
-    message: string, the message to be encrypted.
-    key: string, the key to be used for encryption of the message.
+    message: str
+        the message to be encrypted.
+    key: str
+        the key to be used for encryption of the message.
 
     Returns
     =======
@@ -3379,8 +3381,10 @@ def decipher_xor(ciphertext, key):
     Parameters
     ==========
 
-    ciphertext: requires a hexadecimal number
-    key: string, the key to be used for decryption of the message.
+    ciphertext: str
+        requires a hexadecimal number
+    key: str
+        the key to be used for decryption of the message.
 
     Returns
     =======
@@ -3396,8 +3400,6 @@ def decipher_xor(ciphertext, key):
     val_in_uni = ""
     for i in range(0, len(ciphertext), 2):
         val_in_uni += bytes.fromhex(ciphertext[i:i+2]).decode('utf-8')
-        # creating bytes object from a string of hexadecimal numbers.
-    # print(len(val_in_uni))
 
     for f in range(len(val_in_uni)):
         decrypted_text += chr(ord(key[itr]) ^ ord(val_in_uni[f]))

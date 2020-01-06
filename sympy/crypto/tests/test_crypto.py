@@ -564,3 +564,10 @@ def test_bg_public_key():
 
 def test_decipher_xor():
     assert decipher_xor("123b2e34380b3010292701213236", "ABCD") == "SympyIsTheBest"
+    assert decipher_xor("01015e5e5e010101015e5e5e5e0101015e5e5e010101015e5e5e", "1")[:5] == "00ooo"
+    assert decipher_xor("262a2a3322347a0f090f1a09392c34353b3d22", "dinvds2FCDVDwcd") == "BCDEFGHIJKLMNOPQRST"
+
+def test_encipher_xor():
+    assert encipher_xor("BCDEFGHIJKLMNOPQRST", "dinvds2FCDVDwcd") == "262a2a3322347a0f090f1a09392c34353b3d22"
+    assert encipher_xor("00ooo0000oooo000ooo0000ooo", "1")[:7] == "01015e5"
+    assert encipher_xor("SympyIsTheBest", "ABCD") == "123b2e34380b3010292701213236"
