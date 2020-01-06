@@ -1,11 +1,10 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
-                   Naturals, binomial, Piecewise)
+                   Piecewise)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess)
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
-from sympy.stats.drv import DiscreteDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.utilities.pytest import raises
@@ -148,10 +147,8 @@ def test_BernoulliProcess():
 
     X = BernoulliProcess("X", success='H', failure='T', p=0.6)
     assert X.state_space == FiniteSet('H', 'T')
-    assert X.success == 'H'
-    assert X.failure == 'T'
-    H,T=symbols("H,T")
-    assert str(E(X[1]+X[2]*X[3])) ==str(0.36*H**2 + 0.48*H*T + 0.6*H + 0.16*T**2 + 0.4*T)
+    H, T = symbols("H,T")
+    assert str(E(X[1]+X[2]*X[3])) == str(0.36*H**2 + 0.48*H*T + 0.6*H + 0.16*T**2 + 0.4*T)
 
     t = symbols('t', positive=True, integer=True)
     assert isinstance(B[t], RandomIndexedSymbol)
@@ -169,12 +166,12 @@ def test_BernoulliProcess():
 
     # Test for the sum distribution of Bernoulli Process RVs
     Y = B[1] + B[2] + B[3]
-    assert P(Eq(Y, 0)).round(2)==Float(0.06, 1)
-    assert P(Eq(Y, 2)).round(2)==Float(0.43, 2)
-    assert P(Eq(Y, 4)).round(2)==0
-    assert P(Gt(Y, 1)).round(2)==Float(0.65, 2)
+    assert P(Eq(Y, 0)).round(2) == Float(0.06, 1)
+    assert P(Eq(Y, 2)).round(2) == Float(0.43, 2)
+    assert P(Eq(Y, 4)).round(2) == 0
+    assert P(Gt(Y, 1)).round(2) == Float(0.65, 2)
     # Test for independency of each Random Indexed variable
-    assert P(Eq(B[1], 0) & Eq(B[2], 1) & Eq(B[3], 0) & Eq(B[4], 1)).round(2)==Float(0.06, 1)
+    assert P(Eq(B[1], 0) & Eq(B[2], 1) & Eq(B[3], 0) & Eq(B[4], 1)).round(2) == Float(0.06, 1)
 
     assert E(2 * B[1] + B[2]).round(2) == Float(1.80, 3)
     assert E(2 * B[1] + B[2] + 5).round(2) == Float(6.80, 3)
