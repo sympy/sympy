@@ -12,7 +12,7 @@ from sympy.core.compatibility import (
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
-from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_bool
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, fuzzy_bool
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -682,13 +682,24 @@ class MatrixReductions(MatrixDeterminant):
                                                       dotprodsimp=dotprodsimp)
         return reduced, pivot_cols, swaps
 
-    def _eval_is_echelon(self, iszerofunc):
-        if self.rows <= 0 or self.cols <= 0:
+    def _eval_is_echelon(self):
+        if self.rows == 0 or self.cols == 0:
             return True
-        zeros_below = all(iszerofunc(t) for t in self[1:, 0])
-        if iszerofunc(self[0, 0]):
-            return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
-        return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
+
+        def test():
+            for t in self[1:, 0]:
+                yield t.is_zero
+        zeros_below = fuzzy_and(test())
+        has_pivot = fuzzy_not(self[0, 0].is_zero)
+
+        ite = fuzzy_or([
+            fuzzy_and([has_pivot, self[1:, 1:]._eval_is_echelon()]),
+            fuzzy_and([fuzzy_not(has_pivot), self[:, 1:]._eval_is_echelon()])
+        ])
+
+        if self.cols == 1:
+            return zeros_below
+        return fuzzy_and([zeros_below, ite])
 
     def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True, dotprodsimp=None):
         reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
@@ -964,12 +975,12 @@ class MatrixReductions(MatrixDeterminant):
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
     @property
-    def is_echelon(self, iszerofunc=_iszero):
+    def is_echelon(self):
         """Returns `True` if the matrix is in echelon form.
         That is, all rows of zeros are at the bottom, and below
         each leading non-zero in a row are exclusively zeros."""
 
-        return self._eval_is_echelon(iszerofunc)
+        return self._eval_is_echelon()
 
     def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         """
@@ -3982,31 +3993,27 @@ class MatrixBase(MatrixDeprecated,
             kwargs['dotprodsimp'] = dotprodsimp
         return self._eval_inverse(**kwargs)
 
-    def is_nilpotent(self, dotprodsimp=None):
+    @property
+    def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
-
-        A matrix B is nilpotent if for some integer k, B**k is
-        a zero matrix.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         Examples
         ========
 
         >>> from sympy import Matrix
         >>> a = Matrix([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
-        >>> a.is_nilpotent()
+        >>> a.is_nilpotent
         True
 
         >>> a = Matrix([[1, 0, 1], [1, 0, 0], [1, 1, 0]])
-        >>> a.is_nilpotent()
+        >>> a.is_nilpotent
         False
+
+        Notes
+        =====
+
+        A matrix $B$ is nilpotent if for some integer $k$, $B^k$ is
+        a zero matrix.
         """
         if not self:
             return True
@@ -4014,7 +4021,7 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = _uniquely_named_symbol('x', self)
-        p = self.charpoly(x, dotprodsimp=dotprodsimp)
+        p = self.charpoly(x)
         if p.args[0] == x ** self.rows:
             return True
         return False

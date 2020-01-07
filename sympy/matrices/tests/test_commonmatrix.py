@@ -958,17 +958,17 @@ def test_is_echelon():
     assert a.is_echelon
 
     a = ReductionsOnlyMatrix(2, 3, [0, 0, 6, 3, 2, 1])
-    assert not a.is_echelon
+    assert a.is_echelon is False
 
     x = Symbol('x')
     a = ReductionsOnlyMatrix(3, 1, [x, 0, 0])
-    assert a.is_echelon
+    assert a.is_echelon is True
 
     a = ReductionsOnlyMatrix(3, 1, [x, x, 0])
-    assert not a.is_echelon
+    assert a.is_echelon is None
 
     a = ReductionsOnlyMatrix(3, 3, [0, 0, 0, 1, 2, 3, 0, 0, 0])
-    assert not a.is_echelon
+    assert a.is_echelon is False
 
 
 def test_echelon_form():

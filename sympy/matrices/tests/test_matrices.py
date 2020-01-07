@@ -437,10 +437,6 @@ def test_issue_17247_expression_blowup_17():
         Matrix([[5],[-6],[0],[0],[0],[0],[1],[0]]),
         Matrix([[6],[-7],[0],[0],[0],[0],[0],[1]])]
 
-def test_issue_17247_expression_blowup_18():
-    M = Matrix(6, 6, ([1+x, 1-x]*3 + [1-x, 1+x]*3)*3)
-    assert not M.is_nilpotent(dotprodsimp=True)
-
 def test_issue_17247_expression_blowup_19():
     M = Matrix(S('''[
         [             -3/4,                     0,         1/4 + I/2,                     0],
@@ -1895,12 +1891,14 @@ def test_is_lower():
 
 
 def test_is_nilpotent():
-    a = Matrix(4, 4, [0, 2, 1, 6, 0, 0, 1, 2, 0, 0, 0, 3, 0, 0, 0, 0])
-    assert a.is_nilpotent()
+    a = Matrix([[0, 2, 1, 6], [0, 0, 1, 2], [0, 0, 0, 3], [0, 0, 0, 0]])
+    assert a.is_nilpotent is True
     a = Matrix([[1, 0], [0, 1]])
-    assert not a.is_nilpotent()
+    assert a.is_nilpotent is False
     a = Matrix([])
-    assert a.is_nilpotent()
+    assert a.is_nilpotent is True
+    a = Matrix(6, 6, ([1+x, 1-x]*3 + [1-x, 1+x]*3)*3)
+    assert a.is_nilpotent is False
 
 
 def test_zeros_ones_fill():
