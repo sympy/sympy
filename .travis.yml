@@ -278,7 +278,7 @@ install:
   # This would fail due to invalid Python 2.7 syntax so we disable it while
   # testing import under Python 2.
   - |
-    if [[ -n "${TEST_PY2_IMPORT}" ]]; then
+    if [[ -z "${TEST_PY2_IMPORT}" ]]; then
         if [[ "${TEST_SETUP}" == "true" ]]; then
           # The install cycle below is to test installation on systems without
           # setuptools.
