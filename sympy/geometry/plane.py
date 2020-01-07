@@ -494,7 +494,7 @@ class Plane(GeometryEntity):
         elif isinstance(l, Plane):
             a = Matrix(l.normal_vector)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero:
+            if a.cross(b).is_zero_matrix:
                 return True
             else:
                 return False

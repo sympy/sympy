@@ -598,7 +598,7 @@ class HolonomicFunction(object):
 
         # if a solution is not obtained then increasing the order by 1 in each
         # iteration
-        while sol.is_zero:
+        while sol.is_zero_matrix:
             dim += 1
 
             diff1 = (gen * rowsself[-1])
@@ -986,7 +986,7 @@ class HolonomicFunction(object):
         sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
 
         # until a non trivial solution is found
-        while sol[0].is_zero:
+        while sol[0].is_zero_matrix:
 
             # updating the coefficients Dx^i(f).Dx^j(g) for next degree
             for i in range(a - 1, -1, -1):
@@ -1209,9 +1209,8 @@ class HolonomicFunction(object):
         coeffs[0] = S.One
         system = [coeffs]
         homogeneous = Matrix([[S.Zero for i in range(a)]]).transpose()
-        sol = S.Zero
 
-        while sol.is_zero:
+        while True:
             coeffs_next = [p.diff(self.x) for p in coeffs]
             for i in range(a - 1):
                 coeffs_next[i + 1] += (coeffs[i] * diff)
@@ -1224,6 +1223,8 @@ class HolonomicFunction(object):
             system.append(coeffs)
             sol, taus = (Matrix(system).transpose()
                 ).gauss_jordan_solve(homogeneous)
+            if sol.is_zero_matrix is not True:
+                break
 
         tau = list(taus)[0]
         sol = sol.subs(tau, 1)

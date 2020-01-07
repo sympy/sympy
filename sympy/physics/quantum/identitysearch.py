@@ -158,7 +158,7 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
         # The matrix is scalar if it's diagonal and the adjusted trace
         # value is equal to 2^nqubits
         return bool(
-            matrix.is_diagonal() and has_correct_trace and is_identity)
+            matrix.is_diagonal and has_correct_trace and is_identity)
 
 if np and scipy:
     is_scalar_matrix = is_scalar_sparse_matrix
