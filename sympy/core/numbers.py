@@ -3898,11 +3898,11 @@ if HAS_GMPY:
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq
 
 
-def sympify_mpq(x):
+def sympify_mpmath_mpq(x):
     p, q = x._mpq_
     return Rational(p, q, 1)
 
-converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpq
+converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):
