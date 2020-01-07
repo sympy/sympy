@@ -31,7 +31,7 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-from typing import List, Set
+from typing import Any, Dict as tDict, List, Set
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
@@ -394,8 +394,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = dict()
-    _substitutions_dict_tensmul = dict()
+    _substitutions_dict = dict()  # type: tDict[Any, Any]
+    _substitutions_dict_tensmul = dict()  # type: tDict[Any, Any]
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -2626,6 +2626,8 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
+    _index_structure = None  # type: _IndexStructure
+
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         indices = cls._parse_indices(tensor_head, indices)
@@ -3038,6 +3040,8 @@ class TensMul(TensExpr, AssocOp):
 
     """
     identity = S.One
+
+    _index_structure = None  # type: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
