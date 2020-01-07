@@ -140,7 +140,7 @@ class Density(HermitianOperator):
         'Density'((A*|0>, 0.5),(A*|1>, 0.5))
 
         """
-        new_args = [(op * state, prob) for (state, prob) in self.args]
+        new_args = [(op*state, prob) for (state, prob) in self.args]
         return Density(*new_args)
 
     def doit(self, **hints):
