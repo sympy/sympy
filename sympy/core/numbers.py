@@ -1695,7 +1695,7 @@ class Rational(Number):
         return self.p == 0
 
     def __neg__(self):
-        return Rational(-self.p, self.q)
+        return self.__class__(-self.p, self.q)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -1843,7 +1843,7 @@ class Rational(Number):
         return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
-        return Rational(abs(self.p), self.q)
+        return self.__class__(abs(self.p), self.q)
 
     def __int__(self):
         p, q = self.p, self.q
@@ -2815,6 +2815,10 @@ class Half(RationalConstant, metaclass=Singleton):
     @staticmethod
     def __abs__():
         return S.Half
+
+    @staticmethod
+    def __neg__():
+        return Rational(-1,2)
 
 
 class Infinity(Number, metaclass=Singleton):
