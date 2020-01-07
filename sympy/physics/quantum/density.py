@@ -186,9 +186,9 @@ class Density(HermitianOperator):
                 and len(nc_part2) == 1):
             op = tensor_product_simp(nc_part1[0]*Dagger(nc_part2[0]))
         else:
-            op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
+            op = Mul(*nc_part1)*Dagger(Mul(*nc_part2))
 
-        return Mul(*c_part1) * Mul(*c_part2) * op
+        return Mul(*c_part1)*Mul(*c_part2) * op
 
     def _represent(self, **options):
         return represent(self.doit(), **options)
