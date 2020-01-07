@@ -345,7 +345,7 @@ class IntQubit(IntQubitState, Qubit):
 
     The differences between this class and ``Qubit`` are:
 
-    * The form of the constructor.
+   *The form of the constructor.
     * The qubit values are printed as their corresponding integer, rather
       than the raw qubit values. The internal storage format of the qubit
       values in the same as ``Qubit``.
