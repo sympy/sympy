@@ -1977,7 +1977,7 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
 
     @abstractmethod
     def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     def fun_eval(self, *index_tuples):
         deprecate_fun_eval()
