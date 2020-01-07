@@ -443,7 +443,7 @@ def test_issue_17247_expression_blowup_19():
         [                0, -177/128 - 1369*I/128,                 0, -2063/256 + 541*I/128],
         [          1/2 - I,                     0,                 0,                     0],
         [                0,                     0,                 0, -177/128 - 1369*I/128]]'''))
-    assert not M.is_diagonalizable(dotprodsimp=True)
+    assert M.is_diagonalizable is False
 
 def test_issue_17247_expression_blowup_20():
     M = Matrix([
@@ -2138,10 +2138,10 @@ def test_diagonal_symmetrical():
 
 def test_diagonalization():
     m = Matrix([[1, 2+I], [2-I, 3]])
-    assert m.is_diagonalizable()
+    assert m.is_diagonalizable is True
 
     m = Matrix([[-3, 1], [-3, 20], [3, 10]])
-    assert not m.is_diagonalizable()
+    assert m.is_diagonalizable is False
     assert m.is_symmetric is False
     raises(NonSquareMatrixError, lambda: m.diagonalize())
 
@@ -2153,25 +2153,25 @@ def test_diagonalization():
 
     m = Matrix([[0, 1], [1, 0]])
     assert m.is_symmetric is True
-    assert m.is_diagonalizable()
+    assert m.is_diagonalizable is True
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
     m = Matrix([[1, 0], [0, 3]])
     assert m.is_symmetric is True
-    assert m.is_diagonalizable()
+    assert m.is_diagonalizable is True
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
     assert P == eye(2)
     assert D == m
 
-    m = Matrix(2, 2, [1, 1, 0, 0])
-    assert m.is_diagonalizable()
+    m = Matrix([[1, 1], [0, 0]])
+    assert m.is_diagonalizable is True
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
-    m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
-    assert m.is_diagonalizable()
+    m = Matrix([[1, 2, 0], [0, 3, 0], [2, -4, 2]])
+    assert m.is_diagonalizable is True
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
     for i in P:
@@ -2179,62 +2179,53 @@ def test_diagonalization():
 
     m = Matrix([[1, 0], [0, 0]])
     assert m.is_diagonal is True
-    assert m.is_diagonalizable()
+    assert m.is_diagonalizable is True
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
     assert P == Matrix([[0, 1], [1, 0]])
 
     # diagonalizable, complex only
-    m = Matrix(2, 2, [0, 1, -1, 0])
-    assert not m.is_diagonalizable(True)
-    raises(MatrixError, lambda: m.diagonalize(True))
-    assert m.is_diagonalizable()
+    m = Matrix([[0, 1], [-1, 0]])
+    assert m.is_diagonalizable is True
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
     # not diagonalizable
-    m = Matrix(2, 2, [0, 1, 0, 0])
-    assert not m.is_diagonalizable()
+    m = Matrix([[0, 1], [0, 0]])
+    assert m.is_diagonalizable is False
     raises(MatrixError, lambda: m.diagonalize())
 
-    m = Matrix(3, 3, [-3, 1, -3, 20, 3, 10, 2, -2, 4])
-    assert not m.is_diagonalizable()
+    m = Matrix([[-3, 1, -3], [20, 3, 10], [2, -2, 4]])
+    assert m.is_diagonalizable is False
     raises(MatrixError, lambda: m.diagonalize())
 
     # symbolic
     a, b, c, d = symbols('a b c d')
     m = Matrix([[a, c], [c, b]])
     assert m.is_symmetric is True
-    assert m.is_diagonalizable()
+    assert m.is_diagonalizable is True
 
 
 def test_issue_15887():
     # Mutable matrix should not use cache
     a = MutableDenseMatrix([[0, 1], [1, 0]])
-    assert a.is_diagonalizable() is True
+    assert a.is_diagonalizable is True
     a[1, 0] = 0
-    assert a.is_diagonalizable() is False
+    assert a.is_diagonalizable is False
 
     a = MutableDenseMatrix([[0, 1], [1, 0]])
     a.diagonalize()
     a[1, 0] = 0
     raises(MatrixError, lambda: a.diagonalize())
 
-    # Test deprecated cache and kwargs
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_cache=True)
-
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_subproducts=True)
-
 
 @XFAIL
 def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
-    raises(NotImplementedError, lambda: m.is_diagonalizable(True))
+    raises(NotImplementedError, lambda: m.is_diagonalizable)
     # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
     # see issue 5292
-    assert not m.is_diagonalizable(True)
+    assert not m.is_diagonalizable
     raises(MatrixError, lambda: m.diagonalize(True))
     (P, D) = m.diagonalize(True)
 
@@ -2300,7 +2291,7 @@ def test_jordan_form():
     assert Jmust == J
 
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
-    assert not m.is_diagonalizable()
+    assert m.is_diagonalizable is False
     Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
     P, J = m.jordan_form()
     assert Jmust == J

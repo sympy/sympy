@@ -1436,12 +1436,13 @@ def test_is_diagonalizable():
     a, b, c = symbols('a b c')
     m = EigenOnlyMatrix(2, 2, [a, c, c, b])
     assert m.is_symmetric is True
-    assert m.is_diagonalizable()
-    assert not EigenOnlyMatrix(2, 2, [1, 1, 0, 1]).is_diagonalizable()
+    assert m.is_diagonalizable is True
+
+    m = EigenOnlyMatrix(2, 2, [1, 1, 0, 1])
+    assert m.is_diagonalizable is False
 
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
-    assert m.is_diagonalizable()
-    assert not m.is_diagonalizable(reals_only=True)
+    assert m.is_diagonalizable is True
 
 
 def test_jordan_form():

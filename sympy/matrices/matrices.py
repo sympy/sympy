@@ -1618,23 +1618,9 @@ class MatrixEigen(MatrixSubspaces):
 
         return True, eigenvecs
 
-    def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
+    @property
+    def is_diagonalizable(self):
         """Returns ``True`` if a matrix is diagonalizable.
-
-        Parameters
-        ==========
-
-        reals_only : bool, optional
-            If ``True``, it tests whether the matrix can be diagonalized
-            without complex numbers. (Orthogonally diagonalizable)
-
-            If ``False``, it tests whether the matrix can be unitarily
-            diagonalizable.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification
-            is used during matrix multiplications to control expression
-            blowup and thus speed up calculation.
 
         Examples
         ========
@@ -1643,22 +1629,13 @@ class MatrixEigen(MatrixSubspaces):
 
         >>> from sympy import Matrix
         >>> m = Matrix([[1, 2, 0], [0, 3, 0], [2, -4, 2]])
-        >>> m.is_diagonalizable()
+        >>> m.is_diagonalizable
         True
 
         Example of a non-diagonalizable matrix:
 
         >>> m = Matrix([[0, 1], [0, 0]])
-        >>> m.is_diagonalizable()
-        False
-
-        Example of a unitarily diagonalizable, but not orthogonally
-        diagonalizable:
-
-        >>> m = Matrix([[0, 1], [-1, 0]])
-        >>> m.is_diagonalizable(reals_only=False)
-        True
-        >>> m.is_diagonalizable(reals_only=True)
+        >>> m.is_diagonalizable
         False
 
         See Also
@@ -1667,20 +1644,6 @@ class MatrixEigen(MatrixSubspaces):
         is_diagonal
         diagonalize
         """
-
-        if 'clear_cache' in kwargs:
-            SymPyDeprecationWarning(
-                feature='clear_cache',
-                deprecated_since_version=1.4,
-                issue=15887
-            ).warn()
-        if 'clear_subproducts' in kwargs:
-            SymPyDeprecationWarning(
-                feature='clear_subproducts',
-                deprecated_since_version=1.4,
-                issue=15887
-            ).warn()
-
         if not self.is_square:
             return False
 
@@ -1690,8 +1653,7 @@ class MatrixEigen(MatrixSubspaces):
         if all(e.is_complex for e in self) and self.is_hermitian:
             return True
 
-        return self.is_diagonalizable_with_eigen(reals_only=reals_only,
-                dotprodsimp=dotprodsimp)[0]
+        return self.is_diagonalizable_with_eigen(reals_only=False)[0]
 
     def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
         """Algorithm dump for computing positive-definiteness of a

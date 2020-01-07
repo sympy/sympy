@@ -67,7 +67,7 @@ def test_function_return_types():
     assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
 
     X = ImmutableMatrix([[1, 2], [2, 1]])
-    assert X.is_diagonalizable()
+    assert X.is_diagonalizable is True
     assert X.det() == -3
     assert X.norm(2) == 3
 
