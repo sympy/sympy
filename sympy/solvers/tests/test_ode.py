@@ -3768,3 +3768,17 @@ def test_2nd_2F1_hypergeometric():
           C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702
+
+
+def test_issue_15889():
+    sol = dsolve(exp(f(x).diff(x))-f(x)**2)
+    ans = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
+    assert str(sol.as_dummy()) == str(ans.as_dummy())
+    assert dsolve(f(x).diff(x)**2 - f(x)**3) == Eq(
+        f(x), 4/(C1**2 - 2*C1*x + x**2))
+    assert dsolve(f(x).diff(x)**2 - f(x)) == Eq(
+        f(x), C1**2/4 - C1*x/2 + x**2/4)
+    assert dsolve(f(x).diff(x)**2 - f(x)**2) == [
+        Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    assert dsolve(f(x).diff(x)**2 - f(x)**3, hint='lie_group') == Eq(
+        f(x), 4/(C1**2 + 2*C1*x + x**2))
