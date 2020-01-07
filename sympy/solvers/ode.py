@@ -4736,7 +4736,7 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants(soln1 - soln2, len(constants1))
+    constants1_new = get_numbered_constants(Tuple(soln1, soln2), len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
