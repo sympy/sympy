@@ -1486,7 +1486,7 @@ def metric_to_Christoffel_1st(expr):
 
     """
     matrix = twoform_to_matrix(expr)
-    if not matrix.is_symmetric():
+    if not matrix.is_symmetric:
         raise ValueError(
             'The two-form representing the metric is not symmetric.')
     coord_sys = expr.atoms(CoordSystem).pop()
