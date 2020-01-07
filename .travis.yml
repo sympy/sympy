@@ -27,6 +27,11 @@ matrix:
       sudo: true
       script: bin/test quality
       env:
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
     - stage: baseline
       python: 3.8
@@ -191,12 +196,7 @@ matrix:
             - pypy3
 
     - stage: allowed_failures
-      python: 3.8
-      dist: xenial
-      sudo: true
-      env:
-        - TEST_FLAKE8="true"
-    - python: 3.6
+      python: 3.6
       dist: xenial
       sudo: true
       env:
