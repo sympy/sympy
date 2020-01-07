@@ -3771,14 +3771,29 @@ def test_2nd_2F1_hypergeometric():
 
 
 def test_issue_15889():
-    sol = dsolve(exp(f(x).diff(x))-f(x)**2)
-    ans = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
-    assert str(sol.as_dummy()) == str(ans.as_dummy())
-    assert dsolve(f(x).diff(x)**2 - f(x)**3) == Eq(
-        f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert dsolve(f(x).diff(x)**2 - f(x)) == Eq(
-        f(x), C1**2/4 - C1*x/2 + x**2/4)
-    assert dsolve(f(x).diff(x)**2 - f(x)**2) == [
-        Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    assert dsolve(f(x).diff(x)**2 - f(x)**3, hint='lie_group') == Eq(
-        f(x), 4/(C1**2 + 2*C1*x + x**2))
+    eq = exp(f(x).diff(x))-f(x)**2
+    sol = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**3
+    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
+    assert sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+    eq = f(x).diff(x)**2 - f(x)
+    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**2
+    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x)])
+    assert sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**3
+    sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
+    assert dsolve(eq, hint='lie_group') == sol
+    assert checkodesol(eq, sol) == (True, 0)
+

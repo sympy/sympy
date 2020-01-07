@@ -6408,16 +6408,16 @@ def ode_lie_group(eq, func, order, match):
     except NotImplementedError:
         eqsol = []
 
-    desols = set()
+    desols = []
     for s in eqsol:
         sol = _ode_lie_group(s, func, order, match=match)
         if sol:
-            desols.update(sol)
+            desols.extend(sol)
 
-    if not desols:
+    if desols == []:
         raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
             + " the lie group method")
-    return list(ordered(desols))
+    return desols
 
 def _lie_group_remove(coords):
     r"""
