@@ -1,7 +1,7 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_particle():

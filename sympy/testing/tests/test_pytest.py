@@ -1,6 +1,6 @@
 import warnings
 
-from sympy.utilities.pytest import (raises, warns, ignore_warnings,
+from sympy.testing.pytest import (raises, warns, ignore_warnings,
                                     warns_deprecated_sympy, Failed)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

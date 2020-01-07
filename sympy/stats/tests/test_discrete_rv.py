@@ -14,6 +14,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
 from sympy.stats.rv import sample
 from sympy.utilities.pytest import slow, nocache_fail, raises
 
+
 x = Symbol('x')
 
 

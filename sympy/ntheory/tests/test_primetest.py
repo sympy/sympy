@@ -3,7 +3,7 @@ from sympy.ntheory.generate import Sieve, sieve
 from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
                                      is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime)
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 
 def test_euler_pseudoprimes():

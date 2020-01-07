@@ -8,8 +8,8 @@ import random
 import ast
 
 from sympy.core.compatibility import PY3
-from sympy.utilities.pytest import raises
-from sympy.utilities.quality_unicode import test_this_file_encoding
+from sympy.testing.pytest import raises
+from sympy.testing.quality_unicode import test_this_file_encoding
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -245,6 +245,13 @@ def test_files():
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
         # False positive in the docstring
         "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
+        # These are deprecated stubs that can be removed at some point:
+        "%(sep)sutilities%(sep)sruntests.py" % sepd,
+        "%(sep)sutilities%(sep)spytest.py" % sepd,
+        "%(sep)sutilities%(sep)srandtest.py" % sepd,
+        "%(sep)sutilities%(sep)stmpfiles.py" % sepd,
+        "%(sep)sutilities%(sep)squality_unicode.py" % sepd,
+        "%(sep)sutilities%(sep)sbenchmarking.py" % sepd,
     ])
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")

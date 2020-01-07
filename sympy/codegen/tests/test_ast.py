@@ -4,7 +4,7 @@ from sympy import (
     symbols, Symbol, Tuple, Lt, nan, oo
 )
 from sympy.core.relational import StrictLessThan
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 from sympy.codegen.ast import (

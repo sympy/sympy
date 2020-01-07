@@ -1,6 +1,6 @@
 from sympy import Identity, OneMatrix, ZeroMatrix, Matrix, MatAdd
 from sympy.core import symbols
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import (HadamardProduct, hadamard_product, HadamardPower, hadamard_power)

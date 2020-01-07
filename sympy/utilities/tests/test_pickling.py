@@ -5,7 +5,7 @@ import pickle
 
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta

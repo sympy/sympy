@@ -30,9 +30,9 @@ from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.utilities.pytest import (XFAIL, raises, skip, slow, SKIP,
+from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP,
     nocache_fail)
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
 from sympy.solvers.solveset import (

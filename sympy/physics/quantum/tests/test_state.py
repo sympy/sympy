@@ -1,6 +1,6 @@
 from sympy import (Add, conjugate, diff, I, Integer, Mul, oo, pi, Pow,
                    Rational, sin, sqrt, Symbol, symbols, sympify, S)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr

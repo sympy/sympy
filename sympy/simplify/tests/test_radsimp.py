@@ -7,7 +7,7 @@ from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import (_unevaluated_Add,
     collect_sqrt, fraction_expand, collect_abs)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import x, y, z, a, b, c, d
 

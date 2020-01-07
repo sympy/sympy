@@ -12,9 +12,9 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-    is_deficient, is_amicable)
+    is_deficient, is_amicable, dra, drm)
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.utilities.iterables import capture
 
@@ -653,3 +653,19 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+
+def test_dra():
+    assert dra(19, 12) == 8
+    assert dra(2718, 10) == 9
+    assert dra(0, 22) == 0
+    assert dra(23456789, 10) == 8
+    raises(ValueError, lambda: dra(24, -2))
+    raises(ValueError, lambda: dra(24.2, 5))
+
+def test_drm():
+    assert drm(19, 12) == 7
+    assert drm(2718, 10) == 2
+    assert drm(0, 15) == 0
+    assert drm(234161, 10) == 6
+    raises(ValueError, lambda: drm(24, -2))
+    raises(ValueError, lambda: drm(11.6, 9))
