@@ -1187,6 +1187,10 @@ class Union(Set, LatticeOp, EvalfMixin):
         obj._argset = frozenset(args)
         return obj
 
+    @property
+    def args(self):
+        return self._args
+
     def _complement(self, universe):
         # DeMorgan's Law
         return Intersection(s.complement(universe) for s in self.args)
@@ -1354,6 +1358,10 @@ class Intersection(Set, LatticeOp):
         obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
         return obj
+
+    @property
+    def args(self):
+        return self._args
 
     @property
     def is_iterable(self):
