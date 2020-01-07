@@ -1,8 +1,11 @@
+
 from sympy import symbols, S, oo
+
 from sympy.core import Basic, Expr
 from sympy.core.numbers import Infinity, NegativeInfinity
 from sympy.multipledispatch import dispatch
 from sympy.sets import Interval, FiniteSet
+
 
 
 # XXX: The functions in this module are clearly not tested and are broken in a
@@ -15,9 +18,11 @@ _x, _y = symbols("x y")
 def _set_add(x, y): # noqa:F811
     return None
 
+
 @dispatch(Expr, Expr)
 def _set_add(x, y): # noqa:F811
     return x+y
+
 
 @dispatch(Interval, Interval)
 def _set_add(x, y): # noqa:F811
@@ -26,7 +31,8 @@ def _set_add(x, y): # noqa:F811
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
     return Interval(x.start + y.start, x.end + y.end,
-        x.left_open or y.left_open, x.right_open or y.right_open)
+                    x.left_open or y.left_open, x.right_open or y.right_open)
+
 
 @dispatch(Interval, Infinity)
 def _set_add(x, y): # noqa:F811
@@ -45,9 +51,11 @@ def _set_add(x, y): # noqa:F811
 def _set_sub(x, y): # noqa:F811
     return None
 
+
 @dispatch(Expr, Expr)
 def _set_sub(x, y): # noqa:F811
     return x-y
+
 
 @dispatch(Interval, Interval)
 def _set_sub(x, y): # noqa:F811
@@ -56,7 +64,8 @@ def _set_sub(x, y): # noqa:F811
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
     return Interval(x.start - y.end, x.end - y.start,
-        x.left_open or y.right_open, x.right_open or y.left_open)
+                    x.left_open or y.right_open, x.right_open or y.left_open)
+
 
 @dispatch(Interval, Infinity)
 def _set_sub(x, y): # noqa:F811
