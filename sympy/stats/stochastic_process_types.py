@@ -10,11 +10,13 @@ from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
-                            _symbol_converter)
+                            _symbol_converter, _value_check, pspace, given,
+                           dependent)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
 from sympy.stats import P, E
+from sympy.core.sympify import _sympify
 
 __all__ = [
     'StochasticProcess',
@@ -152,7 +154,7 @@ class StochasticProcess(Basic):
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
         pdf = Lambda(tuple(args),
-                    expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
+                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
@@ -174,9 +176,7 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        distribution = None
-        if hasattr(self, 'distribution'):
-            distribution = self.distribution
+        distribution = getattr(self, 'distribution', None)
         pspace_obj = StochasticPSpace(self.symbol, self, distribution)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
@@ -780,53 +780,44 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     ==========
 
     sym: Symbol/string_types
-    success: Event of success
-    failure: Event of failure
-    p: Proability of getting success
+    success: Integer/string_types
+            The event which is considered to be success, by default is 1.
+    failure: Integer/string_types
+            The event which is considered to be failure, by default is 0.
+    p: Real Number between 0 and 1
+            Represents the probability of getting success.
 
     Examples
     ========
 
     >>> from sympy.stats import BernoulliProcess, P, E
     >>> from sympy import Eq, Gt, Lt
-    >>> B = BernoulliProcess("B",p=0.7, success=1, failure=0)
-
+    >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     FiniteSet(0, 1)
-
     >>> (B.p).round(2)
     0.70
-
     >>> B.success
     1
-
     >>> B.failure
     0
-
     >>> X = B[1] + B[2] + B[3]
     >>> P(Eq(X, 0)).round(2)
     0.03
-
     >>> P(Eq(X, 2)).round(2)
     0.44
-
     >>> P(Eq(X, 4)).round(2)
     0
-
     >>> P(Gt(X, 1)).round(2)
     0.78
-
     >>> P(Eq(B[1], 0) & Eq(B[2], 1) & Eq(B[3], 0) & Eq(B[4], 1)).round(2)
     0.04
-
     >>> B.joint_distribution(B[1], B[2])
     JointDistributionHandmade(Lambda((B[1], B[2]), Piecewise((0.7, Eq(B[1], 1)),
     (0.3, Eq(B[1], 0)), (0, True))*Piecewise((0.7, Eq(B[2], 1)), (0.3, Eq(B[2], 0)),
     (0, True))))
-
     >>> E(2*B[1] + B[2]).round(2)
     2.10
-
     >>> P(B[1] < 1).round(2)
     0.30
 
@@ -857,18 +848,12 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         return self.args[5]
 
     def __new__(cls, sym, p, success=1, failure=0):
-        if p > 1 or p < 0:
-            raise ValueError("Probability must be in between 0 and 1")
-        p = sympify(p)
+        _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
+        p = _sympify(p)
         sym = _symbol_converter(sym)
         state_space = _set_converter([success, failure])
         return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
                              sympify(success), sympify(failure))
-
-    def __getattribute__(self, name):
-        if name == 'density':
-            return self.pmf
-        return object.__getattribute__(self, name)
 
     def _rvindexed_subs(self, expr, condition=None):
         """
@@ -876,14 +861,14 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         same name, distribution and probability as RandomIndexedSymbol.
 
         """
-        from sympy.stats import Bernoulli
+
         rvs_expr = random_symbols(expr)
         if len(rvs_expr) != 0:
             swapdict_expr = {}
             for rv in rvs_expr:
                 if isinstance(rv, RandomIndexedSymbol):
-                    newrv = Bernoulli(rv.name,p=rv.pspace.process.p,
-                                      succ = self.success, fail= self.failure)
+                    newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
+                                      succ=self.success, fail=self.failure)
                     swapdict_expr[rv] = newrv
             expr = expr.subs(swapdict_expr)
         rvs_cond = random_symbols(condition)
@@ -892,8 +877,8 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
             if condition is not None:
                 for rv in rvs_cond:
                     if isinstance(rv, RandomIndexedSymbol):
-                        newrv = Bernoulli(rv.name,p=rv.pspace.process.p,
-                                          succ = self.success, fail= self.failure)
+                        newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
+                                          succ=self.success, fail=self.failure)
                         swapdict_cond[rv] = newrv
                 condition = condition.subs(swapdict_cond)
         return expr, condition
@@ -918,10 +903,9 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
         """
         new_expr, new_condition = self._rvindexed_subs(expr, condition)
-        from sympy.stats import pspace
+
         new_pspace = pspace(new_expr)
         if new_condition is not None:
-            from sympy.stats import given
             new_expr = given(new_expr, new_condition)
         if new_expr.is_Add:  # As E is Linear
             return Add(*[new_pspace.compute_expectation(
@@ -939,7 +923,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         ==========
 
         condition: Relational
+                Condition for which probability has to be computed. Must
+                contain a RandomIndexedSymbol of the process.
         given_condition: Relational/And
+                The given conditions under which computations should be done.
 
         Returns
         =======
@@ -950,11 +937,9 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         if isinstance(new_givencondition, RandomSymbol):
             condrv = random_symbols(new_condition)
             if len(condrv) == 1 and condrv[0] == new_givencondition:
-                from sympy.stats.frv_types import BernoulliDistribution
-                return BernoulliDistribution(probability(new_condition), 0, 1)
-            from sympy.stats.rv import dependent
+                return BernoulliDistribution(self.probability(new_condition), 0, 1)
+
             if any([dependent(rv, new_givencondition) for rv in condrv]):
-                from sympy.stats.symbolic_probability import Probability
                 return Probability(new_condition, new_givencondition)
             else:
                 return self.probability(new_condition)
@@ -963,23 +948,21 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
                 not isinstance(new_givencondition, (Relational, Boolean)):
             raise ValueError("%s is not a relational or combination of relationals"
                     % (new_givencondition))
-        if new_givencondition is False:
+        if new_givencondition == False:
             return S.Zero
-        if new_condition is True:
+        if new_condition == True:
             return S.One
-        if new_condition is False:
+        if new_condition == False:
             return S.Zero
         if not isinstance(new_condition, (Relational, Boolean)):
             raise ValueError("%s is not a relational or combination of relationals"
                     % (new_condition))
         if new_givencondition is not None:  # If there is a condition
         # Recompute on new conditional expr
-            from sympy.stats.rv import given
             return self.probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
-        from sympy.stats.rv import pspace
         return pspace(new_condition).probability(new_condition, **kwargs)
 
-    def pmf(self, x):
+    def density(self, x):
         return Piecewise((self.p, Eq(x, self.success)),
                          (1 - self.p, Eq(x, self.failure)),
                          (S.Zero, True))
