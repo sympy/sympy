@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 __all__ = ["Options"]
 
-from typing import List, Optional
+from typing import Dict, List, Optional, Type
 
 from sympy.core import S, Basic, sympify
 from sympy.core.compatibility import with_metaclass
@@ -124,7 +124,7 @@ class Options(dict):
     """
 
     __order__ = None
-    __options__ = {}
+    __options__ = {}  # type: Dict[str, Type[Option]]
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)
@@ -260,8 +260,8 @@ class Expand(BooleanOption, metaclass=OptionType):
 
     option = 'expand'
 
-    requires = []
-    excludes = []
+    requires = []  # type: List[str]
+    excludes = []  # type: List[str]
 
     @classmethod
     def default(cls):
@@ -273,8 +273,8 @@ class Gens(Option, metaclass=OptionType):
 
     option = 'gens'
 
-    requires = []
-    excludes = []
+    requires = []  # type: List[str]
+    excludes = []  # type: List[str]
 
     @classmethod
     def default(cls):
@@ -302,8 +302,8 @@ class Wrt(Option, metaclass=OptionType):
 
     option = 'wrt'
 
-    requires = []
-    excludes = []
+    requires = []  # type: List[str]
+    excludes = []  # type: List[str]
 
     _re_split = re.compile(r"\s*,\s*|\s+")
 
@@ -329,8 +329,8 @@ class Sort(Option, metaclass=OptionType):
 
     option = 'sort'
 
-    requires = []
-    excludes = []
+    requires = []  # type: List[str]
+    excludes = []  # type: List[str]
 
     @classmethod
     def default(cls):
@@ -351,8 +351,8 @@ class Order(Option, metaclass=OptionType):
 
     option = 'order'
 
-    requires = []
-    excludes = []
+    requires = []  # type: List[str]
+    excludes = []  # type: List[str]
 
     @classmethod
     def default(cls):
@@ -368,7 +368,7 @@ class Field(BooleanOption, metaclass=OptionType):
 
     option = 'field'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['domain', 'split', 'gaussian']
 
 
@@ -377,7 +377,7 @@ class Greedy(BooleanOption, metaclass=OptionType):
 
     option = 'greedy'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
@@ -390,7 +390,7 @@ class Composite(BooleanOption, metaclass=OptionType):
     def default(cls):
         return None
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
@@ -399,7 +399,7 @@ class Domain(Option, metaclass=OptionType):
 
     option = 'domain'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['field', 'greedy', 'split', 'gaussian', 'extension']
 
     after = ['gens']
@@ -504,7 +504,7 @@ class Split(BooleanOption, metaclass=OptionType):
 
     option = 'split'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['field', 'greedy', 'domain', 'gaussian', 'extension',
         'modulus', 'symmetric']
 
@@ -519,7 +519,7 @@ class Gaussian(BooleanOption, metaclass=OptionType):
 
     option = 'gaussian'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['field', 'greedy', 'domain', 'split', 'extension',
         'modulus', 'symmetric']
 
@@ -535,7 +535,7 @@ class Extension(Option, metaclass=OptionType):
 
     option = 'extension'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['greedy', 'domain', 'split', 'gaussian', 'modulus',
         'symmetric']
 
@@ -568,7 +568,7 @@ class Modulus(Option, metaclass=OptionType):
 
     option = 'modulus'
 
-    requires = []
+    requires = []  # type: List[str]
     excludes = ['greedy', 'split', 'domain', 'gaussian', 'extension']
 
     @classmethod

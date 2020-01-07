@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.compatibility import is_sequence, reduce
@@ -97,7 +99,7 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}
+_field_cache = {}  # type: Dict[Any, Any]
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """

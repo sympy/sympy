@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
 from sympy.core.compatibility import HAS_GMPY, is_sequence
@@ -16,9 +17,9 @@ from sympy.utilities import default_sort_key, public
 class Domain(object):
     """Represents an abstract domain. """
 
-    dtype = None
-    zero = None
-    one = None
+    dtype = None  # type: Optional[Type]
+    zero = None  # type: Optional[Any]
+    one = None  # type: Optional[Any]
 
     is_Ring = False
     is_Field = False
@@ -45,8 +46,8 @@ class Domain(object):
 
     has_CharacteristicZero = False
 
-    rep = None
-    alias = None
+    rep = None  # type: Optional[str]
+    alias = None  # type: Optional[str]
 
     @property  # type: ignore
     @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
