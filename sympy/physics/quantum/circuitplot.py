@@ -55,8 +55,8 @@ class CircuitPlot(object):
     control_radius = 0.05
     not_radius = 0.15
     swap_delta = 0.05
-    labels: List[str] = []
-    inits: Dict[str, str] = {}
+    labels = []  # type: List[str]
+    inits = {}  # type: Dict[str, str]
     label_buffer = 0.5
 
     def __init__(self, c, nqubits, **kwargs):

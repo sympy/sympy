@@ -1376,7 +1376,7 @@ def rv_subs(expr, symbols=None):
     return expr.subs(swapdict)
 
 class NamedArgsMixin(object):
-    _argnames : tTuple[str, ...] = ()
+    _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):
         try:

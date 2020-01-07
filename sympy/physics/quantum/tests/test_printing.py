@@ -37,7 +37,7 @@ from sympy.core.compatibility import u_decode as u
 MutableDenseMatrix = Matrix
 
 
-ENV : Dict[str, Any] = {}
+ENV = {}  # type: Dict[str, Any]
 exec_('from sympy import *', ENV)
 exec_('from sympy.physics.quantum import *', ENV)
 exec_('from sympy.physics.quantum.cg import *', ENV)
