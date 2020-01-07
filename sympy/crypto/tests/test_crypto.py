@@ -16,7 +16,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
       encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
-      encipher_railfence, decipher_railfence, decipher_columnar)
+      encipher_railfence, decipher_railfence, encipher_columnar, decipher_columnar)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -564,3 +564,6 @@ def test_bg_public_key():
 
 def test_decipher_columnar():
     assert decipher_columnar("EVLNEACDTKESEAQROFOJDEECUWIREE","ZEBRAS")[:25] == "WEAREDISCOVEREDFLEEATONCE"
+
+def test_encipher_columnar():
+    assert encipher_columnar("He was reassigned","PIE") == "WRSGDESAIEHAESN"
