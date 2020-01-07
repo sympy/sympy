@@ -7,7 +7,7 @@ from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.stats.frv_types import BernoulliDistribution
 
 
