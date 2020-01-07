@@ -12,8 +12,11 @@ See the webpage for more information and documentation:
 """
 
 
-from __future__ import absolute_import, print_function
-del absolute_import, print_function
+import sys
+if sys.version_info < (3, 5):
+    raise ImportError("Python version 3.5 or above is required for SymPy.")
+del sys
+
 
 try:
     import mpmath
@@ -32,15 +35,6 @@ if 'dev' in __version__:
         del warnings
     enable_warnings()
     del enable_warnings
-
-
-import sys
-if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
-    raise ImportError("Python version 2.7 or 3.5 or above "
-                      "is required for SymPy.")
-
-del sys
 
 
 def __sympy_debug():
@@ -91,3 +85,4 @@ evalf._create_evalf_table()
 #import abc
 
 from .deprecated import *
+from .testing import *

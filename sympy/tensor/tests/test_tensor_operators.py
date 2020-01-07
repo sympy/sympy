@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, \
@@ -10,7 +10,7 @@ from sympy import Array
 L = TensorIndexType("L")
 i, j, k = tensor_indices("i j k", L)
 i0 = tensor_indices("i0", L)
-L_0 = tensor_indices("L_0", L)
+L_0, L_1 = tensor_indices("L_0 L_1", L)
 
 A, B, C, D = tensor_heads("A B C D", [L])
 
@@ -52,6 +52,7 @@ def test_tensor_partial_deriv():
 
 
 def test_replace_arrays_partial_derivative():
+
     x, y, z, t = symbols("x y z t")
 
     # d(A^i)/d(A_j) = d(g^ik A_k)/d(A_j) = g^ik delta_jk
@@ -92,3 +93,27 @@ def test_replace_arrays_partial_derivative():
     assert expr.get_indices() == [-L_0, L_0]
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, 1)}, []) == 2
     assert expr.replace_with_arrays({A(i): [x, y], L: diag(1, -1)}, []) == 2
+
+    expr = PartialDerivative(H(i, j) + H(j, i), A(i))
+    assert expr.get_indices() == [L_0, j, -L_0]
+    assert expr.get_free_indices() == [j]
+
+    expr = PartialDerivative(H(i, j) + H(j, i), A(k))*B(-i)
+    assert expr.get_indices() == [L_0, j, -k, -L_0]
+    assert expr.get_free_indices() == [j, -k]
+
+    expr = PartialDerivative(A(i)*(H(-i, j) + H(j, -i)), A(j))
+    assert expr.get_indices() == [L_0, -L_0, L_1, -L_1]
+    assert expr.get_free_indices() == []
+
+    expr = A(j)*A(-j) + expr
+    assert expr.get_indices() == [L_0, -L_0, L_1, -L_1]
+    assert expr.get_free_indices() == []
+
+    expr = A(i)*(B(j)*PartialDerivative(C(-j), D(i)) + C(j)*PartialDerivative(D(-j), B(i)))
+    assert expr.get_indices() == [L_0, L_1, -L_1, -L_0]
+    assert expr.get_free_indices() == []
+
+    expr = A(i)*PartialDerivative(C(-j), D(i))
+    assert expr.get_indices() == [L_0, -j, -L_0]
+    assert expr.get_free_indices() == [-j]

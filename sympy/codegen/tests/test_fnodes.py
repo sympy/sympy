@@ -16,7 +16,7 @@ from sympy.external import import_module
 from sympy.printing.fcode import fcode
 from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
 from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 cython = import_module('cython')
 np = import_module('numpy')

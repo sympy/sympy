@@ -13,7 +13,7 @@ from sympy import (
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
     gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
-from sympy.utilities.pytest import XFAIL, slow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')

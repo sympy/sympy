@@ -1,5 +1,5 @@
 from sympy import Symbol, var, Function, FunctionClass
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_var():
     ns = {"var": var, "raises": raises}

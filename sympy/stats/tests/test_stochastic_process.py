@@ -10,6 +10,7 @@ from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.utilities.pytest import raises
 from sympy.stats.frv_types import BernoulliDistribution
 
+
 def test_DiscreteMarkovChain():
 
     # pass only the name

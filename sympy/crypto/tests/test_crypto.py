@@ -21,7 +21,7 @@ from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, warns
+from sympy.testing.pytest import raises, warns
 
 from random import randrange
 

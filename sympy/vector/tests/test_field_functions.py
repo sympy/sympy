@@ -11,7 +11,7 @@ from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
                                     laplacian, scalar_potential_difference)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 C = CoordSys3D('C')
 i, j, k = C.base_vectors()

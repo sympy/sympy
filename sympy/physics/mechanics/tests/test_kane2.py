@@ -5,7 +5,7 @@ from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
                                      find_dynamicsymbols, KanesMethod, inertia,
                                      inertia_of_point_mass, Point,
                                      ReferenceFrame, RigidBody)
-from sympy.utilities.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_aux_dep():

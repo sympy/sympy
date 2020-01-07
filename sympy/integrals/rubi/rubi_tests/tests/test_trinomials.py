@@ -24,7 +24,7 @@ from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, Hypergeometric2F1)
 from sympy import pi as Pi, elliptic_e, elliptic_f, elliptic_pi, Mod
 from sympy import S, hyper, I, simplify, exp_polar, symbols, sqrt
-from sympy.utilities.pytest import SKIP
+from sympy.testing.pytest import SKIP
 
 a, b, c, d, e, f, m, n, x, u , k, p, j, l , i= symbols('a b c d e f m n x u k p j l i1')
 A, B, C, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)

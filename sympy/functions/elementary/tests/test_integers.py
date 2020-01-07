@@ -3,7 +3,7 @@ from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
         Le, Ge, Gt, Lt, Ne, sqrt, S
 
 from sympy.core.expr import unchanged
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 x = Symbol('x')
 i = Symbol('i', imaginary=True)

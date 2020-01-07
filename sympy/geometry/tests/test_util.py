@@ -3,7 +3,7 @@ from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
     intersection, centroid, Point3D, Line3D
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
 from sympy.solvers.solvers import solve
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_idiff():
