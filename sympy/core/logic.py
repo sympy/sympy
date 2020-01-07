@@ -8,7 +8,11 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from typing import Dict, Type
+from typing import Dict, Type, Union
+
+
+# Type of a fuzzy bool
+FuzzyBool = Union[True, False, None]
 
 
 def _torf(args):

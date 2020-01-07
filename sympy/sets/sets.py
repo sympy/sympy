@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Optional
+
 from collections import defaultdict
 import inspect
 
@@ -13,7 +15,8 @@ from sympy.core.decorators import (deprecated, sympify_method_args,
 from sympy.core.evalf import EvalfMixin
 from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
-from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and, fuzzy_not
+from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
+    fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
@@ -57,13 +60,13 @@ class Set(Basic):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
-    is_Intersection = None
-    is_UniversalSet = None
-    is_Complement = None
+    is_Intersection = None  # type: Optional[bool]
+    is_UniversalSet = None  # type: Optional[bool]
+    is_Complement = None  # type: Optional[bool]
     is_ComplexRegion = False
 
-    is_empty = None
-    is_finite_set = None
+    is_empty = None  # type: FuzzyBool
+    is_finite_set = None  # type: FuzzyBool
 
     @property  # type: ignore
     @deprecated(useinstead="is S.EmptySet or is_empty",
