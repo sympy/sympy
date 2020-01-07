@@ -38,9 +38,10 @@ matplotlib = import_module(
     'matplotlib', import_kwargs={'fromlist': ['pyplot']},
     catch=(RuntimeError,))  # This is raised in environments that have no display.
 
-pyplot = matplotlib.pyplot
-Line2D = matplotlib.lines.Line2D
-Circle = matplotlib.patches.Circle
+if np and matplotlib:
+    pyplot = matplotlib.pyplot
+    Line2D = matplotlib.lines.Line2D
+    Circle = matplotlib.patches.Circle
 
 #from matplotlib import rc
 #rc('text',usetex=True)
