@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import S, Add, Symbol, Mod
+from sympy.core import S, Add, Symbol, Mod, Float
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
@@ -1485,6 +1485,9 @@ class LatexPrinter(Printer):
             return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
+
+    def _print_DecimalRational(self, expr):
+        return self._print_Float(Float(expr))
 
     def _print_Order(self, expr):
         s = self._print(expr.expr)
