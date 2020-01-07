@@ -1,4 +1,4 @@
-from sympy import S
+from sympy import S, Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union
@@ -65,6 +65,40 @@ def is_subset_sets(a_range, b_interval): # noqa:F811
         else:
             cond_right = a_range.sup <= b_interval.right
         return fuzzy_and([cond_left, cond_right])
+
+@dispatch(Range, FiniteSet)
+def is_subset_sets(a_range, b_finiteset): # noqa:F811
+    try:
+        a_size = a_range.size
+    except ValueError:
+        # symbolic Range of unknown size
+        return None
+    if a_size > len(b_finiteset):
+        return False
+    elif any(arg.has(Symbol) for arg in a_range.args):
+        return fuzzy_and(b_finiteset.contains(x) for x in a_range)
+    else:
+        # Checking A \ B == EmptySet is more efficient than repeated naive
+        # membership checks on an arbitrary FiniteSet.
+        a_set = set(a_range)
+        b_remaining = len(b_finiteset)
+        # Symbolic expressions and numbers of unknown type (integer or not) are
+        # all counted as "candidates", i.e. *potentially* matching some a in
+        # a_range.
+        cnt_candidate = 0
+        for b in b_finiteset:
+            if b.is_Integer:
+                a_set.discard(b)
+            elif fuzzy_not(b.is_integer):
+                pass
+            else:
+                cnt_candidate += 1
+            b_remaining -= 1
+            if len(a_set) > b_remaining + cnt_candidate:
+                return False
+            if len(a_set) == 0:
+                return True
+        return None
 
 @dispatch(Interval, Range)
 def is_subset_sets(a_interval, b_range): # noqa:F811

@@ -655,7 +655,15 @@ def given(expr, condition=None, **kwargs):
             if temp == True:
                 return True
             if temp != False:
-                sums += expr.subs(rv, res)
+                # XXX: This seems nonsensical but preserves existing behaviour
+                # after the change that Relational is no longer a subclass of
+                # Expr. Here expr is sometimes Relational and sometimes Expr
+                # but we are trying to add them with +=. This needs to be
+                # fixed somehow.
+                if sums == 0 and isinstance(expr, Relational):
+                    sums = expr.subs(rv, res)
+                else:
+                    sums += expr.subs(rv, res)
         if sums == 0:
             return False
         return sums

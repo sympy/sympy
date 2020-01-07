@@ -1,4 +1,4 @@
-from sympy import (residue, Symbol, Function, sin, S, I, exp, log, pi,
+from sympy import (residue, Symbol, Function, sin, I, exp, log, pi,
                    factorial, sqrt, Rational)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, z, a, s

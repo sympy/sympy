@@ -1,6 +1,5 @@
 from sympy import symbols
-from sympy.physics.mechanics import (Point, Particle, ReferenceFrame, inertia,
-                                     inertia_of_point_mass)
+from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
 from sympy.utilities.pytest import raises
 

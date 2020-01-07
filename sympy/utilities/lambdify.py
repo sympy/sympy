@@ -11,8 +11,6 @@ import re
 import textwrap
 import linecache
 
-from types import FunctionType
-
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
 from sympy.utilities.misc import filldedent
@@ -114,7 +112,7 @@ def _import(module, reload=False):
     other modules.
     """
     # Required despite static analysis claiming it is not used
-    from sympy.external import import_module
+    from sympy.external import import_module # noqa:F401
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]

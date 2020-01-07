@@ -2,14 +2,15 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
+from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, range, as_int
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, \
     nfloat, expand_mul, expand_multinomial
 from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
@@ -377,12 +378,12 @@ def signsimp(expr, evaluate=None):
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
     expr = sympify(expr)
-    if not isinstance(expr, Expr) or expr.is_Atom:
+    if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
     e = sub_post(sub_pre(expr))
-    if not isinstance(e, Expr) or e.is_Atom:
+    if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
         return e.func(*[signsimp(a, evaluate) for a in e.args])
@@ -1966,7 +1967,8 @@ def nc_simplify(expr, deep=True):
 def dotprodsimp(expr, withsimp=False):
     """Simplification for a sum of products targeted at the kind of blowup that
     occurs during summation of products. Intended to reduce expression blowup
-    during matrix multiplication or other similar operations.
+    during matrix multiplication or other similar operations. Only works with
+    algebraic expressions and does not recurse into non.
 
     Parameters
     ==========
@@ -1978,9 +1980,7 @@ def dotprodsimp(expr, withsimp=False):
         simplify an expression repetitively which does not simplify.
     """
 
-    from sympy.core.operations import LatticeOp
-
-    def _count_ops_alg(expr):
+    def count_ops_alg(expr):
         """Optimized count algebraic operations with no recursion into
         non-algebraic args that ``core.function.count_ops`` does.
         """
@@ -1990,6 +1990,9 @@ def dotprodsimp(expr, withsimp=False):
 
         while args:
             a = args.pop()
+
+            if not isinstance(a, Basic):
+                continue
 
             if a.is_Rational:
                 if a is not S.One: # -1/3 = NEG + DIV
@@ -2035,13 +2038,9 @@ def dotprodsimp(expr, withsimp=False):
                 ops += 1
                 args.append(a.base)
 
-            elif isinstance(a, LatticeOp):
-                ops += len(a.args) - 1
-                args.extend(a.args)
-
         return ops
 
-    def _nonalg_subs_dummies(expr, dummies):
+    def nonalg_subs_dummies(expr, dummies):
         """Substitute dummy variables for non-algebraic expressions to avoid
         evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
         """
@@ -2053,7 +2052,7 @@ def dotprodsimp(expr, withsimp=False):
             args = None
 
             for i, a in enumerate(expr.args):
-                c = _nonalg_subs_dummies(a, dummies)
+                c = nonalg_subs_dummies(a, dummies)
 
                 if c is a:
                     continue
@@ -2072,25 +2071,21 @@ def dotprodsimp(expr, withsimp=False):
 
     simplified = False # doesn't really mean simplified, rather "can simplify again"
 
-    if isinstance(expr, Expr) and not expr.is_Relational:
-        # XXX: Should really count ops of initial expression and compare to
-        # expand_mul to see if simplification was done but that can be good bit
-        # slower for large initial expressions and this seems to work.
-        expr     = expand_mul(expr) # this and the following expand should not be combined
-        exprops  = _count_ops_alg(expr)
-        expr2    = expand_multinomial(expr)
-        expr2ops = _count_ops_alg(expr2)
+    if isinstance(expr, Basic) and (expr.is_Add or expr.is_Mul or expr.is_Pow):
+        expr2 = expr.expand(deep=True, modulus=None, power_base=False,
+            power_exp=False, mul=True, log=False, multinomial=True, basic=False)
 
-        if expr2ops < exprops:
+        if expr2 != expr:
             expr       = expr2
-            exprops    = expr2ops
             simplified = True
+
+        exprops = count_ops_alg(expr)
 
         if exprops >= 6: # empirically tested cutoff for expensive simplification
             dummies = {}
-            expr2   = _nonalg_subs_dummies(expr, dummies)
+            expr2   = nonalg_subs_dummies(expr, dummies)
 
-            if expr2 is expr or _count_ops_alg(expr2) >= 6: # check again after substitution
+            if expr2 is expr or count_ops_alg(expr2) >= 6: # check again after substitution
                 expr3 = cancel(expr2)
 
                 if expr3 != expr2:
@@ -2105,7 +2100,7 @@ def dotprodsimp(expr, withsimp=False):
                 expr.args [1].args [-1].exp is S.NegativeOne):
 
             expr2    = together (expr)
-            expr2ops = _count_ops_alg(expr2)
+            expr2ops = count_ops_alg(expr2)
 
             if expr2ops < exprops:
                 expr       = expr2
