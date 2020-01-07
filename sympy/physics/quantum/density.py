@@ -184,7 +184,7 @@ class Density(HermitianOperator):
         # before this function is called
         if (isinstance(nc_part1[0], TensorProduct) and len(nc_part1) == 1
                 and len(nc_part2) == 1):
-            op = tensor_product_simp(nc_part1[0] * Dagger(nc_part2[0]))
+            op = tensor_product_simp(nc_part1[0]*Dagger(nc_part2[0]))
         else:
             op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
 
