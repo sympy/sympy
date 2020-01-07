@@ -1604,7 +1604,7 @@ class Rational(Number):
                 pass
             else:
                 if isinstance(p, (float, Float)):
-                    return Rational(*_as_integer_ratio(p))
+                    return cls(*_as_integer_ratio(p))
 
                 if not isinstance(p, str):
                     try:
@@ -1626,7 +1626,7 @@ class Rational(Number):
                     except ValueError:
                         pass  # error will raise below
                     else:
-                        return Rational(p.numerator, p.denominator, 1)
+                        return cls(p.numerator, p.denominator, 1)
 
                 if not isinstance(p, Rational):
                     raise TypeError('invalid input: %s' % p)
@@ -2040,6 +2040,31 @@ class Rational(Number):
     def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         return self, S.Zero
+
+
+class DecimalRational(Rational):
+    """Represents rationals that print as decimals
+
+    Examples
+    ========
+
+    >>> from sympy import DecimalRational
+    >>> latex(DecimalRational(1,10))
+    '.1'
+    >>> latex(DecimalRational('.1'))
+    '.1'
+
+    """
+
+    @cacheit
+    def __new__(cls, *args):
+        obj = super().__new__(cls, *args)
+        p, q = obj.p, obj.q
+        if not isinstance(obj, DecimalRational):
+            obj = Expr.__new__(cls)
+            obj.p = p
+            obj.q = q
+        return obj
 
 
 class Integer(Rational):

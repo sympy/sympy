@@ -8,8 +8,8 @@ from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var
-from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
-    RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
+from .numbers import Number, Float, Rational, DecimalRational, Integer, \
+    NumberSymbol, RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
     AlgebraicNumber, comp, mod_inverse
 from .power import Pow, integer_nthroot, integer_log
 from .mul import Mul, prod
@@ -51,8 +51,9 @@ __all__ = [
 
     'Symbol', 'Wild', 'Dummy', 'symbols', 'var',
 
-    'Number', 'Float', 'Rational', 'Integer', 'NumberSymbol', 'RealNumber',
-    'igcd', 'ilcm', 'seterr', 'E', 'I', 'nan', 'oo', 'pi', 'zoo',
+    'Number', 'Float', 'Rational', 'DecimalRational', 'Integer',
+    'NumberSymbol', 'RealNumber', 'igcd', 'ilcm', 'seterr',
+    'E', 'I', 'nan', 'oo', 'pi', 'zoo',
     'AlgebraicNumber', 'comp', 'mod_inverse',
 
     'Pow', 'integer_nthroot', 'integer_log',
