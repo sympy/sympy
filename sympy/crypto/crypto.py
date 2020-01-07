@@ -3364,7 +3364,7 @@ def encipher_columnar(message, key):
     words = len(message)
     remainder = words%row_length
 
-    if remainder is not 0 :
+    if remainder != 0 :
         message += ''.join(choice(string.ascii_lowercase) for i in range(row_length - remainder))
 
     d = defaultdict(list)
