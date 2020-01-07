@@ -142,6 +142,7 @@ class LatexPrinter(Printer):
         "gothic_re_im": False,
         "decimal_separator": "period",
         "perm_cyclic": True,
+        "parenthesize_super": True
     }
 
     def __init__(self, settings=None):
@@ -209,8 +210,10 @@ class LatexPrinter(Printer):
 
     def parenthesize_super(self, s):
         """ Parenthesize s if there is a superscript in s"""
-        if "^" in s:
+        if "^" in s and self._settings['parenthesize_super']:
             return r"\left({}\right)".format(s)
+        elif "^" in s and not self._settings['parenthesize_super']:
+            return self.embed_super(s)
         return s
 
     def embed_super(self, s):
@@ -590,7 +593,7 @@ class LatexPrinter(Printer):
             p, q = expr.exp.p, expr.exp.q
             # issue #12886: add parentheses for superscripts raised to powers
             if '^' in base and expr.base.is_Symbol:
-                base = r"\left(%s\right)" % base
+                base = self.parenthesize_super(base)
             if expr.base.is_Function:
                 return self._print(expr.base, exp="%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
@@ -614,7 +617,7 @@ class LatexPrinter(Printer):
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if '^' in base and expr.base.is_Symbol:
-            base = r"\left(%s\right)" % base
+            base = self.parenthesize_super(base)
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
@@ -2551,7 +2554,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
           mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
-          decimal_separator="period", perm_cyclic=True):
+          decimal_separator="period", perm_cyclic=True, parenthesize_super=True):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2623,6 +2626,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
         separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
         ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
+    parenthesize_super : boolean, optional
+        If set to ``False``, superscripted expressions will not be parenthesized when
+        powered. Default is ``True``, which parenthesizes the expression when powered.
 
     Notes
     =====
@@ -2753,6 +2759,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
         'perm_cyclic' : perm_cyclic,
+        'parenthesize_super' : parenthesize_super
     }
 
     return LatexPrinter(settings).doprint(expr)
