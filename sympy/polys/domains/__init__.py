@@ -1,8 +1,9 @@
 """Implementation of mathematical domains. """
 
 __all__ = ['Domain', 'FiniteField', 'IntegerRing', 'RationalField',
-           'RealField', 'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
-           'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
+           'RealField', 'ComplexField', 'PythonFiniteField',
+           'GMPYFiniteField', 'PythonIntegerRing',
+           'GMPYIntegerRing', 'PythonRational',
            'GMPYRationalField', 'AlgebraicField', 'PolynomialRing',
            'FractionField', 'ExpressionDomain', 'PythonRational']
 
