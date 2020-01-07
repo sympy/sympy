@@ -9,7 +9,7 @@ from sympy.physics.quantum.matrixutils import (
 from sympy.core.compatibility import range
 
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 m = Matrix([[1, 2], [3, 4]])
 

@@ -14,7 +14,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.utilities.iterables import capture
 

@@ -653,7 +653,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       the generated function relies on the input being a numpy array:
 
       >>> from sympy import Piecewise
-      >>> from sympy.utilities.pytest import ignore_warnings
+      >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
 
       >>> with ignore_warnings(RuntimeWarning):

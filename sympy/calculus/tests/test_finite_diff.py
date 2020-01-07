@@ -6,7 +6,7 @@ from sympy.calculus.finite_diff import (
     as_finite_diff
 )
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_apply_finite_diff():

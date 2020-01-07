@@ -6,8 +6,8 @@ from sympy.core.compatibility import long, range
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.randtest import verify_numerically
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')

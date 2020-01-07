@@ -5,7 +5,7 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orderings import lex
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.core import symbols, E
 from sympy import sqrt, Rational, exp, log
 

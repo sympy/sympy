@@ -1,6 +1,6 @@
 from sympy import Symbol, Mul, symbols, Basic
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 class SymbolInMulOnce(Symbol):
     # Test class for a symbol that can only appear once in a `Mul` expression.

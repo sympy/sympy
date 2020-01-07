@@ -15,7 +15,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)

@@ -1,6 +1,6 @@
 from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Rational
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 
 def test_curve():

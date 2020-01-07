@@ -2,7 +2,7 @@ from sympy.core.backend import symbols, Matrix, atan, zeros
 from sympy import simplify
 from sympy.physics.mechanics import (dynamicsymbols, Particle, Point,
                                      ReferenceFrame, SymbolicSystem)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 # This class is going to be tested using a simple pendulum set up in x and y
 # coordinates

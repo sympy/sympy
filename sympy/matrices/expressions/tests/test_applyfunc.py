@@ -1,7 +1,7 @@
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy import Matrix, Lambda, MatrixSymbol, exp, MatMul, sin, simplify
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.matrices.common import ShapeError
 
 

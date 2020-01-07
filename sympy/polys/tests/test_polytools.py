@@ -58,7 +58,7 @@ from sympy import (
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable, PY3
 from sympy.core.mul import _keep_coeff
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol, Matrix

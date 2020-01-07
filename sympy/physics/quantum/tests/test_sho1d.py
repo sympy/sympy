@@ -12,7 +12,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.represent import represent
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
                                         SHOKet, SHOBra,

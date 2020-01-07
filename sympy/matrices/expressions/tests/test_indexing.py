@@ -1,7 +1,7 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, trace,
         Symbol)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
 
 k, l, m, n = symbols('k l m n', integer=True)

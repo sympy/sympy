@@ -4,7 +4,7 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
 from sympy.core.compatibility import range
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_symbol_unset():
