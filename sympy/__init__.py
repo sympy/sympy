@@ -203,7 +203,7 @@ from .utilities import (flatten, group, take, subsets, variations,
         interactive_traversal, prefixes, postfixes, sift, topological_sort,
         unflatten, has_dups, has_variety, reshape, default_sort_key, ordered,
         rotations, filldedent, lambdify, source, threaded, xthreaded, public,
-        memoize_property, test, doctest, timed)
+        memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         inverse_mellin_transform, MellinTransform, InverseMellinTransform,
