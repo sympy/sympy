@@ -3795,4 +3795,5 @@ def test_issue_15889():
     eq = f(x).diff(x)**2 - f(x)**3
     sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
     assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0) 
+    assert checkodesol(eq, sol) == (True, 0)
+
