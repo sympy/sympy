@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Any, Optional, Tuple as tTuple
+
 from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
@@ -29,7 +31,7 @@ class Expr(Basic, EvalfMixin):
     sympy.core.basic.Basic
     """
 
-    __slots__ = ()
+    __slots__ = ()  # type: tTuple[str, ...]
 
     is_scalar = True  # self derivative is 1
 

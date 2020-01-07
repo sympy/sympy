@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Dict, Type, Union
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
@@ -42,7 +44,7 @@ class Relational(Boolean, EvalfMixin):
     ==========
     rop : str or None
         Indicates what subclass to instantiate.  Valid values can be found
-        in the keys of Relational.ValidRelationalOperator.
+        in the keys of Relational.ValidRelationOperator.
 
     Examples
     ========
@@ -54,6 +56,8 @@ class Relational(Boolean, EvalfMixin):
 
     """
     __slots__ = ()
+
+    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 

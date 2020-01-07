@@ -1792,7 +1792,7 @@ class Basic(metaclass=ManagedProperties):
                 else:
                     return self
 
-    _constructor_postprocessor_mapping = {}
+    _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):

@@ -261,15 +261,15 @@ def igcd(*args):
     return a
 
 def _igcd2_python(a, b):
-        """Compute gcd of two Python integers a and b."""
-        if (a.bit_length() > BIGBITS and
-            b.bit_length() > BIGBITS):
-            return igcd_lehmer(a, b)
+    """Compute gcd of two Python integers a and b."""
+    if (a.bit_length() > BIGBITS and
+        b.bit_length() > BIGBITS):
+        return igcd_lehmer(a, b)
 
-        a, b = abs(a), abs(b)
-        while b:
-            a, b = b, a % b
-        return a
+    a, b = abs(a), abs(b)
+    while b:
+        a, b = b, a % b
+    return a
 
 try:
     from math import gcd as igcd2
@@ -3888,6 +3888,9 @@ if HAS_GMPY:
     def sympify_mpz(x):
         return Integer(long(x))
 
+    # XXX: The sympify_mpq function here was never used because it is
+    # overridden by the other sympify_mpq function below. Maybe it should just
+    # be removed or maybe it should be used for something...
     def sympify_mpq(x):
         return Rational(long(x.numerator), long(x.denominator))
 
@@ -3895,17 +3898,17 @@ if HAS_GMPY:
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq
 
 
-def sympify_mpmath(x):
-    return Expr._from_mpmath(x, x.context.prec)
-
-converter[mpnumeric] = sympify_mpmath
-
-
 def sympify_mpq(x):
     p, q = x._mpq_
     return Rational(p, q, 1)
 
 converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpq
+
+
+def sympify_mpmath(x):
+    return Expr._from_mpmath(x, x.context.prec)
+
+converter[mpnumeric] = sympify_mpmath
 
 
 def sympify_complex(a):
