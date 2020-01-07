@@ -164,10 +164,10 @@ class Density(HermitianOperator):
             state = state.expand()  # needed to break up (a+b)*c
             if (isinstance(state, Add)):
                 for arg in product(state.args, repeat=2):
-                    terms.append(prob *
-                                 self._generate_outer_prod(arg[0], arg[1]))
+                    terms.append(prob*self._generate_outer_prod(arg[0],
+                                                                arg[1]))
             else:
-                terms.append(prob * self._generate_outer_prod(state, state))
+                terms.append(prob*self._generate_outer_prod(state, state))
 
         return Add(*terms)
 
