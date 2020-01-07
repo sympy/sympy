@@ -5,7 +5,7 @@ from sympy.core.compatibility import range
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius, discrete_log
+    sqrt_mod_iter, mobius, discrete_log, quadratic_congruence
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _discrete_log_trial_mul, _discrete_log_shanks_steps, \
     _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
@@ -244,3 +244,14 @@ def test_residue():
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
+    assert quadratic_congruence(400, 85, 125, 1600) == [295, 615, 935, 1255, 1575]
+    assert quadratic_congruence(3, 6, 5, 25) == [3, 20]
+    assert quadratic_congruence(120, 80, 175, 500) == []
+    assert quadratic_congruence(15, 14, 7, 2) == [1]
+    assert quadratic_congruence(8, 15, 7, 29) == [10, 28]
+    assert quadratic_congruence(160, 200, 300, 461) == [144, 431]
+    assert quadratic_congruence(100000, 123456, 7415263, 48112959837082048697) == [30417843635344493501, 36001135160550533083]
+    assert quadratic_congruence(65, 121, 72, 277) == [249, 252]
+    assert quadratic_congruence(5, 10, 14, 2) == [0]
+    assert quadratic_congruence(10, 17, 19, 2) == [1]
+    assert quadratic_congruence(10, 14, 20, 2) == [0, 1]

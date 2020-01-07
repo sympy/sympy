@@ -349,13 +349,13 @@ def test_set_operations_nonsets():
     ]
     nums = [0, 1, 2, S(0), S(1), S(2)]
 
-    for s in sets:
-        for n in nums:
+    for si in sets:
+        for ni in nums:
             for op in ops:
-                raises(TypeError, lambda : op(s, n))
-                raises(TypeError, lambda : op(n, s))
-        raises(TypeError, lambda: s ** object())
-        raises(TypeError, lambda: s ** {1})
+                raises(TypeError, lambda : op(si, ni))
+                raises(TypeError, lambda : op(ni, si))
+        raises(TypeError, lambda: si ** object())
+        raises(TypeError, lambda: si ** {1})
 
 
 def test_complement():
@@ -627,6 +627,15 @@ def test_interval_to_mpi():
     assert Interval(0, 1).to_mpi() == mpi(0, 1)
     assert Interval(0, 1, True, False).to_mpi() == mpi(0, 1)
     assert type(Interval(0, 1).to_mpi()) == type(mpi(0, 1))
+
+
+def test_set_evalf():
+    assert Interval(S(11)/64, S.Half).evalf() == Interval(
+        Float('0.171875'), Float('0.5'))
+    assert Interval(x, S.Half, right_open=True).evalf() == Interval(
+        x, Float('0.5'), right_open=True)
+    assert Interval(-oo, S.Half).evalf() == Interval(-oo, Float('0.5'))
+    assert FiniteSet(2, x).evalf() == FiniteSet(Float('2.0'), x)
 
 
 def test_measure():
