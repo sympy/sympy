@@ -3796,4 +3796,3 @@ def test_issue_15889():
     sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
     assert sol == dsolve(eq, hint='lie_group')
     assert checkodesol(eq, sol) == (True, 0)
-
