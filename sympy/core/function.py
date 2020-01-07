@@ -171,6 +171,13 @@ class FunctionClass(ManagedProperties):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
         nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
+        if nargs is None and 'nargs' not in cls.__dict__:
+            for supcls in cls.__mro__:
+                if hasattr(supcls, '_nargs'):
+                    nargs = supcls._nargs
+                    break
+                else:
+                    continue
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
