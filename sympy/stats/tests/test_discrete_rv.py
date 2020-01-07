@@ -12,8 +12,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, nocache_fail, raises
-
+from sympy.testing.pytest import slow, nocache_fail, raises
 
 x = Symbol('x')
 
