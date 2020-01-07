@@ -109,7 +109,7 @@ def _report_failure(self, out, test, example, got):
 
 
 if PY3 and IS_WINDOWS:
-    DocTestRunner.report_failure = _report_failure
+    DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
 def convert_to_native_paths(lst):
