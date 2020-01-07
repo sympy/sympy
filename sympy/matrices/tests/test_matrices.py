@@ -1899,6 +1899,7 @@ def test_is_nilpotent():
     assert a.is_nilpotent is True
     a = Matrix(6, 6, ([1+x, 1-x]*3 + [1-x, 1+x]*3)*3)
     assert a.is_nilpotent is False
+    assert Matrix([1, 2]).is_nilpotent is False
 
 
 def test_zeros_ones_fill():
@@ -2559,7 +2560,6 @@ def test_errors():
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_ADJ())
     raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_ADJ())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_LU())
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).is_nilpotent())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det())
     raises(ValueError,
         lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))

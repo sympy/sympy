@@ -1680,77 +1680,94 @@ class MatrixEigen(MatrixSubspaces):
             If ``'LDL'``, it attempts computing the LDL
             decomposition to detect the definitiveness.
         """
+        if not self.is_square:
+            return False
+
         if self.is_hermitian:
-            if method == 'eigen':
-                eigen = self.eigenvals(dotprodsimp=dotprodsimp)
-                args = [x.is_positive for x in eigen.keys()]
-                return fuzzy_and(args)
+            M = self
+        else:
+            M = (self + self.H) / 2
 
-            elif method == 'CH':
-                try:
-                    self.cholesky(hermitian=True)
-                except NonPositiveDefiniteMatrixError:
-                    return False
-                return True
+        if method == 'eigen':
+            eigen = M.eigenvals(dotprodsimp=dotprodsimp)
+            args = [x.is_positive for x in eigen.keys()]
+            return fuzzy_and(args)
 
-            elif method == 'LDL':
-                try:
-                    self.LDLdecomposition(hermitian=True)
-                except NonPositiveDefiniteMatrixError:
-                    return False
-                return True
+        elif method == 'CH':
+            try:
+                M.cholesky(hermitian=True)
+            except NonPositiveDefiniteMatrixError:
+                return False
+            return True
 
-            else:
-                raise NotImplementedError()
+        elif method == 'LDL':
+            try:
+                M.LDLdecomposition(hermitian=True)
+            except NonPositiveDefiniteMatrixError:
+                return False
+            return True
 
-        elif self.is_square:
-            M_H = (self + self.H) / 2
-            return M_H._eval_is_positive_definite(method=method,
-                    dotprodsimp=dotprodsimp)
+        raise NotImplementedError
 
     def is_positive_definite(self):
         return self._eval_is_positive_definite()
 
     def is_positive_semidefinite(self):
-        if self.is_hermitian:
-            eigen = self.eigenvals()
-            args = [x.is_nonnegative for x in eigen.keys()]
-            return fuzzy_and(args)
+        if not self.is_square:
+            return False
 
-        elif self.is_square:
-            return ((self + self.H) / 2).is_positive_semidefinite
+        if self.is_hermitian:
+            M = self
+        else:
+            M = (self + self.H) / 2
+
+        eigen = M.eigenvals()
+        args = [x.is_nonnegative for x in eigen.keys()]
+        return fuzzy_and(args)
 
     def is_negative_definite(self):
-        if self.is_hermitian:
-            eigen = self.eigenvals()
-            args = [x.is_negative for x in eigen.keys()]
-            return fuzzy_and(args)
+        if not self.is_square:
+            return False
 
-        elif self.is_square:
-            return ((self + self.H) / 2).is_negative_definite
+        if self.is_hermitian:
+            M = self
+        else:
+            M = (self + self.H) / 2
+
+        eigen = M.eigenvals()
+        args = [x.is_negative for x in eigen.keys()]
+        return fuzzy_and(args)
 
     def is_negative_semidefinite(self):
-        if self.is_hermitian:
-            eigen = self.eigenvals()
-            args = [x.is_nonpositive for x in eigen.keys()]
-            return fuzzy_and(args)
+        if not self.is_square:
+            return False
 
-        elif self.is_square:
-            return ((self + self.H) / 2).is_negative_semidefinite
+        if self.is_hermitian:
+            M = self
+        else:
+            M = (self + self.H) / 2
+
+        eigen = M.eigenvals()
+        args = [x.is_nonpositive for x in eigen.keys()]
+        return fuzzy_and(args)
 
     def is_indefinite(self):
+        if not self.is_square:
+            return False
+
         if self.is_hermitian:
-            eigen = self.eigenvals()
+            M = self
+        else:
+            M = (self + self.H) / 2
 
-            args1 = [x.is_positive for x in eigen.keys()]
-            any_positive = fuzzy_or(args1)
-            args2 = [x.is_negative for x in eigen.keys()]
-            any_negative = fuzzy_or(args2)
+        eigen = M.eigenvals()
 
-            return fuzzy_and([any_positive, any_negative])
+        args1 = [x.is_positive for x in eigen.keys()]
+        any_positive = fuzzy_or(args1)
+        args2 = [x.is_negative for x in eigen.keys()]
+        any_negative = fuzzy_or(args2)
 
-        elif self.is_square:
-            return ((self + self.H) / 2).is_indefinite
+        return fuzzy_and([any_positive, any_negative])
 
     _doc_positive_definite = \
         r"""Finds out the definiteness of a matrix.
@@ -3979,9 +3996,10 @@ class MatrixBase(MatrixDeprecated,
         """
         if not self:
             return True
+
         if not self.is_square:
-            raise NonSquareMatrixError(
-                "Nilpotency is valid only for square matrices")
+            return False
+
         x = _uniquely_named_symbol('x', self)
         p = self.charpoly(x)
         if p.args[0] == x ** self.rows:
