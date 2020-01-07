@@ -18,7 +18,7 @@ from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_general_sum_of_even_powers, _can_do_sum_of_squares)
 from sympy.utilities import default_sort_key
 
-from sympy.utilities.pytest import slow, raises, XFAIL
+from sympy.testing.pytest import slow, raises, XFAIL
 from sympy.utilities.iterables import (
         signed_permutations)
 

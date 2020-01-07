@@ -21,7 +21,7 @@ from sympy.physics.quantum.sho1d import RaisingOp
 
 from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
 from sympy.core.compatibility import exec_
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 # Imports used in srepr strings
 from sympy.physics.quantum.spin import JzOp

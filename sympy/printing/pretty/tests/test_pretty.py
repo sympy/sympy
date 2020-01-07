@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
@@ -41,7 +41,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -6051,7 +6051,7 @@ def test_pretty_Complement():
 
 def test_pretty_SymmetricDifference():
     from sympy import SymmetricDifference, Interval
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
            evaluate = False)) == u'[2, 3] ∆ [3, 5]'
     with raises(NotImplementedError):

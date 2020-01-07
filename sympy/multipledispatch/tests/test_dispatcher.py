@@ -1,7 +1,7 @@
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
                                          restart_ordering)
-from sympy.utilities.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, XFAIL, warns
 
 
 def identity(x):

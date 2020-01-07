@@ -15,7 +15,7 @@ from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 
 from mpmath import mpf
 from mpmath.rational import mpq
@@ -1967,7 +1967,7 @@ def test_Integer_precision():
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
 
 def test_numpy_to_float():
-    from sympy.utilities.pytest import skip
+    from sympy.testing.pytest import skip
     from sympy.external import import_module
     np = import_module('numpy')
     if not np:

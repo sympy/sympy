@@ -8,7 +8,7 @@ import inspect
 
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
-from sympy.utilities.runtests import DependencyError, SymPyDocTests, PyTestReporter
+from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """

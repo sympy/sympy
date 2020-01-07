@@ -4,12 +4,12 @@ from sympy.combinatorics.perm_groups import (PermutationGroup,
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.pytest import skip, XFAIL
+from sympy.testing.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 from sympy.combinatorics.homomorphisms import is_isomorphic
 
 rmul = Permutation.rmul

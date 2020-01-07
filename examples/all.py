@@ -133,7 +133,7 @@ def run_examples(windowed=False, quiet=False, summary=True):
         examples += WINDOWED_EXAMPLES
 
     if quiet:
-        from sympy.utilities.runtests import PyTestReporter
+        from sympy.testing.runtests import PyTestReporter
         reporter = PyTestReporter()
         reporter.write("Testing Examples\n")
         reporter.write("-" * reporter.terminal_width)

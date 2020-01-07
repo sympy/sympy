@@ -10,7 +10,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
 from sympy.functions import airyai, airybi, besselj, bessely
 
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
+from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
 from sympy.utilities.misc import filldedent
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')

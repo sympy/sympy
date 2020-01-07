@@ -30,7 +30,7 @@ from sympy.printing.mathml import mathml, MathMLContentPrinter, \
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
     SymmetricDifference, Interval, EmptySet, ProductSet
 from sympy.stats.rv import RandomSymbol
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')

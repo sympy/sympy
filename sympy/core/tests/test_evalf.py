@@ -9,7 +9,7 @@ from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.compatibility import long, range
 from sympy.core.expr import unchanged
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
 
 

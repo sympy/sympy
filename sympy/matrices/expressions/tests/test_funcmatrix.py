@@ -2,7 +2,7 @@ from sympy.core import symbols, Lambda
 from sympy.functions import KroneckerDelta
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import FunctionMatrix, MatrixExpr, Identity
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_funcmatrix_creation():

@@ -5,7 +5,7 @@ from sympy import Symbol, Rational, SparseMatrix, Dict, diff, symbols, Indexed, 
 from sympy.core.compatibility import long
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_ndim_array_initiation():

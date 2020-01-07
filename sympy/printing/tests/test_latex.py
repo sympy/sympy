@@ -1,7 +1,7 @@
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
-    Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -32,7 +32,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci

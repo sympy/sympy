@@ -10,7 +10,7 @@ from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _discrete_log_trial_mul, _discrete_log_shanks_steps, \
     _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
 from sympy.polys.domains import ZZ
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_residue():

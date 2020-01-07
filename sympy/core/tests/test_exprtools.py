@@ -8,7 +8,7 @@ from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import a, b, t, x, y, z
 

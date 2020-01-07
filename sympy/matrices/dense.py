@@ -6,7 +6,7 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops, expand_mul
+from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
 from sympy.matrices.matrices import MatrixBase
-from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
+from sympy.simplify.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
