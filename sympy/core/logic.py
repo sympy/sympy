@@ -12,7 +12,7 @@ from typing import Dict, Type, Union
 
 
 # Type of a fuzzy bool
-FuzzyBool = Union[True, False, None]
+FuzzyBool = Union[bool, None]
 
 
 def _torf(args):
