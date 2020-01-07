@@ -170,7 +170,8 @@ class FunctionClass(ManagedProperties):
     def __init__(cls, *args, **kwargs):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
+        if not getattr(self, '_nargs', None) or 'nargs' in self.__dict__:
+            nargs = kwargs.pop('nargs', self.__dict__.get('nargs', arity(self)))
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
