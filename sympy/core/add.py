@@ -139,7 +139,7 @@ class Add(Expr, AssocOp):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number or isinstance(coeff, AccumBounds):
-                    coeff += o
+                    coeff = o.__add__(coeff)
                     if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None

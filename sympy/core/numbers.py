@@ -1702,6 +1702,8 @@ class Rational(Number):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 return Rational(self.p + self.q*other.p, self.q, 1)
+            elif isinstance(other, DecimalRational):
+                return other + self
             elif isinstance(other, Rational):
                 #TODO: this can probably be optimized more
                 return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
@@ -2066,6 +2068,20 @@ class DecimalRational(Rational):
             obj.q = q
         return obj
 
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if global_parameters.evaluate:
+            if isinstance(other, Integer):
+                return self.__class__(self.p + self.q*other.p, self.q, 1)
+            elif isinstance(other, Rational):
+                return self.__class__(self.p*other.q + self.q*other.p, self.q*other.q)
+            elif isinstance(other, Float):
+                return other + self
+            else:
+                return Number.__add__(self, other)
+        return Number.__add__(self, other)
+    __radd__ = __add__
+
 
 class Integer(Rational):
     """Represents integer numbers of any size.
@@ -2193,20 +2209,14 @@ class Integer(Rational):
                 return Integer(self.p + other)
             elif isinstance(other, Integer):
                 return Integer(self.p + other.p)
+            elif isinstance(other, DecimalRational):
+                return other + self
             elif isinstance(other, Rational):
                 return Rational(self.p*other.q + other.p, other.q, 1)
             return Rational.__add__(self, other)
         else:
             return Add(self, other)
-
-    def __radd__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, int):
-                return Integer(other + self.p)
-            elif isinstance(other, Rational):
-                return Rational(other.p + self.p*other.q, other.q, 1)
-            return Rational.__radd__(self, other)
-        return Rational.__radd__(self, other)
+    __radd__ = __add__
 
     def __sub__(self, other):
         if global_parameters.evaluate:
