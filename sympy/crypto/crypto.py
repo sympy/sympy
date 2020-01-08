@@ -19,7 +19,7 @@ from functools import reduce
 import warnings
 
 from itertools import cycle
-from random import randint, choice
+from random import choice
 from collections import defaultdict
 import string
 
