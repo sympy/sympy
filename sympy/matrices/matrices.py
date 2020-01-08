@@ -1932,7 +1932,7 @@ class MatrixEigen(MatrixSubspaces):
             """If ``has_floats`` is `True`, cast all ``args`` as
             matrices of floats."""
             if has_floats:
-                args = [m.evalf(prec=max_dps, chop=chop) for m in args]
+                args = [m.evalf(n=max_dps, chop=chop) for m in args]
             if len(args) == 1:
                 return args[0]
             return args
