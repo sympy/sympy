@@ -106,7 +106,7 @@ def _peeloff_pi(arg):
     >>> peel(x + pi/2)
     (x, pi/2)
     >>> peel(x + 2*pi/3 + pi*y)
-    (x + pi*y + pi/6, pi/2)
+    (x + pi*y + 0.166666666666667*pi, 0.5*pi)
 
     """
     for a in Add.make_args(arg):
@@ -117,10 +117,13 @@ def _peeloff_pi(arg):
             K, p = a.as_two_terms()
             if p is S.Pi and K.is_Rational:
                 break
+            K = a.coeff(S.Pi)
+            if K and K.is_rational:
+                break
     else:
         return arg, S.Zero
 
-    m1 = (K % S.Half) * S.Pi
+    m1 = (K % (1/2)) * S.Pi
     m2 = K*S.Pi - m1
     return arg - m2, m2
 
