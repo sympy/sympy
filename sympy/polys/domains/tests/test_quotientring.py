@@ -5,7 +5,7 @@ from sympy.abc import x, y
 
 from sympy.polys.polyerrors import NotReversible
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.compatibility import range
 
 

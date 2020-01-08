@@ -1036,6 +1036,8 @@ class BaseCovarDerivativeOp(Expr):
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
         to_subs = [wrt_vector(d) for d in d_funcs]
+        # XXX: This substitution can fail when there are Dummy symbols and the
+        # cache is disabled: https://github.com/sympy/sympy/issues/17794
         result = d_result.subs(list(zip(to_subs, derivs)))
 
         # Remove the dummies

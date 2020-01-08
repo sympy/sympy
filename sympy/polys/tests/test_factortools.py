@@ -9,7 +9,7 @@ from sympy.polys.polyclasses import ANP
 from sympy.polys.specialpolys import f_polys, w_polys
 
 from sympy import nextprime, sin, sqrt, I
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.core.compatibility import range
 

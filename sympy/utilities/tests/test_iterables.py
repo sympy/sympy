@@ -24,7 +24,7 @@ from sympy.utilities.enumerative import (
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -695,12 +695,12 @@ def test_kbins():
     assert len(list(kbins('1123', 2, ordered=0))) == 5
     assert len(list(kbins('1123', 2, ordered=None))) == 3
 
-    def test():
+    def test1():
         for orderedval in [None, 0, 1, 10, 11]:
             print('ordered =', orderedval)
             for p in kbins([0, 0, 1], 2, ordered=orderedval):
                 print('   ', p)
-    assert capture(lambda : test()) == dedent('''\
+    assert capture(lambda : test1()) == dedent('''\
         ordered = None
             [[0], [0, 1]]
             [[0, 0], [1]]
@@ -724,12 +724,12 @@ def test_kbins():
             [[1], [0, 0]]
             [[1, 0], [0]]\n''')
 
-    def test():
+    def test2():
         for orderedval in [None, 0, 1, 10, 11]:
             print('ordered =', orderedval)
             for p in kbins(list(range(3)), 2, ordered=orderedval):
                 print('   ', p)
-    assert capture(lambda : test()) == dedent('''\
+    assert capture(lambda : test2()) == dedent('''\
         ordered = None
             [[0], [1, 2]]
             [[0, 1], [2]]

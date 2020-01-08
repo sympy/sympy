@@ -1104,7 +1104,7 @@ class Line(LinearEntity):
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
 
-        if len(args) == 1 and isinstance(args[0], Expr):
+        if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
@@ -1319,7 +1319,7 @@ class Ray(LinearEntity):
             return Ray2D(p1, p2, **kwargs)
         elif dim == 3:
             return Ray3D(p1, p2, **kwargs)
-        return LinearEntity.__new__(cls, p1, *pts, **kwargs)
+        return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
         """Returns SVG path element for the LinearEntity.

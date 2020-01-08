@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
@@ -302,9 +302,4 @@ def test_Cycle():
 
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
-    print_cyclic = Permutation.print_cyclic
-    Permutation.print_cyclic = True
-    try:
-        sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
-    finally:
-        Permutation.print_cyclic = print_cyclic
+    sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)

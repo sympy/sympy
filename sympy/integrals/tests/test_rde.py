@@ -1,5 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, symbols, oo, I, Rational
+from sympy import Poly, symbols, oo, I, Rational
 from sympy.core.compatibility import PY3
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
@@ -7,7 +7,7 @@ from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
     no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import x, t, z, n
 
 t0, t1, t2, k = symbols('t:3 k')

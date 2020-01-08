@@ -2,7 +2,7 @@ from sympy import symbols, re, im, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
      Matrix, diff, integrate, trigsimp, S, Rational
 from sympy.algebras.quaternion import Quaternion
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')

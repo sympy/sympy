@@ -17,7 +17,7 @@ from sympy.polys.polyerrors import (
     DomainError)
 from sympy.polys.polyutils import illegal
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 

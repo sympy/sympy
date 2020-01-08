@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
@@ -13,7 +13,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, unicode, PY3
+from sympy.core.compatibility import range, u_decode as u, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -41,7 +41,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -364,6 +364,18 @@ def test_pretty_Cycle():
     assert pretty(Cycle(1, 3)(4, 5)) == '(1 3)(4 5)'
     assert pretty(Cycle()) == '()'
 
+
+def test_pretty_Permutation():
+    from sympy.combinatorics.permutations import Permutation
+    p1 = Permutation(1, 2)(3, 4)
+    assert xpretty(p1, perm_cyclic=True, use_unicode=True) == "(1 2)(3 4)"
+    assert xpretty(p1, perm_cyclic=True, use_unicode=False) == "(1 2)(3 4)"
+    assert xpretty(p1, perm_cyclic=False, use_unicode=True) == \
+    u'⎛0 1 2 3 4⎞\n'\
+    u'⎝0 2 1 4 3⎠'
+    assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
+    "/0 1 2 3 4\\\n"\
+    "\\0 2 1 4 3/"
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -1180,37 +1192,6 @@ x %= y\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
-def test_issue_7117():
-    # See also issue #5031 (hence the evaluate=False in these).
-    e = Eq(x + 1, x/2)
-    q = Mul(2, e, evaluate=False)
-    assert upretty(q) == u("""\
-  ⎛        x⎞\n\
-2⋅⎜x + 1 = ─⎟\n\
-  ⎝        2⎠\
-""")
-    q = Add(e, 6, evaluate=False)
-    assert upretty(q) == u("""\
-    ⎛        x⎞\n\
-6 + ⎜x + 1 = ─⎟\n\
-    ⎝        2⎠\
-""")
-    q = Pow(e, 2, evaluate=False)
-    assert upretty(q) == u("""\
-           2\n\
-⎛        x⎞ \n\
-⎜x + 1 = ─⎟ \n\
-⎝        2⎠ \
-""")
-    e2 = Eq(x, 2)
-    q = Mul(e, e2, evaluate=False)
-    assert upretty(q) == u("""\
-⎛        x⎞        \n\
-⎜x + 1 = ─⎟⋅(x = 2)\n\
-⎝        2⎠        \
-""")
-
 
 def test_pretty_rational():
     expr = y*x**-2
@@ -3210,12 +3191,12 @@ def test_MatrixExpressions():
     expr = (X.T*X).applyfunc(sin)
 
     ascii_str = """\
-    / T  \\\n\
-sin.\\X *X/\
+              / T  \\\n\
+(d -> sin(d)).\\X *X/\
 """
     ucode_str = u("""\
-    ⎛ T  ⎞\n\
-sin˳⎝X ⋅X⎠\
+             ⎛ T  ⎞\n\
+(d ↦ sin(d))˳⎝X ⋅X⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3852,7 +3833,7 @@ def test_pretty_ImageSet():
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
-    ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
+    ucode_str = u'{x | x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
@@ -3898,7 +3879,7 @@ def test_ProductSet_exponent():
 def test_ProductSet_parenthesis():
     ucode_str = u'([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])'
 
-    a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
+    a, b = Interval(2, 3), Interval(4, 7)
     assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
 def test_ProductSet_prod_char_issue_10413():
@@ -6070,7 +6051,7 @@ def test_pretty_Complement():
 
 def test_pretty_SymmetricDifference():
     from sympy import SymmetricDifference, Interval
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
            evaluate = False)) == u'[2, 3] ∆ [3, 5]'
     with raises(NotImplementedError):
@@ -6582,7 +6563,6 @@ def test_pretty_print_tensor_partial_deriv():
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
-    i0 = tensor_indices("i0", L)
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
@@ -6648,20 +6628,20 @@ A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
+    expr = (A(i) + B(i))*PartialDerivative(C(j), D(j))
     ascii_str = \
 """\
-/ i    i\\   d  /    \\\n\
+/ i    i\\   d  / L_0\\\n\
 |A  + B |*-----|C   |\n\
-\\       /   L_0\\ L_0/\n\
+\\       /   L_0\\    /\n\
           dD         \n\
                      \
 """
     ucode_str = \
 u("""\
-⎛ i    i⎞  ∂  ⎛   ⎞\n\
+⎛ i    i⎞  ∂  ⎛ L₀⎞\n\
 ⎜A  + B ⎟⋅────⎜C  ⎟\n\
-⎝       ⎠   L₀⎝ L₀⎠\n\
+⎝       ⎠   L₀⎝   ⎠\n\
           ∂D       \n\
                    \
 """)
@@ -6688,6 +6668,28 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2           \n\
+   ∂   ⎛       ⎞\n\
+───────⎜A  + B ⎟\n\
+       ⎝ i    i⎠\n\
+∂A  ∂A          \n\
+  n   j         \
+""")
+    assert upretty(expr) == ucode_str
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2        \n\
+   ∂   ⎛    ⎞\n\
+───────⎜3⋅A ⎟\n\
+       ⎝   i⎠\n\
+∂A  ∂A       \n\
+  n   j      \
+""")
+    assert upretty(expr) == ucode_str
+
     expr = TensorElement(H(i, j), {i:1})
     ascii_str = \
 """\
@@ -6699,7 +6701,7 @@ H     \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {i:1, j:1})
+    expr = TensorElement(H(i, j), {i: 1, j: 1})
     ascii_str = \
 """\
  i=1,j=1\n\
@@ -6710,7 +6712,7 @@ H       \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {j:1})
+    expr = TensorElement(H(i, j), {j: 1})
     ascii_str = \
 """\
  i,j=1\n\
@@ -6719,7 +6721,7 @@ H     \n\
 """
     ucode_str = ascii_str
 
-    expr = TensorElement(H(-i, j), {-i:1})
+    expr = TensorElement(H(-i, j), {-i: 1})
     ascii_str = \
 """\
     j\n\
@@ -6854,7 +6856,6 @@ def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
     B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
 
     # Testing printer:
     expr = hadamard_power(A, n)

@@ -9,7 +9,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    atanh, sinh, tanh)
+    sinh, tanh, cosh, sech, coth)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -30,8 +30,9 @@ from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP,
+    nocache_fail)
+from sympy.testing.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
 from sympy.solvers.solveset import (
@@ -626,17 +627,6 @@ def test_issue_10069():
     assert solveset_real(eq, x) == u
 
 
-@XFAIL
-def test_rewrite_trigh():
-    # if this import passes then the test below should also pass
-    from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
-        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
-
-
 def test_real_imag_splitting():
     a, b = symbols('a b', real=True)
     assert solveset_real(sqrt(a**2 - b**2) - 3, a) == \
@@ -772,6 +762,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers)
 
 
+@nocache_fail
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -791,6 +782,7 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    # This fails when running with the cache off:
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(imageset(Lambda(n, 2*n*pi + pi*Rational(5, 3)), S.Integers),
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
@@ -823,6 +815,41 @@ def test_solve_trig():
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
+
+
+def test_solve_hyperbolic():
+    # actual solver: _solve_trig1
+    n = Dummy('n')
+    assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
+    assert solveset(sinh(x) + cos(x), x) == ConditionSet(x,
+        Eq(cos(x) + sinh(x), 0), S.Complexes)
+    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
+        log(sqrt(sqrt(5) - 2)))
+    assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
+        log(sqrt(3)/3), log(sqrt(3)))
+    assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
+        log((2 + sqrt(5))*exp(3)))
+    assert solveset_real(cosh(2*x) + 2*sinh(x) - 5, x) == FiniteSet(
+        log(-2 + sqrt(5)), log(1 + sqrt(2)))
+    assert solveset_real((coth(x) + sinh(2*x))/cosh(x) - 3, x) == FiniteSet(
+        log(S.Half + sqrt(5)/2), log(1 + sqrt(2)))
+    assert solveset_real(cosh(x)*sinh(x) - 2, x) == FiniteSet(
+        log(sqrt(4 + sqrt(17))))
+    assert solveset_real(sinh(x) + tanh(x) - 1, x) == FiniteSet(
+        log(sqrt(2)/2 + sqrt(-S(1)/2 + sqrt(2))))
+    assert solveset_complex(sinh(x) - I/2, x) == Union(
+        ImageSet(Lambda(n, I*(2*n*pi + 5*pi/6)), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi/6)), S.Integers))
+    assert solveset_complex(sinh(x) + sech(x), x) == Union(
+        ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers))
+    # issues #9606 / #9531:
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+    assert solveset(sinh(x), x, S.Complexes) == Union(
+        ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi), S.Integers))
 
 
 def test_solve_invalid_sol():

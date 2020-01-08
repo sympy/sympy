@@ -7,19 +7,19 @@ _x, _y = symbols("x y")
 
 
 @dispatch(Basic, Basic)
-def _set_mul(x, y):
+def _set_mul(x, y): # noqa:F811
     return None
 
 @dispatch(Set, Set)
-def _set_mul(x, y):
+def _set_mul(x, y): # noqa:F811
     return None
 
 @dispatch(Expr, Expr)
-def _set_mul(x, y):
+def _set_mul(x, y): # noqa:F811
     return x*y
 
 @dispatch(Interval, Interval)
-def _set_mul(x, y):
+def _set_mul(x, y): # noqa:F811
     """
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -40,23 +40,21 @@ def _set_mul(x, y):
         minopen,
         maxopen
     )
-    return SetExpr(Interval(start, end))
-
 
 @dispatch(Basic, Basic)
-def _set_div(x, y):
+def _set_div(x, y): # noqa:F811
     return None
 
 @dispatch(Expr, Expr)
-def _set_div(x, y):
+def _set_div(x, y): # noqa:F811
     return x/y
 
 @dispatch(Set, Set)
-def _set_div(x, y):
+def _set_div(x, y): # noqa:F811
     return None
 
 @dispatch(Interval, Interval)
-def _set_div(x, y):
+def _set_div(x, y): # noqa:F811
     """
     Divisions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic

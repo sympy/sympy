@@ -1,6 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy.integrals.risch import (DifferentialExtension, NonElementaryIntegral,
-        derivation, risch_integrate)
+from sympy.integrals.risch import DifferentialExtension, derivation
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,

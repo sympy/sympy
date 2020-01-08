@@ -1,7 +1,7 @@
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
                                          restart_ordering)
-from sympy.utilities.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, XFAIL, warns
 
 
 def identity(x):
@@ -41,11 +41,11 @@ def test_dispatcher_as_decorator():
     f = Dispatcher('f')
 
     @f.register(int)
-    def inc(x):
+    def inc(x): # noqa:F811
         return x + 1
 
     @f.register(float)
-    def inc(x):
+    def inc(x): # noqa:F811
         return x - 1
 
     assert f(1) == 2

@@ -13,10 +13,6 @@ from sympy import symbols, sin, cos, log
 x, y, z = symbols('x, y, z')
 
 
-def test_import():
-    from sympy.plotting.pygletplot import PygletPlot
-
-
 def test_plot_2d():
     from sympy.plotting.pygletplot import PygletPlot
     p = PygletPlot(x, [x, -5, 5, 4], visible=False)

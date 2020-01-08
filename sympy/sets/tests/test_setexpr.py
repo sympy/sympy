@@ -1,9 +1,10 @@
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
-from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo,
+
+from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo, I,
         symbols, Lambda, Dummy, Rational)
 
-I = Interval(0, 2)
+
 a, x = symbols("a, x")
 _d = Dummy("d")
 
@@ -28,7 +29,7 @@ def test_scalar_funcs():
 
 def test_Add_Mul():
     assert (SetExpr(Interval(0, 1)) + 1).set == Interval(1, 2)
-    assert (SetExpr(Interval(0, 1)) * 2).set == Interval(0, 2)
+    assert (SetExpr(Interval(0, 1))*2).set == Interval(0, 2)
 
 
 def test_Pow():
@@ -36,33 +37,33 @@ def test_Pow():
 
 
 def test_compound():
-    assert (exp(SetExpr(Interval(0, 1)) * 2 + 1)).set == \
-        Interval(exp(1), exp(3))
+    assert (exp(SetExpr(Interval(0, 1))*2 + 1)).set == \
+           Interval(exp(1), exp(3))
 
 
 def test_Interval_Interval():
     assert (SetExpr(Interval(1, 2)) + SetExpr(Interval(10, 20))).set == \
-        Interval(11, 22)
-    assert (SetExpr(Interval(1, 2)) * SetExpr(Interval(10, 20))).set == \
-        Interval(10, 40)
+           Interval(11, 22)
+    assert (SetExpr(Interval(1, 2))*SetExpr(Interval(10, 20))).set == \
+           Interval(10, 40)
 
 
 def test_FiniteSet_FiniteSet():
-    assert (SetExpr(FiniteSet(1, 2, 3)) + SetExpr(FiniteSet(1, 2))).set ==\
-        FiniteSet(2, 3, 4, 5)
-    assert (SetExpr(FiniteSet(1, 2, 3)) * SetExpr(FiniteSet(1, 2))).set ==\
-        FiniteSet(1, 2, 3, 4, 6)
+    assert (SetExpr(FiniteSet(1, 2, 3)) + SetExpr(FiniteSet(1, 2))).set == \
+           FiniteSet(2, 3, 4, 5)
+    assert (SetExpr(FiniteSet(1, 2, 3))*SetExpr(FiniteSet(1, 2))).set == \
+           FiniteSet(1, 2, 3, 4, 6)
 
 
 def test_Interval_FiniteSet():
     assert (SetExpr(FiniteSet(1, 2)) + SetExpr(Interval(0, 10))).set == \
-        Interval(1, 12)
+           Interval(1, 12)
 
 
 def test_Many_Sets():
     assert (SetExpr(Interval(0, 1)) +
-                    SetExpr(Interval(2, 3)) +
-                    SetExpr(FiniteSet(10, 11, 12))).set == Interval(12, 16)
+            SetExpr(Interval(2, 3)) +
+            SetExpr(FiniteSet(10, 11, 12))).set == Interval(12, 16)
 
 
 def test_same_setexprs_are_not_identical():
@@ -89,97 +90,100 @@ def test_Interval_arithmetic():
 
     assert i12cc + i12cc == SetExpr(Interval(2, 4))
     assert i12cc - i12cc == SetExpr(Interval(-1, 1))
-    assert i12cc * i12cc == SetExpr(Interval(1, 4))
-    assert i12cc / i12cc == SetExpr(Interval(S.Half, 2))
-    assert i12cc ** 2 == SetExpr(Interval(1, 4))
-    assert i12cc ** 3 == SetExpr(Interval(1, 8))
+    assert i12cc*i12cc == SetExpr(Interval(1, 4))
+    assert i12cc/i12cc == SetExpr(Interval(S.Half, 2))
+    assert i12cc**2 == SetExpr(Interval(1, 4))
+    assert i12cc**3 == SetExpr(Interval(1, 8))
 
     assert i12lo + i12ro == SetExpr(Interval.open(2, 4))
     assert i12lo - i12ro == SetExpr(Interval.Lopen(-1, 1))
-    assert i12lo * i12ro == SetExpr(Interval.open(1, 4))
-    assert i12lo / i12ro == SetExpr(Interval.Lopen(S.Half, 2))
+    assert i12lo*i12ro == SetExpr(Interval.open(1, 4))
+    assert i12lo/i12ro == SetExpr(Interval.Lopen(S.Half, 2))
     assert i12lo + i12lo == SetExpr(Interval.Lopen(2, 4))
     assert i12lo - i12lo == SetExpr(Interval.open(-1, 1))
-    assert i12lo * i12lo == SetExpr(Interval.Lopen(1, 4))
-    assert i12lo / i12lo == SetExpr(Interval.open(S.Half, 2))
+    assert i12lo*i12lo == SetExpr(Interval.Lopen(1, 4))
+    assert i12lo/i12lo == SetExpr(Interval.open(S.Half, 2))
     assert i12lo + i12cc == SetExpr(Interval.Lopen(2, 4))
     assert i12lo - i12cc == SetExpr(Interval.Lopen(-1, 1))
-    assert i12lo * i12cc == SetExpr(Interval.Lopen(1, 4))
-    assert i12lo / i12cc == SetExpr(Interval.Lopen(S.Half, 2))
+    assert i12lo*i12cc == SetExpr(Interval.Lopen(1, 4))
+    assert i12lo/i12cc == SetExpr(Interval.Lopen(S.Half, 2))
     assert i12lo + i12o == SetExpr(Interval.open(2, 4))
     assert i12lo - i12o == SetExpr(Interval.open(-1, 1))
-    assert i12lo * i12o == SetExpr(Interval.open(1, 4))
-    assert i12lo / i12o == SetExpr(Interval.open(S.Half, 2))
-    assert i12lo ** 2 == SetExpr(Interval.Lopen(1, 4))
-    assert i12lo ** 3 == SetExpr(Interval.Lopen(1, 8))
+    assert i12lo*i12o == SetExpr(Interval.open(1, 4))
+    assert i12lo/i12o == SetExpr(Interval.open(S.Half, 2))
+    assert i12lo**2 == SetExpr(Interval.Lopen(1, 4))
+    assert i12lo**3 == SetExpr(Interval.Lopen(1, 8))
 
     assert i12ro + i12ro == SetExpr(Interval.Ropen(2, 4))
     assert i12ro - i12ro == SetExpr(Interval.open(-1, 1))
-    assert i12ro * i12ro == SetExpr(Interval.Ropen(1, 4))
-    assert i12ro / i12ro == SetExpr(Interval.open(S.Half, 2))
+    assert i12ro*i12ro == SetExpr(Interval.Ropen(1, 4))
+    assert i12ro/i12ro == SetExpr(Interval.open(S.Half, 2))
     assert i12ro + i12cc == SetExpr(Interval.Ropen(2, 4))
     assert i12ro - i12cc == SetExpr(Interval.Ropen(-1, 1))
-    assert i12ro * i12cc == SetExpr(Interval.Ropen(1, 4))
-    assert i12ro / i12cc == SetExpr(Interval.Ropen(S.Half, 2))
+    assert i12ro*i12cc == SetExpr(Interval.Ropen(1, 4))
+    assert i12ro/i12cc == SetExpr(Interval.Ropen(S.Half, 2))
     assert i12ro + i12o == SetExpr(Interval.open(2, 4))
     assert i12ro - i12o == SetExpr(Interval.open(-1, 1))
-    assert i12ro * i12o == SetExpr(Interval.open(1, 4))
-    assert i12ro / i12o == SetExpr(Interval.open(S.Half, 2))
-    assert i12ro ** 2 == SetExpr(Interval.Ropen(1, 4))
-    assert i12ro ** 3 == SetExpr(Interval.Ropen(1, 8))
+    assert i12ro*i12o == SetExpr(Interval.open(1, 4))
+    assert i12ro/i12o == SetExpr(Interval.open(S.Half, 2))
+    assert i12ro**2 == SetExpr(Interval.Ropen(1, 4))
+    assert i12ro**3 == SetExpr(Interval.Ropen(1, 8))
 
     assert i12o + i12lo == SetExpr(Interval.open(2, 4))
     assert i12o - i12lo == SetExpr(Interval.open(-1, 1))
-    assert i12o * i12lo == SetExpr(Interval.open(1, 4))
-    assert i12o / i12lo == SetExpr(Interval.open(S.Half, 2))
+    assert i12o*i12lo == SetExpr(Interval.open(1, 4))
+    assert i12o/i12lo == SetExpr(Interval.open(S.Half, 2))
     assert i12o + i12ro == SetExpr(Interval.open(2, 4))
     assert i12o - i12ro == SetExpr(Interval.open(-1, 1))
-    assert i12o * i12ro == SetExpr(Interval.open(1, 4))
-    assert i12o / i12ro == SetExpr(Interval.open(S.Half, 2))
+    assert i12o*i12ro == SetExpr(Interval.open(1, 4))
+    assert i12o/i12ro == SetExpr(Interval.open(S.Half, 2))
     assert i12o + i12cc == SetExpr(Interval.open(2, 4))
     assert i12o - i12cc == SetExpr(Interval.open(-1, 1))
-    assert i12o * i12cc == SetExpr(Interval.open(1, 4))
-    assert i12o / i12cc == SetExpr(Interval.open(S.Half, 2))
-    assert i12o ** 2 == SetExpr(Interval.open(1, 4))
-    assert i12o ** 3 == SetExpr(Interval.open(1, 8))
+    assert i12o*i12cc == SetExpr(Interval.open(1, 4))
+    assert i12o/i12cc == SetExpr(Interval.open(S.Half, 2))
+    assert i12o**2 == SetExpr(Interval.open(1, 4))
+    assert i12o**3 == SetExpr(Interval.open(1, 8))
 
     assert n23cc + n23cc == SetExpr(Interval(-4, 6))
     assert n23cc - n23cc == SetExpr(Interval(-5, 5))
-    assert n23cc * n23cc == SetExpr(Interval(-6, 9))
-    assert n23cc / n23cc == SetExpr(Interval.open(-oo, oo))
+    assert n23cc*n23cc == SetExpr(Interval(-6, 9))
+    assert n23cc/n23cc == SetExpr(Interval.open(-oo, oo))
     assert n23cc + n23ro == SetExpr(Interval.Ropen(-4, 6))
     assert n23cc - n23ro == SetExpr(Interval.Lopen(-5, 5))
-    assert n23cc * n23ro == SetExpr(Interval.Ropen(-6, 9))
-    assert n23cc / n23ro == SetExpr(Interval.Lopen(-oo, oo))
+    assert n23cc*n23ro == SetExpr(Interval.Ropen(-6, 9))
+    assert n23cc/n23ro == SetExpr(Interval.Lopen(-oo, oo))
     assert n23cc + n23lo == SetExpr(Interval.Lopen(-4, 6))
     assert n23cc - n23lo == SetExpr(Interval.Ropen(-5, 5))
-    assert n23cc * n23lo == SetExpr(Interval(-6, 9))
-    assert n23cc / n23lo == SetExpr(Interval.open(-oo, oo))
+    assert n23cc*n23lo == SetExpr(Interval(-6, 9))
+    assert n23cc/n23lo == SetExpr(Interval.open(-oo, oo))
     assert n23cc + n23o == SetExpr(Interval.open(-4, 6))
     assert n23cc - n23o == SetExpr(Interval.open(-5, 5))
-    assert n23cc * n23o == SetExpr(Interval.open(-6, 9))
-    assert n23cc / n23o == SetExpr(Interval.open(-oo, oo))
-    assert n23cc ** 2 == SetExpr(Interval(0, 9))
-    assert n23cc ** 3 == SetExpr(Interval(-8, 27))
+    assert n23cc*n23o == SetExpr(Interval.open(-6, 9))
+    assert n23cc/n23o == SetExpr(Interval.open(-oo, oo))
+    assert n23cc**2 == SetExpr(Interval(0, 9))
+    assert n23cc**3 == SetExpr(Interval(-8, 27))
 
     n32cc = SetExpr(Interval(-3, 2))
     n32lo = SetExpr(Interval.Lopen(-3, 2))
     n32ro = SetExpr(Interval.Ropen(-3, 2))
-    assert n32cc * n32lo == SetExpr(Interval.Ropen(-6, 9))
-    assert n32cc * n32cc == SetExpr(Interval(-6, 9))
-    assert n32lo * n32cc == SetExpr(Interval.Ropen(-6, 9))
-    assert n32cc * n32ro == SetExpr(Interval(-6, 9))
-    assert n32lo * n32ro == SetExpr(Interval.Ropen(-6, 9))
-    assert n32cc / n32lo == SetExpr(Interval.Ropen(-oo, oo))
-    assert i12cc / n32lo == SetExpr(Interval.Ropen(-oo, oo))
+    assert n32cc*n32lo == SetExpr(Interval.Ropen(-6, 9))
+    assert n32cc*n32cc == SetExpr(Interval(-6, 9))
+    assert n32lo*n32cc == SetExpr(Interval.Ropen(-6, 9))
+    assert n32cc*n32ro == SetExpr(Interval(-6, 9))
+    assert n32lo*n32ro == SetExpr(Interval.Ropen(-6, 9))
+    assert n32cc/n32lo == SetExpr(Interval.Ropen(-oo, oo))
+    assert i12cc/n32lo == SetExpr(Interval.Ropen(-oo, oo))
 
-    assert n3n2cc ** 2 == SetExpr(Interval(4, 9))
-    assert n3n2cc ** 3 == SetExpr(Interval(-27, -8))
+    assert n3n2cc**2 == SetExpr(Interval(4, 9))
+    assert n3n2cc**3 == SetExpr(Interval(-27, -8))
 
     assert n23cc + i12cc == SetExpr(Interval(-1, 5))
     assert n23cc - i12cc == SetExpr(Interval(-4, 2))
-    assert n23cc * i12cc == SetExpr(Interval(-4, 6))
-    assert n23cc / i12cc == SetExpr(Interval(-2, 3))
+    assert n23cc*i12cc == SetExpr(Interval(-4, 6))
+    assert n23cc/i12cc == SetExpr(Interval(-2, 3))
+
+
+
 
 
 def test_SetExpr_Intersection():
@@ -189,8 +193,8 @@ def test_SetExpr_Intersection():
     inter = Intersection(set1, set2)
     se = SetExpr(inter)
     assert exp(se).set == Intersection(
-            ImageSet(Lambda(x, exp(x)), set1),
-            ImageSet(Lambda(x, exp(x)), set2))
+        ImageSet(Lambda(x, exp(x)), set1),
+        ImageSet(Lambda(x, exp(x)), set2))
     assert cos(se).set == ImageSet(Lambda(x, cos(x)), inter)
 
 
@@ -204,31 +208,32 @@ def test_SetExpr_Interval_div():
     assert SetExpr(Interval(2, 4))/SetExpr(Interval(-3, 0)) == SetExpr(Interval(-oo, Rational(-2, 3)))
     assert SetExpr(Interval(2, 4))/SetExpr(Interval(0, 3)) == SetExpr(Interval(Rational(2, 3), oo))
 
-    #assert SetExpr(Interval(0, 1))/SetExpr(Interval(0, 1)) == SetExpr(Interval(0, oo))
-    #assert SetExpr(Interval(-1, 0))/SetExpr(Interval(0, 1)) == SetExpr(Interval(-oo, 0))
+    # assert SetExpr(Interval(0, 1))/SetExpr(Interval(0, 1)) == SetExpr(Interval(0, oo))
+    # assert SetExpr(Interval(-1, 0))/SetExpr(Interval(0, 1)) == SetExpr(Interval(-oo, 0))
     assert SetExpr(Interval(-1, 2))/SetExpr(Interval(-2, 2)) == SetExpr(Interval(-oo, oo))
 
     assert 1/SetExpr(Interval(-1, 2)) == SetExpr(Union(Interval(-oo, -1), Interval(S.Half, oo)))
+
     assert 1/SetExpr(Interval(0, 2)) == SetExpr(Interval(S.Half, oo))
     assert (-1)/SetExpr(Interval(0, 2)) == SetExpr(Interval(-oo, Rational(-1, 2)))
-    #assert 1/SetExpr(Interval(-oo, 0)) == SetExpr(Interval.open(-oo, 0))
+    # assert 1/SetExpr(Interval(-oo, 0)) == SetExpr(Interval.open(-oo, 0))
     assert 1/SetExpr(Interval(-1, 0)) == SetExpr(Interval(-oo, -1))
-    #assert (-2)/SetExpr(Interval(-oo, 0)) == SetExpr(Interval(0, oo))
-    #assert 1/SetExpr(Interval(-oo, -1)) == SetExpr(Interval(-1, 0))
+    # assert (-2)/SetExpr(Interval(-oo, 0)) == SetExpr(Interval(0, oo))
+    # assert 1/SetExpr(Interval(-oo, -1)) == SetExpr(Interval(-1, 0))
 
-    #assert SetExpr(Interval(1, 2))/a == Mul(SetExpr(Interval(1, 2)), 1/a, evaluate=False)
+    # assert SetExpr(Interval(1, 2))/a == Mul(SetExpr(Interval(1, 2)), 1/a, evaluate=False)
 
-    #assert SetExpr(Interval(1, 2))/0 == SetExpr(Interval(1, 2))*zoo
-    #assert SetExpr(Interval(1, oo))/oo == SetExpr(Interval(0, oo))
-    #assert SetExpr(Interval(1, oo))/(-oo) == SetExpr(Interval(-oo, 0))
-    #assert SetExpr(Interval(-oo, -1))/oo == SetExpr(Interval(-oo, 0))
-    #assert SetExpr(Interval(-oo, -1))/(-oo) == SetExpr(Interval(0, oo))
-    #assert SetExpr(Interval(-oo, oo))/oo == SetExpr(Interval(-oo, oo))
-    #assert SetExpr(Interval(-oo, oo))/(-oo) == SetExpr(Interval(-oo, oo))
-    #assert SetExpr(Interval(-1, oo))/oo == SetExpr(Interval(0, oo))
-    #assert SetExpr(Interval(-1, oo))/(-oo) == SetExpr(Interval(-oo, 0))
-    #assert SetExpr(Interval(-oo, 1))/oo == SetExpr(Interval(-oo, 0))
-    #assert SetExpr(Interval(-oo, 1))/(-oo) == SetExpr(Interval(0, oo))
+    # assert SetExpr(Interval(1, 2))/0 == SetExpr(Interval(1, 2))*zoo
+    # assert SetExpr(Interval(1, oo))/oo == SetExpr(Interval(0, oo))
+    # assert SetExpr(Interval(1, oo))/(-oo) == SetExpr(Interval(-oo, 0))
+    # assert SetExpr(Interval(-oo, -1))/oo == SetExpr(Interval(-oo, 0))
+    # assert SetExpr(Interval(-oo, -1))/(-oo) == SetExpr(Interval(0, oo))
+    # assert SetExpr(Interval(-oo, oo))/oo == SetExpr(Interval(-oo, oo))
+    # assert SetExpr(Interval(-oo, oo))/(-oo) == SetExpr(Interval(-oo, oo))
+    # assert SetExpr(Interval(-1, oo))/oo == SetExpr(Interval(0, oo))
+    # assert SetExpr(Interval(-1, oo))/(-oo) == SetExpr(Interval(-oo, 0))
+    # assert SetExpr(Interval(-oo, 1))/oo == SetExpr(Interval(-oo, 0))
+    # assert SetExpr(Interval(-oo, 1))/(-oo) == SetExpr(Interval(0, oo))
 
 
 def test_SetExpr_Interval_pow():
@@ -237,6 +242,7 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(1, 2))**2 == SetExpr(Interval(1, 4))
     assert SetExpr(Interval(-1, 2))**3 == SetExpr(Interval(-1, 8))
     assert SetExpr(Interval(-1, 1))**0 == SetExpr(FiniteSet(1))
+
 
     #assert SetExpr(Interval(1, 2))**Rational(5, 2) == SetExpr(Interval(1, 4*sqrt(2)))
     #assert SetExpr(Interval(-1, 2))**Rational(1, 3) == SetExpr(Interval(-1, 2**Rational(1, 3)))
@@ -250,6 +256,7 @@ def test_SetExpr_Interval_pow():
 
     assert SetExpr(Interval(1, 5))**(-2) == SetExpr(Interval(Rational(1, 25), 1))
     assert SetExpr(Interval(-1, 3))**(-2) == SetExpr(Interval(0, oo))
+
     assert SetExpr(Interval(0, 2))**(-2) == SetExpr(Interval(Rational(1, 4), oo))
     assert SetExpr(Interval(-1, 2))**(-3) == SetExpr(Union(Interval(-oo, -1), Interval(Rational(1, 8), oo)))
     assert SetExpr(Interval(-3, -2))**(-3) == SetExpr(Interval(Rational(-1, 8), Rational(-1, 27)))
@@ -257,6 +264,7 @@ def test_SetExpr_Interval_pow():
     #assert SetExpr(Interval(0, oo))**S.Half == SetExpr(Interval(0, oo))
     #assert SetExpr(Interval(-oo, -1))**Rational(1, 3) == SetExpr(Interval(-oo, -1))
     #assert SetExpr(Interval(-2, 3))**(Rational(-1, 3)) == SetExpr(Interval(-oo, oo))
+
     assert SetExpr(Interval(-oo, 0))**(-2) == SetExpr(Interval.open(0, oo))
     assert SetExpr(Interval(-2, 0))**(-2) == SetExpr(Interval(Rational(1, 4), oo))
 
@@ -285,3 +293,17 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(2, 3))**(-oo) == SetExpr(FiniteSet(0))
     assert SetExpr(Interval(0, 2))**(-oo) == SetExpr(Interval(0, oo))
     assert (SetExpr(Interval(-1, 2))**(-oo)).dummy_eq(SetExpr(ImageSet(Lambda(_d, _d**(-oo)), Interval(-1, 2))))
+
+
+def test_SetExpr_Integers():
+    assert SetExpr(S.Integers) + 1 == SetExpr(S.Integers)
+    assert SetExpr(S.Integers) + I == SetExpr(ImageSet(Lambda(_d, _d + I), S.Integers))
+    assert SetExpr(S.Integers)*(-1) == SetExpr(S.Integers)
+    assert SetExpr(S.Integers)*2 == SetExpr(ImageSet(Lambda(_d, 2*_d), S.Integers))
+    assert SetExpr(S.Integers)*I == SetExpr(ImageSet(Lambda(_d, I*_d), S.Integers))
+    # issue #18050:
+    assert SetExpr(S.Integers)._eval_func(Lambda(x, I*x + 1)) == SetExpr(
+            ImageSet(Lambda(_d, I*_d + 1), S.Integers))
+    # needs improvement:
+    assert SetExpr(S.Integers)*I + 1 == SetExpr(
+            ImageSet(Lambda(x, x + 1), ImageSet(Lambda(_d, _d*I), S.Integers)))

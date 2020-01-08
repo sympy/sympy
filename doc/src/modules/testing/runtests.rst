@@ -2,5 +2,5 @@
 Run Tests
 =========
 
-.. automodule:: sympy.utilities.runtests
+.. automodule:: sympy.testing.runtests
    :members:

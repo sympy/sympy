@@ -6,7 +6,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
