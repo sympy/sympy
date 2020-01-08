@@ -5,7 +5,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Lambda, Mul, Dummy, IndexedBase, symbols,
                    linsolve, eye, Or, Not, Intersection, Add,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, sympify, Piecewise)
+                   Ge, Piecewise, Symbol)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -17,6 +17,7 @@ from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
 from sympy.stats import P, E
 from sympy.core.sympify import _sympify
+from sympy.core.compatibility import string_types
 
 __all__ = [
     'StochasticProcess',
@@ -53,6 +54,27 @@ def _set_converter(itr):
     if not isinstance(itr, Set):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
+
+def _sym_sympify(arg):
+    """
+    Converts an arbitrary expression to a type that can be used inside SymPy.
+    As generally strings are unwise to use in the expressions,
+    it returns the Symbol of argument if the string type argument is passed.
+
+    Parameter
+    =========
+    arg
+        The parameter to be converted to be used in Sympy.
+
+    Returns
+    =======
+    The converted parameter.
+
+    """
+    if isinstance(arg, string_types):
+        return Symbol(arg)
+    else:
+        return _sympify(arg)
 
 def _matrix_checks(matrix):
     if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
@@ -832,11 +854,13 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     def __new__(cls, sym, p, success=1, failure=0):
         _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
-        p = _sympify(p)
+        p = _sym_sympify(p)
         sym = _symbol_converter(sym)
+        success = _sym_sympify(success)
+        failure = _sym_sympify(failure)
         state_space = _set_converter([success, failure])
         return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
-                             sympify(success), sympify(failure))
+                             success, failure)
 
     @property
     def p(self):
