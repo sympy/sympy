@@ -1079,7 +1079,23 @@ class MatrixSpecial(MatrixRequired):
 
 
 class MatrixProperties(MatrixRequired):
-    """Provides basic properties of a matrix."""
+    """Provides basic properties of a matrix.
+
+    Notes
+    =====
+
+    Every matrix properties named like ``is_foo``, ``is_bar`` should
+    be decorated with ``@property``. It should take no keyword arguments
+    because it is not accessible once ``@property`` is used.
+
+    The assumption predicates need not be maximally-precise if fuzzy
+    value ``None`` is properly used. And no exceptions should be raised
+    for computing the assumptions, as it can either fit into ``None``
+    or ``False``.
+
+    If you encounter any false positives or exceptions while
+    computing the assumptions here, please report this to as a bug.
+    """
 
     def _eval_atoms(self, *types):
         result = set()
