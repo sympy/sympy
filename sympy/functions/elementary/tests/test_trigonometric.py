@@ -28,7 +28,6 @@ enn = Symbol('en', extended_nonnegative=True)
 enz = Symbol('enz', extended_nonzero=True)
 a = Symbol('a', algebraic=True)
 na = Symbol('na', nonzero=True, algebraic=True)
-nb = Symbol('nb', integer=True)
 
 
 def test_sin():
@@ -80,7 +79,7 @@ def test_sin():
     assert sin(pi*e/2) == 0
     assert sin(pi*k) == 0
     assert sin(pi*k).subs(k, 3) == sin(pi*k/2).subs(k, 6)  # issue 8298
-    assert sin(2*nb*pi + 4) == sin(4) # issue 17976
+    assert sin(2*k*pi + 4) == sin(4) # issue 17976
 
     assert sin(pi/3) == S.Half*sqrt(3)
     assert sin(pi*Rational(-2, 3)) == Rational(-1, 2)*sqrt(3)
