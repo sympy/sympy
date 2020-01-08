@@ -1,5 +1,7 @@
 from __future__ import division, print_function
 
+from typing import Any
+
 from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
@@ -963,12 +965,12 @@ class MatrixReductions(MatrixDeterminant):
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
     @property
-    def is_echelon(self, iszerofunc=_iszero):
+    def is_echelon(self):
         """Returns `True` if the matrix is in echelon form.
         That is, all rows of zeros are at the bottom, and below
         each leading non-zero in a row are exclusively zeros."""
 
-        return self._eval_is_echelon(iszerofunc)
+        return self._eval_is_echelon(_iszero)
 
     def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         """
@@ -1735,9 +1737,11 @@ class MatrixEigen(MatrixSubspaces):
             return M_H._eval_is_positive_definite(method=method,
                     dotprodsimp=dotprodsimp)
 
+    @property
     def is_positive_definite(self):
         return self._eval_is_positive_definite()
 
+    @property
     def is_positive_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1747,6 +1751,7 @@ class MatrixEigen(MatrixSubspaces):
         elif self.is_square:
             return ((self + self.H) / 2).is_positive_semidefinite
 
+    @property
     def is_negative_definite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1756,6 +1761,7 @@ class MatrixEigen(MatrixSubspaces):
         elif self.is_square:
             return ((self + self.H) / 2).is_negative_definite
 
+    @property
     def is_negative_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1765,6 +1771,7 @@ class MatrixEigen(MatrixSubspaces):
         elif self.is_square:
             return ((self + self.H) / 2).is_negative_semidefinite
 
+    @property
     def is_indefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1856,16 +1863,11 @@ class MatrixEigen(MatrixSubspaces):
             Math. Monthly 77, 259-264 1970.
         """
 
-    is_positive_definite = \
-        property(fget=is_positive_definite, doc=_doc_positive_definite)
-    is_positive_semidefinite = \
-        property(fget=is_positive_semidefinite, doc=_doc_positive_definite)
-    is_negative_definite = \
-        property(fget=is_negative_definite, doc=_doc_positive_definite)
-    is_negative_semidefinite = \
-        property(fget=is_negative_semidefinite, doc=_doc_positive_definite)
-    is_indefinite = \
-        property(fget=is_indefinite, doc=_doc_positive_definite)
+    is_positive_definite.__doc__ = _doc_positive_definite
+    is_positive_semidefinite.__doc__ = _doc_positive_definite
+    is_negative_definite.__doc__ = _doc_positive_definite
+    is_negative_semidefinite.__doc__ = _doc_positive_definite
+    is_indefinite.__doc__ = _doc_positive_definite
 
     def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
@@ -2213,7 +2215,7 @@ class MatrixCalculus(MatrixCommon):
         from sympy import derive_by_array
         return derive_by_array(base, self)
 
-    def integrate(self, *args):
+    def integrate(self, *args, **kwargs):
         """Integrate each element of the matrix.  ``args`` will
         be passed to the ``integrate`` function.
 
@@ -2238,7 +2240,7 @@ class MatrixCalculus(MatrixCommon):
         limit
         diff
         """
-        return self.applyfunc(lambda x: x.integrate(*args))
+        return self.applyfunc(lambda x: x.integrate(*args, **kwargs))
 
     def jacobian(self, X):
         """Calculates the Jacobian matrix (derivative of a vector-valued function).
@@ -2519,7 +2521,8 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
-    __hash__ = None  # Mutable
+    # Mutable:
+    __hash__ = None  # type: ignore
 
     # Defined here the same as on Basic.
 
@@ -2540,7 +2543,7 @@ class MatrixBase(MatrixDeprecated,
         s = latex(self, mode='plain')
         return "$\\displaystyle %s$" % s
 
-    _repr_latex_orig = _repr_latex_
+    _repr_latex_orig = _repr_latex_  # type: Any
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
