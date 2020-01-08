@@ -151,8 +151,7 @@ class StochasticProcess(Basic):
 
         if args[0].pspace.distribution == None: # checks if there is any distribution available
             return JointDistribution(*args)
-        # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
-        # is completed
+
         pdf = Lambda(tuple(args),
                 expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
         return JointDistributionHandmade(pdf)
@@ -770,7 +769,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 class BernoulliProcess(DiscreteTimeStochasticProcess):
     """
     The Bernoulli process consists of repeated
-    independent Bernoulli trials with the same parameter `p`.
+    independent Bernoulli process trials with the same parameter `p`.
     It's assumed that the probability `p` applies to every
     trial and that the outcomes of each trial
     are independent of all the rest. Therefore Bernoulli Processs
@@ -831,6 +830,14 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     index_set = S.Naturals0
 
+    def __new__(cls, sym, p, success=1, failure=0):
+        _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
+        p = _sympify(p)
+        sym = _symbol_converter(sym)
+        state_space = _set_converter([success, failure])
+        return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
+                             sympify(success), sympify(failure))
+
     @property
     def p(self):
         return self.args[3]
@@ -846,14 +853,6 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     @property
     def failure(self):
         return self.args[5]
-
-    def __new__(cls, sym, p, success=1, failure=0):
-        _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
-        p = _sympify(p)
-        sym = _symbol_converter(sym)
-        state_space = _set_converter([success, failure])
-        return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
-                             sympify(success), sympify(failure))
 
     def _rvindexed_subs(self, expr, condition=None):
         """
