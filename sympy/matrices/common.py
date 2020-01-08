@@ -2137,7 +2137,9 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(lambda x: x.xreplace(rule))
 
     def _eval_simplify(self, **kwargs):
-        return self.simplify(**kwargs)
+        # XXX: We can't use self.simplify here as mutable subclasses will
+        # override simplify and have it return None
+        return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
         from sympy.simplify import trigsimp
