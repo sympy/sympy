@@ -2637,10 +2637,6 @@ class Tensor(TensExpr):
 
     """
 
-    _diff_wrt = True
-    is_scalar = True
-    # TODO: verify whether this does not lead to inconsistencies
-
     is_commutative = False
 
     def __new__(cls, tensor_head, indices, **kw_args):
@@ -3014,48 +3010,41 @@ class Tensor(TensExpr):
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_partial_derivative(self, s):
-        if not isinstance(s, Tensor):
-            # at this stage, `s` should be tensor or the
-            # derivative vanishes
+    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+
+        # @a_i/@a_k = delta_i^k
+        # @a_i/@a^k = g_ij delta^j_k
+        # @a^i/@a^k = delta^i_k
+        # @a^i/@a_k = g^ij delta_j^k
+        # TODO: if there is no metric present, the derivative should be zero?
+
+        if self.head != s.head:
             return S.Zero
-        else:
-            (selfhead, selffreeindices) = self.args
-            (otherhead, otherfreeindices) = s.args
 
-            # @a_i/@a_k = delta_i^k
-            # @a_i/@a^k = g_ij delta^j_k
-            # @a^i/@a^k = delta^i_k
-            # @a^i/@a_k = g^ij delta_j^k
-            # TODO: if there is no metric present, the derivative should be zero?
+        # if heads are the same, provide delta and/or metric products
+        # for every free index pair in the appropriate tensor
+        # assumed that the free indices are in proper order
+        # A contravariante index in the derivative becomes covariant
+        # after performing the derivative and vice versa
 
-            if selfhead == otherhead:
-                # if heads are the same, provide delta and/or metric products
-                # for every free index pair in the appropriate tensor
-                # assumed that the free indices are in proper order
-                # A contravariante index in the derivative becomes covariant
-                # after performing the derivative and vice versa
-
-                mykroneckerdeltas = []
-                for (iself, iother) in zip(selffreeindices, otherfreeindices):
-                    if iself.tensor_index_type is not iother.tensor_index_type:
-                        raise ValueError("index types not compatible")
-                    else:
-                        mytensorindextype = iself.tensor_index_type
-                        mytensormetric = mytensorindextype.metric
-                        kroneckerdelta = None
-                        if iself.is_up == iother.is_up:
-                            kroneckerdelta = mytensorindextype.delta(iself, -iother)
-                        else:
-                            dummy = TensorIndex('dummy', mytensorindextype,
-                                                is_up=iself.is_up)
-                            kroneckerdelta = mytensormetric(iself, dummy)\
-                                             * mytensorindextype.delta(-dummy,
-                                                                       -iother)
-                        mykroneckerdeltas.append(kroneckerdelta)
-                return TensMul.fromiter(mykroneckerdeltas)
+        kronecker_delta_list = []
+        for iself, iother in zip(self.free_indices, s.free_indices):
+            if iself.tensor_index_type is not iother.tensor_index_type:
+                raise ValueError("index types not compatible")
             else:
-                return S.Zero
+                tensor_index_type = iself.tensor_index_type
+                tensor_metric = tensor_index_type.metric
+                if iself.is_up == iother.is_up:
+                    kroneckerdelta = tensor_index_type.delta(iself, -iother)
+                else:
+                    dummy = TensorIndex('dummy', tensor_index_type,
+                                        is_up=iself.is_up)
+                    kroneckerdelta = (
+                        tensor_metric(iself, dummy) *
+                        tensor_index_type.delta(-dummy, -iother)
+                    )
+                kronecker_delta_list.append(kroneckerdelta)
+        return TensMul.fromiter(kronecker_delta_list)
 
 
 class TensMul(TensExpr, AssocOp):

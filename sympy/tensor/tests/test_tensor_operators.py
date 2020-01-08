@@ -44,16 +44,8 @@ def test_tensor_partial_deriv():
     expr2b = A(i)*PartialDerivative(H(k, -i), A(-j))
     assert expr2b.get_indices() == [L_0, k, -L_0, j]
 
-    expr3a = TensMul(A(i), PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j)))
-    # TensMul prevents doit() execution to check the exact index structure
-    # as intended with PartialDerivative
-    assert expr3a.get_indices() == [i, k, -i, -j]
-
-    # Perform doit() explicitly
-    expr3b = expr3a.doit()
-    # Since this changes the order of the indices, it is only useful to check
-    # whether j is still a lower index and k is still upper
-    assert (-j in expr3b.get_indices()) and (k in expr3b.get_indices())
+    expr3 = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
+    assert expr3.get_indices() == [L_0, k, -L_0, -j]
 
     expr4 = (A(i) + B(i))*PartialDerivative(C(j), D(j))
     assert expr4.get_indices() == [i, L_0, -L_0]
@@ -133,15 +125,13 @@ def test_replace_arrays_partial_derivative():
     assert expr.get_free_indices() == [-j]
 
 
-@XFAIL
 def test_expand_partial_derivative_sum_rule():
     tau = symbols("tau")
 
     # check sum rule for D(tensor, symbol)
     expr1aa = PartialDerivative(A(i), tau)
 
-    assert expr1aa._expand_partial_derivative() ==\
-        PartialDerivative(A(i), tau)
+    assert expr1aa._expand_partial_derivative() == PartialDerivative(A(i), tau)
 
     expr1ab = PartialDerivative(A(i) + B(i), tau)
 
@@ -236,7 +226,6 @@ def test_expand_partial_derivative_constant_factor_rule():
             c3*PartialDerivative(A(i), D(j))
 
 
-@XFAIL
 def test_expand_partial_derivative_full_linearity():
     for count in range(10):
         pos_random_int1 = sympify(randint(0, 1000))
@@ -295,7 +284,6 @@ def test_expand_partial_derivative_full_linearity():
             + c3*PartialDerivative(B(i), D(j))
 
 
-@XFAIL
 def test_expand_partial_derivative_product_rule():
     # check product rule
     expr4a = PartialDerivative(A(i)*B(j), D(k))
@@ -315,10 +303,3 @@ def test_expand_partial_derivative_product_rule():
         + PartialDerivative(A(i), D(m))*PartialDerivative(B(j), C(k))\
         + PartialDerivative(A(i), C(k))*PartialDerivative(B(j), D(m))\
         + A(i)*PartialDerivative(B(j), C(k), D(m))
-
-# this is maybe canon_bp()
-#def test_expand_partial_derivative_commutation_higher_derivatives():
-#    # check commutation of derivatives
-
-def test_eval_partial_derivative():
-    pass
