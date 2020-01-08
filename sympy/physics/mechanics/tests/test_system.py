@@ -38,7 +38,7 @@ kin_explicit_rhs = Matrix([u, v])
 comb_explicit_rhs = comb_implicit_mat.LUsolve(comb_implicit_rhs)
 
 # Set up a body and load to pass into the system
-theta = atan(x / y)
+theta = atan(x/y)
 N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [theta, N.z])
 O = Point('O')
