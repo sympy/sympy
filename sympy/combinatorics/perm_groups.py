@@ -17,7 +17,7 @@ from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
-from sympy.utilities.randtest import _randrange
+from sympy.testing.randtest import _randrange
 from itertools import islice
 
 rmul = Permutation.rmul_with_af

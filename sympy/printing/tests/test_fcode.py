@@ -15,7 +15,7 @@ from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_printmethod():

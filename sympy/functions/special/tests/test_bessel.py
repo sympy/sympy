@@ -8,11 +8,11 @@ from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
-from sympy.utilities.randtest import (random_complex_number as randcplx,
+from sympy.testing.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import z, n, k, x
 

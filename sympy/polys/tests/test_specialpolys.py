@@ -2,7 +2,7 @@
 
 from sympy import Poly, ZZ, symbols, sqrt, prime, Add
 from sympy.utilities.iterables import permute_signs
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.polys.specialpolys import (
     swinnerton_dyer_poly,

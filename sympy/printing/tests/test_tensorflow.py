@@ -15,7 +15,7 @@ from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 
 tf = tensorflow = import_module("tensorflow")

@@ -7,7 +7,7 @@ from sympy.matrices.expressions.matexpr import \
     MatrixSymbol, Identity, ZeroMatrix, OneMatrix
 from sympy.matrices.expressions.permutation import \
     MatrixPermute, PermutationMatrix
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import Symbol
 
 
@@ -16,20 +16,20 @@ def test_PermutationMatrix_basic():
     assert unchanged(PermutationMatrix, p)
     raises(ValueError, lambda: PermutationMatrix((0, 1, 2)))
     assert PermutationMatrix(p).as_explicit() == Matrix([[0, 1], [1, 0]])
-    assert isinstance(PermutationMatrix(p) * MatrixSymbol('A', 2, 2), MatMul)
+    assert isinstance(PermutationMatrix(p)*MatrixSymbol('A', 2, 2), MatMul)
 
 
 def test_PermutationMatrix_matmul():
     p = Permutation([1, 2, 0])
     P = PermutationMatrix(p)
     M = Matrix([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
-    assert (P * M).as_explicit() == P.as_explicit() * M
-    assert (M * P).as_explicit() == M * P.as_explicit()
+    assert (P*M).as_explicit() == P.as_explicit()*M
+    assert (M*P).as_explicit() == M*P.as_explicit()
 
     P1 = PermutationMatrix(Permutation([1, 2, 0]))
     P2 = PermutationMatrix(Permutation([2, 1, 0]))
     P3 = PermutationMatrix(Permutation([1, 0, 2]))
-    assert P1 * P2 == P3
+    assert P1*P2 == P3
 
 
 def test_PermutationMatrix_matpow():

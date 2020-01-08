@@ -7,7 +7,7 @@ from sympy.polys.orderings import (
 
 from sympy.abc import x, y, z, t
 from sympy.core import S
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_lex_order():
     assert lex((1, 2, 3)) == (1, 2, 3)

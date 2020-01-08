@@ -1,4 +1,6 @@
-from sympy.core.compatibility import range, zip_longest
+from sympy.core.compatibility import range
+from itertools import zip_longest
+
 from sympy.utilities.enumerative import (
     list_visitor,
     MultisetPartitionTraverser,

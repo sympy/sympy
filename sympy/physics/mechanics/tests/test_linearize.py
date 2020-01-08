@@ -3,7 +3,7 @@ from sympy import solve, simplify, sympify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.utilities.pytest import slow, warns_deprecated_sympy
+from sympy.testing.pytest import slow, warns_deprecated_sympy
 
 
 @slow

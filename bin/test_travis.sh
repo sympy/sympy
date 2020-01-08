@@ -9,6 +9,10 @@ if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
 fi
 
+if [[ "${TEST_PY2_IMPORT}" == "true" ]]; then
+    python bin/test_py2_import.py
+fi
+
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     echo "Testing SPHINX"
     cd doc

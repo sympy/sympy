@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
+
 class _cache(list):
     """ List of cached functions """
 
@@ -33,6 +34,7 @@ class _cache(list):
                     break
                 else:
                     myfunc = myfunc.__wrapped__
+
 
 # global cache registry:
 CACHE = _cache()

@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import (TensorIndexType,
