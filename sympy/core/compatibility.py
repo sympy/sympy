@@ -69,8 +69,7 @@ __all__ = [
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
     'zip_longest', 'maketrans', 'as_int', 'default_sort_key', 'ordered',
-    'GROUND_TYPES', 'HAS_GMPY', 'gmpy', 'SYMPY_INTS', 'lru_cache',
-    'filterfalse', 'clock',
+    'GROUND_TYPES', 'HAS_GMPY', 'gmpy', 'SYMPY_INTS', 'lru_cache', 'clock',
 ]
 
 import sys
@@ -361,10 +360,8 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-try:
-    from itertools import zip_longest
-except ImportError:  # Python 2.7
-    from itertools import izip_longest as zip_longest
+
+from itertools import zip_longest
 
 
 try:
@@ -958,12 +955,6 @@ else:
 
         return decorating_function
     ### End of backported lru_cache
-
-try:
-    from itertools import filterfalse
-except ImportError:  # Python 2.7
-    def filterfalse(pred, itr):
-        return filter(lambda x: not pred(x), itr)
 
 try:
     from time import clock
