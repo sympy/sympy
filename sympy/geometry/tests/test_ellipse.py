@@ -451,7 +451,6 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
-	
     #checking for other point
     t1 = e.second_moment_of_area(Point(6,5))
     t2 = (580*pi, 845*pi, 600*pi)
@@ -542,7 +541,6 @@ def test_evolute():
 	t2 = (e.vradius*(y - e.center.y))**Rational(2, 3)
 	E = t1 + t2 - (e.hradius**2 - e.vradius**2)**Rational(2, 3)
 	assert e.evolute() == E
-	
 	#Numerical Example
 	e = Ellipse(Point(1, 1), 6, 3)
 	t1 = (6*(x - 1))**Rational(2, 3)
