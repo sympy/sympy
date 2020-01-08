@@ -195,7 +195,7 @@ class DixonResultant():
         the last column. For the precondition to hold the last non-zero
         row of the rref matrix should be of the form [0, 0, ..., 1].
         """
-        if matrix.is_zero:
+        if matrix.is_zero_matrix:
             return False
 
         m, n = matrix.shape
@@ -214,8 +214,10 @@ class DixonResultant():
 
     def delete_zero_rows_and_columns(self, matrix):
         """Remove the zero rows and columns of the matrix."""
-        rows = [i for i in range(matrix.rows) if not matrix.row(i).is_zero]
-        cols = [j for j in range(matrix.cols) if not matrix.col(j).is_zero]
+        rows = [
+            i for i in range(matrix.rows) if not matrix.row(i).is_zero_matrix]
+        cols = [
+            j for j in range(matrix.cols) if not matrix.col(j).is_zero_matrix]
 
         return matrix[rows, cols]
 
