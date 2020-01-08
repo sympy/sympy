@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.add import Add
+from sympy.core.add import Add, Mul
 from sympy.core.basic import sympify, cacheit
 from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
@@ -106,7 +106,7 @@ def _peeloff_pi(arg):
     >>> peel(x + pi/2)
     (x, pi/2)
     >>> peel(x + 2*pi/3 + pi*y)
-    (x + pi*y + 0.166666666666667*pi, 0.5*pi)
+    (x + pi*y + pi/6, pi/2)
 
     """
     for a in Add.make_args(arg):
@@ -123,7 +123,11 @@ def _peeloff_pi(arg):
     else:
         return arg, S.Zero
 
-    m1 = (K % (1/2)) * S.Pi
+    z = S.One
+    for a in Mul.make_args(K):
+        z = z*(a % S.Half)
+
+    m1 = z * S.Pi
     m2 = K*S.Pi - m1
     return arg - m2, m2
 
