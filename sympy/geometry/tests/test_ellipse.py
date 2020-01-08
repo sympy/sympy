@@ -546,4 +546,3 @@ def test_evolute():
     t2 = (3*(y - 1))**Rational(2, 3)
     E = t1 + t2 - (27)**Rational(2, 3)
     assert e.evolute() == E
-
