@@ -39,7 +39,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArra
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
-                                 TensorElement, tensor_heads, TensMul)
+                                 TensorElement, tensor_heads)
 
 from sympy.testing.pytest import raises
 
@@ -6608,22 +6608,22 @@ A  ⋅───⎜H   ⎟\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensMul(A(i), PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j)))
+    expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
     ascii_str = \
 """\
- i  d / k         k \\\n\
-A *---|B *C  + 3*H  |\n\
-     j\\    i       i/\n\
-   dA                \n\
-                     \
+ L_0  d / k           k   \\\n\
+A   *---|B *C    + 3*H    |\n\
+       j\\    L_0       L_0/\n\
+     dA                    \n\
+                           \
 """
     ucode_str = \
 u("""\
- i  ∂ ⎛ k         k ⎞\n\
-A ⋅───⎜B ⋅C  + 3⋅H  ⎟\n\
-     j⎝    i       i⎠\n\
-   ∂A                \n\
-                     \
+ L₀  ∂ ⎛ k          k  ⎞\n\
+A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
+      j⎝    L₀       L₀⎠\n\
+    ∂A                  \n\
+                        \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
