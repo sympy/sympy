@@ -484,7 +484,7 @@ def translate(s, a, b=None, c=None):
                 a = ''.join(a)
                 b = ''.join(b)
         s = replace(s, mr)
-        table = maketrans(a, b)
+        table = str.maketrans(a, b)
         # s may have become unicode which uses the py3 syntax for translate
         if isinstance(table, str) and isinstance(s, str):
             s = s.translate(table)
