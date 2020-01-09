@@ -586,7 +586,7 @@ def random_integer_partition(n, seed=None):
     >>> random_integer_partition(1)
     [1]
     """
-    from sympy.utilities.randtest import _randint
+    from sympy.testing.randtest import _randint
 
     n = as_int(n)
     if n < 1:

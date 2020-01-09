@@ -5,7 +5,7 @@ import pickle
 
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta
@@ -395,9 +395,9 @@ def test_pickling_polys_fields():
     # NOTE: can't use protocols < 2 because we have to execute __new__ to
     # make sure caching of fields works properly.
 
-    # from sympy.polys.fields import FracField
+    # from sympy.polys.fields import FracField
 
-    # field = FracField("x,y,z", ZZ, lex)
+    # field = FracField("x,y,z", ZZ, lex)
 
     # TODO: AssertionError: assert id(obj) not in self.memo
     # for c in (FracField, field):

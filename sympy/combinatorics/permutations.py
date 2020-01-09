@@ -3,8 +3,12 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
+from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
-from sympy.core.compatibility import is_sequence, reduce, range, as_int
+from sympy.core.expr import Expr
+from sympy.core.compatibility import \
+    is_sequence, reduce, range, as_int, Iterable
+from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
@@ -23,7 +27,6 @@ def _af_rmul(a, b):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-    >>> Permutation.print_cyclic = False
 
     >>> a, b = [1, 0, 2], [0, 2, 1]
     >>> _af_rmul(a, b)
@@ -57,7 +60,6 @@ def _af_rmuln(*abc):
     ========
 
     >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-    >>> Permutation.print_cyclic = False
 
     >>> a, b = [1, 0, 2], [0, 2, 1]
     >>> _af_rmul(a, b)
@@ -179,7 +181,6 @@ def _af_pow(a, n):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation, _af_pow
-    >>> Permutation.print_cyclic = False
     >>> p = Permutation([2, 0, 3, 1])
     >>> p.order()
     4
@@ -358,7 +359,6 @@ class Cycle(dict):
 
         >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -479,7 +479,8 @@ class Permutation(Atom):
     original ordering, not the elements (a, b, etc...) themselves.
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = False
+    >>> from sympy.interactive import init_printing
+    >>> init_printing(perm_cyclic=False, pretty_print=False)
 
     Permutations Notation
     =====================
@@ -662,17 +663,17 @@ class Permutation(Atom):
 
     There are a few things to note about how Permutations are printed.
 
-    1) If you prefer one form (array or cycle) over another, you can set that
-    with the print_cyclic flag.
+    1) If you prefer one form (array or cycle) over another, you can set
+    ``init_printing`` with the ``perm_cyclic`` flag.
 
-    >>> Permutation(1, 2)(4, 5)(3, 4)
+    >>> from sympy import init_printing
+    >>> p = Permutation(1, 2)(4, 5)(3, 4)
+    >>> p
     Permutation([0, 2, 1, 4, 5, 3])
-    >>> p = _
 
-    >>> Permutation.print_cyclic = True
+    >>> init_printing(perm_cyclic=True, pretty_print=False)
     >>> p
     (1 2)(3 4 5)
-    >>> Permutation.print_cyclic = False
 
     2) Regardless of the setting, a list of elements in the array for cyclic
     form can be obtained and either of those can be copied and supplied as
@@ -688,6 +689,7 @@ class Permutation(Atom):
     3) Printing is economical in that as little as possible is printed while
     retaining all information about the size of the permutation:
 
+    >>> init_printing(perm_cyclic=False, pretty_print=False)
     >>> Permutation([1, 0, 2, 3])
     Permutation([1, 0, 2, 3])
     >>> Permutation([1, 0, 2, 3], size=20)
@@ -696,10 +698,10 @@ class Permutation(Atom):
     Permutation([1, 0, 2, 4, 3], size=20)
 
     >>> p = Permutation([1, 0, 2, 3])
-    >>> Permutation.print_cyclic = True
+    >>> init_printing(perm_cyclic=True, pretty_print=False)
     >>> p
     (3)(0 1)
-    >>> Permutation.print_cyclic = False
+    >>> init_printing(perm_cyclic=False, pretty_print=False)
 
     The 2 was not printed but it is still there as can be seen with the
     array_form and size methods:
@@ -776,7 +778,7 @@ class Permutation(Atom):
     Permutations:
 
     >>> p(['zero', 'one', 'four', 'two'])
-     ['one', 'zero', 'four', 'two']
+    ['one', 'zero', 'four', 'two']
     >>> p('zo42')
     ['o', 'z', '4', '2']
 
@@ -836,7 +838,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
 
         Permutations entered in array-form are left unaltered:
 
@@ -971,8 +974,9 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Perm
-        >>> Perm.print_cyclic = False
-        >>> a = [2,1,3,0]
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
+        >>> a = [2, 1, 3, 0]
         >>> p = Perm._af_new(a)
         >>> p
         Permutation([2, 1, 3, 0])
@@ -996,7 +1000,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation([[2, 0], [3, 1]])
         >>> p.array_form
         [2, 3, 0, 1]
@@ -1009,29 +1012,6 @@ class Permutation(Atom):
         """
         return self._array_form[:]
 
-    def __repr__(self):
-        if Permutation.print_cyclic:
-            if not self.size:
-                return 'Permutation()'
-            # before taking Cycle notation, see if the last element is
-            # a singleton and move it to the head of the string
-            s = Cycle(self)(self.size - 1).__repr__()[len('Cycle'):]
-            last = s.rfind('(')
-            if not last == 0 and ',' not in s[last:]:
-                s = s[last:] + s[:last]
-            return 'Permutation%s' %s
-        else:
-            s = self.support()
-            if not s:
-                if self.size < 5:
-                    return 'Permutation(%s)' % str(self.array_form)
-                return 'Permutation([], size=%s)' % self.size
-            trim = str(self.array_form[:s[-1] + 1]) + ', size=%s' % self.size
-            use = full = str(self.array_form)
-            if len(trim) < len(full):
-                use = trim
-            return 'Permutation(%s)' % use
-
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
         trimming unmoved elements if size is less than the maximum
@@ -1042,7 +1022,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -1083,7 +1062,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation([0, 3, 1, 2])
         >>> p.cyclic_form
         [[1, 3, 2]]
@@ -1179,7 +1157,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> I = Permutation([0, 1, 2, 3])
         >>> a = Permutation([2, 1, 3, 0])
         >>> I + a.rank() == a
@@ -1218,7 +1195,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-        >>> Permutation.print_cyclic = False
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1283,7 +1259,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
-        >>> Permutation.print_cyclic = False
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1303,6 +1278,8 @@ class Permutation(Atom):
         It is acceptable for the arrays to have different lengths; the shorter
         one will be padded to match the longer one:
 
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> b*Permutation([1, 0])
         Permutation([1, 2, 0])
         >>> Permutation([1, 0])*b
@@ -1364,8 +1341,9 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
-        >>> p = Permutation([2,0,3,1])
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
+        >>> p = Permutation([2, 0, 3, 1])
         >>> p.order()
         4
         >>> p**4
@@ -1404,7 +1382,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = True
         >>> p = Permutation(1, 2, 9)
         >>> q = Permutation(6, 9, 8)
         >>> p*q != q*p
@@ -1519,7 +1496,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
 
         >>> Permutation.from_sequence('SymPy')
         (4)(0 1 3)
@@ -1545,8 +1521,9 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
-        >>> p = Permutation([[2,0], [3,1]])
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
+        >>> p = Permutation([[2, 0], [3, 1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
         >>> _ == p**-1
@@ -1568,6 +1545,10 @@ class Permutation(Atom):
         """
         for i in self.array_form:
             yield i
+
+    def __repr__(self):
+        from sympy.printing.repr import srepr
+        return srepr(self)
 
     def __call__(self, *i):
         """
@@ -1595,18 +1576,20 @@ class Permutation(Atom):
         # gets called a lot and should be fast
         if len(i) == 1:
             i = i[0]
-            try:
-                # P(1)
+            if not isinstance(i, Iterable):
+                i = as_int(i)
+                if i < 0 or i > self.size:
+                    raise TypeError(
+                        "{} should be an integer between 0 and {}"
+                        .format(i, self.size-1))
                 return self._array_form[i]
-            except TypeError:
-                try:
-                    # P([a, b, c])
-                    return [i[j] for j in self._array_form]
-                except Exception:
-                    raise TypeError('unrecognized argument')
-        else:
-            # P(1, 2, 3)
-            return self*Permutation(Cycle(*i), size=self.size)
+            # P([a, b, c])
+            if len(i) != self.size:
+                raise TypeError(
+                    "{} should have the length {}.".format(i, self.size))
+            return [i[j] for j in self._array_form]
+        # P(1, 2, 3)
+        return self*Permutation(Cycle(*i), size=self.size)
 
     def atoms(self):
         """
@@ -1622,6 +1605,55 @@ class Permutation(Atom):
         {0, 1, 2, 3, 4, 5}
         """
         return set(self.array_form)
+
+    def apply(self, i):
+        r"""Apply the permutation to an expression.
+
+        Parameters
+        ==========
+
+        i : Expr
+            It should be an integer between $0$ and $n-1$ where $n$
+            is the size of the permutation.
+
+            If it is a symbol or a symbolic expression that can
+            have integer values, an ``AppliedPermutation`` object
+            will be returned which can represent an unevaluated
+            function.
+
+        Notes
+        =====
+
+        Any permutation can be defined as a bijective function
+        $\sigma : \{ 0, 1, ..., n-1 \} \rightarrow \{ 0, 1, ..., n-1 \}$
+        where $n$ denotes the size of the permutation.
+
+        The definition may even be extended for any set with distinctive
+        elements, such that the permutation can even be applied for
+        real numbers or such, however, it is not implemented for now for
+        computational reasons and the integrity with the group theory
+        module.
+
+        This function is similar to the ``__call__`` magic, however,
+        ``__call__`` magic already has some other applications like
+        permuting an array or attatching new cycles, which would
+        not always be mathematically consistent.
+
+        This also guarantees that the return type is a SymPy integer,
+        which guarantees the safety to use assumptions.
+        """
+        i = _sympify(i)
+        if i.is_integer is False:
+            raise NotImplementedError("{} should be an integer.".format(i))
+
+        n = self.size
+        if (i < 0) == True or (i >= n) == True:
+            raise NotImplementedError(
+                "{} should be an integer between 0 and {}".format(i, n-1))
+
+        if i.is_Integer:
+            return Integer(self._array_form[i])
+        return AppliedPermutation(self, i)
 
     def next_lex(self):
         """
@@ -1676,7 +1708,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
         >>> Permutation.unrank_nonlex(4, -1)
@@ -1743,7 +1776,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([2, 0, 3, 1]); p.rank_nonlex()
         5
         >>> p = p.next_nonlex(); p
@@ -2129,7 +2163,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([0, 2, 3, 1])
         >>> x = Permutation([2, 0, 3, 1])
         >>> c = p.commutator(x); c
@@ -2209,7 +2244,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([3, 1, 5, 2, 4, 0])
         >>> p.order()
         4
@@ -2254,7 +2290,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> Permutation(3).cycle_structure
         {1: 4}
         >>> Permutation(0, 4, 3)(1, 2)(5, 6).cycle_structure
@@ -2349,7 +2384,6 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
         >>> p = Permutation([4, 8, 0, 7, 1, 5, 3, 6, 2])
         >>> p.inversion_vector()
         [4, 7, 0, 5, 0, 2, 1, 1]
@@ -2364,13 +2398,12 @@ class Permutation(Atom):
         >>> while p:
         ...     print('%s %s %s' % (p, p.inversion_vector(), p.rank()))
         ...     p = p.next_lex()
-        ...
-        Permutation([0, 1, 2]) [0, 0] 0
-        Permutation([0, 2, 1]) [0, 1] 1
-        Permutation([1, 0, 2]) [1, 0] 2
-        Permutation([1, 2, 0]) [1, 1] 3
-        Permutation([2, 0, 1]) [2, 0] 4
-        Permutation([2, 1, 0]) [2, 1] 5
+        (2) [0, 0] 0
+        (1 2) [0, 1] 1
+        (2)(0 1) [1, 0] 2
+        (0 1 2) [1, 1] 3
+        (0 2 1) [2, 0] 4
+        (0 2) [2, 1] 5
 
         See Also
         ========
@@ -2440,6 +2473,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> Permutation.unrank_trotterjohnson(5, 10)
         Permutation([0, 3, 1, 2, 4])
 
@@ -2479,7 +2514,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation([3, 0, 2, 1])
         >>> p.rank_trotterjohnson()
         4
@@ -2530,7 +2566,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> p = Permutation.josephus(3, 6, 1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])
@@ -2761,7 +2798,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> Permutation.from_inversion_vector([3, 2, 1, 0, 0])
         Permutation([3, 2, 1, 0, 4, 5])
 
@@ -2807,7 +2845,8 @@ class Permutation(Atom):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> Permutation.print_cyclic = False
+        >>> from sympy.interactive import init_printing
+        >>> init_printing(perm_cyclic=False, pretty_print=False)
         >>> a = Permutation.unrank_lex(5, 10)
         >>> a.rank()
         10
@@ -2832,10 +2871,75 @@ class Permutation(Atom):
             psize = new_psize
         return cls._af_new(perm_array)
 
-    # global flag to control how permutations are printed
-    # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)
-    # when False, Permutation([0, 2, 1, 3]) -> Permutation([0, 2, 1])
-    print_cyclic = True
+    def resize(self, n):
+        """Resize the permutation to the new size ``n``.
+
+        Parameters
+        ==========
+
+        n : int
+            The new size of the permutation.
+
+        Raises
+        ======
+
+        ValueError
+            If the permutation cannot be resized to the given size.
+            This may only happen when resized to a smaller size than
+            the original.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+
+        Increasing the size of a permutation:
+
+        >>> p = Permutation(0, 1, 2)
+        >>> p = p.resize(5)
+        >>> p
+        (4)(0 1 2)
+
+        Decreasing the size of the permutation:
+
+        >>> p = p.resize(4)
+        >>> p
+        (3)(0 1 2)
+
+        If resizing to the specific size breaks the cycles:
+
+        >>> p.resize(2)
+        Traceback (most recent call last):
+        ...
+        ValueError: The permutation can not be resized to 2 because the
+        cycle (0, 1, 2) may break.
+        """
+        aform = self.array_form
+        l = len(aform)
+        if n > l:
+            aform += list(range(l, n))
+            return Permutation._af_new(aform)
+
+        elif n < l:
+            cyclic_form = self.full_cyclic_form
+            new_cyclic_form = []
+            for cycle in cyclic_form:
+                cycle_min = min(cycle)
+                cycle_max = max(cycle)
+                if cycle_min <= n-1:
+                    if cycle_max > n-1:
+                        raise ValueError(
+                            "The permutation can not be resized to {} "
+                            "because the cycle {} may break."
+                            .format(n, tuple(cycle)))
+
+                    new_cyclic_form.append(cycle)
+            return Permutation(new_cyclic_form)
+
+        return self
+
+    # XXX Deprecated flag
+    print_cyclic = None
 
 
 def _merge(arr, temp, left, mid, right):
@@ -2872,3 +2976,46 @@ def _merge(arr, temp, left, mid, right):
 
 Perm = Permutation
 _af_new = Perm._af_new
+
+
+class AppliedPermutation(Expr):
+    """A permutation applied to a symbolic variable.
+
+    Parameters
+    ==========
+
+    perm : Permutation
+    x : Expr
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.combinatorics import Permutation
+
+    Creating a symbolic permutation function application:
+
+    >>> x = Symbol('x')
+    >>> p = Permutation(0, 1, 2)
+    >>> p.apply(x)
+    AppliedPermutation((0 1 2), x)
+    >>> _.subs(x, 1)
+    2
+    """
+    def __new__(cls, perm, x, evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+
+        perm = _sympify(perm)
+        x = _sympify(x)
+
+        if not isinstance(perm, Permutation):
+            raise ValueError("{} must be a Permutation instance."
+                .format(perm))
+
+        if evaluate:
+            if x.is_Integer:
+                return perm.apply(x)
+
+        obj = super(AppliedPermutation, cls).__new__(cls, perm, x)
+        return obj

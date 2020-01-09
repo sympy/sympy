@@ -1,4 +1,4 @@
-from sympy import (Rational, Float, S, Symbol, cos, oo, pi, simplify,
+from sympy import (Eq, Rational, Float, S, Symbol, cos, oo, pi, simplify,
     sin, sqrt, symbols, acos)
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
@@ -8,7 +8,7 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, warns
+from sympy.testing.pytest import raises, warns
 
 
 x = Symbol('x', real=True)
@@ -29,6 +29,7 @@ def test_object_from_equation():
     assert Line(3*a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
     assert Line(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
     assert Line(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
+    assert Line(Eq(3*a + b, -18), x='a', y=b) == Line2D(Point2D(0, -18), Point2D(1, -21))
     raises(ValueError, lambda: Line(x))
     raises(ValueError, lambda: Line(y))
     raises(ValueError, lambda: Line(x/y))
@@ -747,3 +748,9 @@ def test_parameter_value():
     l = Line(p1, p2)
     assert l.parameter_value((5, 6), t) == {t: 1}
     raises(ValueError, lambda: l.parameter_value((0, 0), t))
+
+
+def test_issue_8615():
+    a = Line3D(Point3D(6, 5, 0), Point3D(6, -6, 0))
+    b = Line3D(Point3D(6, -1, 19/10), Point3D(6, -1, 0))
+    assert a.intersection(b) == [Point3D(6, -1, 0)]

@@ -2,7 +2,7 @@ from sympy import I, Matrix, symbols, conjugate, Expr, Integer
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 
 def test_scalars():

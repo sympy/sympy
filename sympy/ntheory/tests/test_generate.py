@@ -5,7 +5,7 @@ from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevpr
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_prime():
     assert prime(1) == 2
@@ -214,3 +214,20 @@ def test_sieve_slice():
     assert sieve[5] == 11
     assert list(sieve[5:10]) == [sieve[x] for x in range(5, 10)]
     assert list(sieve[5:10:2]) == [sieve[x] for x in range(5, 10, 2)]
+    assert list(sieve[1:5]) == [2, 3, 5, 7]
+    raises(IndexError, lambda: sieve[:5])
+    raises(IndexError, lambda: sieve[0])
+    raises(IndexError, lambda: sieve[0:5])
+
+def test_sieve_iter():
+    values = []
+    for value in sieve:
+        if value > 7:
+            break
+        values.append(value)
+    assert values == list(sieve[1:5])
+
+
+def test_sieve_repr():
+    assert "sieve" in repr(sieve)
+    assert "prime" in repr(sieve)

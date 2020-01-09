@@ -1,7 +1,7 @@
 from sympy.core import symbols, S
 from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow
 from sympy.matrices import eye, Identity, ShapeError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import refine, Q
 
 n, m, l = symbols('n m l', integer=True)

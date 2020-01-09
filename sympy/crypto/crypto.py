@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This file contains some classical ciphers and routines
 implementing a linear-feedback shift register (LFSR)
@@ -32,7 +30,7 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
-from sympy.utilities.randtest import _randrange, _randint
+from sympy.testing.randtest import _randrange, _randint
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -587,12 +585,12 @@ def encipher_substitution(msg, old, new=None):
 
 
 ######################################################################
-#################### Vigenère cipher examples ########################
+#################### Vigenere cipher examples ########################
 ######################################################################
 
 def encipher_vigenere(msg, key, symbols=None):
     """
-    Performs the Vigenère cipher encryption on plaintext ``msg``, and
+    Performs the Vigenere cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
 
     Examples
@@ -619,20 +617,20 @@ def encipher_vigenere(msg, key, symbols=None):
     Notes
     =====
 
-    The Vigenère cipher is named after Blaise de Vigenère, a sixteenth
+    The Vigenere cipher is named after Blaise de Vigenere, a sixteenth
     century diplomat and cryptographer, by a historical accident.
-    Vigenère actually invented a different and more complicated cipher.
-    The so-called *Vigenère cipher* was actually invented
+    Vigenere actually invented a different and more complicated cipher.
+    The so-called *Vigenere cipher* was actually invented
     by Giovan Batista Belaso in 1553.
 
     This cipher was used in the 1800's, for example, during the American
     Civil War. The Confederacy used a brass cipher disk to implement the
-    Vigenère cipher (now on display in the NSA Museum in Fort
+    Vigenere cipher (now on display in the NSA Museum in Fort
     Meade) [1]_.
 
-    The Vigenère cipher is a generalization of the shift cipher.
+    The Vigenere cipher is a generalization of the shift cipher.
     Whereas the shift cipher shifts each letter by the same amount
-    (that amount being the key of the shift cipher) the Vigenère
+    (that amount being the key of the shift cipher) the Vigenere
     cipher shifts a letter by an amount determined by the key (which is
     a word or phrase known only to the sender and receiver).
 
@@ -640,7 +638,7 @@ def encipher_vigenere(msg, key, symbols=None):
     so-called Vigenere cipher is actually a shift cipher with a
     shift of `2` (since "C" is the 2nd letter of the alphabet, if
     you start counting at `0`). If the key was a word with two
-    letters, such as "CA", then the so-called Vigenère cipher will
+    letters, such as "CA", then the so-called Vigenere cipher will
     shift letters in even positions by `2` and letters in odd positions
     are left alone (shifted by `0`, since "A" is the 0th letter, if
     you start counting at `0`).
@@ -687,7 +685,7 @@ def encipher_vigenere(msg, key, symbols=None):
     comprised of randomly selected characters -- a one-time pad -- the
     message is theoretically unbreakable.
 
-    The cipher Vigenère actually discovered is an "auto-key" cipher
+    The cipher Vigenere actually discovered is an "auto-key" cipher
     described as follows.
 
     ALGORITHM:
@@ -760,7 +758,7 @@ def encipher_vigenere(msg, key, symbols=None):
 
 def decipher_vigenere(msg, key, symbols=None):
     """
-    Decode using the Vigenère cipher.
+    Decode using the Vigenere cipher.
 
     Examples
     ========
@@ -2562,7 +2560,7 @@ def elgamal_private_key(digit=10, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.utilities.randtest._randrange.
+    the output of this routine. See sympy.testing.randtest._randrange.
 
     Examples
     ========
@@ -2644,7 +2642,7 @@ def encipher_elgamal(i, key, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.utilities.randtest._randrange.
+    the output of this routine. See sympy.testing.randtest._randrange.
 
     Examples
     ========
@@ -2749,7 +2747,7 @@ def dh_private_key(digit=10, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.utilities.randtest._randrange.
+    the output of this routine. See sympy.testing.randtest._randrange.
 
     Examples
     ========
@@ -3141,12 +3139,12 @@ def decipher_railfence(ciphertext,rails):
     return ''.join(res)
 
 
-################ Blum–Goldwasser cryptosystem  #########################
+################ Blum-Goldwasser cryptosystem  #########################
 
 def bg_private_key(p, q):
     """
     Check if p and q can be used as private keys for
-    the Blum–Goldwasser cryptosystem.
+    the Blum-Goldwasser cryptosystem.
 
     The three necessary checks for p and q to pass
     so that they can be used as private keys:

@@ -10,7 +10,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -20,7 +20,7 @@ from sympy.codegen.ast import (
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 

@@ -11,8 +11,6 @@ import re
 import textwrap
 import linecache
 
-from types import FunctionType
-
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
 from sympy.utilities.misc import filldedent
@@ -114,7 +112,7 @@ def _import(module, reload=False):
     other modules.
     """
     # Required despite static analysis claiming it is not used
-    from sympy.external import import_module
+    from sympy.external import import_module # noqa:F401
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -655,7 +653,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       the generated function relies on the input being a numpy array:
 
       >>> from sympy import Piecewise
-      >>> from sympy.utilities.pytest import ignore_warnings
+      >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
 
       >>> with ignore_warnings(RuntimeWarning):
@@ -697,7 +695,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             else:
                 modules = ["numpy"]
         else:
-            modules = ["scipy", "numpy"]
+            modules = ["numpy", "scipy"]
 
     # Get the needed namespaces.
     namespaces = []

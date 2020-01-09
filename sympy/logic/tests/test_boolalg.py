@@ -18,7 +18,7 @@ from sympy.logic.boolalg import (
     truth_table, as_Boolean)
 from sympy.assumptions.cnf import CNF
 
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.testing.pytest import raises, XFAIL, slow
 from sympy.utilities import cartes
 
 from itertools import combinations

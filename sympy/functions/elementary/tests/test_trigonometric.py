@@ -10,7 +10,7 @@ from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.setexpr import SetExpr
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.testing.pytest import XFAIL, slow, raises
 
 
 x, y, z = symbols('x y z')

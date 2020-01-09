@@ -10,7 +10,7 @@ from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.functions import sqrt
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
 from sympy.physics.quantum.tensorproduct import TensorProduct
 

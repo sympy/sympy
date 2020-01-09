@@ -12,6 +12,8 @@ from sympy.combinatorics import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.core.compatibility import string_types
+from sympy.utilities.magic import pollute
+from sympy import symbols
 
 from itertools import product
 

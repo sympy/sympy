@@ -13,7 +13,7 @@ from sympy.core.compatibility import default_sort_key
 
 from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
 from sympy.functions.elementary.exponential import exp
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core import I, pi
 
 b1 = Basic()

@@ -61,6 +61,17 @@ Metaclasses:
                 pass
 """
 
+__all__ = [
+    'PY3', 'class_types', 'integer_types', 'string_types', 'long', 'int_info',
+    'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
+    'get_function_globals', 'get_function_name', 'builtins', 'reduce',
+    'StringIO', 'cStringIO', 'exec_', 'range', 'round', 'Mapping', 'Callable',
+    'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
+    'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
+    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
+    'SYMPY_INTS', 'lru_cache', 'clock',
+]
+
 import sys
 PY3 = sys.version_info[0] > 2
 
@@ -101,7 +112,6 @@ if PY3:
     from inspect import unwrap
     from itertools import accumulate
 else:
-    import codecs
     import types
 
     class_types = (type, types.ClassType)
@@ -143,7 +153,7 @@ else:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
 
-    range = xrange
+    range = xrange  # noqa:F821
     _round = round
     def round(x, *args):
         try:
@@ -349,18 +359,6 @@ def is_sequence(i, include=None):
             iterable(i) or
             bool(include) and
             isinstance(i, include))
-
-try:
-    from itertools import zip_longest
-except ImportError:  # Python 2.7
-    from itertools import izip_longest as zip_longest
-
-
-try:
-    # Python 2.7
-    from string import maketrans
-except ImportError:
-    maketrans = str.maketrans
 
 
 def as_int(n, strict=True):
@@ -676,7 +674,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 
     This function is best used in cases when use of the first key is
     expected to be a good hashing function; if there are no unique hashes
-    from application of a key then that key should not have been used. The
+    from application of a key, then that key should not have been used. The
     exception, however, is that even if there are many collisions, if the
     first group is small and one does not need to process all items in the
     list then time will not be wasted sorting what one was not interested
@@ -810,149 +808,143 @@ def _make_key(args, kwds, typed,
         return key[0]
     return _HashedSeq(key)
 
-def lru_cache(maxsize=100, typed=False):
-    """Least-recently-used cache decorator.
-
-    If *maxsize* is set to None, the LRU features are disabled and the cache
-    can grow without bound.
-
-    If *typed* is True, arguments of different types will be cached separately.
-    For example, f(3.0) and f(3) will be treated as distinct calls with
-    distinct results.
-
-    Arguments to the cached function must be hashable.
-
-    View the cache statistics named tuple (hits, misses, maxsize, currsize) with
-    f.cache_info().  Clear the cache and statistics with f.cache_clear().
-    Access the underlying function with f.__wrapped__.
-
-    See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
-
-    """
-
-    # Users should only access the lru_cache through its public API:
-    #       cache_info, cache_clear, and f.__wrapped__
-    # The internals of the lru_cache are encapsulated for thread safety and
-    # to allow the implementation to change (including a possible C version).
-
-    def decorating_function(user_function):
-
-        cache = dict()
-        stats = [0, 0]                  # make statistics updateable non-locally
-        HITS, MISSES = 0, 1             # names for the stats fields
-        make_key = _make_key
-        cache_get = cache.get           # bound method to lookup key or return None
-        _len = len                      # localize the global len() function
-        lock = RLock()                  # because linkedlist updates aren't threadsafe
-        root = []                       # root of the circular doubly linked list
-        root[:] = [root, root, None, None]      # initialize by pointing to self
-        nonlocal_root = [root]                  # make updateable non-locally
-        PREV, NEXT, KEY, RESULT = 0, 1, 2, 3    # names for the link fields
-
-        if maxsize == 0:
-
-            def wrapper(*args, **kwds):
-                # no caching, just do a statistics update after a successful call
-                result = user_function(*args, **kwds)
-                stats[MISSES] += 1
-                return result
-
-        elif maxsize is None:
-
-            def wrapper(*args, **kwds):
-                # simple caching without ordering or size limit
-                key = make_key(args, kwds, typed)
-                result = cache_get(key, root)   # root used here as a unique not-found sentinel
-                if result is not root:
-                    stats[HITS] += 1
-                    return result
-                result = user_function(*args, **kwds)
-                cache[key] = result
-                stats[MISSES] += 1
-                return result
-
-        else:
-
-            def wrapper(*args, **kwds):
-                # size limited caching that tracks accesses by recency
-                try:
-                    key = make_key(args, kwds, typed) if kwds or typed else args
-                except TypeError:
-                    stats[MISSES] += 1
-                    return user_function(*args, **kwds)
-                with lock:
-                    link = cache_get(key)
-                    if link is not None:
-                        # record recent use of the key by moving it to the front of the list
-                        root, = nonlocal_root
-                        link_prev, link_next, key, result = link
-                        link_prev[NEXT] = link_next
-                        link_next[PREV] = link_prev
-                        last = root[PREV]
-                        last[NEXT] = root[PREV] = link
-                        link[PREV] = last
-                        link[NEXT] = root
-                        stats[HITS] += 1
-                        return result
-                result = user_function(*args, **kwds)
-                with lock:
-                    root, = nonlocal_root
-                    if key in cache:
-                        # getting here means that this same key was added to the
-                        # cache while the lock was released.  since the link
-                        # update is already done, we need only return the
-                        # computed result and update the count of misses.
-                        pass
-                    elif _len(cache) >= maxsize:
-                        # use the old root to store the new key and result
-                        oldroot = root
-                        oldroot[KEY] = key
-                        oldroot[RESULT] = result
-                        # empty the oldest link and make it the new root
-                        root = nonlocal_root[0] = oldroot[NEXT]
-                        oldkey = root[KEY]
-                        root[KEY] = root[RESULT] = None
-                        # now update the cache dictionary for the new links
-                        del cache[oldkey]
-                        cache[key] = oldroot
-                    else:
-                        # put result in a new link at the front of the list
-                        last = root[PREV]
-                        link = [last, root, key, result]
-                        last[NEXT] = root[PREV] = cache[key] = link
-                    stats[MISSES] += 1
-                return result
-
-        def cache_info():
-            """Report cache statistics"""
-            with lock:
-                return _CacheInfo(stats[HITS], stats[MISSES], maxsize, len(cache))
-
-        def cache_clear():
-            """Clear the cache and cache statistics"""
-            with lock:
-                cache.clear()
-                root = nonlocal_root[0]
-                root[:] = [root, root, None, None]
-                stats[:] = [0, 0]
-
-        wrapper.__wrapped__ = user_function
-        wrapper.cache_info = cache_info
-        wrapper.cache_clear = cache_clear
-        return update_wrapper(wrapper, user_function)
-
-    return decorating_function
-### End of backported lru_cache
-
 if sys.version_info[:2] >= (3, 3):
     # 3.2 has an lru_cache with an incompatible API
     from functools import lru_cache
+else:
+    def lru_cache(maxsize=100, typed=False):
+        """Least-recently-used cache decorator.
 
-try:
-    from itertools import filterfalse
-except ImportError:  # Python 2.7
-    def filterfalse(pred, itr):
-        return filter(lambda x: not pred(x), itr)
+        If *maxsize* is set to None, the LRU features are disabled and the cache
+        can grow without bound.
+
+        If *typed* is True, arguments of different types will be cached separately.
+        For example, f(3.0) and f(3) will be treated as distinct calls with
+        distinct results.
+
+        Arguments to the cached function must be hashable.
+
+        View the cache statistics named tuple (hits, misses, maxsize, currsize) with
+        f.cache_info().  Clear the cache and statistics with f.cache_clear().
+        Access the underlying function with f.__wrapped__.
+
+        See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+
+        """
+
+        # Users should only access the lru_cache through its public API:
+        #       cache_info, cache_clear, and f.__wrapped__
+        # The internals of the lru_cache are encapsulated for thread safety and
+        # to allow the implementation to change (including a possible C version).
+
+        def decorating_function(user_function):
+
+            cache = dict()
+            stats = [0, 0]                  # make statistics updateable non-locally
+            HITS, MISSES = 0, 1             # names for the stats fields
+            make_key = _make_key
+            cache_get = cache.get           # bound method to lookup key or return None
+            _len = len                      # localize the global len() function
+            lock = RLock()                  # because linkedlist updates aren't threadsafe
+            root = []                       # root of the circular doubly linked list
+            root[:] = [root, root, None, None]      # initialize by pointing to self
+            nonlocal_root = [root]                  # make updateable non-locally
+            PREV, NEXT, KEY, RESULT = 0, 1, 2, 3    # names for the link fields
+
+            if maxsize == 0:
+
+                def wrapper(*args, **kwds):
+                    # no caching, just do a statistics update after a successful call
+                    result = user_function(*args, **kwds)
+                    stats[MISSES] += 1
+                    return result
+
+            elif maxsize is None:
+
+                def wrapper(*args, **kwds):
+                    # simple caching without ordering or size limit
+                    key = make_key(args, kwds, typed)
+                    result = cache_get(key, root)   # root used here as a unique not-found sentinel
+                    if result is not root:
+                        stats[HITS] += 1
+                        return result
+                    result = user_function(*args, **kwds)
+                    cache[key] = result
+                    stats[MISSES] += 1
+                    return result
+
+            else:
+
+                def wrapper(*args, **kwds):
+                    # size limited caching that tracks accesses by recency
+                    try:
+                        key = make_key(args, kwds, typed) if kwds or typed else args
+                    except TypeError:
+                        stats[MISSES] += 1
+                        return user_function(*args, **kwds)
+                    with lock:
+                        link = cache_get(key)
+                        if link is not None:
+                            # record recent use of the key by moving it to the front of the list
+                            root, = nonlocal_root
+                            link_prev, link_next, key, result = link
+                            link_prev[NEXT] = link_next
+                            link_next[PREV] = link_prev
+                            last = root[PREV]
+                            last[NEXT] = root[PREV] = link
+                            link[PREV] = last
+                            link[NEXT] = root
+                            stats[HITS] += 1
+                            return result
+                    result = user_function(*args, **kwds)
+                    with lock:
+                        root, = nonlocal_root
+                        if key in cache:
+                            # getting here means that this same key was added to the
+                            # cache while the lock was released.  since the link
+                            # update is already done, we need only return the
+                            # computed result and update the count of misses.
+                            pass
+                        elif _len(cache) >= maxsize:
+                            # use the old root to store the new key and result
+                            oldroot = root
+                            oldroot[KEY] = key
+                            oldroot[RESULT] = result
+                            # empty the oldest link and make it the new root
+                            root = nonlocal_root[0] = oldroot[NEXT]
+                            oldkey = root[KEY]
+                            root[KEY] = root[RESULT] = None
+                            # now update the cache dictionary for the new links
+                            del cache[oldkey]
+                            cache[key] = oldroot
+                        else:
+                            # put result in a new link at the front of the list
+                            last = root[PREV]
+                            link = [last, root, key, result]
+                            last[NEXT] = root[PREV] = cache[key] = link
+                        stats[MISSES] += 1
+                    return result
+
+            def cache_info():
+                """Report cache statistics"""
+                with lock:
+                    return _CacheInfo(stats[HITS], stats[MISSES], maxsize, len(cache))
+
+            def cache_clear():
+                """Clear the cache and cache statistics"""
+                with lock:
+                    cache.clear()
+                    root = nonlocal_root[0]
+                    root[:] = [root, root, None, None]
+                    stats[:] = [0, 0]
+
+            wrapper.__wrapped__ = user_function
+            wrapper.cache_info = cache_info
+            wrapper.cache_clear = cache_clear
+            return update_wrapper(wrapper, user_function)
+
+        return decorating_function
+    ### End of backported lru_cache
 
 try:
     from time import clock
