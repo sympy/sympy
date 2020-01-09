@@ -756,8 +756,7 @@ def _nthroot_mod_composite(a, n, m):
             tot_roots.update(nthroot_mod(a, n, p, True) or [])
         else:
             for root in nthroot_mod(a, n, p, True) or []:
-                rootn = pow(root, n)
-                diff = (rootn // (root or 1) * n) % p
+                diff = (pow(root, n - 1) * n) % p
                 if diff != 0:
                     ppow = p
                     m_inv = mod_inverse(diff, p)
