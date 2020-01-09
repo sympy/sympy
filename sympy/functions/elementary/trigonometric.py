@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.add import Add, Mul
+from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
 from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
@@ -120,7 +120,7 @@ def _peeloff_pi(arg):
     else:
         return arg, S.Zero
 
-    m1 = (K % S.Half)*S.Pi
+    m1 = (K % S.Half) * S.Pi
     m2 = K*S.Pi - m1
     return arg - m2, m2
 
