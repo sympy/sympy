@@ -760,9 +760,10 @@ def _nthroot_mod_composite(a, n, m):
                 diff = (rootn // (root or 1) * n) % p
                 if diff != 0:
                     ppow = p
+                    m_inv = mod_inverse(diff, p)
                     for j in range(1, e):
                         ppow *= p
-                        root = (root - (rootn - a) * mod_inverse(diff, p)) % ppow
+                        root = (root - (pow(root, n) - a) * m_inv) % ppow
                     tot_roots.add(root)
                 else:
                     new_base = p

@@ -177,6 +177,8 @@ def test_residue():
     assert nthroot_mod(36010, 8, 87382, True) == [40208, 47174]
     assert nthroot_mod(0, 12, 37, True) == [0]
     assert nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    assert nthroot_mod(4, 4, 27, True) == [5, 22]
+    assert nthroot_mod(4, 4, 121, True) == [19, 102]
 
     for p in primerange(5, 100):
         qv = range(3, p, 4)
