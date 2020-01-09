@@ -68,9 +68,8 @@ __all__ = [
     'StringIO', 'cStringIO', 'exec_', 'range', 'round', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
-    'zip_longest', 'maketrans', 'as_int', 'default_sort_key', 'ordered',
-    'GROUND_TYPES', 'HAS_GMPY', 'gmpy', 'SYMPY_INTS', 'lru_cache',
-    'filterfalse', 'clock',
+    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
+    'SYMPY_INTS', 'lru_cache', 'clock',
 ]
 
 import sys
@@ -360,18 +359,6 @@ def is_sequence(i, include=None):
             iterable(i) or
             bool(include) and
             isinstance(i, include))
-
-try:
-    from itertools import zip_longest
-except ImportError:  # Python 2.7
-    from itertools import izip_longest as zip_longest
-
-
-try:
-    # Python 2.7
-    from string import maketrans
-except ImportError:
-    maketrans = str.maketrans
 
 
 def as_int(n, strict=True):
@@ -687,7 +674,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 
     This function is best used in cases when use of the first key is
     expected to be a good hashing function; if there are no unique hashes
-    from application of a key then that key should not have been used. The
+    from application of a key, then that key should not have been used. The
     exception, however, is that even if there are many collisions, if the
     first group is small and one does not need to process all items in the
     list then time will not be wasted sorting what one was not interested
@@ -958,12 +945,6 @@ else:
 
         return decorating_function
     ### End of backported lru_cache
-
-try:
-    from itertools import filterfalse
-except ImportError:  # Python 2.7
-    def filterfalse(pred, itr):
-        return filter(lambda x: not pred(x), itr)
 
 try:
     from time import clock

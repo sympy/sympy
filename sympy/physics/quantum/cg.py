@@ -106,7 +106,7 @@ class Wigner3j(Expr):
             (printer._print(self.j3), printer._print(self.m3)))
         hsep = 2
         vsep = 1
-        maxw = [-1] * 3
+        maxw = [-1]*3
         for j in range(3):
             maxw[j] = max([ m[j][i].width() for i in range(2) ])
         D = None
@@ -204,9 +204,9 @@ class CG(Wigner3j):
         top = prettyForm(*top.left(' '))
 
         if not pad == bot.width():
-            bot = prettyForm(*bot.right(' ' * (pad - bot.width())))
+            bot = prettyForm(*bot.right(' '*(pad - bot.width())))
         if not pad == top.width():
-            top = prettyForm(*top.right(' ' * (pad - top.width())))
+            top = prettyForm(*top.right(' '*(pad - top.width())))
         s = stringPict('C' + ' '*pad)
         s = prettyForm(*s.below(bot))
         s = prettyForm(*s.above(top))
@@ -266,7 +266,7 @@ class Wigner6j(Expr):
             (printer._print(self.j12), printer._print(self.j23)))
         hsep = 2
         vsep = 1
-        maxw = [-1] * 3
+        maxw = [-1]*3
         for j in range(3):
             maxw[j] = max([ m[j][i].width() for i in range(2) ])
         D = None
@@ -370,7 +370,7 @@ class Wigner9j(Expr):
             (printer._print(self.j12), printer._print(self.j34), printer._print(self.j)))
         hsep = 2
         vsep = 1
-        maxw = [-1] * 3
+        maxw = [-1]*3
         for j in range(3):
             maxw[j] = max([ m[j][i].width() for i in range(3) ])
         D = None
@@ -615,7 +615,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             i += 1
             continue
         sub_dep = [(x, sub_1[x]) for x in dep_variables]
-        cg_index = [None] * build_index_expr.subs(sub_1)
+        cg_index = [None]*build_index_expr.subs(sub_1)
         for j in range(i, len(term_list)):
             sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables) - len(dep_variables), sign=(sign.subs(sub_1), sign.subs(sub_dep)))
             if sub_2 is None:
@@ -631,8 +631,8 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             [ term_list.pop(j) for j in indices ]
             for term in cg_index:
                 if abs(term[2]) > min_lt:
-                    term_list.append( (term[2] - min_lt*term[3]) * term[1] )
-            other_part += min_lt * (sign*simp).subs(sub_1)
+                    term_list.append( (term[2] - min_lt*term[3])*term[1] )
+            other_part += min_lt*(sign*simp).subs(sub_1)
         else:
             i += 1
     return term_list, other_part
