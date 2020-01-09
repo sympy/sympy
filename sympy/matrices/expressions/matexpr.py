@@ -174,7 +174,7 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
-    def as_real_imag(self):
+    def as_real_imag(self, deep=True, **hints):
         from sympy import I
         real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*I)

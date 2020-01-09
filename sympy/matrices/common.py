@@ -54,8 +54,8 @@ class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
 class MatrixRequired(object):
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
-    rows = None
-    cols = None
+    rows = None  # type: int
+    cols = None  # type: int
     _simplify = None
 
     @classmethod
@@ -1122,8 +1122,9 @@ class MatrixProperties(MatrixRequired):
                 return 1
             return 0
 
-        return all(self[i, j] == dirac(i, j) for i in range(self.rows) for j in
-                   range(self.cols))
+        return all(self[i, j] == dirac(i, j)
+                for i in range(self.rows)
+                for j in range(self.cols))
 
     def _eval_is_lower_hessenberg(self):
         return all(self[i, j].is_zero
@@ -1330,7 +1331,7 @@ class MatrixProperties(MatrixRequired):
         return self._eval_is_diagonal()
 
     @property
-    def is_hermitian(self, simplify=True):
+    def is_hermitian(self):
         """Checks if the matrix is Hermitian.
 
         In a Hermitian matrix element i,j is the complex conjugate of
@@ -1361,11 +1362,7 @@ class MatrixProperties(MatrixRequired):
         if not self.is_square:
             return False
 
-        simpfunc = simplify
-        if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
-
-        return self._eval_is_matrix_hermitian(simpfunc)
+        return self._eval_is_matrix_hermitian(_simplify)
 
     @property
     def is_Identity(self) -> FuzzyBool:
