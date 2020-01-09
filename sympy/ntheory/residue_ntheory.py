@@ -757,7 +757,7 @@ def _nthroot_mod_composite(a, n, m):
         else:
             for root in nthroot_mod(a, n, p, True) or []:
                 rootn = pow(root, n)
-                diff = (rootn * // (root or 1)) % p
+                diff = (rootn // (root or 1)) % p
                 if diff != 0:
                     ppow = p
                     for j in range(1, e):
