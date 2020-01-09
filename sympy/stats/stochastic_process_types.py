@@ -15,7 +15,6 @@ from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
-from sympy.stats import P, E
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import string_types
 
