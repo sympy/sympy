@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import (
     Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
     MutableDenseNDimArray, MutableSparseNDimArray

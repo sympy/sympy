@@ -1825,7 +1825,7 @@ def rs_compose_add(p1, p2):
     """
     R = p1.ring
     x = R.gens[0]
-    prec = p1.degree() * p2.degree() + 1
+    prec = p1.degree()*p2.degree() + 1
     np1 = rs_newton(p1, x, prec)
     np1e = rs_hadamard_exp(np1)
     np2 = rs_newton(p2, x, prec)
@@ -1837,7 +1837,7 @@ def rs_compose_add(p1, p2):
     q = rs_exp(q, x, prec)
     q = _invert_monoms(q)
     q = q.primitive()[1]
-    dp = p1.degree() * p2.degree() - q.degree()
+    dp = p1.degree()*p2.degree() - q.degree()
     # `dp` is the multiplicity of the zeroes of the resultant;
     # these zeroes are missed in this computation so they are put here.
     # if p1 and p2 are monic irreducible polynomials,

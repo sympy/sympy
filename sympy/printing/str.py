@@ -22,6 +22,7 @@ class StrPrinter(Printer):
         "full_prec": "auto",
         "sympy_integers": False,
         "abbrev": False,
+        "perm_cyclic": True,
     }
 
     _relationals = dict()
@@ -326,7 +327,7 @@ class StrPrinter(Printer):
         )
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return "{0}({1}...)".format(
+        return "{0}.({1})".format(
             expr.function,
             self._print(expr.expr),
         )
@@ -354,7 +355,20 @@ class StrPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        if Permutation.print_cyclic:
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
             if not expr.size:
                 return '()'
             # before taking Cycle notation, see if the last element is

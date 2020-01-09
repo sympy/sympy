@@ -929,7 +929,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.utilities.randtest import _randint
+    from sympy.testing.randtest import _randint
 
     randint = _randint(seed)
 

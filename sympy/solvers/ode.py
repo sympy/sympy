@@ -391,7 +391,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
     in eq already.
     """
 
-    if isinstance(eq, Expr):
+    if isinstance(eq, (Expr, Eq)):
         eq = [eq]
     elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
@@ -702,10 +702,10 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # attempt to solve for func, and apply any other hint specific
         # simplifications
         sols = solvefunc(eq, func, order, match)
-        if isinstance(sols, Expr):
-            rv =  odesimp(eq, sols, func, hint)
-        else:
+        if iterable(sols):
             rv = [odesimp(eq, s, func, hint) for s in sols]
+        else:
+            rv =  odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
@@ -720,7 +720,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         if len(rv) == 1:
             rv = rv[0]
     if ics and not 'power_series' in hint:
-        if isinstance(rv, Expr):
+        if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
         else:
@@ -1199,6 +1199,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
+        if r is None and 'factorable' not in matching_hints:
+            roots = solve(reduced_eq, df)
+            if roots:
+                meq = Mul(*[(df - i) for i in roots])*Dummy()
+                m = _ode_factorable_match(meq, func, kwargs.get('x0', 0))
+                matching_hints['factorable'] = m
         if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
@@ -1466,7 +1472,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r is not None:
             coeff = r[order]
             factor = x**order / coeff
-            r_rescaled = {i: factor*r[i] for i in r}
+            r_rescaled = {i: factor*r[i] for i in r if i != 'trialset'}
+
+        # XXX: Mixing up the trialset with the coefficients is error-prone.
+        # These should be separated as something like r['coeffs'] and
+        # r['trialset']
 
         if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
                 r_rescaled if i != 'trialset' and i >= 0):
@@ -1519,12 +1529,9 @@ def equivalence_hypergeometric(A, B, func):
 
     # This method for finding the equivalence is only for 2F1 type.
     # We can extend it for 1F1 and 0F1 type also.
-    f = func
     x = func.args[0]
-    df = f.diff(x)
 
     # making given equation in normal form
-    from sympy.core.logic import fuzzy_not
     I1 = factor(cancel(A.diff(x)/2 + A**2/4 - B))
 
     # computing shifted invariant(J1) of the equation
@@ -1590,14 +1597,13 @@ def ode_2nd_hypergeometric(eq, func, order, match):
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy import factor
     x = func.args[0]
-    f = func
     C0, C1 = get_numbered_constants(eq, num=2)
     a = match['a']
     b = match['b']
     c = match['c']
 
     A = match['A']
-    B = match['B']
+    # B = match['B']
 
     sol = None
     if match['type'] == "2F1":
@@ -3392,8 +3398,8 @@ def _ode_factorable_match(eq, func, x0):
     r = None
     if isinstance(eqs, Pow):
         # if f(x)**p=0 then f(x)=0 (p>0)
-        if (expr.exp).is_positive:
-            eq = expr.base
+        if eqs.exp.is_positive:
+            eq = eqs.base
         if isinstance(eq, Pow):
             return None
         else:
@@ -4730,7 +4736,7 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants(soln1 - soln2, len(constants1))
+    constants1_new = get_numbered_constants(Tuple(soln1, soln2), len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
@@ -6335,8 +6341,7 @@ def _ode_lie_group( s, func, order, match):
 
     match = {'h': h, 'y': y}
 
-    # This is done so that if:
-    # a] any heuristic raises a ValueError
+    # This is done so that if any heuristic raises a ValueError
     # another heuristic can be used.
     sol = None
     for heuristic in heuristics:
@@ -6349,9 +6354,9 @@ def ode_lie_group(eq, func, order, match):
     r"""
     This hint implements the Lie group method of solving first order differential
     equations. The aim is to convert the given differential equation from the
-    given coordinate given system into another coordinate system where it becomes
-    invariant under the one-parameter Lie group of translations. The converted ODE is
-    quadrature and can be solved easily. It makes use of the
+    given coordinate system into another coordinate system where it becomes
+    invariant under the one-parameter Lie group of translations. The converted
+    ODE can be easily solved by quadrature. It makes use of the
     :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
     infinitesimals of the transformation.
 
@@ -6395,7 +6400,6 @@ def ode_lie_group(eq, func, order, match):
 
     """
 
-    f = func.func
     x = func.args[0]
     df = func.diff(x)
 
@@ -6418,14 +6422,12 @@ def ode_lie_group(eq, func, order, match):
 def _lie_group_remove(coords):
     r"""
     This function is strictly meant for internal use by the Lie group ODE solving
-    method. It replaces arbitrary functions returned by pdsolve with either 0 or 1 or the
-    args of the arbitrary function.
+    method. It replaces arbitrary functions returned by pdsolve as follows:
 
-    The algorithm used is:
-    1] If coords is an instance of an Undefined Function, then the args are returned
-    2] If the arbitrary function is present in an Add object, it is replaced by zero.
-    3] If the arbitrary function is present in an Mul object, it is replaced by one.
-    4] If coords has no Undefined Function, it is returned as it is.
+    1] If coords is an arbitrary function, then its argument is returned.
+    2] An arbitrary function in an Add object is replaced by zero.
+    3] An arbitrary function in a Mul object is replaced by one.
+    4] If there is no arbitrary function coords is returned unchanged.
 
     Examples
     ========
@@ -6440,7 +6442,7 @@ def _lie_group_remove(coords):
     >>> eq = F(x**2*y)
     >>> _lie_group_remove(eq)
     x**2*y
-    >>> eq = y**2*x + F(x**3)
+    >>> eq = x*y**2 + F(x**3)
     >>> _lie_group_remove(eq)
     x*y**2
     >>> eq = (F(x**3) + y)*x**4

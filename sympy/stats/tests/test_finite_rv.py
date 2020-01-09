@@ -12,7 +12,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.utilities.pytest import raises, skip
+from sympy.testing.pytest import raises, skip
 
 
 def BayesTest(A, B):

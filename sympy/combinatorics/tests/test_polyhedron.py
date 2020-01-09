@@ -5,7 +5,7 @@ from sympy.combinatorics.polyhedron import (Polyhedron,
     cube_faces)
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 rmul = Permutation.rmul
 

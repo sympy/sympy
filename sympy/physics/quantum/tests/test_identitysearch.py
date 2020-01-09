@@ -1,6 +1,5 @@
 from sympy.external import import_module
 from sympy import Mul, Integer
-from sympy.core.compatibility import PY3
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import (X, Y, Z, H, CNOT,
         IdentityGate, CGate, PhaseGate, TGate)
@@ -8,7 +7,7 @@ from sympy.physics.quantum.identitysearch import (generate_gate_rules,
         generate_equivalent_ids, GateIdentity, bfs_identity_search,
         is_scalar_sparse_matrix,
         is_scalar_nonsparse_matrix, is_degenerate, is_reducible)
-from sympy.utilities.pytest import skip, XFAIL
+from sympy.testing.pytest import skip
 
 
 def create_gate_sequence(qubit=0):
@@ -484,18 +483,9 @@ def test_bfs_identity_search():
     assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
 
 
-# @XFAIL
-# Seems to fail on Python 2.7, but not 3.X, unless scipy is installed
 def test_bfs_identity_search_xfail():
-    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
-    if scipy:
-        skip("scipy installed.")
     s = PhaseGate(0)
     t = TGate(0)
     gate_list = [Dagger(s), t]
     id_set = {GateIdentity(Dagger(s), t, t)}
     assert bfs_identity_search(gate_list, 1, max_depth=3) == id_set
-
-
-if not PY3:
-    test_bfs_identity_search_xfail = XFAIL(test_bfs_identity_search_xfail)

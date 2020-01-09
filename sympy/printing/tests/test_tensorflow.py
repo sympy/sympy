@@ -1,21 +1,21 @@
 import random
 
-from sympy import symbols, Symbol, Function, Derivative
+from sympy import symbols, Derivative
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
         CodegenArrayPermuteDims, CodegenArrayDiagonal)
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
-    Abs, Max, Min, ceiling, exp, floor, sign, sin, asin, sqrt, cos, \
+    Abs, ceiling, exp, floor, sign, sin, asin, sqrt, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
     re, im, arg, erf, loggamma, log
 from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
-from sympy.printing.tensorflow import TensorflowPrinter, tensorflow_code
+from sympy.printing.tensorflow import tensorflow_code
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 
 tf = tensorflow = import_module("tensorflow")

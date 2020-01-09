@@ -1,13 +1,13 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest, range, PY3, Mapping)
+    string_types, with_metaclass, range, PY3, Mapping)
 from .singleton import S
 
 from inspect import getmro
@@ -764,35 +764,6 @@ class Basic(with_metaclass(ManagedProperties)):
         produce the sorted representation.
         """
         return self.args
-
-
-    def as_poly(self, *gens, **args):
-        """Converts ``self`` to a polynomial or returns ``None``.
-
-        >>> from sympy import sin
-        >>> from sympy.abc import x, y
-
-        >>> print((x**2 + x*y).as_poly())
-        Poly(x**2 + x*y, x, y, domain='ZZ')
-
-        >>> print((x**2 + x*y).as_poly(x, y))
-        Poly(x**2 + x*y, x, y, domain='ZZ')
-
-        >>> print((x**2 + sin(y)).as_poly(x, y))
-        None
-
-        """
-        from sympy.polys import Poly, PolynomialError
-
-        try:
-            poly = Poly(self, *gens, **args)
-
-            if not poly.is_Poly:
-                return None
-            else:
-                return poly
-        except PolynomialError:
-            return None
 
     def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
@@ -1693,6 +1664,11 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             return self
 
+    def simplify(self, **kwargs):
+        """See the simplify function in sympy.simplify"""
+        from sympy.simplify import simplify
+        return simplify(self, **kwargs)
+
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):
@@ -1795,10 +1771,10 @@ class Basic(with_metaclass(ManagedProperties)):
             if isinstance(args[-1], string_types):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                try:
-                    rule = '_eval_rewrite_as_' + args[-1].__name__
-                except:
-                    rule = '_eval_rewrite_as_' + args[-1].__class__.__name__
+                name = getattr(args[-1], '__name__', None)
+                if name is None:
+                    name = args[-1].__class__.__name__
+                rule = '_eval_rewrite_as_' + name
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)

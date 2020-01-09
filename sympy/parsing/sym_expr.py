@@ -16,7 +16,7 @@ else:
     if cin:
         from sympy.parsing.c.c_parser import parse_c
 
-    @doctest_depends_on(modules=['lfortran', 'cin'])
+    @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
     class SymPyExpression(object):
         """Class to store and handle SymPy expressions
 
@@ -46,14 +46,17 @@ else:
 
         Example of parsing C code:
 
+        >>> from sympy.parsing.sym_expr import SymPyExpression
         >>> src = '''
         ... int a,b;
         ... float c = 2, d =4;
         ... '''
         >>> a = SymPyExpression(src, 'c')
         >>> a.return_expr()
-        [Declaration(Variable(Symbol('a'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('b'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('c'), type=IntBaseType(String('integer')), value=Integer(2))), Declaration(Variable(Symbol('d'),     type=IntBaseType(String('integer')), value=Integer(4)))]
-
+        [Declaration(Variable(a, type=integer, value=0)),
+        Declaration(Variable(b, type=integer, value=0)),
+        Declaration(Variable(c, type=real, value=2.0)),
+        Declaration(Variable(d, type=real, value=4.0))]
 
         An example of variable definiton:
 

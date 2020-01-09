@@ -35,7 +35,7 @@ from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
-# the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
+# the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
@@ -1052,7 +1052,7 @@ class MatplotlibBackend(BaseBackend):
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits',
+                mpl_toolkits = import_module('mpl_toolkits', # noqa
                                      __import__kwargs={'fromlist': ['mplot3d']})
                 self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 
