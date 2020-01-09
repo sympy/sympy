@@ -8,7 +8,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
 from sympy.matrices import (
-    GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
+    GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix, NumPyMatrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
@@ -21,7 +21,7 @@ from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
-from sympy.matrices.determinant import _det_bareiss, _det_berkowitz, _det_lu
+from sympy.matrices.determinant import det_bareiss, det_berkowitz, det_LU
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -565,9 +565,9 @@ def test_determinant():
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
-            _det_bareiss(M) ==
-            _det_berkowitz(M) ==
-            _det_lu(M) ==
+            det_bareiss(M) ==
+            det_berkowitz(M) ==
+            det_LU(M) ==
             1)
 
     M = Matrix(( (-3,  2),
@@ -3976,3 +3976,23 @@ def test_issue_17827():
     raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
     raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
     raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
+
+def test_NumPyMatrix():
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test NumPyMatrix')
+
+    a = array([[1, 2], [3, 4]])
+    M = NumPyMatrix(a)
+    assert M == Matrix([[1, 2], [3, 4]])
+    a[0, 0] = -1
+    assert M == Matrix([[1, 2], [3, 4]])
+    assert Matrix(M) == Matrix([[1, 2], [3, 4]])
+
+    # NumPyMatrix as wrapper
+    M = NumPyMatrix(a, copy=False)
+    assert M == Matrix([[-1, 2], [3, 4]])
+    a[0, 0] = 1
+    assert M == Matrix([[1, 2], [3, 4]])
+    assert Matrix(M) == Matrix([[1, 2], [3, 4]])

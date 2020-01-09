@@ -776,35 +776,35 @@ def test_div():
     assert n/2 == ArithmeticOnlyMatrix(1, 2, [S.Half, S(2)/2])
 
 
-# DeterminantOnlyMatrix tests
-def test_det():
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
-    raises(NonSquareMatrixError, lambda: a.det())
+# # DeterminantOnlyMatrix tests
+# def test_det():
+#     a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+#     raises(NonSquareMatrixError, lambda: a.det())
 
-    z = zeros_Determinant(2)
-    ey = eye_Determinant(2)
-    assert z.det() == 0
-    assert ey.det() == 1
+#     z = zeros_Determinant(2)
+#     ey = eye_Determinant(2)
+#     assert z.det() == 0
+#     assert ey.det() == 1
 
-    x = Symbol('x')
-    a = DeterminantOnlyMatrix(0, 0, [])
-    b = DeterminantOnlyMatrix(1, 1, [5])
-    c = DeterminantOnlyMatrix(2, 2, [1, 2, 3, 4])
-    d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
-    e = DeterminantOnlyMatrix(4, 4,
-        [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
+#     x = Symbol('x')
+#     a = DeterminantOnlyMatrix(0, 0, [])
+#     b = DeterminantOnlyMatrix(1, 1, [5])
+#     c = DeterminantOnlyMatrix(2, 2, [1, 2, 3, 4])
+#     d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
+#     e = DeterminantOnlyMatrix(4, 4,
+#         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
-    # the method keyword for `det` doesn't kick in until 4x4 matrices,
-    # so there is no need to test all methods on smaller ones
+#     # the method keyword for `det` doesn't kick in until 4x4 matrices,
+#     # so there is no need to test all methods on smaller ones
 
-    assert a.det() == 1
-    assert b.det() == 5
-    assert c.det() == -2
-    assert d.det() == 3
-    assert e.det() == 4*x - 24
-    assert e.det(method='bareiss') == 4*x - 24
-    assert e.det(method='berkowitz') == 4*x - 24
-    raises(ValueError, lambda: e.det(iszerofunc="test"))
+#     assert a.det() == 1
+#     assert b.det() == 5
+#     assert c.det() == -2
+#     assert d.det() == 3
+#     assert e.det() == 4*x - 24
+#     assert e.det(method='bareiss') == 4*x - 24
+#     assert e.det(method='berkowitz') == 4*x - 24
+#     raises(ValueError, lambda: e.det(iszerofunc="test"))
 
 
 # def test_adjugate():

@@ -106,6 +106,8 @@ class SparseMatrix(MatrixBase):
     ImmutableSparseMatrix
     """
 
+    is_sparse = True
+
     def __new__(cls, *args, **kwargs):
         self = object.__new__(cls)
         if len(args) == 1 and isinstance(args[0], SparseMatrix):

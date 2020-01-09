@@ -36,9 +36,8 @@ from .common import (
 from .utilities import _toselfclass, _iszero, _is_zero_after_expand_mul
 
 from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
-    det, minor, minor_submatrix, _find_reasonable_pivot,
-    _find_reasonable_pivot_naive, _berkowitz_toeplitz_matrix, _det_bareiss,
-    _det_berkowitz, _det_lu)
+    det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
+    _find_reasonable_pivot, _find_reasonable_pivot_naive)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -76,12 +75,15 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
+    _find_reasonable_pivot       = _find_reasonable_pivot
+    _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
+
     def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix. See ``adjugate`` in sympy.matrices.determinant for details."""
 
-        return _toselfclass(self, cofactor_matrix(self, method,
-                dotprodsimp=dotprodsimp).transpose())
+        return _toselfclass(self, adjugate(self, method=method,
+                dotprodsimp=dotprodsimp))
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
@@ -107,6 +109,25 @@ class MatrixDeterminant(MatrixCommon):
         sympy.matrices.determinant for details."""
 
         return det(self, method=method, iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
+
+    def det_bareiss(self, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
+        """Compute matrix determinant using Bareiss' fraction-free algorithm.
+        See ``det_bareiss`` in sympy.matrices.determinant for details."""
+
+        return det_bareiss(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
+    def det_berkowitz(self, dotprodsimp=None):
+        """ Use the Berkowitz algorithm to compute the determinant. See
+        ``det_berkowitz`` in sympy.matrices.determinant for details."""
+
+        return det_berkowitz(self, dotprodsimp=dotprodsimp)
+
+    def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+        """ Computes the determinant of a matrix from its LU decomposition. See
+        ``det_LU`` in sympy.matrices.determinant for details."""
+
+        return det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
                 dotprodsimp=dotprodsimp)
 
     def minor(self, i, j, method="berkowitz", dotprodsimp=None):
@@ -1930,25 +1951,6 @@ class MatrixDeprecated(MatrixCommon):
         return self.cofactor_matrix(method=method)
 
     def det_bareis(self):
-        return self.det(method='bareiss')
-
-    def det_bareiss(self):
-        """Compute matrix determinant using Bareiss' fraction-free
-        algorithm which is an extension of the well known Gaussian
-        elimination method. This approach is best suited for dense
-        symbolic matrices and will result in a determinant with
-        minimal number of fractions. It means that less term
-        rewriting is needed on resulting formulae.
-
-        TODO: Implement algorithm for sparse matrices (SFF),
-        http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-
-        See Also
-        ========
-
-        det
-        berkowitz_det
-        """
         return self.det(method='bareiss')
 
     def det_LU_decomposition(self):

@@ -311,140 +311,6 @@ def _berkowitz_vector(M, dotprodsimp=None):
             dotprodsimp=dotprodsimp)
 
 
-def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul,
-        dotprodsimp=None):
-    """Compute matrix determinant using Bareiss' fraction-free
-    algorithm which is an extension of the well known Gaussian
-    elimination method. This approach is best suited for dense
-    symbolic matrices and will result in a determinant with
-    minimal number of fractions. It means that less term
-    rewriting is needed on resulting formulae.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-
-    TODO: Implement algorithm for sparse matrices (SFF),
-    http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-    """
-
-    # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
-    # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
-    def bareiss(mat, cumm=1):
-        if mat.rows == 0:
-            return mat.one
-        elif mat.rows == 1:
-            return mat[0, 0]
-
-        # find a pivot and extract the remaining matrix
-        # With the default iszerofunc, _find_reasonable_pivot slows down
-        # the computation by the factor of 2.5 in one test.
-        # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                                        iszerofunc=iszerofunc)
-        if pivot_pos is None:
-            return mat.zero
-
-        # if we have a valid pivot, we'll do a "row swap", so keep the
-        # sign of the det
-        sign = (-1) ** (pivot_pos % 2)
-
-        # we want every row but the pivot row and every column
-        rows = list(i for i in range(mat.rows) if i != pivot_pos)
-        cols = list(range(mat.cols))
-        tmp_mat = mat.extract(rows, cols)
-
-        def entry(i, j):
-            ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-            if dotprodsimp:
-                return _dotprodsimp(ret)
-            elif not ret.is_Atom:
-                return cancel(ret)
-            return ret
-
-        return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
-
-    return bareiss(M)
-
-
-def _det_berkowitz(M, dotprodsimp=None):
-    """ Use the Berkowitz algorithm to compute the determinant.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-    """
-
-    berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
-    return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
-
-
-def _det_lu(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
-    """ Computes the determinant of a matrix from its LU decomposition.
-    This function uses the LU decomposition computed by
-    LUDecomposition_Simple().
-
-    The keyword arguments iszerofunc and simpfunc are passed to
-    LUDecomposition_Simple().
-    iszerofunc is a callable that returns a boolean indicating if its
-    input is zero, or None if it cannot make the determination.
-    simpfunc is a callable that simplifies its input.
-    The default is simpfunc=None, which indicate that the pivot search
-    algorithm should not attempt to simplify any candidate pivots.
-    If simpfunc fails to simplify its input, then it must return its input
-    instead of a copy.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-    """
-
-    if M.rows == 0:
-        return M.one
-        # sympy/matrices/tests/test_matrices.py contains a test that
-        # suggests that the determinant of a 0 x 0 matrix is one, by
-        # convention.
-
-    lu, row_swaps = M.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None,
-            dotprodsimp=dotprodsimp)
-    # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
-    # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
-    # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).
-    # LUdecomposition_Simple() returns a list of row exchange index pairs, rather
-    # than a permutation matrix, but det(P) = (-1)**len(row_swaps).
-
-    # Avoid forming the potentially time consuming  product of U's diagonal entries
-    # if the product is zero.
-    # Bottom right entry of U is 0 => det(A) = 0.
-    # It may be impossible to determine if this entry of U is zero when it is symbolic.
-    if iszerofunc(lu[lu.rows-1, lu.rows-1]):
-        return M.zero
-
-    # Compute det(P)
-    det = -M.one if len(row_swaps)%2 else M.one
-
-    # Compute det(U) by calculating the product of U's diagonal entries.
-    # The upper triangular portion of lu is the upper triangular portion of the
-    # U factor in the LU decomposition.
-    for k in range(lu.rows):
-        det *= lu[k, k]
-
-    # return det(P)*det(U)
-    return det
-
-
 def adjugate(M, method="berkowitz", dotprodsimp=None):
     """Returns the adjugate, or classical adjoint, of
     a matrix.  That is, the transpose of the matrix of cofactors.
@@ -461,6 +327,7 @@ def adjugate(M, method="berkowitz", dotprodsimp=None):
     return cofactor_matrix(M, method, dotprodsimp=dotprodsimp).transpose()
 
 
+@cacheit
 def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
@@ -645,10 +512,17 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
 
     # sanitize `method`
     method = method.lower()
+
     if method == "bareis":
         method = "bareiss"
-    if method == "det_lu":
+    elif method == "det_lu":
         method = "lu"
+
+    _eval_det = getattr(M, '_eval_det', None)
+
+    if _eval_det: # allow object to override det, like for NumPy
+        return _eval_det(method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
     if method not in ("bareiss", "berkowitz", "lu"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
@@ -657,16 +531,17 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
             iszerofunc = _is_zero_after_expand_mul
         elif method == "lu":
             iszerofunc = _iszero
+
     elif not isinstance(iszerofunc, FunctionType):
         raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
 
-    # if methods were made internal and all determinant calculations
-    # passed through here, then these lines could be factored out of
-    # the method routines
+    M = sympify(M)
+
     if not M.is_square:
         raise NonSquareMatrixError()
 
     n = M.rows
+
     if n == 0:
         return M.one
     elif n == 1:
@@ -684,11 +559,148 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
         return _dotprodsimp(m) if dotprodsimp else m
 
     if method == "bareiss":
-        return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     elif method == "berkowitz":
-        return _det_berkowitz(M, dotprodsimp=dotprodsimp)
+        return det_berkowitz(M, dotprodsimp=dotprodsimp)
     elif method == "lu":
-        return _det_lu(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return det_LU(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
+
+@cacheit
+def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
+    """Compute matrix determinant using Bareiss' fraction-free
+    algorithm which is an extension of the well known Gaussian
+    elimination method. This approach is best suited for dense
+    symbolic matrices and will result in a determinant with
+    minimal number of fractions. It means that less term
+    rewriting is needed on resulting formulae.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+
+    TODO: Implement algorithm for sparse matrices (SFF),
+    http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
+    """
+
+    # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
+    # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    def bareiss(mat, cumm=1):
+        if mat.rows == 0:
+            return mat.one
+        elif mat.rows == 1:
+            return mat[0, 0]
+
+        # find a pivot and extract the remaining matrix
+        # With the default iszerofunc, _find_reasonable_pivot slows down
+        # the computation by the factor of 2.5 in one test.
+        # Relevant issues: #10279 and #13877.
+        pivot_pos, pivot_val, _, _ = mat[:, 0]._find_reasonable_pivot(
+                iszerofunc=iszerofunc)
+        if pivot_pos is None:
+            return mat.zero
+
+        # if we have a valid pivot, we'll do a "row swap", so keep the
+        # sign of the det
+        sign = (-1) ** (pivot_pos % 2)
+
+        # we want every row but the pivot row and every column
+        rows = list(i for i in range(mat.rows) if i != pivot_pos)
+        cols = list(range(mat.cols))
+        tmp_mat = mat.extract(rows, cols)
+
+        def entry(i, j):
+            ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
+            if dotprodsimp:
+                return _dotprodsimp(ret)
+            elif not ret.is_Atom:
+                return cancel(ret)
+            return ret
+
+        return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
+
+    return bareiss(sympify(M))
+
+
+def det_berkowitz(M, dotprodsimp=None):
+    """ Use the Berkowitz algorithm to compute the determinant.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+    """
+
+    berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
+    return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
+
+
+@cacheit
+def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+    """ Computes the determinant of a matrix from its LU decomposition.
+    This function uses the LU decomposition computed by
+    LUDecomposition_Simple().
+
+    The keyword arguments iszerofunc and simpfunc are passed to
+    LUDecomposition_Simple().
+    iszerofunc is a callable that returns a boolean indicating if its
+    input is zero, or None if it cannot make the determination.
+    simpfunc is a callable that simplifies its input.
+    The default is simpfunc=None, which indicate that the pivot search
+    algorithm should not attempt to simplify any candidate pivots.
+    If simpfunc fails to simplify its input, then it must return its input
+    instead of a copy.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+    """
+
+    M = sympify(M)
+
+    if M.rows == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
+
+    lu, row_swaps = M.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None,
+            dotprodsimp=dotprodsimp)
+    # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
+    # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
+    # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).
+    # LUdecomposition_Simple() returns a list of row exchange index pairs, rather
+    # than a permutation matrix, but det(P) = (-1)**len(row_swaps).
+
+    # Avoid forming the potentially time consuming  product of U's diagonal entries
+    # if the product is zero.
+    # Bottom right entry of U is 0 => det(A) = 0.
+    # It may be impossible to determine if this entry of U is zero when it is symbolic.
+    if iszerofunc(lu[lu.rows-1, lu.rows-1]):
+        return M.zero
+
+    # Compute det(P)
+    det = -M.one if len(row_swaps)%2 else M.one
+
+    # Compute det(U) by calculating the product of U's diagonal entries.
+    # The upper triangular portion of lu is the upper triangular portion of the
+    # U factor in the LU decomposition.
+    for k in range(lu.rows):
+        det *= lu[k, k]
+
+    # return det(P)*det(U)
+    return det
 
 
 def minor(M, i, j, method="berkowitz", dotprodsimp=None):

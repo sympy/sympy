@@ -39,6 +39,7 @@ def _compare_sequence(a, b):
 class DenseMatrix(MatrixBase):
 
     is_MatrixExpr = False
+    is_sparse     = False
 
     _op_priority = 10.01
     _class_priority = 4
@@ -657,7 +658,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         zeros
         ones
         """
-        self._mat = [value]*len(self)
+        for i in range(len(self._mat)):
+            self._mat[i] = value
 
     def row_del(self, i):
         """Delete the given row.

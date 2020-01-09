@@ -17,9 +17,11 @@ Matrix = MutableMatrix = MutableDenseMatrix
 from .sparse import MutableSparseMatrix
 from .sparsetools import banded
 from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
+from .numpy import NumPyMatrix
 
 ImmutableMatrix = ImmutableDenseMatrix
 SparseMatrix = MutableSparseMatrix
+IMatrix = ImmutableDenseMatrix
 
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
@@ -31,9 +33,9 @@ from .expressions import (
     PermutationMatrix, MatrixPermute)
 
 from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
-    det, minor, minor_submatrix, _find_reasonable_pivot,
-    _find_reasonable_pivot_naive, _berkowitz_toeplitz_matrix, _det_bareiss,
-    _det_berkowitz, _det_lu)
+    det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
+    _find_reasonable_pivot, _find_reasonable_pivot_naive,
+    _berkowitz_toeplitz_matrix)
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -53,7 +55,9 @@ __all__ = [
 
     'banded',
 
-    'ImmutableDenseMatrix', 'ImmutableSparseMatrix',
+    'ImmutableDenseMatrix', 'ImmutableSparseMatrix', 'IMatrix',
+
+    'NumPyMatrix',
 
     'ImmutableMatrix', 'SparseMatrix',
 
@@ -66,7 +70,8 @@ __all__ = [
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
 
-    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'minor',
-    'minor_submatrix', '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
-    '_berkowitz_toeplitz_matrix', '_det_bareiss', '_det_berkowitz', '_det_lu',
+    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'det_bareiss',
+    'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
+    '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
+    '_berkowitz_toeplitz_matrix',
 ]
