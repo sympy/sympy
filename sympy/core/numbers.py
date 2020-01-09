@@ -14,9 +14,8 @@ from .evalf import pure_complex
 from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
-from sympy.core.compatibility import (
-    as_int, long, with_metaclass, HAS_GMPY,
-    SYMPY_INTS, int_info, gmpy)
+from sympy.core.compatibility import (as_int, long, HAS_GMPY, SYMPY_INTS,
+    int_info, gmpy)
 from sympy.core.cache import lru_cache
 
 import mpmath

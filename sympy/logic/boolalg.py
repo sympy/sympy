@@ -8,8 +8,7 @@ from itertools import combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (ordered, with_metaclass,
-    as_int)
+from sympy.core.compatibility import ordered, as_int
 from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp

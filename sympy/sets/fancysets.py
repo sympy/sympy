@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import with_metaclass
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda

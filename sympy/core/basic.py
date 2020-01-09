@@ -7,7 +7,7 @@ from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    with_metaclass, PY3, Mapping)
+    PY3, Mapping)
 from .singleton import S
 
 from inspect import getmro

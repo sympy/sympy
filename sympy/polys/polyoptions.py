@@ -7,7 +7,6 @@ __all__ = ["Options"]
 from typing import Dict, List, Optional, Type
 
 from sympy.core import S, Basic, sympify
-from sympy.core.compatibility import with_metaclass
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from typing import Any, Callable
+from typing import Any
 
 from sympy import Basic
 from sympy import S

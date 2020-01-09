@@ -6,9 +6,7 @@ from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, PY3, reduce)
-from sympy.core.cache import cacheit
+from sympy.core.compatibility import iterable, ordered, PY3, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
