@@ -356,8 +356,7 @@ def test_evalf_relational():
     # one that doesn't
     assert unchanged(Eq, (3 - I)**2/2 + I, 0)
     assert Eq((3 - I)**2/2 + I, 0).n() is S.false
-    # note: these don't always evaluate to Boolean
-    assert nfloat(Eq((3 - I)**2 + I, 0)) == Eq((3.0 - I)**2 + I, 0)
+    assert nfloat(Eq((3 - I)**2 + I, 0)) == S.false
 
 
 def test_issue_5486():

@@ -390,7 +390,6 @@ class PrettyPrinter(Printer):
         return cyc
 
     def _print_Permutation(self, expr):
-        from ..str import sstr
         from sympy.combinatorics.permutations import Permutation, Cycle
 
         perm_cyclic = Permutation.print_cyclic
@@ -1192,6 +1191,9 @@ class PrettyPrinter(Printer):
             binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
         pform = prettyForm(deriv_symbol)
+
+        if len(deriv.variables) > 1:
+            pform = pform**self._print(len(deriv.variables))
 
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1

@@ -391,7 +391,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
     in eq already.
     """
 
-    if isinstance(eq, Expr):
+    if isinstance(eq, (Expr, Eq)):
         eq = [eq]
     elif not iterable(eq):
         raise ValueError("Expected Expr or iterable but got %s" % eq)
@@ -702,10 +702,10 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # attempt to solve for func, and apply any other hint specific
         # simplifications
         sols = solvefunc(eq, func, order, match)
-        if isinstance(sols, Expr):
-            rv =  odesimp(eq, sols, func, hint)
-        else:
+        if iterable(sols):
             rv = [odesimp(eq, s, func, hint) for s in sols]
+        else:
+            rv =  odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
@@ -720,7 +720,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         if len(rv) == 1:
             rv = rv[0]
     if ics and not 'power_series' in hint:
-        if isinstance(rv, Expr):
+        if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
         else:
@@ -1466,7 +1466,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r is not None:
             coeff = r[order]
             factor = x**order / coeff
-            r_rescaled = {i: factor*r[i] for i in r}
+            r_rescaled = {i: factor*r[i] for i in r if i != 'trialset'}
+
+        # XXX: Mixing up the trialset with the coefficients is error-prone.
+        # These should be separated as something like r['coeffs'] and
+        # r['trialset']
 
         if r_rescaled and not any(not _test_term(r_rescaled[i], i) for i in
                 r_rescaled if i != 'trialset' and i >= 0):

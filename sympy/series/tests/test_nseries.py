@@ -371,7 +371,6 @@ def test_series2():
 
 def test_series3():
     w = Symbol("w", real=True)
-    x = Symbol("x", real=True)
     e = w**(-6)*(w**3*tan(w) - w**3*sin(w))
     assert e.nseries(w, n=8) == Integer(1)/2 + O(w**2)
 

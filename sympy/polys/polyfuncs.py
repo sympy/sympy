@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy.core import S, Basic, Add, Mul, symbols, Dummy
 from sympy.core.compatibility import range
-from sympy.functions.combinatorial.factorials import factorial
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError, OptionError)

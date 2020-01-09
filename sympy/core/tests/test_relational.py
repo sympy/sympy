@@ -1,8 +1,8 @@
 from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, floor, ceiling, trigsimp)
-from sympy.core.compatibility import range
+    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
+from sympy.core.compatibility import range, PY3
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -130,6 +130,17 @@ def test_Eq():
     assert Eq(True, 1) is S.false
 
     assert Eq((), 1) is S.false
+
+
+def test_as_poly():
+    from sympy.polys.polytools import Poly
+    # Only Eq should have an as_poly method:
+    assert Eq(x, 1).as_poly() == Poly(x - 1, x, domain='ZZ')
+    raises(AttributeError, lambda: Ne(x, 1).as_poly())
+    raises(AttributeError, lambda: Ge(x, 1).as_poly())
+    raises(AttributeError, lambda: Gt(x, 1).as_poly())
+    raises(AttributeError, lambda: Le(x, 1).as_poly())
+    raises(AttributeError, lambda: Lt(x, 1).as_poly())
 
 
 def test_rel_Infinity():
@@ -362,6 +373,19 @@ def test_new_relational():
     assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
     assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
     assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
+
+
+def test_relational_arithmetic():
+    for cls in [Eq, Ne, Le, Lt, Ge, Gt]:
+        rel = cls(x, y)
+        raises(TypeError, lambda: 0+rel)
+        raises(TypeError, lambda: 1*rel)
+        raises(TypeError, lambda: 1**rel)
+        raises(TypeError, lambda: rel**1)
+        raises(TypeError, lambda: Add(0, rel))
+        raises(TypeError, lambda: Mul(1, rel))
+        raises(TypeError, lambda: Pow(1, rel))
+        raises(TypeError, lambda: Pow(rel, 1))
 
 
 def test_relational_bool_output():
@@ -611,7 +635,8 @@ def test_inequalities_cant_sympify_other():
 
     for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan, Rational(1, 3)):
         for op in (lt, gt, le, ge):
-            raises(TypeError, lambda: op(a, bar))
+            if PY3:
+                raises(TypeError, lambda: op(a, bar))
 
 
 def test_ineq_avoid_wild_symbol_flip():
@@ -933,6 +958,13 @@ def test_issues_13081_12583_12534():
     # this should be the same if we reverse the relational
     assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))] == []
 
+def test_issue_18188():
+    from sympy.sets.conditionset import ConditionSet
+    result1 = Eq(x*cos(x) - 3*sin(x), 0)
+    assert result1.as_set() == ConditionSet(x, Eq(x*cos(x) - 3*sin(x), 0), Reals)
+
+    result2 = Eq(x**2 + sqrt(x*2) + sin(x), 0)
+    assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
     ans = set([x])
