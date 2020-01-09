@@ -819,7 +819,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     if a % p == 0:
         return [0]
     if not is_nthpow_residue(a, n, p):
-        return None
+        return [] if all_roots else None
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
     # The roots of ``x**n - a = 0 (mod p)`` are roots of

@@ -179,8 +179,9 @@ def test_residue():
     assert nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
     assert nthroot_mod(4, 4, 27, True) == [5, 22]
     assert nthroot_mod(4, 4, 121, True) == [19, 102]
+    assert nthroot_mod(2, 3, 7, True) == []
 
-    for p in primerange(5, 100):
+    for p in range(5, 100):
         qv = range(3, p, 4)
         for q in qv:
             d = defaultdict(list)
@@ -191,7 +192,7 @@ def test_residue():
                 if d[a]:
                     assert d[a] == res
                 else:
-                    assert res is None
+                    assert res == []
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
