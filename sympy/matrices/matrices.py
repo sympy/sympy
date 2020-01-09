@@ -77,34 +77,6 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
-<<<<<<< HEAD
-=======
-    # The following lambdas are here only because the test suite checks them as
-    # methods of the various matrix classes. I don't know if they are really
-    # necessary to be present other than for the tests, which could be changed
-    # to test these in sympy.matrices.determinant.
-    _eval_berkowitz_toeplitz_matrix = lambda self, dotprodsimp=None: tuple(
-        _toselfclass(self, m) for m in _eval_berkowitz_toeplitz_matrix(
-        sympify(self), dotprodsimp=dotprodsimp))
-
-    _eval_det_bareiss = lambda self, iszerofunc=_is_zero_after_expand_mul, \
-        dotprodsimp=None: _eval_det_bareiss(sympify(self), iszerofunc=iszerofunc,
-        dotprodsimp=dotprodsimp)
-
-    _eval_det_berkowitz = lambda self, dotprodsimp=None: _eval_det_berkowitz(
-        sympify(self), dotprodsimp=dotprodsimp)
-
-    _eval_det_lu = lambda self, simpfunc=None, iszerofunc=_is_zero_after_expand_mul, \
-        dotprodsimp=None: _eval_det_lu(sympify(self), iszerofunc=iszerofunc,
-        simpfunc=simpfunc, dotprodsimp=dotprodsimp)
-
-    def _eval_determinant(self):
-        """Assumed to exist by matrix expressions; If we subclass
-        MatrixDeterminant, we can fully evaluate determinants."""
-
-        return det(self)
-
->>>>>>> 38231bc94f4e7c952850492b92899c8daf2fd6a3
     def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix. See ``adjugate`` in sympy.matrices.determinant for details."""
