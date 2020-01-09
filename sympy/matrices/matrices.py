@@ -130,52 +130,6 @@ class MatrixReductions(MatrixDeterminant):
     """Provides basic matrix row/column operations.
     Should not be instantiated directly."""
 
-    def _eval_col_op_swap(self, col1, col2):
-        def entry(i, j):
-            if j == col1:
-                return self[i, col2]
-            elif j == col2:
-                return self[i, col1]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
-    def _eval_col_op_multiply_col_by_const(self, col, k):
-        def entry(i, j):
-            if j == col:
-                return k * self[i, j]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
-    def _eval_col_op_add_multiple_to_other_col(self, col, k, col2):
-        def entry(i, j):
-            if j == col:
-                return self[i, j] + k * self[i, col2]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
-    def _eval_row_op_swap(self, row1, row2):
-        def entry(i, j):
-            if i == row1:
-                return self[row2, j]
-            elif i == row2:
-                return self[row1, j]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
-    def _eval_row_op_multiply_row_by_const(self, row, k):
-        def entry(i, j):
-            if i == row:
-                return k * self[i, j]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
-    def _eval_row_op_add_multiple_to_other_row(self, row, k, row2):
-        def entry(i, j):
-            if i == row:
-                return self[i, j] + k * self[row2, j]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
     def _eval_echelon_form(self, iszerofunc, simpfunc, dotprodsimp=None):
         """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
         in echelon form and ``swaps`` is a list of row-swaps performed."""
@@ -220,7 +174,7 @@ class MatrixReductions(MatrixDeterminant):
             if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
 
-        if op == "n<->m":
+        elif op == "n<->m":
             # we need two cols to swap. It doesn't matter
             # how they were specified, so gather them together and
             # remove `None`
@@ -237,7 +191,7 @@ class MatrixReductions(MatrixDeterminant):
             if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
-        if op == "n->n+km":
+        elif op == "n->n+km":
             col = col1 if col is None else col
             col2 = col1 if col2 is None else col2
             if col is None or col2 is None or k is None:
@@ -250,6 +204,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
             if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+
+        else:
+            raise MatrixError('invalid row/column operation')
 
         return op, col, k, col1, col2
 
@@ -429,13 +386,15 @@ class MatrixReductions(MatrixDeterminant):
 
         op, col, k, col1, col2 = self._normalize_op_args(op, col, k, col1, col2, "col")
 
-        # now that we've validated, we're all good to dispatch
-        if op == "n->kn":
-            return self._eval_col_op_multiply_col_by_const(col, k)
-        if op == "n<->m":
-            return self._eval_col_op_swap(col1, col2)
-        if op == "n->n+km":
-            return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
+        entry = {
+            "n->kn": lambda i, j: k * self[i, j] if j == col else self[i, j],
+            "n<->m": lambda i, j: self[i, col2] if j == col1 else self[i, col1] \
+                    if j == col2 else self[i, j],
+            "n->n+km": lambda i, j: self[i, j] + k * self[i, col2] if j == col \
+                    else self [i, j]
+        }
+
+        return self._new(self.rows, self.cols, entry[op])
 
     def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
         """Performs the elementary row operation `op`.
@@ -459,13 +418,15 @@ class MatrixReductions(MatrixDeterminant):
 
         op, row, k, row1, row2 = self._normalize_op_args(op, row, k, row1, row2, "row")
 
-        # now that we've validated, we're all good to dispatch
-        if op == "n->kn":
-            return self._eval_row_op_multiply_row_by_const(row, k)
-        if op == "n<->m":
-            return self._eval_row_op_swap(row1, row2)
-        if op == "n->n+km":
-            return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
+        entry = {
+            "n->kn": lambda i, j: k * self[i, j] if i == row else self[i, j],
+            "n<->m": lambda i, j: self[row2, j] if i == row1 else self[row1, j] \
+                    if i == row2 else self[i, j],
+            "n->n+km": lambda i, j: self[i, j] + k * self[row2, j] if i == row \
+                    else self [i, j]
+        }
+
+        return self._new(self.rows, self.cols, entry[op])
 
     @property
     def is_echelon(self, iszerofunc=_iszero):
