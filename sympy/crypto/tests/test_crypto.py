@@ -563,7 +563,7 @@ def test_bg_public_key():
     raises(ValueError, lambda: bg_private_key(13, 17))
 
 def test_decipher_columnar():
-    assert decipher_columnar("EVLNEACDTKESEAQROFOJDEECUWIREE","ZEBRAS")[:25] == "WEAREDISCOVEREDFLEEATONCE"
+    assert decipher_columnar("EVLNACDTESEAROFODEECWIREE","ZEBRAS") == "WEAREDISCOVEREDFLEEATONCE"
 
 def test_encipher_columnar():
-    assert encipher_columnar("He was reassigned","PIE") == "WRSGDESAIEHAESN"
+    assert encipher_columnar("WEAREDISCOVEREDFLEEATONCE","ZEBRAS",padding=False) == "EVLNACDTESEAROFODEECWIREE"

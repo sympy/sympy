@@ -3330,7 +3330,7 @@ def decipher_bg(message, key):
 
 ################# Columnar Transposition Cipher #################
 
-def encipher_columnar(message, key):
+def encipher_columnar(message, key, padding=True):
     """
     Performs Regular Columnar Encryption on plaintext and returns ciphertext
 
@@ -3347,6 +3347,8 @@ def encipher_columnar(message, key):
 
     message : string, the message to be encrypted.
     key : string, the key to be used for encryption.
+    padding: bool, decides if random letters are to be padded
+            in the end of message. By default, its value is true.
 
     Returns
     =======
@@ -3360,20 +3362,23 @@ def encipher_columnar(message, key):
     """
     message =  ''.join(alphabet for alphabet in message if alphabet.isalpha())
     key =  ''.join(alphabet for alphabet in key if alphabet.isalpha())
-    row_length = len(key)
+    n = len(key)
     words = len(message)
-    remainder = words%row_length
+    remainder = words%n
 
-    if remainder != 0 :
-        message += ''.join(choice(string.ascii_lowercase) for i in range(row_length - remainder))
+    if len(message) < 2:
+        return message
+
+    if remainder != 0 and padding == True:
+        message += ''.join(choice(string.ascii_lowercase) for i in range(n - remainder))
 
     d = defaultdict(list)
     low = key.lower()
     for i,c in enumerate(low):
         d[c].append(i)
-    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(n)))]
 
-    cipher = ''.join([message[j].upper() for i in range(row_length) for j in range(index_list.index(i), len(message), row_length)])
+    cipher = ''.join([message[j].upper() for i in range(n) for j in range(index_list.index(i), len(message), n)])
     return cipher
 
 def decipher_columnar(cipher, key):
@@ -3410,15 +3415,35 @@ def decipher_columnar(cipher, key):
 
     cipher =  ''.join(alphabet for alphabet in cipher if alphabet.isalpha())
     key =  ''.join(alphabet for alphabet in key if alphabet.isalpha())
-    row_length = len(key)
+    n = len(key)
     words = len(cipher)
-    col_length = -(-words//row_length)          # Ceil Function
+    col_length = -(-words//n)          # Ceil Function
+    remainder = words%n
+    x = col_length*n - words
+
+    if len(cipher) < 2:
+        return cipher
 
     d = defaultdict(list)
     low = key.lower()
     for i,c in enumerate(low):
         d[c].append(i)
-    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(row_length)))]
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(n)))]
 
-    message = ''.join([cipher[j*col_length + i] for i in range(col_length) for j in index_list])
+    if remainder == 0:
+        message = ''.join([cipher[j*col_length + i] for i in range(col_length) for j in index_list])
+    else :
+        o = [0]*n
+        for i in index_list[-x:]:
+            o[i] = 1
+        o = [sum(o[:i]) for i in index_list]
+        rv = []
+        do = words
+        for i in range(col_length):
+            for oi, j in zip(o, index_list):
+                k = i + j*col_length - oi
+                rv.append(cipher[k])
+                do -= 1
+                if do == 0:
+                    return ''.join(rv)
     return message
