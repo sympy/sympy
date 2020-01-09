@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
-                   Lambda, Mul, Dummy, IndexedBase, symbols,
-                   linsolve, eye, Or, Not, Intersection, Add,
+                   Lambda, Mul, Dummy, IndexedBase, Add,
+                   linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
                    Ge, Piecewise, Symbol)
 from sympy.core.relational import Relational
@@ -61,13 +61,14 @@ def _sym_sympify(arg):
     As generally strings are unwise to use in the expressions,
     it returns the Symbol of argument if the string type argument is passed.
 
-    Parameter
+    Parameters
     =========
-    arg
-        The parameter to be converted to be used in Sympy.
+
+    arg: The parameter to be converted to be used in Sympy.
 
     Returns
     =======
+
     The converted parameter.
 
     """
@@ -854,7 +855,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     def __new__(cls, sym, p, success=1, failure=0):
         _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
-        p = _sym_sympify(p)
+        p = _sympify(p)
         sym = _symbol_converter(sym)
         success = _sym_sympify(success)
         failure = _sym_sympify(failure)
@@ -953,7 +954,9 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
         Returns
         =======
+
         Probability of the condition.
+
         """
         new_condition, new_givencondition = self._rvindexed_subs(condition, given_condition)
 
