@@ -21,8 +21,10 @@ from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
+from sympy.matrices.determinant import _det_bareiss, _det_berkowitz, _det_lu
 
 from sympy.abc import a, b, c, d, x, y, z, t
+
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -563,9 +565,9 @@ def test_determinant():
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
-            M._eval_det_bareiss() ==
-            M._eval_det_berkowitz() ==
-            M._eval_det_lu() ==
+            _det_bareiss(M) ==
+            _det_berkowitz(M) ==
+            _det_lu(M) ==
             1)
 
     M = Matrix(( (-3,  2),

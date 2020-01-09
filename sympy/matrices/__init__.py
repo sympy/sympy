@@ -32,8 +32,8 @@ from .expressions import (
 
 from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     det, minor, minor_submatrix, _find_reasonable_pivot,
-    _find_reasonable_pivot_naive, _eval_berkowitz_toeplitz_matrix,
-    _eval_det_bareiss, _eval_det_berkowitz, _eval_det_lu)
+    _find_reasonable_pivot_naive, _berkowitz_toeplitz_matrix, _det_bareiss,
+    _det_berkowitz, _det_lu)
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -68,6 +68,5 @@ __all__ = [
 
     'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'minor',
     'minor_submatrix', '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
-    '_eval_berkowitz_toeplitz_matrix', '_eval_det_bareiss', '_eval_det_berkowitz',
-    '_eval_det_lu',
+    '_berkowitz_toeplitz_matrix', '_det_bareiss', '_det_berkowitz', '_det_lu',
 ]

@@ -202,7 +202,7 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
 
 
 @cacheit
-def _eval_berkowitz_toeplitz_matrix(M, dotprodsimp=None):
+def _berkowitz_toeplitz_matrix(M, dotprodsimp=None):
     """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
     corresponding to ``M`` and A is the first principal submatrix.
 
@@ -257,7 +257,7 @@ def _eval_berkowitz_toeplitz_matrix(M, dotprodsimp=None):
 
 
 @cacheit
-def _eval_berkowitz_vector(M, dotprodsimp=None):
+def _berkowitz_vector(M, dotprodsimp=None):
     """ Run the Berkowitz algorithm and return a vector whose entries
         are the coefficients of the characteristic polynomial of ``M``.
 
@@ -306,12 +306,12 @@ def _eval_berkowitz_vector(M, dotprodsimp=None):
     elif M.rows == 1 and M.cols == 1:
         return M._new(2, 1, [M.one, -M[0,0]])
 
-    submat, toeplitz = _eval_berkowitz_toeplitz_matrix(M, dotprodsimp=dotprodsimp)
-    return toeplitz.multiply(_eval_berkowitz_vector(submat, dotprodsimp=dotprodsimp),
+    submat, toeplitz = _berkowitz_toeplitz_matrix(M, dotprodsimp=dotprodsimp)
+    return toeplitz.multiply(_berkowitz_vector(submat, dotprodsimp=dotprodsimp),
             dotprodsimp=dotprodsimp)
 
 
-def _eval_det_bareiss(M, iszerofunc=_is_zero_after_expand_mul,
+def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul,
         dotprodsimp=None):
     """Compute matrix determinant using Bareiss' fraction-free
     algorithm which is an extension of the well known Gaussian
@@ -371,7 +371,7 @@ def _eval_det_bareiss(M, iszerofunc=_is_zero_after_expand_mul,
     return bareiss(M)
 
 
-def _eval_det_berkowitz(M, dotprodsimp=None):
+def _det_berkowitz(M, dotprodsimp=None):
     """ Use the Berkowitz algorithm to compute the determinant.
 
     Parameters
@@ -383,11 +383,11 @@ def _eval_det_berkowitz(M, dotprodsimp=None):
         speed up calculation.
     """
 
-    berk_vector = _eval_berkowitz_vector(M, dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
     return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
 
-def _eval_det_lu(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+def _det_lu(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
     """ Computes the determinant of a matrix from its LU decomposition.
     This function uses the LU decomposition computed by
     LUDecomposition_Simple().
@@ -527,7 +527,7 @@ def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     if dotprodsimp:
         simplify = lambda e: e
 
-    berk_vector = _eval_berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
     x = _uniquely_named_symbol(x, berk_vector)
     return PurePoly([simplify(a) for a in berk_vector], x)
 
@@ -684,11 +684,11 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
         return _dotprodsimp(m) if dotprodsimp else m
 
     if method == "bareiss":
-        return _eval_det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     elif method == "berkowitz":
-        return _eval_det_berkowitz(M, dotprodsimp=dotprodsimp)
+        return _det_berkowitz(M, dotprodsimp=dotprodsimp)
     elif method == "lu":
-        return _eval_det_lu(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return _det_lu(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
 
 def minor(M, i, j, method="berkowitz", dotprodsimp=None):

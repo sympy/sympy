@@ -37,8 +37,8 @@ from .utilities import _toselfclass, _iszero, _is_zero_after_expand_mul
 
 from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     det, minor, minor_submatrix, _find_reasonable_pivot,
-    _find_reasonable_pivot_naive, _eval_berkowitz_toeplitz_matrix,
-    _eval_det_bareiss, _eval_det_berkowitz, _eval_det_lu)
+    _find_reasonable_pivot_naive, _berkowitz_toeplitz_matrix, _det_bareiss,
+    _det_berkowitz, _det_lu)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -76,60 +76,35 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
-    # The following lambdas are here only because the test suite checks them as
-    # methods of the various matrix classes. I don't know if they are really
-    # necessary to be present other than for the tests, which could be changed
-    # to test these in sympy.matrices.determinant.
-    _eval_berkowitz_toeplitz_matrix = lambda self, dotprodsimp=None: tuple(
-        _toselfclass(self, m) for m in _eval_berkowitz_toeplitz_matrix(
-        sympify(self), dotprodsimp=dotprodsimp))
-
-    _eval_det_bareiss = lambda self, iszerofunc=_is_zero_after_expand_mul, \
-        dotprodsimp=None: _eval_det_bareiss(sympify(self), iszerofunc=iszerofunc,
-        dotprodsimp=dotprodsimp)
-
-    _eval_det_berkowitz = lambda self, dotprodsimp=None: _eval_det_berkowitz(
-        sympify(self), dotprodsimp=dotprodsimp)
-
-    _eval_det_lu = lambda self, simpfunc=None, iszerofunc=_is_zero_after_expand_mul, \
-        dotprodsimp=None: _eval_det_lu(sympify(self), iszerofunc=iszerofunc,
-        simpfunc=simpfunc, dotprodsimp=dotprodsimp)
-
-    def _eval_determinant(self):
-        """Assumed to exist by matrix expressions; If we subclass
-        MatrixDeterminant, we can fully evaluate determinants."""
-
-        return det(self)
-
     def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
-        a matrix. See ``adjugate`` in .determinant for details."""
+        a matrix. See ``adjugate`` in sympy.matrices.determinant for details."""
 
         return _toselfclass(self, cofactor_matrix(self, method,
                 dotprodsimp=dotprodsimp).transpose())
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
-        the identity matrix. See ``charpoly`` in .determinant for details."""
+        the identity matrix. See ``charpoly`` in sympy.matrices.determinant for details."""
 
         return charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
 
     def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Calculate the cofactor of an element. See ``cofactor`` in
-        .determinant for details."""
+        sympy.matrices.determinant for details."""
 
         return cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
 
     def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
         """Return a matrix containing the cofactor of each element. See
-        ``cofactor_matrix`` in .determinant for details."""
+        ``cofactor_matrix`` in sympy.matrices.determinant for details."""
 
         return _toselfclass(self, cofactor_matrix(self, method=method,
                 dotprodsimp=dotprodsimp))
 
     def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
         """Computes the determinant of a matrix. See ``det`` in
-        .determinant for details."""
+        sympy.matrices.determinant for details."""
 
         return det(self, method=method, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
@@ -138,7 +113,7 @@ class MatrixDeterminant(MatrixCommon):
         """Return the (i,j) minor of ``self``.  That is,
         return the determinant of the matrix obtained by deleting
         the `i`th row and `j`th column from ``self``. See ``minor`` in
-        .determinant for details."""
+        sympy.matrices.determinant for details."""
 
         return minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
 
@@ -147,6 +122,8 @@ class MatrixDeterminant(MatrixCommon):
         and `j`th column from ``self``."""
 
         return _toselfclass(self, minor_submatrix(self, i, j))
+
+    _eval_determinant = det
 
 
 class MatrixReductions(MatrixDeterminant):
