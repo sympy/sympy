@@ -117,17 +117,10 @@ def _peeloff_pi(arg):
             K, p = a.as_two_terms()
             if p is S.Pi and K.is_Rational:
                 break
-            K = a.coeff(S.Pi)
-            if K and K.is_rational:
-                break
     else:
         return arg, S.Zero
 
-    z = S.One
-    for a in Mul.make_args(K):
-        z = z*(a % S.Half)
-
-    m1 = z * S.Pi
+    m1 = (K % S.Half)*S.Pi
     m2 = K*S.Pi - m1
     return arg - m2, m2
 
