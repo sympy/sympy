@@ -33,25 +33,12 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, NonPositiveDefiniteMatrixError)
 
+from .utilities import _toselfclass, _iszero, _is_zero_after_expand_mul
+
 from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     det, minor, minor_submatrix, _find_reasonable_pivot,
     _find_reasonable_pivot_naive, _eval_berkowitz_toeplitz_matrix,
     _eval_det_bareiss, _eval_det_berkowitz, _eval_det_lu)
-
-
-def _toselfclass(self, M): # temporarily here, should go in utilities or something
-    return M if isinstance(M, self.__class__) else self.__class__(M)
-
-
-def _iszero(x):
-    """Returns True if x is zero."""
-    return getattr(x, 'is_zero', None)
-
-
-def _is_zero_after_expand_mul(x):
-    """Tests by expand_mul only, suitable for polynomials and rational
-    functions."""
-    return expand_mul(x) == 0
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -114,11 +101,12 @@ class MatrixDeterminant(MatrixCommon):
 
         return det(self)
 
-    def adjugate(self, method="berkowitz"):
+    def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix. See ``adjugate`` in .determinant for details."""
 
-        return _toselfclass(self, cofactor_matrix(self, method).transpose())
+        return _toselfclass(self, cofactor_matrix(self, method,
+                dotprodsimp=dotprodsimp).transpose())
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is

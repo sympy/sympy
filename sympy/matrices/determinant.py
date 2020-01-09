@@ -13,17 +13,7 @@ from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .common import NonSquareMatrixError
 
-
-# currently duplicated from .matrices, should go in utilities or something
-def _iszero(x):
-    """Returns True if x is zero."""
-    return getattr(x, 'is_zero', None)
-
-
-def _is_zero_after_expand_mul(x):
-    """Tests by expand_mul only, suitable for polynomials and rational
-    functions."""
-    return expand_mul(x) == 0
+from .utilities import _toselfclass, _iszero, _is_zero_after_expand_mul
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
@@ -455,7 +445,7 @@ def _eval_det_lu(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
     return det
 
 
-def adjugate(M, method="berkowitz"):
+def adjugate(M, method="berkowitz", dotprodsimp=None):
     """Returns the adjugate, or classical adjoint, of
     a matrix.  That is, the transpose of the matrix of cofactors.
 
@@ -468,7 +458,7 @@ def adjugate(M, method="berkowitz"):
     cofactor_matrix
     sympy.matrices.common.MatrixCommon.transpose
     """
-    return cofactor_matrix(M, method).transpose()
+    return cofactor_matrix(M, method, dotprodsimp=dotprodsimp).transpose()
 
 
 def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
