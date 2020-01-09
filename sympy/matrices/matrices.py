@@ -220,7 +220,7 @@ class MatrixReductions(MatrixDeterminant):
             if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
 
-        if op == "n<->m":
+        elif op == "n<->m":
             # we need two cols to swap. It doesn't matter
             # how they were specified, so gather them together and
             # remove `None`
@@ -237,7 +237,7 @@ class MatrixReductions(MatrixDeterminant):
             if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
-        if op == "n->n+km":
+        elif op == "n->n+km":
             col = col1 if col is None else col
             col2 = col1 if col2 is None else col2
             if col is None or col2 is None or k is None:
@@ -250,6 +250,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
             if not 0 <= col2 < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+
+        else:
+            raise MatrixError('invalid row/column operation')
 
         return op, col, k, col1, col2
 
