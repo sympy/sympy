@@ -99,3 +99,7 @@ class NumPyMatrix(MutableDenseMatrix):
     def _eval_det(self, *args, **kwargs): # override det and calculate usign NumPy
         import numpy.linalg
         return sympify(numpy.linalg.det(self._arr))
+
+    _eval_det_bareiss   = _eval_det
+    _eval_det_berkowitz = _eval_det
+    _eval_det_LU        = _eval_det

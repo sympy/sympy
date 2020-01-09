@@ -388,13 +388,15 @@ def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     det
     """
 
+    M = sympify(M)
+
     if not M.is_square:
         raise NonSquareMatrixError()
 
     if dotprodsimp:
         simplify = lambda e: e
 
-    berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
     x = _uniquely_named_symbol(x, berk_vector)
     return PurePoly([simplify(a) for a in berk_vector], x)
 
@@ -417,6 +419,8 @@ def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     minor
     minor_submatrix
     """
+
+    M = sympify(M)
 
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
@@ -443,6 +447,8 @@ def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     minor_submatrix
     adjugate
     """
+
+    M = sympify(M)
 
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
@@ -623,6 +629,11 @@ def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
 
         return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
 
+    _eval_det_bareiss = getattr(M, '_eval_det_bareiss', None)
+
+    if _eval_det_bareiss: # allow object to override det, like for NumPy
+        return _eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
     return bareiss(sympify(M))
 
 
@@ -637,6 +648,11 @@ def det_berkowitz(M, dotprodsimp=None):
         during matrix multiplications to control expression blowup and thus
         speed up calculation.
     """
+
+    _eval_det_berkowitz = getattr(M, '_eval_det_berkowitz', None)
+
+    if _eval_det_berkowitz: # allow object to override det, like for NumPy
+        return _eval_det_berkowitz(dotprodsimp=dotprodsimp)
 
     berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
     return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
@@ -666,6 +682,12 @@ def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         during matrix multiplications to control expression blowup and thus
         speed up calculation.
     """
+
+    _eval_det_LU = getattr(M, '_eval_det_LU', None)
+
+    if _eval_det_LU: # allow object to override det, like for NumPy
+        return _eval_det_LU(iszerofunc=iszerofunc, simpfunc=simpfunc,
+                dotprodsimp=dotprodsimp)
 
     M = sympify(M)
 
@@ -724,6 +746,8 @@ def minor(M, i, j, method="berkowitz", dotprodsimp=None):
     det
     """
 
+    M = sympify(M)
+
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
@@ -741,6 +765,8 @@ def minor_submatrix(M, i, j):
     cofactor
     """
 
+    M = sympify(M)
+
     if i < 0:
         i += M.rows
     if j < 0:
@@ -752,4 +778,5 @@ def minor_submatrix(M, i, j):
 
     rows = [a for a in range(M.rows) if a != i]
     cols = [a for a in range(M.cols) if a != j]
+
     return sympify(M.extract(rows, cols))
