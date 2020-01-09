@@ -252,6 +252,11 @@ def igcd(*args):
     if 1 in args_temp:
         return 1
     a = args_temp.pop()
+    if HAS_GMPY: # Using gmpy if present to speed up.
+        from sympy.core.compatibility import gmpy
+        for b in args_temp:
+            a = gmpy.gcd(a, b) if b else a
+        return a
     for b in args_temp:
         a = igcd2(a, b) if b else a
     return a
