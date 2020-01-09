@@ -73,7 +73,7 @@ def integer_nthroot(y, n):
         raise ValueError("n must be positive")
     if HAS_GMPY:
         from sympy.core.compatibility import gmpy
-        x, t = gmpy.mpz(y).root(n)
+        x, t = gmpy.root(y, n)
         return as_int(x), bool(t)
 
     if y in (0, 1):
