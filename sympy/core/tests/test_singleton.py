@@ -1,6 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
-from sympy.core.singleton import S, Singleton, SingletonRegistry
+from sympy.core.singleton import S, Singleton
 
 from sympy.core.compatibility import with_metaclass, exec_
 

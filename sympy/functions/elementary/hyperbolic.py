@@ -8,9 +8,7 @@ from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
 
-from sympy import pi, Eq
-from sympy.logic import Or, And
-from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_bool
+from sympy.core.logic import fuzzy_or, fuzzy_and
 
 
 

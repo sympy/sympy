@@ -4,9 +4,8 @@ from __future__ import print_function, division
 
 from inspect import getmro
 
-from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
-from .evaluate import global_evaluate
+from .parameters import global_parameters
 
 
 class SympifyError(ValueError):
@@ -288,10 +287,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
-        else:
-            evaluate = True
+        evaluate = global_parameters.evaluate
 
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
@@ -503,7 +499,10 @@ def kernS(s):
         try:
             expr = sympify(s)
             break
-        except:  # the kern might cause unknown errors, so use bare except
+        # XXX: What exception can be caught here? Broad except should not be
+        # used without a clear reason. Running the test suite does not lead to
+        # any errors at this point...
+        except TypeError:  # the kern might cause unknown errors...
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s
                 hit = False

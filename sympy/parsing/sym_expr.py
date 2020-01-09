@@ -55,8 +55,8 @@ else:
         >>> a.return_expr()
         [Declaration(Variable(a, type=integer, value=0)),
         Declaration(Variable(b, type=integer, value=0)),
-        Declaration(Variable(c, type=integer, value=2)),
-        Declaration(Variable(d, type=integer, value=4))]
+        Declaration(Variable(c, type=real, value=2.0)),
+        Declaration(Variable(d, type=real, value=4.0))]
 
         An example of variable definiton:
 

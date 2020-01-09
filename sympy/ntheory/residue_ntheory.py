@@ -393,7 +393,7 @@ def _sqrt_mod_prime_power(a, p, k):
     if k == 1:
         if p == 2:
             return [ZZ(a)]
-        if not is_quad_residue(a, p):
+        if not (a % p < 2 or pow(a, (p - 1) // 2, p) == 1):
             return None
 
         if p % 4 == 3:
@@ -773,8 +773,8 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) is None:
-        raise NotImplementedError("Not Implemented for m without primitive root")
+    if not isprime(p):
+        raise NotImplementedError("Not implemented for composite p")
 
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
@@ -1300,3 +1300,51 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_pollard_rho(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
+
+
+
+def quadratic_congruence(a, b, c, p):
+    """
+    Find the solutions to ``a x**2 + b x + c = 0 mod p
+    a : integer
+    b : integer
+    c : integer
+    p : positive integer
+    """
+    from sympy.polys.galoistools import linear_congruence
+    a = as_int(a)
+    b = as_int(b)
+    c = as_int(c)
+    p = as_int(p)
+    a = a % p
+    b = b % p
+    c = c % p
+
+    if a == 0:
+        return linear_congruence(b, -c, p)
+    if p == 2:
+        roots = []
+        if c % 2 == 0:
+            roots.append(0)
+        if (a + b + c) % 2 == 0:
+            roots.append(1)
+        return roots
+    if isprime(p):
+        inv_a = mod_inverse(a, p)
+        b *= inv_a
+        c *= inv_a
+        if b % 2 == 1:
+            b = b + p
+        d = ((b * b) // 4 - c) % p
+        y = sqrt_mod(d, p, all_roots=True)
+        res = set()
+        for i in y:
+            res.add((i - b // 2) % p)
+        return sorted(res)
+    y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+    res = set()
+    for i in y:
+        root = linear_congruence(2 * a, i - b, 4 * a * p)
+        for j in root:
+            res.add(j % p)
+    return sorted(res)

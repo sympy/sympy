@@ -10,11 +10,8 @@ FIXME: This module is still under actively developed. Some functions may be not 
 
 from __future__ import print_function, division
 
-from sympy.codegen.ast import Assignment
 from sympy.core import S
-from sympy.core.basic import Atom
 from sympy.core.numbers import Integer, IntegerConstant
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 

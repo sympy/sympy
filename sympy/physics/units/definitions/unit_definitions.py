@@ -2,7 +2,7 @@ from sympy.physics.units.definitions.dimension_definitions import current, tempe
     luminous_intensity, angle, charge, voltage, impedance, conductance, capacitance, inductance, magnetic_density, \
     magnetic_flux, information
 
-from sympy import Rational, pi, sqrt, S
+from sympy import Rational, pi, S
 from sympy.physics.units.prefixes import kilo, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
 from sympy.physics.units.quantities import Quantity
 
