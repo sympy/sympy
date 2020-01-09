@@ -10,7 +10,7 @@ from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
-from .compatibility import as_int, range
+from .compatibility import as_int, range, HAS_GMPY
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 
@@ -71,6 +71,11 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
+    if HAS_GMPY:
+        from sympy.core.compatibility import gmpy
+        x, t = gmpy.mpz(y).root(n)
+        return as_int(x), bool(t)
+
     if y in (0, 1):
         return y, True
     if n == 1:
