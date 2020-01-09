@@ -22,19 +22,19 @@ def upretty(expr):
 # Some of the pretty forms shown denote how the expressions just
 # above them should look with pretty printing.
 N = CoordSys3D('N')
-C = N.orient_new_axis('C', a, N.k)
+C = N.orient_new_axis('C', a, N.k)  # type: ignore
 v = []
 d = []
 v.append(Vector.zero)
-v.append(N.i)
-v.append(-N.i)
-v.append(N.i + N.j)
-v.append(a*N.i)
-v.append(a*N.i - b*N.j)
-v.append((a**2 + N.x)*N.i + N.k)
-v.append((a**2 + b)*N.i + 3*(C.y - c)*N.k)
+v.append(N.i)  # type: ignore
+v.append(-N.i)  # type: ignore
+v.append(N.i + N.j)  # type: ignore
+v.append(a*N.i)  # type: ignore
+v.append(a*N.i - b*N.j)  # type: ignore
+v.append((a**2 + N.x)*N.i + N.k)  # type: ignore
+v.append((a**2 + b)*N.i + 3*(C.y - c)*N.k)  # type: ignore
 f = Function('f')
-v.append(N.j - (Integral(f(b)) - C.x**2)*N.k)
+v.append(N.j - (Integral(f(b)) - C.x**2)*N.k)  # type: ignore
 upretty_v_8 = u(
 """\
       ⎛   2   ⌠        ⎞    \n\
@@ -50,9 +50,9 @@ j_N + /         /       \\\n\
       \\       /         / \
 """)
 
-v.append(N.i + C.k)
-v.append(express(N.i, C))
-v.append((a**2 + b)*N.i + (Integral(f(b)))*N.k)
+v.append(N.i + C.k)  # type: ignore
+v.append(express(N.i, C))  # type: ignore
+v.append((a**2 + b)*N.i + (Integral(f(b)))*N.k)  # type: ignore
 upretty_v_11 = u(
 """\
 ⎛ 2    ⎞        ⎛⌠        ⎞    \n\
@@ -69,8 +69,8 @@ pretty_v_11 = u(
 """)
 
 for x in v:
-    d.append(x | N.k)
-s = 3*N.x**2*C.y
+    d.append(x | N.k)  # type: ignore
+s = 3*N.x**2*C.y  # type: ignore
 upretty_s = u(
 """\
          2\n\
