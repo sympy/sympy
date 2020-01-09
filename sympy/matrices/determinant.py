@@ -484,29 +484,29 @@ def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     >>> from sympy import Matrix
     >>> from sympy.abc import x, y
     >>> A = Matrix([[1, 3], [2, 0]])
-    >>> A.charpoly(x) == A.charpoly(y)
+    >>> charpoly(A, x) == charpoly(A, y)
     True
 
     Specifying ``x`` is optional; a symbol named ``lambda`` is used by
     default (which looks good when pretty-printed in unicode):
 
-    >>> A.charpoly().as_expr()
+    >>> charpoly(A).as_expr()
     lambda**2 - lambda - 6
 
     And if ``x`` clashes with an existing symbol, underscores will
     be prepended to the name to make it unique:
 
     >>> A = Matrix([[1, 2], [x, 0]])
-    >>> A.charpoly(x).as_expr()
+    >>> charpoly(A, x).as_expr()
     _x**2 - _x - 2*x
 
     Whether you pass a symbol or not, the generator can be obtained
     with the gen attribute since it may not be the same as the symbol
     that was passed:
 
-    >>> A.charpoly(x).gen
+    >>> charpoly(A, x).gen
     _x
-    >>> A.charpoly(x).gen == x
+    >>> charpoly(A, x).gen == x
     False
 
     Parameters
