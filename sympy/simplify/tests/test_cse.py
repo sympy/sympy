@@ -539,6 +539,11 @@ def test_issue_13000():
     assert cse_eq == eq
 
 
+def test_issue_18203():
+    eq = CRootOf(x**5 + 11*x - 2, 0) + CRootOf(x**5 + 11*x - 2, 1)
+    assert cse(eq) == ([], [eq])
+
+
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
