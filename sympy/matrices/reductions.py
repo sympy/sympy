@@ -3,11 +3,10 @@ from __future__ import division, print_function
 from types import FunctionType
 
 from sympy.core.cache import cacheit
-from sympy.core.sympify import sympify
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .determinant import det, _find_reasonable_pivot
-from .utilities import _toselfclass, _iszero
+from .utilities import _safesympify, _toselfclass, _iszero
 
 
 @cacheit
@@ -139,7 +138,7 @@ def is_echelon(M, iszerofunc=_iszero):
     zeros are at the bottom, and below each leading non-zero in a row are
     exclusively zeros."""
 
-    return _is_echelon(sympify(M), iszerofunc)
+    return _is_echelon(_safesympify(M), iszerofunc)
 
 def echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
         dotprodsimp=None):
@@ -158,7 +157,7 @@ def echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
 
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
 
-    mat, pivots, _ = _row_reduce(sympify(M), iszerofunc, simpfunc,
+    mat, pivots, _ = _row_reduce(_safesympify(M), iszerofunc, simpfunc,
             normalize_last=True, normalize=False, zero_above=False,
             dotprodsimp=dotprodsimp)
 
@@ -216,7 +215,7 @@ def rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         if False in zeros:
             return 1
 
-    M = sympify(M)
+    M = _safesympify(M)
 
     if M.rows == 2 and M.cols == 2:
         zeros = [iszerofunc(x) for x in M]
@@ -301,7 +300,7 @@ def rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
 
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
 
-    mat, pivot_cols, _ = _row_reduce(sympify(M), iszerofunc, simpfunc,
+    mat, pivot_cols, _ = _row_reduce(_safesympify(M), iszerofunc, simpfunc,
             normalize_last, normalize=True, zero_above=True,
             dotprodsimp=dotprodsimp)
 

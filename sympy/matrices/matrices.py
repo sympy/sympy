@@ -33,7 +33,8 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, NonPositiveDefiniteMatrixError)
 
-from .utilities import _toselfclass, _iszero, _is_zero_after_expand_mul
+from .utilities import (_safesympify, _toselfclass, _iszero,
+    _is_zero_after_expand_mul)
 
 from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
@@ -88,7 +89,8 @@ class MatrixDeterminant(MatrixCommon):
         """Computes characteristic polynomial det(x*I - self) where I is
         the identity matrix. See ``charpoly`` in sympy.matrices.determinant for details."""
 
-        return charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+        return charpoly(_safesympify(self), x=x, simplify=simplify,
+                dotprodsimp=dotprodsimp)
 
     def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Calculate the cofactor of an element. See ``cofactor`` in
@@ -107,14 +109,15 @@ class MatrixDeterminant(MatrixCommon):
         """Computes the determinant of a matrix. See ``det`` in
         sympy.matrices.determinant for details."""
 
-        return det(self, method=method, iszerofunc=iszerofunc,
+        return det(_safesympify(self), method=method, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
 
     def det_bareiss(self, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         """Compute matrix determinant using Bareiss' fraction-free algorithm.
         See ``det_bareiss`` in sympy.matrices.determinant for details."""
 
-        return det_bareiss(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return det_bareiss(_safesympify(self), iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
 
     def det_berkowitz(self, dotprodsimp=None):
         """ Use the Berkowitz algorithm to compute the determinant. See
@@ -126,8 +129,8 @@ class MatrixDeterminant(MatrixCommon):
         """ Computes the determinant of a matrix from its LU decomposition. See
         ``det_LU`` in sympy.matrices.determinant for details."""
 
-        return det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                dotprodsimp=dotprodsimp)
+        return det_LU(_safesympify(self), iszerofunc=iszerofunc,
+                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
 
     def minor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Return the (i,j) minor of ``self``.  That is,

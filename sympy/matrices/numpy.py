@@ -65,7 +65,7 @@ class NumPyMatrix(MutableDenseMatrix):
             if len(args) == 1:
                 view_arr = args[0]
 
-                if not isinstance(view_arr, (np.ndarray, np.matrix)):
+                if not isinstance(view_arr, np.ndarray):
                     raise TypeError("'copy=False' for NumPyMatrix requires NumPy matrix as source")
                 if len(view_arr.shape) != 2:
                     raise TypeError("'copy=False' for NumPyMatrix without rows and cols specified requires 2D NumPy matrix as source")
@@ -75,7 +75,7 @@ class NumPyMatrix(MutableDenseMatrix):
             elif len(args) == 3:
                 rows, cols, view_arr = args
 
-                if not isinstance(view_arr, (np.ndarray, np.matrix)):
+                if not isinstance(view_arr, np.ndarray):
                     raise TypeError("'copy=False' for NumPyMatrix requires NumPy matrix as source")
 
             else:
@@ -88,11 +88,11 @@ class NumPyMatrix(MutableDenseMatrix):
                 view_arr = np.ndarray(view_arr.shape, dtype=view_arr.dtype, buffer=view_arr)
 
         else:
-            if len(args) == 1 and isinstance(args[0], (np.ndarray, np.matrix)):
+            if len(args) == 1 and isinstance(args[0], np.ndarray):
                 if dtype is None:
                     dtype = args[0].dtype
 
-            elif len(args) == 3 and isinstance(args[2], (np.ndarray, np.matrix)):
+            elif len(args) == 3 and isinstance(args[2], np.ndarray):
                 if dtype is None:
                     dtype = args[2].dtype
 

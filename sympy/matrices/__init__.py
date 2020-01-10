@@ -23,13 +23,6 @@ ImmutableMatrix = ImmutableDenseMatrix
 MutableMatrix   = MutableDenseMatrix
 SparseMatrix    = MutableSparseMatrix
 
-IMatrix  = ImmutableDenseMatrix
-MMatrix  = MutableDenseMatrix
-SMatrix  = ImmutableSparseMatrix
-ISMatrix = ImmutableSparseMatrix
-MSMatrix = MutableSparseMatrix
-NPMatrix = NumPyMatrix
-
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
     Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace,
@@ -69,8 +62,6 @@ __all__ = [
     'ImmutableSparseMatrix',
     'MutableSparseMatrix',
     'NumPyMatrix',
-
-    'IMatrix', 'MMatrix', 'SMatrix', 'ISMatrix', 'MSMatrix', 'NPMatrix',
 
     'MatrixSlice', 'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix',
     'Identity', 'Inverse', 'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr',

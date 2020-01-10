@@ -1,6 +1,17 @@
 from __future__ import division, print_function
 
 from sympy.core.function import expand_mul
+from sympy.core.sympify import SympifyError, sympify
+
+
+def _safesympify(M):
+  """Try to sympify and return original object if that fails. Needed to safely
+  operate on ``RawMatrix`` objects from sympy.polys.solvers."""
+
+  try:
+    return sympify(M)
+  except SympifyError:
+    return M
 
 
 def _toselfclass(self, M):

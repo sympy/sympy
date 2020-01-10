@@ -6,12 +6,11 @@ from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import _uniquely_named_symbol
-from sympy.core.sympify import sympify
 from sympy.polys import PurePoly, cancel
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .common import MatrixError, NonSquareMatrixError
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _safesympify, _iszero, _is_zero_after_expand_mul
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
@@ -391,7 +390,7 @@ def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     if dotprodsimp:
         simplify = lambda e: e
 
-    berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(_safesympify(M), dotprodsimp=dotprodsimp)
     x = _uniquely_named_symbol(x, berk_vector)
 
     return PurePoly([simplify(a) for a in berk_vector], x)
@@ -445,7 +444,7 @@ def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return sympify(M)._new(M.rows, M.cols,
+    return _safesympify(M)._new(M.rows, M.cols,
             lambda i, j: cofactor(M, i, j, method, dotprodsimp=dotprodsimp))
 
 
@@ -623,7 +622,7 @@ def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    return bareiss(sympify(M))
+    return bareiss(_safesympify(M))
 
 
 def det_berkowitz(M, dotprodsimp=None):
@@ -647,7 +646,7 @@ def det_berkowitz(M, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(_safesympify(M), dotprodsimp=dotprodsimp)
     return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
 
@@ -685,7 +684,7 @@ def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    lu, row_swaps = sympify(M).LUdecomposition_Simple(iszerofunc=iszerofunc,
+    lu, row_swaps = _safesympify(M).LUdecomposition_Simple(iszerofunc=iszerofunc,
             simpfunc=None, dotprodsimp=dotprodsimp)
     # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
     # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
@@ -763,4 +762,4 @@ def minor_submatrix(M, i, j):
     rows = [a for a in range(M.rows) if a != i]
     cols = [a for a in range(M.cols) if a != j]
 
-    return sympify(M).extract(rows, cols)
+    return _safesympify(M).extract(rows, cols)
