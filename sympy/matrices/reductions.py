@@ -1,9 +1,13 @@
 from __future__ import division, print_function
 
+from types import FunctionType
+
 from sympy.core.cache import cacheit
+from sympy.core.sympify import sympify
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
-from .determinant import _find_reasonable_pivot
+from .determinant import det, _find_reasonable_pivot
+from .utilities import _toselfclass, _iszero
 
 
 @cacheit
@@ -117,3 +121,191 @@ def _row_reduce(M, iszerofunc, simpfunc, normalize_last=True,
                 mat[p] = dps(mat[p] / pivot_val)
 
     return M._new(M.rows, M.cols, mat), tuple(pivot_cols), tuple(swaps)
+
+
+def _is_echelon(M, iszerofunc=_iszero):
+    if M.rows <= 0 or M.cols <= 0:
+        return True
+
+    zeros_below = all(iszerofunc(t) for t in M[1:, 0])
+
+    if iszerofunc(M[0, 0]):
+        return zeros_below and _is_echelon(M[:, 1:], iszerofunc)
+
+    return zeros_below and _is_echelon(M[1:, 1:], iszerofunc)
+
+def is_echelon(M, iszerofunc=_iszero):
+    """Returns `True` if the matrix is in echelon form. That is, all rows of
+    zeros are at the bottom, and below each leading non-zero in a row are
+    exclusively zeros."""
+
+    return _is_echelon(sympify(M), iszerofunc)
+
+def echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
+        dotprodsimp=None):
+    """Returns a matrix row-equivalent to ``M`` that is in echelon form. Note
+    that echelon form of a matrix is *not* unique, however, properties like the
+    row space and the null space are preserved.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+    """
+
+    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+
+    mat, pivots, _ = _row_reduce(sympify(M), iszerofunc, simpfunc,
+            normalize_last=True, normalize=False, zero_above=False,
+            dotprodsimp=dotprodsimp)
+
+    if with_pivots:
+        return mat, pivots
+
+    return mat
+
+
+def _permute_complexity_right(M, iszerofunc):
+    """Permute columns with complicated elements as
+    far right as they can go.  Since the ``sympy`` row reduction
+    algorithms start on the left, having complexity right-shifted
+    speeds things up.
+
+    Returns a tuple (mat, perm) where perm is a permutation
+    of the columns to perform to shift the complex columns right, and mat
+    is the permuted matrix."""
+
+    def complexity(i):
+        # the complexity of a column will be judged by how many
+        # element's zero-ness cannot be determined
+        return sum(1 if iszerofunc(e) is None else 0 for e in M[:, i])
+
+    complex = [(complexity(i), i) for i in range(M.cols)]
+    perm    = [j for (i, j) in sorted(complex)]
+
+    return (M.permute(perm, orientation='cols'), perm)
+
+def rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
+    """
+    Returns the rank of a matrix
+
+    >>> from sympy import Matrix
+    >>> from sympy.abc import x
+    >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
+    >>> m.rank()
+    2
+    >>> n = Matrix(3, 3, range(1, 10))
+    >>> n.rank()
+    2
+    """
+
+    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+
+    # for small matrices, we compute the rank explicitly
+    # if is_zero on elements doesn't answer the question
+    # for small matrices, we fall back to the full routine.
+    if M.rows <= 0 or M.cols <= 0:
+        return 0
+
+    if M.rows <= 1 or M.cols <= 1:
+        zeros = [iszerofunc(x) for x in M]
+
+        if False in zeros:
+            return 1
+
+    M = sympify(M)
+
+    if M.rows == 2 and M.cols == 2:
+        zeros = [iszerofunc(x) for x in M]
+
+        if not False in zeros and not None in zeros:
+            return 0
+
+        _det = det(M, dotprodsimp=dotprodsimp)
+
+        if iszerofunc(_det) and False in zeros:
+            return 1
+        if iszerofunc(_det) is False:
+            return 2
+
+    mat, _       = _permute_complexity_right(M, iszerofunc=iszerofunc)
+    _, pivots, _ = _row_reduce(mat, iszerofunc, simpfunc, normalize_last=True,
+            normalize=False, zero_above=False, dotprodsimp=dotprodsimp)
+
+    return len(pivots)
+
+
+def rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
+        normalize_last=True, dotprodsimp=None):
+    """Return reduced row-echelon form of matrix and indices of pivot vars.
+
+    Parameters
+    ==========
+
+    iszerofunc : Function
+        A function used for detecting whether an element can
+        act as a pivot.  ``lambda x: x.is_zero`` is used by default.
+
+    simplify : Function
+        A function used to simplify elements when looking for a pivot.
+        By default SymPy's ``simplify`` is used.
+
+    pivots : True or False
+        If ``True``, a tuple containing the row-reduced matrix and a tuple
+        of pivot columns is returned.  If ``False`` just the row-reduced
+        matrix is returned.
+
+    normalize_last : True or False
+        If ``True``, no pivots are normalized to `1` until after all
+        entries above and below each pivot are zeroed.  This means the row
+        reduction algorithm is fraction free until the very last step.
+        If ``False``, the naive row reduction procedure is used where
+        each pivot is normalized to be `1` before row operations are
+        used to zero above and below the pivot.
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+
+    Notes
+    =====
+
+    The default value of ``normalize_last=True`` can provide significant
+    speedup to row reduction, especially on matrices with symbols.  However,
+    if you depend on the form row reduction algorithm leaves entries
+    of the matrix, set ``noramlize_last=False``
+
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.abc import x
+    >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
+    >>> m.rref()
+    (Matrix([
+    [1, 0],
+    [0, 1]]), (0, 1))
+    >>> rref_matrix, rref_pivots = m.rref()
+    >>> rref_matrix
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> rref_pivots
+    (0, 1)
+    """
+
+    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+
+    mat, pivot_cols, _ = _row_reduce(sympify(M), iszerofunc, simpfunc,
+            normalize_last, normalize=True, zero_above=True,
+            dotprodsimp=dotprodsimp)
+
+    if pivots:
+        mat = (mat, pivot_cols)
+
+    return mat

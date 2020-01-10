@@ -17,7 +17,7 @@ from sympy.core.compatibility import (
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, converter as sympify_converter
 from sympy.functions import Abs
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
@@ -2588,6 +2588,12 @@ class _MinimalMatrix(object):
     @property
     def shape(self):
         return (self.rows, self.cols)
+
+def _sympify_minimal_matrix(m):
+    from .immutable import ImmutableDenseMatrix
+    return ImmutableDenseMatrix(m.rows, m.cols, m)
+
+sympify_converter[_MinimalMatrix] = _sympify_minimal_matrix
 
 
 class _MatrixWrapper(object):

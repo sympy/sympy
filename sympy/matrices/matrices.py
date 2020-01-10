@@ -39,7 +39,7 @@ from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
     _find_reasonable_pivot, _find_reasonable_pivot_naive)
 
-from .reductions import _row_reduce
+from .reductions import is_echelon, echelon_form, rank, rref
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -198,6 +198,61 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
+    def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
+        """Validate the arguments for a row/column operation.  ``error_str``
+        can be one of "row" or "col" depending on the arguments being parsed."""
+        if op not in ["n->kn", "n<->m", "n->n+km"]:
+            raise ValueError("Unknown {} operation '{}'. Valid col operations "
+                             "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
+
+        # define self_col according to error_str
+        self_cols = self.cols if error_str == 'col' else self.rows
+
+        # normalize and validate the arguments
+        if op == "n->kn":
+            col = col if col is not None else col1
+            if col is None or k is None:
+                raise ValueError("For a {0} operation 'n->kn' you must provide the "
+                                 "kwargs `{0}` and `k`".format(error_str))
+            if not 0 <= col < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+
+        elif op == "n<->m":
+            # we need two cols to swap. It doesn't matter
+            # how they were specified, so gather them together and
+            # remove `None`
+            cols = set((col, k, col1, col2)).difference([None])
+            if len(cols) > 2:
+                # maybe the user left `k` by mistake?
+                cols = set((col, col1, col2)).difference([None])
+            if len(cols) != 2:
+                raise ValueError("For a {0} operation 'n<->m' you must provide the "
+                                 "kwargs `{0}1` and `{0}2`".format(error_str))
+            col1, col2 = cols
+            if not 0 <= col1 < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
+            if not 0 <= col2 < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+
+        elif op == "n->n+km":
+            col = col1 if col is None else col
+            col2 = col1 if col2 is None else col2
+            if col is None or col2 is None or k is None:
+                raise ValueError("For a {0} operation 'n->n+km' you must provide the "
+                                 "kwargs `{0}`, `k`, and `{0}2`".format(error_str))
+            if col == col2:
+                raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
+                                 "be different.".format(error_str))
+            if not 0 <= col < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+            if not 0 <= col2 < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+
+        else:
+            raise MatrixError('invalid row/column operation')
+
+        return op, col, k, col1, col2
+
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
         """Performs the elementary column operation `op`.
 
@@ -258,244 +313,43 @@ class MatrixReductions(MatrixDeterminant):
         if op == "n->n+km":
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
-    def _eval_echelon_form(self, iszerofunc, simpfunc, dotprodsimp=None):
-        """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
-        in echelon form and ``swaps`` is a list of row-swaps performed."""
-
-        reduced, pivot_cols, swaps = _row_reduce(sympify(self), iszerofunc, simpfunc,
-                                                 normalize_last=True,
-                                                 normalize=False,
-                                                 zero_above=False,
-                                                 dotprodsimp=dotprodsimp)
-        return _toselfclass(self, reduced), pivot_cols, swaps
-
-    def _eval_is_echelon(self, iszerofunc):
-        if self.rows <= 0 or self.cols <= 0:
-            return True
-        zeros_below = all(iszerofunc(t) for t in self[1:, 0])
-        if iszerofunc(self[0, 0]):
-            return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
-        return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
-
-    def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
-        """Validate the arguments for a row/column operation.  ``error_str``
-        can be one of "row" or "col" depending on the arguments being parsed."""
-        if op not in ["n->kn", "n<->m", "n->n+km"]:
-            raise ValueError("Unknown {} operation '{}'. Valid col operations "
-                             "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
-
-        # define self_col according to error_str
-        self_cols = self.cols if error_str == 'col' else self.rows
-
-        # normalize and validate the arguments
-        if op == "n->kn":
-            col = col if col is not None else col1
-            if col is None or k is None:
-                raise ValueError("For a {0} operation 'n->kn' you must provide the "
-                                 "kwargs `{0}` and `k`".format(error_str))
-            if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-
-        elif op == "n<->m":
-            # we need two cols to swap. It doesn't matter
-            # how they were specified, so gather them together and
-            # remove `None`
-            cols = set((col, k, col1, col2)).difference([None])
-            if len(cols) > 2:
-                # maybe the user left `k` by mistake?
-                cols = set((col, col1, col2)).difference([None])
-            if len(cols) != 2:
-                raise ValueError("For a {0} operation 'n<->m' you must provide the "
-                                 "kwargs `{0}1` and `{0}2`".format(error_str))
-            col1, col2 = cols
-            if not 0 <= col1 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
-            if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
-
-        elif op == "n->n+km":
-            col = col1 if col is None else col
-            col2 = col1 if col2 is None else col2
-            if col is None or col2 is None or k is None:
-                raise ValueError("For a {0} operation 'n->n+km' you must provide the "
-                                 "kwargs `{0}`, `k`, and `{0}2`".format(error_str))
-            if col == col2:
-                raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
-                                 "be different.".format(error_str))
-            if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-            if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
-
-        else:
-            raise MatrixError('invalid row/column operation')
-
-        return op, col, k, col1, col2
-
-    def _permute_complexity_right(self, iszerofunc):
-        """Permute columns with complicated elements as
-        far right as they can go.  Since the ``sympy`` row reduction
-        algorithms start on the left, having complexity right-shifted
-        speeds things up.
-
-        Returns a tuple (mat, perm) where perm is a permutation
-        of the columns to perform to shift the complex columns right, and mat
-        is the permuted matrix."""
-
-        def complexity(i):
-            # the complexity of a column will be judged by how many
-            # element's zero-ness cannot be determined
-            return sum(1 if iszerofunc(e) is None else 0 for e in self[:, i])
-        complex = [(complexity(i), i) for i in range(self.cols)]
-        perm = [j for (i, j) in sorted(complex)]
-
-        return (self.permute(perm, orientation='cols'), perm)
+    is_echelon = property(is_echelon)
 
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
             dotprodsimp=None):
-        """Returns a matrix row-equivalent to ``self`` that is
-        in echelon form.  Note that echelon form of a matrix
-        is *not* unique, however, properties like the row
-        space and the null space are preserved.
+        """Returns a matrix row-equivalent to ``self`` that is in echelon form.
+        Note that echelon form of a matrix is *not* unique, however, properties
+        like the row space and the null space are preserved. See
+        ``echelon_form`` in sympy.matrices.reductions for details."""
 
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc,
+        mat_pivots = echelon_form(self, iszerofunc=iszerofunc,
+                simplify=simplify, with_pivots=with_pivots,
                 dotprodsimp=dotprodsimp)
+
         if with_pivots:
-            return mat, pivots
-        return mat
+            return _toselfclass(self, mat_pivots[0]), mat_pivots[1]
 
-    @property
-    def is_echelon(self, iszerofunc=_iszero):
-        """Returns `True` if the matrix is in echelon form.
-        That is, all rows of zeros are at the bottom, and below
-        each leading non-zero in a row are exclusively zeros."""
-
-        return self._eval_is_echelon(iszerofunc)
+        return _toselfclass(self, mat_pivots)
 
     def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
-        """
-        Returns the rank of a matrix
+        """Returns the rank of a matrix. See ``rank`` in
+        sympy.matrices.reductions for details."""
 
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x
-        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
-        >>> m.rank()
-        2
-        >>> n = Matrix(3, 3, range(1, 10))
-        >>> n.rank()
-        2
-        """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-
-        # for small matrices, we compute the rank explicitly
-        # if is_zero on elements doesn't answer the question
-        # for small matrices, we fall back to the full routine.
-        if self.rows <= 0 or self.cols <= 0:
-            return 0
-        if self.rows <= 1 or self.cols <= 1:
-            zeros = [iszerofunc(x) for x in self]
-            if False in zeros:
-                return 1
-        if self.rows == 2 and self.cols == 2:
-            zeros = [iszerofunc(x) for x in self]
-            if not False in zeros and not None in zeros:
-                return 0
-            det = self.det(dotprodsimp=dotprodsimp)
-            if iszerofunc(det) and False in zeros:
-                return 1
-            if iszerofunc(det) is False:
-                return 2
-
-        mat, _ = self._permute_complexity_right(iszerofunc=iszerofunc)
-        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc,
-                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
-        return len(pivots)
+        return rank(self, iszerofunc=iszerofunc, simplify=simplify,
+                dotprodsimp=dotprodsimp)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True, dotprodsimp=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
+        See ``rref`` in sympy.matrices.reductions for details."""
 
-        Parameters
-        ==========
-
-        iszerofunc : Function
-            A function used for detecting whether an element can
-            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
-
-        simplify : Function
-            A function used to simplify elements when looking for a pivot.
-            By default SymPy's ``simplify`` is used.
-
-        pivots : True or False
-            If ``True``, a tuple containing the row-reduced matrix and a tuple
-            of pivot columns is returned.  If ``False`` just the row-reduced
-            matrix is returned.
-
-        normalize_last : True or False
-            If ``True``, no pivots are normalized to `1` until after all
-            entries above and below each pivot are zeroed.  This means the row
-            reduction algorithm is fraction free until the very last step.
-            If ``False``, the naive row reduction procedure is used where
-            each pivot is normalized to be `1` before row operations are
-            used to zero above and below the pivot.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Notes
-        =====
-
-        The default value of ``normalize_last=True`` can provide significant
-        speedup to row reduction, especially on matrices with symbols.  However,
-        if you depend on the form row reduction algorithm leaves entries
-        of the matrix, set ``noramlize_last=False``
-
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x
-        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
-        >>> m.rref()
-        (Matrix([
-        [1, 0],
-        [0, 1]]), (0, 1))
-        >>> rref_matrix, rref_pivots = m.rref()
-        >>> rref_matrix
-        Matrix([
-        [1, 0],
-        [0, 1]])
-        >>> rref_pivots
-        (0, 1)
-        """
-
-        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-        ret, pivot_cols, _ = _row_reduce(sympify(self), iszerofunc, simpfunc,
-                normalize_last, normalize=True, zero_above=True,
-                dotprodsimp=dotprodsimp)
-
-        ret = _toselfclass(self, ret)
+        mat_pivots = rref(self, iszerofunc=iszerofunc, simplify=simplify,
+            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
 
         if pivots:
-            ret = (ret, pivot_cols)
+            return _toselfclass(self, mat_pivots[0]), mat_pivots[1]
 
-        return ret
+        return _toselfclass(self, mat_pivots)
 
 
 class MatrixSubspaces(MatrixReductions):

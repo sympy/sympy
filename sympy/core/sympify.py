@@ -299,7 +299,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 convert_xor=convert_xor, strict=strict, rational=rational,
                 evaluate=evaluate)
 
-        if isinstance(a, np.ndarray) and len(a.shape) == 2:
+        if isinstance(a, (np.ndarray, np.matrix)) and len(a.shape) == 2:
             from sympy.matrices import ImmutableDenseMatrix
             return ImmutableDenseMatrix(a)
 

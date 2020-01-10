@@ -11,7 +11,6 @@ from sympy.polys import PurePoly, cancel
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .common import MatrixError, NonSquareMatrixError
-
 from .utilities import _iszero, _is_zero_after_expand_mul
 
 

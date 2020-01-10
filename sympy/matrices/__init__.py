@@ -44,7 +44,7 @@ from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _berkowitz_toeplitz_matrix)
 
-from .reductions import (_row_reduce)
+from .reductions import is_echelon, echelon_form, rank, rref
 
 
 __all__ = [
@@ -86,5 +86,5 @@ __all__ = [
     '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
     '_berkowitz_toeplitz_matrix',
 
-    '_row_reduce',
+    'is_echelon', 'echelon_form', 'rank', 'rref',
 ]

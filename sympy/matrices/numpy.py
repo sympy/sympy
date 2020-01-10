@@ -10,6 +10,7 @@ class NumPyMatrix(MutableDenseMatrix):
     use in SymPy. Dispatches supported operations for faster execution to NumPy.
     """
 
+    _class_priority       = 2
     _NDArrayFlatSympified = None
 
     # Wraps creation of a single NDArrayFlatSympified class to defer importing
@@ -116,7 +117,7 @@ class NumPyMatrix(MutableDenseMatrix):
 
         return self
 
-    def det(self, *args, **kwargs): # override det and calculate usign NumPy
+    def det(self, *args, **kwargs):
         import numpy.linalg as npla
 
         if not self.is_square:
@@ -133,3 +134,8 @@ class NumPyMatrix(MutableDenseMatrix):
     det_bareiss   = det
     det_berkowitz = det
     det_LU        = det
+
+    def rank(self, *args, **kwargs):
+        import numpy.linalg as npla
+
+        return sympify(npla.matrix_rank(self._arr))
