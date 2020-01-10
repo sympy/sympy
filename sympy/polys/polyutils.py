@@ -8,7 +8,7 @@ from sympy.core.compatibility import range
 from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
-
+from sympy.core.numbers import ImaginaryUnit
 
 import re
 
@@ -229,7 +229,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     return polys, opt.gens
 
 
-def _parallel_dict_from_expr_no_gens(exprs, opt):
+def _parallel_dict_from_expr_no_gens(exprs, opt,expression = None):
     """Transform expressions into a multinomial form and figure out generators. """
     if opt.domain is not None:
         def _is_coeff(factor):
@@ -245,7 +245,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor.is_number
 
     gens, reprs = set([]), []
-
+    terms = []
     for expr in exprs:
         terms = []
 
@@ -273,6 +273,23 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             terms.append((coeff, elements))
 
         reprs.append(terms)
+
+    complex_in_denom, complex_in_num = False, False
+    if not expression is None:
+        # is_complex returns complex_in_num = True if numerator is complex
+        # and complex_in_denom = True if Denominator is complex
+        complex_in_num, complex_in_denom = is_complex(expression)
+    I = ImaginaryUnit()
+
+    # if expression is imaginary but gens then add I in gens
+    if not I in gens and len(gens)==0 and (complex_in_num or complex_in_denom):
+        gens.add(I)
+        imaginary_term = ([0], {I: 0})
+
+        if complex_in_num:
+            reprs[0].append(imaginary_term)
+        if complex_in_denom:
+            reprs[1].append(imaginary_term)
 
     gens = _sort_gens(gens, opt=opt)
     k, indices = len(gens), {}
@@ -321,7 +338,7 @@ def parallel_dict_from_expr(exprs, **args):
     return reps, opt.gens
 
 
-def _parallel_dict_from_expr(exprs, opt):
+def _parallel_dict_from_expr(exprs, opt, expression = None):
     """Transform expressions into a multinomial form. """
     if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
@@ -332,7 +349,7 @@ def _parallel_dict_from_expr(exprs, opt):
     if opt.gens:
         reps, gens = _parallel_dict_from_expr_if_gens(exprs, opt)
     else:
-        reps, gens = _parallel_dict_from_expr_no_gens(exprs, opt)
+        reps, gens = _parallel_dict_from_expr_no_gens(exprs, opt, expression)
 
     return reps, opt.clone({'gens': gens})
 
@@ -421,6 +438,17 @@ def _dict_reorder(rep, gens, new_gens):
 
     return map(tuple, new_monoms), coeffs
 
+def is_complex(exprs):
+    """Checks whether the numerator,Denominator of an expression is Complex"""
+    complex_in_num_denom = [False, False]
+    if len(exprs)>0:
+        if 'I' in str(exprs[0]):
+            complex_in_num_denom[0] = True
+    if len(exprs)>1:
+        if 'I' in str(exprs[1]):
+            complex_in_num_denom[1] = True
+
+    return complex_in_num_denom
 
 class PicklableWithSlots(object):
     """
