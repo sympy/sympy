@@ -4,7 +4,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj)
+                   factorial, binomial, erfi, besselj, besselk)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
@@ -342,6 +342,8 @@ def test_arcsin():
                             (2*asin(sqrt((-a + x)/(-a + b)))/pi, b >= x),
                             (1, True))
 
+    assert pspace(X).domain.set == Interval(a, b)
+
 
 def test_benini():
     alpha = Symbol("alpha", positive=True)
@@ -351,6 +353,7 @@ def test_benini():
 
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
+    assert pspace(X).domain.set == Interval(sigma, oo)
 
     alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
@@ -677,6 +680,8 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
+    assert characteristic_function(X)(x) == \
+            2*(-I*b*x)**(a/2)*besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
 
 def test_sampling_gamma_inverse():
     scipy = import_module('scipy')
@@ -709,6 +714,10 @@ def test_gumbel():
     exp(-mu/beta)*exp(y/beta)*exp(-exp(-mu/beta)*exp(y/beta))/beta
     assert cdf(X)(x).expand() == \
     exp(-exp(mu/beta)*exp(-x/beta))
+    assert characteristic_function(X)(x) == \
+        exp(I*mu*x)*gamma(-I*beta*x + 1)
+    assert characteristic_function(Y)(y) == \
+        exp(I*mu*y)*gamma(I*beta*y + 1)
 
 def test_kumaraswamy():
     a = Symbol("a", positive=True)

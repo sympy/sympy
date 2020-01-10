@@ -178,6 +178,7 @@ def rv(symbol, cls, args):
 class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
+    @property
     def set(self):
         return Interval(self.a, self.b)
 
@@ -1711,7 +1712,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
-        return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
+        return 2 * (-I*b*t)**(a/2) * besselk(a, sqrt(-4*I*b*t)) / gamma(a)
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the '
