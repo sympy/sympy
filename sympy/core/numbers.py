@@ -15,7 +15,7 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (
-    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
+    as_int, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
 from sympy.core.cache import lru_cache
 
@@ -2145,7 +2145,7 @@ class Integer(Rational):
 
     def __rdivmod__(self, other):
         from .containers import Tuple
-        if isinstance(other, integer_types) and global_parameters.evaluate:
+        if isinstance(other, int) and global_parameters.evaluate:
             return Tuple(*(divmod(other, self.p)))
         else:
             try:
@@ -2160,7 +2160,7 @@ class Integer(Rational):
     # TODO make it decorator + bytecodehacks?
     def __add__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p + other)
             elif isinstance(other, Integer):
                 return Integer(self.p + other.p)
@@ -2172,7 +2172,7 @@ class Integer(Rational):
 
     def __radd__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other + self.p)
             elif isinstance(other, Rational):
                 return Rational(other.p + self.p*other.q, other.q, 1)
@@ -2181,7 +2181,7 @@ class Integer(Rational):
 
     def __sub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p - other)
             elif isinstance(other, Integer):
                 return Integer(self.p - other.p)
@@ -2192,7 +2192,7 @@ class Integer(Rational):
 
     def __rsub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other - self.p)
             elif isinstance(other, Rational):
                 return Rational(other.p - self.p*other.q, other.q, 1)
@@ -2201,7 +2201,7 @@ class Integer(Rational):
 
     def __mul__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p*other)
             elif isinstance(other, Integer):
                 return Integer(self.p*other.p)
@@ -2212,7 +2212,7 @@ class Integer(Rational):
 
     def __rmul__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other*self.p)
             elif isinstance(other, Rational):
                 return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
@@ -2221,7 +2221,7 @@ class Integer(Rational):
 
     def __mod__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p % other)
             elif isinstance(other, Integer):
                 return Integer(self.p % other.p)
@@ -2230,7 +2230,7 @@ class Integer(Rational):
 
     def __rmod__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other % self.p)
             elif isinstance(other, Integer):
                 return Integer(other.p % self.p)
@@ -2238,7 +2238,7 @@ class Integer(Rational):
         return Rational.__rmod__(self, other)
 
     def __eq__(self, other):
-        if isinstance(other, integer_types):
+        if isinstance(other, int):
             return (self.p == other)
         elif isinstance(other, Integer):
             return (self.p == other.p)
@@ -2425,7 +2425,7 @@ class Integer(Rational):
         return Integer(Integer(other).p // self.p)
 
 # Add sympify converters
-for i_type in integer_types:
+for i_type in (int, ):
     converter[i_type] = Integer
 
 

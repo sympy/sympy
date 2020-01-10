@@ -25,7 +25,6 @@ String and Unicode compatible changes:
 Integer related changes:
     * `long()` removed in Python 3, import `long` for Python 2/3 compatible
       function
-    * `integer_types` gives int in Python 3, int and long in Python 2
 
 Types related changes:
     * `class_types` gives type in Python 3, type and ClassType in Python 2
@@ -62,7 +61,7 @@ Metaclasses:
 """
 
 __all__ = [
-    'PY3', 'class_types', 'integer_types', 'string_types', 'long', 'int_info',
+    'PY3', 'class_types', 'string_types', 'long', 'int_info',
     'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'range', 'round', 'Mapping', 'Callable',
@@ -77,7 +76,6 @@ PY3 = sys.version_info[0] > 2
 
 if PY3:
     class_types = type,
-    integer_types = (int,)
     string_types = (str,)
     long = int
     int_info = sys.int_info
@@ -115,7 +113,6 @@ else:
     import types
 
     class_types = (type, types.ClassType)
-    integer_types = (int, long)
     string_types = (str, unicode)
     long = long
     int_info = sys.long_info
@@ -764,7 +761,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = integer_types
+SYMPY_INTS = (int, )
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
