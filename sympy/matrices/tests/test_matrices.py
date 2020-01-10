@@ -4146,23 +4146,3 @@ def test_issue_17827():
     raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
     raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
     raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
-
-def test_NumPyMatrix():
-    try:
-        from numpy import array
-    except ImportError:
-        skip('NumPy must be available to test NumPyMatrix')
-
-    a = array([[1, 2], [3, 4]])
-    M = NumPyMatrix(a)
-    assert M == Matrix([[1, 2], [3, 4]])
-    a[0, 0] = -1
-    assert M == Matrix([[1, 2], [3, 4]])
-    assert Matrix(M) == Matrix([[1, 2], [3, 4]])
-
-    # NumPyMatrix as wrapper
-    M = NumPyMatrix(a, copy=False)
-    assert M == Matrix([[-1, 2], [3, 4]])
-    a[0, 0] = 1
-    assert M == Matrix([[1, 2], [3, 4]])
-    assert Matrix(M) == Matrix([[1, 2], [3, 4]])

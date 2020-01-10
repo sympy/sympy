@@ -12,7 +12,7 @@ from .dense import (
 from .dense import MutableDenseMatrix
 from .matrices import DeferredVector, MatrixBase
 
-Matrix = MutableMatrix = MutableDenseMatrix
+Matrix = MutableDenseMatrix
 
 from .sparse import MutableSparseMatrix
 from .sparsetools import banded
@@ -20,10 +20,15 @@ from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
 from .numpy import NumPyMatrix
 
 ImmutableMatrix = ImmutableDenseMatrix
-SparseMatrix = MutableSparseMatrix
-IMatrix = ImmutableDenseMatrix
-SMatrix = SparseMatrix
+MutableMatrix   = MutableDenseMatrix
+SparseMatrix    = MutableSparseMatrix
+
+IMatrix  = ImmutableDenseMatrix
+MMatrix  = MutableDenseMatrix
+SMatrix  = ImmutableSparseMatrix
 ISMatrix = ImmutableSparseMatrix
+MSMatrix = MutableSparseMatrix
+NPMatrix = NumPyMatrix
 
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
@@ -47,22 +52,22 @@ __all__ = [
     'randMatrix', 'rot_axis1', 'rot_axis2', 'rot_axis3', 'symarray',
     'wronskian', 'zeros',
 
-    'MutableDenseMatrix',
-
     'DeferredVector', 'MatrixBase',
-
-    'Matrix', 'MutableMatrix',
-
-    'MutableSparseMatrix',
 
     'banded',
 
-    'ImmutableDenseMatrix', 'ImmutableSparseMatrix',
-    'IMatrix', 'SMatrix', 'ISMatrix',
+    'Matrix',
 
+    'ImmutableMatrix',
+    'MutableMatrix',
+    'ImmutableDenseMatrix',
+    'MutableDenseMatrix',
+    'SparseMatrix',
+    'ImmutableSparseMatrix',
+    'MutableSparseMatrix',
     'NumPyMatrix',
 
-    'ImmutableMatrix', 'SparseMatrix',
+    'IMatrix', 'MMatrix', 'SMatrix', 'ISMatrix', 'MSMatrix', 'NPMatrix',
 
     'MatrixSlice', 'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix',
     'Identity', 'Inverse', 'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr',
