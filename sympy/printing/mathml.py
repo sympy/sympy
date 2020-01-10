@@ -4,6 +4,8 @@ A MathML printer.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy import sympify, S, Mul
 from sympy.core.compatibility import default_sort_key
 from sympy.core.function import _coeff_isneg
@@ -37,7 +39,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)

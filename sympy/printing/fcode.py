@@ -19,6 +19,8 @@ it is necessary to make them different for Fortran.
 
 from __future__ import print_function, division
 
+from typing import Dict, Any
+
 from collections import defaultdict
 from itertools import chain
 import string
@@ -102,7 +104,7 @@ class FCodePrinter(CodePrinter):
         'contract': True,
         'standard': 77,
         'name_mangling' : True,
-    }
+    }  # type: Dict[str, Any]
 
     _operators = {
         'and': '.and.',
