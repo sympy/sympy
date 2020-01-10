@@ -11,9 +11,8 @@ from sympy.core.compatibility import (
     reduce, string_types)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.logic import fuzzy_and, fuzzy_or
-from sympy.core.numbers import Float, Integer, mod_inverse
+from sympy.core.numbers import Float, mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
@@ -21,7 +20,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.polys import PurePoly, cancel, roots
+from sympy.polys import cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
@@ -76,9 +75,6 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
-    _find_reasonable_pivot       = _find_reasonable_pivot
-    _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
-
     def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix. See ``adjugate`` in sympy.matrices.determinant for details."""
@@ -124,7 +120,7 @@ class MatrixDeterminant(MatrixCommon):
 
         return det_berkowitz(self, dotprodsimp=dotprodsimp)
 
-    def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+    def det_LU(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         """ Computes the determinant of a matrix from its LU decomposition. See
         ``det_LU`` in sympy.matrices.determinant for details."""
 
@@ -145,7 +141,9 @@ class MatrixDeterminant(MatrixCommon):
 
         return _toselfclass(self, minor_submatrix(self, i, j))
 
-    _eval_determinant = det
+    _find_reasonable_pivot       = _find_reasonable_pivot
+    _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
+    _eval_determinant            = det
 
 
 class MatrixReductions(MatrixDeterminant):

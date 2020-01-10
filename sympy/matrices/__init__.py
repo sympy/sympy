@@ -22,6 +22,8 @@ from .numpy import NumPyMatrix
 ImmutableMatrix = ImmutableDenseMatrix
 SparseMatrix = MutableSparseMatrix
 IMatrix = ImmutableDenseMatrix
+SMatrix = SparseMatrix
+ISMatrix = ImmutableSparseMatrix
 
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
@@ -55,7 +57,8 @@ __all__ = [
 
     'banded',
 
-    'ImmutableDenseMatrix', 'ImmutableSparseMatrix', 'IMatrix',
+    'ImmutableDenseMatrix', 'ImmutableSparseMatrix',
+    'IMatrix', 'SMatrix', 'ISMatrix',
 
     'NumPyMatrix',
 

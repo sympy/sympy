@@ -21,7 +21,6 @@ from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
-from sympy.matrices.determinant import det_bareiss, det_berkowitz, det_LU
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -733,9 +732,9 @@ def test_determinant():
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
-            det_bareiss(M) ==
-            det_berkowitz(M) ==
-            det_LU(M) ==
+            M.det_bareiss() ==
+            M.det_berkowitz() ==
+            M.det_LU() ==
             1)
 
     M = Matrix(( (-3,  2),

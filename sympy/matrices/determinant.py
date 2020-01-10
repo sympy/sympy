@@ -3,7 +3,6 @@ from __future__ import division, print_function
 from types import FunctionType
 
 from sympy.core.cache import cacheit
-from sympy.core.function import expand_mul
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import _uniquely_named_symbol
@@ -11,9 +10,9 @@ from sympy.core.sympify import sympify
 from sympy.polys import PurePoly, cancel
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
-from .common import NonSquareMatrixError
+from .common import MatrixError, NonSquareMatrixError
 
-from .utilities import _toselfclass, _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
@@ -315,7 +314,6 @@ def adjugate(M, method="berkowitz", dotprodsimp=None):
     """Returns the adjugate, or classical adjoint, of
     a matrix.  That is, the transpose of the matrix of cofactors.
 
-
     https://en.wikipedia.org/wiki/Adjugate
 
     See Also
@@ -324,7 +322,7 @@ def adjugate(M, method="berkowitz", dotprodsimp=None):
     cofactor_matrix
     sympy.matrices.common.MatrixCommon.transpose
     """
-    return cofactor_matrix(M, method, dotprodsimp=dotprodsimp).transpose()
+    return cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp).transpose()
 
 
 @cacheit
@@ -388,16 +386,15 @@ def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     det
     """
 
-    M = sympify(M)
-
     if not M.is_square:
         raise NonSquareMatrixError()
 
     if dotprodsimp:
         simplify = lambda e: e
 
-    berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
     x = _uniquely_named_symbol(x, berk_vector)
+
     return PurePoly([simplify(a) for a in berk_vector], x)
 
 
@@ -419,8 +416,6 @@ def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     minor
     minor_submatrix
     """
-
-    M = sympify(M)
 
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
@@ -448,13 +443,11 @@ def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     adjugate
     """
 
-    M = sympify(M)
-
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return sympify(M._new(M.rows, M.cols,
-            lambda i, j: cofactor(M, i, j, method, dotprodsimp=dotprodsimp)))
+    return sympify(M)._new(M.rows, M.cols,
+            lambda i, j: cofactor(M, i, j, method, dotprodsimp=dotprodsimp))
 
 
 @cacheit
@@ -524,11 +517,6 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     elif method == "det_lu":
         method = "lu"
 
-    _eval_det = getattr(M, '_eval_det', None)
-
-    if _eval_det: # allow object to override det, like for NumPy
-        return _eval_det(method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-
     if method not in ("bareiss", "berkowitz", "lu"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
@@ -541,28 +529,24 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     elif not isinstance(iszerofunc, FunctionType):
         raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
 
-    M = sympify(M)
-
-    if not M.is_square:
-        raise NonSquareMatrixError()
-
     n = M.rows
 
-    if n == 0:
-        return M.one
-    elif n == 1:
-        return M[0,0]
-    elif n == 2:
-        m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
-        return _dotprodsimp(m) if dotprodsimp else m
-    elif n == 3:
-        m =  (M[0, 0] * M[1, 1] * M[2, 2]
-            + M[0, 1] * M[1, 2] * M[2, 0]
-            + M[0, 2] * M[1, 0] * M[2, 1]
-            - M[0, 2] * M[1, 1] * M[2, 0]
-            - M[0, 0] * M[1, 2] * M[2, 1]
-            - M[0, 1] * M[1, 0] * M[2, 2])
-        return _dotprodsimp(m) if dotprodsimp else m
+    if n == M.cols:
+        if n == 0:
+            return M.one
+        elif n == 1:
+            return M[0,0]
+        elif n == 2:
+            m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
+            return _dotprodsimp(m) if dotprodsimp else m
+        elif n == 3:
+            m =  (M[0, 0] * M[1, 1] * M[2, 2]
+                + M[0, 1] * M[1, 2] * M[2, 0]
+                + M[0, 2] * M[1, 0] * M[2, 1]
+                - M[0, 2] * M[1, 1] * M[2, 0]
+                - M[0, 0] * M[1, 2] * M[2, 1]
+                - M[0, 1] * M[1, 0] * M[2, 2])
+            return _dotprodsimp(m) if dotprodsimp else m
 
     if method == "bareiss":
         return det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
@@ -570,6 +554,8 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
         return det_berkowitz(M, dotprodsimp=dotprodsimp)
     elif method == "lu":
         return det_LU(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    else:
+        raise MatrixError('unknown method for calculating determinant')
 
 
 @cacheit
@@ -629,10 +615,14 @@ def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
 
         return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
 
-    _eval_det_bareiss = getattr(M, '_eval_det_bareiss', None)
+    if not M.is_square:
+        raise NonSquareMatrixError()
 
-    if _eval_det_bareiss: # allow object to override det, like for NumPy
-        return _eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    if M.rows == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
 
     return bareiss(sympify(M))
 
@@ -649,10 +639,14 @@ def det_berkowitz(M, dotprodsimp=None):
         speed up calculation.
     """
 
-    _eval_det_berkowitz = getattr(M, '_eval_det_berkowitz', None)
+    if not M.is_square:
+        raise NonSquareMatrixError()
 
-    if _eval_det_berkowitz: # allow object to override det, like for NumPy
-        return _eval_det_berkowitz(dotprodsimp=dotprodsimp)
+    if M.rows == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
 
     berk_vector = _berkowitz_vector(sympify(M), dotprodsimp=dotprodsimp)
     return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
@@ -683,13 +677,8 @@ def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         speed up calculation.
     """
 
-    _eval_det_LU = getattr(M, '_eval_det_LU', None)
-
-    if _eval_det_LU: # allow object to override det, like for NumPy
-        return _eval_det_LU(iszerofunc=iszerofunc, simpfunc=simpfunc,
-                dotprodsimp=dotprodsimp)
-
-    M = sympify(M)
+    if not M.is_square:
+        raise NonSquareMatrixError()
 
     if M.rows == 0:
         return M.one
@@ -697,8 +686,8 @@ def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    lu, row_swaps = M.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None,
-            dotprodsimp=dotprodsimp)
+    lu, row_swaps = sympify(M).LUdecomposition_Simple(iszerofunc=iszerofunc,
+            simpfunc=None, dotprodsimp=dotprodsimp)
     # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
     # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
     # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).
@@ -746,9 +735,7 @@ def minor(M, i, j, method="berkowitz", dotprodsimp=None):
     det
     """
 
-    M = sympify(M)
-
-    if not M.is_square or M.rows < 1:
+    if not M.is_square:
         raise NonSquareMatrixError()
 
     return det(minor_submatrix(M, i, j), method=method, dotprodsimp=dotprodsimp)
@@ -756,7 +743,7 @@ def minor(M, i, j, method="berkowitz", dotprodsimp=None):
 
 def minor_submatrix(M, i, j):
     """Return the submatrix obtained by removing the `i`th row
-    and `j`th column from ``M``.
+    and `j`th column from ``M`` (works with Pythonic negative indices).
 
     See Also
     ========
@@ -764,8 +751,6 @@ def minor_submatrix(M, i, j):
     minor
     cofactor
     """
-
-    M = sympify(M)
 
     if i < 0:
         i += M.rows
@@ -779,4 +764,4 @@ def minor_submatrix(M, i, j):
     rows = [a for a in range(M.rows) if a != i]
     cols = [a for a in range(M.cols) if a != j]
 
-    return sympify(M.extract(rows, cols))
+    return sympify(M).extract(rows, cols)
