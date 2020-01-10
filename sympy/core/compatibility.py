@@ -24,9 +24,6 @@ Integer related changes:
     * `long()` removed in Python 3, import `long` for Python 2/3 compatible
       function
 
-Types related changes:
-    * `class_types` gives type in Python 3, type and ClassType in Python 2
-
 Renamed function attributes:
     * Python 2 `.func_code`, Python 3 `.__func__`, access with
       `get_function_code()`
@@ -59,21 +56,19 @@ Metaclasses:
 """
 
 __all__ = [
-    'PY3', 'class_types', 'long', 'int_info',
+    'PY3', 'long', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
     'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'range', 'round', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
     'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
-    'SYMPY_INTS', 'lru_cache', 'clock',
 ]
 
 import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    class_types = type,
     long = int
     int_info = sys.int_info
 
@@ -109,7 +104,6 @@ if PY3:
 else:
     import types
 
-    class_types = (type, types.ClassType)
     long = long
     int_info = sys.long_info
 
