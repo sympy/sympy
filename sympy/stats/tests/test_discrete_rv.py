@@ -12,7 +12,8 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.testing.pytest import slow, nocache_fail, raises
+from sympy.testing.pytest import slow, nocache_fail, raises, skip
+from sympy.external import import_module
 
 x = Symbol('x')
 
@@ -33,7 +34,7 @@ def test_Poisson():
     assert density(x) == PoissonDistribution(l)
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
-
+    assert sample(x) in x.pspace.domain.set
 
 def test_GeometricDistribution():
     p = S.One / 5
@@ -74,7 +75,7 @@ def test_Logarithmic():
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
     assert isinstance(E(x, evaluate=False), Sum)
-
+    assert sample(x) in x.pspace.domain.set
 
 @nocache_fail
 def test_negative_binomial():
@@ -104,7 +105,8 @@ def test_skellam():
         mu1*exp(I*z) - mu1 - mu2 + mu2*exp(-I*z))
     assert moment_generating_function(X)(z) == exp(
         mu1*exp(z) - mu1 - mu2 + mu2*exp(-z))
-
+    X = Skellam('x', 1, 2)
+    assert sample(X) in X.pspace.domain.set
 
 def test_yule_simon():
     from sympy import S
@@ -115,7 +117,8 @@ def test_yule_simon():
     assert isinstance(E(x, evaluate=False), Sum)
     # To test the cdf function
     assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
-
+    x = YuleSimon('x', 1)
+    assert sample(x) in x.pspace.domain.set
 
 def test_zeta():
     s = S(5)
@@ -123,7 +126,8 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
-
+    x = Zeta('x', 5)
+    assert sample(x) in x.pspace.domain.set
 
 @slow
 def test_sample_discrete():
@@ -261,3 +265,48 @@ def test_product_spaces():
 #    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
 #        """X2 <= 2), (0, True)), (X2, 1, oo))"""
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
+
+
+def test_sampling_methods():
+    distribs_numpy = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+        Zeta('Z', 2)
+    ]
+    distribs_scipy = [
+        Geometric('G', 0.5),
+        Logarithmic('L', 0.5),
+        Poisson('P', 1),
+        Skellam('S', 1, 1),
+        YuleSimon('Y', 1),
+        Zeta('Z', 2)
+    ]
+    distribs_pymc3 = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        for X in distribs_numpy:
+            sam = X.pspace.distribution._sample_numpy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            sam = X.pspace.distribution._sample_scipy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            sam = X.pspace.distribution._sample_pymc3(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
