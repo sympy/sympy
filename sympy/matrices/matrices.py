@@ -39,6 +39,8 @@ from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
     _find_reasonable_pivot, _find_reasonable_pivot_naive)
 
+from .reductions import _row_reduce
+
 
 class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
@@ -196,15 +198,76 @@ class MatrixReductions(MatrixDeterminant):
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
+    def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
+        """Performs the elementary column operation `op`.
+
+        `op` may be one of
+
+            * "n->kn" (column n goes to k*n)
+            * "n<->m" (swap column n and column m)
+            * "n->n+km" (column n goes to column n + k*column m)
+
+        Parameters
+        ==========
+
+        op : string; the elementary row operation
+        col : the column to apply the column operation
+        k : the multiple to apply in the column operation
+        col1 : one column of a column swap
+        col2 : second column of a column swap or column "m" in the column operation
+               "n->n+km"
+        """
+
+        op, col, k, col1, col2 = self._normalize_op_args(op, col, k, col1, col2, "col")
+
+        # now that we've validated, we're all good to dispatch
+        if op == "n->kn":
+            return self._eval_col_op_multiply_col_by_const(col, k)
+        if op == "n<->m":
+            return self._eval_col_op_swap(col1, col2)
+        if op == "n->n+km":
+            return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
+
+    def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
+        """Performs the elementary row operation `op`.
+
+        `op` may be one of
+
+            * "n->kn" (row n goes to k*n)
+            * "n<->m" (swap row n and row m)
+            * "n->n+km" (row n goes to row n + k*row m)
+
+        Parameters
+        ==========
+
+        op : string; the elementary row operation
+        row : the row to apply the row operation
+        k : the multiple to apply in the row operation
+        row1 : one row of a row swap
+        row2 : second row of a row swap or row "m" in the row operation
+               "n->n+km"
+        """
+
+        op, row, k, row1, row2 = self._normalize_op_args(op, row, k, row1, row2, "row")
+
+        # now that we've validated, we're all good to dispatch
+        if op == "n->kn":
+            return self._eval_row_op_multiply_row_by_const(row, k)
+        if op == "n<->m":
+            return self._eval_row_op_swap(row1, row2)
+        if op == "n->n+km":
+            return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
+
     def _eval_echelon_form(self, iszerofunc, simpfunc, dotprodsimp=None):
         """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
         in echelon form and ``swaps`` is a list of row-swaps performed."""
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last=True,
-                                                      normalize=False,
-                                                      zero_above=False,
-                                                      dotprodsimp=dotprodsimp)
-        return reduced, pivot_cols, swaps
+
+        reduced, pivot_cols, swaps = _row_reduce(sympify(self), iszerofunc, simpfunc,
+                                                 normalize_last=True,
+                                                 normalize=False,
+                                                 zero_above=False,
+                                                 dotprodsimp=dotprodsimp)
+        return _toselfclass(self, reduced), pivot_cols, swaps
 
     def _eval_is_echelon(self, iszerofunc):
         if self.rows <= 0 or self.cols <= 0:
@@ -213,13 +276,6 @@ class MatrixReductions(MatrixDeterminant):
         if iszerofunc(self[0, 0]):
             return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
         return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
-
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True, dotprodsimp=None):
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last, normalize=True,
-                                                      zero_above=True,
-                                                      dotprodsimp=dotprodsimp)
-        return reduced, pivot_cols
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
         """Validate the arguments for a row/column operation.  ``error_str``
@@ -295,117 +351,6 @@ class MatrixReductions(MatrixDeterminant):
 
         return (self.permute(perm, orientation='cols'), perm)
 
-    def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
-                    normalize=True, zero_above=True, dotprodsimp=None):
-        """Row reduce ``self`` and return a tuple (rref_matrix,
-        pivot_cols, swaps) where pivot_cols are the pivot columns
-        and swaps are any row swaps that were used in the process
-        of row reduction.
-
-        Parameters
-        ==========
-
-        iszerofunc : determines if an entry can be used as a pivot
-
-        simpfunc : used to simplify elements and test if they are
-            zero if ``iszerofunc`` returns `None`
-
-        normalize_last : indicates where all row reduction should
-            happen in a fraction-free manner and then the rows are
-            normalized (so that the pivots are 1), or whether
-            rows should be normalized along the way (like the naive
-            row reduction algorithm)
-
-        normalize : whether pivot rows should be normalized so that
-            the pivot value is 1
-
-        zero_above : whether entries above the pivot should be zeroed.
-            If ``zero_above=False``, an echelon matrix will be returned.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        """
-
-        def get_col(i):
-            return mat[i::cols]
-
-        def row_swap(i, j):
-            mat[i*cols:(i + 1)*cols], mat[j*cols:(j + 1)*cols] = \
-                mat[j*cols:(j + 1)*cols], mat[i*cols:(i + 1)*cols]
-
-        def cross_cancel(a, i, b, j):
-            """Does the row op row[i] = a*row[i] - b*row[j]"""
-            q = (j - i)*cols
-            for p in range(i*cols, (i + 1)*cols):
-                mat[p] = dps(a*mat[p] - b*mat[p + q])
-
-        dps = _dotprodsimp if dotprodsimp else lambda e: e
-        rows, cols = self.rows, self.cols
-        mat = list(self)
-        piv_row, piv_col = 0, 0
-        pivot_cols = []
-        swaps = []
-
-        # use a fraction free method to zero above and below each pivot
-        while piv_col < cols and piv_row < rows:
-            pivot_offset, pivot_val, \
-            assumed_nonzero, newly_determined = _find_reasonable_pivot(
-                get_col(piv_col)[piv_row:], iszerofunc, simpfunc)
-
-            # _find_reasonable_pivot may have simplified some things
-            # in the process.  Let's not let them go to waste
-            for (offset, val) in newly_determined:
-                offset += piv_row
-                mat[offset*cols + piv_col] = val
-
-            if pivot_offset is None:
-                piv_col += 1
-                continue
-
-            pivot_cols.append(piv_col)
-            if pivot_offset != 0:
-                row_swap(piv_row, pivot_offset + piv_row)
-                swaps.append((piv_row, pivot_offset + piv_row))
-
-            # if we aren't normalizing last, we normalize
-            # before we zero the other rows
-            if normalize_last is False:
-                i, j = piv_row, piv_col
-                mat[i*cols + j] = self.one
-                for p in range(i*cols + j + 1, (i + 1)*cols):
-                    mat[p] = dps(mat[p] / pivot_val)
-                # after normalizing, the pivot value is 1
-                pivot_val = self.one
-
-            # zero above and below the pivot
-            for row in range(rows):
-                # don't zero our current row
-                if row == piv_row:
-                    continue
-                # don't zero above the pivot unless we're told.
-                if zero_above is False and row < piv_row:
-                    continue
-                # if we're already a zero, don't do anything
-                val = mat[row*cols + piv_col]
-                if iszerofunc(val):
-                    continue
-
-                cross_cancel(pivot_val, row, val, piv_row)
-            piv_row += 1
-
-        # normalize each row
-        if normalize_last is True and normalize is True:
-            for piv_i, piv_j in enumerate(pivot_cols):
-                pivot_val = mat[piv_i*cols + piv_j]
-                mat[piv_i*cols + piv_j] = self.one
-                for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    mat[p] = dps(mat[p] / pivot_val)
-
-        return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
-
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
             dotprodsimp=None):
         """Returns a matrix row-equivalent to ``self`` that is
@@ -429,66 +374,6 @@ class MatrixReductions(MatrixDeterminant):
         if with_pivots:
             return mat, pivots
         return mat
-
-    def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
-        """Performs the elementary column operation `op`.
-
-        `op` may be one of
-
-            * "n->kn" (column n goes to k*n)
-            * "n<->m" (swap column n and column m)
-            * "n->n+km" (column n goes to column n + k*column m)
-
-        Parameters
-        ==========
-
-        op : string; the elementary row operation
-        col : the column to apply the column operation
-        k : the multiple to apply in the column operation
-        col1 : one column of a column swap
-        col2 : second column of a column swap or column "m" in the column operation
-               "n->n+km"
-        """
-
-        op, col, k, col1, col2 = self._normalize_op_args(op, col, k, col1, col2, "col")
-
-        # now that we've validated, we're all good to dispatch
-        if op == "n->kn":
-            return self._eval_col_op_multiply_col_by_const(col, k)
-        if op == "n<->m":
-            return self._eval_col_op_swap(col1, col2)
-        if op == "n->n+km":
-            return self._eval_col_op_add_multiple_to_other_col(col, k, col2)
-
-    def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
-        """Performs the elementary row operation `op`.
-
-        `op` may be one of
-
-            * "n->kn" (row n goes to k*n)
-            * "n<->m" (swap row n and row m)
-            * "n->n+km" (row n goes to row n + k*row m)
-
-        Parameters
-        ==========
-
-        op : string; the elementary row operation
-        row : the row to apply the row operation
-        k : the multiple to apply in the row operation
-        row1 : one row of a row swap
-        row2 : second row of a row swap or row "m" in the row operation
-               "n->n+km"
-        """
-
-        op, row, k, row1, row2 = self._normalize_op_args(op, row, k, row1, row2, "row")
-
-        # now that we've validated, we're all good to dispatch
-        if op == "n->kn":
-            return self._eval_row_op_multiply_row_by_const(row, k)
-        if op == "n<->m":
-            return self._eval_row_op_swap(row1, row2)
-        if op == "n->n+km":
-            return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
     @property
     def is_echelon(self, iszerofunc=_iszero):
@@ -598,14 +483,18 @@ class MatrixReductions(MatrixDeterminant):
         >>> rref_pivots
         (0, 1)
         """
+
         simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
 
-        ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
-                                          simpfunc=simpfunc,
-                                          normalize_last=normalize_last,
-                                          dotprodsimp=dotprodsimp)
+        ret, pivot_cols, _ = _row_reduce(sympify(self), iszerofunc, simpfunc,
+                normalize_last, normalize=True, zero_above=True,
+                dotprodsimp=dotprodsimp)
+
+        ret = _toselfclass(self, ret)
+
         if pivots:
             ret = (ret, pivot_cols)
+
         return ret
 
 

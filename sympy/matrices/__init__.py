@@ -44,6 +44,9 @@ from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _berkowitz_toeplitz_matrix)
 
+from .reductions import (_row_reduce)
+
+
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
 
@@ -82,4 +85,6 @@ __all__ = [
     'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
     '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
     '_berkowitz_toeplitz_matrix',
+
+    '_row_reduce',
 ]

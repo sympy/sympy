@@ -123,7 +123,7 @@ class NumPyMatrix(MutableDenseMatrix):
             raise NonSquareMatrixError()
 
         if self.rows == 0:
-            return M.one
+            return self.one
             # sympy/matrices/tests/test_matrices.py contains a test that
             # suggests that the determinant of a 0 x 0 matrix is one, by
             # convention.
