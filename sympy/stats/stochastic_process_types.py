@@ -67,7 +67,7 @@ class StochasticProcess(Basic):
     Parameters
     ==========
 
-    sym: Symbol or string_types
+    sym: Symbol or str
     state_space: Set
         The state space of the stochastic process, by default S.Reals.
         For discrete sets it is zero indexed.
@@ -537,7 +537,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Parameters
     ==========
 
-    sym: Symbol/string_types
+    sym: Symbol/str
     state_space: Set
         Optional, by default, S.Reals
     trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
@@ -699,7 +699,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     Parameters
     ==========
 
-    sym: Symbol/string_types
+    sym: Symbol/str
     state_space: Set
         Optional, by default, S.Reals
     gen_mat: Matrix/ImmutableMatrix/MatrixSymbol

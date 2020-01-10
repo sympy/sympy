@@ -258,7 +258,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.tensor.array import NDimArray
 
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic, NDimArray] + list((int, ))
+                frozenset, dict, Vector, Dyadic, NDimArray, int]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
