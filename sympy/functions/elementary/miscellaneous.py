@@ -630,9 +630,11 @@ class MinMaxBase(Expr, LatticeOp):
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
-    def evalf(self, prec=None, **options):
-        return self.func(*[a.evalf(prec, **options) for a in self.args])
-    n = evalf
+    def evalf(self, n=15, **options):
+        return self.func(*[a.evalf(n, **options) for a in self.args])
+
+    def n(self, *args, **kwargs):
+        return self.evalf(*args, **kwargs)
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
     _eval_is_antihermitian = lambda s: _torf(i.is_antihermitian for i in s.args)
