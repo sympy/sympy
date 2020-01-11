@@ -50,7 +50,13 @@ class AskCommutativeHandler(CommonHandler):
                 return False
         return True
 
-    Number, NaN = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def Number():
+        return True
+
+    @staticmethod
+    def NaN():
+        return True
 
 
 class TautologicalHandler(AskHandler):
