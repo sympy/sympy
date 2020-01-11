@@ -2550,7 +2550,6 @@ class TensAdd(TensExpr, AssocOp):
         args = self.args
         for x in args:
             a.append(str(x))
-        a.sort()
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')
         return s

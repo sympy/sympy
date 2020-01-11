@@ -534,34 +534,34 @@ def test_add1():
     t2 = t2.canon_bp()
     assert str(t2) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
     t2b = t2 + t1
-    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + A(b, -L_0)*B(L_0, a) + A(b, L_0)*B(a, -L_0)'
+    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0) + A(b, -L_0)*B(L_0, a)'
     t2b = t2b.canon_bp()
-    assert str(t2b) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
+    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + 2*A(b, L_0)*B(a, -L_0)'
     p, q, r = tensor_heads('p,q,r', [Lorentz])
     t = q(d0)*2
     assert str(t) == '2*q(d0)'
     t = 2*q(d0)
     assert str(t) == '2*q(d0)'
     t1 = p(d0) + 2*q(d0)
-    assert str(t1) == '2*q(d0) + p(d0)'
+    assert str(t1) == 'p(d0) + 2*q(d0)'
     t2 = p(-d0) + 2*q(-d0)
-    assert str(t2) == '2*q(-d0) + p(-d0)'
+    assert str(t2) == 'p(-d0) + 2*q(-d0)'
     t1 = p(d0)
     t3 = t1*t2
-    assert str(t3) == 'p(L_0)*(2*q(-L_0) + p(-L_0))'
+    assert str(t3) == 'p(L_0)*(p(-L_0) + 2*q(-L_0))'
     t3 = t3.expand()
-    assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == 'p(L_0)*p(-L_0) + 2*p(L_0)*q(-L_0)'
     t3 = t2*t1
     t3 = t3.expand()
-    assert str(t3) == '2*q(-L_0)*p(L_0) + p(-L_0)*p(L_0)'
+    assert str(t3) == 'p(-L_0)*p(L_0) + 2*q(-L_0)*p(L_0)'
     t3 = t3.canon_bp()
-    assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == 'p(L_0)*p(-L_0) + 2*p(L_0)*q(-L_0)'
     t1 = p(d0) + 2*q(d0)
     t3 = t1*t2
     t3 = t3.canon_bp()
-    assert str(t3) == '4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == 'p(L_0)*p(-L_0) + 4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0)'
     t1 = p(d0) - 2*q(d0)
-    assert str(t1) == '-2*q(d0) + p(d0)'
+    assert str(t1) == 'p(d0) - 2*q(d0)'
     t2 = p(-d0) + 2*q(-d0)
     t3 = t1*t2
     t3 = t3.canon_bp()
@@ -1772,7 +1772,7 @@ def test_tensor_expand():
     assert expr != A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)*C(k)*C(-k)
     assert expr.expand() == A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)*C(k)*C(-k)
     assert str(expr) == "A(-L_0)*(A(L_0)*A(j) + A(L_0)*B(j)*C(L_1)*C(-L_1))"
-    assert str(expr.canon_bp()) == 'A(L_0)*A(-L_0)*B(j)*C(L_1)*C(-L_1) + A(j)*A(L_0)*A(-L_0)'
+    assert str(expr.canon_bp()) == 'A(j)*A(L_0)*A(-L_0) + A(L_0)*A(-L_0)*B(j)*C(L_1)*C(-L_1)'
 
     expr = A(-i)*(2*A(i)*A(j) + A(i)*B(j))
     assert expr.expand() == 2*A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)
