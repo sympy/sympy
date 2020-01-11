@@ -1392,3 +1392,87 @@ def quadratic_congruence(a, b, c, p):
         for j in root:
             res.add(j % p)
     return sorted(res)
+
+
+def _general_congruence_prime(expr, p):
+    from sympy import Poly
+    roots = []
+    syms = expr.free_symbols
+    coefficients = Poly(expr,syms).all_coeffs()
+
+    rank = len(coefficients)
+    for i in range(0, p):
+        f_val = 0
+        for coeff in range(0,rank - 1):
+            f_val = (f_val + pow(i, int(rank - coeff - 1), p) * coefficients[coeff]) % p
+        f_val = f_val + coefficients[-1]
+        if f_val % p == 0:
+            roots.append(i)
+    return roots
+
+
+
+def general_congruence(expr, m):
+    from sympy.ntheory.modular import crt
+    from sympy import Poly
+    if not expr.is_polynomial():
+        raise ValueError("The expression should be a polynomial")
+    syms = expr.free_symbols
+    if len(syms) > 1:
+        raise ValueError("Do not support for more than one symbol")
+
+    if isprime(m):
+        return _general_congruence_prime(expr, m)
+    coefficients = Poly(expr,syms).all_coeffs()
+
+    rank = len(coefficients)
+
+    f = factorint(m)
+    dd = {}
+    for p, e in f.items():
+        tot_roots = set()
+        if e == 1:
+            tot_roots.update(_general_congruence_prime(expr, p))
+        else:
+            for root in _general_congruence_prime(expr, p):
+                diff = 0
+                for coeff in range(0,rank - 1):
+                    if not coefficients[coeff]:
+                        continue
+                    diff = (diff + pow(root, rank - coeff - 2, p) * (rank - coeff - 1) * coefficients[coeff]) % p
+                if diff != 0:
+                    ppow = p
+                    m_inv = mod_inverse(diff, p)
+                    for j in range(1, e):
+                        ppow *= p
+                        f_val = 0
+                        for coeff in range(0,rank - 1):
+                            f_val = (f_val + pow(root, int(rank - coeff - 1), ppow) * coefficients[coeff]) % ppow
+                        f_val = f_val + coefficients[-1]
+                        root = (root - f_val * m_inv) % ppow
+                    tot_roots.add(root)
+                else:
+                    new_base = p
+                    roots_in_base = {root}
+                    while new_base < pow(p, e):
+                        new_base *= p
+                        new_roots = set()
+                        for k in roots_in_base:
+                            f_val = 0
+                            for coeff in range(0,rank - 1):
+                                f_val = (f_val + pow(k, int(rank - coeff - 1), new_base) * coefficients[coeff]) % new_base
+                            f_val = f_val + coefficients[-1]
+                            if f_val % new_base != 0:
+                                continue
+                            while k not in new_roots:
+                                new_roots.add(k)
+                                k = (k + (new_base // p)) % new_base
+                        roots_in_base = new_roots
+                    tot_roots = tot_roots | roots_in_base
+        dd[pow(p, e)] = tot_roots
+    a = []
+    m = []
+    for x, y in dd.items():
+        m.append(x)
+        a.append(list(y))
+    return sorted(set(crt(m, list(i))[0] for i in cartes(*a)))
