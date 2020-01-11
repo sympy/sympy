@@ -11,7 +11,6 @@ try:
 except ImportError:
     skipcheck = lambda: skip('NumPy must be available to test NumPyMatrix')
 
-
 x = Symbol('x')
 
 
@@ -165,5 +164,4 @@ def test_rref():
     skipcheck()
 
     M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert M.is_echelon is False
     assert M.rref() == (Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]]), (0, 1))

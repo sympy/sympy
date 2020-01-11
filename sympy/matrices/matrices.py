@@ -1873,12 +1873,22 @@ class MatrixBase(MatrixDeprecated,
         if not printer:
             from sympy.printing.str import StrPrinter
             printer = StrPrinter()
+
+        name = self.__class__.__name__
+
+        if name == 'MutableDenseMatrix':
+            name = 'MMatrix'
+        elif name == 'ImmutableDenseMatrix':
+            name = 'IMatrix'
+
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+            return '%s(%s, %s, [])' % (name, self.rows, self.cols)
+
         if self.rows == 1:
-            return "Matrix([%s])" % self.table(printer, rowsep=',\n')
-        return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
+            return "%s([%s])" % (name, self.table(printer, rowsep=',\n'))
+
+        return "%s([\n%s])" % (name, self.table(printer, rowsep=',\n'))
 
     @classmethod
     def irregular(cls, ntop, *matrices, **kwargs):
