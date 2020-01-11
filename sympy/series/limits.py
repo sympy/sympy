@@ -236,7 +236,7 @@ class Limit(Expr):
                     else:
                         inve = e.subs(z, 1/u)
                     try:
-                        r = limit(inve.as_leading_term(u), u, S.Zero, "+")
+                        r = limit(inve, u, S.Zero, "+")
                         if isinstance(r, Limit):
                             return self
                         else:
