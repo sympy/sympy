@@ -16,7 +16,6 @@ from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
 from sympy.core.sympify import _sympify
-from sympy.core.compatibility import string_types
 
 __all__ = [
     'StochasticProcess',
@@ -71,7 +70,7 @@ def _sym_sympify(arg):
     The converted parameter.
 
     """
-    if isinstance(arg, string_types):
+    if isinstance(arg, str):
         return Symbol(arg)
     else:
         return _sympify(arg)
@@ -800,10 +799,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     Parameters
     ==========
 
-    sym: Symbol/string_types
-    success: Integer/string_types
+    sym: Symbol/str
+    success: Integer/str
             The event which is considered to be success, by default is 1.
-    failure: Integer/string_types
+    failure: Integer/str
             The event which is considered to be failure, by default is 0.
     p: Real Number between 0 and 1
             Represents the probability of getting success.
