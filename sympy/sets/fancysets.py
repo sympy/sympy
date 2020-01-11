@@ -921,7 +921,7 @@ class Range(Set):
                 x <= self.sup if self.sup in self else x < self.sup)
 
 
-# Using range from compatibility above (xrange on Py2)
+# Using range from compatibility above.
 if PY3:
     converter[range] = lambda r: Range(r.start, r.stop, r.step)
 else:
