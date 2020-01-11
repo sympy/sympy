@@ -24,14 +24,14 @@ from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
 from sympy.external import import_module
-from sympy.testing.pytest import skip
+
 numpy = import_module('numpy')
 scipy = import_module('scipy')
 pymc3 = import_module('pymc3')
 
 
 __all__ = ['Geometric',
-'Hermite'
+'Hermite',
 'Logarithmic',
 'NegativeBinomial',
 'Poisson',
