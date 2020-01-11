@@ -592,6 +592,12 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        if isinstance(expr, MatrixBase):
+            return None
+        return AskImaginaryHandler.Expr(expr, assumptions)
+
+    @staticmethod
     def Add(expr, assumptions):
         """
         Antihermitian + Antihermitian  -> Antihermitian
@@ -650,6 +656,7 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
         for i in range(rows):
             for j in range(i, cols):
                 cond = fuzzy_bool(Eq(mat[i, j], -conjugate(mat[j, i])))
+                print(mat[i, j], -conjugate(mat[j, i]), cond)
                 if cond == None:
                     ret_val = None
                 if cond == False:

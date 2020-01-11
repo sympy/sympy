@@ -1903,6 +1903,16 @@ def test_matrix():
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, I, 0), (-5, 0, 11))))) == False
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) == None
 
+    # antihermitian
+    A = Matrix([[0, -2 - I, 0], [2 - I, 0, -I], [0, -I, 0]])
+    B = Matrix([[-I, 2 + I, 0], [-2 + I, 0, 2 + I], [0, -2 + I, -I]])
+    assert ask(Q.antihermitian(A)) is True
+    assert ask(Q.antihermitian(B)) is True
+    assert ask(Q.antihermitian(A**2)) is False
+    assert ask(Q.antihermitian(B**3)) is True
+    _A = Matrix([[0, -2 - I, 0], [z, 0, -I], [0, -I, 0]])
+    assert ask(Q.antihermitian(_A)) is None
+
 
 def test_algebraic():
     assert ask(Q.algebraic(x)) is None
