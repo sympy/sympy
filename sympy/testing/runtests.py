@@ -34,7 +34,7 @@ import stat
 import tempfile
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, string_types, range, unwrap,
+from sympy.core.compatibility import (exec_, PY3, range, unwrap,
         unicode)
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
@@ -505,7 +505,7 @@ def _test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
-    if isinstance(kw, string_types):
+    if isinstance(kw, str):
         kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
@@ -1644,13 +1644,13 @@ class SymPyDocTestFinder(DocTestFinder):
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
-                if not isinstance(valname, string_types):
+                if not isinstance(valname, str):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
                                      "must be strings: %r" %
                                      (type(valname),))
                 if not (inspect.isfunction(val) or inspect.isclass(val) or
                         inspect.ismethod(val) or inspect.ismodule(val) or
-                        isinstance(val, string_types)):
+                        isinstance(val, str)):
                     raise ValueError("SymPyDocTestFinder.find: __test__ values "
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
@@ -1703,7 +1703,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
-        if isinstance(obj, string_types):
+        if isinstance(obj, str):
             # obj is a string in the case for objects in the polys package.
             # Note that source_lines is a binary string (compiled polys
             # modules), which can't be handled by _find_lineno so determine
@@ -1725,7 +1725,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     docstring = ''
                 else:
                     docstring = obj.__doc__
-                    if not isinstance(docstring, string_types):
+                    if not isinstance(docstring, str):
                         docstring = str(docstring)
             except (TypeError, AttributeError):
                 docstring = ''

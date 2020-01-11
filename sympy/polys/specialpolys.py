@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.core.compatibility import range, string_types
+from sympy.core.compatibility import range
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -149,12 +149,12 @@ def interpolating_poly(n, x, X='x', Y='y'):
     """
     ok = getattr(x, 'free_symbols', None)
 
-    if isinstance(X, string_types):
+    if isinstance(X, str):
         X = symbols("%s:%s" % (X, n))
     elif ok and ok & Tuple(*X).free_symbols:
         ok = False
 
-    if isinstance(Y, string_types):
+    if isinstance(Y, str):
         Y = symbols("%s:%s" % (Y, n))
     elif ok and ok & Tuple(*Y).free_symbols:
         ok = False
