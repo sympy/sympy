@@ -204,8 +204,6 @@ matrix:
 
   allow_failures:
     - env:
-        - TEST_FLAKE8="true"
-    - env:
         - BENCHMARK="true"
 
 before_install:
