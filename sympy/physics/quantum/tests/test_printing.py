@@ -310,7 +310,7 @@ U \n\
 """)
     assert str(g4) == \
 """\
-U((0,),Matrix([\n\
+U((0,),MMatrix([\n\
 [a, b],\n\
 [c, d]]))\
 """

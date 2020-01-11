@@ -10,12 +10,12 @@ def test_printing():
     R = QQ.old_poly_ring(x)
 
     assert str(homomorphism(R.free_module(1), R.free_module(1), [0])) == \
-        'Matrix([[0]]) : QQ[x]**1 -> QQ[x]**1'
+        'MMatrix([[0]]) : QQ[x]**1 -> QQ[x]**1'
     assert str(homomorphism(R.free_module(2), R.free_module(2), [0, 0])) == \
-        'Matrix([                       \n[0, 0], : QQ[x]**2 -> QQ[x]**2\n[0, 0]])                       '
+        'MMatrix([                       \n[0, 0], : QQ[x]**2 -> QQ[x]**2\n[0, 0]])                       '
     assert str(homomorphism(R.free_module(1), R.free_module(1) / [[x]], [0])) == \
-        'Matrix([[0]]) : QQ[x]**1 -> QQ[x]**1/<[x]>'
-    assert str(R.free_module(0).identity_hom()) == 'Matrix(0, 0, []) : QQ[x]**0 -> QQ[x]**0'
+        'MMatrix([[0]]) : QQ[x]**1 -> QQ[x]**1/<[x]>'
+    assert str(R.free_module(0).identity_hom()) == 'MMatrix(0, 0, []) : QQ[x]**0 -> QQ[x]**0'
 
 def test_operations():
     F = QQ.old_poly_ring(x).free_module(2)

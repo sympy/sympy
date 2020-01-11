@@ -1,4 +1,4 @@
-from sympy import Float, I, PurePoly, S, Symbol
+from sympy import Float, I, PurePoly, S, Symbol, oo, nan
 from sympy.matrices import (NonSquareMatrixError, Matrix,
     NumPyMatrix as NPMatrix)
 from sympy.utilities.pytest import raises, XFAIL, skip, warns_deprecated_sympy
@@ -23,17 +23,33 @@ def test_creation():
     M = NPMatrix(3, 2, a)
     assert M == Matrix([[1, 2], [3, 4], [5, 6]])
 
+    a = np.array([[1, 2], [3, 4]], dtype='i4')
+    M = NPMatrix(a)
+    assert M.dtype == np.int32
+    M = NPMatrix(a, dtype='f4')
+    assert M.dtype == np.float32
+
     m = np.matrix([[1, 2, 3], [4, 5, 6]])
     M = NPMatrix(m)
     assert M == Matrix([[1, 2, 3], [4, 5, 6]])
     M = NPMatrix(3, 2, m)
     assert M == Matrix([[1, 2], [3, 4], [5, 6]])
 
-    a = np.array([[1, 2], [3, 4]], dtype='i4')
+    m = np.matrix([[1, 2, 3], [4, 5, 6]], dtype='i4')
     M = NPMatrix(m)
     assert M.dtype == np.int32
     M = NPMatrix(m, dtype='f4')
     assert M.dtype == np.float32
+
+
+def test_detect_dtype():
+    skipcheck()
+
+    assert NPMatrix([[1]]).dtype == np.int64
+    assert NPMatrix([[1.0]]).dtype == np.float64
+    assert NPMatrix([[oo]]).dtype == np.float64
+    assert NPMatrix([[nan]]).dtype == np.float64
+    assert NPMatrix([[I]]).dtype == np.complex128
 
 
 def test_as_wrapper():

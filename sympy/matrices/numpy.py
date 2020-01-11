@@ -1,9 +1,42 @@
 from __future__ import division, print_function
 
+from sympy import Float
 from sympy.core.sympify import sympify
 
 from .common import NonSquareMatrixError
 from .dense import MutableDenseMatrix
+
+
+def _detect_dtype(l): # Is there a better way to do this?
+    import numpy as np
+
+    try:
+        f = [float(e) for e in l]
+    except TypeError: # complex or symbolic source
+        pass
+
+    else:
+        try:
+            i = [int(e) for e in l]
+        except TypeError: # have infinities and/or nans
+            return np.float64
+
+        else:
+            if any(isinstance(e, Float) for e in l) or i != f:
+                return np.float64
+            else:
+                return np.int64
+
+    try:
+        all(complex(e) for e in l)
+
+        return np.complex128
+
+    except TypeError: # non-numeric source data
+        raise TypeError('source data for NumPyMatrix must be numeric') from None
+
+    return np.complex128
+
 
 class NumPyMatrix(MutableDenseMatrix):
     """Matrix class which can wrap or create a new NumPy matrix (ndarray) for
@@ -38,15 +71,26 @@ class NumPyMatrix(MutableDenseMatrix):
         return NumPyMatrix._NDArrayFlatSympified
 
     @classmethod
-    def _new(cls, *args, dtype=None, **kwargs):
-        """
+    def _new(cls, *args, dtype=None, copy=True, **kwargs):
+        """Create a new NumPy store backed numeric matrix with either a new
+        NumPy ``ndarray`` for the data or by creating a view on an existing
+        ``ndarray``. If a view is being created on an existing ``ndarray`` then
+        the dimensions can be reshaped by passing the new ``rows`` and ``cols``
+        as long as the total number of elements remains the same.
+
         Parameters
         ==========
 
         dtype : numpy.dtype, optional
             This can be either a NumPy character dtype specification like
-            ``'f4'`` or a class like ``numpy.float32``. Defaults to
-            ``numpy.complex128``.
+            ``'f4'`` or a class like ``numpy.float32``. Also, a value of
+            ``None`` specifies that the type of matrix should be auto-detected
+            which will result in either an ``int``, a ``float`` or a ``complex``
+            matrix. Note that this could cause problems if you initially create
+            a matrix of integers then carry out an in-place operation which
+            results in floats or complexes. A value of ``'full'`` specifies the
+            maximal information data type be used which is currently
+            ``numpy.complex128``. Defaults to ``None``.
 
         copy : bool, optional
             Specifies whether the source data is to be copied or a view is
@@ -54,13 +98,17 @@ class NumPyMatrix(MutableDenseMatrix):
             a NumPy ``ndarray`` and the specified ``dtype`` is either ``None``
             or matches the source array ``dtype``. This allows wrapping of
             existing large NumPy matrices, otherwise a copy is always
-            performed. Defaults to ``True``.
+            performed. If you specify ``copy=False`` for source data which is
+            not an ``ndarray`` then the flag will be ignored and the data will
+            be copied anyway. Defaults to ``True``.
         """
 
         import numpy as np
 
+        if dtype == 'full':
+            dtype = np.complex128
+
         view_arr = None
-        copy     = kwargs.get('copy', True) # 'copy=True' for non-numpy matrices will be ignored
 
         if copy is False:
             if len(args) == 1:
@@ -102,20 +150,21 @@ class NumPyMatrix(MutableDenseMatrix):
                     args = args[:2] + (np.ndarray(args[2].size, dtype=args[2].dtype, buffer=args[2]),)
 
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-            flat_list             = list(flat_list) # create a shallow copy
 
-        self       = object.__new__(cls)
-        self.rows  = rows
-        self.cols  = cols
-        self.dtype = np.complex128 if dtype is None else np.dtype(dtype)
-        _arr       = np.ndarray((rows, cols), dtype=self.dtype) if view_arr is None else view_arr
-        self._arr  = _arr
-        self._mat  = self.NDArrayFlatSympified(_arr)
+        self      = object.__new__(cls)
+        self.rows = rows
+        self.cols = cols
 
         if view_arr is None:
-            for r in range(rows):
-                for c in range(cols):
-                    _arr[r, c] = flat_list[cols * r + c]
+            if dtype is None:
+                dtype = _detect_dtype(flat_list)
+
+            view_arr = np.array([flat_list[cols * r : cols * (r + 1)]
+                    for r in range (rows)], dtype=dtype)
+
+        self.dtype = np.dtype(dtype)
+        self._arr  = view_arr
+        self._mat  = self.NDArrayFlatSympified(view_arr)
 
         return self
 

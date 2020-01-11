@@ -1714,9 +1714,10 @@ class MatrixBase(MatrixDeprecated,
 
         if name == 'MutableDenseMatrix':
             return 'MMatrix'
-
         if name == 'ImmutableDenseMatrix':
             return 'IMatrix'
+        if name == 'MutableSparseMatrix':
+            return 'SparseMatrix'
 
         return name
 
