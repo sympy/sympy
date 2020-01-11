@@ -17,6 +17,7 @@ from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 import random
+from sympy.external import import_module
 
 
 class DiscreteDistribution(Basic):
@@ -47,7 +48,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     def sample(self,size=()):
         """ A random realization from the distribution """
-        if getattr(self,'_sample_scipy', None):
+        if getattr(self,'_sample_scipy', None) and import_module('scipy'):
             return self._sample_scipy(size)
         icdf = self._inverse_cdf_expression()
         while True:

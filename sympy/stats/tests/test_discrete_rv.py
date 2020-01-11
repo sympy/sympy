@@ -34,7 +34,7 @@ def test_Poisson():
     assert density(x) == PoissonDistribution(l)
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
-    assert sample(x) in x.pspace.domain.set
+
 
 def test_GeometricDistribution():
     p = S.One / 5
@@ -75,7 +75,7 @@ def test_Logarithmic():
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
     assert isinstance(E(x, evaluate=False), Sum)
-    assert sample(x) in x.pspace.domain.set
+
 
 @nocache_fail
 def test_negative_binomial():
@@ -105,8 +105,7 @@ def test_skellam():
         mu1*exp(I*z) - mu1 - mu2 + mu2*exp(-I*z))
     assert moment_generating_function(X)(z) == exp(
         mu1*exp(z) - mu1 - mu2 + mu2*exp(-z))
-    X = Skellam('x', 1, 2)
-    assert sample(X) in X.pspace.domain.set
+
 
 def test_yule_simon():
     from sympy import S
@@ -117,8 +116,7 @@ def test_yule_simon():
     assert isinstance(E(x, evaluate=False), Sum)
     # To test the cdf function
     assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
-    x = YuleSimon('x', 1)
-    assert sample(x) in x.pspace.domain.set
+
 
 def test_zeta():
     s = S(5)
@@ -126,8 +124,7 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
-    x = Zeta('x', 5)
-    assert sample(x) in x.pspace.domain.set
+
 
 @slow
 def test_sample_discrete():
