@@ -126,7 +126,6 @@ from __future__ import print_function, division
 
 from typing import Any, Dict, List
 
-from itertools import chain
 from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
