@@ -190,7 +190,7 @@ def cbrt(arg, evaluate=None):
 
 
 def root(arg, n, k=0, evaluate=None):
-    r"""Returns the k-th n-th root of ``arg``.
+    r"""Returns the *k*-th *n*-th root of ``arg``.
 
     Parameters
     ==========
@@ -290,13 +290,13 @@ def root(arg, n, k=0, evaluate=None):
 
 
 def real_root(arg, n=None, evaluate=None):
-    """Return the real ``n``'th-root of ``arg`` if possible.
+    """Return the real *n*'th-root of *arg* if possible.
 
     Parameters
     ==========
 
     n : int or None, optional
-        If ``n`` is ``None``, then all instances of
+        If *n* is ``None``, then all instances of
         ``(-n)**(1/odd)`` will be changed to ``-n**(1/odd)``.
         This will only create a real root of a principal root.
         The presence of other factors may cause the result to not be
