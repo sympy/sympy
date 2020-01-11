@@ -598,3 +598,16 @@ def test_issue_17431():
 
 def test_issue_17671():
     assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
+
+def test_issue_13382():
+    assert limit(n*(((n + 1)**2 + 1)/(n**2 + 1) - 1), n, oo) == 2
+
+def test_issue_13403():
+    assert limit(n*(-1 + (n + log(n + 1) + 1)/(n + log(n))), n ,oo) == 1
+
+def test_issue_13416():
+    assert limit((-n**3*log(n)**3 + (n - 1)*(n + 1)**2*log(n + 1)**3)/(n**2*log(n)**3), n ,oo) == 1
+
+def test_issue_13462():
+    n = Symbol('n')   
+    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
