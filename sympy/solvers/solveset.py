@@ -1203,7 +1203,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         elif base.has(symbol) and not expo.has(symbol):
             try:
                 remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
-                if remainder_list is None:
+                if remainder_list == []:
                     return symbol, EmptySet
             except (ValueError, NotImplementedError):
                 return modterm, rhs

@@ -2185,6 +2185,7 @@ def test_invert_modular():
             (x, ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x) == \
             (x**2 + x + 1, ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
+    assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, EmptySet())
 
 
 def test_solve_modular():
@@ -2242,11 +2243,13 @@ def test_solve_modular():
     assert solveset(Mod(3**(3**x), 4) - 3, x, S.Integers) == \
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers)
-    # Not Implemented for m without primitive root
+    # Implemented for m without primitive root
+    assert solveset(Mod(x**3, 7) - 2, x, S.Integers) == EmptySet()
     assert solveset(Mod(x**3, 8) - 1, x, S.Integers) == \
-            ConditionSet(x, Eq(Mod(x**3, 8) - 1, 0), S.Integers)
+            ImageSet(Lambda(n, 8*n + 1), S.Integers)
     assert solveset(Mod(x**4, 9) - 4, x, S.Integers) == \
-            ConditionSet(x, Eq(Mod(x**4, 9) - 4, 0), S.Integers)
+            Union(ImageSet(Lambda(n, 9*n + 4), S.Integers),
+            ImageSet(Lambda(n, 9*n + 5), S.Integers))
     # domain intersection
     assert solveset(3 - Mod(5*x - 8, 7), x, S.Naturals0) == \
             Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0)

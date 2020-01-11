@@ -1,6 +1,6 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types, range, Callable
+from sympy.core.compatibility import range, Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
@@ -69,7 +69,7 @@ class CoordSys3D(Basic):
         BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("name should be a string")
 
         if transformation is not None:
@@ -87,7 +87,7 @@ class CoordSys3D(Basic):
                 x1, x2, x3 = symbols('x1 x2 x3', cls=Dummy)
                 transformation = Lambda((x1, x2, x3),
                                         transformation(x1, x2, x3))
-            elif isinstance(transformation, string_types):
+            elif isinstance(transformation, str):
                 transformation = Symbol(transformation)
             elif isinstance(transformation, (Symbol, Lambda)):
                 pass
@@ -359,7 +359,7 @@ class CoordSys3D(Basic):
             Name of coordinate system
 
         """
-        if isinstance(curv_coord_name, string_types):
+        if isinstance(curv_coord_name, str):
             if curv_coord_name == 'cartesian':
                 return lambda x, y, z: (S.One, S.One, S.One)
             if curv_coord_name == 'spherical':
@@ -414,7 +414,7 @@ class CoordSys3D(Basic):
             Name of coordinate system
 
         """
-        if isinstance(curv_coord_name, string_types):
+        if isinstance(curv_coord_name, str):
             if curv_coord_name == 'cartesian':
                 return lambda x, y, z: (x, y, z)
             if curv_coord_name == 'spherical':
@@ -1045,5 +1045,5 @@ def _check_strings(arg_name, arg):
     if len(arg) != 3:
         raise ValueError(errorstr)
     for s in arg:
-        if not isinstance(s, string_types):
+        if not isinstance(s, str):
             raise TypeError(errorstr)

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Symbol, sympify
-from sympy.core.compatibility import is_sequence, range, string_types
+from sympy.core.compatibility import is_sequence, range
 from sympy.geometry.entity import GeometryEntity
 from .plot_interval import PlotInterval
 from .plot_object import PlotObject
@@ -144,7 +144,7 @@ class PlotMode(PlotObject):
                                      m.i_var_count))
             return m
         # If it is a string, there are two possibilities.
-        if isinstance(mode_arg, string_types):
+        if isinstance(mode_arg, str):
             i, d = i_var_count, d_var_count
             if i > PlotMode._i_var_max:
                 raise ValueError(var_count_error(True, True))
@@ -376,7 +376,7 @@ class PlotMode(PlotObject):
     def _extract_options(args, kwargs):
         newkwargs, newargs = {}, []
         for a in args:
-            if isinstance(a, string_types):
+            if isinstance(a, str):
                 newkwargs = dict(newkwargs, **parse_option_string(a))
             else:
                 newargs.append(a)
