@@ -124,6 +124,8 @@ There is a function constructing a loop (or a complete function) like this in
 
 from __future__ import print_function, division
 
+from typing import Any, Dict, List
+
 from itertools import chain
 from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
@@ -172,8 +174,8 @@ class Token(Basic):
     """
 
     __slots__ = ()
-    defaults = {}
-    not_in_args = []
+    defaults = {}  # type: Dict[str, Any]
+    not_in_args = []  # type: List[str]
     indented_args = ['body']
 
     @property
@@ -498,6 +500,7 @@ class AugmentedAssignment(AssignmentBase):
        Symbol for binary operation being applied in the assignment, such as "+",
        "*", etc.
     """
+    binop = None  # type: str
 
     @property
     def op(self):
@@ -916,7 +919,7 @@ class Node(Token):
 
     __slots__ = ('attrs',)
 
-    defaults = {'attrs': Tuple()}
+    defaults = {'attrs': Tuple()}  # type: Dict[str, Any]
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
@@ -1339,7 +1342,7 @@ class Attribute(Token):
     True
     """
     __slots__ = ('name', 'parameters')
-    defaults = {'parameters': Tuple()}
+
     _construct_name = String
     _construct_parameters = staticmethod(_mk_Tuple)
 
@@ -1405,10 +1408,9 @@ class Variable(Node):
     """
 
     __slots__ = ('symbol', 'type', 'value') + Node.__slots__
-    defaults = dict(chain(Node.defaults.items(), {
-        'type': untyped,
-        'value': none
-    }.items()))
+
+    defaults = Node.defaults.copy()
+    defaults.update({'type': untyped, 'value': none})
 
     _construct_symbol = staticmethod(sympify)
     _construct_value = staticmethod(sympify)

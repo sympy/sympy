@@ -602,8 +602,8 @@ class merge(F95Function):
 
 
 class _literal(Float):
-    _token = None
-    _decimals = None
+    _token = None  # type: str
+    _decimals = None  # type: int
 
     def _fcode(self, printer, *args, **kwargs):
         mantissa, sgnd_ex = ('%.{0}e'.format(self._decimals) % self).split('e')
