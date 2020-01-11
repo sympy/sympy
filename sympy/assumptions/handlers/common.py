@@ -51,11 +51,11 @@ class AskCommutativeHandler(CommonHandler):
         return True
 
     @staticmethod
-    def Number():
+    def Number(expr, assumptions):
         return True
 
     @staticmethod
-    def NaN():
+    def NaN(expr, assumptions):
         return True
 
 
