@@ -320,12 +320,7 @@ def test_Range_set():
         assert r.inf == rev.inf and r.sup == rev.sup
         assert r.step == -rev.step
 
-    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
-    # compatibility imports above)
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange # noqa
+    builtin_range = range
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)

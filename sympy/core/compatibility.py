@@ -44,10 +44,6 @@ Moved modules:
     * `cStringIO()` (same as `StingIO()` in Python 3)
     * Python 2 `__builtin__`, access with Python 3 name, `builtins`
 
-Iterator/list changes:
-    * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
-      compatible iterator version of range.
-
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
 
@@ -153,7 +149,6 @@ else:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
 
-    range = xrange  # noqa:F821
     _round = round
     def round(x, *args):
         try:
