@@ -609,6 +609,14 @@ def test_issue_13416():
     assert limit((-n**3*log(n)**3 + (n - 1)*(n + 1)**2*log(n + 1)**3)/(n**2*log(n)**3), n ,oo) == 1
 
 def test_issue_13462():
-    n = Symbol('n')   
-    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
-    
+    N, k = symbols('N, k', positive = True)
+    es = 1 - (1 - 1/(2*N))**k
+    e = 2*N*es
+    c0 = limit(e, N, oo)
+    c1 = limit(N*(e-c0), N, oo)
+    c2 = limit((e-c0-c1/N)*(N*N), N, oo)
+    c2x = limit(e*N*N-c0*N*N-c1*N, N, oo)
+    assert c0 == k
+    assert c1 == (-k**2/4 + k/4)
+    assert c2 == (k**3/24 - k**2/8 + k/12)
+    assert c2x == (k**3/24 - k**2/8 + k/12)
