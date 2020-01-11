@@ -1394,12 +1394,9 @@ def quadratic_congruence(a, b, c, p):
     return sorted(res)
 
 
-def _general_congruence_prime(expr, p):
+def _general_congruence_prime(coefficients, p):
     from sympy import Poly
     roots = []
-    syms = expr.free_symbols
-    coefficients = Poly(expr,syms).all_coeffs()
-
     rank = len(coefficients)
     for i in range(0, p):
         f_val = 0
@@ -1421,20 +1418,23 @@ def general_congruence(expr, m):
     if len(syms) > 1:
         raise ValueError("Do not support for more than one symbol")
 
-    if isprime(m):
-        return _general_congruence_prime(expr, m)
     coefficients = Poly(expr,syms).all_coeffs()
 
     rank = len(coefficients)
-
+    if rank == 3:
+        return quadratic_congruence(coefficients[0], coefficients[1], coefficients[2], m)
+    if rank == 2:
+        return quadratic_congruence(0, coefficients[0], coefficients[1], m)
+    if isprime(m):
+        return _general_congruence_prime(coefficients, m)
     f = factorint(m)
     dd = {}
     for p, e in f.items():
         tot_roots = set()
         if e == 1:
-            tot_roots.update(_general_congruence_prime(expr, p))
+            tot_roots.update(_general_congruence_prime(coefficients, p))
         else:
-            for root in _general_congruence_prime(expr, p):
+            for root in _general_congruence_prime(coefficients, p):
                 diff = 0
                 for coeff in range(0,rank - 1):
                     if not coefficients[coeff]:
@@ -1446,7 +1446,7 @@ def general_congruence(expr, m):
                     for j in range(1, e):
                         ppow *= p
                         f_val = 0
-                        for coeff in range(0,rank - 1):
+                        for coeff in range(0, rank - 1):
                             f_val = (f_val + pow(root, int(rank - coeff - 1), ppow) * coefficients[coeff]) % ppow
                         f_val = f_val + coefficients[-1]
                         root = (root - f_val * m_inv) % ppow

@@ -266,3 +266,5 @@ def test_residue():
     assert general_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1, 972000) == [220999, 242999, 463999, 485999, 706999, 728999, 949999, 971999]
     assert general_congruence(x**3 - 10*x**2 + 12*x - 82, 33075) == [30287]
     assert general_congruence(x**2 + x + 47, 2401) == [785, 1615]
+    assert general_congruence(10*x**2 + 14*x + 20, 2) == [0, 1]
+    assert general_congruence(65*x**2 + 121*x + 72, 277) == [249, 252]
