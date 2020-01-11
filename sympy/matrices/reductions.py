@@ -7,7 +7,7 @@ from sympy.core.sympify import sympify
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .utilities import _iszero
-from .determinant import _find_reasonable_pivot, _det
+from .determinant import _find_reasonable_pivot
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -238,7 +238,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         if not False in zeros and not None in zeros:
             return 0
 
-        d = _det(M, dotprodsimp=dotprodsimp)
+        d = M.det(dotprodsimp=dotprodsimp)
 
         if iszerofunc(d) and False in zeros:
             return 1
@@ -328,17 +328,21 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
 # The following are top level stand-alone interface functions which sympify the
 # matrix where needed (so it becomes immutable and returns immutable), otherwise
 # the implementations above do not sympify due to problems in other parts of the
-# codebase using matrices of unsympifiable objects. Technically could just
-# assign these via 'charpoly = _charpoly' where sympification is not needed but
-# this is clearer.
+# codebase using matrices of unsympifiable objects.
 
 def is_echelon(M, iszerofunc=_iszero):
     return _is_echelon(M, iszerofunc=iszerofunc)
 
 def echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
         dotprodsimp=None):
-    return _echelon_form(sympify(M), iszerofunc=iszerofunc, simplify=simplify,
+
+    matpiv = _echelon_form(M, iszerofunc=iszerofunc, simplify=simplify,
             with_pivots=with_pivots, dotprodsimp=dotprodsimp)
+
+    if with_pivots:
+        return sympify(matpiv[0]), matpiv[1]
+
+    return sympify(matpiv)
 
 def rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
     return _rank(M, iszerofunc=iszerofunc, simplify=simplify,
@@ -346,8 +350,15 @@ def rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
 
 def rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True, dotprodsimp=None):
-    return _rref(sympify(M), iszerofunc=iszerofunc, simplify=simplify,
+
+    matpiv = _rref(M, iszerofunc=iszerofunc, simplify=simplify,
             pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+
+    if pivots:
+        return sympify(matpiv[0]), matpiv[1]
+
+    return sympify(matpiv)
+
 
 is_echelon.__doc__   = _is_echelon.__doc__
 echelon_form.__doc__ = _echelon_form.__doc__

@@ -41,6 +41,7 @@ from .determinant import (
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
+from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -82,7 +83,7 @@ class MatrixDeterminant(MatrixCommon):
     _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
     _eval_determinant            = _det
 
-    # could just assign these via 'adjugate = _adjugate' but this is clearer
+    # could just assign these like 'adjugate = _adjugate' but this is clearer
     def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix. See ``adjugate`` in sympy.matrices.determinant for details."""
@@ -313,7 +314,6 @@ class MatrixReductions(MatrixDeterminant):
         if op == "n->n+km":
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
-    # could just assign these via 'echelon_form = _echelon_form' but this is clearer
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
             dotprodsimp=None):
         """Returns a matrix row-equivalent to ``self`` that is in echelon form.
@@ -347,187 +347,31 @@ class MatrixSubspaces(MatrixReductions):
     of a matrix.  Should not be instantiated directly."""
 
     def columnspace(self, simplify=False, dotprodsimp=None):
-        """Returns a list of vectors (Matrix objects) that span columnspace of ``self``
+        """Returns a list of vectors (Matrix objects) that span columnspace of
+        ``self``. See ``columnspace`` in sympy.matrices.subspaces for details."""
 
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.columnspace()
-        [Matrix([
-        [ 1],
-        [-2],
-        [ 3]]), Matrix([
-        [0],
-        [0],
-        [6]])]
-
-        See Also
-        ========
-
-        nullspace
-        rowspace
-        """
-        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
-                dotprodsimp=dotprodsimp)
-
-        return [self.col(i) for i in pivots]
+        return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
 
     def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
-        """Returns list of vectors (Matrix objects) that span nullspace of ``self``
+        """Returns list of vectors (Matrix objects) that span nullspace of
+        ``self``. See ``nullspace`` in sympy.matrices.subspaces for details."""
 
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.nullspace()
-        [Matrix([
-        [-3],
-        [ 1],
-        [ 0]])]
-
-        See Also
-        ========
-
-        columnspace
-        rowspace
-        """
-
-        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify,
+        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
-
-        free_vars = [i for i in range(self.cols) if i not in pivots]
-
-        basis = []
-        for free_var in free_vars:
-            # for each free variable, we will set it to 1 and all others
-            # to 0.  Then, we will use back substitution to solve the system
-            vec = [self.zero]*self.cols
-            vec[free_var] = self.one
-            for piv_row, piv_col in enumerate(pivots):
-                vec[piv_col] -= reduced[piv_row, free_var]
-            basis.append(vec)
-
-        return [self._new(self.cols, 1, b) for b in basis]
 
     def rowspace(self, simplify=False, dotprodsimp=None):
-        """Returns a list of vectors that span the row space of ``self``.
+        """Returns a list of vectors that span the row space of ``self``. See
+        ``rowspace`` in sympy.matrices.subspaces for details."""
 
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-
-        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
-                dotprodsimp=dotprodsimp)
-
-        return [reduced.row(i) for i in range(len(pivots))]
+        return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
 
     @classmethod
     def orthogonalize(cls, *vecs, **kwargs):
-        """Apply the Gram-Schmidt orthogonalization procedure
-        to vectors supplied in ``vecs``.
+        """Apply the Gram-Schmidt orthogonalization procedure to vectors
+        supplied in ``vecs``. See ``orthogonalize`` in sympy.matrices.subspaces for
+        details."""
 
-        Parameters
-        ==========
-
-        vecs
-            vectors to be made orthogonal
-
-        normalize : bool
-            If ``True``, return an orthonormal basis.
-
-        rankcheck : bool
-            If ``True``, the computation does not stop when encountering
-            linearly dependent vectors.
-
-            If ``False``, it will raise ``ValueError`` when any zero
-            or linearly dependent vectors are found.
-
-        Returns
-        =======
-
-        list
-            List of orthogonal (or orthonormal) basis vectors.
-
-        See Also
-        ========
-
-        MatrixBase.QRdecomposition
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
-        """
-        normalize = kwargs.get('normalize', False)
-        rankcheck = kwargs.get('rankcheck', False)
-
-        def project(a, b):
-            return b * (a.dot(b, hermitian=True) / b.dot(b, hermitian=True))
-
-        def perp_to_subspace(vec, basis):
-            """projects vec onto the subspace given
-            by the orthogonal basis ``basis``"""
-            components = [project(vec, b) for b in basis]
-            if len(basis) == 0:
-                return vec
-            return vec - reduce(lambda a, b: a + b, components)
-
-        ret = []
-        # make sure we start with a non-zero vector
-        vecs = list(vecs)
-        while len(vecs) > 0 and vecs[0].is_zero:
-            if rankcheck is False:
-                del vecs[0]
-            else:
-                raise ValueError(
-                    "GramSchmidt: vector set not linearly independent")
-
-        for vec in vecs:
-            perp = perp_to_subspace(vec, ret)
-            if not perp.is_zero:
-                ret.append(perp)
-            elif rankcheck is True:
-                raise ValueError(
-                    "GramSchmidt: vector set not linearly independent")
-
-        if normalize:
-            ret = [vec / vec.norm() for vec in ret]
-
-        return ret
+        return _orthogonalize(cls, *vecs, **kwargs)
 
 
 class MatrixEigen(MatrixSubspaces):
@@ -1864,31 +1708,37 @@ class MatrixBase(MatrixDeprecated,
     def __repr__(self):
         return sstr(self)
 
+    @property
+    def __class_name(self):
+        name = self.__class__.__name__
+
+        if name == 'MutableDenseMatrix':
+            return 'MMatrix'
+
+        if name == 'ImmutableDenseMatrix':
+            return 'IMatrix'
+
+        return name
+
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
-        return "Matrix(%s)" % str(self.tolist())
+            return '%s(%s, %s, [])' % (self.__class_name, self.rows, self.cols)
+
+        return "%s(%s)" % (self.__class_name, str(self.tolist()))
 
     def _format_str(self, printer=None):
         if not printer:
             from sympy.printing.str import StrPrinter
             printer = StrPrinter()
 
-        name = self.__class__.__name__
-
-        if name == 'MutableDenseMatrix':
-            name = 'MMatrix'
-        elif name == 'ImmutableDenseMatrix':
-            name = 'IMatrix'
-
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return '%s(%s, %s, [])' % (name, self.rows, self.cols)
+            return '%s(%s, %s, [])' % (self.__class_name, self.rows, self.cols)
 
         if self.rows == 1:
-            return "%s([%s])" % (name, self.table(printer, rowsep=',\n'))
+            return "%s([%s])" % (self.__class_name, self.table(printer, rowsep=',\n'))
 
-        return "%s([\n%s])" % (name, self.table(printer, rowsep=',\n'))
+        return "%s([\n%s])" % (self.__class_name, self.table(printer, rowsep=',\n'))
 
     @classmethod
     def irregular(cls, ntop, *matrices, **kwargs):

@@ -1,4 +1,4 @@
-from sympy import S, PurePoly, Symbol
+from sympy import I, PurePoly, S, Symbol
 from sympy.matrices import (Matrix, IMatrix, MMatrix,
     MutableSparseMatrix as MSMatrix, ImmutableSparseMatrix as ISMatrix)
 from sympy.utilities.pytest import raises, XFAIL, skip, warns_deprecated_sympy
@@ -6,7 +6,8 @@ from sympy.utilities.pytest import raises, XFAIL, skip, warns_deprecated_sympy
 from sympy.matrices import (
     adjugate, charpoly, cofactor, cofactor_matrix,
     det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
-    is_echelon, echelon_form, rank, rref)
+    is_echelon, echelon_form, rank, rref,
+    columnspace, nullspace, rowspace, orthogonalize)
 
 x = Symbol('x')
 
@@ -94,13 +95,17 @@ def test_minor_submatrix():
 def test_echelon():
     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     S = MSMatrix(M)
-    A = Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]])
+    A = (Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]]), (0, 1))
 
     assert is_echelon(M) is False
-    assert echelon_form(M) == A
+    R = echelon_form(M, with_pivots=True)
+    assert isinstance(R[0], IMatrix)
+    assert R == A
 
     assert is_echelon(S) is False
-    assert echelon_form(S) == A
+    R = echelon_form(S, with_pivots=True)
+    assert isinstance(R[0], ISMatrix)
+    assert R == A
 
 
 def test_rank():
@@ -114,5 +119,84 @@ def test_rref():
     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     A = (Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]]), (0, 1))
 
-    assert rref(M) == A
-    assert rref(MSMatrix(M)) == A
+    R = rref(M)
+    assert isinstance(R[0], IMatrix)
+    assert R == A
+
+    R = rref(MSMatrix(M))
+    assert isinstance(R[0], ISMatrix)
+    assert R == A
+
+
+def test_columnspace():
+    M = MMatrix([
+        [ 1,  2,  0,  2,  5],
+        [-2, -5,  1, -1, -8],
+        [ 0, -3,  3,  4,  1],
+        [ 3,  6,  0, -7,  2]])
+
+    A = columnspace(M)
+    assert all(isinstance(m, IMatrix) for m in A)
+    assert A[0] == Matrix([1, -2, 0, 3])
+    assert A[1] == Matrix([2, -5, -3, 6])
+    assert A[2] == Matrix([2, -1, 4, -7])
+
+    A = columnspace(MSMatrix(M))
+    assert all(isinstance(m, ISMatrix) for m in A)
+    assert A[0] == Matrix([1, -2, 0, 3])
+    assert A[1] == Matrix([2, -5, -3, 6])
+    assert A[2] == Matrix([2, -1, 4, -7])
+
+
+def test_rowspace():
+    M = MMatrix([
+        [ 1,  2,  0,  2,  5],
+        [-2, -5,  1, -1, -8],
+        [ 0, -3,  3,  4,  1],
+        [ 3,  6,  0, -7,  2]])
+
+    A = rowspace(M)
+    assert all(isinstance(m, IMatrix) for m in A)
+    assert A[0] == Matrix([[1, 2, 0, 2, 5]])
+    assert A[1] == Matrix([[0, -1, 1, 3, 2]])
+    assert A[2] == Matrix([[0, 0, 0, 5, 5]])
+
+    A = rowspace(MSMatrix(M))
+    assert all(isinstance(m, ISMatrix) for m in A)
+    assert A[0] == Matrix([[1, 2, 0, 2, 5]])
+    assert A[1] == Matrix([[0, -1, 1, 3, 2]])
+    assert A[2] == Matrix([[0, 0, 0, 5, 5]])
+
+
+def test_nullspace():
+    M = MMatrix([
+        [ 1,  3, 0,  2,  6, 3, 1],
+        [-2, -6, 0, -2, -8, 3, 1],
+        [ 3,  9, 0,  0,  6, 6, 2],
+        [-1, -3, 0,  1,  0, 9, 3]])
+
+    A = nullspace(M)
+    assert all(isinstance(m, IMatrix) for m in A)
+    assert A[0] == Matrix([-3, 1, 0, 0, 0, 0, 0])
+    assert A[1] == Matrix([0, 0, 1, 0, 0, 0, 0])
+    assert A[2] == Matrix([-2, 0, 0, -2, 1, 0, 0])
+    assert A[3] == Matrix([0, 0, 0, 0, 0, -S(1)/3, 1])
+
+    A = nullspace(MSMatrix(M))
+    assert all(isinstance(m, ISMatrix) for m in A)
+    assert A[0] == Matrix([-3, 1, 0, 0, 0, 0, 0])
+    assert A[1] == Matrix([0, 0, 1, 0, 0, 0, 0])
+    assert A[2] == Matrix([-2, 0, 0, -2, 1, 0, 0])
+    assert A[3] == Matrix([0, 0, 0, 0, 0, -S(1)/3, 1])
+
+
+def test_orthogonalize():
+    v = [Matrix([1, I]), Matrix([1, -I])]
+
+    A = orthogonalize(MMatrix, *v)
+    assert all(isinstance(m, IMatrix) for m in A)
+    assert A == [Matrix([1, I]), Matrix([1, -I])]
+
+    A = orthogonalize(MSMatrix, *v)
+    assert all(isinstance(m, ISMatrix) for m in A)
+    assert A == [Matrix([1, I]), Matrix([1, -I])]

@@ -47,6 +47,10 @@ from .reductions import (
     _is_echelon, _echelon_form, _rank, _rref,
     is_echelon, echelon_form, rank, rref)
 
+from .subspaces import (
+    _columnspace, _nullspace, _rowspace, _orthogonalize,
+    columnspace, nullspace, rowspace, orthogonalize)
+
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -92,4 +96,7 @@ __all__ = [
     '_row_reduce_list', '_row_reduce',
     '_is_echelon', '_echelon_form', '_rank', '_rref',
     'is_echelon', 'echelon_form', 'rank', 'rref',
+
+    '_columnspace', '_nullspace', '_rowspace', '_orthogonalize',
+    'columnspace', 'nullspace', 'rowspace', 'orthogonalize'
 ]
