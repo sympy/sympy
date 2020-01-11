@@ -999,7 +999,7 @@ def solve(f, *symbols, **flags):
 
         if fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
-        
+
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
 
@@ -1030,7 +1030,7 @@ def solve(f, *symbols, **flags):
         if flags.get('set', False):
             return [], set()
         return []
-    
+
     for i, fi in enumerate(f):
         # Abs
         while True:
@@ -1045,7 +1045,7 @@ def solve(f, *symbols, **flags):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % e)
-        
+
         # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
         fi = fi.xreplace(dict(list(zip(_arg,
@@ -1053,7 +1053,7 @@ def solve(f, *symbols, **flags):
 
         # save changes
         f[i] = fi
-    
+
     # see if re(s) or im(s) appear
     irf = []
     for s in symbols:
@@ -1082,10 +1082,10 @@ def solve(f, *symbols, **flags):
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
-    
+
     # this is needed in the next two events
     symset = set(symbols)
-    
+
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
     # hard to solve; this means that solutions may be given in terms
@@ -1124,7 +1124,7 @@ def solve(f, *symbols, **flags):
         return []
     f = newf
     del newf
-    
+
     # mask off any Object that we aren't going to invert: Derivative,
     # Integral, etc... so that solving for anything that they contain will
     # give an implicit solution
@@ -1663,9 +1663,9 @@ def _solve(f, *symbols, **flags):
             # in) so recast the poly in terms of our generator of interest.
             # Also use composite=True with f_num since Poly won't update
             # poly as documented in issue 8810.
-            
+
             poly = Poly(f_num, gens[0], composite=True)
-            
+
             # if we aren't on the tsolve-pass, use roots
             if not flags.pop('tsolve', False):
                 soln = None
@@ -3679,3 +3679,4 @@ def unrad(eq, *syms, **flags):
 
 from sympy.solvers.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)
+    

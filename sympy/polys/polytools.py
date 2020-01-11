@@ -4265,6 +4265,7 @@ def poly_from_expr(expr, *gens, **args):
 def _poly_from_expr(expr, opt):
     """Construct a polynomial from an expression. """
     orig, expr = expr, sympify(expr)
+
     if not isinstance(expr, Basic):
         raise PolificationFailed(opt, orig, expr)
     elif expr.is_Poly:
@@ -4280,7 +4281,7 @@ def _poly_from_expr(expr, opt):
     elif opt.expand:
         expr = expr.expand()
 
-    rep, opt = _dict_from_expr(expr, opt)  
+    rep, opt = _dict_from_expr(expr, opt)
     if not opt.gens:
         raise PolificationFailed(opt, orig, expr)
 
@@ -4294,6 +4295,7 @@ def _poly_from_expr(expr, opt):
 
     rep = dict(list(zip(monoms, coeffs)))
     poly = Poly._from_dict(rep, opt)
+
     if opt.polys is None:
         opt.polys = False
 
@@ -5902,8 +5904,9 @@ def _factors_product(factors):
 def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
+
     args = [i._eval_factor() if hasattr(i, '_eval_factor') else i
-        for i in Mul.make_args(expr)] #same as appending list elements by looping over. e.g Mul.make_args(x*y) will separate into terms (x, y), also Mul.make_args(x*y*x) = (y, x**2)  )
+        for i in Mul.make_args(expr)]
     for arg in args:
         if arg.is_Number:
             coeff *= arg
@@ -5928,6 +5931,7 @@ def _symbolic_factor_list(expr, opt, method):
             factors.append((exc.expr, exp))
         else:
             func = getattr(poly, method + '_list')
+
             _coeff, _factors = func()
             if _coeff is not S.One:
                 if exp.is_Integer:
@@ -5936,6 +5940,7 @@ def _symbolic_factor_list(expr, opt, method):
                     factors.append((_coeff, exp))
                 else:
                     _factors.append((_coeff, S.One))
+
             if exp is S.One:
                 factors.extend(_factors)
             elif exp.is_integer:
@@ -5950,6 +5955,7 @@ def _symbolic_factor_list(expr, opt, method):
                         other.append((f, k))
 
                 factors.append((_factors_product(other), exp))
+
     return coeff, factors
 
 
@@ -5972,14 +5978,15 @@ def _generic_factor_list(expr, gens, args, method):
     """Helper function for :func:`sqf_list` and :func:`factor_list`. """
     options.allowed_flags(args, ['frac', 'polys'])
     opt = options.build_options(gens, args)
+
     expr = sympify(expr)
-    
+
     if isinstance(expr, Expr) and not expr.is_Relational:
         numer, denom = together(expr).as_numer_denom()
-        
+
         cp, fp = _symbolic_factor_list(numer, opt, method)
         cq, fq = _symbolic_factor_list(denom, opt, method)
-        
+
         if fq and not opt.frac:
             raise PolynomialError("a polynomial expected, got %s" % expr)
 
@@ -5993,7 +6000,7 @@ def _generic_factor_list(expr, gens, args, method):
 
         fp = _sorted_factors(fp, method)
         fq = _sorted_factors(fq, method)
-        
+
         if not opt.polys:
             fp = [(f.as_expr(), k) for f, k in fp]
             fq = [(f.as_expr(), k) for f, k in fq]

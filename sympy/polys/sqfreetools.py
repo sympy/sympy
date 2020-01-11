@@ -313,7 +313,7 @@ def dup_sqf_list(f, K, all=False):
         return coeff, []
 
     result, i = [], 1
-    
+
     h = dup_diff(f, 1, K)
     g, p, q = dup_inner_gcd(f, h, K)
 
