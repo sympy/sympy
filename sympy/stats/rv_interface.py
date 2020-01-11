@@ -7,7 +7,7 @@ from .rv import (probability, expectation, density, where, given, pspace, cdf,
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
         'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
-        'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy',
+        'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
         'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
         'smoment', 'quantile']
@@ -338,6 +338,39 @@ def factorial_moment(X, n, condition=None, **kwargs):
     .. [2] http://mathworld.wolfram.com/FactorialMoment.html
     """
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
+
+def median(X, evaluate=True, **kwargs):
+    """
+    Calculuates the median of the probability distribution.
+
+    Parameters
+    ==========
+
+    X: The random expression whose median is to be calculated.
+
+    Returns
+    =======
+
+    The median of the random expression.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, Die, median
+    >>> N = Normal('N', 3, 1)
+    >>> median(N)
+    3
+    >>> D = Die('D')
+    >>> median(D)
+    3
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
+
+    """
+    return quantile(X, evaluate=evaluate, **kwargs)(1/2)
 
 
 P = probability

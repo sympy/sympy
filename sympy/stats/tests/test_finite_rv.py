@@ -8,7 +8,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
                          Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
                          sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
                          cmoment, smoment, characteristic_function, moment_generating_function,
-                         quantile,  kurtosis)
+                         quantile,  kurtosis, median)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
@@ -99,7 +99,8 @@ def test_dice():
 
     assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
     assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
-
+    assert median(X) == 3
+    assert median(Y) == 3
     # Bayes test for die
     BayesTest(X > 3, X + Y < 5)
     BayesTest(Eq(X - Y, Z), Z > Y)

@@ -10,7 +10,7 @@ from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import Intersection, FiniteSet
-from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis,
+from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
@@ -45,7 +45,7 @@ def test_single_normal():
     assert P(X**2 < 1) == erf(2**S.Half/2)
     assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
     assert E(X, Eq(X, mu)) == mu
-
+    assert median(X) == 0
 
 def test_conditional_1d():
     X = Normal('x', 0, 1)
@@ -117,6 +117,7 @@ def test_symbolic():
     assert E(Z) == 1/rate
     assert E(a*Z + b) == a*E(Z) + b
     assert E(X + a*Z + b) == mu1 + a/rate + b
+    assert median(X) == mu1
 
 
 def test_cdf():
@@ -446,7 +447,7 @@ def test_cauchy():
 
     gamma = Symbol("gamma", nonpositive=True)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
-
+    assert median(X) == x0
 
 def test_chi():
     from sympy import I
