@@ -22,6 +22,8 @@ from .numpy import NumPyMatrix
 ImmutableMatrix = ImmutableDenseMatrix
 MutableMatrix   = MutableDenseMatrix
 SparseMatrix    = MutableSparseMatrix
+MMatrix         = MutableDenseMatrix
+IMatrix         = ImmutableDenseMatrix
 
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
@@ -32,12 +34,18 @@ from .expressions import (
     DotProduct, kronecker_product, KroneckerProduct,
     PermutationMatrix, MatrixPermute)
 
-from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
-    det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
+from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
-    _berkowitz_toeplitz_matrix)
+    _berkowitz_toeplitz_matrix,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix,
+    adjugate, charpoly, cofactor, cofactor_matrix,
+    det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix)
 
-from .reductions import is_echelon, echelon_form, rank, rref
+from .reductions import (
+    _row_reduce_list, _row_reduce,
+    _is_echelon, _echelon_form, _rank, _rref,
+    is_echelon, echelon_form, rank, rref)
 
 
 __all__ = [
@@ -53,6 +61,8 @@ __all__ = [
     'banded',
 
     'Matrix',
+    'IMatrix',
+    'MMatrix',
 
     'ImmutableMatrix',
     'MutableMatrix',
@@ -72,10 +82,14 @@ __all__ = [
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
 
-    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'det_bareiss',
-    'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
     '_find_reasonable_pivot', '_find_reasonable_pivot_naive',
     '_berkowitz_toeplitz_matrix',
+    '_adjugate', '_charpoly', '_cofactor', '_cofactor_matrix', '_det',
+    '_det_bareiss', '_det_berkowitz', '_det_LU', '_minor', '_minor_submatrix',
+    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'det_bareiss',
+    'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
 
+    '_row_reduce_list', '_row_reduce',
+    '_is_echelon', '_echelon_form', '_rank', '_rref',
     'is_echelon', 'echelon_form', 'rank', 'rref',
 ]

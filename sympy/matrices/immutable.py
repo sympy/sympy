@@ -32,11 +32,10 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     TypeError: Cannot set values of ImmutableDenseMatrix
     """
 
-    # MatrixExpr is set as NotIterable, but we want explicit matrices to be
-    # iterable
-    _iterable = True
+    _iterable       = True # MatrixExpr is set as NotIterable, but we want explicit matrices to be iterable
     _class_priority = 8
-    _op_priority = 10.001
+    _op_priority    = 10.001
+    is_mutable      = False
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
@@ -152,8 +151,10 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
     >>> _.shape
     (3, 3)
     """
-    is_Matrix = True
+
     _class_priority = 9
+    is_Matrix       = True
+    is_mutable      = False
 
     @classmethod
     def _new(cls, *args, **kwargs):

@@ -2497,14 +2497,15 @@ class _MinimalMatrix(object):
     methods and properties with the exception of `__init__` and `__repr__`
     which are included for convenience."""
 
-    is_MatrixLike = True
-    _sympify = staticmethod(sympify)
     _class_priority = 3
-    zero = S.Zero
-    one = S.One
-
-    is_Matrix = True
-    is_MatrixExpr = False
+    _sympify        = staticmethod(sympify)
+    is_Matrix       = True
+    is_MatrixLike   = True
+    is_MatrixExpr   = False
+    is_mutable      = False
+    is_sparse       = False
+    zero            = S.Zero
+    one             = S.One
 
     @classmethod
     def _new(cls, *args, **kwargs):

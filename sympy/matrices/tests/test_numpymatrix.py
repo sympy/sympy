@@ -1,5 +1,6 @@
 from sympy import S, PurePoly, Symbol
-from sympy.matrices import NonSquareMatrixError, Matrix, NPMatrix
+from sympy.matrices import (NonSquareMatrixError, Matrix,
+    NumPyMatrix as NPMatrix)
 from sympy.utilities.pytest import raises, XFAIL, skip, warns_deprecated_sympy
 
 try:

@@ -5,12 +5,13 @@ from types import FunctionType
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.core.symbol import _uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .common import MatrixError, NonSquareMatrixError
-from .utilities import _safesympify, _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
@@ -198,7 +199,7 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
     return indeterminates[0][0], indeterminates[0][1], True, newly_determined
 
 
-@cacheit
+# This functions is a candidate for caching if it gets implemented for matrices.
 def _berkowitz_toeplitz_matrix(M, dotprodsimp=None):
     """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
     corresponding to ``M`` and A is the first principal submatrix.
@@ -253,7 +254,7 @@ def _berkowitz_toeplitz_matrix(M, dotprodsimp=None):
     return (A, toeplitz)
 
 
-@cacheit
+# This functions is a candidate for caching if it gets implemented for matrices.
 def _berkowitz_vector(M, dotprodsimp=None):
     """ Run the Berkowitz algorithm and return a vector whose entries
         are the coefficients of the characteristic polynomial of ``M``.
@@ -308,7 +309,7 @@ def _berkowitz_vector(M, dotprodsimp=None):
             dotprodsimp=dotprodsimp)
 
 
-def adjugate(M, method="berkowitz", dotprodsimp=None):
+def _adjugate(M, method="berkowitz", dotprodsimp=None):
     """Returns the adjugate, or classical adjoint, of
     a matrix.  That is, the transpose of the matrix of cofactors.
 
@@ -320,11 +321,12 @@ def adjugate(M, method="berkowitz", dotprodsimp=None):
     cofactor_matrix
     sympy.matrices.common.MatrixCommon.transpose
     """
-    return cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp).transpose()
+
+    return _cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp).transpose()
 
 
-@cacheit
-def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
+# This functions is a candidate for caching if it gets implemented for matrices.
+def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
@@ -390,13 +392,13 @@ def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     if dotprodsimp:
         simplify = lambda e: e
 
-    berk_vector = _berkowitz_vector(_safesympify(M), dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
     x = _uniquely_named_symbol(x, berk_vector)
 
     return PurePoly([simplify(a) for a in berk_vector], x)
 
 
-def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
+def _cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     """Calculate the cofactor of an element.
 
     Parameters
@@ -418,10 +420,10 @@ def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return (-1)**((i + j) % 2) * minor(M, i, j, method, dotprodsimp=dotprodsimp)
+    return (-1)**((i + j) % 2) * _minor(M, i, j, method, dotprodsimp=dotprodsimp)
 
 
-def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
+def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     """Return a matrix containing the cofactor of each element.
 
     Parameters
@@ -444,12 +446,12 @@ def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return _safesympify(M)._new(M.rows, M.cols,
-            lambda i, j: cofactor(M, i, j, method, dotprodsimp=dotprodsimp))
+    return M._new(M.rows, M.cols,
+            lambda i, j: _cofactor(M, i, j, method, dotprodsimp=dotprodsimp))
 
 
-@cacheit
-def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
+# This functions is a candidate for caching if it gets implemented for matrices.
+def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     """Computes the determinant of a matrix.
 
     Parameters
@@ -529,7 +531,7 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
 
     n = M.rows
 
-    if n == M.cols:
+    if n == M.cols: # square check is done in individual method functions
         if n == 0:
             return M.one
         elif n == 1:
@@ -547,17 +549,17 @@ def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
             return _dotprodsimp(m) if dotprodsimp else m
 
     if method == "bareiss":
-        return det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     elif method == "berkowitz":
-        return det_berkowitz(M, dotprodsimp=dotprodsimp)
+        return _det_berkowitz(M, dotprodsimp=dotprodsimp)
     elif method == "lu":
-        return det_LU(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return _det_LU(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     else:
         raise MatrixError('unknown method for calculating determinant')
 
 
-@cacheit
-def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
+# This functions is a candidate for caching if it gets implemented for matrices.
+def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
     """Compute matrix determinant using Bareiss' fraction-free
     algorithm which is an extension of the well known Gaussian
     elimination method. This approach is best suited for dense
@@ -622,10 +624,10 @@ def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    return bareiss(_safesympify(M))
+    return bareiss(M)
 
 
-def det_berkowitz(M, dotprodsimp=None):
+def _det_berkowitz(M, dotprodsimp=None):
     """ Use the Berkowitz algorithm to compute the determinant.
 
     Parameters
@@ -646,12 +648,12 @@ def det_berkowitz(M, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    berk_vector = _berkowitz_vector(_safesympify(M), dotprodsimp=dotprodsimp)
+    berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
     return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
 
-@cacheit
-def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+# This functions is a candidate for caching if it gets implemented for matrices.
+def _det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
     """ Computes the determinant of a matrix from its LU decomposition.
     This function uses the LU decomposition computed by
     LUDecomposition_Simple().
@@ -684,7 +686,7 @@ def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
 
-    lu, row_swaps = _safesympify(M).LUdecomposition_Simple(iszerofunc=iszerofunc,
+    lu, row_swaps = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
             simpfunc=None, dotprodsimp=dotprodsimp)
     # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
     # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
@@ -712,7 +714,7 @@ def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
     return det
 
 
-def minor(M, i, j, method="berkowitz", dotprodsimp=None):
+def _minor(M, i, j, method="berkowitz", dotprodsimp=None):
     """Return the (i,j) minor of ``M``.  That is,
     return the determinant of the matrix obtained by deleting
     the `i`th row and `j`th column from ``M``.
@@ -736,10 +738,10 @@ def minor(M, i, j, method="berkowitz", dotprodsimp=None):
     if not M.is_square:
         raise NonSquareMatrixError()
 
-    return det(minor_submatrix(M, i, j), method=method, dotprodsimp=dotprodsimp)
+    return _det(_minor_submatrix(M, i, j), method=method, dotprodsimp=dotprodsimp)
 
 
-def minor_submatrix(M, i, j):
+def _minor_submatrix(M, i, j):
     """Return the submatrix obtained by removing the `i`th row
     and `j`th column from ``M`` (works with Pythonic negative indices).
 
@@ -762,4 +764,53 @@ def minor_submatrix(M, i, j):
     rows = [a for a in range(M.rows) if a != i]
     cols = [a for a in range(M.cols) if a != j]
 
-    return _safesympify(M).extract(rows, cols)
+    return M.extract(rows, cols)
+
+
+# The following are top level stand-alone interface functions which sympify the
+# matrix where needed (so it becomes immutable and returns immutable), otherwise
+# the implementations above do not sympify due to problems in other parts of the
+# codebase using matrices of unsympifiable objects. Technically could just
+# assign these via 'charpoly = _charpoly' where sympification is not needed but
+# this is clearer.
+
+def adjugate(M, method="berkowitz", dotprodsimp=None):
+    return _adjugate(sympify(M), method=method, dotprodsimp=dotprodsimp)
+
+def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
+    return _charpoly(M, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+
+def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
+    return _cofactor(M, i, j, method=method, dotprodsimp=dotprodsimp)
+
+def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
+    return _cofactor_matrix(sympify(M), method=method, dotprodsimp=dotprodsimp)
+
+def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
+    return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
+def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
+    return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
+def det_berkowitz(M, dotprodsimp=None):
+    return _det_berkowitz(M, dotprodsimp=dotprodsimp)
+
+def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+    return _det_LU(M, iszerofunc=iszerofunc, simpfunc=simpfunc,
+            dotprodsimp=dotprodsimp)
+
+def minor(M, i, j, method="berkowitz", dotprodsimp=None):
+    return _minor(M, i, j, method=method, dotprodsimp=dotprodsimp)
+
+def minor_submatrix(M, i, j):
+    return _minor_submatrix(sympify(M), i, j)
+
+adjugate.__doc__        = _adjugate.__doc__
+charpoly.__doc__        = _charpoly.__doc__
+cofactor.__doc__        = _cofactor.__doc__
+cofactor_matrix.__doc__ = _cofactor_matrix.__doc__
+det.__doc__             = _det.__doc__
+det_bareiss.__doc__     = _det_bareiss.__doc__
+det_berkowitz.__doc__   = _det_berkowitz.__doc__
+det_LU.__doc__          = _det_LU.__doc__
+minor.__doc__           = _minor.__doc__

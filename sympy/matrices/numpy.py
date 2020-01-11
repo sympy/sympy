@@ -60,34 +60,36 @@ class NumPyMatrix(MutableDenseMatrix):
         import numpy as np
 
         view_arr = None
+        copy     = kwargs.get('copy', True) # 'copy=True' for non-numpy matrices will be ignored
 
-        if kwargs.get('copy', True) is False:
+        if copy is False:
             if len(args) == 1:
                 view_arr = args[0]
 
                 if not isinstance(view_arr, np.ndarray):
-                    raise TypeError("'copy=False' for NumPyMatrix requires NumPy matrix as source")
-                if len(view_arr.shape) != 2:
+                    copy, view_arr = True, None
+                elif len(view_arr.shape) != 2:
                     raise TypeError("'copy=False' for NumPyMatrix without rows and cols specified requires 2D NumPy matrix as source")
-
-                rows, cols = view_arr.shape
+                else:
+                    rows, cols = view_arr.shape
 
             elif len(args) == 3:
                 rows, cols, view_arr = args
 
                 if not isinstance(view_arr, np.ndarray):
-                    raise TypeError("'copy=False' for NumPyMatrix requires NumPy matrix as source")
+                    copy, view_arr = True, None
 
             else:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows, cols, [list]")
 
-            if dtype is not None and dtype != view_arr.dtype:
-                raise TypeError("'copy=False' for NumPyMatrix with 'dtype' requires 'dtype' to match source NumPy matrix")
+            if copy is False:
+                if dtype is not None and dtype != view_arr.dtype:
+                    raise TypeError("'copy=False' for NumPyMatrix with 'dtype' requires 'dtype' to match source NumPy matrix")
 
-            if isinstance(view_arr, np.matrix):
-                view_arr = np.ndarray(view_arr.shape, dtype=view_arr.dtype, buffer=view_arr)
+                if isinstance(view_arr, np.matrix):
+                    view_arr = np.ndarray(view_arr.shape, dtype=view_arr.dtype, buffer=view_arr)
 
-        else:
+        if copy is True:
             if len(args) == 1 and isinstance(args[0], np.ndarray):
                 if dtype is None:
                     dtype = args[0].dtype

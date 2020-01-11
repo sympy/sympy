@@ -33,14 +33,14 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, NonPositiveDefiniteMatrixError)
 
-from .utilities import (_safesympify, _toselfclass, _iszero,
-    _is_zero_after_expand_mul)
+from .utilities import _iszero, _is_zero_after_expand_mul
 
-from .determinant import (adjugate, charpoly, cofactor, cofactor_matrix,
-    det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
-    _find_reasonable_pivot, _find_reasonable_pivot_naive)
+from .determinant import (
+    _find_reasonable_pivot, _find_reasonable_pivot_naive,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
-from .reductions import is_echelon, echelon_form, rank, rref
+from .reductions import _is_echelon, _echelon_form, _rank, _rref
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -78,59 +78,60 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations.
     Should not be instantiated directly."""
 
+    _find_reasonable_pivot       = _find_reasonable_pivot
+    _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
+    _eval_determinant            = _det
+
+    # could just assign these via 'adjugate = _adjugate' but this is clearer
     def adjugate(self, method="berkowitz", dotprodsimp=None):
         """Returns the adjugate, or classical adjoint, of
         a matrix. See ``adjugate`` in sympy.matrices.determinant for details."""
 
-        return _toselfclass(self, adjugate(self, method=method,
-                dotprodsimp=dotprodsimp))
+        return _adjugate(self, method=method, dotprodsimp=dotprodsimp)
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
         """Computes characteristic polynomial det(x*I - self) where I is
         the identity matrix. See ``charpoly`` in sympy.matrices.determinant for details."""
 
-        return charpoly(_safesympify(self), x=x, simplify=simplify,
-                dotprodsimp=dotprodsimp)
+        return _charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
 
     def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Calculate the cofactor of an element. See ``cofactor`` in
         sympy.matrices.determinant for details."""
 
-        return cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+        return _cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
 
     def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
         """Return a matrix containing the cofactor of each element. See
         ``cofactor_matrix`` in sympy.matrices.determinant for details."""
 
-        return _toselfclass(self, cofactor_matrix(self, method=method,
-                dotprodsimp=dotprodsimp))
+        return _cofactor_matrix(self, method=method, dotprodsimp=dotprodsimp)
 
     def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
         """Computes the determinant of a matrix. See ``det`` in
         sympy.matrices.determinant for details."""
 
-        return det(_safesympify(self), method=method, iszerofunc=iszerofunc,
+        return _det(self, method=method, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
 
     def det_bareiss(self, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         """Compute matrix determinant using Bareiss' fraction-free algorithm.
         See ``det_bareiss`` in sympy.matrices.determinant for details."""
 
-        return det_bareiss(_safesympify(self), iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+        return _det_bareiss(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
     def det_berkowitz(self, dotprodsimp=None):
         """ Use the Berkowitz algorithm to compute the determinant. See
         ``det_berkowitz`` in sympy.matrices.determinant for details."""
 
-        return det_berkowitz(self, dotprodsimp=dotprodsimp)
+        return _det_berkowitz(self, dotprodsimp=dotprodsimp)
 
     def det_LU(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         """ Computes the determinant of a matrix from its LU decomposition. See
         ``det_LU`` in sympy.matrices.determinant for details."""
 
-        return det_LU(_safesympify(self), iszerofunc=iszerofunc,
-                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
+        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
+                dotprodsimp=dotprodsimp)
 
     def minor(self, i, j, method="berkowitz", dotprodsimp=None):
         """Return the (i,j) minor of ``self``.  That is,
@@ -138,17 +139,13 @@ class MatrixDeterminant(MatrixCommon):
         the `i`th row and `j`th column from ``self``. See ``minor`` in
         sympy.matrices.determinant for details."""
 
-        return minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+        return _minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
 
     def minor_submatrix(self, i, j):
         """Return the submatrix obtained by removing the `i`th row
         and `j`th column from ``self``."""
 
-        return _toselfclass(self, minor_submatrix(self, i, j))
-
-    _find_reasonable_pivot       = _find_reasonable_pivot
-    _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
-    _eval_determinant            = det
+        return _minor_submatrix(self, i, j)
 
 
 class MatrixReductions(MatrixDeterminant):
@@ -316,8 +313,7 @@ class MatrixReductions(MatrixDeterminant):
         if op == "n->n+km":
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
-    is_echelon = property(is_echelon)
-
+    # could just assign these via 'echelon_form = _echelon_form' but this is clearer
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
             dotprodsimp=None):
         """Returns a matrix row-equivalent to ``self`` that is in echelon form.
@@ -325,20 +321,16 @@ class MatrixReductions(MatrixDeterminant):
         like the row space and the null space are preserved. See
         ``echelon_form`` in sympy.matrices.reductions for details."""
 
-        mat_pivots = echelon_form(self, iszerofunc=iszerofunc,
-                simplify=simplify, with_pivots=with_pivots,
-                dotprodsimp=dotprodsimp)
+        return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
+                with_pivots=with_pivots, dotprodsimp=dotprodsimp)
 
-        if with_pivots:
-            return _toselfclass(self, mat_pivots[0]), mat_pivots[1]
-
-        return _toselfclass(self, mat_pivots)
+    is_echelon = property(_is_echelon)
 
     def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         """Returns the rank of a matrix. See ``rank`` in
         sympy.matrices.reductions for details."""
 
-        return rank(self, iszerofunc=iszerofunc, simplify=simplify,
+        return _rank(self, iszerofunc=iszerofunc, simplify=simplify,
                 dotprodsimp=dotprodsimp)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
@@ -346,13 +338,8 @@ class MatrixReductions(MatrixDeterminant):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
         See ``rref`` in sympy.matrices.reductions for details."""
 
-        mat_pivots = rref(self, iszerofunc=iszerofunc, simplify=simplify,
+        return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
             pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
-
-        if pivots:
-            return _toselfclass(self, mat_pivots[0]), mat_pivots[1]
-
-        return _toselfclass(self, mat_pivots)
 
 
 class MatrixSubspaces(MatrixReductions):
@@ -1765,14 +1752,15 @@ class MatrixBase(MatrixDeprecated,
                  MatrixEigen,
                  MatrixCommon):
     """Base class for matrix objects."""
-    # Added just for numpy compatibility
-    __array_priority__ = 11
 
-    is_Matrix = True
-    _class_priority = 3
-    _sympify = staticmethod(sympify)
-    zero = S.Zero
-    one = S.One
+    __array_priority__ = 11 # added just for numpy compatibility
+    _class_priority    = 3
+    _sympify           = staticmethod(sympify)
+    is_Matrix          = True
+    is_mutable         = None
+    is_sparse          = False
+    zero               = S.Zero
+    one                = S.One
 
     __hash__ = None  # Mutable
 

@@ -989,6 +989,9 @@ class SparseMatrix(MatrixBase):
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
+
+    is_mutable = True
+
     @classmethod
     def _new(cls, *args, **kwargs):
         return cls(*args)

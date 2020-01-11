@@ -4,20 +4,6 @@ from sympy.core.function import expand_mul
 from sympy.core.sympify import SympifyError, sympify
 
 
-def _safesympify(M):
-  """Try to sympify and return original object if that fails. Needed to safely
-  operate on ``RawMatrix`` objects from sympy.polys.solvers."""
-
-  try:
-    return sympify(M)
-  except SympifyError:
-    return M
-
-
-def _toselfclass(self, M):
-    return M if isinstance(M, self.__class__) else self.__class__(M)
-
-
 def _iszero(x):
     """Returns True if x is zero."""
     return getattr(x, 'is_zero', None)
