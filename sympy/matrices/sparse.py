@@ -320,7 +320,7 @@ class SparseMatrix(MatrixBase):
 
         return C
 
-    def _eval_inverse(self, dotprodsimp=None, **kwargs):
+    def _eval_inverse(self, method='LDL', dotprodsimp=None):
         """Return the matrix inverse using Cholesky or LDL (default)
         decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
         respectively.
@@ -356,29 +356,20 @@ class SparseMatrix(MatrixBase):
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, 1]])
-
         """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        sym = self.is_symmetric()
         M = self.as_mutable()
         I = M.eye(M.rows)
-        if not sym:
-            t = M.T
-            r1 = M[0, :]
-            M = t.multiply(M, dotprodsimp=dotprodsimp)
-            I = t*I
-        method = kwargs.get('method', 'LDL')
+        if not self.is_symmetric():
+            I = M.T
+            M = I.multiply(M, dotprodsimp=dotprodsimp)
+
         if method == "LDL":
-            solve = M._LDL_solve
+            rv = M._LDL_solve(I, dotprodsimp=dotprodsimp)
         elif method == "CH":
-            solve = M._cholesky_solve
+            rv = M._cholesky_solve(I, dotprodsimp=dotprodsimp)
         else:
             raise NotImplementedError(
                 'Method may be "CH" or "LDL", not %s.' % method)
-        rv = M.hstack(*[solve(I[:, i], dotprodsimp=dotprodsimp) for i in range(I.cols)])
-        if not sym:
-            scale = dps((r1*rv[:, 0])[0, 0])
-            rv /= scale
         return self._new(rv)
 
     def _eval_Abs(self):
