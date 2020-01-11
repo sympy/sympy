@@ -620,3 +620,4 @@ def test_issue_13462():
     assert c1 == (-k**2/4 + k/4)
     assert c2 == (k**3/24 - k**2/8 + k/12)
     assert c2x == (k**3/24 - k**2/8 + k/12)
+    
