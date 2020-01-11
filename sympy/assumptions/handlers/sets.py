@@ -643,6 +643,19 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
             elif ask(Q.odd(expr.exp), assumptions):
                 return True
 
+    @staticmethod
+    def MatrixBase(mat, assumptions):
+        rows, cols = mat.shape
+        ret_val = True
+        for i in range(rows):
+            for j in range(i, cols):
+                cond = fuzzy_bool(Eq(mat[i, j], -conjugate(mat[j, i])))
+                if cond == None:
+                    ret_val = None
+                if cond == False:
+                    return False
+        return ret_val
+
 
 class AskAlgebraicHandler(CommonHandler):
     """Handler for Q.algebraic key. """
