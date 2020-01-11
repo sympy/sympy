@@ -6211,11 +6211,20 @@ def sqf_list(f, *gens, **args):
     (2, [(x + 1, 2), (x + 2, 3)])
 
     """
-    numer = Poly(f, *gens, **args)
-    fp = Poly.sqf_list(numer)
-    coeff = fp[0]
-    fp = [(s.as_expr(), k) for s, k in fp[1]]
-    return coeff ,fp
+    options.allowed_flags(args, ['frac', 'polys'])
+    opt = options.build_options(gens, args)
+    f = sympify(f)
+    if isinstance(f, Expr) and not f.is_Relational:
+        numer, denom = together(f).as_numer_denom()
+        numer = Poly(numer, *gens, **args)
+        if denom!=1 and not opt.frac:
+            raise PolynomialError("a polynomial expected, got %s" % f)
+        fp = Poly.sqf_list(numer)
+        coeff = fp[0]
+        fp = [(s.as_expr(), k) for s, k in fp[1]]
+        return coeff ,fp
+    else:
+        raise PolynomialError("a polynomial expected, got %s" % f)
 
 @public
 def sqf(f, *gens, **args):
