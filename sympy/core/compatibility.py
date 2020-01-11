@@ -102,8 +102,6 @@ if PY3:
     from inspect import unwrap
     from itertools import accumulate
 else:
-    import types
-
     long = long
     int_info = sys.long_info
 

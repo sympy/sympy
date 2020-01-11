@@ -8,7 +8,6 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 from inspect import isfunction
-from itertools import chain
 
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add

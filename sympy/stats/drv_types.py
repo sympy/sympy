@@ -25,7 +25,7 @@ from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
 
 __all__ = ['Geometric',
-'Hermite'
+'Hermite',
 'Logarithmic',
 'NegativeBinomial',
 'Poisson',
