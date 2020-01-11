@@ -611,3 +611,4 @@ def test_issue_13416():
 def test_issue_13462():
     n = Symbol('n')   
     assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
+    
