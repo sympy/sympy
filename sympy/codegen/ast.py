@@ -1342,6 +1342,7 @@ class Attribute(Token):
     True
     """
     __slots__ = ('name', 'parameters')
+    defaults = {'parameters': Tuple()}
 
     _construct_name = String
     _construct_parameters = staticmethod(_mk_Tuple)
