@@ -1909,7 +1909,9 @@ def test_matrix():
     assert ask(Q.antihermitian(A)) is True
     assert ask(Q.antihermitian(B)) is True
     assert ask(Q.antihermitian(A**2)) is False
-    assert ask(Q.antihermitian(B**3)) is True
+    C = (B**3)
+    C.simplify()
+    assert ask(Q.antihermitian(C)) is True
     _A = Matrix([[0, -2 - I, 0], [z, 0, -I], [0, -I, 0]])
     assert ask(Q.antihermitian(_A)) is None
 
