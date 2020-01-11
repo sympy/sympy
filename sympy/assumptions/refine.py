@@ -5,7 +5,7 @@ from typing import Dict, Callable
 from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.logic.boolalg import Boolean
 
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q, ask  # type: ignore
 
 def refine(expr, assumptions=True):
     """
