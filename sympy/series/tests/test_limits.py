@@ -599,14 +599,18 @@ def test_issue_17431():
 def test_issue_17671():
     assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
 
+
 def test_issue_13382():
     assert limit(n*(((n + 1)**2 + 1)/(n**2 + 1) - 1), n, oo) == 2
+
 
 def test_issue_13403():
     assert limit(n*(-1 + (n + log(n + 1) + 1)/(n + log(n))), n ,oo) == 1
 
+
 def test_issue_13416():
     assert limit((-n**3*log(n)**3 + (n - 1)*(n + 1)**2*log(n + 1)**3)/(n**2*log(n)**3), n ,oo) == 1
+
 
 def test_issue_13462():
     N, k = symbols('N, k', positive = True)
@@ -620,4 +624,4 @@ def test_issue_13462():
     assert c1 == (-k**2/4 + k/4)
     assert c2 == (k**3/24 - k**2/8 + k/12)
     assert c2x == (k**3/24 - k**2/8 + k/12)
-    
+
