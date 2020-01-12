@@ -13,6 +13,11 @@ def test_Operator():
     assert Operator(g)(x,y) == g(x,y)
     assert Operator(h(x))(x,y) == h(x)
 
+    assert Operator(sin)(x,y) == sin(x)
+    assert Operator(sin, (1,))(x,y,z) == sin(y)
+    assert Operator(Add, (0,2))(x,y,z) == Add(x,z)
+    assert Operator(Add, ((0,),))(x,y,z) == Add(x,y,z)
+
 def test_AppliedOperator1():
     """
     Cases where AppliedOperator is force-evaluated.

@@ -2634,7 +2634,10 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Operator(self, expr):
-        return self._print(expr.operator)
+        if [*expr.argidxs] == [0]:
+            return self._print(expr.operator)
+        else:
+            return prettyForm(str(expr))
 
 
 def pretty(expr, **settings):

@@ -10,6 +10,9 @@ def test_OperatorAdd():
     assert (sin-cos)(x) == sin(x)-cos(x)
     assert (sin+1-sin)(x) == 1
 
+    assert (sin+Add)(x,y,z) == sin(x)+x+y+z
+    assert (Operator(sin, (1,)) + Operator(Add, (0,2)))(x,y,z) == sin(y) + x+z
+
 def test_OperatorMul():
     assert (1*f)(x) == f(x)
     assert (2*cos)(x) == 2*cos(x)

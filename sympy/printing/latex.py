@@ -2514,7 +2514,10 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def _print_Operator(self, expr):
-        return self._print(expr.operator)
+        if [*expr.argidxs] == [0]:
+            return self._print(expr.operator)
+        else:
+            return self._print_Basic(expr)
 
     def _print_AppliedOperator(self, expr):
         operator_str = r"\left({}\right)".format(self._print(expr.operator))
