@@ -247,6 +247,8 @@ def test_doit2():
     # limit() breaks on the contained Integral.
     assert l.doit(deep=False) == l
 
+def test_issue_2929():
+    assert limit((x * exp(x))/(exp(x) - 1), x, -oo) == 0
 
 def test_issue_3792():
     assert limit((1 - cos(x))/x**2, x, S.Half) == 4 - 4*cos(S.Half)
