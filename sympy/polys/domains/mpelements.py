@@ -45,7 +45,7 @@ new = object.__new__
 @public
 class MPContext(PythonMPContext):
 
-    def __init__(ctx, prec=53, dps=None, tol=None, field='CC'):
+    def __init__(ctx, prec=53, dps=None, tol=None, real=False):
         ctx._prec_rounding = [prec, round_nearest]
 
         if dps is None:
@@ -58,9 +58,9 @@ class MPContext(PythonMPContext):
         ctx.mpf._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.mpc._ctxdata = [ctx.mpc, new, ctx._prec_rounding]
 
-        if field == 'RR':
+        if real:
             ctx.mpf.context = ctx
-        elif field == 'CC':
+        else:
             ctx.mpc.context = ctx
 
         ctx.constant = _constant
