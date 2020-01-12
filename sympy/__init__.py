@@ -37,7 +37,7 @@ if 'dev' in __version__:
     del enable_warnings
 
 
-def __sympy_debug():
+def __sympy_debug() -> bool:
     # helper function so we don't import os globally
     import os
     debug_str = os.getenv('SYMPY_DEBUG', 'False')
@@ -46,7 +46,7 @@ def __sympy_debug():
     else:
         raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
                            debug_str)
-SYMPY_DEBUG = __sympy_debug()
+SYMPY_DEBUG = __sympy_debug()  # type: bool
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
