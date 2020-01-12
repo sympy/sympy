@@ -2591,36 +2591,53 @@ class _MinimalMatrix(object):
 
 
 class _MatrixWrapper(object):
-    """Wrapper class providing the minimum functionality
-    for a matrix-like object: .rows, .cols, .shape, indexability,
-    and iterability.  CommonMatrix math operations should work
-    on matrix-like objects.  For example, wrapping a numpy
-    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
+    """Wrapper class providing the minimum functionality for a matrix-like
+    object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
+    math operations should work on matrix-like objects. This one is intended for
+    matrix-like objects which use the same indexing format as SymPy with respect
+    to returning matrix elements instead of rows for non-tuple indexes.
     """
+
+    is_Matrix     = False # needs to be here because of __getattr__
     is_MatrixLike = True
 
-    def __init__(self, mat, shape=None):
+    def __init__(self, mat, shape):
         self.mat = mat
-        self.rows, self.cols = mat.shape if shape is None else shape
-
-    def __getattr__(self, attr):
-        """Most attribute access is passed straight through
-        to the stored matrix"""
-        return getattr(self.mat, attr)
+        self.shape = shape
+        self.rows, self.cols = shape
 
     def __getitem__(self, key):
-        return self.mat.__getitem__(key)
+        if isinstance(key, tuple):
+            return sympify(self.mat.__getitem__(key))
+
+        return sympify(self.mat.__getitem__((key // self.rows, key % self.cols)))
+
+    def __iter__(self): # supports numpy.matrix and numpy.array
+        mat = self.mat
+        cols = self.cols
+
+        return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
 
 
 def _matrixify(mat):
     """If `mat` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
     `mat` is passed through without modification."""
-    if getattr(mat, 'is_Matrix', False):
+
+    if getattr(mat, 'is_Matrix', False) or getattr(mat, 'is_MatrixLike', False):
         return mat
-    if hasattr(mat, 'shape'):
+
+    shape = None
+
+    if hasattr(mat, 'shape'): # numpy, scipy.sparse
         if len(mat.shape) == 2:
-            return _MatrixWrapper(mat)
+            shape = mat.shape
+    elif hasattr(mat, 'rows') and hasattr(mat, 'cols'): # mpmath
+        shape = (mat.rows, mat.cols)
+
+    if shape:
+        return _MatrixWrapper(mat, shape)
+
     return mat
 
 

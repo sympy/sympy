@@ -756,13 +756,13 @@ def _nthroot_mod_composite(a, n, m):
             tot_roots.update(nthroot_mod(a, n, p, True) or [])
         else:
             for root in nthroot_mod(a, n, p, True) or []:
-                rootn = pow(root, n)
-                diff = (rootn // (root or 1) * n) % p
+                diff = (pow(root, n - 1) * n) % p
                 if diff != 0:
                     ppow = p
+                    m_inv = mod_inverse(diff, p)
                     for j in range(1, e):
                         ppow *= p
-                        root = (root - (rootn - a) * mod_inverse(diff, p)) % ppow
+                        root = (root - (pow(root, n) - a) * m_inv) % ppow
                     tot_roots.add(root)
                 else:
                     new_base = p
@@ -819,7 +819,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     if a % p == 0:
         return [0]
     if not is_nthpow_residue(a, n, p):
-        return None
+        return [] if all_roots else None
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
     # The roots of ``x**n - a = 0 (mod p)`` are roots of

@@ -9,7 +9,7 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
-from sympy.core.compatibility import range, string_types
+from sympy.core.compatibility import range
 
 from .printer import Printer
 
@@ -32,7 +32,7 @@ class ReprPrinter(Printer):
         """
         The fallback printer.
         """
-        if isinstance(expr, string_types):
+        if isinstance(expr, str):
             return expr
         elif hasattr(expr, "__srepr__"):
             return expr.__srepr__()
