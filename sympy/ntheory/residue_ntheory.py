@@ -770,7 +770,7 @@ def _help(m, how1, how2, how3):
                         new_base *= p
                         new_roots = set()
                         for k in roots_in_base:
-                            if how3(k, new_base) % new_base != 0:
+                            if how3(k, new_base)!= 0:
                                 continue
                             while k not in new_roots:
                                 new_roots.add(k)
@@ -1431,7 +1431,7 @@ def _val_poly(root, coefficients, p):
     rank = len(coefficients)
     f_val = 0
     for coeff in range(0, rank - 1):
-        f_val = (f_val + pow(root, int(rank - coeff - 1), p) * coefficients[coeff]) % p
+        f_val = (f_val + pow(root, rank - coeff - 1, p) * coefficients[coeff]) % p
     f_val = f_val + coefficients[-1]
     return f_val % p
 
