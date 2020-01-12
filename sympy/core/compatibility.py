@@ -5,6 +5,8 @@ here for easy import.
 """
 from __future__ import print_function, division
 
+from typing import Tuple, Type
+
 import operator
 from collections import defaultdict
 from sympy.external import import_module
@@ -745,7 +747,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = (int, )
+SYMPY_INTS = (int, )  # type: Tuple[Type, ...]
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
