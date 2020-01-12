@@ -2598,12 +2598,16 @@ class TensAdd(TensExpr, AssocOp):
 
     def _eval_partial_derivative(self, s):
         # Evaluation like Add
-        # TODO: what about if s is a tensor and a no tensor expression?
-        my_diffs = [a._eval_partial_derivative(s)
-                    if isinstance(a, TensExpr) else a.diff(s)
-                    for a in self.args]
+        my_diffs = []
+        for a in self.args:
+            if isinstance(a, TensExpr):
+                my_diffs.append(a._eval_partial_derivative(s))
+            else:
+                # do not call diff if s is no symbol
+                if isinstance(s, Symbol):
+                    my_diffs.append(a.diff(s))
 
-        return self.func(*my_diffs) #self.func(*[a._eval_partial_derivative(s) for a in self.args])
+        return self.func(*my_diffs)
 
 class Tensor(TensExpr):
     """
@@ -2638,8 +2642,6 @@ class Tensor(TensExpr):
 
     """
 
-    _diff_wrt = True
-    is_scalar = True
     is_commutative = False
 
     def __new__(cls, tensor_head, indices, **kw_args):
@@ -3841,7 +3843,11 @@ class TensMul(TensExpr, AssocOp):
             if isinstance(myarg, TensExpr):
                 d = args[i]._eval_partial_derivative(s)
             else:
-                d = args[i].diff(s)
+                # do not call diff is s is no symbol
+                if isinstance(s, Symbol):
+                    d = args[i].diff(s)
+                else:
+                    d = S.Zero
             if d:
                 terms.append(TensMul(*(args[:i] + [d] + args[i + 1:])))
         return TensAdd.fromiter(terms)
