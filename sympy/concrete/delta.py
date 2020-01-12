@@ -10,7 +10,7 @@ References
 from __future__ import print_function, division
 from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
 from sympy.sets import Interval
 

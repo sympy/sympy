@@ -11,7 +11,6 @@ from __future__ import print_function, division
 
 from sympy.codegen.ast import Assignment
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 

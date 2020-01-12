@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy import symbols, Symbol, S
 from sympy.printing import sstr
-from sympy.core.compatibility import range
 from sympy.core.sympify import sympify
 
 

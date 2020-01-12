@@ -6,7 +6,6 @@ from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
-from sympy.core.compatibility import range
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq

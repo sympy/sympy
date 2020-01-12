@@ -8,7 +8,7 @@ from string import ascii_lowercase, ascii_uppercase
 
 unicode_warnings = ''
 
-from sympy.core.compatibility import unicode, range
+from sympy.core.compatibility import unicode
 
 # first, setup unicodedate environment
 try:

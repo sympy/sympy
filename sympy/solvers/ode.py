@@ -237,7 +237,7 @@ from itertools import islice
 from sympy.functions import hyper
 
 from sympy.core import Add, S, Mul, Pow, oo, Rational
-from sympy.core.compatibility import ordered, iterable, is_sequence, range
+from sympy.core.compatibility import ordered, iterable, is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import AtomicExpr, Expr

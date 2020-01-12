@@ -6,7 +6,7 @@ from sympy import (
     S, Rational, AlgebraicNumber,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp

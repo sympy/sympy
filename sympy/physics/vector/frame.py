@@ -1,7 +1,6 @@
 from sympy.core.backend import (diff, expand, sin, cos, sympify,
                    eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
 from sympy import (trigsimp, solve, Symbol, Dummy)
-from sympy.core.compatibility import range
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 

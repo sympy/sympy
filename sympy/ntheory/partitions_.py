@@ -3,7 +3,6 @@ from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
 from sympy.core.numbers import igcd
-from sympy.core.compatibility import range
 from .residue_ntheory import (_sqrt_mod_prime_power,
     legendre_symbol, jacobi_symbol, is_quad_residue)
 

@@ -5,7 +5,7 @@ A MathML printer.
 from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
-from sympy.core.compatibility import range, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy.core.function import _coeff_isneg
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \

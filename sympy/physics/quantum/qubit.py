@@ -12,7 +12,7 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
-from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 

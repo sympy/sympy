@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
-from sympy.core.compatibility import is_sequence, iterable, range
+from sympy.core.compatibility import is_sequence, iterable
 from sympy.core.containers import tuple_wrapper
 from sympy.core.expr import unchanged
 from sympy.core.function import Function, Lambda

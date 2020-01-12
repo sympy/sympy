@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range, is_sequence
+from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 import sympy

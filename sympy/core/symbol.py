@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB, _assume_defined
-from sympy.core.compatibility import range, is_sequence, ordered
+from sympy.core.compatibility import is_sequence, ordered
 from .basic import Basic
 from .sympify import sympify
 from .singleton import S
