@@ -587,7 +587,10 @@ def test_exponential():
     assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
-
+    #Test issue 9970
+    z = Dummy('z')
+    assert P(X > z) == exp(-z*rate)
+    assert P(X < z) == 0
 
 def test_exponential_power():
     mu = Symbol('mu')
