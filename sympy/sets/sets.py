@@ -1772,8 +1772,7 @@ class FiniteSet(Set, EvalfMixin):
         factor's documentation
         ========================
         """
-        fctr_components = [fctr(v, *args, **kwargs) * k for
-                           k, v in self.components.items()]
+        fctr_components = [fctr(v, *args, **kwargs) * k for k, v in self.components.items()]
         return self._add_func(*fctr_components)
     
     def __new__(cls, *args, **kwargs):
