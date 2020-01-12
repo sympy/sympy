@@ -966,6 +966,8 @@ def test_raised_cosine():
     assert density(X)(x) == (Piecewise(((cos(pi*(x - mu)/s) + 1)/(2*s),
                           And(x <= mu + s, mu - s <= x)), (0, True)))
 
+    assert pspace(X).domain.set == Interval(mu - s, mu + s)
+
 
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
@@ -1047,6 +1049,11 @@ def test_triangular():
     assert moment_generating_function(X)(x).expand() == \
     ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
 
+    assert pspace(X).domain.set == Interval(a, b)
+
+    assert characteristic_function(X)(t) == -2 *((b-c) * exp(I*a*t) - (b-a) * exp(I*c*t)
+                                            + (c-a) * exp(I*b*t)) / ((b-a)*(c-a)*(b-c)*t**2)
+
 def test_quadratic_u():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
@@ -1057,6 +1064,11 @@ def test_quadratic_u():
     # Tests _moment_generating_function
     assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
     assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
+
+    # Tests characteristic_function
+    t = Symbol('t')
+    assert characteristic_function(X)(t) == -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I -
+                                            (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
 
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
@@ -1165,6 +1177,8 @@ def test_wignersemicircle():
     #Tests ChiNoncentralDistribution
     assert characteristic_function(X)(x) == \
            Piecewise((2*besselj(1, R*x)/(R*x), Ne(x, 0)), (1, True))
+
+    assert pspace(X).domain.set == Interval(-R, R)
 
 
 def test_prefab_sampling():
