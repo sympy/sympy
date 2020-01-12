@@ -86,29 +86,90 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""
 
-    _find_reasonable_pivot       = _find_reasonable_pivot
-    _find_reasonable_pivot_naive = _find_reasonable_pivot_naive
-    _eval_determinant            = _det
-    adjugate                     = _adjugate
-    charpoly                     = _charpoly
-    cofactor                     = _cofactor
-    cofactor_matrix              = _cofactor_matrix
-    det                          = _det
-    det_bareiss                  = _det_bareiss
-    det_berkowitz                = _det_berkowitz
-    det_LU                       = _det_LU
-    minor                        = _minor
-    minor_submatrix              = _minor_submatrix
+    def _find_reasonable_pivot(self, iszerofunc=_iszero, simpfunc=_simplify):
+        return _find_reasonable_pivot(self, iszerofunc=iszerofunc,
+                simpfunc=iszerofunc)
+
+    def _find_reasonable_pivot_naive(self, iszerofunc=_iszero, simpfunc=None):
+        return _find_reasonable_pivot_naive(self, iszerofunc=iszerofunc,
+                simpfunc=simpfunc)
+
+    def _eval_determinant(self):
+        return _det(self)
+
+    def adjugate(self, method="berkowitz", dotprodsimp=None):
+        return _adjugate(self, method=method, dotprodsimp=dotprodsimp)
+
+    def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
+        return _charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+
+    def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
+        return _cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+
+    def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
+        return _cofactor_matrix(self, method=method, dotprodsimp=dotprodsimp)
+
+    def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
+        return _det(self, method=method, iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
+
+    def det_bareiss(self, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
+        return _det_bareiss(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+
+    def det_berkowitz(self, dotprodsimp=None):
+        return _det_berkowitz(self, dotprodsimp=dotprodsimp)
+
+    def det_LU(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
+        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
+                dotprodsimp=dotprodsimp)
+
+    def minor(self, i, j, method="berkowitz", dotprodsimp=None):
+        return _minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+
+    def minor_submatrix(self, i, j):
+        return _minor_submatrix(self, i, j)
+
+    _find_reasonable_pivot.__doc__       = _find_reasonable_pivot.__doc__
+    _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
+    _eval_determinant.__doc__            = _det.__doc__
+    adjugate.__doc__                     = _adjugate.__doc__
+    charpoly.__doc__                     = _charpoly.__doc__
+    cofactor.__doc__                     = _cofactor.__doc__
+    cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
+    det.__doc__                          = _det.__doc__
+    det_bareiss.__doc__                  = _det_bareiss.__doc__
+    det_berkowitz.__doc__                = _det_berkowitz.__doc__
+    det_LU.__doc__                       = _det_LU.__doc__
+    minor.__doc__                        = _minor.__doc__
+    minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
 
 class MatrixReductions(MatrixDeterminant):
     """Provides basic matrix row/column operations. Should not be instantiated
     directly. See ``reductions.py`` for some of their implementations."""
 
-    echelon_form = _echelon_form
-    is_echelon   = property(fget=_is_echelon, doc=_is_echelon.__doc__)
-    rank         = _rank
-    rref         = _rref
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
+            dotprodsimp=None):
+        return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
+                with_pivots=with_pivots, dotprodsimp=dotprodsimp)
+
+    @property
+    def is_echelon(self):
+        return _is_echelon(self)
+
+    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
+        return _rank(self, iszerofunc=iszerofunc, simplify=simplify,
+                dotprodsimp=dotprodsimp)
+
+    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
+            normalize_last=True, dotprodsimp=None):
+        return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
+            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+
+    echelon_form.__doc__ = _echelon_form.__doc__
+    is_echelon.__doc__   = _is_echelon.__doc__
+    rank.__doc__         = _rank.__doc__
+    rref.__doc__         = _rref.__doc__
 
     def _eval_col_op_swap(self, col1, col2):
         def entry(i, j):
@@ -277,10 +338,24 @@ class MatrixSubspaces(MatrixReductions):
     Should not be instantiated directly. See ``subspaces.py`` for their
     implementations."""
 
-    columnspace   = _columnspace
-    nullspace     = _nullspace
-    rowspace      = _rowspace
-    orthogonalize = classmethod(_orthogonalize)
+    def columnspace(self, simplify=False, dotprodsimp=None):
+        return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+
+    def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
+        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
+
+    def rowspace(self, simplify=False, dotprodsimp=None):
+        return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+
+    @classmethod
+    def orthogonalize(cls, *vecs, **kwargs):
+        return _orthogonalize(cls, *vecs, **kwargs)
+
+    columnspace.__doc__   = _columnspace.__doc__
+    nullspace.__doc__     = _nullspace.__doc__
+    rowspace.__doc__      = _rowspace.__doc__
+    orthogonalize.__doc__ = _orthogonalize.__doc__
 
 
 class MatrixEigen(MatrixSubspaces):
@@ -288,19 +363,71 @@ class MatrixEigen(MatrixSubspaces):
     Should not be instantiated directly. See ``eigen.py`` for their
     implementations."""
 
-    _eval_is_positive_definite = _eval_is_positive_definite
-    eigenvals                  = _eigenvals
-    eigenvects                 = _eigenvects
-    is_diagonalizable          = _is_diagonalizable
-    diagonalize                = _diagonalize
-    is_positive_definite       = property(fget=_is_positive_definite, doc=_is_positive_definite.__doc__)
-    is_positive_semidefinite   = property(fget=_is_positive_semidefinite, doc=_is_positive_semidefinite.__doc__)
-    is_negative_definite       = property(fget=_is_negative_definite, doc=_is_negative_definite.__doc__)
-    is_negative_semidefinite   = property(fget=_is_negative_semidefinite, doc=_is_negative_semidefinite.__doc__)
-    is_indefinite              = property(fget=_is_indefinite, doc=_is_indefinite.__doc__)
-    jordan_form                = _jordan_form
-    left_eigenvects            = _left_eigenvects
-    singular_values            = _singular_values
+    def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
+        return _eval_is_positive_definite(self, method=method,
+                dotprodsimp=dotprodsimp)
+
+    def eigenvals(self, error_when_incomplete=True, dotprodsimp=None, **flags):
+        return _eigenvals(self, error_when_incomplete=error_when_incomplete,
+                dotprodsimp=dotprodsimp, **flags)
+
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero,
+            dotprodsimp=None, **flags):
+        return _eigenvects(self, error_when_incomplete=error_when_incomplete,
+                iszerofunc=iszerofunc, dotprodsimp=dotprodsimp, **flags)
+
+    def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
+        return _is_diagonalizable(self, reals_only=reals_only,
+                dotprodsimp=dotprodsimp, **kwargs)
+
+    def diagonalize(self, reals_only=False, sort=False, normalize=False,
+            dotprodsimp=None):
+        return _diagonalize(self, reals_only=reals_only, sort=sort,
+                normalize=normalize, dotprodsimp=dotprodsimp)
+
+    @property
+    def is_positive_definite(self):
+        return _is_positive_definite(self)
+
+    @property
+    def is_positive_semidefinite(self):
+        return _is_positive_semidefinite(self)
+
+    @property
+    def is_negative_definite(self):
+        return _is_negative_definite(self)
+
+    @property
+    def is_negative_semidefinite(self):
+        return _is_negative_semidefinite(self)
+
+    @property
+    def is_indefinite(self):
+        return _is_indefinite(self)
+
+    def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
+        return _jordan_form(self, calc_transform=calc_transform,
+                dotprodsimp=dotprodsimp, **kwargs)
+
+    def left_eigenvects(self, **flags):
+        return _left_eigenvects(self, **flags)
+
+    def singular_values(self, dotprodsimp=None):
+        return _singular_values(self, dotprodsimp=dotprodsimp)
+
+    _eval_is_positive_definite.__doc__ = _eval_is_positive_definite.__doc__
+    eigenvals.__doc__                  = _eigenvals.__doc__
+    eigenvects.__doc__                 = _eigenvects.__doc__
+    is_diagonalizable.__doc__          = _is_diagonalizable.__doc__
+    diagonalize.__doc__                = _diagonalize.__doc__
+    is_positive_definite.__doc__       = _is_positive_definite.__doc__
+    is_positive_semidefinite.__doc__   = _is_positive_semidefinite.__doc__
+    is_negative_definite.__doc__       = _is_negative_definite.__doc__
+    is_negative_semidefinite.__doc__   = _is_negative_semidefinite.__doc__
+    is_indefinite.__doc__              = _is_indefinite.__doc__
+    jordan_form.__doc__                = _jordan_form.__doc__
+    left_eigenvects.__doc__            = _left_eigenvects.__doc__
+    singular_values.__doc__            = _singular_values.__doc__
 
 
 class MatrixCalculus(MatrixCommon):
