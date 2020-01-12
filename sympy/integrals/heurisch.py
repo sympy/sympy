@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Dict, List
+
 from itertools import permutations
 
 from sympy.core.add import Add
@@ -83,7 +85,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}
+_symbols_cache = {}  # type: Dict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
