@@ -3038,7 +3038,7 @@ class Tensor(TensExpr):
 
             # using args[1], because free_indices is set and does
             # not guarantee a correct index order
-            for iself, iother in zip(self.args[1], s.args[1]):
+            for iself, iother in zip(self.get_free_indices(), s.get_free_indices()):
                 if iself.tensor_index_type != iother.tensor_index_type:
                     raise ValueError("index types not compatible")
                 else:
