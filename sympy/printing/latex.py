@@ -404,7 +404,6 @@ class LatexPrinter(Printer):
         mat = r" \\ ".join((row1, row2))
         return r"\begin{pmatrix} %s \end{pmatrix}" % mat
 
-
     def _print_AppliedPermutation(self, expr):
         perm, var = expr.args
         return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
@@ -2513,6 +2512,22 @@ class LatexPrinter(Printer):
             return r'\left(\Omega\left(%s\right)\right)^{%s}' % \
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_Operator(self, expr):
+        return self._print(expr.operator)
+
+    def _print_AppliedOperator(self, expr):
+        operator_str = r"\left({}\right)".format(self._print(expr.operator))
+        args_str = r"\left({}\right)".format(",".join([self._print(a) for a in expr.arguments]))
+        return operator_str + args_str
+
+    def _print_CompositeOperator(self, expr):
+        if len(expr.gs) == 1:
+            f, g = expr.f, expr.gs[0][1]
+            result = r" \circ ".join([self._print(a) for a in (f,g)])
+        else:
+            result = self._print_Basic(expr)
+        return result
 
 
 def translate(s):

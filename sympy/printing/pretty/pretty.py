@@ -2633,6 +2633,9 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+    def _print_Operator(self, expr):
+        return self._print(expr.operator)
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

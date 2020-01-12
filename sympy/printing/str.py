@@ -864,6 +864,14 @@ class StrPrinter(Printer):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
+    def _print_Operator(self, expr):
+        return self._print(expr.operator)
+
+    def _print_AppliedOperator(self, expr):
+        from sympy.operator import Operator
+        operator_str = "(%s)" % self._print(expr.operator)
+        return operator_str + "(%s)" % self.stringify(expr.arguments, ", ")
+
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
