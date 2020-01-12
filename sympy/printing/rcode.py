@@ -11,7 +11,6 @@ using the functions defined in math.h where possible.
 from __future__ import print_function, division
 
 from sympy.codegen.ast import Assignment
-from sympy.core.compatibility import range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range

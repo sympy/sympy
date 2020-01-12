@@ -6,7 +6,7 @@ from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
-from sympy.core.compatibility import exec_, iterable, range
+from sympy.core.compatibility import exec_, iterable
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public

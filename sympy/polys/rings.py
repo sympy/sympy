@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from operator import add, mul, lt, le, gt, ge
 from types import GeneratorType
 
-from sympy.core.compatibility import is_sequence, reduce, range
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
 from sympy.core.symbol import Symbol, symbols as _symbols

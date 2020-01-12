@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.ntheory import nextprime
 from sympy.polys.densearith import (
     dup_sub_mul,

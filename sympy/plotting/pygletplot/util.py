@@ -7,7 +7,6 @@ except ImportError:
 
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
