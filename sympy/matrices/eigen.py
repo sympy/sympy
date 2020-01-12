@@ -342,10 +342,8 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
 
     Example of a diagonalizable matrix:
 
-    >>> from sympy.matrices import Matrix, is_diagonalizable
+    >>> from sympy import Matrix
     >>> M = Matrix([[1, 2, 0], [0, 3, 0], [2, -4, 2]])
-    >>> is_diagonalizable(M)
-    True
     >>> M.is_diagonalizable()
     True
 
@@ -614,24 +612,6 @@ _doc_positive_definite = \
     >>> A.is_negative_semidefinite
     False
     >>> A.is_indefinite
-    False
-
-    >>> from sympy import Matrix
-    >>> from sympy.matrices import is_positive_definite
-    >>> from sympy.matrices import is_positive_semidefinite
-    >>> from sympy.matrices import is_negative_definite
-    >>> from sympy.matrices import is_negative_semidefinite
-    >>> from sympy.matrices import is_indefinite
-    >>> A = Matrix([[1, -2], [-2, 6]])
-    >>> is_positive_definite(A)
-    True
-    >>> is_positive_semidefinite(A)
-    True
-    >>> is_negative_definite(A)
-    False
-    >>> is_negative_semidefinite(A)
-    False
-    >>> is_indefinite(A)
     False
 
     An example of numeric negative definite matrix:

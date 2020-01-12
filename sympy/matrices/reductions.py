@@ -173,14 +173,11 @@ def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import echelon_form
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> echelon_form(M)
+    >>> M.echelon_form()
     Matrix([
     [1,  2],
     [0, -2]])
-    >>> echelon_form(M) == M.echelon_form()
-    True
     """
 
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
@@ -305,14 +302,11 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
 
     >>> from sympy import Matrix
     >>> from sympy.abc import x
-    >>> from sympy.matrices import rref
     >>> M = Matrix([[1, 2], [x, 1 - 1/x]])
-    >>> rref(M)
+    >>> M.rref()
     (Matrix([
     [1, 0],
     [0, 1]]), (0, 1))
-    >>> rref(M) == M.rref()
-    True
     >>> rref_matrix, rref_pivots = M.rref()
     >>> rref_matrix
     Matrix([
