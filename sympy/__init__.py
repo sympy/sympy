@@ -37,7 +37,7 @@ if 'dev' in __version__:
     del enable_warnings
 
 
-def __sympy_debug() -> bool:
+def __sympy_debug():
     # helper function so we don't import os globally
     import os
     debug_str = os.getenv('SYMPY_DEBUG', 'False')
