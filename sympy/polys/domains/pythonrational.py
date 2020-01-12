@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 import operator
 
-from sympy.core.compatibility import integer_types
 from sympy.core.numbers import Rational, Integer
 from sympy.core.sympify import converter
 from sympy.polys.polyutils import PicklableWithSlots
@@ -114,7 +113,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
                 p, q = ap*q2 + bp*q1, q1*q2
                 g2 = gcd(p, g)
                 p, q = (p // g2), q * (g // g2)
-        elif isinstance(other, integer_types):
+        elif isinstance(other, int):
             p = self.p + self.q*other
             q = self.q
         else:
@@ -123,7 +122,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q, _gcd=False)
 
     def __radd__(self, other):
-        if not isinstance(other, integer_types):
+        if not isinstance(other, int):
             return NotImplemented
 
         p = self.p + self.q*other
@@ -144,7 +143,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
                 p, q = ap*q2 - bp*q1, q1*q2
                 g2 = gcd(p, g)
                 p, q = (p // g2), q * (g // g2)
-        elif isinstance(other, integer_types):
+        elif isinstance(other, int):
             p = self.p - self.q*other
             q = self.q
         else:
@@ -153,7 +152,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q, _gcd=False)
 
     def __rsub__(self, other):
-        if not isinstance(other, integer_types):
+        if not isinstance(other, int):
             return NotImplemented
 
         p = self.q*other - self.p
@@ -168,7 +167,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
             x1 = gcd(ap, bq)
             x2 = gcd(bp, aq)
             p, q = ((ap//x1)*(bp//x2), (aq//x2)*(bq//x1))
-        elif isinstance(other, integer_types):
+        elif isinstance(other, int):
             x = gcd(other, self.q)
             p = self.p*(other//x)
             q = self.q//x
@@ -179,7 +178,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
     def __rmul__(self, other):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
-        if not isinstance(other, integer_types):
+        if not isinstance(other, int):
             return NotImplemented
 
         x = gcd(self.q, other)
@@ -195,7 +194,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
             x1 = gcd(ap, bp)
             x2 = gcd(bq, aq)
             p, q = ((ap//x1)*(bq//x2), (aq//x2)*(bp//x1))
-        elif isinstance(other, integer_types):
+        elif isinstance(other, int):
             x = gcd(other, self.p)
             p = self.p//x
             q = self.q*(other//x)
@@ -208,7 +207,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
     def __rdiv__(self, other):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
-        if not isinstance(other, integer_types):
+        if not isinstance(other, int):
             return NotImplemented
 
         x = gcd(self.p, other)
@@ -241,7 +240,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     def __eq__(self, other):
         if isinstance(other, PythonRational):
             return self.q == other.q and self.p == other.p
-        elif isinstance(other, integer_types):
+        elif isinstance(other, int):
             return self.q == 1 and self.p == other
         else:
             return False

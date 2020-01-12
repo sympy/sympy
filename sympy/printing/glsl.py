@@ -1,6 +1,6 @@
 from sympy.codegen.ast import Assignment
 from sympy.core import S
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import range
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
@@ -79,7 +79,7 @@ class GLSLPrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -194,7 +194,7 @@ class GLSLPrinter(CodePrinter):
         if func in self.known_functions:
             cond_func = self.known_functions[func]
             func = None
-            if isinstance(cond_func, string_types):
+            if isinstance(cond_func, str):
                 func = cond_func
             else:
                 for cond, func in cond_func:

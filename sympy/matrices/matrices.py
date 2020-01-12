@@ -2858,7 +2858,7 @@ class MatrixBase(MatrixDeprecated,
                 return Max(*[sum(m.row(i)) for i in range(m.rows)])
 
             elif (ord is None or isinstance(ord,
-                                            string_types) and ord.lower() in
+                                            str) and ord.lower() in
                 ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)

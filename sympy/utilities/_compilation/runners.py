@@ -10,7 +10,6 @@ import sys
 from .util import (
     find_binary_of_command, unique_list
 )
-from sympy.core.compatibility import string_types
 
 
 class CompilerRunner(object):
@@ -66,7 +65,7 @@ class CompilerRunner(object):
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,
                  undef=None, strict_aliasing=None, preferred_vendor=None, **kwargs):
-        if isinstance(sources, string_types):
+        if isinstance(sources, str):
             raise ValueError("Expected argument sources to be a list of strings.")
         self.sources = list(sources)
         self.out = out
