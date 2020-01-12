@@ -12,7 +12,7 @@ from sympy.external import import_module
 from sympy.printing.ccode import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c, has_fortran
 from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.utilities.pytest import skip, raises
+from sympy.testing.pytest import skip, raises
 
 cython = import_module('cython')
 wurlitzer = import_module('wurlitzer')

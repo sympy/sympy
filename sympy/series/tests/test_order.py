@@ -1,14 +1,14 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
     Function, Add)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import w, x, y, z
 
 
 def test_caching_bug():
     #needs to be a first test, so that all caches are clean
     #cache it
-    e = O(w)
+    O(w)
     #and test that this won't raise an exception
     O(w**(-1/x/log(3)*log(5)), w)
 

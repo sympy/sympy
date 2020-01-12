@@ -1,5 +1,5 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, erf, beta,
+                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
                    floor)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
@@ -11,7 +11,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
                                    YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, raises
+from sympy.testing.pytest import slow, nocache_fail
 
 x = Symbol('x')
 
@@ -51,11 +51,13 @@ def test_Logarithmic():
     assert isinstance(E(x, evaluate=False), Sum)
 
 
+@nocache_fail
 def test_negative_binomial():
     r = 5
     p = S.One / 3
     x = NegativeBinomial('x', r, p)
     assert E(x) == p*r / (1-p)
+    # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
     assert isinstance(E(x, evaluate=False), Sum)

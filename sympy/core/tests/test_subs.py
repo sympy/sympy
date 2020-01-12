@@ -5,7 +5,7 @@ from sympy import (
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
     AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z
 
 
@@ -831,3 +831,11 @@ def test_issue_6976():
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
         y**Rational(1, 4) + y**Rational(3, 2) + sqrt(y) + y**2 + y
     assert x.subs(x**3, y) == y**Rational(1, 3)
+
+
+def test_issue_11746():
+    assert (1/x).subs(x**2, 1) == 1/x
+    assert (1/(x**3)).subs(x**2, 1) == x**(-3)
+    assert (1/(x**4)).subs(x**2, 1) == 1
+    assert (1/(x**3)).subs(x**4, 1) == x**(-3)
+    assert (1/(y**5)).subs(x**5, 1) == y**(-5)

@@ -3,7 +3,7 @@ from sympy.core import S, Symbol, symbols, I, Rational
 from sympy.core.compatibility import range
 from sympy.discrete import (fft, ifft, ntt, intt, fwht, ifwht,
     mobius_transform, inverse_mobius_transform)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_fft_ifft():

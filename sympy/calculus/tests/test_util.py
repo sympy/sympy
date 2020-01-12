@@ -7,7 +7,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -155,7 +155,7 @@ def test_periodicity():
         cos, sin, sec, csc, tan, cot))
     assert periodicity(Abs(sin(tan(x))), x) == pi
     assert periodicity(Abs(sin(sin(x) + tan(x))), x) == 2*pi
-    assert periodicity(sin(x) > S.Half, x) is 2*pi
+    assert periodicity(sin(x) > S.Half, x) == 2*pi
 
     assert periodicity(x > 2, x) is None
     assert periodicity(x**3 - x**2 + 1, x) is None

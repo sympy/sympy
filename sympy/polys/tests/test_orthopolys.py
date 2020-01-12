@@ -1,7 +1,7 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
 from sympy import Poly, S, Rational as Q
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.polys.orthopolys import (
     jacobi_poly,

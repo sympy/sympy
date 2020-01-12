@@ -6,7 +6,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.testing.pytest import XFAIL, raises, slow
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
@@ -550,6 +550,7 @@ def test_subfactorial():
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) is oo
     assert subfactorial(nan) is nan
+    assert subfactorial(23) == 9510425471055777937262
     assert unchanged(subfactorial, 2.2)
 
     x = Symbol('x')

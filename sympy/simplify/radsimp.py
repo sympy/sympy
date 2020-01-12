@@ -7,7 +7,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
 from sympy.core.add import _unevaluated_Add
 from sympy.core.compatibility import iterable, ordered, default_sort_key
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
@@ -163,7 +163,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     syms = list(syms) if iterable(syms) else [syms]
 
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
 
     def make_expression(terms):
         product = []
@@ -496,7 +496,7 @@ def collect_sqrt(expr, evaluate=None):
     collect, collect_const, rcollect
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
     # this step will help to standardize any complex arguments
     # of sqrts
     coeff, expr = expr.as_content_primitive()

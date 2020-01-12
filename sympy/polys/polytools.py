@@ -4037,6 +4037,8 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __mul__(f, g):
+        if not isinstance(g, Expr):
+            return NotImplemented
         if not g.is_Poly:
             try:
                 g = f.__class__(g, *f.gens)
@@ -5495,6 +5497,12 @@ def terms_gcd(f, *gens, **args):
     from sympy.core.relational import Equality
 
     orig = sympify(f)
+
+    if isinstance(f, Equality):
+        return Equality(*(terms_gcd(s, *gens, **args) for s in [f.lhs, f.rhs]))
+    elif isinstance(f, Relational):
+        raise TypeError("Inequalities can not be used with terms_gcd. Found: %s" %(f,))
+
     if not isinstance(f, Expr) or f.is_Atom:
         return orig
 
@@ -5503,9 +5511,6 @@ def terms_gcd(f, *gens, **args):
         args.pop('deep')
         args['expand'] = False
         return terms_gcd(new, *gens, **args)
-
-    if isinstance(f, Equality):
-        return f
 
     clear = args.pop('clear', True)
     options.allowed_flags(args, ['polys'])

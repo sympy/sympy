@@ -1,7 +1,7 @@
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from sympy import Symbol, ask, Q, KroneckerDelta, Identity, Matrix, MatMul
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 n = Symbol('n')

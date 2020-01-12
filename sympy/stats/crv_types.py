@@ -26,6 +26,7 @@ Gumbel
 Gompertz
 Kumaraswamy
 Laplace
+Levy
 Logistic
 LogLogistic
 LogNormal
@@ -33,9 +34,11 @@ Maxwell
 Nakagami
 Normal
 Pareto
+PowerFunction
 QuadraticU
 RaisedCosine
 Rayleigh
+Reciprocal
 ShiftedGompertz
 StudentT
 Trapezoidal
@@ -92,6 +95,7 @@ __all__ = ['ContinuousRV',
 'Gumbel',
 'Kumaraswamy',
 'Laplace',
+'Levy',
 'Logistic',
 'LogLogistic',
 'LogNormal',
@@ -100,9 +104,11 @@ __all__ = ['ContinuousRV',
 'Normal',
 'GaussianInverse',
 'Pareto',
+'PowerFunction',
 'QuadraticU',
 'RaisedCosine',
 'Rayleigh',
+'Reciprocal',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -2106,6 +2112,82 @@ def Laplace(name, mu, b):
     return rv(name, LaplaceDistribution, (mu, b))
 
 #-------------------------------------------------------------------------------
+# Levy distribution ---------------------------------------------------------
+
+
+class LevyDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'c')
+
+    @property
+    def set(self):
+        return Interval(self.mu, oo)
+
+    @staticmethod
+    def check(mu, c):
+        _value_check(c > 0, "c (scale parameter) must be positive")
+        _value_check(mu.is_real, "mu (location paramater) must be real")
+
+    def pdf(self, x):
+        mu, c = self.mu, self.c
+        return sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+
+    def _cdf(self, x):
+        mu, c = self.mu, self.c
+        return erfc(sqrt(c/(2*(x - mu))))
+
+    def _characteristic_function(self, t):
+        mu, c = self.mu, self.c
+        return exp(I * mu * t - sqrt(-2 * I * c * t))
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function of Levy distribution does not exist.')
+
+def Levy(name, mu, c):
+    r"""
+    Create a continuous random variable with a Levy distribution.
+
+    The density of the Levy distribution is given by
+    .. math::
+        f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
+
+    Parameters
+    ==========
+
+    mu : Real number, the location parameter
+    c : Real number, `c > 0`, a scale parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Levy, density, cdf
+    >>> from sympy import Symbol, pprint
+
+    >>> mu = Symbol("mu", real=True)
+    >>> c = Symbol("c", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Levy("x", mu, c)
+
+    >>> density(X)(z)
+    sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
+
+    >>> cdf(X)(z)
+    erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/L%C3%A9vy_distribution
+    .. [2] http://mathworld.wolfram.com/LevyDistribution.html
+    """
+
+    return rv(name, LevyDistribution, (mu, c))
+
+#-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 
 
@@ -2861,6 +2943,91 @@ def Pareto(name, xm, alpha):
     return rv(name, ParetoDistribution, (xm, alpha))
 
 #-------------------------------------------------------------------------------
+# PowerFunction distribution ---------------------------------------------------
+
+
+class PowerFunctionDistribution(SingleContinuousDistribution):
+    _argnames=('alpha','a','b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(alpha, a, b):
+        _value_check(a.is_real, "Continuous Boundary parameter should be real.")
+        _value_check(b.is_real, "Continuous Boundary parameter should be real.")
+        _value_check(a < b, " 'a' the left Boundary must be smaller than 'b' the right Boundary." )
+        _value_check(alpha.is_positive, "Continuous Shape parameter should be positive.")
+
+    def pdf(self, x):
+        alpha, a, b = self.alpha, self.a, self.b
+        num = alpha*(x - a)**(alpha - 1)
+        den = (b - a)**alpha
+        return num/den
+
+def PowerFunction(name, alpha, a, b):
+    r"""
+    Creates a continuous random variable with a Power Function Distribution
+
+    The density of PowerFunction distribution is given by
+
+    .. math::
+        f(x) := \frac{{\alpha}(x - a)^{\alpha - 1}}{(b - a)^{\alpha}}
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    alpha: Positive number, `0 < alpha` the shape paramater
+    a : Real number, :math:`-\infty < a` the left boundary
+    b : Real number, :math:`a < b < \infty` the right boundary
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import PowerFunction, density, cdf, E, variance
+    >>> from sympy import Symbol, simplify
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+    >>> z = Symbol("z")
+
+    >>> X = PowerFunction("X", 2, a, b)
+
+    >>> density(X)(z)
+    (-2*a + 2*z)/(-a + b)**2
+
+    >>> cdf(X)(z)
+    Piecewise((a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
+    z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+
+    >>> alpha = 2
+    >>> a = 0
+    >>> b = 1
+    >>> Y = PowerFunction("Y", alpha, a, b)
+
+    >>> E(Y)
+    2/3
+
+    >>> variance(Y)
+    1/18
+
+    References
+    ==========
+
+    .. [1] http://www.mathwave.com/help/easyfit/html/analyses/distributions/power_func.html
+
+    """
+    return rv(name, PowerFunctionDistribution, (alpha, a, b))
+
+#-------------------------------------------------------------------------------
 # QuadraticU distribution ------------------------------------------------------
 
 
@@ -3114,6 +3281,64 @@ def Rayleigh(name, sigma):
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
+
+#-------------------------------------------------------------------------------
+# Reciprocal distribution --------------------------------------------------------
+
+class ReciprocalDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a > 0, "Parameter > 0. a = %s"%a)
+        _value_check((a < b),
+        "Parameter b must be in range (%s, +oo]. b = %s"%(a, b))
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        return 1/(x*(log(b) - log(a)))
+
+
+def Reciprocal(name, a, b):
+    r"""Creates a continuous random variable with a reciprocal distribution.
+
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`0 < a`
+    b : Real number, :math:`a < b`
+
+    Returns
+    =======
+
+    A RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Reciprocal, density, cdf
+    >>> from sympy import symbols
+    >>> a, b, x = symbols('a, b, x', positive=True)
+    >>> R = Reciprocal('R', a, b)
+
+    >>> density(R)(x)
+    1/(x*(-log(a) + log(b)))
+    >>> cdf(R)(x)
+    Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Reciprocal_distribution
+
+    """
+    return rv(name, ReciprocalDistribution, (a, b))
+
 
 #-------------------------------------------------------------------------------
 # Shifted Gompertz distribution ------------------------------------------------

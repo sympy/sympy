@@ -191,7 +191,7 @@ class Qubit(QubitState, Ket):
     def _represent_ZGate(self, basis, **options):
         """Represent this qubits in the computational basis (ZGate).
         """
-        format = options.get('format', 'sympy')
+        _format = options.get('format', 'sympy')
         n = 1
         definite_state = 0
         for it in reversed(self.qubit_values):
@@ -199,12 +199,12 @@ class Qubit(QubitState, Ket):
             n = n*2
         result = [0]*(2**self.dimension)
         result[int(definite_state)] = 1
-        if format == 'sympy':
+        if _format == 'sympy':
             return Matrix(result)
-        elif format == 'numpy':
+        elif _format == 'numpy':
             import numpy as np
             return np.matrix(result, dtype='complex').transpose()
-        elif format == 'scipy.sparse':
+        elif _format == 'scipy.sparse':
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()
 

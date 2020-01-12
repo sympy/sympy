@@ -10,7 +10,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
 from sympy.functions import airyai, airybi, besselj, bessely
 
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
+from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
 from sympy.utilities.misc import filldedent
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -3650,6 +3650,13 @@ def test_dsolve_remove_redundant_solutions():
 
 
 def test_factorable():
+    # Unable to get coverage on this without explicit testing because _desolve
+    # already handles Pow before we get there but that should be disabled in
+    # future so that factorable gets the raw ODE.
+    from sympy.solvers.ode import _ode_factorable_match
+    eq = f(x).diff(x)-1
+    assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
+
     eq = f(x) + f(x)*f(x).diff(x)
     sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
     assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
@@ -3761,3 +3768,31 @@ def test_2nd_2F1_hypergeometric():
           C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702
+
+
+def test_issue_15889():
+    eq = exp(f(x).diff(x))-f(x)**2
+    sol = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
+    assert str(sol.as_dummy()) == str(dsolve(eq).as_dummy())
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**3
+    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+    eq = f(x).diff(x)**2 - f(x)
+    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**2
+    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x).diff(x)**2 - f(x)**3
+    sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)

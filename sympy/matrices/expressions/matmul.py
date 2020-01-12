@@ -13,6 +13,8 @@ from .matexpr import \
     MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
 from .matpow import MatPow
 from .transpose import transpose
+from .permutation import PermutationMatrix
+
 
 # XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
@@ -158,7 +160,6 @@ class MatMul(MatrixExpr, Mul):
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
                     for arg in self.args[::-1]]).doit()
         except ShapeError:
-            from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
     def doit(self, **kwargs):
@@ -335,9 +336,32 @@ def combine_powers(mul):
 
     return newmul(factor, *new_args)
 
+def combine_permutations(mul):
+    """Refine products of permutation matrices as the products of cycles.
+    """
+    args = mul.args
+    l = len(args)
+    if l < 2:
+        return mul
+
+    result = [args[0]]
+    for i in range(1, l):
+        A = result[-1]
+        B = args[i]
+        if isinstance(A, PermutationMatrix) and \
+            isinstance(B, PermutationMatrix):
+            cycle_1 = A.args[0]
+            cycle_2 = B.args[0]
+            result[-1] = PermutationMatrix(cycle_1 * cycle_2)
+        else:
+            result.append(B)
+
+    return MatMul(*result)
+
 rules = (
     any_zeros, remove_ids, combine_powers, unpack, rm_id(lambda x: x == 1),
-    merge_explicit, factor_in_front, flatten,)
+    merge_explicit, factor_in_front, flatten, combine_permutations)
+
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):

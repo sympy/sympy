@@ -9,7 +9,7 @@ from sympy.codegen.rewriting import (
     optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
     create_expand_pow_optimization, matinv_opt
 )
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def test_log2_opt():

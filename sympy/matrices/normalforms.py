@@ -110,11 +110,11 @@ def invariant_factors(m, domain = None):
 
     # permute the rows and columns until m[0,0] is non-zero if possible
     ind = [i for i in range(m.rows) if m[i,0] != 0]
-    if ind:
+    if ind and ind[0] != 0:
         m = m.permute_rows([[0, ind[0]]])
     else:
         ind = [j for j in range(m.cols) if m[0,j] != 0]
-        if ind:
+        if ind and ind[0] != 0:
             m = m.permute_cols([[0, ind[0]]])
 
     # make the first row and column except m[0,0] zero

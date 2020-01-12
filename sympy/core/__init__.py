@@ -26,10 +26,62 @@ from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
 from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
-from .evaluate import evaluate
+from .parameters import evaluate
 
 # expose singletons
 Catalan = S.Catalan
 EulerGamma = S.EulerGamma
 GoldenRatio = S.GoldenRatio
 TribonacciConstant = S.TribonacciConstant
+
+__all__ = [
+    'sympify', 'SympifyError',
+
+    'cacheit',
+
+    'Basic', 'Atom', 'preorder_traversal',
+
+    'S',
+
+    'Expr', 'AtomicExpr', 'UnevaluatedExpr',
+
+    'Symbol', 'Wild', 'Dummy', 'symbols', 'var',
+
+    'Number', 'Float', 'Rational', 'Integer', 'NumberSymbol', 'RealNumber',
+    'igcd', 'ilcm', 'seterr', 'E', 'I', 'nan', 'oo', 'pi', 'zoo',
+    'AlgebraicNumber', 'comp', 'mod_inverse',
+
+    'Pow', 'integer_nthroot', 'integer_log',
+
+    'Mul', 'prod',
+
+    'Add',
+
+    'Mod',
+
+    'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge', 'Equality', 'GreaterThan',
+    'LessThan', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',
+
+    'vectorize',
+
+    'Lambda', 'WildFunction', 'Derivative', 'diff', 'FunctionClass',
+    'Function', 'Subs', 'expand', 'PoleError', 'count_ops', 'expand_mul',
+    'expand_log', 'expand_func', 'expand_trig', 'expand_complex',
+    'expand_multinomial', 'nfloat', 'expand_power_base', 'expand_power_exp',
+    'arity',
+
+    'PrecisionExhausted', 'N',
+
+    'evalf', # The module?
+
+    'Tuple', 'Dict',
+
+    'gcd_terms', 'factor_terms', 'factor_nc',
+
+    'evaluate',
+
+    'Catalan',
+    'EulerGamma',
+    'GoldenRatio',
+    'TribonacciConstant',
+]
