@@ -7,6 +7,7 @@ from sympy.matrices import (Matrix, ImmutableDenseMatrix as IMatrix,
 from sympy.matrices import (
     adjugate, charpoly, cofactor, cofactor_matrix,
     det_matrix, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
+    # is_echelon, echelon_form, rank, rref,
     rank,
     columnspace, nullspace, rowspace, orthogonalize,
     eigenvals, eigenvects, is_diagonalizable, diagonalize,
@@ -101,11 +102,40 @@ def test_minor_submatrix():
 
 # reductions.py
 
+# def test_echelon():
+#     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+#     S = MSMatrix(M)
+#     A = (Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]]), (0, 1))
+
+#     assert is_echelon(M) is False
+#     R = echelon_form(M, with_pivots=True)
+#     assert isinstance(R[0], IMatrix)
+#     assert R == A
+
+#     assert is_echelon(S) is False
+#     R = echelon_form(S, with_pivots=True)
+#     assert isinstance(R[0], ISMatrix)
+#     assert R == A
+
+
 def test_rank():
     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     assert rank(M) == 2
     assert rank(MSMatrix(M)) == 2
+
+
+# def test_rref():
+#     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+#     A = (Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]]), (0, 1))
+
+#     R = rref(M)
+#     assert isinstance(R[0], IMatrix)
+#     assert R == A
+
+#     R = rref(MSMatrix(M))
+#     assert isinstance(R[0], ISMatrix)
+#     assert R == A
 
 
 # subspaces.py
