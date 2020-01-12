@@ -14,7 +14,7 @@ from sympy import I
 
 
 L = TensorIndexType("L")
-i, j, k, m = tensor_indices("i j k m", L)
+i, j, k, m, m1, m2, m3, m4 = tensor_indices("i j k m m1 m2 m3 m4", L)
 i0 = tensor_indices("i0", L)
 L_0, L_1 = tensor_indices("L_0 L_1", L)
 
@@ -302,3 +302,127 @@ def test_expand_partial_derivative_product_rule():
         + PartialDerivative(A(i), C(k))*PartialDerivative(B(j), D(m))\
         + PartialDerivative(A(i), D(m))*PartialDerivative(B(j), C(k))\
         + A(i)*PartialDerivative(B(j), C(k), D(m))
+
+
+def test_eval_partial_derivative_expr_by_symbol():
+
+    tau, alpha = symbols("tau alpha")
+
+    expr1 = PartialDerivative(tau**alpha, tau)
+    assert expr1._eval_partial_derivative() == alpha*1/tau*tau**alpha
+
+    expr2 = PartialDerivative(2*tau + 3*tau**4, tau)
+    assert expr2._eval_partial_derivative() == 2 + 12*tau**3
+
+    expr3 = PartialDerivative(2*tau + 3*tau**4, alpha)
+    assert expr3._eval_partial_derivative() == 0
+
+
+def test_eval_partial_derivative_single_tensors_by_scalar():
+
+    tau = symbols("tau")
+
+    expr1a = PartialDerivative(A(i), tau)
+    assert expr1a._eval_partial_derivative() == 0
+
+    expr1b = PartialDerivative(A(-i), tau)
+    assert expr1b._eval_partial_derivative() == 0
+
+    expr2a = PartialDerivative(H(i, j), tau)
+    assert expr2a._eval_partial_derivative() == 0
+
+    expr2b = PartialDerivative(H(i, -j), tau)
+    assert expr2b._eval_partial_derivative() == 0
+
+    expr2c = PartialDerivative(H(-i, j), tau)
+    assert expr2c._eval_partial_derivative() == 0
+
+    expr2d = PartialDerivative(H(-i, -j), tau)
+    assert expr2d._eval_partial_derivative() == 0
+
+
+def test_eval_partial_derivative_single_1st_rank_tensors_by_tensor():
+
+    expr1 = PartialDerivative(A(i), A(j))
+    assert expr1._eval_partial_derivative() - L.delta(i, -j) == 0
+
+    expr2 = PartialDerivative(A(i), A(-j))
+    assert expr2._eval_partial_derivative() - L.metric(i, L_0) * L.delta(-L_0, j) == 0
+
+    expr3 = PartialDerivative(A(-i), A(-j))
+    assert expr3._eval_partial_derivative() - L.delta(-i, j) == 0
+
+    expr4 = PartialDerivative(A(-i), A(j))
+    assert expr4._eval_partial_derivative() - L.metric(-i, -L_0)*L.delta(L_0, -j) == 0
+
+    expr5 = PartialDerivative(A(i), B(j))
+    expr6 = PartialDerivative(A(i), C(j))
+    expr7 = PartialDerivative(A(i), D(j))
+    expr8 = PartialDerivative(A(i), H(j, k))
+    assert expr5._eval_partial_derivative() == 0
+    assert expr6._eval_partial_derivative() == 0
+    assert expr7._eval_partial_derivative() == 0
+    assert expr8._eval_partial_derivative() == 0
+
+    expr9 = PartialDerivative(A(i), A(i))
+    assert expr9._eval_partial_derivative() - L.delta(L_0, -L_0) == 0
+
+    expr10 = PartialDerivative(A(-i), A(-i))
+    assert expr10._eval_partial_derivative() - L.delta(-L_0, L_0) == 0
+
+
+def test_eval_partial_derivative_single_2nd_rank_tensors_by_tensor():
+
+    expr1 = PartialDerivative(H(i, j), H(m, m1))
+    assert expr1._eval_partial_derivative() - L.delta(i, -m)*L.delta(j, -m1) == 0
+
+    expr2 = PartialDerivative(H(i, j), H(-m, m1))
+    assert expr2._eval_partial_derivative() - L.metric(i, L_0)*L.delta(-L_0, m)*L.delta(j, -m1) == 0
+
+    expr3 = PartialDerivative(H(i, j), H(m, -m1))
+    assert expr3._eval_partial_derivative() - L.delta(i, -m)*L.metric(j, L_0)*L.delta(-L_0, m1) == 0
+
+    expr4 = PartialDerivative(H(i, j), H(-m, -m1))
+    assert expr4._eval_partial_derivative() - L.metric(i, L_0)*L.delta(-L_0, m)*L.metric(j, L_0)*L.delta(-L_0, m1) == 0
+
+
+def test_eval_partial_derivative_expr1():
+
+    tau, alpha = symbols("tau alpha")
+
+    # this is only some special expression
+    # tested: vector derivative
+    # tested: scalar derivative
+    # tested: tensor derivative
+    base_expr1 = A(i)*H(-i, j) + A(i)*A(-i)*A(j) + tau**alpha*A(j)
+
+    tensor_derivative = PartialDerivative(base_expr1, H(k, m))._eval_partial_derivative()
+    vector_derivative = PartialDerivative(base_expr1, A(k))._eval_partial_derivative()
+    scalar_derivative = PartialDerivative(base_expr1, tau)._eval_partial_derivative()
+
+    assert (tensor_derivative - A(L_0)*L.metric(-L_0, -L_1)*L.delta(L_1, -k)*L.delta(j, -m)) == 0
+
+    assert (vector_derivative - (tau**alpha*L.delta(j, -k) +
+        L.delta(L_0, -k)*A(-L_0)*A(j) +
+        A(L_0)*L.metric(-L_0, -L_1)*L.delta(L_1, -k)*A(j) +
+        A(L_0)*A(-L_0)*L.delta(j, -k) +
+        L.delta(L_0, -k)*H(-L_0, j))).expand() == 0
+
+    assert (vector_derivative.contract_metric(L.metric).contract_delta(L.delta) -
+        (tau**alpha*L.delta(j, -k) + A(L_0)*A(-L_0)*L.delta(j, -k) + H(-k, j) + 2*A(j)*A(-k))).expand() == 0
+
+    assert scalar_derivative - alpha*1/tau*tau**alpha*A(j) == 0
+
+
+def test_eval_partial_derivative_mixed_scalar_tensor_expr2():
+
+    tau, alpha = symbols("tau alpha")
+
+    base_expr2 = A(i)*A(-i) + tau**2
+
+    vector_expression = PartialDerivative(base_expr2, A(k))._eval_partial_derivative()
+    assert  (vector_expression -
+        (L.delta(L_0, -k)*A(-L_0) + A(L_0)*L.metric(-L_0, -L_1)*L.delta(L_1, -k))).expand() == 0
+
+    scalar_expression = PartialDerivative(base_expr2, tau)._eval_partial_derivative()
+    assert scalar_expression == 2*tau

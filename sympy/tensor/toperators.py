@@ -139,7 +139,13 @@ class PartialDerivative(TensExpr):
     def _eval_partial_derivative(self):
         result = self.expr
         for v in self.variables:
-            result = result._eval_partial_derivative(v)
+            if isinstance(result, TensExpr):
+                result = result._eval_partial_derivative(v)
+            else:
+                if isinstance(v, Symbol):
+                    result = result.diff(v)
+                else:
+                    result = S.Zero
         return result
 
     def get_indices(self):

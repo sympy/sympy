@@ -3035,8 +3035,11 @@ class Tensor(TensExpr):
             # after performing the derivative and vice versa
 
             kronecker_delta_list = []
-            for iself, iother in zip(self.free_indices, s.free_indices):
-                if iself.tensor_index_type is not iother.tensor_index_type:
+
+            # using args[1], because free_indices is set and does
+            # not guarantee a correct index order
+            for iself, iother in zip(self.args[1], s.args[1]):
+                if iself.tensor_index_type != iother.tensor_index_type:
                     raise ValueError("index types not compatible")
                 else:
                     tensor_index_type = iself.tensor_index_type
