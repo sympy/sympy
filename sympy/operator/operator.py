@@ -87,7 +87,6 @@ class OperatorExpr(Expr):
                 newargs.append(a)
         return newargs
 
-
 class Operator(OperatorExpr):
     def __new__(cls, operator, **kwargs):
         operator = sympify(operator)
