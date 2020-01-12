@@ -2,7 +2,6 @@ from __future__ import division, print_function
 
 from types import FunctionType
 
-from sympy.core.sympify import sympify
 from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 
 from .utilities import _iszero
