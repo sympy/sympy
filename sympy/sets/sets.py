@@ -1765,6 +1765,17 @@ class FiniteSet(Set, EvalfMixin):
     is_empty = False
     is_finite_set = True
 
+    def factor(self, *args, **kwargs):
+        """
+        Implements the SymPy factor routine, on the scalar parts
+        of a basis-dependent expression.
+        factor's documentation
+        ========================
+        """
+        fctr_components = [fctr(v, *args, **kwargs) * k for
+                           k, v in self.components.items()]
+        return self._add_func(*fctr_components)
+    
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         if evaluate:
