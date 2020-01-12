@@ -25,18 +25,17 @@ SparseMatrix = MutableSparseMatrix
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
     Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace,
-    Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols, Adjoint,
-    hadamard_product, HadamardProduct, HadamardPower, Determinant,
+    Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols,
+    Adjoint, hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
     PermutationMatrix, MatrixPermute)
 
 from .determinant import (
-    adjugate, charpoly, cofactor, cofactor_matrix,
-    det, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix)
+    adjugate, charpoly, cofactor, cofactor_matrix, det_matrix, det_bareiss,
+    det_berkowitz, det_LU, minor, minor_submatrix)
 
-from .reductions import (
-    is_echelon, echelon_form, rank, rref)
+from .reductions import rank
 
 from .subspaces import (
     columnspace, nullspace, rowspace, orthogonalize)
@@ -79,10 +78,10 @@ __all__ = [
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
 
-    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'det_bareiss',
-    'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
+    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det_matrix',
+    'det_bareiss', 'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
 
-    'is_echelon', 'echelon_form', 'rank', 'rref',
+    'rank',
 
     'columnspace', 'nullspace', 'rowspace', 'orthogonalize',
 

@@ -551,11 +551,11 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import det
+    >>> from sympy.matrices import det_matrix
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> det(M)
+    >>> det_matrix(M)
     -2
-    >>> det(M) == M.det()
+    >>> det_matrix(M) == M.det()
     True
     """
 
@@ -860,7 +860,7 @@ def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
 def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     return sympify(_cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp))
 
-def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
+def det_matrix(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
 def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
@@ -884,7 +884,7 @@ adjugate.__doc__        = _adjugate.__doc__
 charpoly.__doc__        = _charpoly.__doc__
 cofactor.__doc__        = _cofactor.__doc__
 cofactor_matrix.__doc__ = _cofactor_matrix.__doc__
-det.__doc__             = _det.__doc__
+det_matrix.__doc__      = _det.__doc__
 det_bareiss.__doc__     = _det_bareiss.__doc__
 det_berkowitz.__doc__   = _det_berkowitz.__doc__
 det_LU.__doc__          = _det_LU.__doc__

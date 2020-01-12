@@ -40,14 +40,14 @@ class Determinant(Expr):
         except (AttributeError, NotImplementedError):
             return self
 
-def det(matexpr):
+def det(matexpr, *args, **kwargs):
     """ Matrix Determinant
 
     Examples
     ========
 
     >>> from sympy import MatrixSymbol, eye
-    >>> from sympy.matrices.expressions import det
+    >>> from sympy.matrices import det
     >>> A = MatrixSymbol('A', 3, 3)
     >>> det(A)
     Determinant(A)
@@ -55,7 +55,12 @@ def det(matexpr):
     1
     """
 
-    return Determinant(matexpr).doit()
+    if isinstance(matexpr, Expr):
+        return Determinant(matexpr).doit()
+
+    from sympy.matrices.determinant import det_matrix
+
+    return det_matrix(matexpr, *args, **kwargs)
 
 
 from sympy.assumptions.ask import ask, Q
@@ -65,7 +70,7 @@ from sympy.assumptions.refine import handlers_dict
 def refine_Determinant(expr, assumptions):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
-    >>> from sympy.matrices.expressions import det
+    >>> from sympy.matrices import det
     >>> X = MatrixSymbol('X', 2, 2)
     >>> det(X)
     Determinant(X)
