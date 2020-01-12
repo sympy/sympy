@@ -8,7 +8,7 @@ import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name, string_types
+from sympy.core.compatibility import get_function_name
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -94,7 +94,7 @@ else:
             except expectedException:
                 return
             raise Failed("DID NOT RAISE")
-        elif isinstance(code, string_types):
+        elif isinstance(code, str):
             raise TypeError(
                 '\'raises(xxx, "code")\' has been phased out; '
                 'change \'raises(xxx, "expression")\' '
