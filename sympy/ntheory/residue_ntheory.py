@@ -743,26 +743,25 @@ def _nthroot_mod1(s, q, p, all_roots):
         return res
     return min(res)
 
-def _nthroot_mod_composite(a, n, m):
-    """
-    Find the solutions to ``x**n = a mod m`` when m is not prime.
-    """
+
+
+def _help(m, how1, how2, how3):
     from sympy.ntheory.modular import crt
     f = factorint(m)
     dd = {}
     for p, e in f.items():
         tot_roots = set()
         if e == 1:
-            tot_roots.update(nthroot_mod(a, n, p, True) or [])
+            tot_roots.update(how1(p))
         else:
-            for root in nthroot_mod(a, n, p, True) or []:
-                diff = (pow(root, n - 1) * n) % p
+            for root in how1(p):
+                diff = how2(root, p)
                 if diff != 0:
                     ppow = p
                     m_inv = mod_inverse(diff, p)
                     for j in range(1, e):
                         ppow *= p
-                        root = (root - (pow(root, n) - a) * m_inv) % ppow
+                        root = (root - how3(root, ppow) * (m_inv % ppow)) % ppow
                     tot_roots.add(root)
                 else:
                     new_base = p
@@ -771,7 +770,7 @@ def _nthroot_mod_composite(a, n, m):
                         new_base *= p
                         new_roots = set()
                         for k in roots_in_base:
-                            if (pow(k, n) - a) % (new_base) != 0:
+                            if how3(k, new_base) % new_base != 0:
                                 continue
                             while k not in new_roots:
                                 new_roots.add(k)
@@ -785,6 +784,16 @@ def _nthroot_mod_composite(a, n, m):
         m.append(x)
         a.append(list(y))
     return sorted(set(crt(m, list(i))[0] for i in cartes(*a)))
+
+def _nthroot_mod_composite(a, n, m):
+    """
+    Find the solutions to ``x**n = a mod m`` when m is not prime.
+    """
+    return _help(m,
+        lambda p: nthroot_mod(a, n, p, True) or [],
+        lambda root, p: (pow(root, n - 1, p) * (n % p)) % p,
+        lambda root, p: (pow(root, n, p) - a) % p)
+
 
 def nthroot_mod(a, n, p, all_roots=False):
     """
@@ -1395,7 +1404,6 @@ def quadratic_congruence(a, b, c, p):
 
 
 def _general_congruence_prime(coefficients, p):
-    from sympy import Poly
     roots = []
     rank = len(coefficients)
     for i in range(0, p):
@@ -1408,18 +1416,38 @@ def _general_congruence_prime(coefficients, p):
     return roots
 
 
+def _diff_poly(root, coefficients, p):
+
+    diff = 0
+    rank = len(coefficients)
+    for coeff in range(0,rank - 1):
+        if not coefficients[coeff]:
+            continue
+        diff = (diff + pow(root, rank - coeff - 2, p) * (rank - coeff - 1) * coefficients[coeff]) % p
+    return diff % p
+
+
+def _val_poly(root, coefficients, p):
+    rank = len(coefficients)
+    f_val = 0
+    for coeff in range(0, rank - 1):
+        f_val = (f_val + pow(root, int(rank - coeff - 1), p) * coefficients[coeff]) % p
+    f_val = f_val + coefficients[-1]
+    return f_val % p
+
 
 def general_congruence(expr, m):
-    from sympy.ntheory.modular import crt
+    """
+    Find the solutions to a polynomial congruence equation.
+    """
+
     from sympy import Poly
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
     syms = expr.free_symbols
     if len(syms) > 1:
         raise ValueError("Do not support for more than one symbol")
-
     coefficients = Poly(expr,syms).all_coeffs()
-
     rank = len(coefficients)
     if rank == 3:
         return quadratic_congruence(coefficients[0], coefficients[1], coefficients[2], m)
@@ -1427,52 +1455,7 @@ def general_congruence(expr, m):
         return quadratic_congruence(0, coefficients[0], coefficients[1], m)
     if isprime(m):
         return _general_congruence_prime(coefficients, m)
-    f = factorint(m)
-    dd = {}
-    for p, e in f.items():
-        tot_roots = set()
-        if e == 1:
-            tot_roots.update(_general_congruence_prime(coefficients, p))
-        else:
-            for root in _general_congruence_prime(coefficients, p):
-                diff = 0
-                for coeff in range(0,rank - 1):
-                    if not coefficients[coeff]:
-                        continue
-                    diff = (diff + pow(root, rank - coeff - 2, p) * (rank - coeff - 1) * coefficients[coeff]) % p
-                if diff != 0:
-                    ppow = p
-                    m_inv = mod_inverse(diff, p)
-                    for j in range(1, e):
-                        ppow *= p
-                        f_val = 0
-                        for coeff in range(0, rank - 1):
-                            f_val = (f_val + pow(root, int(rank - coeff - 1), ppow) * coefficients[coeff]) % ppow
-                        f_val = f_val + coefficients[-1]
-                        root = (root - f_val * m_inv) % ppow
-                    tot_roots.add(root)
-                else:
-                    new_base = p
-                    roots_in_base = {root}
-                    while new_base < pow(p, e):
-                        new_base *= p
-                        new_roots = set()
-                        for k in roots_in_base:
-                            f_val = 0
-                            for coeff in range(0,rank - 1):
-                                f_val = (f_val + pow(k, int(rank - coeff - 1), new_base) * coefficients[coeff]) % new_base
-                            f_val = f_val + coefficients[-1]
-                            if f_val % new_base != 0:
-                                continue
-                            while k not in new_roots:
-                                new_roots.add(k)
-                                k = (k + (new_base // p)) % new_base
-                        roots_in_base = new_roots
-                    tot_roots = tot_roots | roots_in_base
-        dd[pow(p, e)] = tot_roots
-    a = []
-    m = []
-    for x, y in dd.items():
-        m.append(x)
-        a.append(list(y))
-    return sorted(set(crt(m, list(i))[0] for i in cartes(*a)))
+    return _help(m,
+        lambda p: _general_congruence_prime(coefficients, p),
+        lambda root, p: _diff_poly(root, coefficients, p),
+        lambda root, p: _val_poly(root, coefficients, p))
