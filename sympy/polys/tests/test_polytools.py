@@ -2273,7 +2273,7 @@ def test_sqf():
     assert sqf_list(f) == (1, [(g, 1), (h, 2)])
     assert sqf_list(f, x) == (1, [(g, 1), (h, 2)])
     assert sqf_list(f, (x,)) == (1, [(g, 1), (h, 2)])
-    assert sqf_list(F) == (1, [(G, 1), (H, 2)])
+    assert sqf_list(F) == (1, [(g, 1), (h, 2)])
     assert sqf_list(f, polys=True) == (1, [(G, 1), (H, 2)])
     assert sqf_list(F, polys=False) == (1, [(g, 1), (h, 2)])
 
@@ -2282,7 +2282,6 @@ def test_sqf():
     raises(ComputationFailed, lambda: sqf_part(4))
 
     assert sqf(1) == 1
-    assert sqf_list(1) == (1, [])
 
     assert sqf((2*x**2 + 2)**7) == 128*(x**2 + 1)**7
 
@@ -3263,7 +3262,7 @@ def test_to_rational_coeffs():
 def test_factor_terms():
     # issue 7067
     assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
-    assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+    assert sqf_list((x**2 + 1)  * (x - 1)**2 * (x - 2)**3 * (x - 3)**3) == (1, [(x**2 + 1, 1), (x - 1, 2), (x**2 -5*x + 6, 3)])
 
 
 def test_as_list():

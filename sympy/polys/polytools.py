@@ -13,6 +13,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -5983,10 +5984,8 @@ def _generic_factor_list(expr, gens, args, method):
 
     if isinstance(expr, Expr) and not expr.is_Relational:
         numer, denom = together(expr).as_numer_denom()
-
         cp, fp = _symbolic_factor_list(numer, opt, method)
         cq, fq = _symbolic_factor_list(denom, opt, method)
-
         if fq and not opt.frac:
             raise PolynomialError("a polynomial expected, got %s" % expr)
 
@@ -6218,20 +6217,19 @@ def sqf_list(f, *gens, **args):
     (2, [(x + 1, 2), (x + 2, 3)])
 
     """
-    options.allowed_flags(args, ['frac', 'polys'])
-    opt = options.build_options(gens, args)
-    f = sympify(f)
-    if isinstance(f, Expr) and not f.is_Relational:
-        numer, denom = together(f).as_numer_denom()
-        numer = Poly(numer, *gens, **args)
-        if denom!=1 and not opt.frac:
-            raise PolynomialError("a polynomial expected, got %s" % f)
-        fp = Poly.sqf_list(numer)
-        coeff = fp[0]
-        fp = [(s.as_expr(), k) for s, k in fp[1]]
-        return coeff ,fp
+    coeff, facs = _generic_factor_list(f, gens, args, method='sqf')
+    if facs:
+        new_facs = [facs[0]]
+        for i in range(1, len(facs)):
+            l = len(new_facs)
+            if facs[i-1][1] == facs[i][1]:
+                new_facs[l-1] = (Mul(new_facs[l-1][0], facs[i][0]).expand(), new_facs[l-1][1])
+            else:
+                new_facs.append(facs[i])
+        res = (coeff, new_facs,)
+        return res
     else:
-        raise PolynomialError("a polynomial expected, got %s" % f)
+        return coeff, facs
 
 @public
 def sqf(f, *gens, **args):
