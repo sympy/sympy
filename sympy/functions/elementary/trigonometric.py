@@ -118,7 +118,7 @@ def _peeloff_pi(arg):
             if p is S.Pi and K.is_Rational:
                 break
             K = a.coeff(S.Pi)
-            if K.is_rational:
+            if K and K.is_rational:
                 break
 
     else:
