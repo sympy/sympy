@@ -1,6 +1,5 @@
 from itertools import permutations
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq

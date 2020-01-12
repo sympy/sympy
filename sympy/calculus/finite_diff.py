@@ -18,7 +18,7 @@ for:
 """
 
 from sympy import Derivative, S
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.core.decorators import deprecated
 
 

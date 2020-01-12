@@ -14,7 +14,7 @@ from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
-    is_sequence, range, ordered)
+    is_sequence, ordered)
 from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 

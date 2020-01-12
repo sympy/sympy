@@ -1,6 +1,6 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.core.compatibility import range, Callable
+from sympy.core.compatibility import Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix

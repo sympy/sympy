@@ -44,7 +44,7 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.compatibility import with_metaclass, PY3, range
+from sympy.core.compatibility import with_metaclass, PY3
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and

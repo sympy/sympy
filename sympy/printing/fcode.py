@@ -33,7 +33,6 @@ from sympy.codegen.fnodes import (
     intent_in, intent_out, intent_inout
 )
 from sympy.core import S, Add, N, Float, Symbol
-from sympy.core.compatibility import range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range

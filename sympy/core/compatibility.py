@@ -55,7 +55,7 @@ __all__ = [
     'PY3', 'long', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
     'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
-    'StringIO', 'cStringIO', 'exec_', 'range', 'round', 'Mapping', 'Callable',
+    'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
     'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
@@ -89,7 +89,6 @@ if PY3:
 
     exec_ = getattr(builtins, "exec")
 
-    range = range
     round = round
 
     from collections.abc import (Mapping, Callable, MutableMapping,

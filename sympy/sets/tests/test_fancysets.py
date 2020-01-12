@@ -1,4 +1,4 @@
-from sympy.core.compatibility import range, PY3
+from sympy.core.compatibility import PY3
 from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)

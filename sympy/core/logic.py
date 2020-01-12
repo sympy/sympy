@@ -8,7 +8,6 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 
 
 def _torf(args):

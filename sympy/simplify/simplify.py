@@ -5,7 +5,7 @@ from collections import defaultdict
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
-from sympy.core.compatibility import iterable, ordered, range, as_int
+from sympy.core.compatibility import iterable, ordered, as_int
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
     nfloat, expand_mul)

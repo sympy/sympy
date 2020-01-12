@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic
-from sympy.core.compatibility import range
 
 import random
 

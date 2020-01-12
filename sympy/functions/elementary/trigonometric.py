@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
-from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import igcdex, Rational, pi

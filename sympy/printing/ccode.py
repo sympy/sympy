@@ -17,7 +17,6 @@ from functools import wraps
 from itertools import chain
 
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration,
