@@ -3,14 +3,12 @@ from sympy.testing.pytest import raises
 from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import (TensorIndexType,
                                  tensor_indices,
-                                 TensorHead, tensor_heads,
-                                 TensMul)
+                                 TensorHead, tensor_heads)
 from sympy import symbols, diag
 from sympy import Array, Rational
 
 from sympy import sympify
 from random import randint
-from sympy import I
 
 
 L = TensorIndexType("L")
