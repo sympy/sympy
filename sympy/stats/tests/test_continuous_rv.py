@@ -22,8 +22,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import raises, XFAIL, slow, skip
+from sympy.testing.randtest import verify_numerically as tn
 
 oo = S.Infinity
 

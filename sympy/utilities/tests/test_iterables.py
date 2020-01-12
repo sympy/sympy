@@ -24,7 +24,7 @@ from sympy.utilities.enumerative import (
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
 

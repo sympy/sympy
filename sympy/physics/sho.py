@@ -43,11 +43,11 @@ def R_nl(n, l, nu, r):
     The normalization of the radial wavefunction is:
 
     >>> from sympy import Integral, oo
-    >>> Integral(R_nl(0, 0, 1, r)**2 * r**2, (r, 0, oo)).n()
+    >>> Integral(R_nl(0, 0, 1, r)**2*r**2, (r, 0, oo)).n()
     1.00000000000000
-    >>> Integral(R_nl(1, 0, 1, r)**2 * r**2, (r, 0, oo)).n()
+    >>> Integral(R_nl(1, 0, 1, r)**2*r**2, (r, 0, oo)).n()
     1.00000000000000
-    >>> Integral(R_nl(1, 1, 1, r)**2 * r**2, (r, 0, oo)).n()
+    >>> Integral(R_nl(1, 1, 1, r)**2*r**2, (r, 0, oo)).n()
     1.00000000000000
 
     """

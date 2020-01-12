@@ -8,7 +8,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution

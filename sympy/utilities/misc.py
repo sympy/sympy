@@ -7,9 +7,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import (get_function_name, range, as_int,
-    string_types)
-
+from sympy.core.compatibility import get_function_name, range, as_int
 
 
 class Undecidable(ValueError):
@@ -63,7 +61,7 @@ def strlines(s, c=64, short=False):
     ========
     filldedent, rawlines
     """
-    if type(s) not in string_types:
+    if type(s) is not str:
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
@@ -432,7 +430,7 @@ def translate(s, a, b=None, c=None):
     >>> translate(abc, {'ab': 'x', 'bc': 'y'}) in ('xc', 'ay')
     True
     """
-    from sympy.core.compatibility import maketrans, PY3
+    from sympy.core.compatibility import PY3
 
     mr = {}
     if a is None:
@@ -458,9 +456,11 @@ def translate(s, a, b=None, c=None):
             raise ValueError('oldchars and newchars have different lengths')
     if PY3:
         if c:
-            s = s.translate(maketrans('', '', c))
+            val = str.maketrans('', '', c)
+            s = s.translate(val)
         s = replace(s, mr)
-        return s.translate(maketrans(a, b))
+        n = str.maketrans(a, b)
+        return s.translate(n)
     else:
         # when support for Python 2 is dropped, this if-else-block
         # can be replaced with the if-clause
@@ -482,7 +482,7 @@ def translate(s, a, b=None, c=None):
                 a = ''.join(a)
                 b = ''.join(b)
         s = replace(s, mr)
-        table = maketrans(a, b)
+        table = str.maketrans(a, b)
         # s may have become unicode which uses the py3 syntax for translate
         if isinstance(table, str) and isinstance(s, str):
             s = s.translate(table)

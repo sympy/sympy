@@ -10,7 +10,7 @@ from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter

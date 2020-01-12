@@ -505,13 +505,13 @@ class Expr(Basic, EvalfMixin):
         See Also
         ========
 
-        sympy.utilities.randtest.random_complex_number
+        sympy.testing.randtest.random_complex_number
         """
 
         free = self.free_symbols
         prec = 1
         if free:
-            from sympy.utilities.randtest import random_complex_number
+            from sympy.testing.randtest import random_complex_number
             a, c, b, d = re_min, re_max, im_min, im_max
             reps = dict(list(zip(free, [random_complex_number(a, b, c, d, rational=True)
                            for zi in free])))

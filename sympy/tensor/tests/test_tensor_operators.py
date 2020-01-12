@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, \

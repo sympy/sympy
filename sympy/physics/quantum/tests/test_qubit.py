@@ -11,7 +11,7 @@ from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.shor import Qubit
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
 

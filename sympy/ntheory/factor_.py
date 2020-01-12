@@ -7,7 +7,7 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int, SYMPY_INTS, range, string_types
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
@@ -130,7 +130,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     elif visual not in (True, False):
         visual = None
 
-    if isinstance(n, string_types):
+    if isinstance(n, str):
         if visual:
             return n
         d = {}
@@ -2371,3 +2371,74 @@ def is_amicable(m, n):
         return False
     a, b = map(lambda i: divisor_sigma(i), (m, n))
     return a == b == (m + n)
+
+
+def dra(n, b):
+    """
+    Returns the additive digital root of a natural number ``n`` in base ``b``
+    which is a single digit value obtained by an iterative process of summing
+    digits, on each iteration using the result from the previous iteration to
+    compute a digit sum.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import dra
+    >>> dra(3110, 12)
+    8
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Digital_root
+
+    """
+
+    num = abs(as_int(n))
+    b = as_int(b)
+    if b <= 1:
+        raise ValueError("Base should be an integer greater than 1")
+
+    if num == 0:
+        return 0
+
+    return (1 + (num - 1) % (b - 1))
+
+
+def drm(n, b):
+    """
+    Returns the multiplicative digital root of a natural number ``n`` in a given
+    base ``b`` which is a single digit value obtained by an iterative process of
+    multiplying digits, on each iteration using the result from the previous
+    iteration to compute the digit multiplication.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import drm
+    >>> drm(9876, 10)
+    0
+
+    >>> drm(49, 10)
+    8
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/MultiplicativeDigitalRoot.html
+
+    """
+
+    n = abs(as_int(n))
+    b = as_int(b)
+    if b <= 1:
+        raise ValueError("Base should be an integer greater than 1")
+    while n > b:
+        mul = 1
+        while n > 1:
+            n, r = divmod(n, b)
+            if r == 0:
+                return 0
+            mul *= r
+        n = mul
+    return n

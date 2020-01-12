@@ -6,7 +6,7 @@ from sympy.core.containers import tuple_wrapper
 from sympy.core.expr import unchanged
 from sympy.core.function import Function, Lambda
 from sympy.core.relational import Eq
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import x, y
 

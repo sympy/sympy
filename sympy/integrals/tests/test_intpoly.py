@@ -14,7 +14,7 @@ from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point, Point2D
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 
 def test_decompose():

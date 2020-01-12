@@ -15,7 +15,7 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (
-    as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
+    as_int, long, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info, gmpy)
 from sympy.core.cache import lru_cache
 
@@ -603,7 +603,7 @@ class Number(AtomicExpr):
             return Rational(*obj)
         if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
             return Float(obj)
-        if isinstance(obj, string_types):
+        if isinstance(obj, str):
             _obj = obj.lower()  # float('INF') == float('inf')
             if _obj == 'nan':
                 return S.NaN
@@ -1046,7 +1046,7 @@ class Float(Number):
             raise ValueError('Both decimal and binary precision supplied. '
                              'Supply only one. ')
 
-        if isinstance(num, string_types):
+        if isinstance(num, str):
             # Float accepts spaces as digit separators
             num = num.replace(' ', '').lower()
             # in Py 3.6
@@ -1098,7 +1098,7 @@ class Float(Number):
             dps = 15
             if isinstance(num, Float):
                 return num
-            if isinstance(num, string_types) and _literal_float(num):
+            if isinstance(num, str) and _literal_float(num):
                 try:
                     Num = decimal.Decimal(num)
                 except decimal.InvalidOperation:
@@ -1111,7 +1111,7 @@ class Float(Number):
                     dps = max(15, dps)
                     precision = mlib.libmpf.dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
-            if not isinstance(num, string_types):
+            if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string or an integer.')
             ok = None
@@ -1142,7 +1142,7 @@ class Float(Number):
 
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
-        elif isinstance(num, string_types):
+        elif isinstance(num, str):
             _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
@@ -1606,7 +1606,7 @@ class Rational(Number):
                 if isinstance(p, (float, Float)):
                     return Rational(*_as_integer_ratio(p))
 
-                if not isinstance(p, string_types):
+                if not isinstance(p, str):
                     try:
                         p = sympify(p)
                     except (SympifyError, SyntaxError):
@@ -2085,7 +2085,7 @@ class Integer(Rational):
 
     @cacheit
     def __new__(cls, i):
-        if isinstance(i, string_types):
+        if isinstance(i, str):
             i = i.replace(' ', '')
         # whereas we cannot, in general, make a Rational from an
         # arbitrary expression, we can make an Integer unambiguously
@@ -2149,7 +2149,7 @@ class Integer(Rational):
 
     def __rdivmod__(self, other):
         from .containers import Tuple
-        if isinstance(other, integer_types) and global_parameters.evaluate:
+        if isinstance(other, int) and global_parameters.evaluate:
             return Tuple(*(divmod(other, self.p)))
         else:
             try:
@@ -2164,7 +2164,7 @@ class Integer(Rational):
     # TODO make it decorator + bytecodehacks?
     def __add__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p + other)
             elif isinstance(other, Integer):
                 return Integer(self.p + other.p)
@@ -2176,7 +2176,7 @@ class Integer(Rational):
 
     def __radd__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other + self.p)
             elif isinstance(other, Rational):
                 return Rational(other.p + self.p*other.q, other.q, 1)
@@ -2185,7 +2185,7 @@ class Integer(Rational):
 
     def __sub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p - other)
             elif isinstance(other, Integer):
                 return Integer(self.p - other.p)
@@ -2196,7 +2196,7 @@ class Integer(Rational):
 
     def __rsub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other - self.p)
             elif isinstance(other, Rational):
                 return Rational(other.p - self.p*other.q, other.q, 1)
@@ -2205,7 +2205,7 @@ class Integer(Rational):
 
     def __mul__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p*other)
             elif isinstance(other, Integer):
                 return Integer(self.p*other.p)
@@ -2216,7 +2216,7 @@ class Integer(Rational):
 
     def __rmul__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other*self.p)
             elif isinstance(other, Rational):
                 return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
@@ -2225,7 +2225,7 @@ class Integer(Rational):
 
     def __mod__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(self.p % other)
             elif isinstance(other, Integer):
                 return Integer(self.p % other.p)
@@ -2234,7 +2234,7 @@ class Integer(Rational):
 
     def __rmod__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, integer_types):
+            if isinstance(other, int):
                 return Integer(other % self.p)
             elif isinstance(other, Integer):
                 return Integer(other.p % self.p)
@@ -2242,7 +2242,7 @@ class Integer(Rational):
         return Rational.__rmod__(self, other)
 
     def __eq__(self, other):
-        if isinstance(other, integer_types):
+        if isinstance(other, int):
             return (self.p == other)
         elif isinstance(other, Integer):
             return (self.p == other.p)
@@ -2429,8 +2429,7 @@ class Integer(Rational):
         return Integer(Integer(other).p // self.p)
 
 # Add sympify converters
-for i_type in integer_types:
-    converter[i_type] = Integer
+converter[int] = Integer
 
 
 class AlgebraicNumber(Expr):

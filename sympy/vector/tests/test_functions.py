@@ -2,7 +2,7 @@ from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import express, matrix_to_vector, orthogonalize
 from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix, Rational
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 N = CoordSys3D('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')

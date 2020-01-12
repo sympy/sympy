@@ -4,7 +4,7 @@ from sympy.vector import (CoordSys3D, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)
 
-from sympy.utilities.pytest import nocache_fail
+from sympy.testing.pytest import nocache_fail
 
 A = CoordSys3D('A')
 

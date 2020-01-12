@@ -5,7 +5,7 @@ from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_sinh():

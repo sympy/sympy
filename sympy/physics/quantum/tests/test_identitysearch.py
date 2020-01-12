@@ -7,7 +7,7 @@ from sympy.physics.quantum.identitysearch import (generate_gate_rules,
         generate_equivalent_ids, GateIdentity, bfs_identity_search,
         is_scalar_sparse_matrix,
         is_scalar_nonsparse_matrix, is_degenerate, is_reducible)
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 
 def create_gate_sequence(qubit=0):

@@ -3,7 +3,7 @@
 from sympy import QQ, S
 from sympy.abc import x, y
 from sympy.polys.agca import homomorphism
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_printing():
