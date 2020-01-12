@@ -2638,6 +2638,8 @@ class Tensor(TensExpr):
 
     """
 
+    _diff_wrt = True
+    is_scalar = True
     is_commutative = False
 
     def __new__(cls, tensor_head, indices, **kw_args):
@@ -3013,39 +3015,43 @@ class Tensor(TensExpr):
 
     def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
 
-        # @a_i/@a_k = delta_i^k
-        # @a_i/@a^k = g_ij delta^j_k
-        # @a^i/@a^k = delta^i_k
-        # @a^i/@a_k = g^ij delta_j^k
-        # TODO: if there is no metric present, the derivative should be zero?
-
-        if self.head != s.head:
+        if not isinstance(s, Tensor):
             return S.Zero
+        else:
 
-        # if heads are the same, provide delta and/or metric products
-        # for every free index pair in the appropriate tensor
-        # assumed that the free indices are in proper order
-        # A contravariante index in the derivative becomes covariant
-        # after performing the derivative and vice versa
+            # @a_i/@a_k = delta_i^k
+            # @a_i/@a^k = g_ij delta^j_k
+            # @a^i/@a^k = delta^i_k
+            # @a^i/@a_k = g^ij delta_j^k
+            # TODO: if there is no metric present, the derivative should be zero?
 
-        kronecker_delta_list = []
-        for iself, iother in zip(self.free_indices, s.free_indices):
-            if iself.tensor_index_type is not iother.tensor_index_type:
-                raise ValueError("index types not compatible")
-            else:
-                tensor_index_type = iself.tensor_index_type
-                tensor_metric = tensor_index_type.metric
-                if iself.is_up == iother.is_up:
-                    kroneckerdelta = tensor_index_type.delta(iself, -iother)
+            if self.head != s.head:
+                return S.Zero
+
+            # if heads are the same, provide delta and/or metric products
+            # for every free index pair in the appropriate tensor
+            # assumed that the free indices are in proper order
+            # A contravariante index in the derivative becomes covariant
+            # after performing the derivative and vice versa
+
+            kronecker_delta_list = []
+            for iself, iother in zip(self.free_indices, s.free_indices):
+                if iself.tensor_index_type is not iother.tensor_index_type:
+                    raise ValueError("index types not compatible")
                 else:
-                    dummy = TensorIndex('dummy', tensor_index_type,
-                                        is_up=iself.is_up)
-                    kroneckerdelta = (
-                        tensor_metric(iself, dummy) *
-                        tensor_index_type.delta(-dummy, -iother)
-                    )
-                kronecker_delta_list.append(kroneckerdelta)
-        return TensMul.fromiter(kronecker_delta_list)
+                    tensor_index_type = iself.tensor_index_type
+                    tensor_metric = tensor_index_type.metric
+                    if iself.is_up == iother.is_up:
+                        kroneckerdelta = tensor_index_type.delta(iself, -iother)
+                    else:
+                        dummy = TensorIndex('dummy', tensor_index_type,
+                                            is_up=iself.is_up)
+                        kroneckerdelta = (
+                            tensor_metric(iself, dummy) *
+                            tensor_index_type.delta(-dummy, -iother)
+                        )
+                    kronecker_delta_list.append(kroneckerdelta)
+            return TensMul.fromiter(kronecker_delta_list)
 
 
 class TensMul(TensExpr, AssocOp):
