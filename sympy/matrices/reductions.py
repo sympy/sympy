@@ -348,37 +348,9 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
 # the implementations above do not sympify due to problems in other parts of the
 # codebase using matrices of unsympifiable objects.
 
-def is_echelon(M, iszerofunc=_iszero):
-    return _is_echelon(M, iszerofunc=iszerofunc)
-
-def echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
-        dotprodsimp=None):
-
-    matpiv = _echelon_form(M, iszerofunc=iszerofunc, simplify=simplify,
-            with_pivots=with_pivots, dotprodsimp=dotprodsimp)
-
-    if with_pivots:
-        return sympify(matpiv[0]), matpiv[1]
-
-    return sympify(matpiv)
-
 def rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
     return _rank(M, iszerofunc=iszerofunc, simplify=simplify,
             dotprodsimp=dotprodsimp)
 
-def rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
-        normalize_last=True, dotprodsimp=None):
 
-    matpiv = _rref(M, iszerofunc=iszerofunc, simplify=simplify,
-            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
-
-    if pivots:
-        return sympify(matpiv[0]), matpiv[1]
-
-    return sympify(matpiv)
-
-
-is_echelon.__doc__   = _is_echelon.__doc__
-echelon_form.__doc__ = _echelon_form.__doc__
-rank.__doc__         = _rank.__doc__
-rref.__doc__         = _rref.__doc__
+rank.__doc__ = _rank.__doc__

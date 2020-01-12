@@ -11,9 +11,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots
-from sympy.simplify import (nsimplify, simplify as _simplify,
-    dotprodsimp as _dotprodsimp)
-from sympy.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
+from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import (MatrixError, NonSquareMatrixError,
@@ -1051,10 +1049,6 @@ def eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
 
     return [(v, m, [sympify(ev) for ev in es]) for v, m, es in eigenvects]
 
-def is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
-    return _is_diagonalizable(M, reals_only=reals_only,
-            dotprodsimp=dotprodsimp, **kwargs)
-
 def diagonalize(M, reals_only=False, sort=False, normalize=False,
         dotprodsimp=None):
 
@@ -1062,21 +1056,6 @@ def diagonalize(M, reals_only=False, sort=False, normalize=False,
             normalize=normalize, dotprodsimp=dotprodsimp)
 
     return sympify(P), sympify(D)
-
-def is_positive_definite(M):
-    return _is_positive_definite(M)
-
-def is_positive_semidefinite(M):
-    return _is_positive_semidefinite(M)
-
-def is_negative_definite(M):
-    return _is_negative_definite(M)
-
-def is_negative_semidefinite(M):
-    return _is_negative_semidefinite(M)
-
-def is_indefinite(M):
-    return _is_indefinite(M)
 
 def jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
     P, J = _jordan_form(M, calc_transform=calc_transform,
@@ -1093,15 +1072,9 @@ def singular_values(M, dotprodsimp=None):
     return _singular_values(M, dotprodsimp=dotprodsimp)
 
 
-eigenvals.__doc__                = _eigenvals.__doc__
-eigenvects.__doc__               = _eigenvects.__doc__
-is_diagonalizable.__doc__        = _is_diagonalizable.__doc__
-diagonalize.__doc__              = _diagonalize.__doc__
-is_positive_definite.__doc__     = _doc_positive_definite
-is_positive_semidefinite.__doc__ = _doc_positive_definite
-is_negative_definite.__doc__     = _doc_positive_definite
-is_negative_semidefinite.__doc__ = _doc_positive_definite
-is_indefinite.__doc__            = _doc_positive_definite
-jordan_form.__doc__              = _jordan_form.__doc__
-left_eigenvects.__doc__          = _left_eigenvects.__doc__
-singular_values.__doc__          = _singular_values.__doc__
+eigenvals.__doc__       = _eigenvals.__doc__
+eigenvects.__doc__      = _eigenvects.__doc__
+diagonalize.__doc__     = _diagonalize.__doc__
+jordan_form.__doc__     = _jordan_form.__doc__
+left_eigenvects.__doc__ = _left_eigenvects.__doc__
+singular_values.__doc__ = _singular_values.__doc__

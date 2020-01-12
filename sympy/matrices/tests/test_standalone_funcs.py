@@ -7,13 +7,10 @@ from sympy.matrices import (Matrix, ImmutableDenseMatrix as IMatrix,
 from sympy.matrices import (
     adjugate, charpoly, cofactor, cofactor_matrix,
     det_matrix, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix,
-    # is_echelon, echelon_form, rank, rref,
     rank,
     columnspace, nullspace, rowspace, orthogonalize,
-    eigenvals, eigenvects, is_diagonalizable, diagonalize,
-    is_positive_definite, is_positive_semidefinite, is_negative_definite,
-    is_negative_semidefinite, is_indefinite,
-    jordan_form, left_eigenvects, singular_values)
+    eigenvals, eigenvects, diagonalize, jordan_form, left_eigenvects,
+    singular_values)
 
 x = Symbol('x')
 
@@ -102,40 +99,11 @@ def test_minor_submatrix():
 
 # reductions.py
 
-# def test_echelon():
-#     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-#     S = MSMatrix(M)
-#     A = (Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]]), (0, 1))
-
-#     assert is_echelon(M) is False
-#     R = echelon_form(M, with_pivots=True)
-#     assert isinstance(R[0], IMatrix)
-#     assert R == A
-
-#     assert is_echelon(S) is False
-#     R = echelon_form(S, with_pivots=True)
-#     assert isinstance(R[0], ISMatrix)
-#     assert R == A
-
-
 def test_rank():
     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     assert rank(M) == 2
     assert rank(MSMatrix(M)) == 2
-
-
-# def test_rref():
-#     M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-#     A = (Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]]), (0, 1))
-
-#     R = rref(M)
-#     assert isinstance(R[0], IMatrix)
-#     assert R == A
-
-#     R = rref(MSMatrix(M))
-#     assert isinstance(R[0], ISMatrix)
-#     assert R == A
 
 
 # subspaces.py
@@ -249,13 +217,6 @@ def test_eigenvects():
     assert R == A
 
 
-def test_is_diagonalizable():
-    M = MMatrix([[1, 2+I], [2-I, 3]])
-
-    assert is_diagonalizable(M)
-    assert is_diagonalizable(MSMatrix(M))
-
-
 def test_diagonalize():
     M = MMatrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
 
@@ -268,24 +229,6 @@ def test_diagonalize():
     assert isinstance(P, ISMatrix)
     assert isinstance(D, ISMatrix)
     assert P.inv() * M * P == D
-
-
-def test_positive_definite():
-    M = MMatrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
-
-    assert is_positive_definite(M) == True
-    assert is_positive_semidefinite(M) == True
-    assert is_negative_definite(M) == False
-    assert is_negative_semidefinite(M) == False
-    assert is_indefinite(M) == False
-
-    M = MSMatrix(M)
-
-    assert is_positive_definite(M) == True
-    assert is_positive_semidefinite(M) == True
-    assert is_negative_definite(M) == False
-    assert is_negative_semidefinite(M) == False
-    assert is_indefinite(M) == False
 
 
 def test_jordan_form():

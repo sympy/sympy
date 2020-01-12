@@ -41,10 +41,8 @@ from .subspaces import (
     columnspace, nullspace, rowspace, orthogonalize)
 
 from .eigen import (
-    eigenvals, eigenvects, is_diagonalizable, diagonalize,
-    is_positive_definite, is_positive_semidefinite, is_negative_definite,
-    is_negative_semidefinite, is_indefinite,
-    jordan_form, left_eigenvects, singular_values)
+    eigenvals, eigenvects, diagonalize, jordan_form, left_eigenvects,
+    singular_values)
 
 
 __all__ = [
@@ -85,8 +83,6 @@ __all__ = [
 
     'columnspace', 'nullspace', 'rowspace', 'orthogonalize',
 
-    'eigenvals', 'eigenvects', 'is_diagonalizable', 'diagonalize',
-    'is_positive_definite', 'is_positive_semidefinite', 'is_negative_definite',
-    'is_negative_semidefinite', 'is_indefinite',
-    'jordan_form', 'left_eigenvects', 'singular_values',
+    'eigenvals', 'eigenvects', 'diagonalize', 'jordan_form', 'left_eigenvects',
+    'singular_values',
 ]
