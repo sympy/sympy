@@ -46,7 +46,8 @@ def det(matexpr):
     Examples
     ========
 
-    >>> from sympy import MatrixSymbol, det, eye
+    >>> from sympy import MatrixSymbol, eye
+    >>> from sympy.matrices.expressions import det
     >>> A = MatrixSymbol('A', 3, 3)
     >>> det(A)
     Determinant(A)
@@ -63,7 +64,8 @@ from sympy.assumptions.refine import handlers_dict
 
 def refine_Determinant(expr, assumptions):
     """
-    >>> from sympy import MatrixSymbol, Q, assuming, refine, det
+    >>> from sympy import MatrixSymbol, Q, assuming, refine
+    >>> from sympy.matrices.expressions import det
     >>> X = MatrixSymbol('X', 2, 2)
     >>> det(X)
     Determinant(X)

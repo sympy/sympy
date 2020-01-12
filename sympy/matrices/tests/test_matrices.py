@@ -731,9 +731,9 @@ def test_determinant():
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
-            M._eval_det_bareiss() ==
-            M._eval_det_berkowitz() ==
-            M._eval_det_lu() ==
+            M.det_bareiss() ==
+            M.det_berkowitz() ==
+            M.det_LU() ==
             1)
 
     M = Matrix(( (-3,  2),
