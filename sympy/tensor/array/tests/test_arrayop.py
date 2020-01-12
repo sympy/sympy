@@ -2,7 +2,7 @@ import random
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
 from sympy.tensor.array import Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray

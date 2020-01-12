@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)

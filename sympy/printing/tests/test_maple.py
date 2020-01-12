@@ -2,7 +2,7 @@ from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)

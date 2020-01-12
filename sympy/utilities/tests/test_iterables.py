@@ -7,7 +7,7 @@ from sympy import (
     symbols, Integer, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
     factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
@@ -24,7 +24,7 @@ from sympy.utilities.enumerative import (
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
 

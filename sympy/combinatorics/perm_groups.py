@@ -13,11 +13,10 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
 from sympy.core import Basic
-from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
-from sympy.utilities.randtest import _randrange
+from sympy.testing.randtest import _randrange
 from itertools import islice
 
 rmul = Permutation.rmul_with_af

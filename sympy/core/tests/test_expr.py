@@ -8,11 +8,11 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import range, round, PY3
+from sympy.core.compatibility import round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 

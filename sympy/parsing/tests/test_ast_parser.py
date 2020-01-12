@@ -1,6 +1,6 @@
 from sympy import symbols, S
 from sympy.parsing.ast_parser import parse_expr
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError
 
 def test_parse_expr():

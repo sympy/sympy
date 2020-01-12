@@ -1,6 +1,5 @@
 from itertools import permutations
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
@@ -9,7 +8,7 @@ from sympy.core.singleton import S
 from sympy.combinatorics.permutations import \
     Permutation, _af_parity, _af_rmul, _af_rmuln, AppliedPermutation, Cycle
 from sympy.printing import sstr, srepr, pretty, latex
-from sympy.utilities.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 rmul = Permutation.rmul

@@ -2,9 +2,8 @@ from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
-from sympy.core.compatibility import range
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_symbol_unset():

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence, string_types
+from sympy.core.compatibility import is_sequence
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -61,7 +61,7 @@ def __qsympify_sequence_helper(seq):
     if not is_sequence(seq):
         if isinstance(seq, Matrix):
             return seq
-        elif isinstance(seq, string_types):
+        elif isinstance(seq, str):
             return Symbol(seq)
         else:
             return sympify(seq)

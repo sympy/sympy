@@ -7,8 +7,8 @@ from mpmath.libmp.libmpf import prec_to_dps
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (
-    Callable, NotIterable, as_int, default_sort_key, is_sequence, range,
-    reduce, string_types)
+    Callable, NotIterable, as_int, default_sort_key, is_sequence,
+    reduce)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
@@ -4747,7 +4747,7 @@ class MatrixBase(MatrixDeprecated,
                 return Max(*[sum(m.row(i)) for i in range(m.rows)])
 
             elif (ord is None or isinstance(ord,
-                                            string_types) and ord.lower() in
+                                            str) and ord.lower() in
                 ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)

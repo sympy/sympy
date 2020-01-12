@@ -8,7 +8,7 @@ from sympy.core import Symbol, symbols
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin
 from sympy.matrices import Matrix
-from sympy.utilities.pytest import raises, nocache_fail
+from sympy.testing.pytest import raises, nocache_fail
 
 TP = TensorProduct
 

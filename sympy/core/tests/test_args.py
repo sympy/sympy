@@ -11,8 +11,7 @@ import io
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, SKIP
+from sympy.testing.pytest import XFAIL, SKIP
 
 x, y, z = symbols('x,y,z')
 
@@ -1508,6 +1507,9 @@ def test_sympy__stats__drv_types__GeometricDistribution():
     from sympy.stats.drv_types import GeometricDistribution
     assert _test_args(GeometricDistribution(.5))
 
+def test_sympy__stats__drv_types__HermiteDistribution():
+    from sympy.stats.drv_types import HermiteDistribution
+    assert _test_args(HermiteDistribution(1, 2))
 
 def test_sympy__stats__drv_types__LogarithmicDistribution():
     from sympy.stats.drv_types import LogarithmicDistribution
@@ -1644,6 +1646,10 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
     from sympy.stats.stochastic_process_types import ContinuousMarkovChain
     from sympy import MatrixSymbol
     assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__BernoulliProcess():
+    from sympy.stats.stochastic_process_types import BernoulliProcess
+    assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
 
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace

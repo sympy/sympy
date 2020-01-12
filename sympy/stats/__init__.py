@@ -57,7 +57,7 @@ __all__ = [
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle',
 
-    'Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
@@ -67,7 +67,7 @@ __all__ = [
 
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
-    'GeneratorMatrixOf', 'ContinuousMarkovChain',
+    'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -97,7 +97,7 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle)
 
-from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson,
+from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta)
 
 from .joint_rv_types import (JointRV, Dirichlet,
@@ -108,7 +108,7 @@ from .joint_rv_types import (JointRV, Dirichlet,
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
-        ContinuousMarkovChain)
+        ContinuousMarkovChain, BernoulliProcess)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,

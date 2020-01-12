@@ -44,7 +44,7 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.compatibility import string_types, with_metaclass, PY3, range
+from sympy.core.compatibility import with_metaclass, PY3
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and
@@ -171,6 +171,13 @@ class FunctionClass(ManagedProperties):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
         nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
+        if nargs is None and 'nargs' not in cls.__dict__:
+            for supcls in cls.__mro__:
+                if hasattr(supcls, '_nargs'):
+                    nargs = supcls._nargs
+                    break
+                else:
+                    continue
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -888,7 +895,7 @@ class UndefinedFunction(FunctionClass):
         if isinstance(name, Symbol):
             assumptions = name._merge(assumptions)
             name = name.name
-        elif not isinstance(name, string_types):
+        elif not isinstance(name, str):
             raise TypeError('expecting string or Symbol for name')
         else:
             commutative = assumptions.get('commutative', None)
@@ -3212,7 +3219,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         return expr.applyfunc(lambda e: nfloat(e, **kw))
 
     # handling of iterable containers
-    if iterable(expr, exclude=string_types):
+    if iterable(expr, exclude=str):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
                 args = [tuple(map(lambda i: nfloat(i, **kw), a))
