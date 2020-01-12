@@ -242,6 +242,8 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
 
 from .testing import test, doctest
 
+from .operator import Operator, CompositeOperator
+
 # This module causes conflicts with other modules:
 # from .stats import *
 # Adds about .04-.05 seconds of import time
@@ -483,6 +485,9 @@ __all__ = [
     'julia_code', 'mathematica_code', 'octave_code', 'rust_code', 'print_gtk',
     'preview', 'srepr', 'print_tree', 'StrPrinter', 'sstr', 'sstrrepr',
     'TableForm', 'dotprint', 'maple_code', 'print_maple_code',
+
+    # sympy.operator
+    'Operator', 'CompositeOperator',
 
     # sympy.plotting
     'plot', 'textplot', 'plot_backends', 'plot_implicit', 'plot_parametric',

@@ -2526,7 +2526,7 @@ class LatexPrinter(Printer):
 
     def _print_CompositeOperator(self, expr):
         if len(expr.gs) == 1:
-            f, g = expr.f, expr.gs[0][1]
+            f, (g,) = expr.f, expr.gs
             result = r" \circ ".join([self._print(a) for a in (f,g)])
         else:
             result = self._print_Basic(expr)
