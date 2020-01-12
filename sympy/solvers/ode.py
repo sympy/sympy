@@ -231,6 +231,8 @@ of those tests will surely fail.
 """
 from __future__ import print_function, division
 
+from typing import Dict, Type
+
 from collections import defaultdict
 from itertools import islice
 
@@ -262,8 +264,8 @@ from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
-from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse, besselsimp
+from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
+    separatevars, simplify, trigsimp, posify, cse, besselsimp)
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import checksol, solve
@@ -4572,7 +4574,7 @@ def ode_nth_order_reducible(eq, func, order, match):
 # be stored in cached results we need to ensure that we always get the
 # same class back for each particular integration variable so we store these
 # classes in a global dict:
-_nth_algebraic_diffx_stored = {}
+_nth_algebraic_diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
 
 def _nth_algebraic_diffx(var):
     cls = _nth_algebraic_diffx_stored.get(var, None)

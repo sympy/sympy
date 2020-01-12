@@ -399,7 +399,7 @@ def writeImaginary(self, ctx):
     self.var_list = []
 
 if AutolevListener:
-    class MyListener(AutolevListener):
+    class MyListener(AutolevListener):  # type: ignore
         def __init__(self, include_numeric=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
