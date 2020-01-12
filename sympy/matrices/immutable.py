@@ -1,7 +1,6 @@
 from __future__ import division, print_function
 
-from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
-from sympy.core.cache import cacheit
+from sympy.core import Basic, Dict, Integer, Tuple
 from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
