@@ -16,7 +16,7 @@ from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
-    SYMPY_INTS, int_info)
+    SYMPY_INTS, int_info, gmpy)
 from sympy.core.cache import lru_cache
 
 import mpmath
@@ -253,7 +253,6 @@ def igcd(*args):
         return 1
     a = args_temp.pop()
     if HAS_GMPY: # Using gmpy if present to speed up.
-        from sympy.core.compatibility import gmpy
         for b in args_temp:
             a = as_int(gmpy.gcd(a, b)) if b else a
         return a
