@@ -13,7 +13,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
