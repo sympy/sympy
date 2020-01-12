@@ -3884,11 +3884,7 @@ def sympify_fractions(f):
 converter[fractions.Fraction] = sympify_fractions
 
 try:
-    if HAS_GMPY == 2:
-        import gmpy2 as gmpy
-    elif HAS_GMPY == 1:
-        import gmpy
-    else:
+    if not HAS_GMPY:
         raise ImportError
 
     def sympify_mpz(x):
