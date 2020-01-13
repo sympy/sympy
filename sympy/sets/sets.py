@@ -27,7 +27,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
 from mpmath import mpi, mpf
-from sympy.vector.basisdependent import factor
 
 tfn = defaultdict(lambda: None, {
     True: S.true,
@@ -1765,13 +1764,14 @@ class FiniteSet(Set, EvalfMixin):
     is_finite_set = True
 
     def factor(self, *args, **kwargs):
+        from sympy.polys import factor as fctr
         """
         Implements the SymPy factor routine, on the scalar parts
         of a basis-dependent expression.
         factor's documentation
         ========================
         """
-        fctr_components = [factor(v, *args, **kwargs) * k for
+        fctr_components = [fctr(v, *args, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*fctr_components)
     
