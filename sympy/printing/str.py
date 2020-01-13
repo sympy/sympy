@@ -867,6 +867,8 @@ class StrPrinter(Printer):
     def _print_Operator(self, expr):
         if [*expr.argidxs] == [0]:
             result = self._print(expr.operator)
+        elif len(expr.argidxs) == 1 and len(expr.argidxs[0]) == 1 and [*expr.argidxs[0]] == [0]:
+            result = self._print(expr.operator)
         elif isinstance(expr.operator, Basic):
             result = self._print(expr.operator)
         else:
@@ -878,6 +880,18 @@ class StrPrinter(Printer):
         operator_str = "(%s)" % self._print(expr.operator)
         return operator_str + "(%s)" % self.stringify(expr.arguments, ", ")
 
+    def _print_DerivatedOperator(self, expr, max_primnum=3):
+        if len(expr.argidxs) == 1 and expr.argidxs[0][0] == 0:
+            prime = r"'"
+            num_of_prime = expr.argidxs[0][1]
+            if num_of_prime > max_primnum:
+                result = self._print_Basic(expr)
+            else:
+                primes = num_of_prime * prime
+            result = r"%s%s" % (self._print(expr.operator), primes)
+        else:
+            result = self._print_Basic(expr)
+        return result
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

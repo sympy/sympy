@@ -2637,6 +2637,8 @@ class PrettyPrinter(Printer):
         from sympy.core.basic import Basic
         if [*expr.argidxs] == [0]:
             pform = self._print(expr.operator)
+        elif len(expr.argidxs) == 1 and len(expr.argidxs[0]) == 1 and [*expr.argidxs[0]] == [0]:
+            pform = self._print(expr.operator)
         elif isinstance(expr.operator, Basic):
             pform = self._print(expr.operator)
         else:
@@ -2652,6 +2654,20 @@ class PrettyPrinter(Printer):
             op = ' ' + U('MEDIUM SMALL WHITE CIRCLE') + ' '
             result = op.join([self.doprint(a) for a in (f,g)])
             pform = prettyForm(result)
+        else:
+            pform = prettyForm(str(expr))
+        return pform
+
+    def _print_DerivatedOperator(self, expr, max_primnum=3):
+        if len(expr.argidxs) == 1 and expr.argidxs[0][0] == 0:
+            prime = r"'"
+            num_of_prime = expr.argidxs[0][1]
+            if num_of_prime > max_primnum:
+                prettyprime = prettyForm(*self._print(num_of_prime).parens())
+                pform = self._print(expr.operator)**(prettyprime)
+            else:
+                primes = num_of_prime * prime
+                pform = prettyForm(*self._print(expr.operator).right(primes))
         else:
             pform = prettyForm(str(expr))
         return pform

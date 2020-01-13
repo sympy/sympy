@@ -11,3 +11,4 @@ can behave as if they are instances of ``Expr``.
 from .operator import *
 from .operatorop import *
 from .composite import *
+from .derivative import *

@@ -1,8 +1,6 @@
-from sympy import Add, cos, Function, sin, symbols
-from sympy.abc import x,y,z
+from sympy import Add, cos, sin
+from sympy.abc import x,y
 from sympy.operator import CompositeOperator
-
-f,g,h = symbols('f, g, h', cls=Function)
 
 def test_CompositeOperator():
     assert CompositeOperator(sin, cos)(x) == sin(cos(x))

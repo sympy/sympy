@@ -2516,6 +2516,8 @@ class LatexPrinter(Printer):
     def _print_Operator(self, expr):
         if [*expr.argidxs] == [0]:
             result = self._print(expr.operator)
+        elif len(expr.argidxs) == 1 and len(expr.argidxs[0]) == 1 and [*expr.argidxs[0]] == [0]:
+            result = self._print(expr.operator)
         elif isinstance(expr.operator, Basic):
             result = self._print(expr.operator)
         else:
@@ -2531,6 +2533,19 @@ class LatexPrinter(Printer):
         if len(expr.gs) == 1:
             f, (g,) = expr.f, expr.gs
             result = r" \circ ".join([self._print(a) for a in (f,g)])
+        else:
+            result = self._print_Basic(expr)
+        return result
+
+    def _print_DerivatedOperator(self, expr, max_primnum=3):
+        if len(expr.argidxs) == 1 and expr.argidxs[0][0] == 0:
+            prime = r"\prime"
+            num_of_prime = expr.argidxs[0][1]
+            if num_of_prime > max_primnum:
+                primes = r"\left(%s\right)" % num_of_prime
+            else:
+                primes = num_of_prime * prime
+            result = r"%s^{%s}" % (self._print(expr.operator), primes)
         else:
             result = self._print_Basic(expr)
         return result
