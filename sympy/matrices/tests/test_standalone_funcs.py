@@ -1,8 +1,6 @@
-from sympy import I, PurePoly, S, Symbol
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.matrices import (Matrix, ImmutableDenseMatrix as IMatrix,
-    MutableDenseMatrix as MMatrix, MutableSparseMatrix as MSMatrix,
-    ImmutableSparseMatrix as ISMatrix)
+from sympy import PurePoly, Symbol
+from sympy.matrices import (Matrix, ImmutableDenseMatrix, SparseMatrix,
+    ImmutableSparseMatrix)
 
 from sympy.matrices import (
     adjugate, charpoly, cofactor, cofactor_matrix,
@@ -14,7 +12,7 @@ x = Symbol('x')
 # determinant.py
 
 def test_adjugate():
-    M = MMatrix(4, 4, [0, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
+    M = Matrix(4, 4, [0, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
     A = Matrix([
         [   4,  -8,  4,   0],
         [  76, -68, -8,  24],
@@ -22,45 +20,45 @@ def test_adjugate():
         [  48, -72,  0,  24]])
 
     R = adjugate(M)
-    assert isinstance(R, IMatrix)
+    assert isinstance(R, ImmutableDenseMatrix)
     assert R == A
 
-    R = adjugate(MSMatrix(M))
-    assert isinstance(R, ISMatrix)
+    R = adjugate(SparseMatrix(M))
+    assert isinstance(R, ImmutableSparseMatrix)
     assert R == A
 
 
 def test_charpoly():
-    M = MMatrix([[1, 2], [3, 4]])
+    M = Matrix([[1, 2], [3, 4]])
     A = PurePoly(x**2 - 5*x - 2, x, domain='RR')
 
     assert charpoly(M, x='x') == A
-    assert charpoly(MSMatrix(M), x='x') == A
+    assert charpoly(SparseMatrix(M), x='x') == A
 
 
 def test_cofactor():
-    M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     assert cofactor(M, 1, 1) == -12
-    assert cofactor(MSMatrix(M), 1, 1) == -12
+    assert cofactor(SparseMatrix(M), 1, 1) == -12
 
 
 def test_cofactor_matrix():
-    M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     A = Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
     R = cofactor_matrix(M)
-    assert isinstance(R, IMatrix)
+    assert isinstance(R, ImmutableDenseMatrix)
     assert R == A
 
-    R = cofactor_matrix(MSMatrix(M))
-    assert isinstance(R, ISMatrix)
+    R = cofactor_matrix(SparseMatrix(M))
+    assert isinstance(R, ImmutableSparseMatrix)
     assert R == A
 
 
 def test_det_matrix():
-    M = MMatrix([[1, 2], [3, 4]])
-    S = MSMatrix(M)
+    M = Matrix([[1, 2], [3, 4]])
+    S = SparseMatrix(M)
 
     assert det_matrix(M) == -2
     assert det_bareiss(M) == -2
@@ -74,20 +72,20 @@ def test_det_matrix():
 
 
 def test_minor():
-    M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     assert minor(M, 1, 1) == -12
-    assert minor(MSMatrix(M), 1, 1) == -12
+    assert minor(SparseMatrix(M), 1, 1) == -12
 
 
 def test_minor_submatrix():
-    M = MMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     A = Matrix([[1, 3], [7, 9]])
 
     R = minor_submatrix(M, 1, 1)
-    assert isinstance(R, IMatrix)
+    assert isinstance(R, ImmutableDenseMatrix)
     assert R == A
 
-    R = minor_submatrix(MSMatrix(M), 1, 1)
-    assert isinstance(R, ISMatrix)
+    R = minor_submatrix(SparseMatrix(M), 1, 1)
+    assert isinstance(R, ImmutableSparseMatrix)
     assert R == A
