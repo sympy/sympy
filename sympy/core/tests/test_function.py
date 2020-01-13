@@ -5,7 +5,6 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic, Dict, oo, zoo, nan, Pow)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)

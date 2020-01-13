@@ -6,4 +6,4 @@ SymPyDeprecationWarning(
     issue=18095,
     deprecated_since_version="1.6").warn()
 
-from sympy.testing.runtests import *
+from sympy.testing.runtests import *  # noqa:F401

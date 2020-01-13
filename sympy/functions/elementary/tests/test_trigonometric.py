@@ -4,7 +4,6 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
         AccumBounds, Interval, ImageSet, Lambda, besselj, Add)
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq

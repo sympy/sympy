@@ -7,7 +7,7 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
-from sympy.core.compatibility import long, range
+from sympy.core.compatibility import long
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y

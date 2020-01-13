@@ -13,7 +13,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, PY3
+from sympy.core.compatibility import u_decode as u, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 

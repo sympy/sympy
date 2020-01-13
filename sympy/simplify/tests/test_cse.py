@@ -17,8 +17,6 @@ from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
         ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import MatrixSymbol
 
-from sympy.core.compatibility import range
-
 
 w, x, y, z = symbols('w,x,y,z')
 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
@@ -537,6 +535,11 @@ def test_issue_13000():
     eq = x/(-4*x**2 + y**2)
     cse_eq = cse(eq)[1][0]
     assert cse_eq == eq
+
+
+def test_issue_18203():
+    eq = CRootOf(x**5 + 11*x - 2, 0) + CRootOf(x**5 + 11*x - 2, 1)
+    assert cse(eq) == ([], [eq])
 
 
 def test_unevaluated_mul():

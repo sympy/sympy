@@ -12,7 +12,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
-from sympy.core.compatibility import long, iterable, range, Hashable
+from sympy.core.compatibility import long, iterable, Hashable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
@@ -3788,6 +3788,43 @@ def test_from_ndarray():
     assert Matrix(array([x, y, z])) == Matrix([x, y, z])
     raises(NotImplementedError, lambda: Matrix(array([[
         [1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+
+def test_17522_numpy():
+    from sympy.matrices.common import _matrixify
+    try:
+        from numpy import array, matrix
+    except ImportError:
+        skip('NumPy must be available to test indexing matrixified NumPy ndarrays and matrices')
+
+    m = _matrixify(array([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
+
+    m = _matrixify(matrix([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
+
+def test_17522_mpmath():
+    from sympy.matrices.common import _matrixify
+    try:
+        from mpmath import matrix
+    except ImportError:
+        skip('mpmath must be available to test indexing matrixified mpmath matrices')
+
+    m = _matrixify(matrix([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
+
+def test_17522_scipy():
+    from sympy.matrices.common import _matrixify
+    try:
+        from scipy.sparse import csr_matrix
+    except ImportError:
+        skip('SciPy must be available to test indexing matrixified SciPy sparse matrices')
+
+    m = _matrixify(csr_matrix([[1, 2], [3, 4]]))
+    assert m[3] == 4
+    assert list(m) == [1, 2, 3, 4]
 
 def test_hermitian():
     a = Matrix([[1, I], [-I, 1]])

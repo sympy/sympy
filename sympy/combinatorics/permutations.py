@@ -7,7 +7,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
-    is_sequence, reduce, range, as_int, Iterable
+    is_sequence, reduce, as_int, Iterable
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import as_Boolean

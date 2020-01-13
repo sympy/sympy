@@ -8,7 +8,6 @@ from sympy.utilities import default_sort_key
 from sympy.testing.pytest import slow
 from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)
-from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
 

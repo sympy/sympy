@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy import ask, Q
 from sympy.core import Basic, Add
-from sympy.core.compatibility import range
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift

@@ -1,7 +1,6 @@
 """Tools for manipulation of expressions using paths. """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import range
 
 from sympy.core import Basic
 

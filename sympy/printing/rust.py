@@ -34,7 +34,6 @@ complete source code files.
 from __future__ import print_function, division
 
 from sympy.core import S, Rational, Float, Lambda
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 
 # Rust's methods for integer and float can be found at here :
@@ -299,7 +298,7 @@ class RustCodePrinter(CodePrinter):
             cond_func = self.known_functions[expr.func.__name__]
             func = None
             style = 1
-            if isinstance(cond_func, string_types):
+            if isinstance(cond_func, str):
                 func = cond_func
             else:
                 for cond, func, style in cond_func:
@@ -482,7 +481,7 @@ class RustCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
