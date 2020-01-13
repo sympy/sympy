@@ -731,7 +731,7 @@ if GROUND_TYPES != 'python':
         if gmpy:
             HAS_GMPY = 1
 else:
-    return None
+    gmpy = None
 
 if GROUND_TYPES == 'auto':
     if HAS_GMPY:
