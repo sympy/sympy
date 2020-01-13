@@ -1749,6 +1749,8 @@ class Rational(Number):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+            elif isinstance(other, DecimalRational):
+                return other*self
             elif isinstance(other, Rational):
                 return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
             elif isinstance(other, Float):
@@ -2063,6 +2065,7 @@ class DecimalRational(Rational):
     '.1'
 
     """
+    is_DecimalRational = True
 
     @cacheit
     def __new__(cls, *args):
@@ -2113,6 +2116,20 @@ class DecimalRational(Rational):
             else:
                 return Number.__rsub__(self, other)
         return Number.__rsub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if global_parameters.evaluate:
+            if isinstance(other, Integer):
+                return self.__class__(self.p*other.p, self.q, igcd(other.p, self.q))
+            elif isinstance(other, Rational):
+                return self.__class__(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
+            elif isinstance(other, Float):
+                return other*self
+            else:
+                return Number.__mul__(self, other)
+        return Number.__mul__(self, other)
+    __rmul__ = __mul__
 
 
 class Integer(Rational):
@@ -2280,19 +2297,13 @@ class Integer(Rational):
                 return Integer(self.p*other)
             elif isinstance(other, Integer):
                 return Integer(self.p*other.p)
+            elif isinstance(other, DecimalRational):
+                return other*self
             elif isinstance(other, Rational):
                 return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
             return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
-
-    def __rmul__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, int):
-                return Integer(other*self.p)
-            elif isinstance(other, Rational):
-                return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
-            return Rational.__rmul__(self, other)
-        return Rational.__rmul__(self, other)
+    __rmul__ = __mul__
 
     def __mod__(self, other):
         if global_parameters.evaluate:

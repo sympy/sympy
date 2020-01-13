@@ -275,7 +275,7 @@ class Mul(Expr, AssocOp):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 elif coeff.is_Number or isinstance(coeff, AccumBounds):  # it could be zoo
-                    coeff *= o
+                    coeff = o.__mul__(coeff)
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
