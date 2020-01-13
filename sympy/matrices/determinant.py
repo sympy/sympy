@@ -640,8 +640,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                iszerofunc=iszerofunc)
+        pivot_pos, pivot_val, _, _ = mat[:, 0]._find_reasonable_pivot(iszerofunc=iszerofunc)
         if pivot_pos is None:
             return mat.zero
 
