@@ -62,9 +62,6 @@ def test_psi_nlm():
         * sqrt(2 * 2 ** 3) * exp(-2 * r / (3)) * (r * 2) ** 2)
 
 def test_hydrogen_energies():
-    assert E_nl(n, Z) == -Z**2/(2*n**2)
-    assert E_nl(n) == -1/(2*n**2)
-
     assert E_nl(1, 47) == -S(47)**2/(2*1**2)
     assert E_nl(2, 47) == -S(47)**2/(2*2**2)
 
@@ -122,3 +119,4 @@ def test_hydrogen_energies_relat():
 def test_issue_13524():
     n = symbols('n', integer=True)
     assert E_nl(n,Z) == -Z**2/(2*n**2)
+    assert E_nl(n) == -1/(2*n**2)

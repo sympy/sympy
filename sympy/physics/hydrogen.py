@@ -132,11 +132,11 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     # sympify arguments
     n, l, m, r, phi, theta, Z = map(S, [n, l, m, r, phi, theta, Z])
     # check if values for n,l,m make physically sense
-    if n.is_integer and n.is_constant() and n < 1:
+    if n.is_integer == True and n.is_constant() and n < 1:
         raise ValueError("'n' must be positive integer")
-    if l.is_integer and l.is_constant() and not (n > l):
+    if l.is_integer == True and l.is_constant() and not (n > l):
         raise ValueError("'n' must be greater than 'l'")
-    if m.is_integer and m.is_constant() and not (abs(m) <= l):
+    if m.is_integer == True and m.is_constant() and not (abs(m) <= l):
         raise ValueError("|'m'| must be less or equal 'l'")
     # return the hydrogen wave function
     return R_nl(n, l, r, Z)*Ynm(l, m, theta, phi).expand(func=True)
