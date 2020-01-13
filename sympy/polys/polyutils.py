@@ -229,7 +229,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     return polys, opt.gens
 
 
-def _parallel_dict_from_expr_no_gens(exprs, opt,expression = None):
+def _parallel_dict_from_expr_no_gens(exprs, opt, expression=None):
     """Transform expressions into a multinomial form and figure out generators. """
     if opt.domain is not None:
         def _is_coeff(factor):
@@ -274,21 +274,21 @@ def _parallel_dict_from_expr_no_gens(exprs, opt,expression = None):
 
         reprs.append(terms)
 
-    complex_in_denom, complex_in_num = False, False
+    imag_in_num, imag_in_denom = False, False
     if not expression is None:
         # is_complex returns complex_in_num = True if numerator is complex
-        # and complex_in_denom = True if Denominator is complex
-        complex_in_num, complex_in_denom = is_complex(expression)
+        # and complex_in_denom = True if denominator is complex
+        imag_in_num, imag_in_denom = has_imaginary(expression)
     I = ImaginaryUnit()
 
-    # if expression is imaginary but gens then add I in gens
-    if not I in gens and len(gens)==0 and (complex_in_num or complex_in_denom):
+    # if expression is imaginary but gens is empty then add I in gens
+    if not I in gens and len(gens) == 0 and (imag_in_num or imag_in_denom):
         gens.add(I)
         imaginary_term = ([0], {I: 0})
 
-        if complex_in_num:
+        if imag_in_num:
             reprs[0].append(imaginary_term)
-        if complex_in_denom:
+        if imag_in_denom:
             reprs[1].append(imaginary_term)
 
     gens = _sort_gens(gens, opt=opt)
@@ -338,7 +338,7 @@ def parallel_dict_from_expr(exprs, **args):
     return reps, opt.gens
 
 
-def _parallel_dict_from_expr(exprs, opt, expression = None):
+def _parallel_dict_from_expr(exprs, opt, expression=None):
     """Transform expressions into a multinomial form. """
     if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
@@ -438,17 +438,28 @@ def _dict_reorder(rep, gens, new_gens):
 
     return map(tuple, new_monoms), coeffs
 
-def is_complex(exprs):
-    """Checks whether the numerator,Denominator of an expression is Complex"""
-    complex_in_num_denom = [False, False]
-    if len(exprs)>0:
-        if 'I' in str(exprs[0]):
-            complex_in_num_denom[0] = True
-    if len(exprs)>1:
-        if 'I' in str(exprs[1]):
-            complex_in_num_denom[1] = True
+def has_imaginary(exprs):
+    """Checks whether the numerator, denominator of an expression has Imaginary Unit"""
+    has_imag_in_num_denom = [False, False]
+    I = ImaginaryUnit()
+    if len(exprs):
+        try:
+            has_I = (exprs[0]).has(I)
+        except AttributeError:
+            has_I = False
+        else:
+            if has_I:
+                has_imag_in_num_denom[0] = True
+    if len(exprs) > 1:
+        try:
+            has_I = (exprs[1]).has(I)
+        except AttributeError:
+            has_I = False
+        else:
+            if has_I:
+                has_imag_in_num_denom[1] = True
 
-    return complex_in_num_denom
+    return has_imag_in_num_denom
 
 class PicklableWithSlots(object):
     """
