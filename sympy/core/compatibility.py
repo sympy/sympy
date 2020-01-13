@@ -730,6 +730,8 @@ if GROUND_TYPES != 'python':
             module_version_attr='version', module_version_attr_call_args=())
         if gmpy:
             HAS_GMPY = 1
+else:
+    return None
 
 if GROUND_TYPES == 'auto':
     if HAS_GMPY:
