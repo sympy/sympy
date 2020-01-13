@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import string_types
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.utilities import public
 
@@ -46,7 +45,7 @@ new = object.__new__
 @public
 class MPContext(PythonMPContext):
 
-    def __init__(ctx, prec=53, dps=None, tol=None):
+    def __init__(ctx, prec=53, dps=None, tol=None, real=False):
         ctx._prec_rounding = [prec, round_nearest]
 
         if dps is None:
@@ -58,8 +57,12 @@ class MPContext(PythonMPContext):
         ctx.mpc = ComplexElement
         ctx.mpf._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.mpc._ctxdata = [ctx.mpc, new, ctx._prec_rounding]
-        ctx.mpf.context = ctx
-        ctx.mpc.context = ctx
+
+        if real:
+            ctx.mpf.context = ctx
+        else:
+            ctx.mpc.context = ctx
+
         ctx.constant = _constant
         ctx.constant._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.constant.context = ctx
@@ -105,7 +108,7 @@ class MPContext(PythonMPContext):
         if hasattr(tol, "_mpf_"):
             return tol._mpf_
         prec, rounding = ctx._prec_rounding
-        if isinstance(tol, string_types):
+        if isinstance(tol, str):
             return from_str(tol, prec, rounding)
         raise ValueError("expected a real number, got %s" % tol)
 

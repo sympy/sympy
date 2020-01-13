@@ -128,7 +128,6 @@ from itertools import chain
 from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Lt, Le, Ge, Gt
@@ -153,7 +152,7 @@ def _mk_Tuple(args):
 
     sympy.Tuple
     """
-    args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
+    args = [String(arg) if isinstance(arg, str) else arg for arg in args]
     return Tuple(*args)
 
 
@@ -880,7 +879,7 @@ class String(Token):
 
     @classmethod
     def _construct_text(cls, text):
-        if not isinstance(text, string_types):
+        if not isinstance(text, str):
             raise TypeError("Argument text is not a string type.")
         return text
 

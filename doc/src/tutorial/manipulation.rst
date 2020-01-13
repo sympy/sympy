@@ -17,15 +17,15 @@ Understanding Expression Trees
 
 Before we can do this, we need to understand how expressions are represented
 in SymPy.  A mathematical expression is represented as a tree.  Let us take
-the expression `2^x + xy`, i.e., ``2**x + x*y``.  We can see what this
+the expression `x^2 + xy`, i.e., ``x**2 + x*y``.  We can see what this
 expression looks like internally by using ``srepr``
 
     >>> from sympy import *
     >>> x, y, z = symbols('x y z')
 
-    >>> expr = 2**x + x*y
+    >>> expr = x**2 + x*y
     >>> srepr(expr)
-    "Add(Pow(Integer(2), Symbol('x')), Mul(Symbol('x'), Symbol('y')))"
+    "Add(Pow(Symbol('x'), Integer(2)), Mul(Symbol('x'), Symbol('y')))"
 
 The easiest way to tear this apart is to look at a diagram of the expression
 tree:

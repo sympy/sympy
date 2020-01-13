@@ -10,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import reduce, range
+from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
 

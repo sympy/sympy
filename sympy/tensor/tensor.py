@@ -43,7 +43,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS, with_metaclass
+from sympy.core.compatibility import reduce, SYMPY_INTS, with_metaclass
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -986,12 +986,12 @@ class TensorIndexType(Basic):
                                     deprecated_since_version="1.5").warn()
             dummy_name = kwargs.get('dummy_fmt')
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name = Symbol(name)
 
         if dummy_name is None:
             dummy_name = str(name)[0]
-        if isinstance(dummy_name, string_types):
+        if isinstance(dummy_name, str):
             dummy_name = Symbol(dummy_name)
 
         if dim is None:
@@ -1006,7 +1006,7 @@ class TensorIndexType(Basic):
 
         metric_symmetry = sympify(metric_symmetry)
 
-        if isinstance(metric_name, string_types):
+        if isinstance(metric_name, str):
             metric_name = Symbol(metric_name)
 
         if 'metric' in kwargs:
@@ -1233,7 +1233,7 @@ class TensorIndex(Basic):
     A(-L_0, L_0)
     """
     def __new__(cls, name, tensor_index_type, is_up=True):
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
             name_symbol = name
@@ -1293,7 +1293,7 @@ def tensor_indices(s, typ):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         a = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')
@@ -1550,7 +1550,7 @@ class TensorType(Basic):
         ``comm``: commutation group number
         see ``_TensorManager.set_comm``
         """
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             names = [x.name for x in symbols(s, seq=True)]
         else:
             raise ValueError('expecting a string')
@@ -1700,7 +1700,7 @@ class TensorHead(Basic):
     is_commutative = False
 
     def __new__(cls, name, index_types, symmetry=None, comm=0):
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
             name_symbol = name
@@ -1837,7 +1837,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     """
     Returns a sequence of TensorHeads from a string `s`
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         names = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')

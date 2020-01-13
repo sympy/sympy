@@ -5,7 +5,7 @@ Covering Product, Intersecting Product
 from __future__ import print_function, division
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import range, as_int, iterable
+from sympy.core.compatibility import as_int, iterable
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht,

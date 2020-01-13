@@ -4,7 +4,7 @@ import random
 
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, range, reduce
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
 from sympy.core.singleton import S

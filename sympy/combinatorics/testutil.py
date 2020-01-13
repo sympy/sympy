@@ -1,6 +1,5 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.util import _distribute_gens_by_base
-from sympy.core.compatibility import range
 
 rmul = Permutation.rmul
 

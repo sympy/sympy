@@ -1,5 +1,4 @@
 from sympy import Sieve, sieve, Symbol, S, limit, I, zoo, nan, Rational
-from sympy.core.compatibility import range
 
 from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient

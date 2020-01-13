@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import range, string_types
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 
@@ -237,7 +236,7 @@ class Point(object):
 
         """
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError('Must supply a valid name')
         if value == 0:
             value = Vector(0)

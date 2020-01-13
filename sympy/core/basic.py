@@ -7,7 +7,7 @@ from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, range, PY3, Mapping)
+    with_metaclass, PY3, Mapping)
 from .singleton import S
 
 from inspect import getmro
@@ -914,11 +914,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if isinstance(s[0], string_types):
+            if isinstance(s[0], str):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, string_types))
+                s = [sympify(_, strict=not isinstance(_, str))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -1768,7 +1768,7 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
         else:
             pattern = args[:-1]
-            if isinstance(args[-1], string_types):
+            if isinstance(args[-1], str):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
                 name = getattr(args[-1], '__name__', None)

@@ -12,7 +12,7 @@ import textwrap
 import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins, PY3)
+    NotIterable, builtins, PY3)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -703,7 +703,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
-    if isinstance(modules, (dict, string_types)) or not hasattr(modules, '__iter__'):
+    if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
         # consistency check
@@ -835,7 +835,7 @@ def _get_namespace(m):
     """
     This is used by _lambdify to parse its arguments.
     """
-    if isinstance(m, string_types):
+    if isinstance(m, str):
         _import(m)
         return MODULES[m][0]
     elif isinstance(m, dict):
@@ -883,7 +883,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
-        if isinstance(args, string_types):
+        if isinstance(args, str):
             return args
         elif isinstance(args, DeferredVector):
             return str(args)
@@ -951,14 +951,14 @@ def lambdastr(args, expr, printer=None, dummify=None):
     if dummify:
         args = sub_args(args, dummies_dict)
     else:
-        if isinstance(args, string_types):
+        if isinstance(args, str):
             pass
         elif iterable(args, exclude=DeferredVector):
             args = ",".join(str(a) for a in args)
 
     # Transform expr
     if dummify:
-        if isinstance(expr, string_types):
+        if isinstance(expr, str):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
@@ -1031,14 +1031,14 @@ class _EvaluatorPrinter(object):
     if PY3:
         @classmethod
         def _is_safe_ident(cls, ident):
-            return isinstance(ident, string_types) and ident.isidentifier() \
+            return isinstance(ident, str) and ident.isidentifier() \
                     and not keyword.iskeyword(ident)
     else:
         _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
 
         @classmethod
         def _is_safe_ident(cls, ident):
-            return isinstance(ident, string_types) and cls._safe_ident_re.match(ident) \
+            return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
                 and not (keyword.iskeyword(ident) or ident == 'None')
 
     def _preprocess(self, args, expr):
@@ -1263,7 +1263,7 @@ def implemented_function(symfunc, implementation):
     if isinstance(symfunc, UndefinedFunction):
         kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
-    if isinstance(symfunc, string_types):
+    if isinstance(symfunc, str):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
         symfunc = UndefinedFunction(
