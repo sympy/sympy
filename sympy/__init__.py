@@ -190,7 +190,7 @@ from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         Adjoint, hadamard_product, HadamardProduct, HadamardPower,
         Determinant, det, diagonalize_vector, DiagMatrix, DiagonalMatrix,
         DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct,
-        PermutationMatrix, MatrixPermute)
+        PermutationMatrix, MatrixPermute, NumPyMatrix)
 
 from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         Segment2D, Ray2D, Line3D, Segment3D, Ray3D, Plane, Ellipse, Circle,
@@ -424,7 +424,7 @@ __all__ = [
     'HadamardPower', 'Determinant', 'det', 'diagonalize_vector', 'DiagMatrix',
     'DiagonalMatrix', 'DiagonalOf', 'trace', 'DotProduct',
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',
-    'MatrixPermute',
+    'MatrixPermute', 'NumPyMatrix',
 
     # sympy.geometry
     'Point', 'Point2D', 'Point3D', 'Line', 'Ray', 'Segment', 'Line2D',

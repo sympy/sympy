@@ -1258,7 +1258,7 @@ class MatrixSubspaces(MatrixReductions):
         for vec in vecs:
             perp = perp_to_subspace(vec, ret)
             if not perp.is_zero:
-                ret.append(perp)
+                ret.append(cls(perp))
             elif rankcheck is True:
                 raise ValueError(
                     "GramSchmidt: vector set not linearly independent")
@@ -2510,15 +2510,16 @@ class MatrixBase(MatrixDeprecated,
                  MatrixEigen,
                  MatrixCommon):
     """Base class for matrix objects."""
-    # Added just for numpy compatibility
-    __array_priority__ = 11
 
-    is_Matrix = True
-    _class_priority = 3
+    __array_priority__ = 11 # added just for numpy compatibility
+    _class_priority    = 3
+    is_Matrix          = True
+    is_mutable         = None
+    is_sparse          = False
+    zero               = S.Zero
+    one                = S.One
+
     _sympify = staticmethod(sympify)
-    zero = S.Zero
-    one = S.One
-
     __hash__ = None  # Mutable
 
     # Defined here the same as on Basic.

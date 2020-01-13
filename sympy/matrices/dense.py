@@ -37,11 +37,9 @@ def _compare_sequence(a, b):
     return tuple(a) == tuple(b)
 
 class DenseMatrix(MatrixBase):
-
-    is_MatrixExpr = False
-
-    _op_priority = 10.01
+    _op_priority    = 10.01
     _class_priority = 4
+    is_MatrixExpr   = False
 
     def __eq__(self, other):
         other = sympify(other)

@@ -11,6 +11,7 @@ from .dense import (
     zeros)
 from .dense import MutableDenseMatrix
 from .matrices import DeferredVector, MatrixBase
+from .numpy import NumPyMatrix
 
 Matrix = MutableMatrix = MutableDenseMatrix
 
