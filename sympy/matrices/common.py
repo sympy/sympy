@@ -2505,6 +2505,9 @@ class _MinimalMatrix(object):
 
     is_Matrix = True
     is_MatrixExpr = False
+    is_mutable = None
+    is_sparse = None
+
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -2598,6 +2601,8 @@ class _MatrixWrapper(object):
     matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
     """
     is_MatrixLike = True
+    is_mutable = False
+    is_sparse = None
 
     def __init__(self, mat, shape=None):
         self.mat = mat

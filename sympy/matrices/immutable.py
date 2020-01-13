@@ -14,6 +14,8 @@ def sympify_matrix(arg):
 sympify_converter[MatrixBase] = sympify_matrix
 
 class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
+    is_mutable = False
+
     """Create an immutable version of a matrix.
 
     Examples
@@ -154,6 +156,7 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
     """
     is_Matrix = True
     _class_priority = 9
+    is_mutable = False
 
     @classmethod
     def _new(cls, *args, **kwargs):

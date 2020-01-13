@@ -11,7 +11,8 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
+    MutableSparseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -4145,3 +4146,16 @@ def test_issue_17827():
     raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
     raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
     raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
+
+
+def test_is_mutable():
+    assert MutableDenseMatrix(0, 0, []).is_mutable is True
+    assert ImmutableDenseMatrix(0, 0, []).is_mutable is False
+    assert MutableSparseMatrix(0, 0, []).is_mutable is True
+    assert ImmutableSparseMatrix(0, 0, []).is_mutable is False
+
+def test_is_sparse():
+    assert MutableDenseMatrix(0, 0, []).is_sparse is False
+    assert ImmutableDenseMatrix(0, 0, []).is_sparse is False
+    assert MutableSparseMatrix(0, 0, []).is_sparse is True
+    assert ImmutableSparseMatrix(0, 0, []).is_sparse is True

@@ -2515,7 +2515,7 @@ class MatrixBase(MatrixDeprecated,
     _class_priority    = 3
     is_Matrix          = True
     is_mutable         = None
-    is_sparse          = False
+    is_sparse          = None
     zero               = S.Zero
     one                = S.One
 

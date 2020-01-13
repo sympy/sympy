@@ -40,6 +40,7 @@ class DenseMatrix(MatrixBase):
     _op_priority    = 10.01
     _class_priority = 4
     is_MatrixExpr   = False
+    is_sparse       = False
 
     def __eq__(self, other):
         other = sympify(other)
@@ -421,6 +422,8 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
+    is_mutable = True
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
