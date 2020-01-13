@@ -13,7 +13,7 @@ from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
-    Iterable, as_int, is_sequence, range, reduce)
+    Iterable, as_int, is_sequence, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol

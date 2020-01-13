@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import divisors
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, range)
+    default_sort_key)
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)

@@ -9,7 +9,6 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
-from sympy.core.compatibility import range
 
 from .printer import Printer
 

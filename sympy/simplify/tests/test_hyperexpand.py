@@ -13,7 +13,6 @@ from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.testing.randtest import verify_numerically as tn
-from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar, Rational)

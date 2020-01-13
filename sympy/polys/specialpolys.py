@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.core.compatibility import range
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt

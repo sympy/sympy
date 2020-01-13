@@ -12,7 +12,7 @@ import textwrap
 import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, range, builtins, PY3)
+    NotIterable, builtins, PY3)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 

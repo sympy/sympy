@@ -4,8 +4,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core import SympifyError, Add
-from sympy.core.compatibility import Callable, as_int, is_sequence, range, \
-    reduce
+from sympy.core.compatibility import Callable, as_int, is_sequence, reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul

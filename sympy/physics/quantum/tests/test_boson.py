@@ -1,5 +1,4 @@
 from sympy import sqrt, exp, prod, Rational
-from sympy.core.compatibility import range
 from sympy.physics.quantum import Dagger, Commutator, qapply
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.boson import (
