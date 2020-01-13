@@ -42,7 +42,9 @@ class Determinant(Expr):
 
 # The following is here so that code which does
 # ``from sympy.matrices.expressions.determinant import det`` continues to work.
-from ..determinant import det
+# Can't do just ``from ..determinant import det`` becaues flake8 flakes out.
+from ..determinant import det as _det
+det = _det
 
 
 from sympy.assumptions.ask import ask, Q
