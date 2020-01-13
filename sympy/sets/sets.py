@@ -1762,11 +1762,11 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
     is_empty = False
     is_finite_set = True
-    
+
     def factor(self, *gens, **args): 
         from sympy.polys import factor 
         return factor(self, *gens, **args)
-    
+
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         if evaluate:
