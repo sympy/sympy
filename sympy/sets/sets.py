@@ -1766,18 +1766,6 @@ class FiniteSet(Set, EvalfMixin):
         """See the factor() function in sympy.polys.polytools""" 
         from sympy.polys import factor 
         return factor(self, *gens, **args)
-   
-    def factor(self, *args, **kwargs):
-        from sympy.polys import factor as fctr
-        """
-        Implements the SymPy factor routine, on the scalar parts
-        of a basis-dependent expression.
-        factor's documentation
-        ========================
-        """
-        fctr_components = [fctr(v, *args, **kwargs) * k for
-                           k, v in self.components.items()]
-        return self._add_func(*fctr_components)
     
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
