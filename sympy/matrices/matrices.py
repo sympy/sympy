@@ -4278,59 +4278,239 @@ class MatrixBase(MatrixDeprecated,
         return L, U, p
 
 
-    def LUdecomposition_Simple(self,
-                               iszerofunc=_iszero,
-                               simpfunc=None,
-                               rankcheck=False,
-                               dotprodsimp=None):
-        """Compute an lu decomposition of m x n matrix A, where P*A = L*U
+    def LUdecomposition_Simple(
+        self, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
+        dotprodsimp=None):
+        r"""Compute the PLU decomposition of the matrix.
 
-        * L is m x m lower triangular with unit diagonal
-        * U is m x n upper triangular
-        * P is an m x m permutation matrix
+        Parameters
+        ==========
 
-        Returns an m x n matrix lu, and an m element list perm where each
-        element of perm is a pair of row exchange indices.
+        rankcheck : bool, optional
+            Determines if this function should detect the rank
+            deficiency of the matrixis and should raise a
+            ``ValueError``.
 
-        The factors L and U are stored in lu as follows:
-        The subdiagonal elements of L are stored in the subdiagonal elements
-        of lu, that is lu[i, j] = L[i, j] whenever i > j.
-        The elements on the diagonal of L are all 1, and are not explicitly
-        stored.
-        U is stored in the upper triangular portion of lu, that is
-        lu[i ,j] = U[i, j] whenever i <= j.
-        The output matrix can be visualized as:
+        iszerofunc : function, optional
+            A function which determines if a given expression is zero.
 
-            Matrix([
-                [u, u, u, u],
-                [l, u, u, u],
-                [l, l, u, u],
-                [l, l, l, u]])
+            The function should be a callable that takes a single
+            sympy expression and returns a 3-valued boolean value
+            ``True``, ``False``, or ``None``.
 
-        where l represents a subdiagonal entry of the L factor, and u
-        represents an entry from the upper triangular entry of the U
-        factor.
+            It is internally used by the pivot searching algorithm.
+            See the notes section for a more information about the
+            pivot searching algorithm.
 
-        perm is a list row swap index pairs such that if A is the original
-        matrix, then A = (L*U).permuteBkwd(perm), and the row permutation
-        matrix P such that ``P*A = L*U`` can be computed by
-        ``P=eye(A.row).permuteFwd(perm)``.
+        simpfunc : function or None, optional
+            A function that simplifies the input.
 
-        The keyword argument rankcheck determines if this function raises a
-        ValueError when passed a matrix whose rank is strictly less than
-        min(num rows, num cols). The default behavior is to decompose a rank
-        deficient matrix. Pass rankcheck=True to raise a
-        ValueError instead. (This mimics the previous behavior of this function).
+            If this is specified as a function, this function should be
+            a callable that takes a single sympy expression and returns
+            an another sympy expression that is algebraically
+            equivalent.
 
-        The keyword arguments iszerofunc and simpfunc are used by the pivot
-        search algorithm.
-        iszerofunc is a callable that returns a boolean indicating if its
-        input is zero, or None if it cannot make the determination.
-        simpfunc is a callable that simplifies its input.
-        The default is simpfunc=None, which indicate that the pivot search
-        algorithm should not attempt to simplify any candidate pivots.
-        If simpfunc fails to simplify its input, then it must return its input
-        instead of a copy.
+            If ``None``, it indicates that the pivot search algorithm
+            should not attempt to simplify any candidate pivots.
+
+            It is internally used by the pivot searching algorithm.
+            See the notes section for a more information about the
+            pivot searching algorithm.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification
+            is used during matrix multiplications to control expression
+            blowup and thus speed up calculation.
+
+        Returns
+        =======
+
+        (lu, row_swaps) : (Matrix, list)
+            If the original matrix is a $m, n$ matrix:
+
+            *lu* is a $m, n$ matrix, which contains result of the
+            decomposition in a compresed form. See the notes section
+            to see how the matrix is compressed.
+
+            *row_swaps* is a $m$-element list where each element is a
+            pair of row exchange indices.
+
+            ``A = (L*U).permute_backward(perm)``, and the row
+            permutation matrix $P$ from the formula $P A = L U$ can be
+            computed by ``P=eye(A.row).permute_forward(perm)``.
+
+        Raises
+        ======
+
+        ValueError
+            Raised if ``rankcheck=True`` and the matrix is found to
+            be rank deficient during the computation.
+
+        Notes
+        =====
+
+        About the PLU decomposition:
+
+        PLU decomposition is a generalization of a LU decomposition
+        which can be extended for rank-deficient matrices.
+
+        It can further be generalized for non-square matrices, and this
+        is the notation that SymPy is using.
+
+        PLU decomposition is a decomposition of a $m, n$ matrix $A$ in
+        the form of $P A = L U$ where
+
+        * $L$ is a $m, m$ lower triangular matrix with unit diagonal
+          entries.
+        * $U$ is a $m, n$ upper triangular matrix.
+        * $P$ is a $m, m$ permutation matrix.
+
+        So, for a square matrix, the decomposition would look like:
+
+        .. math::
+            L = \begin{bmatrix}
+            1 & 0 & 0 & \cdots & 0 \\
+            L_{1, 0} & 1 & 0 & \cdots & 0 \\
+            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1
+            \end{bmatrix}
+
+        .. math::
+            U = \begin{bmatrix}
+            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
+            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
+            0 & 0 & U_{2, 2} & \cdots & U_{2, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            0 & 0 & 0 & \cdots & U_{n-1, n-1}
+            \end{bmatrix}
+
+        And for a matrix with more rows than the columns,
+        the decomposition would look like:
+
+        .. math::
+            L = \begin{bmatrix}
+            1 & 0 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+            L_{1, 0} & 1 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 & 0 & \cdots & 0 \\
+            \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \ddots
+            & \vdots \\
+            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1 & 0
+            & \cdots & 0 \\
+            L_{n, 0} & L_{n, 1} & L_{n, 2} & \cdots & L_{n, n-1} & 1
+            & \cdots & 0 \\
+            \vdots & \vdots & \vdots & \ddots & \vdots & \vdots
+            & \ddots & \vdots \\
+            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & L_{m-1, n-1}
+            & 0 & \cdots & 1 \\
+            \end{bmatrix}
+
+        .. math::
+            U = \begin{bmatrix}
+            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
+            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
+            0 & 0 & U_{2, 2} & \cdots & U_{2, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            0 & 0 & 0 & \cdots & U_{n-1, n-1} \\
+            0 & 0 & 0 & \cdots & 0 \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            0 & 0 & 0 & \cdots & 0
+            \end{bmatrix}
+
+        Finally, for a matrix with more columns than the rows, the
+        decomposition would look like:
+
+        .. math::
+            L = \begin{bmatrix}
+            1 & 0 & 0 & \cdots & 0 \\
+            L_{1, 0} & 1 & 0 & \cdots & 0 \\
+            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1
+            \end{bmatrix}
+
+        .. math::
+            U = \begin{bmatrix}
+            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, m-1}
+            & \cdots & U_{0, n-1} \\
+            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, m-1}
+            & \cdots & U_{1, n-1} \\
+            0 & 0 & U_{2, 2} & \cdots & U_{2, m-1}
+            & \cdots & U_{2, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots
+            & \cdots & \vdots \\
+            0 & 0 & 0 & \cdots & U_{m-1, m-1}
+            & \cdots & U_{m-1, n-1} \\
+            \end{bmatrix}
+
+        About the compressed LU storage:
+
+        The results of the decomposition are often stored in compressed
+        forms rather than returning $L$ and $U$ matrices individually.
+
+        It may be less intiuitive, but it is commonly used for a lot of
+        numeric libraries because of the efficiency.
+
+        The storage matrix is defined as following for this specific
+        method:
+
+        * The subdiagonal elements of $L$ are stored in the subdiagonal
+          portion of $LU$, that is $LU_{i, j} = L_{i, j}$ whenever
+          $i > j$.
+        * The elements on the diagonal of $L$ are all 1, and are not
+          explicitly stored.
+        * $U$ is stored in the upper triangular portion of $LU$, that is
+          $LU_{i, j} = U_{i, j}$ whenever $i <= j$.
+        * For a case of $m > n$, the right side of the $L$ matrix is
+          trivial to store.
+        * For a case of $m < n$, the below side of the $U$ matrix is
+          trivial to store.
+
+        So, for a square matrix, the compressed output matrix would be:
+
+        .. math::
+            LU = \begin{bmatrix}
+            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
+            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
+            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & U_{n-1, n-1}
+            \end{bmatrix}
+
+        For a matrix with more rows than the columns, the compressed
+        output matrix would be:
+
+        .. math::
+            LU = \begin{bmatrix}
+            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
+            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
+            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots
+            & U_{n-1, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots
+            & L_{m-1, n-1} \\
+            \end{bmatrix}
+
+        For a matrix with more columns than the rows, the compressed
+        output matrix would be:
+
+        .. math::
+            LU = \begin{bmatrix}
+            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, m-1}
+            & \cdots & U_{0, n-1} \\
+            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, m-1}
+            & \cdots & U_{1, n-1} \\
+            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, m-1}
+            & \cdots & U_{2, n-1} \\
+            \vdots & \vdots & \vdots & \ddots & \vdots
+            & \cdots & \vdots \\
+            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & U_{m-1, m-1}
+            & \cdots & U_{m-1, n-1} \\
+            \end{bmatrix}
+
+        About the pivot searching algorithm:
 
         When a matrix contains symbolic entries, the pivot search algorithm
         differs from the case where every entry can be categorized as zero or
@@ -4353,14 +4533,6 @@ class MatrixBase(MatrixDeprecated,
         relies on ``_find_reasonable_pivot()``.
         Future versions of ``LUdecomposition_simple()`` may use
         ``_find_reasonable_pivot()``.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         See Also
         ========
