@@ -9,7 +9,7 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag, Operator, CompositeOperator)
+    Heaviside, dirichlet_eta, diag, Op, CompositeOp)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
@@ -6935,15 +6935,15 @@ def test_issue_17857():
     assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
     assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
 
-def test_Operator():
-    assert pretty(Operator(sin)) == 'sin'
+def test_Op():
+    assert pretty(Op(sin)) == 'sin'
 
-def test_CompositeOperator():
-    assert pretty(CompositeOperator(sin, cos)) == 'sin ⚬ cos'
+def test_CompositeOp():
+    assert pretty(CompositeOp(sin, cos)) == 'sin ⚬ cos'
 
-def test_AppliedOperator():
-    assert pretty(CompositeOperator(sin, cos)(x, evaluate=False)) == '(sin ⚬ cos)(x)'
+def test_AppliedOp():
+    assert pretty(CompositeOp(sin, cos)(x, evaluate=False)) == '(sin ⚬ cos)(x)'
 
-def test_DerivatedOperator():
+def test_DerivatedOp():
     assert pretty(sin.deriv(0,3)) == "sin'''"
     assert pretty(sin.deriv(0,10)) == '   (10)\nsin    '

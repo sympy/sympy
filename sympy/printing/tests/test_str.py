@@ -4,7 +4,7 @@ from sympy import (Abs, Add, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, Operator)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, Op)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -855,9 +855,9 @@ def test_str_special_matrices():
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
 
-def test_Operator():
-    assert str(Operator(sin)) == 'sin'
+def test_Op():
+    assert str(Op(sin)) == 'sin'
 
-def test_DerivatedOperator():
+def test_DerivatedOp():
     assert str(sin.deriv(0,3)) == "sin'''"
-    assert str(sin.deriv(0,10)) == 'DerivatedOperator(sin, (0, 10))'
+    assert str(sin.deriv(0,10)) == 'DerivatedOp(sin, (0, 10))'

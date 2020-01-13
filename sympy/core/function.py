@@ -267,66 +267,66 @@ class FunctionClass(ManagedProperties):
         return cls.__name__
 
     def __pos__(cls):
-        from sympy.operator import Operator
-        return Operator(cls)
+        from sympy.operator import Op
+        return Op(cls)
 
     def __neg__(cls):
-        from sympy.operator import Operator
-        return -Operator(cls)
+        from sympy.operator import Op
+        return -Op(cls)
 
     def __add__(cls, other):
-        from sympy.operator import OperatorAdd
-        return OperatorAdd(cls, other)
+        from sympy.operator import OpAdd
+        return OpAdd(cls, other)
 
     def __radd__(cls, other):
-        from sympy.operator import OperatorAdd
-        return OperatorAdd(other, cls)
+        from sympy.operator import OpAdd
+        return OpAdd(other, cls)
 
     def __sub__(cls, other):
-        from sympy.operator import OperatorAdd
-        return OperatorAdd(cls, -other)
+        from sympy.operator import OpAdd
+        return OpAdd(cls, -other)
 
     def __rsub__(cls, other):
-        from sympy.operator import OperatorAdd
-        return OperatorAdd(-cls, other)
+        from sympy.operator import OpAdd
+        return OpAdd(-cls, other)
 
     def __mul__(cls, other):
-        from sympy.operator import OperatorMul
-        return OperatorMul(cls, other)
+        from sympy.operator import OpMul
+        return OpMul(cls, other)
 
     def __rmul__(cls, other):
-        from sympy.operator import OperatorMul
-        return OperatorMul(other, cls)
+        from sympy.operator import OpMul
+        return OpMul(other, cls)
 
     def __pow__(self, other):
-        from sympy.operator import OperatorPow
-        return OperatorPow(self, other)
+        from sympy.operator import OpPow
+        return OpPow(self, other)
 
     def __rpow__(self, other):
-        from sympy.operator import OperatorPow
-        return OperatorPow(other, self)
+        from sympy.operator import OpPow
+        return OpPow(other, self)
 
     def __div__(self, other):
         from sympy.core.singleton import S
-        from sympy.operator import OperatorMul, OperatorPow
-        return OperatorMul(self, OperatorPow(other, S.NegativeOne))
+        from sympy.operator import OpMul, OpPow
+        return OpMul(self, OpPow(other, S.NegativeOne))
 
     def __rdiv__(self, other):
         from sympy.core.singleton import S
-        from sympy.operator import OperatorMul, OperatorPow
-        return OperatorMul(other, OperatorPow(self, S.NegativeOne))
+        from sympy.operator import OpMul, OpPow
+        return OpMul(other, OpPow(self, S.NegativeOne))
 
     def __matmul__(self, other):
-        from sympy.operator import CompositeOperator
-        return CompositeOperator(self, other)
+        from sympy.operator import CompositeOp
+        return CompositeOp(self, other)
 
     def __rmatmul__(self, other):
-        from sympy.operator import CompositeOperator
-        return CompositeOperator(other, self)
+        from sympy.operator import CompositeOp
+        return CompositeOp(other, self)
 
     def deriv(self, *argidxs, **kwargs):
-        from sympy.operator import DerivatedOperator
-        return DerivatedOperator(self, *argidxs, **kwargs)
+        from sympy.operator import DerivatedOp
+        return DerivatedOp(self, *argidxs, **kwargs)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__

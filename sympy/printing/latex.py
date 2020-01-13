@@ -2513,23 +2513,24 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
-    def _print_Operator(self, expr):
+    def _print_Op(self, expr):
+        from sympy.core.expr import Expr
         if [*expr.argidxs] == [0]:
             result = self._print(expr.operator)
         elif len(expr.argidxs) == 1 and len(expr.argidxs[0]) == 1 and [*expr.argidxs[0]] == [0]:
             result = self._print(expr.operator)
-        elif isinstance(expr.operator, Basic):
+        elif isinstance(expr.operator, Expr):
             result = self._print(expr.operator)
         else:
             result = self._print_Basic(expr)
         return result
 
-    def _print_AppliedOperator(self, expr):
+    def _print_AppliedOp(self, expr):
         operator_str = r"\left({}\right)".format(self._print(expr.operator))
         args_str = r"\left({}\right)".format(",".join([self._print(a) for a in expr.arguments]))
         return operator_str + args_str
 
-    def _print_CompositeOperator(self, expr):
+    def _print_CompositeOp(self, expr):
         if len(expr.gs) == 1:
             f, (g,) = expr.f, expr.gs
             result = r" \circ ".join([self._print(a) for a in (f,g)])
@@ -2537,7 +2538,7 @@ class LatexPrinter(Printer):
             result = self._print_Basic(expr)
         return result
 
-    def _print_DerivatedOperator(self, expr, max_primnum=3):
+    def _print_DerivatedOp(self, expr, max_primnum=3):
         if len(expr.argidxs) == 1 and expr.argidxs[0][0] == 0:
             prime = r"\prime"
             num_of_prime = expr.argidxs[0][1]

@@ -242,7 +242,7 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
 
 from .testing import test, doctest
 
-from .operator import Operator, CompositeOperator
+from .operator import Op, CompositeOp
 
 # This module causes conflicts with other modules:
 # from .stats import *
@@ -487,7 +487,7 @@ __all__ = [
     'TableForm', 'dotprint', 'maple_code', 'print_maple_code',
 
     # sympy.operator
-    'Operator', 'CompositeOperator',
+    'Op', 'CompositeOp',
 
     # sympy.plotting
     'plot', 'textplot', 'plot_backends', 'plot_implicit', 'plot_parametric',

@@ -20,7 +20,7 @@ from sympy import (
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW, Operator, CompositeOperator)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW, Op, CompositeOp)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -2553,15 +2553,15 @@ def test_issue_17857():
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
 
-def test_Operator():
-    assert latex(Operator(sin)) == r'\sin'
+def test_Op():
+    assert latex(Op(sin)) == r'\sin'
 
-def test_CompositeOperator():
-    assert latex(CompositeOperator(sin, cos)) == r'\sin \circ \cos'
+def test_CompositeOp():
+    assert latex(CompositeOp(sin, cos)) == r'\sin \circ \cos'
 
-def test_AppliedOperator():
-    assert latex(CompositeOperator(sin, cos)(x, evaluate=False)) == r'\left(\sin \circ \cos\right)\left(x\right)'
+def test_AppliedOp():
+    assert latex(CompositeOp(sin, cos)(x, evaluate=False)) == r'\left(\sin \circ \cos\right)\left(x\right)'
 
-def test_DerivatedOperator():
+def test_DerivatedOp():
     assert latex(sin.deriv(0,3)) == r'\sin^{\prime\prime\prime}'
     assert latex(sin.deriv(0,10)) == r'\sin^{\left(10\right)}'

@@ -864,23 +864,23 @@ class StrPrinter(Printer):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
-    def _print_Operator(self, expr):
+    def _print_Op(self, expr):
+        from sympy.core.expr import Expr
         if [*expr.argidxs] == [0]:
             result = self._print(expr.operator)
         elif len(expr.argidxs) == 1 and len(expr.argidxs[0]) == 1 and [*expr.argidxs[0]] == [0]:
             result = self._print(expr.operator)
-        elif isinstance(expr.operator, Basic):
+        elif isinstance(expr.operator, Expr):
             result = self._print(expr.operator)
         else:
             result = self._print_Basic(expr)
         return result
 
-    def _print_AppliedOperator(self, expr):
-        from sympy.operator import Operator
+    def _print_AppliedOp(self, expr):
         operator_str = "(%s)" % self._print(expr.operator)
         return operator_str + "(%s)" % self.stringify(expr.arguments, ", ")
 
-    def _print_DerivatedOperator(self, expr, max_primnum=3):
+    def _print_DerivatedOp(self, expr, max_primnum=3):
         if len(expr.argidxs) == 1 and expr.argidxs[0][0] == 0:
             prime = r"'"
             num_of_prime = expr.argidxs[0][1]
