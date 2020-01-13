@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, as_int, string_types
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
@@ -91,12 +91,12 @@ def vfree_group(symbols):
 def _parse_symbols(symbols):
     if not symbols:
         return tuple()
-    if isinstance(symbols, string_types):
+    if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr or FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
-        if all(isinstance(s, string_types) for s in symbols):
+        if all(isinstance(s, str) for s in symbols):
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols

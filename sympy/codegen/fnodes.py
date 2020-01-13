@@ -10,7 +10,6 @@ from sympy.codegen.ast import (
     Token, _mk_Tuple, Variable
 )
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Function
@@ -305,7 +304,7 @@ def dimension(*args):
     for arg in args:
         if isinstance(arg, Extent):
             parameters.append(arg)
-        elif isinstance(arg, string_types):
+        elif isinstance(arg, str):
             if arg == ':':
                 parameters.append(Extent())
             else:
@@ -368,7 +367,7 @@ def array(symbol, dim, intent=None, **kwargs):
         return Variable(symbol, type_, value=value, attrs=attrs)
 
 def _printable(arg):
-    return String(arg) if isinstance(arg, string_types) else sympify(arg)
+    return String(arg) if isinstance(arg, str) else sympify(arg)
 
 
 def allocated(array):

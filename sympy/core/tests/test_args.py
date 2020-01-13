@@ -1648,6 +1648,10 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
     from sympy import MatrixSymbol
     assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
 
+def test_sympy__stats__stochastic_process_types__BernoulliProcess():
+    from sympy.stats.stochastic_process_types import BernoulliProcess
+    assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
+
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
     from sympy.stats.random_matrix_models import RandomMatrixEnsemble

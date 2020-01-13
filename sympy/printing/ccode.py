@@ -17,7 +17,7 @@ from functools import wraps
 from itertools import chain
 
 from sympy.core import S
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration,
@@ -306,7 +306,7 @@ class C89CodePrinter(CodePrinter):
         strides = getattr(expr.base, 'strides', None)
         indices = expr.indices
 
-        if strides is None or isinstance(strides, string_types):
+        if strides is None or isinstance(strides, str):
             dims = expr.shape
             shift = S.One
             temp = tuple()
@@ -443,7 +443,7 @@ class C89CodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -689,7 +689,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     def _print_math_func(self, expr, nest=False, known=None):
         if known is None:
             known = self.known_functions[expr.__class__.__name__]
-        if not isinstance(known, string_types):
+        if not isinstance(known, str):
             for cb, name in known:
                 if cb(*expr.args):
                     known = name
