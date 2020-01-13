@@ -940,7 +940,7 @@ class MeijerFormulaCollection(object):
                 return res
 
 
-class Operator(object):
+class _Operator(object):
     """
     Base class for operators to be applied to our functions.
 
@@ -971,10 +971,10 @@ class Operator(object):
         Examples
         ========
 
-        >>> from sympy.simplify.hyperexpand import Operator
+        >>> from sympy.simplify.hyperexpand import _Operator
         >>> from sympy.polys.polytools import Poly
         >>> from sympy.abc import x, y, z
-        >>> op = Operator()
+        >>> op = _Operator()
         >>> op._poly = Poly(x**2 + z*x + y, x)
         >>> op.apply(z**7, lambda f: f.diff(z))
         y*z**7 + 7*z**7 + 42*z**5
@@ -990,14 +990,14 @@ class Operator(object):
         return r
 
 
-class MultOperator(Operator):
+class MultOperator(_Operator):
     """ Simply multiply by a "constant" """
 
     def __init__(self, p):
         self._poly = Poly(p, _x)
 
 
-class ShiftA(Operator):
+class ShiftA(_Operator):
     """ Increment an upper index. """
 
     def __init__(self, ai):
@@ -1010,7 +1010,7 @@ class ShiftA(Operator):
         return '<Increment upper %s.>' % (1/self._poly.all_coeffs()[0])
 
 
-class ShiftB(Operator):
+class ShiftB(_Operator):
     """ Decrement a lower index. """
 
     def __init__(self, bi):
@@ -1023,7 +1023,7 @@ class ShiftB(Operator):
         return '<Decrement lower %s.>' % (1/self._poly.all_coeffs()[0] + 1)
 
 
-class UnShiftA(Operator):
+class UnShiftA(_Operator):
     """ Decrement an upper index. """
 
     def __init__(self, ap, bq, i, z):
@@ -1064,7 +1064,7 @@ class UnShiftA(Operator):
                                                         self._ap, self._bq)
 
 
-class UnShiftB(Operator):
+class UnShiftB(_Operator):
     """ Increment a lower index. """
 
     def __init__(self, ap, bq, i, z):
@@ -1106,7 +1106,7 @@ class UnShiftB(Operator):
                                                         self._ap, self._bq)
 
 
-class MeijerShiftA(Operator):
+class MeijerShiftA(_Operator):
     """ Increment an upper b index. """
 
     def __init__(self, bi):
@@ -1117,7 +1117,7 @@ class MeijerShiftA(Operator):
         return '<Increment upper b=%s.>' % (self._poly.all_coeffs()[1])
 
 
-class MeijerShiftB(Operator):
+class MeijerShiftB(_Operator):
     """ Decrement an upper a index. """
 
     def __init__(self, bi):
@@ -1128,7 +1128,7 @@ class MeijerShiftB(Operator):
         return '<Decrement upper a=%s.>' % (1 - self._poly.all_coeffs()[1])
 
 
-class MeijerShiftC(Operator):
+class MeijerShiftC(_Operator):
     """ Increment a lower b index. """
 
     def __init__(self, bi):
@@ -1139,7 +1139,7 @@ class MeijerShiftC(Operator):
         return '<Increment lower b=%s.>' % (-self._poly.all_coeffs()[1])
 
 
-class MeijerShiftD(Operator):
+class MeijerShiftD(_Operator):
     """ Decrement a lower a index. """
 
     def __init__(self, bi):
@@ -1150,7 +1150,7 @@ class MeijerShiftD(Operator):
         return '<Decrement lower a=%s.>' % (self._poly.all_coeffs()[1] + 1)
 
 
-class MeijerUnShiftA(Operator):
+class MeijerUnShiftA(_Operator):
     """ Decrement an upper b index. """
 
     def __init__(self, an, ap, bm, bq, i, z):
@@ -1196,7 +1196,7 @@ class MeijerUnShiftA(Operator):
                                       self._an, self._ap, self._bm, self._bq)
 
 
-class MeijerUnShiftB(Operator):
+class MeijerUnShiftB(_Operator):
     """ Increment an upper a index. """
 
     def __init__(self, an, ap, bm, bq, i, z):
@@ -1243,7 +1243,7 @@ class MeijerUnShiftB(Operator):
                                       self._an, self._ap, self._bm, self._bq)
 
 
-class MeijerUnShiftC(Operator):
+class MeijerUnShiftC(_Operator):
     """ Decrement a lower b index. """
     # XXX this is "essentially" the same as MeijerUnShiftA. This "essentially"
     #     can be made rigorous using the functional equation G(1/z) = G'(z),
@@ -1294,7 +1294,7 @@ class MeijerUnShiftC(Operator):
                                       self._an, self._ap, self._bm, self._bq)
 
 
-class MeijerUnShiftD(Operator):
+class MeijerUnShiftD(_Operator):
     """ Increment a lower a index. """
     # XXX This is essentially the same as MeijerUnShiftA.
     #     See comment at MeijerUnShiftC.
@@ -1343,7 +1343,7 @@ class MeijerUnShiftD(Operator):
                                       self._an, self._ap, self._bm, self._bq)
 
 
-class ReduceOrder(Operator):
+class ReduceOrder(_Operator):
     """ Reduce Order by cancelling an upper and a lower index. """
 
     def __new__(cls, ai, bj):
@@ -1356,7 +1356,7 @@ class ReduceOrder(Operator):
         if bj.is_integer and bj.is_nonpositive:
             return None
 
-        expr = Operator.__new__(cls)
+        expr = _Operator.__new__(cls)
 
         p = S.One
         for k in range(n):
@@ -1378,7 +1378,7 @@ class ReduceOrder(Operator):
         if n.is_negative or not n.is_Integer:
             return None
 
-        expr = Operator.__new__(cls)
+        expr = _Operator.__new__(cls)
 
         p = S.One
         for k in range(n):
@@ -1489,7 +1489,7 @@ def reduce_order_meijer(func):
 
 
 def make_derivative_operator(M, z):
-    """ Create a derivative operator, to be passed to Operator.apply. """
+    """ Create a derivative operator, to be passed to _Operator.apply. """
     def doit(C):
         r = z*C.diff(z) + C*M
         r = r.applyfunc(make_simp(z))
