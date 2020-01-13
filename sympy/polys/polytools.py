@@ -6239,7 +6239,6 @@ def sqf_list(f, *gens, **args):
             coeff *= cf
             for sqf_fac in sqf_facs:
                 facs.append((sqf_fac[0] , e*sqf_fac[1]))
-    
     facs = _sorted_factors(facs, 'sqf')
     if not opt.polys:
         facs = [(f.as_expr(), k) for f, k in facs]
