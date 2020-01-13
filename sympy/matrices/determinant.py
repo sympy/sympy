@@ -318,14 +318,11 @@ def _adjugate(M, method="berkowitz", dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import adjugate
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> adjugate(M)
+    >>> M.adjugate()
     Matrix([
     [ 4, -2],
     [-3,  1]])
-    >>> adjugate(M) == M.adjugate()
-    True
 
     See Also
     ========
@@ -358,9 +355,8 @@ def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
 
     >>> from sympy import Matrix
     >>> from sympy.abc import x, y
-    >>> from sympy.matrices import charpoly
     >>> A = Matrix([[1, 3], [2, 0]])
-    >>> charpoly(A, x) == charpoly(A, y)
+    >>> A.charpoly(x) == A.charpoly(y)
     True
     >>> A.charpoly(x) == A.charpoly(y)
     True
@@ -368,7 +364,7 @@ def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     Specifying ``x`` is optional; a symbol named ``lambda`` is used by
     default (which looks good when pretty-printed in unicode):
 
-    >>> charpoly(A).as_expr()
+    >>> A.charpoly().as_expr()
     lambda**2 - lambda - 6
 
     And if ``x`` clashes with an existing symbol, underscores will
