@@ -6,6 +6,7 @@ from sympy import Float
 from sympy.core.compatibility import default_sort_key
 from sympy.core.sympify import sympify
 from sympy.simplify import nsimplify
+from sympy.utilities.decorator import doctest_depends_on
 
 from .common import NonSquareMatrixError
 from .dense import MutableDenseMatrix
@@ -217,6 +218,7 @@ class NumPyMatrix(MutableDenseMatrix):
 
         return sympify(npl.matrix_rank(self._arr))
 
+    @doctest_depends_on(modules=('numpy',))
     def eigenvals(self, *args, multiple=False, rational=True, **kwargs):
         """Returns the eigenvalues of the matrix using ``numpy.linalg.eigvals``.
 
@@ -254,6 +256,7 @@ class NumPyMatrix(MutableDenseMatrix):
         else:
             return [simpfunc(v) for v in evals]
 
+    @doctest_depends_on(modules=('numpy',))
     def eigenvects(self, *args, rational=True, **kwargs):
         """Returns the eigenvalues and eigenvectors of the matrix using
         ``numpy.linalg.eigv``.
