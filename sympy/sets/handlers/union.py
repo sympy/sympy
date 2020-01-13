@@ -6,31 +6,31 @@ from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
 from sympy.sets.sets import UniversalSet
 
 
-@dispatch(Naturals0, Naturals)
+@dispatch(Naturals0, Naturals)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Rationals, Naturals)
+@dispatch(Rationals, Naturals)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Rationals, Naturals0)
+@dispatch(Rationals, Naturals0)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Reals, Naturals)
+@dispatch(Reals, Naturals)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Reals, Naturals0)
+@dispatch(Reals, Naturals0)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Reals, Rationals)
+@dispatch(Reals, Rationals)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Integers, Set)
+@dispatch(Integers, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     intersect = Intersection(a, b)
     if intersect == a:
@@ -38,7 +38,7 @@ def union_sets(a, b): # noqa:F811
     elif intersect == b:
         return a
 
-@dispatch(ComplexRegion, Set)
+@dispatch(ComplexRegion, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     if b.is_subset(S.Reals):
         # treat a subset of reals as a complex region
@@ -53,16 +53,16 @@ def union_sets(a, b): # noqa:F811
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(type(EmptySet), Set)
+@dispatch(type(EmptySet), Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return b
 
 
-@dispatch(UniversalSet, Set)
+@dispatch(UniversalSet, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(ProductSet, ProductSet)
+@dispatch(ProductSet, ProductSet)  # type: ignore
 def union_sets(a, b): # noqa:F811
     if b.is_subset(a):
         return a
@@ -77,13 +77,13 @@ def union_sets(a, b): # noqa:F811
             return Union(a1, b1) * a2
     return None
 
-@dispatch(ProductSet, Set)
+@dispatch(ProductSet, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     if b.is_subset(a):
         return a
     return None
 
-@dispatch(Interval, Interval)
+@dispatch(Interval, Interval)  # type: ignore
 def union_sets(a, b): # noqa:F811
     if a._is_comparable(b):
         from sympy.functions.elementary.miscellaneous import Min, Max
@@ -103,11 +103,11 @@ def union_sets(a, b): # noqa:F811
                           (b.end != end or b.right_open))
             return Interval(start, end, left_open, right_open)
 
-@dispatch(Interval, UniversalSet)
+@dispatch(Interval, UniversalSet)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return S.UniversalSet
 
-@dispatch(Interval, Set)
+@dispatch(Interval, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     # If I have open end points and these endpoints are contained in b
     # But only in case, when endpoints are finite. Because
@@ -126,11 +126,11 @@ def union_sets(a, b): # noqa:F811
         return set((new_a, b))
     return None
 
-@dispatch(FiniteSet, FiniteSet)
+@dispatch(FiniteSet, FiniteSet)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return FiniteSet(*(a._elements | b._elements))
 
-@dispatch(FiniteSet, Set)
+@dispatch(FiniteSet, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
@@ -138,6 +138,6 @@ def union_sets(a, b): # noqa:F811
             FiniteSet(*[x for x in a if b.contains(x) != True]), b))
     return None
 
-@dispatch(Set, Set)
+@dispatch(Set, Set)  # type: ignore
 def union_sets(a, b): # noqa:F811
     return None
