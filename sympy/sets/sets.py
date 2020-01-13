@@ -27,7 +27,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
 from mpmath import mpi, mpf
-from sympy.vector.basisdependent import factor as fctr
+from sympy.polys import factor
 
 tfn = defaultdict(lambda: None, {
     True: S.true,
@@ -1771,7 +1771,7 @@ class FiniteSet(Set, EvalfMixin):
         factor's documentation
         ========================
         """
-        fctr_components = [fctr(v, *args, **kwargs) * k for
+        fctr_components = [factor(v, *args, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*fctr_components)
     
