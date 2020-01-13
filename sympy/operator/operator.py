@@ -8,18 +8,18 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
-class OperatorExpr(Expr):
-    """Basic class for every operator classes.
+class OpExpr(Expr):
+    """Basic class for every operator classes.  'Op' stands for 'Operator'.
     """
 
     _op_priority = 20 # This is some random big value
 
     def __call__(self, *args, evaluate=True, **kwargs):
         args = sympify(args)
-        return AppliedOperator(self, args, evaluate=evaluate, **kwargs)
+        return AppliedOp(self, args, evaluate=evaluate, **kwargs)
 
     def _eval_operation(self, *args, **kwargs):
-        """Every subclasses of OperatorExpr should override this.
+        """Every subclasses of OpExpr should override this.
         """
         raise NotImplementedError()
 
@@ -27,60 +27,60 @@ class OperatorExpr(Expr):
         return self
 
     def __neg__(self):
-        from .operatorop import OperatorMul
-        return OperatorMul(-1, self)
+        from .operatorop import OpMul
+        return OpMul(-1, self)
 
     def __add__(self, other):
-        from .operatorop import OperatorAdd
-        return OperatorAdd(self, other)
+        from .operatorop import OpAdd
+        return OpAdd(self, other)
 
     def __radd__(self, other):
-        from .operatorop import OperatorAdd
-        return OperatorAdd(other, self)
+        from .operatorop import OpAdd
+        return OpAdd(other, self)
 
     def __sub__(self, other):
-        from .operatorop import OperatorAdd
-        return OperatorAdd(self, -other)
+        from .operatorop import OpAdd
+        return OpAdd(self, -other)
 
     def __rsub__(self, other):
-        from .operatorop import OperatorAdd
-        return OperatorAdd(-self, other)
+        from .operatorop import OpAdd
+        return OpAdd(-self, other)
 
     def __mul__(self, other):
-        from .operatorop import OperatorMul
-        return OperatorMul(self, other)
+        from .operatorop import OpMul
+        return OpMul(self, other)
 
     def __rmul__(self, other):
-        from .operatorop import OperatorMul
-        return OperatorMul(other, self)
+        from .operatorop import OpMul
+        return OpMul(other, self)
 
     def __pow__(self, other):
-        from .operatorop import OperatorPow
-        return OperatorPow(self, other)
+        from .operatorop import OpPow
+        return OpPow(self, other)
 
     def __rpow__(self, other):
-        from .operatorop import OperatorPow
-        return OperatorPow(other, self)
+        from .operatorop import OpPow
+        return OpPow(other, self)
 
     def __div__(self, other):
-        from .operatorop import OperatorMul, OperatorPow
-        return OperatorMul(self, OperatorPow(other, S.NegativeOne))
+        from .operatorop import OpMul, OpPow
+        return OpMul(self, OpPow(other, S.NegativeOne))
 
     def __rdiv__(self, other):
-        from .operatorop import OperatorMul, OperatorPow
-        return OperatorMul(other, OperatorPow(self, S.NegativeOne))
+        from .operatorop import OpMul, OpPow
+        return OpMul(other, OpPow(self, S.NegativeOne))
 
     def __matmul__(self, other):
-        from .composite import CompositeOperator
-        return CompositeOperator(self, other)
+        from .composite import CompositeOp
+        return CompositeOp(self, other)
 
     def __rmatmul__(self, other):
-        from .composite import CompositeOperator
-        return CompositeOperator(other, self)
+        from .composite import CompositeOp
+        return CompositeOp(other, self)
 
     def deriv(self, *argidxs, **kwargs):
-        from .derivative import DerivatedOperator
-        return DerivatedOperator(self, *argidxs, **kwargs)
+        from .derivative import DerivatedOp
+        return DerivatedOp(self, *argidxs, **kwargs)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -88,15 +88,15 @@ class OperatorExpr(Expr):
 
     @classmethod
     def _process_operator(cls, *args):
-        """Unnest the Operator and wrap the arguments with Operator.
+        """Unnest the Op and wrap the arguments with Op.
         """
         args = [sympify(a) for a in args]
         newargs = []
         for a in args:
             if isinstance(a, FunctionClass):
-                newargs.append(Operator(a))
+                newargs.append(Op(a))
             elif isinstance(a, Expr):
-                if isinstance(a, Operator):
+                if isinstance(a, Op):
                     if isinstance(a.operator, FunctionClass):
                         newargs.append(a)
                     elif isinstance(a.operator, Expr):
@@ -107,7 +107,7 @@ class OperatorExpr(Expr):
                 newargs.append(a)
         return newargs
 
-class Operator(OperatorExpr, Atom):
+class Op(OpExpr, Atom):
     def __new__(cls, operator, argidxs=None, **kwargs):
         """
         Atomic operator.
@@ -116,9 +116,9 @@ class Operator(OperatorExpr, Atom):
         ===========
 
         This class wraps a single ``FunctionClass`` or ``Expr`` instance.
-        Operator wrapping ``Expr`` instance is considered as a constant function.
+        Op wrapping ``Expr`` instance is considered as a constant function.
         Calling it with arguments will always return the original ``Expr`` instance.
-        Operator wrapping ``FunctionClass`` instance is considered as a operator.
+        Op wrapping ``FunctionClass`` instance is considered as a operator.
         Calling it with arguments return result of calling original ``FunctionClass``
         instance.
         One may choose which arguments among the passed will be used with
@@ -128,30 +128,30 @@ class Operator(OperatorExpr, Atom):
         ========
 
         >>> from sympy import sin, cos
-        >>> from sympy.operator import Operator
+        >>> from sympy.operator import Op
         >>> from sympy.abc import x,y,z
 
-        >>> Operator(1)
+        >>> Op(1)
         1
-        >>> Operator(sin)
+        >>> Op(sin)
         sin
 
-        >>> Operator(1)(x,y)
+        >>> Op(1)(x,y)
         1
-        >>> Operator(cos)(x,y,z)
+        >>> Op(cos)(x,y,z)
         cos(x)
 
-        >>> Operator(sin, (1,))(x,y,z)
+        >>> Op(sin, (1,))(x,y,z)
         sin(y)
 
         Basic operation between operators are supported.
 
-        >>> (Operator(sin) + Operator(cos))(x)
+        >>> (Op(sin) + Op(cos))(x)
         sin(x) + cos(x)
         >>> (sin+cos)(x)    # This can be used instead of the example above.
         sin(x) + cos(x)
 
-        >>> (Operator(sin) + Operator(cos, (1,)))(x,y)
+        >>> (Op(sin) + Op(cos, (1,)))(x,y)
         sin(x) + cos(y)
 
 
@@ -165,7 +165,7 @@ class Operator(OperatorExpr, Atom):
                 the arguments that will be actually passed.
                 If not given, automatially set according to the arity of operator.
         """
-        if isinstance(operator, OperatorExpr):
+        if isinstance(operator, OpExpr):
             return operator
 
         operator = sympify(operator)
@@ -178,7 +178,7 @@ class Operator(OperatorExpr, Atom):
 
         argidxs = cls._canonicalize_argidxs(argidxs)
 
-        obj = super(cls, Operator).__new__(cls, operator, argidxs, **kwargs)
+        obj = super(cls, Op).__new__(cls, operator, argidxs, **kwargs)
         obj.operator = operator
         obj.argidxs = argidxs
         return obj
@@ -218,7 +218,7 @@ class Operator(OperatorExpr, Atom):
             result = self.operator(*picked_args, **kwargs)
         return result
 
-class AppliedOperator(OperatorExpr):
+class AppliedOp(OpExpr):
     """
     Applied, but unevaluated operator.
 
@@ -232,22 +232,22 @@ class AppliedOperator(OperatorExpr):
     ========
 
     >>> from sympy import sin, cos, S
-    >>> from sympy.operator import Operator, AppliedOperator
+    >>> from sympy.operator import Op, AppliedOp
     >>> from sympy.abc import x,y,z
 
-    >>> Operator(1)(x, evaluate=False)
+    >>> Op(1)(x, evaluate=False)
     1
     >>> _ is S.One
     True
 
-    >>> Operator(sin)(x, evaluate=False)
+    >>> Op(sin)(x, evaluate=False)
     sin(x)
     >>> isinstance(_, sin)
     True
 
     >>> (1+sin)(x, evaluate=False)
     (1 + sin)(x)
-    >>> isinstance(_, AppliedOperator)
+    >>> isinstance(_, AppliedOp)
     True
 
     Parameters
@@ -258,9 +258,9 @@ class AppliedOperator(OperatorExpr):
     args : tuple of arguments
     """
     def __new__(cls, operator, args, evaluate=False, **kwargs):
-        if not isinstance(operator, OperatorExpr):
-            raise TypeError("%s must be instance of OperatorExpr." % operator)
-        if isinstance(operator, Operator):
+        if not isinstance(operator, OpExpr):
+            raise TypeError("%s must be instance of OpExpr." % operator)
+        if isinstance(operator, Op):
             if isinstance(operator.operator, FunctionClass):
                 return operator._eval_operation(*args, evaluate=evaluate, **kwargs)
             elif isinstance(operator.operator, Expr):
@@ -269,7 +269,7 @@ class AppliedOperator(OperatorExpr):
         if evaluate:
             obj = operator._eval_operation(*args, **kwargs)
         else:
-            obj = super(cls, AppliedOperator).__new__(cls, operator, args, **kwargs)
+            obj = super(cls, AppliedOp).__new__(cls, operator, args, **kwargs)
             obj.operator = obj.args[0]
             obj.arguments = obj.args[1]
 

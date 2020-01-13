@@ -1,31 +1,31 @@
 from sympy import cos, Function, sin, symbols
 from sympy.abc import x,y,z
-from sympy.operator import Operator
+from sympy.operator import Op
 
 f,g,h = symbols('f, g, h', cls=Function)
 
-def test_Operator():
-    assert Operator(1)(x,y,z) == 1
-    assert Operator(sin)(x) == sin(x)
-    assert Operator(cos)(y) == cos(y)
-    assert Operator(f)(x) == f(x)
-    assert Operator(g)(x,y) == g(x,y)
-    assert Operator(h(x))(x,y) == h(x)
+def test_Op():
+    assert Op(1)(x,y,z) == 1
+    assert Op(sin)(x) == sin(x)
+    assert Op(cos)(y) == cos(y)
+    assert Op(f)(x) == f(x)
+    assert Op(g)(x,y) == g(x,y)
+    assert Op(h(x))(x,y) == h(x)
 
-    assert Operator(sin)(x,y) == sin(x)
-    assert Operator(sin, (1,))(x,y,z) == sin(y)
+    assert Op(sin)(x,y) == sin(x)
+    assert Op(sin, (1,))(x,y,z) == sin(y)
 
-def test_AppliedOperator1():
+def test_AppliedOp1():
     """
-    Cases where AppliedOperator is force-evaluated.
+    Cases where AppliedOp is force-evaluated.
     """
-    assert Operator(1)(x,y, evaluate=False) == 1
-    assert Operator(f(x))(y,z, evaluate=False) == f(x)
-    assert Operator(sin)(x, evaluate=False) == sin(x)
+    assert Op(1)(x,y, evaluate=False) == 1
+    assert Op(f(x))(y,z, evaluate=False) == f(x)
+    assert Op(sin)(x, evaluate=False) == sin(x)
 
-def test_AppliedOperator2():
+def test_AppliedOp2():
     """
-    Cases where AppliedOperator is not force-evaluated.
+    Cases where AppliedOp is not force-evaluated.
     """
     op1 = sin+cos
     op2 = sin/cos

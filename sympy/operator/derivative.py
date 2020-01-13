@@ -1,10 +1,10 @@
 """Provides derivative operator, i.e. f'(x)."""
 
-from .operator import OperatorExpr, Operator
+from .operator import OpExpr, Op
 from sympy.core.compatibility import iterable
 from sympy.core.symbol import Dummy, symbols
 
-class DerivatedOperator(OperatorExpr):
+class DerivatedOp(OpExpr):
     """
     Derivated operator.
 
@@ -12,16 +12,16 @@ class DerivatedOperator(OperatorExpr):
     ========
 
     >>> from sympy import sin
-    >>> from sympy.operator import DerivatedOperator
+    >>> from sympy.operator import DerivatedOp
     >>> from sympy.abc import x
 
-    >>> DerivatedOperator(sin)
+    >>> DerivatedOp(sin)
     sin'
-    >>> DerivatedOperator(sin)(x, evaluate=False)
+    >>> DerivatedOp(sin)(x, evaluate=False)
     (sin')(x)
     >>> _.doit()
     cos(x)
-    >>> DerivatedOperator(sin, 2)(1, evaluate=False)
+    >>> DerivatedOp(sin, 2)(1, evaluate=False)
     (sin'')(1)
     >>> _.doit()
     -sin(1)
@@ -36,7 +36,7 @@ class DerivatedOperator(OperatorExpr):
             the argument.
     """
     def __new__(cls, operator, *argidxs, **kwargs):
-        operator = Operator(operator)
+        operator = Op(operator)
 
         if not argidxs:
             argidxs = ((0, 1),)
@@ -65,7 +65,7 @@ class DerivatedOperator(OperatorExpr):
                 argidxs_count[argidx] += n
         argidxs_count = sorted(list(argidxs_count.items()))
 
-        obj = super(cls, DerivatedOperator).__new__(cls, operator, *argidxs_count, **kwargs)
+        obj = super(cls, DerivatedOp).__new__(cls, operator, *argidxs_count, **kwargs)
         obj.operator = operator
         obj.argidxs = argidxs_count
 

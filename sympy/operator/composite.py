@@ -1,9 +1,9 @@
 """Composite operator."""
 
-from .operator import OperatorExpr, Operator
+from .operator import OpExpr, Op
 from sympy.core.containers import Tuple
 
-class CompositeOperator(OperatorExpr):
+class CompositeOp(OpExpr):
     """
     Composite operator.
 
@@ -14,7 +14,7 @@ class CompositeOperator(OperatorExpr):
     >>> from sympy.abc import x
 
     >>> sin@cos
-    CompositeOperator(sin, cos)
+    CompositeOp(sin, cos)
     >>> (sin@cos)(x)
     sin(cos(x))
     >>> (2@sin)(x)
@@ -25,16 +25,16 @@ class CompositeOperator(OperatorExpr):
     Parameters
     ==========
     f : instance of Expr or FunctionClass
-            Operator which will be evaluated.
+            Op which will be evaluated.
 
     gs : tuple of Expr or FunctionClass
-            Operators which will be passed as arguments of f.
+            Op which will be passed as arguments of f.
     """
     def __new__(cls, f, *gs, **kwargs):
-        f = Operator(f)
-        gs = [Operator(g) for g in gs]
+        f = Op(f)
+        gs = [Op(g) for g in gs]
         gs = Tuple(*gs)
-        obj = super(cls, CompositeOperator).__new__(cls, f, *gs, **kwargs)
+        obj = super(cls, CompositeOp).__new__(cls, f, *gs, **kwargs)
         obj.f = f
         obj.gs = gs
         return obj

@@ -1,6 +1,6 @@
 """Provides the basic operations between the operators."""
 
-from .operator import OperatorExpr, Operator
+from .operator import OpExpr, Op
 from collections import defaultdict
 from sympy.core.add import Add, _addsort
 from sympy.core.mul import Mul, NC_Marker, _mulsort
@@ -8,7 +8,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 
-class OperatorAdd(OperatorExpr, Add):
+class OpAdd(OpExpr, Add):
     """Added operator.
 
     Examples
@@ -157,16 +157,16 @@ class OperatorAdd(OperatorExpr, Add):
                     newseq.append(cs)
                 elif s.is_Add:
                     # we just re-create the unevaluated Mul
-                    if not isinstance(s, OperatorExpr):
+                    if not isinstance(s, OpExpr):
                         newseq.append(Mul(c, s, evaluate=False))
                     else:
-                        newseq.append(OperatorMul(c, s, evaluate=False))
+                        newseq.append(OpMul(c, s, evaluate=False))
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    if not isinstance(s, OperatorExpr):
+                    if not isinstance(s, OpExpr):
                         newseq.append(Mul(c, s))
                     else:
-                        newseq.append(OperatorMul(c, s))
+                        newseq.append(OpMul(c, s))
 
             noncommutative = noncommutative or not s.is_commutative
 
@@ -227,16 +227,16 @@ class OperatorAdd(OperatorExpr, Add):
 
     def __new__(cls, *args, **kwargs):
         new_args = cls._process_operator(*args)
-        obj = super(cls, OperatorAdd).__new__(cls, *new_args, **kwargs)
-        if not isinstance(obj, OperatorExpr):
-            return Operator(obj)
+        obj = super(cls, OpAdd).__new__(cls, *new_args, **kwargs)
+        if not isinstance(obj, OpExpr):
+            return Op(obj)
         return obj
 
     def _eval_operation(self, *args, **kwargs):
-        args = [a(*args, evaluate=True, **kwargs) if isinstance(a, OperatorExpr) else a for a in self.args]
+        args = [a(*args, evaluate=True, **kwargs) if isinstance(a, OpExpr) else a for a in self.args]
         return Add(*args)
 
-class OperatorMul(OperatorExpr, Mul):
+class OpMul(OpExpr, Mul):
     """Multiplied operator.
 
     Examples
@@ -259,9 +259,9 @@ class OperatorMul(OperatorExpr, Mul):
 
     def __new__(cls, *args, **kwargs):
         new_args = cls._process_operator(*args)
-        obj = super(cls, OperatorMul).__new__(cls, *new_args, **kwargs)
-        if not isinstance(obj, OperatorExpr):
-            return Operator(obj)
+        obj = super(cls, OpMul).__new__(cls, *new_args, **kwargs)
+        if not isinstance(obj, OpExpr):
+            return Op(obj)
         return obj
 
     @classmethod
@@ -714,7 +714,7 @@ class OperatorMul(OperatorExpr, Mul):
         return c_part, nc_part, order_symbols
 
     def _eval_operation(self, *args, **kwargs):
-        args = [a(*args, evaluate=True, **kwargs) if isinstance(a, OperatorExpr) else a for a in self.args]
+        args = [a(*args, evaluate=True, **kwargs) if isinstance(a, OpExpr) else a for a in self.args]
         return Mul(*args)
 
     def _eval_power(b, e):
@@ -723,12 +723,12 @@ class OperatorMul(OperatorExpr, Mul):
         cargs, nc = b.args_cnc(split_1=False)
 
         if e.is_Integer:
-            if not isinstance(b, OperatorExpr):
+            if not isinstance(b, OpExpr):
                 return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
                     Pow(Mul._from_args(nc), e, evaluate=False)
             else:
-                return OperatorMul(*[OperatorPow(b, e, evaluate=False) for b in cargs]) * \
-                    OperatorPow(OperatorMul._from_args(nc), e, evaluate=False)
+                return OpMul(*[OpPow(b, e, evaluate=False) for b in cargs]) * \
+                    OpPow(OpMul._from_args(nc), e, evaluate=False)
         if e.is_Rational and e.q == 2:
             from sympy.core.power import integer_nthroot
             from sympy.functions.elementary.complexes import sign
@@ -750,7 +750,7 @@ class OperatorMul(OperatorExpr, Mul):
 
         return p
 
-class OperatorPow(OperatorExpr, Pow):
+class OpPow(OpExpr, Pow):
     """Powered operator.
 
     Examples
@@ -775,13 +775,13 @@ class OperatorPow(OperatorExpr, Pow):
     """
     def __new__(cls, b, e, **kwargs):
         new_b, new_e = cls._process_operator(b, e)
-        obj = super(cls, OperatorPow).__new__(cls, new_b, new_e, **kwargs)
-        if not isinstance(obj, OperatorExpr):
-            return Operator(obj)
+        obj = super(cls, OpPow).__new__(cls, new_b, new_e, **kwargs)
+        if not isinstance(obj, OpExpr):
+            return Op(obj)
         return obj
 
     def _eval_operation(self, *args, **kwargs):
-        args = [a(*args, evaluate=True, **kwargs) if isinstance(a, OperatorExpr) else a for a in self.args]
+        args = [a(*args, evaluate=True, **kwargs) if isinstance(a, OpExpr) else a for a in self.args]
         return Pow(*args)
 
     def _eval_power(self, other):
@@ -824,9 +824,9 @@ class OperatorPow(OperatorExpr, Pow):
                     # floor arg. is 1/2 + arg(b)/2/pi
                     if _half(other):
                         if b.is_negative is True:
-                            return S.NegativeOne**other*OperatorPow(-b, e*other)
+                            return S.NegativeOne**other*OpPow(-b, e*other)
                         elif b.is_negative is False:
-                            return OperatorPow(b, -other)
+                            return OpPow(b, -other)
                 elif e.is_even:
                     if b.is_extended_real:
                         b = abs(b)
@@ -865,4 +865,4 @@ class OperatorPow(OperatorExpr, Pow):
                     s = None
 
         if s is not None:
-            return s*OperatorPow(b, e*other)
+            return s*OpPow(b, e*other)

@@ -8,7 +8,7 @@ class or ``Lambda`` instance.
 This modlue provides a wrapper of such classes, so that the classes themselves
 can behave as if they are instances of ``Expr``.
 """
-from .operator import *
-from .operatorop import *
-from .composite import *
-from .derivative import *
+from sympy.operator.operator import *
+from sympy.operator.operatorop import *
+from sympy.operator.composite import *
+from sympy.operator.derivative import *

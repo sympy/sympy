@@ -1,7 +1,7 @@
 from sympy import cos, sin
 from sympy.abc import x
-from sympy.operator import DerivatedOperator
+from sympy.operator import DerivatedOp
 
-def test_DerivatedOperator():
-    assert DerivatedOperator(sin)(x).doit() == cos(x)
-    assert DerivatedOperator(sin)(1).doit() == cos(1)
+def test_DerivatedOp():
+    assert DerivatedOp(sin)(x).doit() == cos(x)
+    assert DerivatedOp(sin)(1).doit() == cos(1)
