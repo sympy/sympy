@@ -1762,7 +1762,11 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
     is_empty = False
     is_finite_set = True
-
+    def factor(self, *gens, **args): 
+        """See the factor() function in sympy.polys.polytools""" 
+        from sympy.polys import factor 
+        return factor(self, *gens, **args)
+   
     def factor(self, *args, **kwargs):
         from sympy.polys import factor as fctr
         """
