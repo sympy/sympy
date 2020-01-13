@@ -1,7 +1,7 @@
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    Abs, Add, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -20,7 +20,7 @@ from sympy import (
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW, Operator, CompositeOperator)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -2551,3 +2551,14 @@ def test_latex_decimal_separator():
 def test_issue_17857():
     assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
+
+
+def test_Operator():
+    assert latex(Operator(sin)) == r'\sin'
+    assert latex(Operator(Add)) == "<class 'sympy.core.add.Add'>"
+
+def test_CompositeOperator():
+    assert latex(CompositeOperator(sin, cos)) == r'\sin \circ \cos'
+
+def test_AppliedOperator():
+    assert latex(CompositeOperator(sin, cos)(x, evaluate=False)) == r'\left(\sin \circ \cos\right)\left(x\right)'

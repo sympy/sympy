@@ -9,8 +9,8 @@ from sympy.core.singleton import S
 
 class CompositeOperator(OperatorExpr):
     def __new__(cls, f, *gs, **kwargs):
-        f, = cls._sep_basic_basicmeta(f)
-        gs = cls._sep_basic_basicmeta(*gs)
+        f, = cls._process_basic_basicmeta(f)
+        gs = cls._process_basic_basicmeta(*gs)
         gs = Tuple(*gs)
         obj = super(cls, CompositeOperator).__new__(cls, f, *gs, **kwargs)
         obj.f = f

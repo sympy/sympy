@@ -71,7 +71,7 @@ class OperatorExpr(Expr):
 
 
     @classmethod
-    def _sep_basic_basicmeta(cls, *args):
+    def _process_basic_basicmeta(cls, *args):
         args = [sympify(a) for a in args]
         newargs = []
         for a in args:

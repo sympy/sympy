@@ -228,7 +228,7 @@ class OperatorAdd(OperatorExpr, Add):
             return newseq, [], None
 
     def __new__(cls, *args, **kwargs):
-        new_args = cls._sep_basic_basicmeta(*args)
+        new_args = cls._process_basic_basicmeta(*args)
         obj = super(cls, OperatorAdd).__new__(cls, *new_args, **kwargs)
         if not isinstance(obj, OperatorExpr):
             return Operator(obj)
@@ -242,7 +242,7 @@ class OperatorMul(OperatorExpr, Mul):
     identity = S.One
 
     def __new__(cls, *args, **kwargs):
-        new_args = cls._sep_basic_basicmeta(*args)
+        new_args = cls._process_basic_basicmeta(*args)
         obj = super(cls, OperatorMul).__new__(cls, *new_args, **kwargs)
         if not isinstance(obj, OperatorExpr):
             return Operator(obj)
@@ -736,7 +736,7 @@ class OperatorMul(OperatorExpr, Mul):
 
 class OperatorPow(OperatorExpr, Pow):
     def __new__(cls, b, e, **kwargs):
-        new_b, new_e = cls._sep_basic_basicmeta(b, e)
+        new_b, new_e = cls._process_basic_basicmeta(b, e)
         obj = super(cls, OperatorPow).__new__(cls, new_b, new_e, **kwargs)
         if not isinstance(obj, OperatorExpr):
             return Operator(obj)

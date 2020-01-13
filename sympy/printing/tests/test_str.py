@@ -1,10 +1,10 @@
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+from sympy import (Abs, Add, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
     Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, Operator)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -854,3 +854,7 @@ def test_str_special_matrices():
 
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+def test_Operator():
+    assert str(Operator(sin)) == 'sin'
+    assert str(Operator(Add)) == "Operator(<class 'sympy.core.add.Add'>, ((0,),))"
