@@ -1,4 +1,4 @@
-from sympy import Add, cos, Function, sin, symbols
+from sympy import cos, Function, sin, symbols
 from sympy.abc import x,y,z
 from sympy.operator import Operator
 
@@ -8,15 +8,12 @@ def test_Operator():
     assert Operator(1)(x,y,z) == 1
     assert Operator(sin)(x) == sin(x)
     assert Operator(cos)(y) == cos(y)
-    assert Operator(Add)(x,y,z) == x+y+z
     assert Operator(f)(x) == f(x)
     assert Operator(g)(x,y) == g(x,y)
     assert Operator(h(x))(x,y) == h(x)
 
     assert Operator(sin)(x,y) == sin(x)
     assert Operator(sin, (1,))(x,y,z) == sin(y)
-    assert Operator(Add, (0,2))(x,y,z) == Add(x,z)
-    assert Operator(Add, ((0,),))(x,y,z) == Add(x,y,z)
 
 def test_AppliedOperator1():
     """
@@ -25,7 +22,6 @@ def test_AppliedOperator1():
     assert Operator(1)(x,y, evaluate=False) == 1
     assert Operator(f(x))(y,z, evaluate=False) == f(x)
     assert Operator(sin)(x, evaluate=False) == sin(x)
-    assert Operator(Add)(x,x, evaluate=False) == Add(x,x, evaluate=False)
 
 def test_AppliedOperator2():
     """

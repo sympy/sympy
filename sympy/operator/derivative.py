@@ -1,7 +1,6 @@
 """Provides derivative operator, i.e. f'(x)."""
 
 from .operator import OperatorExpr, Operator
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import iterable
 from sympy.core.symbol import Dummy, symbols
 
@@ -29,7 +28,7 @@ class DerivatedOperator(OperatorExpr):
 
     Parameters
     ==========
-    operator : instance of Basic or BasicMeta
+    operator : instance of Expr or FunctionClass
 
     argidxs : tuple of tuples of two numbers
             First number indicates the index of derivating argument, and second

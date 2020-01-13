@@ -1,9 +1,9 @@
 """Provides the basic classes for operators."""
 
-from sympy.core.basic import Atom, Basic
+from sympy.core.basic import Atom
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
-from sympy.core.core import BasicMeta
+from sympy.core.function import FunctionClass
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
@@ -87,19 +87,19 @@ class OperatorExpr(Expr):
 
 
     @classmethod
-    def _process_basic_basicmeta(cls, *args):
+    def _process_operator(cls, *args):
         """Unnest the Operator and wrap the arguments with Operator.
         """
         args = [sympify(a) for a in args]
         newargs = []
         for a in args:
-            if isinstance(a, BasicMeta):
+            if isinstance(a, FunctionClass):
                 newargs.append(Operator(a))
-            elif isinstance(a, Basic):
+            elif isinstance(a, Expr):
                 if isinstance(a, Operator):
-                    if isinstance(a.operator, BasicMeta):
+                    if isinstance(a.operator, FunctionClass):
                         newargs.append(a)
-                    elif isinstance(a.operator, Basic):
+                    elif isinstance(a.operator, Expr):
                         newargs.append(a.operator)
                 else:
                     newargs.append(a)
@@ -115,11 +115,11 @@ class Operator(OperatorExpr, Atom):
         Explanation
         ===========
 
-        This class wraps a single ``BasicMeta`` or ``Basic`` instance.
-        Operator wrapping ``Basic`` instance is considered as a constant function.
-        Calling it with arguments will always return the original ``Basic`` instance.
-        Operator wrapping ``BasicMeta`` instance is considered as a operator.
-        Calling it with arguments return result of calling original ``BasicMeta``
+        This class wraps a single ``FunctionClass`` or ``Expr`` instance.
+        Operator wrapping ``Expr`` instance is considered as a constant function.
+        Calling it with arguments will always return the original ``Expr`` instance.
+        Operator wrapping ``FunctionClass`` instance is considered as a operator.
+        Calling it with arguments return result of calling original ``FunctionClass``
         instance.
         One may choose which arguments among the passed will be used with
         ``argidxs`` parameter.
@@ -158,7 +158,7 @@ class Operator(OperatorExpr, Atom):
         Parameters
         ==========
 
-        operator : Basic or BasicMeta instance
+        operator : Expr or FunctionClass instance
 
         argidxs : tuple of numbers or tuples, optional
                 number represents the index, and tuple represent the slicing of
@@ -169,15 +169,13 @@ class Operator(OperatorExpr, Atom):
             return operator
 
         operator = sympify(operator)
-        if argidxs is None and isinstance(operator, BasicMeta):
-            from sympy.core.function import arity
-            nargs = arity(operator)
-            if nargs is None:
+        if argidxs is None and isinstance(operator, FunctionClass):
+            nargs = operator.nargs
+            if nargs is S.Naturals0:
                 argidxs = Tuple(Tuple(0,))
-            elif iterable(nargs):
-                argidxs = Tuple(Tuple(0, max(nargs)))
             else:
-                argidxs = Tuple(Tuple(0, nargs))
+                argidxs = Tuple(Tuple(0, max(nargs)))
+
         argidxs = cls._canonicalize_argidxs(argidxs)
 
         obj = super(cls, Operator).__new__(cls, operator, argidxs, **kwargs)
@@ -203,9 +201,9 @@ class Operator(OperatorExpr, Atom):
         return result
 
     def _eval_operation(self, *args, **kwargs):
-        if isinstance(self.operator, Basic):
-            return self.operator
-        elif isinstance(self.operator, BasicMeta):
+        if isinstance(self.operator, Expr):
+            result = self.operator
+        elif isinstance(self.operator, FunctionClass):
             picked_args = []
             for a in self.argidxs:
                 if not iterable(a):
@@ -217,7 +215,8 @@ class Operator(OperatorExpr, Atom):
                     if len(a) == 2:
                         i,j = a
                         picked_args.extend(args[i:j])
-            return self.operator(*picked_args, **kwargs)
+            result = self.operator(*picked_args, **kwargs)
+        return result
 
 class AppliedOperator(OperatorExpr):
     """
@@ -262,9 +261,9 @@ class AppliedOperator(OperatorExpr):
         if not isinstance(operator, OperatorExpr):
             raise TypeError("%s must be instance of OperatorExpr." % operator)
         if isinstance(operator, Operator):
-            if isinstance(operator.operator, BasicMeta):
+            if isinstance(operator.operator, FunctionClass):
                 return operator._eval_operation(*args, evaluate=evaluate, **kwargs)
-            elif isinstance(operator.operator, Basic):
+            elif isinstance(operator.operator, Expr):
                 return operator.operator
 
         if evaluate:
