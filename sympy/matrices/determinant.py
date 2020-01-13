@@ -942,8 +942,10 @@ def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
 
 def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     from .expressions import Determinant
+    from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
 
-    if isinstance(M, Expr):
+    if isinstance(M, Expr) and \
+            not isinstance (M, (ImmutableDenseMatrix, ImmutableSparseMatrix)):
         return Determinant(M).doit()
 
     return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
