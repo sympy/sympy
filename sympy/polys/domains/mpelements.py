@@ -45,7 +45,7 @@ new = object.__new__
 @public
 class MPContext(PythonMPContext):
 
-    def __init__(ctx, prec=53, dps=None, tol=None):
+    def __init__(ctx, prec=53, dps=None, tol=None, real=False):
         ctx._prec_rounding = [prec, round_nearest]
 
         if dps is None:
@@ -57,8 +57,12 @@ class MPContext(PythonMPContext):
         ctx.mpc = ComplexElement
         ctx.mpf._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.mpc._ctxdata = [ctx.mpc, new, ctx._prec_rounding]
-        ctx.mpf.context = ctx
-        ctx.mpc.context = ctx
+
+        if real:
+            ctx.mpf.context = ctx
+        else:
+            ctx.mpc.context = ctx
+
         ctx.constant = _constant
         ctx.constant._ctxdata = [ctx.mpf, new, ctx._prec_rounding]
         ctx.constant.context = ctx
