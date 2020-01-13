@@ -1433,7 +1433,7 @@ def _diff_poly(root, coefficients, p):
 
     diff = 0
     rank = len(coefficients)
-    for coeff in range(0,rank - 1):
+    for coeff in range(0, rank - 1):
         if not coefficients[coeff]:
             continue
         diff = (diff + pow(root, rank - coeff - 2, p) * (rank - coeff - 1) * coefficients[coeff]) % p
@@ -1462,7 +1462,7 @@ def general_congruence(expr, m):
     ========
 
     >>> from sympy.ntheory general_congruence
-    >>> x = symbols('x')
+    >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
     >>> general_congruence(expr, 6125)
     [3257]
