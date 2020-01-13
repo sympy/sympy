@@ -3883,10 +3883,7 @@ def sympify_fractions(f):
 
 converter[fractions.Fraction] = sympify_fractions
 
-try:
-    if not HAS_GMPY:
-        raise ImportError
-
+if HAS_GMPY:
     def sympify_mpz(x):
         return Integer(long(x))
 
@@ -3895,8 +3892,6 @@ try:
 
     converter[type(gmpy.mpz(1))] = sympify_mpz
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq
-except ImportError:
-    pass
 
 
 def sympify_mpmath(x):
