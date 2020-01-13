@@ -857,4 +857,7 @@ def test_issue_14567():
 
 def test_Operator():
     assert str(Operator(sin)) == 'sin'
-    assert str(Operator(Add)) == "Operator(<class 'sympy.core.add.Add'>, ((0,),))"
+
+def test_DerivatedOperator():
+    assert str(sin.deriv(0,3)) == "sin'''"
+    assert str(sin.deriv(0,10)) == 'DerivatedOperator(sin, (0, 10))'

@@ -888,7 +888,7 @@ class StrPrinter(Printer):
                 result = self._print_Basic(expr)
             else:
                 primes = num_of_prime * prime
-            result = r"%s%s" % (self._print(expr.operator), primes)
+                result = r"%s%s" % (self._print(expr.operator), primes)
         else:
             result = self._print_Basic(expr)
         return result

@@ -2555,10 +2555,13 @@ def test_issue_17857():
 
 def test_Operator():
     assert latex(Operator(sin)) == r'\sin'
-    assert latex(Operator(Add)) == "<class 'sympy.core.add.Add'>"
 
 def test_CompositeOperator():
     assert latex(CompositeOperator(sin, cos)) == r'\sin \circ \cos'
 
 def test_AppliedOperator():
     assert latex(CompositeOperator(sin, cos)(x, evaluate=False)) == r'\left(\sin \circ \cos\right)\left(x\right)'
+
+def test_DerivatedOperator():
+    assert latex(sin.deriv(0,3)) == r'\sin^{\prime\prime\prime}'
+    assert latex(sin.deriv(0,10)) == r'\sin^{\left(10\right)}'
