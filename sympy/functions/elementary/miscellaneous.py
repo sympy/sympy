@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import Function, S, sympify
 from sympy.core.add import Add
-from sympy.core.compatibility import as_int
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
