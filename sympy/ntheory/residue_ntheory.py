@@ -1461,7 +1461,7 @@ def general_congruence(expr, m):
     Examples
     ========
 
-    >>> from sympy.ntheory general_congruence
+    >>> from sympy.ntheory import general_congruence
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
     >>> general_congruence(expr, 6125)
