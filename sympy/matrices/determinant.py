@@ -846,12 +846,6 @@ def _minor_submatrix(M, i, j):
 # assign these via 'charpoly = _charpoly' where sympification is not needed but
 # this is clearer.
 
-def adjugate(M, method="berkowitz", dotprodsimp=None):
-    return sympify(_adjugate(M, method=method, dotprodsimp=dotprodsimp))
-
-def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
-    return _charpoly(M, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
-
 def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     return _cofactor(M, i, j, method=method, dotprodsimp=dotprodsimp)
 
@@ -875,8 +869,6 @@ def minor_submatrix(M, i, j):
     return sympify(_minor_submatrix(M, i, j))
 
 
-adjugate.__doc__        = _adjugate.__doc__
-charpoly.__doc__        = _charpoly.__doc__
 cofactor.__doc__        = _cofactor.__doc__
 cofactor_matrix.__doc__ = _cofactor_matrix.__doc__
 det_bareiss.__doc__     = _det_bareiss.__doc__
