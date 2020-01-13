@@ -78,6 +78,10 @@ class OperatorExpr(Expr):
         from .composite import CompositeOperator
         return CompositeOperator(other, self)
 
+    def deriv(self, *argidxs, **kwargs):
+        from .derivative import DerivatedOperator
+        return DerivatedOperator(self, *argidxs, **kwargs)
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 

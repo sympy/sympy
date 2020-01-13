@@ -43,6 +43,20 @@ class DerivatedOperator(OperatorExpr):
             argidxs = ((0, 1),)
         elif len(argidxs) == 1 and not iterable(argidxs[0]):
             argidxs = ((0, argidxs[0]),)
+        elif len(argidxs) > 1:
+            new_argidxs = []
+            pass_step = False
+            for i,a in enumerate(argidxs):
+                if iterable(a):
+                    new_argidxs.append(a)
+                elif not iterable(a) and not pass_step:
+                    new_argidxs.append((argidxs[i], argidxs[i+1]))
+                    pass_step = True
+                else:
+                    pass_step = False
+                    continue
+            argidxs = tuple(new_argidxs)
+
 
         argidxs_count = {}
         for (argidx,n) in argidxs:

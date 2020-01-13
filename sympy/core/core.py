@@ -162,5 +162,9 @@ class BasicMeta(type):
         from sympy.operator import CompositeOperator
         return CompositeOperator(other, self)
 
+    def deriv(self, *argidxs, **kwargs):
+        from sympy.operator import DerivatedOperator
+        return DerivatedOperator(self, *argidxs, **kwargs)
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
