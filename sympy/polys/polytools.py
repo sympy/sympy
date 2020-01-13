@@ -6229,7 +6229,7 @@ def sqf_list(f, *gens, **args):
             raise PolynomialError("a univariate polynomial expected")
         try:
             poly = _poly_from_expr(b, _opt)
-        except:
+        except PolificationFailed:
             coeff *= b
         else:
             gen_set.add(poly[1].gens)
