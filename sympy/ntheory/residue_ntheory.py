@@ -745,23 +745,34 @@ def _nthroot_mod1(s, q, p, all_roots):
 
 
 
-def _help(m, how1, how2, how3):
+def _help(m, prime_modulo_method, diff_method, expr_val):
+    """
+    Helper function for _nthroot_mod_composite and general_congruence.
+
+    Parameters
+    ==========
+
+    m : positive integer
+    prime_modulo_method : function to calculate when m is prime
+    diff_method : function to calculate differentiation of expression
+    expr_val : function to calculate value of the expression
+    """
     from sympy.ntheory.modular import crt
     f = factorint(m)
     dd = {}
     for p, e in f.items():
         tot_roots = set()
         if e == 1:
-            tot_roots.update(how1(p))
+            tot_roots.update(prime_modulo_method(p))
         else:
-            for root in how1(p):
-                diff = how2(root, p)
+            for root in prime_modulo_method(p):
+                diff = diff_method(root, p)
                 if diff != 0:
                     ppow = p
                     m_inv = mod_inverse(diff, p)
                     for j in range(1, e):
                         ppow *= p
-                        root = (root - how3(root, ppow) * (m_inv % ppow)) % ppow
+                        root = (root - expr_val(root, ppow) * (m_inv % ppow)) % ppow
                     tot_roots.add(root)
                 else:
                     new_base = p
@@ -770,7 +781,7 @@ def _help(m, how1, how2, how3):
                         new_base *= p
                         new_roots = set()
                         for k in roots_in_base:
-                            if how3(k, new_base)!= 0:
+                            if expr_val(k, new_base)!= 0:
                                 continue
                             while k not in new_roots:
                                 new_roots.add(k)
@@ -1438,7 +1449,21 @@ def _val_poly(root, coefficients, p):
 
 def general_congruence(expr, m):
     """
-    Find the solutions to a polynomial congruence equation.
+    Find the solutions to a polynomial congruence equation modulo m.
+    Parameters
+    ==========
+
+    expr : Polynomial
+    m : positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory general_congruence
+    >>> x = symbols('x')
+    >>> expr = x**6 - 2*x**5 -35
+    >>> general_congruence(expr, 6125)
+    [3257]
     """
 
     from sympy import Poly
