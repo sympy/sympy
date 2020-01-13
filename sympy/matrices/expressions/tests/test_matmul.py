@@ -1,8 +1,8 @@
 from sympy.core import I, symbols, Basic, Mul, S
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
-        eye, ImmutableMatrix)
-from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
+        eye, ImmutableMatrix, det)
+from sympy.matrices.expressions import Adjoint, Transpose, MatPow
 from sympy.matrices.expressions.matexpr import GenericIdentity
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, combine_powers, any_zeros, unpack, only_squares)

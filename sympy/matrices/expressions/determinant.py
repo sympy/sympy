@@ -40,27 +40,9 @@ class Determinant(Expr):
         except (AttributeError, NotImplementedError):
             return self
 
-def det(matexpr, *args, **kwargs):
-    """ Matrix Determinant
-
-    Examples
-    ========
-
-    >>> from sympy import MatrixSymbol, eye
-    >>> from sympy.matrices import det
-    >>> A = MatrixSymbol('A', 3, 3)
-    >>> det(A)
-    Determinant(A)
-    >>> det(eye(3))
-    1
-    """
-
-    if isinstance(matexpr, Expr):
-        return Determinant(matexpr).doit()
-
-    from ..determinant import _det
-
-    return _det(matexpr, *args, **kwargs)
+# The following is here so that code which does
+# ``from sympy.matrices.expressions.determinant import det`` continues to work.
+from ..determinant import det
 
 
 from sympy.assumptions.ask import ask, Q

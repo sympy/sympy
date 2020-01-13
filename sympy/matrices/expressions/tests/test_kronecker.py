@@ -1,6 +1,6 @@
 from sympy import I, symbols, Matrix, eye, Mod, floor
-from sympy.matrices import MatrixSymbol, Identity
-from sympy.matrices.expressions import det, trace
+from sympy.matrices import MatrixSymbol, Identity, det
+from sympy.matrices.expressions import trace
 
 from sympy.matrices.expressions.kronecker import (KroneckerProduct,
                                                   kronecker_product,

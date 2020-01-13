@@ -2,10 +2,10 @@ from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
-from sympy.matrices.expressions import (MatrixSymbol, Identity,
-        Inverse, trace, Transpose, det, ZeroMatrix)
+from sympy.matrices import (MatrixSymbol, Identity,
+        Inverse, trace, Transpose, ZeroMatrix)
 from sympy.matrices import (
-    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
+    Matrix, ImmutableMatrix, ImmutableSparseMatrix, det)
 from sympy.core import Tuple, symbols, Expr
 from sympy.functions import transpose
 

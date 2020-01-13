@@ -2,37 +2,36 @@ from sympy import PurePoly, symbols
 from sympy.matrices import (Matrix, ImmutableDenseMatrix, SparseMatrix,
     ImmutableSparseMatrix)
 
-from sympy import det #, adjugate, charpoly <- to be added as expression top-level functions
 from sympy.matrices.determinant import (
-    cofactor, cofactor_matrix, det_bareiss, det_berkowitz,
-    det_LU, minor, minor_submatrix)
+    adjugate, charpoly, cofactor, cofactor_matrix, det, det_bareiss,
+    det_berkowitz, det_LU, minor, minor_submatrix)
 
 x, y, z = symbols('x y z')
 
 
-# def test_adjugate():
-#     M = Matrix(4, 4, [0, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
-#     A = Matrix([
-#         [   4,  -8,  4,   0],
-#         [  76, -68, -8,  24],
-#         [-122, 142,  4, -48],
-#         [  48, -72,  0,  24]])
+def test_adjugate():
+    M = Matrix(4, 4, [0, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
+    A = Matrix([
+        [   4,  -8,  4,   0],
+        [  76, -68, -8,  24],
+        [-122, 142,  4, -48],
+        [  48, -72,  0,  24]])
 
-#     R = adjugate(M)
-#     assert isinstance(R, ImmutableDenseMatrix)
-#     assert R == A
+    R = adjugate(M)
+    assert isinstance(R, ImmutableDenseMatrix)
+    assert R == A
 
-#     R = adjugate(SparseMatrix(M))
-#     assert isinstance(R, ImmutableSparseMatrix)
-#     assert R == A
+    R = adjugate(SparseMatrix(M))
+    assert isinstance(R, ImmutableSparseMatrix)
+    assert R == A
 
 
-# def test_charpoly():
-#     M = Matrix([[1, 2], [3, 4]])
-#     A = PurePoly(x**2 - 5*x - 2, x, domain='RR')
+def test_charpoly():
+    M = Matrix([[1, 2], [3, 4]])
+    A = PurePoly(x**2 - 5*x - 2, x, domain='RR')
 
-#     assert charpoly(M, x='x') == A
-#     assert charpoly(SparseMatrix(M), x='x') == A
+    assert charpoly(M, x='x') == A
+    assert charpoly(SparseMatrix(M), x='x') == A
 
 
 def test_cofactor():

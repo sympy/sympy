@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from types import FunctionType
 
+from sympy import Expr
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
@@ -304,6 +305,7 @@ def _berkowitz_vector(M, dotprodsimp=None):
         return M._new(2, 1, [M.one, -M[0,0]])
 
     submat, toeplitz = _berkowitz_toeplitz_matrix(M, dotprodsimp=dotprodsimp)
+
     return toeplitz.multiply(_berkowitz_vector(submat, dotprodsimp=dotprodsimp),
             dotprodsimp=dotprodsimp)
 
@@ -314,12 +316,29 @@ def _adjugate(M, method="berkowitz", dotprodsimp=None):
 
     https://en.wikipedia.org/wiki/Adjugate
 
+    Parameters
+    ==========
+
+    method : string, optional
+        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
+        "lu".
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        to control expression blowup during matrix multiplication. If this
+        is true then the simplify function is not used.
+
     Examples
     ========
 
     >>> from sympy import Matrix
+    >>> from sympy.matrices import adjugate
     >>> M = Matrix([[1, 2], [3, 4]])
     >>> M.adjugate()
+    Matrix([
+    [ 4, -2],
+    [-3,  1]])
+    >>> adjugate(M)
     Matrix([
     [ 4, -2],
     [-3,  1]])
@@ -345,6 +364,14 @@ def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     Parameters
     ==========
 
+    x : string, optional
+        Name for the "lambda" variable, defaults to "lambda".
+
+    simplify : function, optional
+        Simplification function to use on the characteristic polynomial
+        calculated. Defaults to ``simplify``, if ``dotprodsimp`` is ``True``
+        then this is ignored.
+
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification is used
         to control expression blowup during matrix multiplication. If this
@@ -354,33 +381,38 @@ def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
+    >>> from sympy.matrices import charpoly
     >>> from sympy.abc import x, y
-    >>> A = Matrix([[1, 3], [2, 0]])
-    >>> A.charpoly(x) == A.charpoly(y)
+    >>> M = Matrix([[1, 3], [2, 0]])
+    >>> M.charpoly()
+    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
+    >>> charpoly(M)
+    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
+    >>> M.charpoly(x) == M.charpoly(y)
     True
-    >>> A.charpoly(x) == A.charpoly(y)
+    >>> M.charpoly(x) == M.charpoly(y)
     True
 
     Specifying ``x`` is optional; a symbol named ``lambda`` is used by
     default (which looks good when pretty-printed in unicode):
 
-    >>> A.charpoly().as_expr()
+    >>> M.charpoly().as_expr()
     lambda**2 - lambda - 6
 
     And if ``x`` clashes with an existing symbol, underscores will
     be prepended to the name to make it unique:
 
-    >>> A = Matrix([[1, 2], [x, 0]])
-    >>> A.charpoly(x).as_expr()
+    >>> M = Matrix([[1, 2], [x, 0]])
+    >>> M.charpoly(x).as_expr()
     _x**2 - _x - 2*x
 
     Whether you pass a symbol or not, the generator can be obtained
     with the gen attribute since it may not be the same as the symbol
     that was passed:
 
-    >>> A.charpoly(x).gen
+    >>> M.charpoly(x).gen
     _x
-    >>> A.charpoly(x).gen == x
+    >>> M.charpoly(x).gen == x
     False
 
     Notes
@@ -415,6 +447,10 @@ def _cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     Parameters
     ==========
 
+    method : string, optional
+        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
+        "lu".
+
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification is used
         to control expression blowup during matrix multiplication. If this
@@ -426,10 +462,10 @@ def _cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     >>> from sympy import Matrix
     >>> from sympy.matrices import cofactor
     >>> M = Matrix([[1, 2], [3, 4]])
+    >>> M.cofactor(0, 1)
+    -3
     >>> cofactor(M, 0, 1)
     -3
-    >>> cofactor(M, 0, 1) == M.cofactor(0, 1)
-    True
 
     See Also
     ========
@@ -451,6 +487,10 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     Parameters
     ==========
 
+    method : string, optional
+        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
+        "lu".
+
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification is used
         to control expression blowup during matrix multiplication. If this
@@ -462,12 +502,14 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     >>> from sympy import Matrix
     >>> from sympy.matrices import cofactor_matrix
     >>> M = Matrix([[1, 2], [3, 4]])
+    >>> M.cofactor_matrix()
+    Matrix([
+    [ 4, -3],
+    [-2,  1]])
     >>> cofactor_matrix(M)
     Matrix([
     [ 4, -3],
     [-2,  1]])
-    >>> cofactor_matrix(M) == M.cofactor_matrix()
-    True
 
     See Also
     ========
@@ -475,7 +517,6 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     cofactor
     minor
     minor_submatrix
-    adjugate
     """
 
     if not M.is_square or M.rows < 1:
@@ -487,7 +528,9 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
-    """Computes the determinant of a matrix.
+    """Computes the determinant of a matrix if ``M`` is a concrete matrix object
+    otherwise return an expressions ``Determinant(M)`` if ``M`` is a
+    ``MatrixSymbol`` or other expression.
 
     Parameters
     ==========
@@ -546,12 +589,23 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     Examples
     ========
 
-    >>> from sympy import Matrix, det
+    >>> from sympy import Matrix, MatrixSymbol, eye, det
     >>> M = Matrix([[1, 2], [3, 4]])
+    >>> M.det()
+    -2
     >>> det(M)
     -2
-    >>> det(M) == M.det()
-    True
+    >>> M = MatrixSymbol('M', 3, 3)
+    >>> det(M)
+    Determinant(M)
+
+    See Also
+    ========
+
+    det_bareiss
+    det_berkowitz
+    det_LU
+    Determinant
     """
 
     # sanitize `method`
@@ -614,6 +668,10 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
 
     Parameters
     ==========
+
+    iszerofunc : function, optional
+        The function to use to determine zeros when doing an LU decomposition.
+        Defaults to ``lambda x: x.is_zero``.
 
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification is used
@@ -715,6 +773,13 @@ def _det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
     Parameters
     ==========
 
+    iszerofunc : function, optional
+        The function to use to determine zeros when doing an LU decomposition.
+        Defaults to ``lambda x: x.is_zero``.
+
+    simpfunc : function, optional
+        The simplification function to use when looking for zeros for pivots.
+
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification is used
         during matrix multiplications to control expression blowup and thus
@@ -766,6 +831,13 @@ def _minor(M, i, j, method="berkowitz", dotprodsimp=None):
     Parameters
     ==========
 
+    i, j : int
+        The row and column to exclude to obtain the submatrix.
+
+    method : string, optional
+        Method to use to find the determinant of the submatrix, can be
+        "bareiss", "berkowitz" or "lu".
+
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification is used
         during matrix multiplications to control expression blowup and thus
@@ -777,10 +849,10 @@ def _minor(M, i, j, method="berkowitz", dotprodsimp=None):
     >>> from sympy import Matrix
     >>> from sympy.matrices import minor
     >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M.minor(1, 1)
+    -12
     >>> minor(M, 1, 1)
     -12
-    >>> minor(M, 1, 1) == M.minor(1, 1)
-    True
 
     See Also
     ========
@@ -800,18 +872,26 @@ def _minor_submatrix(M, i, j):
     """Return the submatrix obtained by removing the `i`th row
     and `j`th column from ``M`` (works with Pythonic negative indices).
 
+    Parameters
+    ==========
+
+    i, j : int
+        The row and column to exclude to obtain the submatrix.
+
     Examples
     ========
 
     >>> from sympy import Matrix
     >>> from sympy.matrices import minor_submatrix
     >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M.minor_submatrix(1, 1)
+    Matrix([
+    [1, 3],
+    [7, 9]])
     >>> minor_submatrix(M, 1, 1)
     Matrix([
     [1, 3],
     [7, 9]])
-    >>> minor_submatrix(M, 1, 1) == M.minor_submatrix(1, 1)
-    True
 
     See Also
     ========
@@ -842,11 +922,31 @@ def _minor_submatrix(M, i, j):
 # assign these via 'charpoly = _charpoly' where sympification is not needed but
 # this is clearer.
 
+def adjugate(M, method="berkowitz", dotprodsimp=None):
+    if isinstance(M, Expr):
+        raise NotImplementedError('adjugate for matrix expressions not supported yet')
+
+    return sympify(_adjugate(M, method=method, dotprodsimp=dotprodsimp))
+
+def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
+    if isinstance(M, Expr):
+        raise NotImplementedError('charpoly for matrix expressions not supported yet')
+
+    return _charpoly(M, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+
 def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     return _cofactor(M, i, j, method=method, dotprodsimp=dotprodsimp)
 
 def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     return sympify(_cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp))
+
+def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
+    from .expressions import Determinant
+
+    if isinstance(M, Expr):
+        return Determinant(M).doit()
+
+    return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
 def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
     return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
@@ -865,9 +965,13 @@ def minor_submatrix(M, i, j):
     return sympify(_minor_submatrix(M, i, j))
 
 
+adjugate.__doc__        = _adjugate.__doc__
+charpoly.__doc__        = _charpoly.__doc__
 cofactor.__doc__        = _cofactor.__doc__
 cofactor_matrix.__doc__ = _cofactor_matrix.__doc__
+det.__doc__             = _det.__doc__
 det_bareiss.__doc__     = _det_bareiss.__doc__
 det_berkowitz.__doc__   = _det_berkowitz.__doc__
 det_LU.__doc__          = _det_LU.__doc__
 minor.__doc__           = _minor.__doc__
+minor_submatrix.__doc__ = _minor_submatrix.__doc__

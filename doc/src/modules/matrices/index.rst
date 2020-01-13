@@ -17,3 +17,4 @@ Contents:
    sparse.rst
    immutablematrices.rst
    expressions.rst
+   standalone.rst

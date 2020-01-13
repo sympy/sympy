@@ -26,14 +26,14 @@ from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
     Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace,
     Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols,
-    Adjoint, hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
+    Adjoint, hadamard_product, HadamardProduct, HadamardPower, Determinant,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
     PermutationMatrix, MatrixPermute)
 
 from .determinant import (
-    cofactor, cofactor_matrix, det_bareiss, det_berkowitz, det_LU, minor,
-    minor_submatrix)
+    adjugate, charpoly, cofactor, cofactor_matrix, det, det_bareiss,
+    det_berkowitz, det_LU, minor, minor_submatrix)
 
 
 __all__ = [
@@ -63,10 +63,10 @@ __all__ = [
     'MatrixSymbol', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',
     'blockcut', 'block_collapse', 'matrix_symbols', 'Adjoint',
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
-    'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
+    'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
 
-    'cofactor', 'cofactor_matrix', 'det_bareiss', 'det_berkowitz', 'det_LU',
-    'minor', 'minor_submatrix',
+    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det', 'det_bareiss',
+    'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
 ]

@@ -1,8 +1,8 @@
 from sympy.core import S, symbols
-from sympy.matrices import eye, Matrix, ShapeError
+from sympy.matrices import eye, Matrix, ShapeError, det
 from sympy.matrices.expressions import (
     Identity, MatrixExpr, MatrixSymbol, Determinant,
-    det, ZeroMatrix, Transpose
+    ZeroMatrix, Transpose
 )
 from sympy.matrices.expressions.matexpr import OneMatrix
 from sympy.testing.pytest import raises
