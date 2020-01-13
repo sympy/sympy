@@ -788,6 +788,8 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
                                 k = (k + (new_base // p)) % new_base
                         roots_in_base = new_roots
                     tot_roots = tot_roots | roots_in_base
+        if tot_roots == set():
+            return []
         dd[pow(p, e)] = tot_roots
     a = []
     m = []
