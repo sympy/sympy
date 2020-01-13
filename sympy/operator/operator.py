@@ -242,12 +242,12 @@ class AppliedOperator(OperatorExpr):
 
     >>> Operator(sin)(x, evaluate=False)
     sin(x)
-    >>> _.func is sin
+    >>> isinstance(_, sin)
     True
 
     >>> (1+sin)(x, evaluate=False)
     (1 + sin)(x)
-    >>> _.func is AppliedOperator
+    >>> isinstance(_, AppliedOperator)
     True
 
     Parameters

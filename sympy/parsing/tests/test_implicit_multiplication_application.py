@@ -43,8 +43,7 @@ def test_implicit_multiplication():
     for case in application:
         raises(SyntaxError,
                lambda: parse_expr(case, transformations=transformations2))
-    raises(TypeError,
-           lambda: parse_expr('sin**2(x)', transformations=transformations2))
+
 
 
 def test_implicit_application():
