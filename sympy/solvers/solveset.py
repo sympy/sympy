@@ -746,7 +746,8 @@ def _has_rational_power(expr, symbol):
 
 def _solve_radical(f, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
-    eq, cov = unrad(f)
+    res = unrad(f)
+    eq, cov = res if res else (f, [])
     if not cov:
         result = solveset_solver(eq, symbol) - \
             Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
