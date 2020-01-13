@@ -66,6 +66,14 @@ class OperatorExpr(Expr):
         from .operatorop import OperatorMul, OperatorPow
         return OperatorMul(other, OperatorPow(self, S.NegativeOne))
 
+    def __matmul__(self, other):
+        from .composite import CompositeOperator
+        return CompositeOperator(self, other)
+
+    def __rmatmul__(self, other):
+        from .composite import CompositeOperator
+        return CompositeOperator(other, self)
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 

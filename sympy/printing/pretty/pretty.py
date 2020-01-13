@@ -2635,9 +2635,23 @@ class PrettyPrinter(Printer):
 
     def _print_Operator(self, expr):
         if [*expr.argidxs] == [0]:
-            return self._print(expr.operator)
+            pform = self._print(expr.operator)
         else:
-            return prettyForm(str(expr))
+            pform = prettyForm(str(expr))
+        return pform
+
+    def _print_AppliedOperator(self, expr):
+        return self._helper_print_function(expr.operator, expr.arguments)
+
+    def _print_CompositeOperator(self, expr):
+        if len(expr.gs) == 1:
+            f, (g,) = expr.f, expr.gs
+            op = ' ' + U('MEDIUM SMALL WHITE CIRCLE') + ' '
+            result = op.join([self.doprint(a) for a in (f,g)])
+            pform = prettyForm(result)
+        else:
+            pform = prettyForm(str(expr))
+        return pform
 
 
 def pretty(expr, **settings):

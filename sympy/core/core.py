@@ -154,5 +154,13 @@ class BasicMeta(type):
         from sympy.operator import OperatorMul, OperatorPow
         return OperatorMul(other, OperatorPow(self, S.NegativeOne))
 
+    def __matmul__(self, other):
+        from sympy.operator import CompositeOperator
+        return CompositeOperator(self, other)
+
+    def __rmatmul__(self, other):
+        from sympy.operator import CompositeOperator
+        return CompositeOperator(other, self)
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
