@@ -781,3 +781,7 @@ def test_CC_double():
     assert CC(1e-15j).imag > 1e-50
     assert CC(1e-20j).imag > 1e-50
     assert CC(1e-40j).imag > 1e-50
+
+def test_issue_18278():
+    assert str(RR(2).parent()) == 'RR'
+    assert str(CC(2).parent()) == 'CC'
