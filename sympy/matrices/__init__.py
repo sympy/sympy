@@ -35,15 +35,6 @@ from .determinant import (
     adjugate, charpoly, cofactor, cofactor_matrix, det_matrix, det_bareiss,
     det_berkowitz, det_LU, minor, minor_submatrix)
 
-from .reductions import rank
-
-from .subspaces import (
-    columnspace, nullspace, rowspace, orthogonalize)
-
-from .eigen import (
-    eigenvals, eigenvects, diagonalize, jordan_form, left_eigenvects,
-    singular_values)
-
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -78,11 +69,4 @@ __all__ = [
 
     'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det_matrix',
     'det_bareiss', 'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
-
-    'rank',
-
-    'columnspace', 'nullspace', 'rowspace', 'orthogonalize',
-
-    'eigenvals', 'eigenvects', 'diagonalize', 'jordan_form', 'left_eigenvects',
-    'singular_values',
 ]
