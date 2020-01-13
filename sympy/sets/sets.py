@@ -27,7 +27,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
 from mpmath import mpi, mpf
-from sympy.polys import factor
+from sympy.vector.basisdependent import factor
 
 tfn = defaultdict(lambda: None, {
     True: S.true,
