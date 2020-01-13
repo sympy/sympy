@@ -2634,7 +2634,10 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Operator(self, expr):
+        from sympy.core.basic import Basic
         if [*expr.argidxs] == [0]:
+            pform = self._print(expr.operator)
+        elif isinstance(expr.operator, Basic):
             pform = self._print(expr.operator)
         else:
             pform = prettyForm(str(expr))

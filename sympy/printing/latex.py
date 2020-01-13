@@ -2515,9 +2515,12 @@ class LatexPrinter(Printer):
 
     def _print_Operator(self, expr):
         if [*expr.argidxs] == [0]:
-            return self._print(expr.operator)
+            result = self._print(expr.operator)
+        elif isinstance(expr.operator, Basic):
+            result = self._print(expr.operator)
         else:
-            return self._print_Basic(expr)
+            result = self._print_Basic(expr)
+        return result
 
     def _print_AppliedOperator(self, expr):
         operator_str = r"\left({}\right)".format(self._print(expr.operator))

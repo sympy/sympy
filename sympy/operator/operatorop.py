@@ -1,4 +1,5 @@
-"""Operated operators."""
+"""Provides the basic operations between the operators."""
+
 from .operator import OperatorExpr, Operator
 from collections import defaultdict
 from sympy.core.add import Add, _addsort
@@ -8,26 +9,23 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 
 class OperatorAdd(OperatorExpr, Add):
+    """Added operator.
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos
+    >>> from sympy.abc import x
+
+    >>> 1+cos+sin
+    1 + cos + sin
+    >>> (1+cos+sin)(x)
+    sin(x) + cos(x) + 1
+    """
     identity = S.Zero
 
     @classmethod
     def flatten(cls, seq):
-        """
-        Takes the sequence "seq" of nested Adds and returns a flatten list.
-
-        Returns: (commutative_part, noncommutative_part, order_symbols)
-
-        Applies associativity, all terms are commutable with respect to
-        addition.
-
-        NB: the removal of 0 is already handled by AssocOp.__new__
-
-        See also
-        ========
-
-        sympy.core.mul.Mul.flatten
-
-        """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr
@@ -239,6 +237,24 @@ class OperatorAdd(OperatorExpr, Add):
         return Add(*args)
 
 class OperatorMul(OperatorExpr, Mul):
+    """Multiplied operator.
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos
+    >>> from sympy.abc import x
+
+    >>> 2*cos
+    2*cos
+    >>> 1*sin
+    sin
+    >>> cos*sin
+    cos*sin
+
+    >>> (cos*sin*2)(x)
+    2*sin(x)*cos(x)
+    """
     identity = S.One
 
     def __new__(cls, *args, **kwargs):
@@ -735,6 +751,28 @@ class OperatorMul(OperatorExpr, Mul):
         return p
 
 class OperatorPow(OperatorExpr, Pow):
+    """Powered operator.
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos
+    >>> from sympy.abc import x
+
+    >>> 2**cos
+    2**cos
+    >>> cos**4
+    cos**4
+    >>> cos**sin
+    cos**sin
+
+    >>> (cos**sin)(x)
+    cos(x)**sin(x)
+    >>> (sin/cos)(x)
+    sin(x)/cos(x)
+    >>> (sin**x)(x)
+    sin(x)**x
+    """
     def __new__(cls, b, e, **kwargs):
         new_b, new_e = cls._process_basic_basicmeta(b, e)
         obj = super(cls, OperatorPow).__new__(cls, new_b, new_e, **kwargs)

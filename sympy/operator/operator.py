@@ -1,6 +1,6 @@
-"""Contains ``OperatorExpr``, which is a superclass for every operator classes,
-and ``Operator`` class, which is a atomic operator class."""
-from sympy.core.basic import Basic
+"""Provides the basic classes for operators."""
+
+from sympy.core.basic import Atom, Basic
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.core.core import BasicMeta
@@ -9,6 +9,8 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
 class OperatorExpr(Expr):
+    """Basic class for every operator classes.
+    """
 
     _op_priority = 20 # This is some random big value
 
@@ -17,6 +19,8 @@ class OperatorExpr(Expr):
         return AppliedOperator(self, args, evaluate=evaluate, **kwargs)
 
     def _eval_operation(self, *args, **kwargs):
+        """Every subclasses of OperatorExpr should override this.
+        """
         raise NotImplementedError()
 
     def __pos__(self):
@@ -80,6 +84,8 @@ class OperatorExpr(Expr):
 
     @classmethod
     def _process_basic_basicmeta(cls, *args):
+        """Unnest the Operator and wrap the arguments with Operator.
+        """
         args = [sympify(a) for a in args]
         newargs = []
         for a in args:
@@ -97,11 +103,63 @@ class OperatorExpr(Expr):
                 newargs.append(a)
         return newargs
 
-class Operator(OperatorExpr):
+class Operator(OperatorExpr, Atom):
     def __new__(cls, operator, argidxs=None, **kwargs):
         """
-        argidxs : (0, (2,4))와 같이 숫자 또는 Tuple의 Tuple.
-        __call__ 시 pass되는 argument들의 위치를 의미함. Tuple은 slicing 의미!
+        Atomic operator.
+
+        Explanation
+        ===========
+
+        This class wraps a single ``BasicMeta`` or ``Basic`` instance.
+        Operator wrapping ``Basic`` instance is considered as a constant function.
+        Calling it with arguments will always return the original ``Basic`` instance.
+        Operator wrapping ``BasicMeta`` instance is considered as a operator.
+        Calling it with arguments return result of calling original ``BasicMeta``
+        instance.
+        One may choose which arguments among the passed will be used with
+        ``argidxs`` parameter.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos
+        >>> from sympy.operator import Operator
+        >>> from sympy.abc import x,y,z
+
+        >>> Operator(1)
+        1
+        >>> Operator(sin)
+        sin
+
+        >>> Operator(1)(x,y)
+        1
+        >>> Operator(cos)(x,y,z)
+        cos(x)
+
+        >>> Operator(sin, (1,))(x,y,z)
+        sin(y)
+
+        Basic operation between operators are supported.
+
+        >>> (Operator(sin) + Operator(cos))(x)
+        sin(x) + cos(x)
+        >>> (sin+cos)(x)    # This can be used instead of the example above.
+        sin(x) + cos(x)
+
+        >>> (Operator(sin) + Operator(cos, (1,)))(x,y)
+        sin(x) + cos(y)
+
+
+        Parameters
+        ==========
+
+        operator : Basic or BasicMeta instance
+
+        argidxs : tuple of numbers or tuples, optional
+                number represents the index, and tuple represent the slicing of
+                the arguments that will be actually passed.
+                If not given, automatially set according to the arity of operator.
         """
         if isinstance(operator, OperatorExpr):
             return operator
@@ -158,6 +216,44 @@ class Operator(OperatorExpr):
             return self.operator(*picked_args, **kwargs)
 
 class AppliedOperator(OperatorExpr):
+    """
+    Applied, but unevaluated operator.
+
+    Explanation
+    ===========
+
+    If ``operator`` parameter is combined operator, instance of this class is
+    returned. Else, the evaluated result is always returned.
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos, S
+    >>> from sympy.operator import Operator, AppliedOperator
+    >>> from sympy.abc import x,y,z
+
+    >>> Operator(1)(x, evaluate=False)
+    1
+    >>> _ is S.One
+    True
+
+    >>> Operator(sin)(x, evaluate=False)
+    sin(x)
+    >>> _.func is sin
+    True
+
+    >>> (1+sin)(x, evaluate=False)
+    (1 + sin)(x)
+    >>> _.func is AppliedOperator
+    True
+
+    Parameters
+    ==========
+
+    operator : operator instance
+
+    args : tuple of arguments
+    """
     def __new__(cls, operator, args, evaluate=False, **kwargs):
         if not isinstance(operator, OperatorExpr):
             raise TypeError("%s must be instance of OperatorExpr." % operator)
