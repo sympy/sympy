@@ -4426,7 +4426,7 @@ class MatrixBase(MatrixDeprecated,
             L_{1, 0} & 1 & 0 & \cdots & 0 \\
             L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
             \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1
+            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & 1
             \end{bmatrix}
 
         .. math::
