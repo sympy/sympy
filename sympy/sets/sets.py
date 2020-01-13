@@ -1763,8 +1763,8 @@ class FiniteSet(Set, EvalfMixin):
     is_empty = False
     is_finite_set = True
 
-    def factor(self, *gens, **args): 
-        from sympy.polys import factor 
+    def factor(self, *gens, **args):
+        from sympy.polys import factor
         return factor(self, *gens, **args)
 
     def __new__(cls, *args, **kwargs):
