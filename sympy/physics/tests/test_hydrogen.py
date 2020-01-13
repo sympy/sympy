@@ -118,3 +118,7 @@ def test_hydrogen_energies_relat():
     raises(ValueError, lambda: E_nl_dirac(0, 0))
     raises(ValueError, lambda: E_nl_dirac(1, -1))
     raises(ValueError, lambda: E_nl_dirac(1, 0, False))
+
+def test_issue_13524():
+    n = symbols('n', integer=True)
+    assert E_nl(n,Z) == -Z**2/(2*n**2)
