@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Symbol, sympify
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence
 from sympy.geometry.entity import GeometryEntity
 from .plot_interval import PlotInterval
 from .plot_object import PlotObject

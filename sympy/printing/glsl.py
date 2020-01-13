@@ -1,6 +1,5 @@
 from sympy.codegen.ast import Assignment
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence

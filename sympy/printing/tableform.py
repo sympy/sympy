@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.core.containers import Tuple
 
 from types import FunctionType
