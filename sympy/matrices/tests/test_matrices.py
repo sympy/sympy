@@ -11,7 +11,8 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
+    MutableSparseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, Hashable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta

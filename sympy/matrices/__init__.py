@@ -53,6 +53,8 @@ __all__ = [
 
     'ImmutableMatrix', 'SparseMatrix',
 
+    'NumPyMatrix',
+
     'MatrixSlice', 'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix',
     'Identity', 'Inverse', 'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr',
     'MatrixSymbol', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',

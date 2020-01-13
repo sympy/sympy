@@ -1,7 +1,7 @@
 from sympy import (Float, I, N, PurePoly, S, Symbol, oo, nan,
     Matrix, NumPyMatrix as NPMatrix, NonSquareMatrixError, diag, eye)
 from sympy.matrices.matrices import MatrixError
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, skip
 
 try:
     import numpy as np

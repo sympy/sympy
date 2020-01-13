@@ -7,7 +7,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.sympify import sympify
 from sympy.simplify import nsimplify
 
-from .common import MatrixError, NonSquareMatrixError
+from .common import NonSquareMatrixError
 from .dense import MutableDenseMatrix
 
 _TOLERANCE   = 1e-13 # tolerance for nsympify rationalization
