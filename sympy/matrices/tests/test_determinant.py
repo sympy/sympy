@@ -2,9 +2,10 @@ from sympy import PurePoly, Symbol
 from sympy.matrices import (Matrix, ImmutableDenseMatrix, SparseMatrix,
     ImmutableSparseMatrix)
 
-from sympy.matrices import (
-    adjugate, charpoly, cofactor, cofactor_matrix,
-    det_matrix, det_bareiss, det_berkowitz, det_LU, minor, minor_submatrix)
+from sympy import det
+from sympy.matrices.determinant import (
+    adjugate, charpoly, cofactor, cofactor_matrix, det_bareiss, det_berkowitz,
+    det_LU, minor, minor_submatrix)
 
 x = Symbol('x')
 
@@ -56,16 +57,16 @@ def test_cofactor_matrix():
     assert R == A
 
 
-def test_det_matrix():
+def test_det():
     M = Matrix([[1, 2], [3, 4]])
     S = SparseMatrix(M)
 
-    assert det_matrix(M) == -2
+    assert det(M) == -2
     assert det_bareiss(M) == -2
     assert det_berkowitz(M) == -2
     assert det_LU(M) == -2
 
-    assert det_matrix(S) == -2
+    assert det(S) == -2
     assert det_bareiss(S) == -2
     assert det_berkowitz(S) == -2
     assert det_LU(S) == -2

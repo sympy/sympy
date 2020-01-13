@@ -32,8 +32,8 @@ from .expressions import (
     PermutationMatrix, MatrixPermute)
 
 from .determinant import (
-    adjugate, charpoly, cofactor, cofactor_matrix, det_matrix, det_bareiss,
-    det_berkowitz, det_LU, minor, minor_submatrix)
+    adjugate, charpoly, cofactor, cofactor_matrix, det_bareiss, det_berkowitz,
+    det_LU, minor, minor_submatrix)
 
 
 __all__ = [
@@ -67,6 +67,6 @@ __all__ = [
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
 
-    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det_matrix',
-    'det_bareiss', 'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
+    'adjugate', 'charpoly', 'cofactor', 'cofactor_matrix', 'det_bareiss',
+    'det_berkowitz', 'det_LU', 'minor', 'minor_submatrix',
 ]

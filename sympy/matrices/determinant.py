@@ -550,12 +550,11 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     Examples
     ========
 
-    >>> from sympy import Matrix
-    >>> from sympy.matrices import det_matrix
+    >>> from sympy import Matrix, det
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> det_matrix(M)
+    >>> det(M)
     -2
-    >>> det_matrix(M) == M.det()
+    >>> det(M) == M.det()
     True
     """
 
@@ -641,7 +640,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = mat[:, 0]._find_reasonable_pivot(
+        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
                 iszerofunc=iszerofunc)
         if pivot_pos is None:
             return mat.zero
@@ -860,9 +859,6 @@ def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
 def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     return sympify(_cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp))
 
-def det_matrix(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
-    return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-
 def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
     return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
@@ -884,7 +880,6 @@ adjugate.__doc__        = _adjugate.__doc__
 charpoly.__doc__        = _charpoly.__doc__
 cofactor.__doc__        = _cofactor.__doc__
 cofactor_matrix.__doc__ = _cofactor_matrix.__doc__
-det_matrix.__doc__      = _det.__doc__
 det_bareiss.__doc__     = _det_bareiss.__doc__
 det_berkowitz.__doc__   = _det_berkowitz.__doc__
 det_LU.__doc__          = _det_LU.__doc__

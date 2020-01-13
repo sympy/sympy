@@ -74,14 +74,6 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""
 
-    def _find_reasonable_pivot(self, iszerofunc=_iszero, simpfunc=_simplify):
-        return _find_reasonable_pivot(self, iszerofunc=iszerofunc,
-                simpfunc=iszerofunc)
-
-    def _find_reasonable_pivot_naive(self, iszerofunc=_iszero, simpfunc=None):
-        return _find_reasonable_pivot_naive(self, iszerofunc=iszerofunc,
-                simpfunc=simpfunc)
-
     def _eval_determinant(self):
         return _det(self)
 
@@ -117,19 +109,17 @@ class MatrixDeterminant(MatrixCommon):
     def minor_submatrix(self, i, j):
         return _minor_submatrix(self, i, j)
 
-    _find_reasonable_pivot.__doc__       = _find_reasonable_pivot.__doc__
-    _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
-    _eval_determinant.__doc__            = _det.__doc__
-    adjugate.__doc__                     = _adjugate.__doc__
-    charpoly.__doc__                     = _charpoly.__doc__
-    cofactor.__doc__                     = _cofactor.__doc__
-    cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
-    det.__doc__                          = _det.__doc__
-    det_bareiss.__doc__                  = _det_bareiss.__doc__
-    det_berkowitz.__doc__                = _det_berkowitz.__doc__
-    det_LU.__doc__                       = _det_LU.__doc__
-    minor.__doc__                        = _minor.__doc__
-    minor_submatrix.__doc__              = _minor_submatrix.__doc__
+    _eval_determinant.__doc__ = _det.__doc__
+    adjugate.__doc__          = _adjugate.__doc__
+    charpoly.__doc__          = _charpoly.__doc__
+    cofactor.__doc__          = _cofactor.__doc__
+    cofactor_matrix.__doc__   = _cofactor_matrix.__doc__
+    det.__doc__               = _det.__doc__
+    det_bareiss.__doc__       = _det_bareiss.__doc__
+    det_berkowitz.__doc__     = _det_berkowitz.__doc__
+    det_LU.__doc__            = _det_LU.__doc__
+    minor.__doc__             = _minor.__doc__
+    minor_submatrix.__doc__   = _minor_submatrix.__doc__
 
 
 class MatrixReductions(MatrixDeterminant):

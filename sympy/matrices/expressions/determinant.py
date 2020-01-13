@@ -58,9 +58,9 @@ def det(matexpr, *args, **kwargs):
     if isinstance(matexpr, Expr):
         return Determinant(matexpr).doit()
 
-    from sympy.matrices.determinant import det_matrix
+    from ..determinant import _det
 
-    return det_matrix(matexpr, *args, **kwargs)
+    return _det(matexpr, *args, **kwargs)
 
 
 from sympy.assumptions.ask import ask, Q
