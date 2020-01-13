@@ -1763,7 +1763,9 @@ class FiniteSet(Set, EvalfMixin):
     is_empty = False
     is_finite_set = True
     def factor(self, *gens, **args): 
-        """See the factor() function in sympy.polys.polytools""" 
+        """
+        See the factor() function in sympy.polys.polytools
+        """ 
         from sympy.polys import factor 
         return factor(self, *gens, **args)
     
