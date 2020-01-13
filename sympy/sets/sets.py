@@ -26,7 +26,7 @@ from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
-
+from sympy import factor as fctr
 from mpmath import mpi, mpf
 
 
@@ -1772,7 +1772,7 @@ class FiniteSet(Set, EvalfMixin):
         factor's documentation
         ========================
         """
-        fctr_components = [fctr(v, *args, **kwargs) * k for k, v in self.components.items()]
+        fctr_components = [fctr(v, *args, **kwargs) *k for k, v in self.components.items()]
         return self._add_func(*fctr_components)
     
     def __new__(cls, *args, **kwargs):
