@@ -1376,6 +1376,15 @@ def test_Add_is_irrational():
     assert (i + 1).is_rational is False
 
 
+def test_Mul_is_irrational():
+    expr = Mul(1, 2, 3, evaluate=False)
+    assert expr.is_irrational is False
+    expr = Mul(1, I, I, evaluate=False)
+    assert expr.is_irrational is not False
+    expr = Mul(sqrt(2), I, I, evaluate=False)
+    assert expr.is_irrational is not True
+
+
 @XFAIL
 def test_issue_3531():
     class MightyNumeric(tuple):
