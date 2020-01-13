@@ -6216,7 +6216,33 @@ def sqf_list(f, *gens, **args):
     (2, [(x + 1, 2), (x + 2, 3)])
 
     """
-    coeff, facs = _generic_factor_list(f, gens, args, method='sqf')
+    options.allowed_flags(args, ['polys'])
+    opt = options.build_options(gens, args)
+    e = together(f)
+    gen_set = set()
+    coeff = 1
+    facs = []
+    for fac in Mul.make_args(e):
+        b, e = (fac.base, fac.exp) if fac.is_Pow else (fac, S.One)
+        _opt = opt.clone(dict(expand=True))
+        if e < 0:
+            raise PolynomialError("a univariate polynomial expected")
+        try:
+            poly = _poly_from_expr(b, _opt)
+        except:
+            coeff *= b
+        else:
+            gen_set.add(poly[1].gens)
+            if len(gen_set) > 1:
+                raise PolynomialError("a univariate polynomial expected")
+            cf, sqf_facs = poly[0].sqf_list()
+            coeff *= cf
+            for sqf_fac in sqf_facs:
+                facs.append((sqf_fac[0] , e*sqf_fac[1]))
+    
+    facs = _sorted_factors(facs, 'sqf')
+    if not opt.polys:
+        facs = [(f.as_expr(), k) for f, k in facs]
     if facs:
         new_facs = [facs[0]]
         for i in range(1, len(facs)):
