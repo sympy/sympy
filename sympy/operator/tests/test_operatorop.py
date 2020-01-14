@@ -1,6 +1,5 @@
 from sympy import cos, Function, sin, symbols
-from sympy.abc import x,y,z
-from sympy.operator import Op
+from sympy.abc import x
 
 f,g,h = symbols('f, g, h', cls=Function)
 

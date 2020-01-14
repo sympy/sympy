@@ -3,10 +3,14 @@
 from .operator import OpExpr, Op
 from collections import defaultdict
 from sympy.core.add import Add, _addsort
-from sympy.core.mul import Mul, NC_Marker, _mulsort
+from sympy.core.evalf import PrecisionExhausted
+from sympy.core.logic import fuzzy_not
+from sympy.core.mul import Mul, NC_Marker, _mulsort, _keep_coeff, _unevaluated_Mul
+from sympy.core.numbers import Rational
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 
 class OpAdd(OpExpr, Add):
     """Added operator.
