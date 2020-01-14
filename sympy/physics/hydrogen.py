@@ -153,7 +153,7 @@ def E_nl(n, Z=1):
 
     >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
-    >>> var("n Z")
+    >>> var("n Z", integer=True)
     (n, Z)
     >>> E_nl(n, Z)
     -Z**2/(2*n**2)
