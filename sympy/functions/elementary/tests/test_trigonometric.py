@@ -4,7 +4,6 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
         AccumBounds, Interval, ImageSet, Lambda, besselj, Add)
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
@@ -1829,3 +1828,11 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(pi*Rational(3, 2) + x) == csc(x)
     assert sec(pi*Rational(3, 2) - x) == -csc(x)
+
+
+def test_as_real_imag():
+    # This is for https://github.com/sympy/sympy/issues/17142
+    # If it start failing again in irrelevant builds or in the master
+    # please open up the issue again.
+    expr = atan(I/(I + I*tan(1)))
+    assert expr.as_real_imag() == (expr, 0)

@@ -4,7 +4,7 @@ from itertools import permutations
 
 from sympy.combinatorics import Permutation
 from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
-from sympy.core.compatibility import range, reduce
+from sympy.core.compatibility import reduce
 from sympy.core.numbers import Zero
 from sympy.functions import factorial
 from sympy.matrices import Matrix

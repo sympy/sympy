@@ -5,7 +5,6 @@ from sympy import (
     chebyshevu_root, laguerre, assoc_laguerre, laguerre_poly, hermite,
     gegenbauer, jacobi, jacobi_normalized, Sum, floor, exp)
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import raises

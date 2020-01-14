@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
-from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)

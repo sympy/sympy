@@ -76,8 +76,6 @@ from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
-from sympy.core.compatibility import range
-
 
 def dup_trial_division(f, factors, K):
     """

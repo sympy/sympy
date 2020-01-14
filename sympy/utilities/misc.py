@@ -7,7 +7,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, range, as_int
+from sympy.core.compatibility import get_function_name, as_int
 
 
 class Undecidable(ValueError):

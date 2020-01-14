@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int
 from sympy.core.function import Function
 from sympy.utilities.iterables import cartes
 from sympy.core.numbers import igcd, igcdex, mod_inverse

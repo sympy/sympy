@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from inspect import getmro
 
-from .compatibility import iterable, range
+from .compatibility import iterable
 from .parameters import global_parameters
 
 

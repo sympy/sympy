@@ -1,4 +1,3 @@
-from sympy.core.compatibility import range
 from itertools import zip_longest
 
 from sympy.utilities.enumerative import (

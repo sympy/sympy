@@ -12,7 +12,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.testing.pytest import XFAIL, slow
-from sympy.core.compatibility import range
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i
 

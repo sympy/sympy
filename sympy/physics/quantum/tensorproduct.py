@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
-from sympy.core.compatibility import range
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 

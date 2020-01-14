@@ -1,5 +1,5 @@
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
 from sympy.testing.pytest import raises, XFAIL
 

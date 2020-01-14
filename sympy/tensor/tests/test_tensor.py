@@ -14,7 +14,6 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     tensorhead, tensorsymmetry, TensorType, substitute_indices
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.compatibility import range
 from sympy.matrices import diag
 
 

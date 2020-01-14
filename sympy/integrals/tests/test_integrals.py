@@ -7,7 +7,6 @@ from sympy import (
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor

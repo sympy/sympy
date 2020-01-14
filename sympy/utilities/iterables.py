@@ -12,7 +12,7 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, range, PY3
+    as_int, default_sort_key, is_sequence, iterable, ordered, PY3
 )
 
 from sympy.utilities.enumerative import (
