@@ -260,12 +260,6 @@ def igcd(*args):
         a = igcd2(a, b) if b else a
     return a
 
-
-try:
-    from math import gcd as igcd2
-except ImportError:
-    igcd2 = _igcd2_python
-
 def _igcd2_python(a, b):
         """Compute gcd of two Python integers a and b."""
         if (a.bit_length() > BIGBITS and
@@ -276,6 +270,11 @@ def _igcd2_python(a, b):
         while b:
             a, b = b, a % b
         return a
+
+try:
+    from math import gcd as igcd2
+except ImportError:
+    igcd2 = _igcd2_python
 
 
 # Use Lehmer's algorithm only for very large numbers.
