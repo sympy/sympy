@@ -2987,6 +2987,17 @@ class Permutation(Atom):
 
         return self
 
+    def _is_reverse_permutation(self):
+        """Tests if the permutation is a reverse permutation.
+
+        Reverse permutation is a permutation that flips an array.
+        And it is unique with respective to its size.
+
+        e.g. A reverse permutation of size 5 is
+        ``Permutation([4, 3, 2, 1, 0])``
+        """
+        return self.array_form == list(reversed(range(self.size)))
+
     # XXX Deprecated flag
     print_cyclic = None
 

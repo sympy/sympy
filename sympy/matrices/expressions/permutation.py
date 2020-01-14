@@ -260,3 +260,15 @@ class MatrixPermute(MatrixExpr):
             return MatMul(PermutationMatrix(perm), mat)
         elif axis == 1:
             return MatMul(mat, PermutationMatrix(perm**-1))
+
+    def _eval_rewrite_as_MatrixSlice(self, *args, **kwargs):
+        from .slice import MatrixSlice
+
+        mat, perm, axis = self.args
+        if not perm._is_reverse_permutation():
+            return None
+
+        if axis == 0:
+            return MatrixSlice(mat, (self.rows, 0, -1), (0, self.cols, 1))
+        elif axis == 1:
+            return MatrixSlice(mat, (0, self.rows, 1), (self.cols, 0, -1))
