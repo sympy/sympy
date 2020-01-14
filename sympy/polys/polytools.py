@@ -6224,35 +6224,36 @@ def sqf_list(f, *gens, **args):
     facs = []
     for fac in Mul.make_args(e):
         b, e = (fac.base, fac.exp) if fac.is_Pow else (fac, S.One)
-        _opt = opt.clone(dict(expand=True))
         if e < 0:
             raise PolynomialError("a univariate polynomial expected")
         try:
-            poly = _poly_from_expr(b, _opt)
+            poly, _ = _poly_from_expr(b, opt)
         except PolificationFailed:
             coeff *= b
         else:
-            gen_set.add(poly[1].gens)
+            gen_set.add(poly.gens)
             if len(gen_set) > 1:
                 raise PolynomialError("a univariate polynomial expected")
-            cf, sqf_facs = poly[0].sqf_list()
+            cf, sqf_facs = poly.sqf_list()
             coeff *= cf
             for sqf_fac in sqf_facs:
                 facs.append((sqf_fac[0] , e*sqf_fac[1]))
     facs = _sorted_factors(facs, 'sqf')
-    if not opt.polys:
-        facs = [(f.as_expr(), k) for f, k in facs]
     if facs:
         new_facs = [facs[0]]
         for i in range(1, len(facs)):
             l = len(new_facs)
             if facs[i-1][1] == facs[i][1]:
-                new_facs[l-1] = (Mul(new_facs[l-1][0], facs[i][0]).expand(), new_facs[l-1][1])
+                new_facs[l-1] = new_facs[l-1][0] * facs[i][0], new_facs[l-1][1]
             else:
                 new_facs.append(facs[i])
+        if not opt.polys:
+            new_facs = [(f.as_expr(), k) for f, k in new_facs]
         res = (coeff, new_facs,)
         return res
     else:
+        if not opt.polys:
+            facs = [(f.as_expr(), k) for f, k in facs]
         return coeff, facs
 
 @public
