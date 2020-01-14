@@ -1,6 +1,7 @@
 """Composite operator."""
 
 from .operator import OpExpr, Op
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 
 class CompositeOp(OpExpr):
@@ -32,6 +33,11 @@ class CompositeOp(OpExpr):
     """
     def __new__(cls, f, *gs, **kwargs):
         f = Op(f)
+
+        if len(gs) == 1 and iterable(gs[0]):    # Allow the shortcut for
+            gs = gs[0]                          # multivariate function, such as
+                                                # f@(g1,g2) for 2-variate f
+
         gs = [Op(g) for g in gs]
         gs = Tuple(*gs)
         obj = super(cls, CompositeOp).__new__(cls, f, *gs, **kwargs)
