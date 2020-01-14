@@ -1,5 +1,5 @@
-from sympy import (Float, I, N, PurePoly, S, Symbol, oo, nan,
-    Matrix, NumPyMatrix as NPMatrix, NonSquareMatrixError, diag, eye)
+from sympy import (Float, I, N, PurePoly, S, Symbol, oo, nan, Matrix,
+    NumPyMatrix, NonSquareMatrixError, diag, eye)
 from sympy.matrices.matrices import MatrixError
 from sympy.testing.pytest import raises, XFAIL, skip
 
@@ -28,51 +28,51 @@ def test_creation():
     skipcheck()
 
     a = np.array([[1, 2, 3], [4, 5, 6]])
-    M = NPMatrix(a)
+    M = NumPyMatrix(a)
     assert M == Matrix([[1, 2, 3], [4, 5, 6]])
-    M = NPMatrix(3, 2, a)
+    M = NumPyMatrix(3, 2, a)
     assert M == Matrix([[1, 2], [3, 4], [5, 6]])
 
     a = np.array([[1, 2], [3, 4]], dtype='i4')
-    M = NPMatrix(a)
+    M = NumPyMatrix(a)
     assert M.dtype == np.int32
-    M = NPMatrix(a, dtype='f4')
+    M = NumPyMatrix(a, dtype='f4')
     assert M.dtype == np.float32
 
     m = np.matrix([[1, 2, 3], [4, 5, 6]])
-    M = NPMatrix(m)
+    M = NumPyMatrix(m)
     assert M == Matrix([[1, 2, 3], [4, 5, 6]])
-    M = NPMatrix(3, 2, m)
+    M = NumPyMatrix(3, 2, m)
     assert M == Matrix([[1, 2], [3, 4], [5, 6]])
 
     m = np.matrix([[1, 2, 3], [4, 5, 6]], dtype='i4')
-    M = NPMatrix(m)
+    M = NumPyMatrix(m)
     assert M.dtype == np.int32
-    M = NPMatrix(m, dtype='f4')
+    M = NumPyMatrix(m, dtype='f4')
     assert M.dtype == np.float32
 
 
 def test_detect_dtype():
     skipcheck()
 
-    assert NPMatrix([[1]]).dtype == np.int64
-    assert NPMatrix([[1.0]]).dtype == np.float64
-    assert NPMatrix([[oo]]).dtype == np.float64
-    assert NPMatrix([[nan]]).dtype == np.float64
-    assert NPMatrix([[I]]).dtype == np.complex128
+    assert NumPyMatrix([[1]]).dtype == np.int64
+    assert NumPyMatrix([[1.0]]).dtype == np.float64
+    assert NumPyMatrix([[oo]]).dtype == np.float64
+    assert NumPyMatrix([[nan]]).dtype == np.float64
+    assert NumPyMatrix([[I]]).dtype == np.complex128
 
 
 def test_as_wrapper():
     skipcheck()
 
     a = np.array([[1, 2], [3, 4]])
-    M = NPMatrix(a, copy=False)
+    M = NumPyMatrix(a, copy=False)
     assert M[0] == 1
     a[0, 0] = -1
     assert M[0] == -1
 
     m = np.matrix([[1, 2], [3, 4]])
-    M = NPMatrix(m, copy=False)
+    M = NumPyMatrix(m, copy=False)
     assert M[0] == 1
     m[0, 0] = -1
     assert M[0] == -1
@@ -82,13 +82,13 @@ def test_as_reshaping_wrapper():
     skipcheck()
 
     a = np.array([[1, 2, 3], [4, 5, 6]])
-    M = NPMatrix(3, 2, a, copy=False)
+    M = NumPyMatrix(3, 2, a, copy=False)
     assert M == Matrix([[1, 2], [3, 4], [5, 6]])
     a[0, 0] = -1
     assert M[0] == -1
 
     m = np.matrix([[1, 2, 3], [4, 5, 6]])
-    M = NPMatrix(3, 2, m, copy=False)
+    M = NumPyMatrix(3, 2, m, copy=False)
     assert M == Matrix([[1, 2], [3, 4], [5, 6]])
     m[0, 0] = -1
     assert M[0] == -1
@@ -98,7 +98,7 @@ def test_array():
     skipcheck()
 
     a = np.array([[1, 2], [3, 4]])
-    M = NPMatrix(a, copy=False)
+    M = NumPyMatrix(a, copy=False)
     assert M.__array__() is a
     assert M.__array__('f4') is not a
 
@@ -106,53 +106,53 @@ def test_array():
 def test_adjugate():
     skipcheck()
 
-    M = NPMatrix(4, 4, [0, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
+    M = NumPyMatrix(4, 4, [0, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
     A = M.adjugate()
 
-    assert isinstance(A, NPMatrix)
+    assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, (4, -8, 4, 0, 76, -68, -8, 24, -122, 142, 4, -48, 48, -72, 0, 24))
 
-    M = NPMatrix(8, 2, M)
+    M = NumPyMatrix(8, 2, M)
     raises(NonSquareMatrixError, lambda: M.adjugate())
 
 
 def test_charpoly():
     skipcheck()
 
-    M = NPMatrix([[1, 2], [3, 4]])
+    M = NumPyMatrix([[1, 2], [3, 4]])
     assert M.charpoly(x='x') == PurePoly(x**2 - 5*x - 2, x, domain='RR')
 
-    M = NPMatrix(4, 1, M)
+    M = NumPyMatrix(4, 1, M)
     raises(NonSquareMatrixError, lambda: M.charpoly())
 
 
 def test_cofactor():
     skipcheck()
 
-    M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert _fcmp(M.cofactor(1, 1), -12)
 
 
 def test_cofactor_matrix():
     skipcheck()
 
-    M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     A = M.cofactor_matrix()
 
-    assert isinstance(A, NPMatrix)
+    assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, (-3, 6, -3, 6, -12, 6, -3, 6, -3))
 
 
 def test_det():
     skipcheck()
 
-    M = NPMatrix([[1, 2], [3, 4]])
+    M = NumPyMatrix([[1, 2], [3, 4]])
     assert _fcmp(M.det(), -2)
     assert _fcmp(M.det_bareiss(), -2)
     assert _fcmp(M.det_berkowitz(), -2)
     assert _fcmp(M.det_LU(), -2)
 
-    M = NPMatrix(4, 1, M)
+    M = NumPyMatrix(4, 1, M)
     raises(NonSquareMatrixError, lambda: M.det())
     raises(NonSquareMatrixError, lambda: M.det_bareiss())
     raises(NonSquareMatrixError, lambda: M.det_berkowitz())
@@ -162,35 +162,35 @@ def test_det():
 def test_minor():
     skipcheck()
 
-    M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert _fcmp(M.cofactor(1, 1), -12)
 
 
 def test_minor_submatrix():
     skipcheck()
 
-    M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     A = M.minor_submatrix(1, 1)
 
-    assert isinstance(A, NPMatrix)
+    assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, Matrix([[1, 3], [7, 9]]))
 
 
 def test_echelon():
     skipcheck()
 
-    M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype='i4') # float gives different result
+    M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype='i4') # float gives different result
     A = M.echelon_form()
 
     assert M.is_echelon is False
-    assert isinstance(A, NPMatrix)
+    assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]]))
 
 
 def test_rank():
     skipcheck()
 
-    M = NPMatrix([[S('1+I'),S('-19/4+5/4*I'),S('1/2-I'),S('9/4+55/16*I'),S('-3/4'),S('45/32-37/16*I'),S('1/4+1/2*I'),S('-129/64-9/64*I'),S('1/4-5/16*I'),S('65/128+87/64*I'),S('-9/32-1/16*I'),S('183/256-97/128*I'),S('3/64+13/64*I'),S('-23/32-59/256*I'),S('15/128-3/32*I'),S('19/256+551/1024*I')],
+    M = NumPyMatrix([[S('1+I'),S('-19/4+5/4*I'),S('1/2-I'),S('9/4+55/16*I'),S('-3/4'),S('45/32-37/16*I'),S('1/4+1/2*I'),S('-129/64-9/64*I'),S('1/4-5/16*I'),S('65/128+87/64*I'),S('-9/32-1/16*I'),S('183/256-97/128*I'),S('3/64+13/64*I'),S('-23/32-59/256*I'),S('15/128-3/32*I'),S('19/256+551/1024*I')],
         [S('21/8+I'),S('-537/64+143/16*I'),S('-5/8-39/16*I'),S('2473/256+137/64*I'),S('-149/64+49/32*I'),S('-177/128-1369/128*I'),S('125/64+87/64*I'),S('-2063/256+541/128*I'),S('85/256-33/16*I'),S('805/128+2415/512*I'),S('-219/128+115/256*I'),S('6301/4096-6609/1024*I'),S('119/128+143/128*I'),S('-10879/2048+4343/4096*I'),S('129/256-549/512*I'),S('42533/16384+29103/8192*I')],
         [S('-2'),S('17/4-13/2*I'),S('1+I'),S('-19/4+5/4*I'),S('1/2-I'),S('9/4+55/16*I'),S('-3/4'),S('45/32-37/16*I'),S('1/4+1/2*I'),S('-129/64-9/64*I'),S('1/4-5/16*I'),S('65/128+87/64*I'),S('-9/32-1/16*I'),S('183/256-97/128*I'),S('3/64+13/64*I'),S('-23/32-59/256*I')],
         [S('1/4+13/4*I'),S('-825/64-147/32*I'),S('21/8+I'),S('-537/64+143/16*I'),S('-5/8-39/16*I'),S('2473/256+137/64*I'),S('-149/64+49/32*I'),S('-177/128-1369/128*I'),S('125/64+87/64*I'),S('-2063/256+541/128*I'),S('85/256-33/16*I'),S('805/128+2415/512*I'),S('-219/128+115/256*I'),S('6301/4096-6609/1024*I'),S('119/128+143/128*I'),S('-10879/2048+4343/4096*I')],
@@ -208,10 +208,10 @@ def test_rank():
 def test_rref():
     skipcheck()
 
-    M = NPMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     A = M.rref()
 
-    assert isinstance(A[0], NPMatrix)
+    assert isinstance(A[0], NumPyMatrix)
     assert _fcmpseq(A[0], Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]]))
     assert A[1] == (0, 1)
 
@@ -219,14 +219,14 @@ def test_rref():
 def test_columnspace():
     skipcheck()
 
-    M = NPMatrix([
+    M = NumPyMatrix([
         [ 1,  2,  0,  2,  5],
         [-2, -5,  1, -1, -8],
         [ 0, -3,  3,  4,  1],
         [ 3,  6,  0, -7,  2]])
     A = M.columnspace()
 
-    assert all(isinstance(m, NPMatrix) for m in A)
+    assert all(isinstance(m, NumPyMatrix) for m in A)
     assert _fcmpseq(A[0], Matrix([1, -2, 0, 3]))
     assert _fcmpseq(A[1], Matrix([2, -5, -3, 6]))
     assert _fcmpseq(A[2], Matrix([2, -1, 4, -7]))
@@ -235,14 +235,14 @@ def test_columnspace():
 def test_rowspace():
     skipcheck()
 
-    M = NPMatrix([
+    M = NumPyMatrix([
         [ 1,  2,  0,  2,  5],
         [-2, -5,  1, -1, -8],
         [ 0, -3,  3,  4,  1],
         [ 3,  6,  0, -7,  2]], dtype='i4') # float gives different result
     A = M.rowspace()
 
-    assert all(isinstance(m, NPMatrix) for m in A)
+    assert all(isinstance(m, NumPyMatrix) for m in A)
     assert _fcmpseq(A[0], Matrix([[1, 2, 0, 2, 5]]))
     assert _fcmpseq(A[1], Matrix([[0, -1, 1, 3, 2]]))
     assert _fcmpseq(A[2], Matrix([[0, 0, 0, 5, 5]]))
@@ -251,14 +251,14 @@ def test_rowspace():
 def test_nullspace():
     skipcheck()
 
-    M = NPMatrix([
+    M = NumPyMatrix([
         [ 1,  3, 0,  2,  6, 3, 1],
         [-2, -6, 0, -2, -8, 3, 1],
         [ 3,  9, 0,  0,  6, 6, 2],
         [-1, -3, 0,  1,  0, 9, 3]])
     A = M.nullspace()
 
-    assert all(isinstance(m, NPMatrix) for m in A)
+    assert all(isinstance(m, NumPyMatrix) for m in A)
     assert _fcmpseq(A[0], Matrix([-3, 1, 0, 0, 0, 0, 0]))
     assert _fcmpseq(A[1], Matrix([0, 0, 1, 0, 0, 0, 0]))
     assert _fcmpseq(A[2], Matrix([-2, 0, 0, -2, 1, 0, 0]))
@@ -269,9 +269,9 @@ def test_orthogonalize():
     skipcheck()
 
     v = [Matrix([1, I]), Matrix([1, -I])]
-    A = NPMatrix.orthogonalize(*v)
+    A = NumPyMatrix.orthogonalize(*v)
 
-    assert all(isinstance(m, NPMatrix) for m in A)
+    assert all(isinstance(m, NumPyMatrix) for m in A)
     assert _fcmp(A[0][0], 1)
     assert _fcmp(A[0][1] / I, 1)
     assert _fcmp(A[1][0], 1)
@@ -281,15 +281,15 @@ def test_orthogonalize():
 def test_eigenvals():
     skipcheck()
 
-    M = NPMatrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
+    M = NumPyMatrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     assert M.eigenvals() == {2: 1, -1: 1, 0: 1}
 
-    M = NPMatrix(3, 3, [1.5, 0.75, 1.75, 0, -0.75, 0.5, 0, 0, -0.25])
-    assert M.eigenvals() == {S(3)/2: 1, -S(3)/4: 1, -S(1)/4: 1}
-    assert all(e.epsilon_eq(v) for e, v in zip(M.eigenvals(rational=False),
-        (1.5, -0.75, -0.25)))
+    M = NumPyMatrix(3, 3, [1.5, 0.75, 1.75, 0, -0.75, 0.5, 0, 0, -0.25])
+    e = M.eigenvals()
+    assert _fcmpseqsort(e.keys(), (1.5, -0.75, -0.25))
+    assert all(v == 1 for v in e.values())
 
-    M = NPMatrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, 1])
+    M = NumPyMatrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, 1])
     assert M.eigenvals() == {1: 3}
     assert M.eigenvals(multiple=True) == [1, 1, 1]
 
@@ -299,7 +299,7 @@ def test_eigenvects():
 
     M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     A = M.eigenvects()
-    B = NPMatrix(M).eigenvects()
+    B = NumPyMatrix(M).eigenvects()
 
     assert _fcmp(B[0][0], A[0][0])
     assert _fcmp(B[1][0], A[1][0])
@@ -307,12 +307,12 @@ def test_eigenvects():
     assert B[0][1] == A[0][1]
     assert B[1][1] == A[1][1]
     assert B[2][1] == A[2][1]
-    assert _fcmp(abs(N(A[0][2][0].normalized().dot(B[0][2][0]))), 1)
-    assert _fcmp(abs(N(A[1][2][0].normalized().dot(B[1][2][0]))), 1)
-    assert _fcmp(abs(N(A[2][2][0].normalized().dot(B[2][2][0]))), 1)
+    assert _fcmpseq(A[0][2][0], B[0][2][0])
+    assert _fcmpseq(A[1][2][0], B[1][2][0])
+    assert _fcmpseq(A[2][2][0], B[2][2][0])
 
     A = M.left_eigenvects()
-    B = NPMatrix(M).left_eigenvects()
+    B = NumPyMatrix(M).left_eigenvects()
 
     assert _fcmp(B[0][0], A[0][0])
     assert _fcmp(B[1][0], A[1][0])
@@ -320,35 +320,35 @@ def test_eigenvects():
     assert B[0][1] == A[0][1]
     assert B[1][1] == A[1][1]
     assert B[2][1] == A[2][1]
-    assert _fcmp(abs(N(A[0][2][0].normalized().dot(B[0][2][0]))), 1)
-    assert _fcmp(abs(N(A[1][2][0].normalized().dot(B[1][2][0]))), 1)
-    assert _fcmp(abs(N(A[2][2][0].normalized().dot(B[2][2][0]))), 1)
+    assert _fcmpseq(A[0][2][0], B[0][2][0])
+    assert _fcmpseq(A[1][2][0], B[1][2][0])
+    assert _fcmpseq(A[2][2][0], B[2][2][0])
 
 
 def test_diagonalization():
     skipcheck ()
 
-    M = NPMatrix([[1, 2+I], [2-I, 3]])
+    M = NumPyMatrix([[1, 2+I], [2-I, 3]])
     assert M.is_diagonalizable()
 
-    M = NPMatrix(3, 2, [-3, 1, -3, 20, 3, 10])
+    M = NumPyMatrix(3, 2, [-3, 1, -3, 20, 3, 10])
     assert not M.is_diagonalizable()
     assert not M.is_symmetric()
     raises(NonSquareMatrixError, lambda: M.diagonalize())
 
     # diagonalizable
-    M = NPMatrix(diag(1, 2, 3))
+    M = NumPyMatrix(diag(1, 2, 3))
     (P, D) = M.diagonalize()
     assert _fcmpseq(P, eye(3))
     assert _fcmpseq(D, M)
 
-    M = NPMatrix(2, 2, [0, 1, 1, 0])
+    M = NumPyMatrix(2, 2, [0, 1, 1, 0])
     assert M.is_symmetric()
     assert M.is_diagonalizable()
     (P, D) = M.diagonalize()
     assert _fcmpseq(P.inv() * M * P, D)
 
-    M = NPMatrix(2, 2, [1, 0, 0, 3])
+    M = NumPyMatrix(2, 2, [1, 0, 0, 3])
     assert M.is_symmetric()
     assert M.is_diagonalizable()
     (P, D) = M.diagonalize()
@@ -356,19 +356,19 @@ def test_diagonalization():
     assert _fcmpseq(P, eye(2))
     assert _fcmpseq(D, M)
 
-    M = NPMatrix(2, 2, [1, 1, 0, 0])
+    M = NumPyMatrix(2, 2, [1, 1, 0, 0])
     assert M.is_diagonalizable()
     (P, D) = M.diagonalize()
     assert _fcmpseq(P.inv() * M * P, D)
 
-    M = NPMatrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
+    M = NumPyMatrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     assert M.is_diagonalizable()
     (P, D) = M.diagonalize()
     assert _fcmpseq(P.inv() * M * P, D)
     for i in P:
         assert i.as_numer_denom()[1] == 1
 
-    M = NPMatrix(2, 2, [1, 0, 0, 0])
+    M = NumPyMatrix(2, 2, [1, 0, 0, 0])
     assert M.is_diagonal()
     assert M.is_diagonalizable()
     (P, D) = M.diagonalize()
@@ -376,7 +376,7 @@ def test_diagonalization():
     assert _fcmpseq(P, Matrix([[0, 1], [1, 0]]))
 
     # diagonalizable, complex only
-    M = NPMatrix(2, 2, [0, 1, -1, 0])
+    M = NumPyMatrix(2, 2, [0, 1, -1, 0])
     assert not M.is_diagonalizable(True)
     raises(MatrixError, lambda: M.diagonalize(True))
     assert M.is_diagonalizable()
@@ -384,11 +384,11 @@ def test_diagonalization():
     assert P.inv() * M * P == D # _fcmpseq(P.inv() * M * P, D)
 
     # not diagonalizable
-    M = NPMatrix(2, 2, [0, 1, 0, 0])
+    M = NumPyMatrix(2, 2, [0, 1, 0, 0])
     assert not M.is_diagonalizable()
     raises(MatrixError, lambda: M.diagonalize())
 
-    M = NPMatrix(3, 3, [-3, 1, -3, 20, 3, 10, 2, -2, 4])
+    M = NumPyMatrix(3, 3, [-3, 1, -3, 20, 3, 10, 2, -2, 4])
     assert not M.is_diagonalizable()
     raises(MatrixError, lambda: M.diagonalize())
 
@@ -398,14 +398,14 @@ def test_definite():
 
     # Examples from Gilbert Strang, "Introduction to Linear Algebra"
     # Positive definite matrices
-    M = NPMatrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    M = NumPyMatrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
     assert M.is_positive_definite == True
     assert M.is_positive_semidefinite == True
     assert M.is_negative_definite == False
     assert M.is_negative_semidefinite == False
     assert M.is_indefinite == False
 
-    M = NPMatrix([[5, 4], [4, 5]])
+    M = NumPyMatrix([[5, 4], [4, 5]])
     assert M.is_positive_definite == True
     assert M.is_positive_semidefinite == True
     assert M.is_negative_definite == False
@@ -413,14 +413,14 @@ def test_definite():
     assert M.is_indefinite == False
 
     # Positive semidefinite matrices
-    M = NPMatrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    M = NumPyMatrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
     assert M.is_positive_definite == False
     assert M.is_positive_semidefinite == True
     assert M.is_negative_definite == False
     assert M.is_negative_semidefinite == False
     assert M.is_indefinite == False
 
-    M = NPMatrix([[1, 2], [2, 4]])
+    M = NumPyMatrix([[1, 2], [2, 4]])
     assert M.is_positive_definite == False
     assert M.is_positive_semidefinite == True
     assert M.is_negative_definite == False
@@ -429,14 +429,14 @@ def test_definite():
 
     # Examples from Mathematica documentation
     # Non-hermitian positive definite matrices
-    M = NPMatrix([[2, 3], [4, 8]])
+    M = NumPyMatrix([[2, 3], [4, 8]])
     assert M.is_positive_definite == True
     assert M.is_positive_semidefinite == True
     assert M.is_negative_definite == False
     assert M.is_negative_semidefinite == False
     assert M.is_indefinite == False
 
-    M = NPMatrix([[1, 2*I], [-I, 4]])
+    M = NumPyMatrix([[1, 2*I], [-I, 4]])
     assert M.is_positive_definite == True
     assert M.is_positive_semidefinite == True
     assert M.is_negative_definite == False
@@ -447,60 +447,52 @@ def test_definite():
 def test_jordan_form():
     skipcheck ()
 
-    m = NPMatrix(3, 2, [-3, 1, -3, 20, 3, 10])
+    m = NumPyMatrix(3, 2, [-3, 1, -3, 20, 3, 10])
     raises(NonSquareMatrixError, lambda: m.jordan_form())
 
     # diagonalizable
-    M = NPMatrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
-    N = NPMatrix(3, 3, [-1, 0, 0, 0, 1, 0, 0, 0, 1])
+    M = NumPyMatrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
+    N = NumPyMatrix(3, 3, [-1, 0, 0, 0, 1, 0, 0, 0, 1])
     _, J = M.jordan_form()
     assert _fcmpseq(N, J)
     assert _fcmpseq(N, M.diagonalize()[1])
 
     # Jordan cells
     # complexity: one of eigenvalues is zero
-    M = NPMatrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-    N = NPMatrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
+    M = NumPyMatrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+    N = NumPyMatrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
     _, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
     # complexity: all of eigenvalues are equal
-    M = NPMatrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
-    N = NPMatrix(3, 3, [-1, 1, 0, 0, -1, 0, 0, 0, -1])
-    P, J = M.jordan_form()
+    M = NumPyMatrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
+    N = NumPyMatrix(3, 3, [-1, 1, 0, 0, -1, 0, 0, 0, -1])
+    _, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
     # complexity: two of eigenvalues are zero
-    M = NPMatrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
-    N = NPMatrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
+    M = NumPyMatrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
+    N = NumPyMatrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
     P, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
-    M = NPMatrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-    N = NPMatrix(4, 4, [-2, 0, 0, 0,
+    M = NumPyMatrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
+    N = NumPyMatrix(4, 4, [-2, 0, 0, 0,
                          0, 2, 1, 0,
                          0, 0, 2, 0,
                          0, 0, 0, 2])
     P, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
-    M = NPMatrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
-    assert not M.is_diagonalizable()
-    N = NPMatrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
-    P, J = M.jordan_form()
+    M = NumPyMatrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
+    N = NumPyMatrix(4, 4, [2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
+    _, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
-
-# This fails due to numerical tolerance issues, setting _TOLERANCE = 1e-6 in
-# matrices.numpy.py makes this work but that tolerance seems too high for
-# general use.
-@XFAIL
-def test_jordan_form_failing():
-    skipcheck ()
-
-    M = NPMatrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
-    N = NPMatrix(4, 4, [2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
-    _, J = M.jordan_form()
+    M = NumPyMatrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
+    assert not M.is_diagonalizable()
+    N = NumPyMatrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
+    P, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
 
@@ -509,9 +501,9 @@ def test_singular_values():
 
     from math import sqrt
 
-    M = NPMatrix([[0, 1*I], [2, 0]])
+    M = NumPyMatrix([[0, 1*I], [2, 0]])
     assert _fcmpseqsort(M.singular_values(), (2, 1))
 
-    M = NPMatrix([[2, 4], [1, 3], [0, 0], [0, 0]])
+    M = NumPyMatrix([[2, 4], [1, 3], [0, 0], [0, 0]])
     assert _fcmpseqsort(M.singular_values(), [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221))])
     assert _fcmpseqsort(M.T.singular_values(), [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221)), 0, 0])

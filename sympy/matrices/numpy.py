@@ -11,16 +11,6 @@ from sympy.utilities.decorator import doctest_depends_on
 from .common import NonSquareMatrixError
 from .dense import MutableDenseMatrix
 
-_TOLERANCE   = 1e-13 # tolerance for nsympify rationalization
-_TOLERANCEIM = 1e-6 # much lower tolerance for truncating imaginaries to reals, set to 1e-5 if numerical errors persist
-
-
-def _truncim(x): # truncate very small imaginary component to real
-    return x if abs(x.imag) >= _TOLERANCEIM else x.real
-
-def _fsimplify(x):
-    return nsimplify(_truncim(x), rational=True, tolerance=_TOLERANCE)
-
 
 def _detect_dtype(l): # Is there a better way to do this?
     import numpy as np
@@ -38,7 +28,7 @@ def _detect_dtype(l): # Is there a better way to do this?
 
         else:
             if any(isinstance(e, Float) for e in l) or i != f:
-                return np.float64
+                return np.float64 # this also catches integers which are too big
             else:
                 return np.int64
 
@@ -217,92 +207,3 @@ class NumPyMatrix(MutableDenseMatrix):
         import numpy.linalg as npl
 
         return sympify(npl.matrix_rank(self._arr))
-
-    @doctest_depends_on(modules=('numpy',))
-    def eigenvals(self, *args, multiple=False, rational=True, **kwargs):
-        """Returns the eigenvalues of the matrix using ``numpy.linalg.eigvals``.
-
-        Parameters
-        ==========
-
-        rational : bool, optional
-            When ``True`` (default) this will convert the numerical values
-            returned from NumPy to rationals and truncate imaginary values
-            towards zero below a certain threshold. This is necessary because
-            of numerical inaccuracies which will cause numpy to calculate
-            eigenvalues which are very close to one another giving the matrix an
-            incorrect algebraic multiplicity. When ``False`` the results of
-            ``numpy.linalg.eigvals`` are returned as is in all their numerically
-            inaccurate glory.
-
-        Examples
-        ========
-
-        >>> from sympy import NumPyMatrix
-        >>> M = NumPyMatrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-        >>> M.eigenvals()
-        {-2: 1, 2: 3}
-        >>> M.eigenvals(rational=False)
-        {-2.0: 1, 2.0: 1, 2.0 - 7.26128422749622e-8*I: 1, 2.0 + 7.26128422749622e-8*I: 1}
-        """
-
-        import numpy.linalg as npl
-
-        evals    = npl.eigvals(self._arr)
-        simpfunc = _fsimplify if rational else sympify
-
-        if not multiple:
-            return {k: v for k, v in Counter(simpfunc(ev) for ev in evals).items()}
-        else:
-            return [simpfunc(v) for v in evals]
-
-    @doctest_depends_on(modules=('numpy',))
-    def eigenvects(self, *args, rational=True, **kwargs):
-        """Returns the eigenvalues and eigenvectors of the matrix using
-        ``numpy.linalg.eigv``.
-
-        Parameters
-        ==========
-
-        rational : bool, optional
-            When ``True`` (default) this will convert the numerical values
-            returned from NumPy for the eigenvalues to rationals and truncate
-            imaginary values towards zero below a certain threshold. This is
-            necessary because of numerical inaccuracies which will cause numpy
-            to calculate eigenvalues which are very close to one another giving
-            the matrix an incorrect algebraic multiplicity. When ``False`` the
-            eigenvalues from ``numpy.linalg.eig`` used as is and may return
-            incorrect algebraic and geometric multiplicities.
-
-        Examples
-        ========
-
-        >>> from sympy import NumPyMatrix
-        >>> M = NumPyMatrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-        >>> ev = M.eigenvects()
-        >>> len(ev), sum(len(e[2]) for e in ev)
-        (2, 3)
-        >>> ev = M.eigenvects(rational=False)
-        >>> len(ev), sum(len(e[2]) for e in ev)
-        (4, 4)
-        """
-
-        import numpy.linalg as npl
-
-        ret          = {}
-        evals, evecs = npl.eig(self._arr)
-        simpfunc     = _fsimplify if rational else sympify
-
-        for i, eval in enumerate(evals):
-            eval    = simpfunc(eval)
-            eig     = ret.setdefault(eval, [eval, 0, []])
-            ev      = evecs[:, i]
-            eig[1] += 1
-
-            for ev2 in eig[2]: # reject colinear eigenvectors
-                if abs(abs(ev.dot(ev2._arr)[0]) - 1) < _TOLERANCE:
-                    break
-            else:
-                eig[2].append(NumPyMatrix(ev))
-
-        return [(v, m, es) for v, m, es in sorted(ret.values(), key=default_sort_key)]
