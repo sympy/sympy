@@ -1375,7 +1375,8 @@ class Mul(Expr, AssocOp):
                 return
             if a is None:
                 return
-        return False
+        if all(x.is_real for x in self.args):
+            return False
 
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it

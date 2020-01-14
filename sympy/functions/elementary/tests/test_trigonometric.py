@@ -1828,3 +1828,11 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(pi*Rational(3, 2) + x) == csc(x)
     assert sec(pi*Rational(3, 2) - x) == -csc(x)
+
+
+def test_as_real_imag():
+    # This is for https://github.com/sympy/sympy/issues/17142
+    # If it start failing again in irrelevant builds or in the master
+    # please open up the issue again.
+    expr = atan(I/(I + I*tan(1)))
+    assert expr.as_real_imag() == (expr, 0)
