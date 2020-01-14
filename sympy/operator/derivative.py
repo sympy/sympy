@@ -12,7 +12,7 @@ class DerivatedOp(OpExpr):
     ========
 
     >>> from sympy import sin
-    >>> from sympy.operator import DerivatedOp
+    >>> from sympy.operator.derivative import DerivatedOp
     >>> from sympy.abc import x
 
     >>> DerivatedOp(sin)

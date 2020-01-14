@@ -20,7 +20,7 @@ from sympy import (
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW, Op, CompositeOp)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW, Op)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -38,6 +38,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.operator.composite import CompositeOp
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr

@@ -1,6 +1,6 @@
 from sympy import cos, sin
 from sympy.abc import x
-from sympy.operator import DerivatedOp
+from sympy.operator.derivative import DerivatedOp
 
 def test_DerivatedOp():
     assert DerivatedOp(sin)(x).doit() == cos(x)

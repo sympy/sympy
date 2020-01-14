@@ -232,7 +232,7 @@ class AppliedOp(OpExpr):
     ========
 
     >>> from sympy import sin, cos, S
-    >>> from sympy.operator import Op, AppliedOp
+    >>> from sympy.operator.operator import Op, AppliedOp
     >>> from sympy.abc import x,y,z
 
     >>> Op(1)(x, evaluate=False)

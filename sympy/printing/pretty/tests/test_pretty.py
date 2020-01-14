@@ -9,7 +9,7 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag, Op, CompositeOp)
+    Heaviside, dirichlet_eta, diag, Op)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
@@ -27,6 +27,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 from sympy.matrices.expressions import hadamard_power
+
+from sympy.operator.composite import CompositeOp
 
 from sympy.physics import mechanics
 from sympy.physics.units import joule, degree
