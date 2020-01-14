@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB, _assume_defined
-from sympy.core.compatibility import (string_types, range, is_sequence,
-    ordered)
+from sympy.core.compatibility import is_sequence, ordered
 from .basic import Basic
 from .sympify import sympify
 from .singleton import S
@@ -87,7 +86,7 @@ def _symbol(s, matching_symbol=None, **assumptions):
     sympy.core.symbol.Symbol
 
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         if matching_symbol and matching_symbol.name == s:
             return matching_symbol
         return Symbol(s, **assumptions)
@@ -236,7 +235,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
         obj = Expr.__new__(cls)
@@ -624,7 +623,7 @@ def symbols(names, **args):
     """
     result = []
 
-    if isinstance(names, string_types):
+    if isinstance(names, str):
         marker = 0
         literals = [r'\,', r'\:', r'\ ']
         for i in range(len(literals)):

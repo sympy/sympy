@@ -1,6 +1,6 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
                    zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
-                   floor, Rational)
+                   floor)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or

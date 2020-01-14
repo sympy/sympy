@@ -4,7 +4,7 @@ from collections import defaultdict
 from functools import cmp_to_key
 
 from .basic import Basic
-from .compatibility import reduce, is_sequence, range
+from .compatibility import reduce, is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S

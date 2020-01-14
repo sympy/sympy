@@ -12,7 +12,6 @@ from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.matrices import \
     Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.core.mod import Mod
-from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
 

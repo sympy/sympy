@@ -11,7 +11,6 @@ complete source code files.
 
 from __future__ import print_function, division
 from sympy.core import Mul, Pow, S, Rational
-from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -474,7 +473,7 @@ class JuliaCodePrinter(CodePrinter):
         """Accepts a string of code or a list of code lines"""
 
         # code mostly copied from ccode
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

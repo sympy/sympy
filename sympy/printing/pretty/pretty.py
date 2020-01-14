@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S
-from sympy.core.compatibility import range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
@@ -49,7 +48,7 @@ class PrettyPrinter(Printer):
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
 
-        if not isinstance(self._settings['imaginary_unit'], string_types):
+        if not isinstance(self._settings['imaginary_unit'], str):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))

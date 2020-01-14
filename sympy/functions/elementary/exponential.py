@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range
 from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
         expand_mul)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or

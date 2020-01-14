@@ -6,7 +6,7 @@ from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 from sympy.core.basic import preorder_traversal
-from sympy.core.compatibility import iterable, range, ordered
+from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff

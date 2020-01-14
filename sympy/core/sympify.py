@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from inspect import getmro
 
-from .compatibility import iterable, string_types, range
+from .compatibility import iterable
 from .parameters import global_parameters
 
 
@@ -318,7 +318,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 from ..tensor.array import Array
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
-    if not isinstance(a, string_types):
+    if not isinstance(a, str):
         for coerce in (float, int):
             try:
                 coerced = coerce(a)

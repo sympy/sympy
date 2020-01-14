@@ -4,7 +4,6 @@ AST nodes specific to the C family of languages
 
 from sympy.codegen.ast import Attribute, Declaration, Node, String, Token, Type, none, FunctionCall
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
 
@@ -17,7 +16,7 @@ static = Attribute('static')
 
 def alignof(arg):
     """ Generate of FunctionCall instance for calling 'alignof' """
-    return FunctionCall('alignof', [String(arg) if isinstance(arg, string_types) else arg])
+    return FunctionCall('alignof', [String(arg) if isinstance(arg, str) else arg])
 
 
 def sizeof(arg):
@@ -32,7 +31,7 @@ def sizeof(arg):
     >>> ccode(sizeof(real))
     'sizeof(double)'
     """
-    return FunctionCall('sizeof', [String(arg) if isinstance(arg, string_types) else arg])
+    return FunctionCall('sizeof', [String(arg) if isinstance(arg, str) else arg])
 
 
 class CommaOperator(Basic):
