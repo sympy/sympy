@@ -268,3 +268,6 @@ def test_residue():
     assert factmod(13, 11) == 0
     assert factmod(29, 29) == 0
     assert factmod(55, 61) == 30
+    assert factmod(10, 17) == 14
+    assert factmod(0, 7) == 1
+    assert factmod(10, 109) == 81
