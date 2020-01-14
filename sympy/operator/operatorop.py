@@ -10,7 +10,7 @@ from sympy.core.numbers import Rational
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 
 class OpAdd(OpExpr, Add):
     """Added operator.
@@ -744,7 +744,7 @@ class OpMul(OpExpr, Mul):
                     if t:
                         d, t = integer_nthroot(d, 2)
                         if t:
-                            r = sympify(n)/d
+                            r = _sympify(n)/d
                             return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
         p = Pow(b, e, evaluate=False)

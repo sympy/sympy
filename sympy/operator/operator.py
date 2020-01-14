@@ -6,7 +6,7 @@ from sympy.core.containers import Tuple
 from sympy.core.function import FunctionClass
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 
 class OpExpr(Expr):
     """Basic class for every operator classes.  'Op' stands for 'Operator'.
@@ -15,13 +15,13 @@ class OpExpr(Expr):
     _op_priority = 20 # This is some random big value
 
     def __call__(self, *args, evaluate=True, **kwargs):
-        args = sympify(args)
+        args = _sympify(args)
         return AppliedOp(self, args, evaluate=evaluate, **kwargs)
 
     def _eval_operation(self, *args, **kwargs):
         """Every subclasses of OpExpr should override this.
         """
-        raise NotImplementedError()
+        raise NotImplementedError("_eval_operation method is not overridden.")
 
     def __pos__(self):
         return self
@@ -90,7 +90,7 @@ class OpExpr(Expr):
     def _process_operator(cls, *args):
         """Unnest the Op and wrap the arguments with Op.
         """
-        args = [sympify(a) for a in args]
+        args = [_sympify(a) for a in args]
         newargs = []
         for a in args:
             if isinstance(a, FunctionClass):
@@ -130,7 +130,6 @@ class Op(OpExpr, Atom):
         >>> from sympy import sin, cos
         >>> from sympy.operator import Op
         >>> from sympy.abc import x,y,z
-
         >>> Op(1)
         1
         >>> Op(sin)
@@ -168,7 +167,7 @@ class Op(OpExpr, Atom):
         if isinstance(operator, OpExpr):
             return operator
 
-        operator = sympify(operator)
+        operator = _sympify(operator)
         if argidxs is None and isinstance(operator, FunctionClass):
             nargs = operator.nargs
             if nargs is S.Naturals0:
@@ -192,11 +191,11 @@ class Op(OpExpr, Atom):
         for a in argidxs:
             if iterable(a):
                 if len(a) == 2 and a[1] == a[0]+1:
-                    new_argidxs.append(sympify(a[0]))
+                    new_argidxs.append(_sympify(a[0]))
                 else:
                     new_argidxs.append(Tuple(*a))
             else:
-                new_argidxs.append(sympify(a))
+                new_argidxs.append(_sympify(a))
         result = Tuple(*new_argidxs)
         return result
 

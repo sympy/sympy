@@ -307,12 +307,10 @@ class FunctionClass(ManagedProperties):
         return OpPow(other, self)
 
     def __div__(self, other):
-        from sympy.core.singleton import S
         from sympy.operator.operatorop import OpMul, OpPow
         return OpMul(self, OpPow(other, S.NegativeOne))
 
     def __rdiv__(self, other):
-        from sympy.core.singleton import S
         from sympy.operator.operatorop import OpMul, OpPow
         return OpMul(other, OpPow(self, S.NegativeOne))
 
