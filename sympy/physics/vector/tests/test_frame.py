@@ -5,7 +5,7 @@ from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dot)
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 

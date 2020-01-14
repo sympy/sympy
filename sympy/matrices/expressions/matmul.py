@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
-from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -13,7 +12,7 @@ from .matexpr import \
     MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
 from .matpow import MatPow
 from .transpose import transpose
-from .permutation import MatrixPermute, PermutationMatrix
+from .permutation import PermutationMatrix
 
 
 # XXX: MatMul should perhaps not subclass directly from Mul
@@ -160,7 +159,6 @@ class MatMul(MatrixExpr, Mul):
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
                     for arg in self.args[::-1]]).doit()
         except ShapeError:
-            from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
     def doit(self, **kwargs):

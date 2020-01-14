@@ -1,4 +1,4 @@
-from sympy import tensorproduct, MutableDenseNDimArray
+from sympy import MutableDenseNDimArray, S
 from sympy.tensor.tensor import (TensExpr, TensMul, TensorIndex)
 
 
@@ -53,6 +53,14 @@ class PartialDerivative(TensExpr):
         obj._dum = dum
         return obj
 
+    @property
+    def coeff(self):
+        return S.One
+
+    @property
+    def nocoeff(self):
+        return self
+
     @classmethod
     def _contract_indices_for_derivative(cls, expr, variables):
         variables_opposite_valence = []
@@ -84,6 +92,12 @@ class PartialDerivative(TensExpr):
     def get_free_indices(self):
         free = sorted(self._free, key=lambda x: x[1])
         return [i[0] for i in free]
+
+    def _replace_indices(self, repl):
+        expr = self.expr.xreplace(repl)
+        mirrored = {-k: -v for k, v in repl.items()}
+        variables = [i.xreplace(mirrored) for i in self.variables]
+        return self.func(expr, *variables)
 
     @property
     def expr(self):

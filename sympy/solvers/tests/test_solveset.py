@@ -9,7 +9,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    atanh, sinh, tanh, cosh, sech, coth)
+    sinh, tanh, cosh, sech, coth)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -30,9 +30,9 @@ from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.utilities.pytest import (XFAIL, raises, skip, slow, SKIP,
+from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP,
     nocache_fail)
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
 from sympy.solvers.solveset import (
@@ -2185,6 +2185,7 @@ def test_invert_modular():
             (x, ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x) == \
             (x**2 + x + 1, ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
+    assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, EmptySet())
 
 
 def test_solve_modular():
@@ -2242,11 +2243,13 @@ def test_solve_modular():
     assert solveset(Mod(3**(3**x), 4) - 3, x, S.Integers) == \
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers)
-    # Not Implemented for m without primitive root
+    # Implemented for m without primitive root
+    assert solveset(Mod(x**3, 7) - 2, x, S.Integers) == EmptySet()
     assert solveset(Mod(x**3, 8) - 1, x, S.Integers) == \
-            ConditionSet(x, Eq(Mod(x**3, 8) - 1, 0), S.Integers)
+            ImageSet(Lambda(n, 8*n + 1), S.Integers)
     assert solveset(Mod(x**4, 9) - 4, x, S.Integers) == \
-            ConditionSet(x, Eq(Mod(x**4, 9) - 4, 0), S.Integers)
+            Union(ImageSet(Lambda(n, 9*n + 4), S.Integers),
+            ImageSet(Lambda(n, 9*n + 5), S.Integers))
     # domain intersection
     assert solveset(3 - Mod(5*x - 8, 7), x, S.Naturals0) == \
             Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0)

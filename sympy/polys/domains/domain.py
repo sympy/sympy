@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, integer_types, is_sequence
+from sympy.core.compatibility import HAS_GMPY, is_sequence
 from sympy.core.decorators import deprecated
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
@@ -114,7 +114,7 @@ class Domain(object):
 
         from sympy.polys.domains import PythonIntegerRing, GMPYIntegerRing, GMPYRationalField, RealField, ComplexField
 
-        if isinstance(element, integer_types):
+        if isinstance(element, int):
             return self.convert_from(element, PythonIntegerRing())
 
         if HAS_GMPY:

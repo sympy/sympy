@@ -1,7 +1,7 @@
 from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo,
                    powsimp, Rational)
 from sympy.core.function import _mexpand
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.functions.elementary.trigonometric import sin
 from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
@@ -18,7 +18,7 @@ from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_general_sum_of_even_powers, _can_do_sum_of_squares)
 from sympy.utilities import default_sort_key
 
-from sympy.utilities.pytest import slow, raises, XFAIL
+from sympy.testing.pytest import slow, raises, XFAIL
 from sympy.utilities.iterables import (
         signed_permutations)
 
@@ -35,9 +35,12 @@ def diop_simplify(eq):
 
 def test_input_format():
     raises(TypeError, lambda: diophantine(sin(x)))
-    raises(TypeError, lambda: diophantine(3))
     raises(TypeError, lambda: diophantine(x/pi - 3))
 
+def test_nosols():
+    # diophantine should sympify eq so that these are equivalent
+    assert diophantine(3) == set()
+    assert diophantine(S(3)) == set()
 
 def test_univariate():
     assert diop_solve((x - 1)*(x - 2)**2) == set([(1,), (2,)])
@@ -487,12 +490,15 @@ def test_diophantine():
     assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
     assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))
     # Following test case caused problems in parametric representation
-    # But this can be solved by factroing out y.
+    # But this can be solved by factoring out y.
     # No need to use methods for ternary quadratic equations.
     assert check_solutions(y**2 - 7*x*y + 4*y*z)
     assert check_solutions(x**2 - 2*x + 1)
 
     assert diophantine(x - y) == diophantine(Eq(x, y))
+    # 18196
+    eq = x**4 + y**4 - 97
+    assert diophantine(eq, permute=True) == diophantine(-eq, permute=True)
     assert diophantine(3*x*pi - 2*y*pi) == set([(2*t_0, 3*t_0)])
     eq = x**2 + y**2 + z**2 - 14
     base_sol = set([(1, 2, 3)])

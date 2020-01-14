@@ -3,7 +3,7 @@ from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Functio
     Wild, pi, meijerg
 )
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def test_symbol():

@@ -1,5 +1,5 @@
 from sympy.physics.units import DimensionSystem, joule, second, ampere
-from sympy.utilities.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy import Rational, S
 from sympy.physics.units.definitions import c, kg, m, s

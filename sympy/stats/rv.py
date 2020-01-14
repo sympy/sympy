@@ -18,7 +18,6 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function)
-from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -184,7 +183,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             s = Symbol(s)
         if not isinstance(s, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -655,7 +654,15 @@ def given(expr, condition=None, **kwargs):
             if temp == True:
                 return True
             if temp != False:
-                sums += expr.subs(rv, res)
+                # XXX: This seems nonsensical but preserves existing behaviour
+                # after the change that Relational is no longer a subclass of
+                # Expr. Here expr is sometimes Relational and sometimes Expr
+                # but we are trying to add them with +=. This needs to be
+                # fixed somehow.
+                if sums == 0 and isinstance(expr, Relational):
+                    sums = expr.subs(rv, res)
+                else:
+                    sums += expr.subs(rv, res)
         if sums == 0:
             return False
         return sums
@@ -1440,7 +1447,7 @@ def _value_check(condition, message):
 
 def _symbol_converter(sym):
     """
-    Casts the parameter to Symbol if it is of string_types
+    Casts the parameter to Symbol if it is 'str'
     otherwise no operation is performed on it.
 
     Parameters
@@ -1459,7 +1466,7 @@ def _symbol_converter(sym):
     ======
 
     TypeError
-        If the parameter is not an instance of both string_types and
+        If the parameter is not an instance of both str and
         Symbol.
 
     Examples
@@ -1478,7 +1485,7 @@ def _symbol_converter(sym):
     >>> isinstance(r, Symbol)
     True
     """
-    if isinstance(sym, string_types):
+    if isinstance(sym, str):
             sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))

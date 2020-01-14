@@ -5,7 +5,7 @@ from sympy.physics.vector.functions import (cross, dot, express,
                                             kinematic_equations, outer,
                                             partial_velocity,
                                             get_motion_params, dynamicsymbols)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')

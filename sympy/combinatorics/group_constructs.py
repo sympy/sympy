@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
-from sympy.core.compatibility import range
 from sympy.utilities.iterables import uniq
 
 _af_new = Permutation._af_new

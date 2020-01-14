@@ -2,11 +2,11 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (range, integer_types, with_metaclass,
+from sympy.core.compatibility import (with_metaclass,
                                       is_sequence, iterable, ordered)
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.function import UndefinedFunction
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
@@ -284,7 +284,7 @@ class SeqBase(Basic):
             yield self.coeff(pt)
 
     def __getitem__(self, index):
-        if isinstance(index, integer_types):
+        if isinstance(index, int):
             index = self._ith_point(index)
             return self.coeff(index)
         elif isinstance(index, slice):
@@ -1005,7 +1005,7 @@ class SeqAdd(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)
@@ -1114,7 +1114,7 @@ class SeqMul(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)

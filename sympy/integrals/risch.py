@@ -34,7 +34,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered, range
+from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,

@@ -6,11 +6,10 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Matrix, Range, Add, symbols, zoo, Rational)
 from mpmath import mpi
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
-from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 
@@ -251,6 +250,16 @@ def test_difference():
     assert Interval(0, 2) - FiniteSet(1) == \
         Union(Interval(0, 1, False, True), Interval(1, 2, True, False))
 
+    # issue #18119
+    assert S.Reals - FiniteSet(I) == S.Reals
+    assert S.Reals - FiniteSet(-I, I) == S.Reals
+    assert Interval(0, 10) - FiniteSet(-I, I) == Interval(0, 10)
+    assert Interval(0, 10) - FiniteSet(1, I) == Union(
+        Interval.Ropen(0, 1), Interval.Lopen(1, 10))
+    assert S.Reals - FiniteSet(1, 2 + I, x, y**2) == Complement(
+        Union(Interval.open(-oo, 1), Interval.open(1, oo)), FiniteSet(x, y**2),
+        evaluate=False)
+
     assert FiniteSet(1, 2, 3) - FiniteSet(2) == FiniteSet(1, 3)
     assert FiniteSet('ham', 'eggs') - FiniteSet('eggs') == FiniteSet('ham')
     assert FiniteSet(1, 2, 3, 4) - Interval(2, 10, True, False) == \
@@ -339,13 +348,13 @@ def test_set_operations_nonsets():
     ]
     nums = [0, 1, 2, S(0), S(1), S(2)]
 
-    for s in sets:
-        for n in nums:
+    for si in sets:
+        for ni in nums:
             for op in ops:
-                raises(TypeError, lambda : op(s, n))
-                raises(TypeError, lambda : op(n, s))
-        raises(TypeError, lambda: s ** object())
-        raises(TypeError, lambda: s ** {1})
+                raises(TypeError, lambda : op(si, ni))
+                raises(TypeError, lambda : op(ni, si))
+        raises(TypeError, lambda: si ** object())
+        raises(TypeError, lambda: si ** {1})
 
 
 def test_complement():
@@ -617,6 +626,15 @@ def test_interval_to_mpi():
     assert Interval(0, 1).to_mpi() == mpi(0, 1)
     assert Interval(0, 1, True, False).to_mpi() == mpi(0, 1)
     assert type(Interval(0, 1).to_mpi()) == type(mpi(0, 1))
+
+
+def test_set_evalf():
+    assert Interval(S(11)/64, S.Half).evalf() == Interval(
+        Float('0.171875'), Float('0.5'))
+    assert Interval(x, S.Half, right_open=True).evalf() == Interval(
+        x, Float('0.5'), right_open=True)
+    assert Interval(-oo, S.Half).evalf() == Interval(-oo, Float('0.5'))
+    assert FiniteSet(2, x).evalf() == FiniteSet(Float('2.0'), x)
 
 
 def test_measure():

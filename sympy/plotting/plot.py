@@ -29,13 +29,13 @@ import warnings
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
-from sympy.core.compatibility import range, Callable
+from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
-# the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
+# the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot

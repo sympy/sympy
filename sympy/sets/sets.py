@@ -5,13 +5,13 @@ import inspect
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3, reduce)
+    ordered, PY3, reduce)
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
 from sympy.core.evalf import EvalfMixin
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and, fuzzy_not
 from sympy.core.numbers import Float
@@ -1098,9 +1098,8 @@ class Interval(Set, EvalfMixin):
             mpf(self.end._eval_evalf(prec)))
 
     def _eval_evalf(self, prec):
-        return Interval(self.left._eval_evalf(prec),
-            self.right._eval_evalf(prec),
-                        left_open=self.left_open, right_open=self.right_open)
+        return Interval(self.left._evalf(prec), self.right._evalf(prec),
+            left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
@@ -1172,7 +1171,7 @@ class Union(Set, LatticeOp, EvalfMixin):
         return S.UniversalSet
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs to merge intersections and iterables
         args = _sympify(args)
@@ -1345,7 +1344,7 @@ class Intersection(Set, LatticeOp):
         return S.EmptySet
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs to merge intersections and iterables
         args = list(ordered(set(_sympify(args))))
@@ -1767,7 +1766,7 @@ class FiniteSet(Set, EvalfMixin):
     is_finite_set = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         if evaluate:
             args = list(map(sympify, args))
 
@@ -1806,24 +1805,34 @@ class FiniteSet(Set, EvalfMixin):
 
     def _complement(self, other):
         if isinstance(other, Interval):
-            nums = sorted(m for m in self.args if m.is_number)
+            # Splitting in sub-intervals is only done for S.Reals;
+            # other cases that need splitting will first pass through
+            # Set._complement().
+            nums, syms = [], []
+            for m in self.args:
+                if m.is_number and m.is_real:
+                    nums.append(m)
+                elif m.is_real == False:
+                    pass  # drop non-reals
+                else:
+                    syms.append(m)  # various symbolic expressions
             if other == S.Reals and nums != []:
-                syms = [m for m in self.args if m.is_Symbol]
-                # Reals cannot contain elements other than numbers and symbols.
-
+                nums.sort()
                 intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
                 for a, b in zip(nums[:-1], nums[1:]):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
-
                 if syms != []:
                     return Complement(Union(*intervals, evaluate=False),
                             FiniteSet(*syms), evaluate=False)
                 else:
                     return Union(*intervals, evaluate=False)
-            elif nums == []:
-                return None
+            elif nums == []:  # no splitting necessary or possible:
+                if syms:
+                    return Complement(other, FiniteSet(*syms), evaluate=False)
+                else:
+                    return other
 
         elif isinstance(other, FiniteSet):
             unk = []
@@ -1902,7 +1911,7 @@ class FiniteSet(Set, EvalfMixin):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem._eval_evalf(prec) for elem in self])
+        return FiniteSet(*[elem._evalf(prec) for elem in self])
 
     @property
     def _sorted_args(self):

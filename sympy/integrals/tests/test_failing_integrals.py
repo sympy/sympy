@@ -5,7 +5,7 @@ from sympy import (
     tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational
 )
 
-from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
 from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
 

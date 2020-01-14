@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range, ordered
+from sympy.core.compatibility import as_int, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -475,7 +475,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbol
+        >>> from sympy import Point, Polygon
         >>> a, b = 50, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> p = Polygon(p1, p2, p3, p4)

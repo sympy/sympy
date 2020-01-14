@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int, range
+from sympy.core.compatibility import iterable, as_int
 from sympy.utilities.iterables import flatten
 
 from collections import defaultdict

@@ -1,7 +1,7 @@
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
-    Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -32,7 +32,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
@@ -41,7 +41,6 @@ from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
-from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import \
     Cycle, Permutation, AppliedPermutation
 from sympy.matrices.expressions.permutation import PermutationMatrix
@@ -2092,17 +2091,6 @@ def test_issue_8470():
     from sympy.parsing.sympy_parser import parse_expr
     e = parse_expr("-B*A", evaluate=False)
     assert latex(e) == r"A \left(- B\right)"
-
-
-def test_issue_7117():
-    # See also issue #5031 (hence the evaluate=False in these).
-    e = Eq(x + 1, 2*x)
-    q = Mul(2, e, evaluate=False)
-    assert latex(q) == r"2 \left(x + 1 = 2 x\right)"
-    q = Add(6, e, evaluate=False)
-    assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
-    q = Pow(e, 2, evaluate=False)
-    assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
 
 
 def test_issue_15439():

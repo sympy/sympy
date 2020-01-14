@@ -13,7 +13,7 @@ from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
     SymPyPrinter
 )
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
 
 x, y, z = symbols('x y z')

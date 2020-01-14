@@ -11,7 +11,6 @@ from __future__ import print_function, division
 
 from sympy.codegen.ast import Assignment
 from sympy.core import S
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -184,7 +183,7 @@ class JavascriptCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
