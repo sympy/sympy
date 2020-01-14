@@ -151,6 +151,31 @@ def primitive_root(p):
     return next(_primitive_root_prime_iter(p))
 
 
+def factmod(n, p):
+    '''
+    Returns the value --> (n! mod p) for prime ``p``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import factmod
+    >>> factmod(13, 11)
+    0
+    >>> factmod(6, 11)
+    5
+    '''
+    if n >= p:
+        return 0
+    res = 1
+    while n > 1:
+        var = (p - 1) if (n//p)%2 else 1
+        res = (res * var) % p
+        for num in range(2, n%p+1):
+            res = (res * num) % p
+        n = n // p
+    return (res % p)
+
+
 def is_primitive_root(a, p):
     """
     Returns True if ``a`` is a primitive root of ``p``
