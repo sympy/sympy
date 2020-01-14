@@ -1462,7 +1462,7 @@ def _diff_poly(root, coefficients, p):
 
 
 def _val_poly(root, coefficients, p):
-    """A helper function used by general_congruence.
+    """A helper function used by polynomial_congruence.
     It returns value of the polynomial at root (mod p).
 
     Parameters
