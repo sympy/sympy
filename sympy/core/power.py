@@ -74,6 +74,9 @@ def integer_nthroot(y, n):
     if HAS_GMPY:
         x, t = gmpy.iroot(y, n)
         return as_int(x), t
+    return _integer_nthroot_python(y, n)
+
+def _integer_nthroot_python(y, n):
     if y in (0, 1):
         return y, True
     if n == 1:
