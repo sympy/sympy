@@ -24,7 +24,7 @@ if not sage:
 
 import sympy
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 def is_trivially_equal(lhs, rhs):
     """

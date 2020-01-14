@@ -32,7 +32,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
@@ -41,7 +41,6 @@ from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
-from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import \
     Cycle, Permutation, AppliedPermutation
 from sympy.matrices.expressions.permutation import PermutationMatrix

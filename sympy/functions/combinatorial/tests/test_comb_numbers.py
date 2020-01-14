@@ -10,11 +10,10 @@ from sympy.functions import (
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.utilities.pytest import XFAIL, raises, nocache_fail
+from sympy.testing.pytest import XFAIL, raises, nocache_fail
 
 
 x = Symbol('x')

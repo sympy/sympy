@@ -7,7 +7,7 @@ from sympy import (
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 
 a, b, c, d, x, y = symbols('a:d, x, y')

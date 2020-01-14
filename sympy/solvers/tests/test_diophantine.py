@@ -1,7 +1,7 @@
 from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo,
                    powsimp, Rational)
 from sympy.core.function import _mexpand
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.functions.elementary.trigonometric import sin
 from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
@@ -18,7 +18,7 @@ from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_general_sum_of_even_powers, _can_do_sum_of_squares)
 from sympy.utilities import default_sort_key
 
-from sympy.utilities.pytest import slow, raises, XFAIL
+from sympy.testing.pytest import slow, raises, XFAIL
 from sympy.utilities.iterables import (
         signed_permutations)
 

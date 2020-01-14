@@ -5,7 +5,7 @@ from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.printing.rcode import RCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx

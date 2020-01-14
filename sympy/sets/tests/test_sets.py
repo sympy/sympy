@@ -6,11 +6,10 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Matrix, Range, Add, symbols, zoo, Rational)
 from mpmath import mpi
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
-from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 

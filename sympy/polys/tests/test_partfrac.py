@@ -9,7 +9,7 @@ from sympy.polys.partfrac import (
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
                    Symbol, Dummy, factor, together, sqrt, Expr, Rational)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import x, y, a, b, c
 
 

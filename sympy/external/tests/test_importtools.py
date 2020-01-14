@@ -1,5 +1,5 @@
 from sympy.external import import_module
-from sympy.utilities.pytest import warns
+from sympy.testing.pytest import warns
 
 # fixes issue that arose in addressing issue 6533
 def test_no_stdlib_collections():

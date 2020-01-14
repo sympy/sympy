@@ -23,7 +23,6 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
 from sympy.external import import_module
-from sympy.core.compatibility import range
 from sympy.tensor.array import ArrayComprehensionMap
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)

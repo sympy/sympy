@@ -58,7 +58,7 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     def _eval_matrix_mul(self, other):
         self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
-        other_len = other_rows * other_cols
+        other_len = other_rows*other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
 

@@ -1,7 +1,7 @@
 """Tests for PythonRational type. """
 
 from sympy.polys.domains import PythonRational as QQ
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_PythonRational__init__():
     assert QQ(0).p == 0

@@ -6,7 +6,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.testing.pytest import XFAIL, raises, slow
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 

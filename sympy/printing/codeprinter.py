@@ -4,7 +4,7 @@ from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.compatibility import default_sort_key, string_types
+from sympy.core.compatibility import default_sort_key
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
@@ -85,7 +85,7 @@ class CodePrinter(StrPrinter):
         """
         from sympy.matrices.expressions.matexpr import MatrixSymbol
 
-        if isinstance(assign_to, string_types):
+        if isinstance(assign_to, str):
             if expr.is_Matrix:
                 assign_to = MatrixSymbol(assign_to, *expr.shape)
             else:
@@ -372,7 +372,7 @@ class CodePrinter(StrPrinter):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
-            if isinstance(cond_func, string_types):
+            if isinstance(cond_func, str):
                 func = cond_func
             else:
                 for cond, func in cond_func:

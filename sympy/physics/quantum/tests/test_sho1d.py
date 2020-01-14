@@ -1,7 +1,6 @@
 """Tests for sho1d.py"""
 
 from sympy import Integer, Symbol, sqrt, I, S
-from sympy.core.compatibility import range
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum import Commutator
@@ -12,7 +11,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.represent import represent
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
                                         SHOKet, SHOBra,

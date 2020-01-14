@@ -2,12 +2,12 @@ from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
         oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
 )
-from sympy.core.compatibility import long, range
+from sympy.core.compatibility import long
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.randtest import verify_numerically
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -1374,6 +1374,15 @@ def test_Add_is_irrational():
 
     assert (i + 1).is_irrational is True
     assert (i + 1).is_rational is False
+
+
+def test_Mul_is_irrational():
+    expr = Mul(1, 2, 3, evaluate=False)
+    assert expr.is_irrational is False
+    expr = Mul(1, I, I, evaluate=False)
+    assert expr.is_irrational is not False
+    expr = Mul(sqrt(2), I, I, evaluate=False)
+    assert expr.is_irrational is not True
 
 
 @XFAIL

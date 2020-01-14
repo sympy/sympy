@@ -1,6 +1,5 @@
 from sympy import (Eq, Rational, Float, S, Symbol, cos, oo, pi, simplify,
     sin, sqrt, symbols, acos)
-from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
@@ -8,7 +7,7 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, warns
+from sympy.testing.pytest import raises, warns
 
 
 x = Symbol('x', real=True)

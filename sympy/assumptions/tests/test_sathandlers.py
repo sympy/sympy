@@ -4,7 +4,7 @@ from sympy.assumptions.cnf import to_NNF
 from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,
     UnevaluatedOnFree, AnyArgs, CheckOldAssump, ExactlyOneArg)
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 x, y, z = symbols('x y z')

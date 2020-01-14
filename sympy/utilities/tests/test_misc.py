@@ -1,5 +1,5 @@
 from textwrap import dedent
-from sympy.core.compatibility import range, unichr
+from sympy.core.compatibility import unichr
 from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
 import sys
 from subprocess import Popen, PIPE

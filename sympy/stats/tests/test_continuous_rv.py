@@ -5,7 +5,6 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    besseli, floor, expand_func, Rational, I, re,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj)
-from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -22,8 +21,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import raises, XFAIL, slow, skip
+from sympy.testing.randtest import verify_numerically as tn
 
 oo = S.Infinity
 
