@@ -1,9 +1,10 @@
 from __future__ import print_function, division
-
-from sympy import sqrt, log, exp, FallingFactorial
+from sympy.sets import FiniteSet
+from sympy import sqrt, log, exp, FallingFactorial, Float
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile)
+
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
         'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
@@ -370,8 +371,12 @@ def median(X, evaluate=True, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
 
     """
-    return quantile(X, evaluate=evaluate, **kwargs)(1/2)
-
+    result = quantile(X, evaluate=evaluate, **kwargs)(1/2)
+    if isinstance(result, FiniteSet):
+        for elem in result:
+                if cdf(X)(elem).round(8) == Float(1/2, 8):
+                    return elem
+    return result
 
 P = probability
 E = expectation

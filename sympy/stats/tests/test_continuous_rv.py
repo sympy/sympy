@@ -2,7 +2,7 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re,
+                   besseli, floor, expand_func, Rational, I, re, Float,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj)
 from sympy.core.compatibility import range
@@ -382,6 +382,7 @@ def test_beta():
     B = Beta('x', a, b)
     assert expand_func(E(B)) == a / S(a + b)
     assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
+    assert median(B).round(2) == Float(0.29, 2)
 
 def test_beta_noncentral():
     a, b = symbols('a b', positive=True)
@@ -430,7 +431,8 @@ def test_betaprime():
     alpha = Symbol("alpha", positive=True)
     betap = Symbol("beta", nonpositive=True)
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
-
+    X = BetaPrime('x', 1, 1)
+    assert median(X) == 1
 
 def test_cauchy():
     x0 = Symbol("x0")
@@ -532,7 +534,8 @@ def test_dagum():
     b = Symbol("b", positive=True)
     a = Symbol("a", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
-
+    X = Dagum('x', 1 , 1, 1)
+    assert median(X) == 1
 
 def test_erlang():
     k = Symbol("k", integer=True, positive=True)
@@ -588,7 +591,8 @@ def test_exponential():
     assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
-
+    X = Exponential('x', 1)
+    assert median(X).round(3) == Float(0.693, 3)
 
 def test_exponential_power():
     mu = Symbol('mu')
@@ -791,6 +795,8 @@ def test_loglogistic():
     b = symbols('b', prime=True) # b > 1
     X = LogLogistic('x', a, b)
     assert E(X) == pi*a/(b*sin(pi/b))
+    X = LogLogistic('x', 1, 2)
+    assert median(X) == 1
 
 def test_lognormal():
     mean = Symbol('mu', real=True)
@@ -851,6 +857,8 @@ def test_nakagami():
     assert cdf(X)(x) == Piecewise(
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
+    X = Nakagami('x',1 ,1)
+    assert median(X).round(2) == Float(0.83, 2)
 
 def test_gaussian_inverse():
     # test for symbolic parameters
@@ -917,6 +925,7 @@ def test_pareto_numeric():
 
     assert E(X) == alpha*xm/S(alpha - 1)
     assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
+    assert median(X).round(2) == Float(3.31, 3)
     # Skewness tests too slow. Try shortcutting function?
 
 
@@ -943,7 +952,7 @@ def test_PowerFunction():
     assert E(X) == Rational(2,3)
     assert P(X < 0) == 0
     assert P(X < 1) == 1
-
+    assert median(X).round(3) == Float(0.707, 3)
 
 def test_raised_cosine():
     mu = Symbol("mu", real=True)
@@ -1025,6 +1034,7 @@ def test_trapezoidal():
     assert E(X) == Rational(3, 2)
     assert variance(X) == Rational(5, 12)
     assert P(X < 2) == Rational(3, 4)
+    assert median(X).round(2) == Float(1.50, 3)
 
 def test_triangular():
     a = Symbol("a")
@@ -1066,6 +1076,7 @@ def test_uniform():
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
+    assert median(X) == 4
 
     z = Symbol('z')
     p = density(X)(z)
