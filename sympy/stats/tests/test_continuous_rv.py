@@ -20,6 +20,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.crv import SingleContinuousPSpace
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -1223,7 +1224,17 @@ def test_NormalDistribution():
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
-
+    #Test issue 10076
+    a = SingleContinuousPSpace(x, NormalDistribution(2, 4))
+    assert str(a.probability(x < 1, evaluate=False)) ==  ("Integral(sqrt(2)"
+    "*exp(-(_z - 2)**2/32)/(8*sqrt(pi)), (_z, -oo, 1))")
+    assert str(a.probability(x > 1, evaluate=False)) == ("Integral(sqrt(2)"
+    "*exp(-(_z - 2)**2/32)/(8*sqrt(pi)), (_z, 1, oo))")
+    b= SingleContinuousPSpace(x, NormalDistribution(1, 9))
+    assert str(b.probability(x > 6, evaluate=False)) == ("Integral(sqrt(2)"
+    "*exp(-(_z - 1)**2/162)/(18*sqrt(pi)), (_z, 6, oo))")
+    assert str(b.probability(x < 6, evaluate=False)) == ("Integral(sqrt(2)"
+    "*exp(-(_z - 1)**2/162)/(18*sqrt(pi)), (_z, -oo, 6))")
 
 def test_random_parameters():
     mu = Normal('mu', 2, 3)
