@@ -1,15 +1,11 @@
 from __future__ import division, print_function
 
-from collections import Counter
-
 from mpmath import mpf, mpc
 
 from sympy import Integer, Float, Rational
-from sympy.core.compatibility import default_sort_key
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import sympify
 from sympy.simplify import nsimplify
-from sympy.utilities.decorator import doctest_depends_on
 
 from .common import ShapeError, NonSquareMatrixError
 from .dense import MutableDenseMatrix
@@ -200,7 +196,7 @@ class NumPyMatrix(MutableDenseMatrix):
                     if copy is True:
                         return MutableDenseMatrix(*args, copy=copy, **kwargs)
                     else:
-                        raise "'copy=False' for NumPyMatrix requires numeric source data"
+                        raise TypeError("'copy=False' for NumPyMatrix requires numeric source data")
 
             view_arr = np.array([flat_list[cols * r : cols * (r + 1)]
                     for r in range (rows)], dtype=dtype)

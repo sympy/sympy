@@ -2,7 +2,7 @@ from sympy import (Float, I, N, PurePoly, S, Symbol, oo, nan, sqrt, sympify,
     Matrix, ImmutableDenseMatrix, NumPyMatrix, NonSquareMatrixError,
     diag, eye, zeros)
 from sympy.matrices.matrices import MatrixError
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, skip
 
 try:
     import numpy as np
