@@ -803,7 +803,7 @@ def _nthroot_mod_composite(a, n, m):
     Find the solutions to ``x**n = a mod m`` when m is not prime.
     """
     return _help(m,
-        lambda p: nthroot_mod(a, n, p, True) or [],
+        lambda p: nthroot_mod(a, n, p, True),
         lambda root, p: (pow(root, n - 1, p) * (n % p)) % p,
         lambda root, p: (pow(root, n, p) - a) % p)
 
