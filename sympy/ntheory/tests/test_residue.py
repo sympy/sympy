@@ -6,7 +6,7 @@ from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
-    general_congruence
+    polynomial_congruence
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _discrete_log_trial_mul, _discrete_log_shanks_steps, \
     _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
@@ -264,15 +264,15 @@ def test_residue():
     assert quadratic_congruence(5, 10, 14, 2) == [0]
     assert quadratic_congruence(10, 17, 19, 2) == [1]
     assert quadratic_congruence(10, 14, 20, 2) == [0, 1]
-    assert general_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1,
+    assert polynomial_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1,
         972000) == [220999, 242999, 463999, 485999, 706999, 728999,
         949999, 971999]
-    assert general_congruence(x**3 - 10*x**2 + 12*x - 82, 33075) == [
+    assert polynomial_congruence(x**3 - 10*x**2 + 12*x - 82, 33075) == [
         30287]
-    assert general_congruence(x**2 + x + 47, 2401) == [785, 1615]
-    assert general_congruence(10*x**2 + 14*x + 20, 2) == [0, 1]
-    assert general_congruence(x**3 + 3, 16) == [5]
-    assert general_congruence(65*x**2 + 121*x + 72, 277) == [249, 252]
-    assert general_congruence(35*x**3 - 6*x**2 - 567*x + 2308, 148225
+    assert polynomial_congruence(x**2 + x + 47, 2401) == [785, 1615]
+    assert polynomial_congruence(10*x**2 + 14*x + 20, 2) == [0, 1]
+    assert polynomial_congruence(x**3 + 3, 16) == [5]
+    assert polynomial_congruence(65*x**2 + 121*x + 72, 277) == [249, 252]
+    assert polynomial_congruence(35*x**3 - 6*x**2 - 567*x + 2308, 148225
         ) == [86957, 111157, 122531, 146731]
-    assert general_congruence(x**6 - 2*x**5 - 35, 6125) == [3257]
+    assert polynomial_congruence(x**6 - 2*x**5 - 35, 6125) == [3257]

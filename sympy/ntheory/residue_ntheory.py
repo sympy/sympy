@@ -747,7 +747,7 @@ def _nthroot_mod1(s, q, p, all_roots):
 
 def _help(m, prime_modulo_method, diff_method, expr_val):
     """
-    Helper function for _nthroot_mod_composite and general_congruence.
+    Helper function for _nthroot_mod_composite and polynomial_congruence.
 
     Parameters
     ==========
@@ -1416,8 +1416,8 @@ def quadratic_congruence(a, b, c, p):
     return sorted(res)
 
 
-def _general_congruence_prime(coefficients, p):
-    """A helper function used by general_congruence.
+def _polynomial_congruence_prime(coefficients, p):
+    """A helper function used by polynomial_congruence.
     It returns the root of a polynomial modulo prime number
     by naive search from [0, p).
 
@@ -1440,7 +1440,7 @@ def _general_congruence_prime(coefficients, p):
 
 
 def _diff_poly(root, coefficients, p):
-    """A helper function used by general_congruence.
+    """A helper function used by polynomial_congruence.
     It returns the derivative of the polynomial evaluated at the root
     (modulo p).
 
@@ -1480,7 +1480,7 @@ def _val_poly(root, coefficients, p):
     return f_val % p
 
 
-def general_congruence(expr, m):
+def polynomial_congruence(expr, m):
     """
     Find the solutions to a polynomial congruence equation modulo m.
 
@@ -1493,10 +1493,10 @@ def general_congruence(expr, m):
     Examples
     ========
 
-    >>> from sympy.ntheory import general_congruence
+    >>> from sympy.ntheory import polynomial_congruence
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
-    >>> general_congruence(expr, 6125)
+    >>> polynomial_congruence(expr, 6125)
     [3257]
     """
 
@@ -1515,8 +1515,8 @@ def general_congruence(expr, m):
         return quadratic_congruence(0, coefficients[0], coefficients[1],
             m)
     if isprime(m):
-        return _general_congruence_prime(coefficients, m)
+        return _polynomial_congruence_prime(coefficients, m)
     return _help(m,
-        lambda p: _general_congruence_prime(coefficients, p),
+        lambda p: _polynomial_congruence_prime(coefficients, p),
         lambda root, p: _diff_poly(root, coefficients, p),
         lambda root, p: _val_poly(root, coefficients, p))
