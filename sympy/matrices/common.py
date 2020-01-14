@@ -2453,7 +2453,7 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return other._new(other.as_mutable() * self)
+            return classof(self, other)._new(other.as_mutable() * self)
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_rmul(self, other)
@@ -2601,10 +2601,11 @@ class _MatrixWrapper(object):
     to returning matrix elements instead of rows for non-tuple indexes.
     """
 
-    is_Matrix     = False # needs to be here because of __getattr__
-    is_MatrixLike = True
-    is_mutable = False
-    is_sparse = None
+    _class_priority = 0
+    is_Matrix       = False
+    is_MatrixLike   = True
+    is_mutable      = False
+    is_sparse       = None
 
     def __init__(self, mat, shape):
         self.mat = mat
@@ -2617,7 +2618,7 @@ class _MatrixWrapper(object):
 
         return sympify(self.mat.__getitem__((key // self.rows, key % self.cols)))
 
-    def __iter__(self): # supports numpy.matrix and numpy.array
+    def __iter__(self):
         mat = self.mat
         cols = self.cols
 
@@ -2632,9 +2633,16 @@ def _matrixify(mat):
     if getattr(mat, 'is_Matrix', False) or getattr(mat, 'is_MatrixLike', False):
         return mat
 
+    if type(mat).__module__ == 'numpy':
+        import numpy as np
+
+        if isinstance(mat, np.ndarray) and len(mat.shape) == 2:
+            from .numpy import NumPyMatrix
+            return NumPyMatrix(mat) # wrap a NumPy matrix properly
+
     shape = None
 
-    if hasattr(mat, 'shape'): # numpy, scipy.sparse
+    if hasattr(mat, 'shape'): # mpmath, scipy.sparse
         if len(mat.shape) == 2:
             shape = mat.shape
     elif hasattr(mat, 'rows') and hasattr(mat, 'cols'): # mpmath

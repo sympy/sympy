@@ -1,5 +1,6 @@
-from sympy import (Float, I, N, PurePoly, S, Symbol, oo, nan, Matrix,
-    NumPyMatrix, NonSquareMatrixError, diag, eye)
+from sympy import (Float, I, N, PurePoly, S, Symbol, oo, nan, sqrt, sympify,
+    Matrix, ImmutableDenseMatrix, NumPyMatrix, NonSquareMatrixError,
+    diag, eye, zeros)
 from sympy.matrices.matrices import MatrixError
 from sympy.testing.pytest import raises, XFAIL, skip
 
@@ -23,6 +24,8 @@ def _fcmpseq(seq1, seq2):
 def _fcmpseqsort(seq1, seq2):
     return all(_fcmp(a, b) for a, b in zip(sorted(seq1), sorted(seq2)))
 
+
+# creation
 
 def test_creation():
     skipcheck()
@@ -51,7 +54,6 @@ def test_creation():
     M = NumPyMatrix(m, dtype='f4')
     assert M.dtype == np.float32
 
-
 def test_detect_dtype():
     skipcheck()
 
@@ -60,7 +62,6 @@ def test_detect_dtype():
     assert NumPyMatrix([[oo]]).dtype == np.float64
     assert NumPyMatrix([[nan]]).dtype == np.float64
     assert NumPyMatrix([[I]]).dtype == np.complex128
-
 
 def test_as_wrapper():
     skipcheck()
@@ -77,7 +78,6 @@ def test_as_wrapper():
     m[0, 0] = -1
     assert M[0] == -1
 
-
 def test_as_reshaping_wrapper():
     skipcheck()
 
@@ -93,6 +93,14 @@ def test_as_reshaping_wrapper():
     m[0, 0] = -1
     assert M[0] == -1
 
+def test_sympify():
+    skipcheck()
+
+    a = np.array([[1, 2], [3, 4]])
+    assert isinstance(sympify(NumPyMatrix(a)), ImmutableDenseMatrix)
+
+
+# basic operations
 
 def test_array():
     skipcheck()
@@ -102,6 +110,230 @@ def test_array():
     assert M.__array__() is a
     assert M.__array__('f4') is not a
 
+def test_abs():
+    skipcheck()
+
+    M = NumPyMatrix([[1, 1j], [-1j, 1+1j]])
+    A = abs(M)
+
+    assert A.dtype == np.float64
+    assert _fcmpseq(A, (1, 1, 1, sqrt(2)))
+
+def test_neg():
+    skipcheck()
+
+    M = NumPyMatrix([[1, -1], [-1, 2]], dtype='i8')
+    A = -M
+
+    assert A.dtype == np.int64
+    assert _fcmpseq(A, (-1, 1, 1, -2))
+
+def test_add():
+    skipcheck()
+
+    M = NumPyMatrix([[1, 2], [3, 4]], dtype='i8')
+    A = Matrix([[2, 4], [6, 8]])
+
+    R = M + M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M + M._arr
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M._arr + M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M + NumPyMatrix(M, dtype='f8')
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.float64
+    assert _fcmpseq(R, A)
+
+    R = M + NumPyMatrix(M, dtype='c16')
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.complex128
+    assert _fcmpseq(R, A)
+
+    raises(TypeError, lambda: M + 1)
+    raises(TypeError, lambda: 1 + M)
+
+def test_sub():
+    skipcheck()
+
+    M = NumPyMatrix([[1, 2], [3, 4]], dtype='i8')
+    A = zeros(2)
+
+    R = M - M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M - M._arr
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M._arr - M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+def test_mul():
+    skipcheck()
+
+    M = NumPyMatrix([[1, 2], [3, 4]], dtype='i8')
+    A = Matrix([[7, 10], [15, 22]])
+
+    R = M * M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M * M._arr
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M._arr * M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M @ M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M @ M._arr
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M._arr @ M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M * NumPyMatrix(M, dtype='f8')
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.float64
+    assert _fcmpseq(R, A)
+
+    R = M * NumPyMatrix(M, dtype='c16')
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.complex128
+    assert _fcmpseq(R, A)
+
+    A = Matrix([[2, 4], [6, 8]])
+
+    R = M * 2
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = 2 * M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert R == A
+
+    R = M * 2.0
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.float64
+    assert _fcmpseq(R, A)
+
+    R = 2.0 * M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.float64
+    assert _fcmpseq(R, A)
+
+    R = M * (2+0j)
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.complex128
+    assert _fcmpseq(R, A)
+
+    R = (2+0j) * M
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.complex128
+    assert _fcmpseq(R, A)
+
+    A = Matrix([[x, 2*x], [3*x, 4*x]])
+
+    R = x * M
+    assert isinstance(R, Matrix)
+    assert R == A
+
+    R = M * x
+    assert isinstance(R, Matrix)
+    assert R == A
+
+def test_div():
+    skipcheck()
+
+    M = NumPyMatrix([[2, 4], [6, 8]], dtype='i8')
+    A = Matrix([[1, 2], [3, 4]])
+
+    R = M / 2
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.float64
+    assert _fcmpseq(R, A)
+
+    R = M / 2.0
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.float64
+    assert _fcmpseq(R, A)
+
+    R = M / (2+0j)
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.complex128
+    assert _fcmpseq(R, A)
+
+    R = M / x
+    assert isinstance(R, Matrix)
+    assert R == Matrix([[2/x, 4/x], [6/x, 8/x]])
+
+def test_pow():
+    skipcheck()
+
+    M = NumPyMatrix([[1, 2], [3, 4]], dtype='i8')
+    A = Matrix([[7, 10], [15, 22]])
+
+    R = M**2
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert _fcmpseq(R, A)
+
+    R = M**2.0
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert _fcmpseq(R, A)
+
+    R = M**(2+0j)
+    assert isinstance(R, NumPyMatrix)
+    assert R.dtype == np.int64
+    assert _fcmpseq(R, A)
+
+    R = M**x
+    assert isinstance(R, Matrix)
+    assert R == Matrix(S('''[
+        [-2*(5/2 - sqrt(33)/2)**x/((-3/2 + sqrt(33)/2)*(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2))) + 2*(5/2 + sqrt(33)/2)**x/((-sqrt(33)/2 - 3/2)*(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2))), -4*(5/2 - sqrt(33)/2)**x/((-3/2 + sqrt(33)/2)*(-sqrt(33)/2 - 3/2)*(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2))) + 4*(5/2 + sqrt(33)/2)**x/((-3/2 + sqrt(33)/2)*(-sqrt(33)/2 - 3/2)*(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2)))],
+        [                                                 (5/2 - sqrt(33)/2)**x/(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2)) - (5/2 + sqrt(33)/2)**x/(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2)),                                          2*(5/2 - sqrt(33)/2)**x/((-sqrt(33)/2 - 3/2)*(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2))) - 2*(5/2 + sqrt(33)/2)**x/((-3/2 + sqrt(33)/2)*(-2/(-3/2 + sqrt(33)/2) + 2/(-sqrt(33)/2 - 3/2)))]]'''))
+
+def test_coercion():
+    skipcheck()
+
+    M = NumPyMatrix([[1, 2], [3, 4]], dtype='i8')
+    assert isinstance(M * x, Matrix)
+    assert isinstance(x * M, Matrix)
+    assert isinstance(M / x, Matrix)
+    assert isinstance(M + Matrix([[x, x], [x, x]]), Matrix)
+
+
+# higher level functions
 
 def test_adjugate():
     skipcheck()
@@ -115,7 +347,6 @@ def test_adjugate():
     M = NumPyMatrix(8, 2, M)
     raises(NonSquareMatrixError, lambda: M.adjugate())
 
-
 def test_charpoly():
     skipcheck()
 
@@ -125,13 +356,11 @@ def test_charpoly():
     M = NumPyMatrix(4, 1, M)
     raises(NonSquareMatrixError, lambda: M.charpoly())
 
-
 def test_cofactor():
     skipcheck()
 
     M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert _fcmp(M.cofactor(1, 1), -12)
-
 
 def test_cofactor_matrix():
     skipcheck()
@@ -141,7 +370,6 @@ def test_cofactor_matrix():
 
     assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, (-3, 6, -3, 6, -12, 6, -3, 6, -3))
-
 
 def test_det():
     skipcheck()
@@ -158,13 +386,11 @@ def test_det():
     raises(NonSquareMatrixError, lambda: M.det_berkowitz())
     raises(NonSquareMatrixError, lambda: M.det_LU())
 
-
 def test_minor():
     skipcheck()
 
     M = NumPyMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert _fcmp(M.cofactor(1, 1), -12)
-
 
 def test_minor_submatrix():
     skipcheck()
@@ -175,7 +401,6 @@ def test_minor_submatrix():
     assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, Matrix([[1, 3], [7, 9]]))
 
-
 def test_echelon():
     skipcheck()
 
@@ -185,7 +410,6 @@ def test_echelon():
     assert M.is_echelon is False
     assert isinstance(A, NumPyMatrix)
     assert _fcmpseq(A, Matrix([[1, 2, 3], [0, -3, -6], [0, 0, 0]]))
-
 
 def test_rank():
     skipcheck()
@@ -204,7 +428,6 @@ def test_rank():
         [S('0'),S('1/4+1/2*I'),S('1'),S('-9/4+3*I'),S('-2*I'),S('119/8+29/4*I'),S('1/4+5/2*I'),S('-23/8-57/16*I'),S('1/4+13/4*I'),S('-825/64-147/32*I'),S('21/8+I'),S('-537/64+143/16*I'),S('-5/8-39/16*I'),S('2473/256+137/64*I'),S('-149/64+49/32*I'),S('-177/128-1369/128*I')]])
     assert M.rank() == 8
 
-
 def test_rref():
     skipcheck()
 
@@ -214,7 +437,6 @@ def test_rref():
     assert isinstance(A[0], NumPyMatrix)
     assert _fcmpseq(A[0], Matrix([[1, 0, -1], [0, 1, 2], [0, 0, 0]]))
     assert A[1] == (0, 1)
-
 
 def test_columnspace():
     skipcheck()
@@ -231,7 +453,6 @@ def test_columnspace():
     assert _fcmpseq(A[1], Matrix([2, -5, -3, 6]))
     assert _fcmpseq(A[2], Matrix([2, -1, 4, -7]))
 
-
 def test_rowspace():
     skipcheck()
 
@@ -246,7 +467,6 @@ def test_rowspace():
     assert _fcmpseq(A[0], Matrix([[1, 2, 0, 2, 5]]))
     assert _fcmpseq(A[1], Matrix([[0, -1, 1, 3, 2]]))
     assert _fcmpseq(A[2], Matrix([[0, 0, 0, 5, 5]]))
-
 
 def test_nullspace():
     skipcheck()
@@ -264,7 +484,6 @@ def test_nullspace():
     assert _fcmpseq(A[2], Matrix([-2, 0, 0, -2, 1, 0, 0]))
     assert _fcmpseq(A[3], Matrix([0, 0, 0, 0, 0, -1/3, 1]))
 
-
 def test_orthogonalize():
     skipcheck()
 
@@ -276,7 +495,6 @@ def test_orthogonalize():
     assert _fcmp(A[0][1] / I, 1)
     assert _fcmp(A[1][0], 1)
     assert _fcmp(A[1][1] / I, -1)
-
 
 def test_eigenvals():
     skipcheck()
@@ -292,7 +510,6 @@ def test_eigenvals():
     M = NumPyMatrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, 1])
     assert M.eigenvals() == {1: 3}
     assert M.eigenvals(multiple=True) == [1, 1, 1]
-
 
 def test_eigenvects():
     skipcheck()
@@ -323,7 +540,6 @@ def test_eigenvects():
     assert _fcmpseq(A[0][2][0], B[0][2][0])
     assert _fcmpseq(A[1][2][0], B[1][2][0])
     assert _fcmpseq(A[2][2][0], B[2][2][0])
-
 
 def test_diagonalization():
     skipcheck ()
@@ -392,7 +608,6 @@ def test_diagonalization():
     assert not M.is_diagonalizable()
     raises(MatrixError, lambda: M.diagonalize())
 
-
 def test_definite():
     skipcheck ()
 
@@ -443,7 +658,6 @@ def test_definite():
     assert M.is_negative_semidefinite == False
     assert M.is_indefinite == False
 
-
 def test_jordan_form():
     skipcheck ()
 
@@ -473,7 +687,7 @@ def test_jordan_form():
     # complexity: two of eigenvalues are zero
     M = NumPyMatrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
     N = NumPyMatrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
-    P, J = M.jordan_form()
+    _, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
     M = NumPyMatrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
@@ -481,7 +695,7 @@ def test_jordan_form():
                          0, 2, 1, 0,
                          0, 0, 2, 0,
                          0, 0, 0, 2])
-    P, J = M.jordan_form()
+    _, J = M.jordan_form()
     assert _fcmpseq(N, J)
 
     M = NumPyMatrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
@@ -492,9 +706,8 @@ def test_jordan_form():
     M = NumPyMatrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not M.is_diagonalizable()
     N = NumPyMatrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
-    P, J = M.jordan_form()
+    _, J = M.jordan_form()
     assert _fcmpseq(N, J)
-
 
 def test_singular_values():
     skipcheck ()
