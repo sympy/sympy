@@ -181,7 +181,6 @@ def test_periodicity_check():
 
 def test_periodicity_customclass():
     x = Symbol('x')
-    y = Symbol('y')
     class f(Function):
         nargs = 1
         def _period(self, general_period, symbol):
