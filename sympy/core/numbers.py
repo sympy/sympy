@@ -254,8 +254,8 @@ def igcd(*args):
     a = args_temp.pop()
     if HAS_GMPY: # Using gmpy if present to speed up.
         for b in args_temp:
-            a = as_int(gmpy.gcd(a, b)) if b else a
-        return a
+            a = gmpy.gcd(a, b) if b else a
+        return as_int(a)
     for b in args_temp:
         a = igcd2(a, b) if b else a
     return a
@@ -264,7 +264,9 @@ def igcd(*args):
 try:
     from math import gcd as igcd2
 except ImportError:
-    def igcd2(a, b):
+    igcd2 = _igcd2_python
+
+def _igcd2_python(a, b):
         """Compute gcd of two Python integers a and b."""
         if (a.bit_length() > BIGBITS and
             b.bit_length() > BIGBITS):
