@@ -1503,10 +1503,9 @@ def polynomial_congruence(expr, m):
     from sympy import Poly
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
-    syms = expr.free_symbols
-    if len(syms) > 1:
+    if len(Poly(expr).free_symbols) > 1:
         raise ValueError("Do not support for more than one symbol")
-    coefficients = Poly(expr,syms).all_coeffs()
+    coefficients = Poly(expr).all_coeffs()
     rank = len(coefficients)
     if rank == 3:
         return quadratic_congruence(coefficients[0], coefficients[1],
