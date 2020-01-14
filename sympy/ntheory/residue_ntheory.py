@@ -1441,7 +1441,8 @@ def _general_congruence_prime(coefficients, p):
 
 def _diff_poly(root, coefficients, p):
     """A helper function used by general_congruence.
-    It returns derivative of the polynomial at root, then applying modulo p.
+    It returns the derivative of the polynomial evaluated at the root
+    (modulo p).
 
     Parameters
     ==========
@@ -1455,13 +1456,14 @@ def _diff_poly(root, coefficients, p):
     for coeff in range(0, rank - 1):
         if not coefficients[coeff]:
             continue
-        diff = (diff + pow(root, rank - coeff - 2, p) * (rank - coeff - 1) * coefficients[coeff]) % p
+        diff = (diff + pow(root, rank - coeff - 2, p)*(rank - coeff - 1)*
+            coefficients[coeff]) % p
     return diff % p
 
 
 def _val_poly(root, coefficients, p):
     """A helper function used by general_congruence.
-    It returns value of the polynomial at root, then applying modulo p.
+    It returns value of the polynomial at root (mod p).
 
     Parameters
     ==========
@@ -1472,7 +1474,8 @@ def _val_poly(root, coefficients, p):
     rank = len(coefficients)
     f_val = 0
     for coeff in range(0, rank - 1):
-        f_val = (f_val + pow(root, rank - coeff - 1, p) * coefficients[coeff]) % p
+        f_val = (f_val + pow(root, rank - coeff - 1, p)*
+            coefficients[coeff]) % p
     f_val = f_val + coefficients[-1]
     return f_val % p
 
@@ -1480,6 +1483,7 @@ def _val_poly(root, coefficients, p):
 def general_congruence(expr, m):
     """
     Find the solutions to a polynomial congruence equation modulo m.
+
     Parameters
     ==========
 
@@ -1505,9 +1509,11 @@ def general_congruence(expr, m):
     coefficients = Poly(expr,syms).all_coeffs()
     rank = len(coefficients)
     if rank == 3:
-        return quadratic_congruence(coefficients[0], coefficients[1], coefficients[2], m)
+        return quadratic_congruence(coefficients[0], coefficients[1],
+            coefficients[2], m)
     if rank == 2:
-        return quadratic_congruence(0, coefficients[0], coefficients[1], m)
+        return quadratic_congruence(0, coefficients[0], coefficients[1],
+            m)
     if isprime(m):
         return _general_congruence_prime(coefficients, m)
     return _help(m,
