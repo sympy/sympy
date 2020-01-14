@@ -1417,6 +1417,16 @@ def quadratic_congruence(a, b, c, p):
 
 
 def _general_congruence_prime(coefficients, p):
+    """A helper function used by general_congruence.
+    It returns the root of a polynomial modulo prime number
+    by naive search from [0, p).
+
+    Parameters
+    ==========
+    coefficients : list of integers
+    p : prime number
+    """
+
     roots = []
     rank = len(coefficients)
     for i in range(0, p):
@@ -1430,6 +1440,15 @@ def _general_congruence_prime(coefficients, p):
 
 
 def _diff_poly(root, coefficients, p):
+    """A helper function used by general_congruence.
+    It returns derivative of the polynomial at root, then applying modulo p.
+
+    Parameters
+    ==========
+    coefficients : list of integers
+    p : prime number
+    root : integer
+    """
 
     diff = 0
     rank = len(coefficients)
@@ -1441,6 +1460,15 @@ def _diff_poly(root, coefficients, p):
 
 
 def _val_poly(root, coefficients, p):
+    """A helper function used by general_congruence.
+    It returns value of the polynomial at root, then applying modulo p.
+
+    Parameters
+    ==========
+    coefficients : list of integers
+    p : prime number
+    root : integer
+    """
     rank = len(coefficients)
     f_val = 0
     for coeff in range(0, rank - 1):
