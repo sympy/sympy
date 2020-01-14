@@ -6,10 +6,9 @@ import sys
 import types
 import inspect
 
-from functools import update_wrapper
-
 from sympy.core.decorators import wraps
-from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
+from sympy.core.compatibility import get_function_globals, get_function_name, iterable
+from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -40,14 +39,14 @@ def threaded_factory(func, use_add):
 
 
 def threaded(func):
-    """Apply ``func`` to sub--elements of an object, including :class:`Add`.
+    """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
 
     This version of :func:`threaded` decorator allows threading over
-    elements of :class:`Add` class. If this behavior is not desirable
+    elements of :class:`~.Add` class. If this behavior is not desirable
     use :func:`xthreaded` decorator.
 
     Functions using this decorator must have the following signature::
@@ -60,14 +59,14 @@ def threaded(func):
 
 
 def xthreaded(func):
-    """Apply ``func`` to sub--elements of an object, excluding :class:`Add`.
+    """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
 
     This version of :func:`threaded` decorator disallows threading over
-    elements of :class:`Add` class. If this behavior is not desirable
+    elements of :class:`~.Add` class. If this behavior is not desirable
     use :func:`threaded` decorator.
 
     Functions using this decorator must have the following signature::
@@ -127,24 +126,54 @@ class no_attrs_in_subclass(object):
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
-    """Adds metadata about the dependencies which need to be met for doctesting
-    the docstrings of the decorated objects."""
-    pyglet = False
-    if modules is not None and 'pyglet' in modules:
-        pyglet = True
+def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_version=None):
+    """
+    Adds metadata about the dependencies which need to be met for doctesting
+    the docstrings of the decorated objects.
+
+    exe should be a list of executables
+
+    modules should be a list of modules
+
+    disable_viewers should be a list of viewers for preview() to disable
+
+    python_version should be the minimum Python version required, as a tuple
+    (like (3, 0))
+    """
+
+    dependencies = {}
+    if exe is not None:
+        dependencies['executables'] = exe
+    if modules is not None:
+        dependencies['modules'] = modules
+    if disable_viewers is not None:
+        dependencies['disable_viewers'] = disable_viewers
+    if python_version is not None:
+        dependencies['python_version'] = python_version
+
+    def skiptests():
+        r = PyTestReporter()
+        t = SymPyDocTests(r, None)
+        try:
+            t._check_dependencies(**dependencies)
+        except DependencyError:
+            return True  # Skip doctests
+        else:
+            return False # Run doctests
 
     def depends_on_deco(fn):
-        fn._doctest_depends_on = dict(exe=exe, modules=modules,
-                                      disable_viewers=disable_viewers,
-                                      pyglet=pyglet)
+        fn._doctest_depends_on = dependencies
+        fn.__doctest_skip__ = skiptests
 
-        # once we drop py2.5 support and use class decorators this evaluates
-        # to True
         if inspect.isclass(fn):
-            fn._doctest_depdends_on = no_attrs_in_subclass(fn, fn._doctest_depends_on)
+            fn._doctest_depdends_on = no_attrs_in_subclass(
+                fn, fn._doctest_depends_on)
+            fn.__doctest_skip__ = no_attrs_in_subclass(
+                fn, fn.__doctest_skip__)
         return fn
+
     return depends_on_deco
+
 
 def public(obj):
     """
@@ -181,7 +210,7 @@ def public(obj):
     if isinstance(obj, types.FunctionType):
         ns = get_function_globals(obj)
         name = get_function_name(obj)
-    elif isinstance(obj, (type(type), class_types)):
+    elif isinstance(obj, (type(type), type)):
         ns = sys.modules[obj.__module__].__dict__
         name = obj.__name__
     else:
@@ -195,13 +224,19 @@ def public(obj):
     return obj
 
 
-def memoize_property(storage):
-    """Create a property, where the lookup is stored in ``storage``"""
-    def decorator(method):
-        name = method.__name__
-        def wrapper(self):
-            if name not in storage:
-                storage[name] = method(self)
-            return storage[name]
-        return property(update_wrapper(wrapper, method))
-    return decorator
+def memoize_property(propfunc):
+    """Property decorator that caches the value of potentially expensive
+    `propfunc` after the first evaluation. The cached value is stored in
+    the corresponding property name with an attached underscore."""
+    attrname = '_' + propfunc.__name__
+    sentinel = object()
+
+    @wraps(propfunc)
+    def accessor(self):
+        val = getattr(self, attrname, sentinel)
+        if val is sentinel:
+            val = propfunc(self)
+            setattr(self, attrname, val)
+        return val
+
+    return property(accessor)

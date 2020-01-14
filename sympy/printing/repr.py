@@ -8,17 +8,17 @@ relation eval(srepr(expr))=expr holds in an appropriate environment.
 from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
+from mpmath.libmp import repr_dps, to_str as mlib_to_str
+
 from .printer import Printer
-import mpmath.libmp as mlib
-from mpmath.libmp import repr_dps
-from sympy.core.compatibility import range
 
 
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
     _default_settings = {
-        "order": None
+        "order": None,
+        "perm_cyclic" : True,
     }
 
     def reprify(self, args, sep):
@@ -47,11 +47,52 @@ class ReprPrinter(Printer):
 
     def _print_Add(self, expr, order=None):
         args = self._as_ordered_terms(expr, order=order)
+        nargs = len(args)
         args = map(self._print, args)
-        return "Add(%s)" % ", ".join(args)
+        clsname = type(expr).__name__
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return clsname + "(*[%s])" % ", ".join(args)
+        return clsname + "(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
         return expr.__repr__()
+
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
+            if not expr.size:
+                return 'Permutation()'
+            # before taking Cycle notation, see if the last element is
+            # a singleton and move it to the head of the string
+            s = Cycle(expr)(expr.size - 1).__repr__()[len('Cycle'):]
+            last = s.rfind('(')
+            if not last == 0 and ',' not in s[last:]:
+                s = s[last:] + s[:last]
+            return 'Permutation%s' %s
+        else:
+            s = expr.support()
+            if not s:
+                if expr.size < 5:
+                    return 'Permutation(%s)' % str(expr.array_form)
+                return 'Permutation([], size=%s)' % expr.size
+            trim = str(expr.array_form[:s[-1] + 1]) + ', size=%s' % expr.size
+            use = full = str(expr.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
 
     def _print_Function(self, expr):
         r = self._print(expr.func)
@@ -78,6 +119,24 @@ class ReprPrinter(Printer):
 
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
+
+    def _print_Integers(self, expr):
+        return 'Integers'
+
+    def _print_Naturals(self, expr):
+        return 'Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'Reals'
+
+    def _print_EmptySet(self, expr):
+        return 'EmptySet'
+
+    def _print_EmptySequence(self, expr):
+        return 'EmptySequence'
 
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
@@ -107,10 +166,10 @@ class ReprPrinter(Printer):
         _print_MatrixBase
 
     def _print_BooleanTrue(self, expr):
-        return "S.true"
+        return "true"
 
     def _print_BooleanFalse(self, expr):
-        return "S.false"
+        return "false"
 
     def _print_NaN(self, expr):
         return "nan"
@@ -122,8 +181,12 @@ class ReprPrinter(Printer):
         else:
             args = terms
 
+        nargs = len(args)
         args = map(self._print, args)
-        return "Mul(%s)" % ", ".join(args)
+        clsname = type(expr).__name__
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return clsname + "(*[%s])" % ", ".join(args)
+        return clsname + "(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
         return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
@@ -135,7 +198,7 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
+        r = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):

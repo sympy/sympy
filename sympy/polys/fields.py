@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence, reduce, string_types
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -12,15 +12,15 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
-from sympy.polys.rings import PolyElement
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.domains.fractionfield import FractionField
+from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.constructor import construct_domain
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import _parallel_dict_from_expr
-from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.domains.fractionfield import FractionField
-from sympy.polys.constructor import construct_domain
+from sympy.polys.rings import PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -50,7 +50,8 @@ def sfield(exprs, *symbols, **options):
     from options and input expressions.
 
     Parameters
-    ----------
+    ==========
+
     exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
     symbols : sequence of :class:`Symbol`/:class:`Expr`
     options : keyword arguments understood by :class:`Options`
@@ -197,7 +198,7 @@ class FracField(DefaultPrinting):
         elif isinstance(element, tuple) and len(element) == 2:
             numer, denom = list(map(self.ring.ring_new, element))
             return self.new(numer, denom)
-        elif isinstance(element, string_types):
+        elif isinstance(element, str):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
             return self.from_expr(element)

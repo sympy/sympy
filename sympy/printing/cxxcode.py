@@ -2,9 +2,8 @@ from __future__ import (absolute_import, division, print_function)
 """
 C++ code printer
 """
-from functools import wraps
 from itertools import chain
-from sympy.codegen.ast import Type
+from sympy.codegen.ast import Type, none
 from .ccode import C89CodePrinter, C99CodePrinter
 
 
@@ -96,6 +95,12 @@ class _CXXCodePrinterBase(object):
             return self._print(expr.args[0])
         return "%smin(%s, %s)" % (self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
 
+    def _print_using(self, expr):
+        if expr.alias == none:
+            return 'using %s' % expr.type
+        else:
+            raise ValueError("C++98 does not support type aliases")
+
 
 class CXX98CodePrinter(_CXXCodePrinterBase, C89CodePrinter):
     standard = 'C++98'
@@ -125,6 +130,12 @@ class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
         }.items()
     ))
 
+    def _print_using(self, expr):
+        if expr.alias == none:
+            return super(CXX11CodePrinter, self)._print_using(expr)
+        else:
+            return 'using %(alias)s = %(type)s' % expr.kwargs(apply=self._print)
+
 # _attach_print_methods(CXX11CodePrinter, _math_functions)
 
 
@@ -153,5 +164,5 @@ cxx_code_printers = {
 }
 
 def cxxcode(expr, assign_to=None, standard='c++11', **settings):
-    """ C++ equivalent of :func:`sympy.ccode`. """
+    """ C++ equivalent of :func:`~.ccode`. """
     return cxx_code_printers[standard.lower()](settings).doprint(expr, assign_to)

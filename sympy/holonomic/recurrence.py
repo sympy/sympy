@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy import symbols, Symbol, S
 from sympy.printing import sstr
-from sympy.core.compatibility import range
 from sympy.core.sympify import sympify
 
 
@@ -188,11 +187,11 @@ class RecurrenceOperator(object):
 
             if isinstance(b, list):
                 for i in b:
-                    j = base.to_sympy(i).subs(base.gens[0], base.gens[0] + S(1))
+                    j = base.to_sympy(i).subs(base.gens[0], base.gens[0] + S.One)
                     sol.append(base.from_sympy(j))
 
             else:
-                j = b.subs(base.gens[0], base.gens[0] + S(1))
+                j = b.subs(base.gens[0], base.gens[0] + S.One)
                 sol.append(base.from_sympy(j))
 
             return sol
@@ -304,7 +303,7 @@ class RecurrenceOperator(object):
                 return False
         else:
             if self.listofpoly[0] == other:
-                for i in listofpoly[1:]:
+                for i in self.listofpoly[1:]:
                     if i is not self.parent.base.zero:
                         return False
                 return True

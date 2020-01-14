@@ -2,10 +2,9 @@ from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
     cos, sin, Mul, Pow, O)
 from sympy.simplify.radsimp import expand_numer
 from sympy.core.function import expand, expand_multinomial, expand_power_base
-from sympy.core.compatibility import range
 
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import raises
+from sympy.testing.randtest import verify_numerically
 
 from sympy.abc import x, y, z
 
@@ -62,13 +61,13 @@ def test_expand_non_commutative():
     assert ((a*A*B)**i).expand() == a**i*(A*B)**i
     assert ((a*A*(B*(A*B/A)**2))**i).expand() == a**i*(A*B*A*B**2/A)**i
     # issue 6558
-    assert (A*B*(A*B)**-1).expand() == A*B*(A*B)**-1
+    assert (A*B*(A*B)**-1).expand() == 1
     assert ((a*A)**i).expand() == a**i*A**i
     assert ((a*A*B*A**-1)**3).expand() == a**3*A*B**3/A
     assert ((a*A*B*A*B/A)**3).expand() == \
         a**3*A*B*(A*B**2)*(A*B**2)*A*B*A**(-1)
-    assert ((a*A*B*A*B/A)**-3).expand() == \
-        a**-3*(A*B*(A*B**2)*(A*B**2)*A*B*A**(-1))**-1
+    assert ((a*A*B*A*B/A)**-2).expand() == \
+        A*B**-1*A**-1*B**-2*A**-1*B**-1*A**-1/a**2
     assert ((a*b*A*B*A**-1)**i).expand() == a**i*b**i*(A*B/A)**i
     assert ((a*(a*b)**i)**i).expand() == a**i*a**(i**2)*b**(i**2)
     e = Pow(Mul(a, 1/a, A, B, evaluate=False), S(2), evaluate=False)
@@ -132,6 +131,8 @@ def test_expand_frac():
 
 def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
+    assert eq.expand(complex=True)  # does not give oo recursion
+    eq = -I*exp(-3*I*pi/4)/(4*pi**(R(3, 2))*sqrt(x))
     assert eq.expand(complex=True)  # does not give oo recursion
 
 
@@ -289,7 +290,7 @@ def test_issues_5919_6830():
         return verify_numerically(e, expand_multinomial(e))
 
     for a in [2, S.Half]:
-        for b in [3, S(1)/3]:
+        for b in [3, R(1, 3)]:
             for n in range(2, 6):
                 assert ok(a, b, n)
 

@@ -1,15 +1,17 @@
+.. _kane_method:
+
 ==================================
 Kane's Method in Physics/Mechanics
 ==================================
 
-:mod:`mechanics` provides functionality for deriving equations of motion
+:mod:`sympy.physics.mechanics` provides functionality for deriving equations of motion
 using Kane's method [Kane1985]_. This document will describe Kane's method
 as used in this module, but not how the equations are actually derived.
 
 Structure of Equations
 ======================
 
-In :mod:`mechanics` we are assuming there are 5 basic sets of equations needed
+In :mod:`sympy.physics.mechanics` we are assuming there are 5 basic sets of equations needed
 to describe a system. They are: holonomic constraints, non-holonomic
 constraints, kinematic differential equations, dynamic equations, and
 differentiated non-holonomic equations.
@@ -22,7 +24,7 @@ differentiated non-holonomic equations.
   \mathbf{k_d}(q, t) \dot{u} + \mathbf{f_d}(q, \dot{q}, u, t) &= 0\\
   \mathbf{k_{dnh}}(q, t) \dot{u} + \mathbf{f_{dnh}}(q, \dot{q}, u, t) &= 0\\
 
-In :mod:`mechanics` holonomic constraints are only used for the linearization
+In :mod:`sympy.physics.mechanics` holonomic constraints are only used for the linearization
 process; it is assumed that they will be too complicated to solve for the
 dependent coordinate(s).  If you are able to easily solve a holonomic
 constraint, you should consider redefining your problem in terms of a smaller
@@ -50,7 +52,7 @@ in the following fashion:
 Kane's Method in Physics/Mechanics
 ==================================
 
-The formulation of the equations of motion in :mod:`mechanics` starts with
+The formulation of the equations of motion in :mod:`sympy.physics.mechanics` starts with
 creation of a ``KanesMethod`` object. Upon initialization of the
 ``KanesMethod`` object, an inertial reference frame needs to be supplied. along
 with some basic system information, such as coordinates and speeds ::

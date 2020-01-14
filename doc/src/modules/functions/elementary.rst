@@ -66,8 +66,11 @@ principal_branch
 sympy.functions.elementary.trigonometric
 ========================================
 
-Trionometric Functions
-======================
+
+.. _trionometric functions:
+
+Trigonometric Functions
+========================
 
 sin
 ---
@@ -325,6 +328,14 @@ log
 ---
 
 .. autoclass:: sympy.functions.elementary.exponential.log
+
+   :members:
+
+
+exp_polar
+---------
+
+.. autoclass:: sympy.functions.elementary.exponential.exp_polar
 
    :members:
 

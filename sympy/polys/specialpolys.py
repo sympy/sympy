@@ -3,34 +3,23 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.containers import Tuple
 from sympy.core.singleton import S
-
-from sympy.polys.polytools import Poly, PurePoly
-from sympy.polys.polyutils import _analyze_gens
-
-from sympy.polys.polyclasses import DMP
-
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.ntheory import nextprime
+from sympy.polys.densearith import (
+    dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
+)
 from sympy.polys.densebasic import (
     dmp_zero, dmp_one, dmp_ground,
     dup_from_raw_dict, dmp_raise, dup_random
 )
-
-from sympy.polys.densearith import (
-    dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
-)
-
-from sympy.polys.factortools import (
-    dup_zz_cyclotomic_poly
-)
-
 from sympy.polys.domains import ZZ
-
-from sympy.ntheory import nextprime
-
-from sympy.utilities import subsets, public
-
-from sympy.core.compatibility import range
+from sympy.polys.factortools import dup_zz_cyclotomic_poly
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polyutils import _analyze_gens
+from sympy.utilities import subsets, public, filldedent
 
 
 @public
@@ -62,7 +51,7 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         for i in range(2, n + 1):
             p = nextprime(p)
             a.append(sqrt(p))
-        return minimal_polynomial(Add(*a), x, polys=args.get('polys', False))
+        return minimal_polynomial(Add(*a), x, polys=polys)
 
     if n == 1:
         ex = x**2 - 2
@@ -116,7 +105,7 @@ def symmetric_poly(n, *gens, **args):
     elif not n:
         poly = S.One
     else:
-        poly = Add(*[ Mul(*s) for s in subsets(gens, int(n)) ])
+        poly = Add(*[Mul(*s) for s in subsets(gens, int(n))])
 
     if not args.get('polys', False):
         return poly
@@ -153,42 +142,46 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 
 @public
 def interpolating_poly(n, x, X='x', Y='y'):
-    """Construct Lagrange interpolating polynomial for ``n`` data points. """
+    """Construct Lagrange interpolating polynomial for ``n``
+    data points. If a sequence of values are given for ``X`` and ``Y``
+    then the first ``n`` values will be used.
+    """
+    ok = getattr(x, 'free_symbols', None)
+
     if isinstance(X, str):
         X = symbols("%s:%s" % (X, n))
+    elif ok and ok & Tuple(*X).free_symbols:
+        ok = False
 
     if isinstance(Y, str):
         Y = symbols("%s:%s" % (Y, n))
+    elif ok and ok & Tuple(*Y).free_symbols:
+        ok = False
+
+    if not ok:
+        raise ValueError(filldedent('''
+            Expecting symbol for x that does not appear in X or Y.
+            Use `interpolate(list(zip(X, Y)), x)` instead.'''))
 
     coeffs = []
+    numert = Mul(*[x - X[i] for i in range(n)])
 
-    for i in range(0, n):
-        numer = []
-        denom = []
-
-        for j in range(0, n):
-            if i == j:
-                continue
-
-            numer.append(x - X[j])
-            denom.append(X[i] - X[j])
-
-        numer = Mul(*numer)
-        denom = Mul(*denom)
-
+    for i in range(n):
+        numer = numert/(x - X[i])
+        denom = Mul(*[(X[i] - X[j]) for j in range(n) if i != j])
         coeffs.append(numer/denom)
 
-    return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
+    return Add(*[coeff*y for coeff, y in zip(coeffs, Y)])
 
 
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
-    Y = [ Symbol('y_' + str(i)) for i in range(0, n + 1) ]
+    Y = [Symbol('y_' + str(i)) for i in range(n + 1)]
 
     y_0, y_1 = Y[0], Y[1]
 
-    u = y_0 + Add(*[ y for y in Y[1:] ])
-    v = y_0**2 + Add(*[ y**2 for y in Y[1:] ])
+    u = y_0 + Add(*[y for y in Y[1:]])
+    v = y_0**2 + Add(*[y**2 for y in Y[1:]])
 
     F = ((u + 1)*(u + 2)).as_poly(*Y)
     G = ((v + 1)*(-3*y_1*y_0**2 + y_1**2 - 1)).as_poly(*Y)
@@ -202,7 +195,7 @@ def dmp_fateman_poly_F_1(n, K):
     """Fateman's GCD benchmark: trivial GCD """
     u = [K(1), K(0)]
 
-    for i in range(0, n):
+    for i in range(n):
         u = [dmp_one(i, K), u]
 
     v = [K(1), K(0), K(0)]
@@ -230,11 +223,11 @@ def dmp_fateman_poly_F_1(n, K):
 
 def fateman_poly_F_2(n):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
-    Y = [ Symbol('y_' + str(i)) for i in range(0, n + 1) ]
+    Y = [Symbol('y_' + str(i)) for i in range(n + 1)]
 
     y_0 = Y[0]
 
-    u = Add(*[ y for y in Y[1:] ])
+    u = Add(*[y for y in Y[1:]])
 
     H = Poly((y_0 + u + 1)**2, *Y)
 
@@ -248,7 +241,7 @@ def dmp_fateman_poly_F_2(n, K):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
 
-    for i in range(0, n - 1):
+    for i in range(n - 1):
         u = [dmp_one(i, K), u]
 
     m = n - 1
@@ -267,11 +260,11 @@ def dmp_fateman_poly_F_2(n, K):
 
 def fateman_poly_F_3(n):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
-    Y = [ Symbol('y_' + str(i)) for i in range(0, n + 1) ]
+    Y = [Symbol('y_' + str(i)) for i in range(n + 1)]
 
     y_0 = Y[0]
 
-    u = Add(*[ y**(n + 1) for y in Y[1:] ])
+    u = Add(*[y**(n + 1) for y in Y[1:]])
 
     H = Poly((y_0**(n + 1) + u + 1)**2, *Y)
 

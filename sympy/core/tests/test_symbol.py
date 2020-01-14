@@ -1,9 +1,8 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Tuple,
-)
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
 from sympy.core.symbol import _uniquely_named_symbol, _symbol
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
 
@@ -45,18 +44,6 @@ def test_Dummy_force_dummy_index():
     d3 = Dummy('d', dummy_index=3)
     assert d1 == d3
     assert Dummy()._count == Dummy('d', dummy_index=3)._count
-
-
-def test_as_dummy():
-    x = Symbol('x')
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1 != x.as_dummy()
-
-    x = Symbol('x', commutative=False)
-    x1 = x.as_dummy()
-    assert x1 != x
-    assert x1.is_commutative is False
 
 
 def test_lt_gt():
@@ -181,7 +168,7 @@ def test_Wild_properties():
     integerp = lambda k: k.is_integer
     positivep = lambda k: k.is_positive
     symbolp = lambda k: k.is_Symbol
-    realp = lambda k: k.is_real
+    realp = lambda k: k.is_extended_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
@@ -332,10 +319,13 @@ def test_symbols():
     raises(ValueError, lambda: symbols('::a'))
 
 
-def test_call():
-    f = Symbol('f')
-    assert f(2)
-    raises(TypeError, lambda: Wild('x')(1))
+def test_symbols_become_functions_issue_3539():
+    from sympy.abc import alpha, phi, beta, t
+    raises(TypeError, lambda: beta(2))
+    raises(TypeError, lambda: beta(2.5))
+    raises(TypeError, lambda: phi(2.5))
+    raises(TypeError, lambda: alpha(2.5))
+    raises(TypeError, lambda: phi(t))
 
 
 def test_unicode():

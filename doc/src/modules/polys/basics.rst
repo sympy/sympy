@@ -12,7 +12,7 @@ polynomials within SymPy. All code examples assume::
 
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
 
 Basic concepts
 ==============
@@ -69,7 +69,7 @@ keyword parameter. By default, it is determined by the coefficients
 of the polynomial arguments.
 
 Polynomial expressions can be transformed into polynomials by the
-method :func:`as_poly`::
+method :obj:`sympy.core.expr.Expr.as_poly`::
 
     >>> e = (x + y)*(y - 2*z)
     >>> e.as_poly()
@@ -211,7 +211,7 @@ elements of a factorial domain are usually called *primes*.
 A family of integers has only a finite number of common divisors
 and the greatest of them is divisible by all of them. More generally,
 given a family of nonzero elements `(a_i)` in an integral domain,
-a common divisor `d` of the elements is is called a *greatest common
+a common divisor `d` of the elements is called a *greatest common
 divisor*, abbreviated *gcd*, of the family if it is a multiple
 of all common divisors.
 A greatest common divisor, if it exists, is not unique in general;
@@ -248,13 +248,13 @@ The ring of integers and all univariate polynomial rings over fields
 are Euclidean domains with `w(a) = |a|` resp. `w(a) = \deg(a)`.
 
 The division identity for integers is implemented in Python as the built-in
-function :func:`divmod` that can also be applied to SymPy Integers::
+function ``divmod`` that can also be applied to SymPy Integers::
 
     >>> divmod(Integer(53), Integer(7))
     (7, 4)
 
 For polynomials the division identity is given in SymPy by the
-function :func:`div`::
+function :func:`~.div`::
 
     >>> f = 5*x**2 + 10*x + 3
     >>> g = 2*x + 2
@@ -289,7 +289,7 @@ It applies to two elements of a Euclidean domain. A gcd of several
 elements can be obtained by iteration.
 
 The function for computing the greatest common divisor of integers in
-SymPy is currently :func:`igcd`::
+SymPy is currently :func:`~.igcd`::
 
     >>> igcd(2, 4)
     2
@@ -297,7 +297,7 @@ SymPy is currently :func:`igcd`::
     5
 
 For univariate polynomials over a field the function has its common
-name :func:`gcd`, and the returned polynomial is monic::
+name :func:`~.gcd`, and the returned polynomial is monic::
 
     >>> f = 4*x**2 - 1
     >>> g = 8*x**3 + 1
@@ -330,7 +330,7 @@ with rational coefficients can also be written as `f = cp`, where `c`
 is a rational number and `p` is a primitive polynomial.
 The constant `c` is called the *content* of `f`, and `p` is
 its *primitive part*. These components can be found by the method
-:func:`as_content_primitive`::
+:obj:`sympy.core.expr.Expr.as_content_primitive`::
 
     >>> f = 6*x**2 - 3*x + 9
     >>> c, p = f.as_content_primitive()
@@ -403,7 +403,7 @@ form of SymPy expression, like symbols, sums etc.
 Division
 --------
 
-The function :func:`div` provides division of polynomials with remainder.
+The function :func:`~.div` provides division of polynomials with remainder.
 That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
 that `f = g \cdot q + r` and `\deg(r) < q`. For polynomials in one variables
 with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are

@@ -2,10 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.compatibility import ordered, default_sort_key
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops, expand_func
-from sympy.functions.combinatorial.factorials import (binomial,
-    CombinatorialFunction, factorial)
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
 
@@ -78,7 +76,7 @@ def _gammasimp(expr, as_comb):
 
     if as_comb:
         expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+            lambda a, b: gamma(b + 1))
     else:
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
@@ -280,7 +278,7 @@ def _gammasimp(expr, as_comb):
                     elif n < 0:
                         for k in range(-n):
                             do.append(2*y - 1 - k)
-                    ng.append(y + S(1)/2)
+                    ng.append(y + S.Half)
                     no.append(2**(2*y - 1))
                     do.append(sqrt(S.Pi))
 
@@ -364,7 +362,7 @@ def _gammasimp(expr, as_comb):
 
                         # (2)
                         numer.append((2*S.Pi)**(S(n - 1)/2)*
-                                     n**(S(1)/2 - con))
+                                     n**(S.Half - con))
                         # (3)
                         new.append(con)
 

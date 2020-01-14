@@ -13,9 +13,9 @@ from sympy.physics.quantum.spin import (
     JxOp, JyOp, JzOp, J2Op
 )
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 @XFAIL

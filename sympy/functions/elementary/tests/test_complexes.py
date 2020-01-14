@@ -1,10 +1,13 @@
 from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
-    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
-    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda)
-from sympy.utilities.pytest import XFAIL, raises
+    Abs, acos, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta,
+    E, exp, expand, Expr, Function, Heaviside, I, im, log, nan, oo,
+    pi, Rational, re, S, sign, sin, sqrt, Symbol, symbols, transpose,
+    zoo, exp_polar, Piecewise, Interval, comp, Integral, Matrix,
+    ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix, MatrixSymbol,
+    FunctionMatrix, Lambda, Derivative)
+from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
+from sympy.testing.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -19,10 +22,10 @@ def test_re():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
 
-    assert re(nan) == nan
+    assert re(nan) is nan
 
-    assert re(oo) == oo
-    assert re(-oo) == -oo
+    assert re(oo) is oo
+    assert re(-oo) is -oo
 
     assert re(0) == 0
 
@@ -32,14 +35,14 @@ def test_re():
     assert re(E) == E
     assert re(-E) == -E
 
-    assert re(x) == re(x)
+    assert unchanged(re, x)
     assert re(x*I) == -im(x)
     assert re(r*I) == 0
     assert re(r) == r
     assert re(i*I) == I * i
     assert re(i) == 0
 
-    assert re(x + y) == re(x + y)
+    assert re(x + y) == re(x) + re(y)
     assert re(x + r) == re(x) + r
 
     assert re(re(x)) == re(x)
@@ -67,7 +70,7 @@ def test_re():
     assert re(a * (2 + b*I)) == 2*a
 
     assert re((1 + sqrt(a + b*I))/2) == \
-        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
+        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + S.Half
 
     assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
     assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
@@ -79,11 +82,11 @@ def test_re():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
-    assert re(S.ComplexInfinity) == S.NaN
+    assert re(S.ComplexInfinity) is S.NaN
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
-    assert re(A) == (S(1)/2) * (A + conjugate(A))
+    assert re(A) == (S.Half) * (A + conjugate(A))
 
     A = Matrix([[1 + 4*I,2],[0, -3*I]])
     assert re(A) == Matrix([[1, 2],[0, 0]])
@@ -115,10 +118,10 @@ def test_im():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
 
-    assert im(nan) == nan
+    assert im(nan) is nan
 
-    assert im(oo*I) == oo
-    assert im(-oo*I) == -oo
+    assert im(oo*I) is oo
+    assert im(-oo*I) is -oo
 
     assert im(0) == 0
 
@@ -128,14 +131,14 @@ def test_im():
     assert im(E*I) == E
     assert im(-E*I) == -E
 
-    assert im(x) == im(x)
+    assert unchanged(im, x)
     assert im(x*I) == re(x)
     assert im(r*I) == r
     assert im(r) == 0
     assert im(i*I) == 0
     assert im(i) == -I * i
 
-    assert im(x + y) == im(x + y)
+    assert im(x + y) == im(x) + im(y)
     assert im(x + r) == im(x)
     assert im(x + r*I) == im(x) + r
 
@@ -176,12 +179,12 @@ def test_im():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
-    assert im(S.ComplexInfinity) == S.NaN
+    assert im(S.ComplexInfinity) is S.NaN
 
     n, m, l = symbols('n m l')
     A = MatrixSymbol('A',n,m)
 
-    assert im(A) == (S(1)/(2*I)) * (A - conjugate(A))
+    assert im(A) == (S.One/(2*I)) * (A - conjugate(A))
 
     A = Matrix([[1 + 4*I, 2],[0, -3*I]])
     assert im(A) == Matrix([[4, 0],[0, -3]])
@@ -203,7 +206,7 @@ def test_sign():
     assert sign(3*I) == I
     assert sign(-3*I) == -I
     assert sign(0) == 0
-    assert sign(nan) == nan
+    assert sign(nan) is nan
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
@@ -296,7 +299,7 @@ def test_sign():
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
     assert sign(y).rewrite(Piecewise) == sign(y)
-    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x)-1
+    assert sign(x).rewrite(Heaviside) == 2*Heaviside(x, H0=S(1)/2) - 1
     assert sign(y).rewrite(Heaviside) == sign(y)
 
     # evaluate what can be evaluated
@@ -325,15 +328,15 @@ def test_as_real_imag():
     # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
-        ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
-     (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
+        ((re(x)**2 + im(x)**2)**Rational(1, 4)*cos(atan2(im(x), re(x))/2),
+     (re(x)**2 + im(x)**2)**Rational(1, 4)*sin(atan2(im(x), re(x))/2))
 
     # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
                (a**2 + b**2)**Rational(
-                   1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
+                   1, 4)*cos(atan2(b, a)/2)/2 + S.Half,
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
@@ -348,6 +351,7 @@ def test_as_real_imag():
 def test_sign_issue_3068():
     n = pi**1000
     i = int(n)
+    x = Symbol('x')
     assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
@@ -368,8 +372,8 @@ def test_Abs():
     assert Abs(-1) == 1
     assert Abs(I) == 1
     assert Abs(-I) == 1
-    assert Abs(nan) == nan
-    assert Abs(zoo) == oo
+    assert Abs(nan) is nan
+    assert Abs(zoo) is oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
@@ -399,6 +403,12 @@ def test_Abs():
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
     assert Abs(x)**-3 == Abs(x)/(x**4)
     assert Abs(x**3) == x**2*Abs(x)
+    assert Abs(I**I) == exp(-pi/2)
+    assert Abs((4 + 5*I)**(6 + 7*I)) == 68921*exp(-7*atan(Rational(5, 4)))
+    y = Symbol('y', real=True)
+    assert Abs(I**y) == 1
+    y = Symbol('y')
+    assert Abs(I**y) == exp(-pi*im(y)/2)
 
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
@@ -429,6 +439,25 @@ def test_Abs():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
+    assert Abs(x).fdiff() == sign(x)
+    raises(ArgumentIndexError, lambda: Abs(x).fdiff(2))
+
+    # doesn't have recursion error
+    arg = sqrt(acos(1 - I)*acos(1 + I))
+    assert abs(arg) == arg
+
+    # special handling to put Abs in denom
+    assert abs(1/x) == 1/Abs(x)
+    e = abs(2/x**2)
+    assert e.is_Mul and e == 2/Abs(x**2)
+    assert unchanged(Abs, y/x)
+    assert unchanged(Abs, x/(x + 1))
+    assert unchanged(Abs, x*y)
+    p = Symbol('p', positive=True)
+    assert abs(x/p) == abs(x)/p
+
+    # coverage
+    assert unchanged(Abs, Symbol('x', real=True)**y)
 
 
 def test_Abs_rewrite():
@@ -444,6 +473,17 @@ def test_Abs_rewrite():
     assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
     assert Abs(y).rewrite(Piecewise) == Abs(y)
     assert Abs(y).rewrite(sign) == y/sign(y)
+
+    i = Symbol('i', imaginary=True)
+    assert abs(i).rewrite(Piecewise) == Piecewise((I*i, I*i >= 0), (-I*i, True))
+
+
+    assert Abs(y).rewrite(conjugate) == sqrt(y*conjugate(y))
+    assert Abs(i).rewrite(conjugate) == sqrt(-i**2) #  == -I*i
+
+    y = Symbol('y', extended_real=True)
+    assert  (Abs(exp(-I*x)-exp(-I*y))**2).rewrite(conjugate) == \
+        -exp(I*x)*exp(-I*y) + 2 - exp(-I*x)*exp(I*y)
 
 
 def test_Abs_real():
@@ -466,43 +506,60 @@ def test_Abs_real():
 
 def test_Abs_properties():
     x = Symbol('x')
-    assert Abs(x).is_real is True
+    assert Abs(x).is_real is None
+    assert Abs(x).is_extended_real is True
     assert Abs(x).is_rational is None
     assert Abs(x).is_positive is None
-    assert Abs(x).is_nonnegative is True
+    assert Abs(x).is_nonnegative is None
+    assert Abs(x).is_extended_positive is None
+    assert Abs(x).is_extended_nonnegative is True
+
+    f = Symbol('x', finite=True)
+    assert Abs(f).is_real is True
+    assert Abs(f).is_extended_real is True
+    assert Abs(f).is_rational is None
+    assert Abs(f).is_positive is None
+    assert Abs(f).is_nonnegative is True
+    assert Abs(f).is_extended_positive is None
+    assert Abs(f).is_extended_nonnegative is True
 
     z = Symbol('z', complex=True, zero=False)
-    assert Abs(z).is_real is True
+    assert Abs(z).is_real is True # since complex implies finite
+    assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
     assert Abs(z).is_positive is True
+    assert Abs(z).is_extended_positive is True
     assert Abs(z).is_zero is False
 
     p = Symbol('p', positive=True)
     assert Abs(p).is_real is True
+    assert Abs(p).is_extended_real is True
     assert Abs(p).is_rational is None
     assert Abs(p).is_positive is True
     assert Abs(p).is_zero is False
 
     q = Symbol('q', rational=True)
+    assert Abs(q).is_real is True
     assert Abs(q).is_rational is True
     assert Abs(q).is_integer is None
     assert Abs(q).is_positive is None
     assert Abs(q).is_nonnegative is True
 
     i = Symbol('i', integer=True)
+    assert Abs(i).is_real is True
     assert Abs(i).is_integer is True
     assert Abs(i).is_positive is None
     assert Abs(i).is_nonnegative is True
 
     e = Symbol('n', even=True)
     ne = Symbol('ne', real=True, even=False)
-    assert Abs(e).is_even
+    assert Abs(e).is_even is True
     assert Abs(ne).is_even is False
     assert Abs(i).is_even is None
 
     o = Symbol('n', odd=True)
     no = Symbol('no', real=True, odd=False)
-    assert Abs(o).is_odd
+    assert Abs(o).is_odd is True
     assert Abs(no).is_odd is False
     assert Abs(i).is_odd is None
 
@@ -515,17 +572,17 @@ def test_abs():
 
 
 def test_arg():
-    assert arg(0) == nan
+    assert arg(0) is nan
     assert arg(1) == 0
     assert arg(-1) == pi
     assert arg(I) == pi/2
     assert arg(-I) == -pi/2
     assert arg(1 + I) == pi/4
-    assert arg(-1 + I) == 3*pi/4
+    assert arg(-1 + I) == pi*Rational(3, 4)
     assert arg(1 - I) == -pi/4
     assert arg(exp_polar(4*pi*I)) == 4*pi
     assert arg(exp_polar(-7*pi*I)) == -7*pi
-    assert arg(exp_polar(5 - 3*pi*I/4)) == -3*pi/4
+    assert arg(exp_polar(5 - 3*pi*I/4)) == pi*Rational(-3, 4)
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
@@ -780,7 +837,7 @@ def test_derivatives_issue_4757():
 
 
 def test_issue_11413():
-    from sympy import symbols, Matrix, simplify
+    from sympy import Matrix, simplify
     v0 = Symbol('v0')
     v1 = Symbol('v1')
     v2 = Symbol('v2')
@@ -827,6 +884,7 @@ def test_periodic_argument():
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
+    from sympy import principal_branch
     assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
 
 
@@ -845,6 +903,9 @@ def test_principal_branch():
     assert principal_branch(exp_polar(3*pi*I)*x, 2*pi) == \
         principal_branch(exp_polar(I*pi)*x, 2*pi)
     assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
+    # related to issue #14692
+    assert principal_branch(exp_polar(-I*pi/2)/polar_lift(neg), 2*pi) == \
+        exp_polar(-I*pi/2)/neg
 
     assert N_equals(principal_branch((1 + I)**2, 2*pi), 2*I)
     assert N_equals(principal_branch((1 + I)**2, 3*pi), 2*I)
@@ -863,10 +924,46 @@ def test_issue_6167_6151():
     i = int(n)
     assert sign(n - i) == 1
     assert abs(n - i) == n - i
+    x = Symbol('x')
     eps = pi**-1500
     big = pi**1000
     one = cos(x)**2 + sin(x)**2
     e = big*one - big + eps
+    from sympy import simplify
     assert sign(simplify(e)) == 1
-    for xi in (111, 11, 1, S(1)/10):
+    for xi in (111, 11, 1, Rational(1, 10)):
         assert sign(e.subs(x, xi)) == 1
+
+
+def test_issue_14216():
+    from sympy.functions.elementary.complexes import unpolarify
+    A = MatrixSymbol("A", 2, 2)
+    assert unpolarify(A[0, 0]) == A[0, 0]
+    assert unpolarify(A[0, 0]*A[1, 0]) == A[0, 0]*A[1, 0]
+
+
+def test_issue_14238():
+    # doesn't cause recursion error
+    r = Symbol('r', real=True)
+    assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+def test_zero_assumptions():
+    nr = Symbol('nonreal', real=False, finite=True)
+    ni = Symbol('nonimaginary', imaginary=False)
+    # imaginary implies not zero
+    nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
+
+    assert re(nr).is_zero is None
+    assert im(nr).is_zero is False
+
+    assert re(ni).is_zero is None
+    assert im(ni).is_zero is None
+
+    assert re(nzni).is_zero is False
+    assert im(nzni).is_zero is None
+
+def test_issue_15893():
+    f = Function('f', real=True)
+    x = Symbol('x', real=True)
+    eq = Derivative(Abs(f(x)), f(x))
+    assert eq.doit() == sign(f(x))

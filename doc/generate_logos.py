@@ -4,11 +4,12 @@
 This script creates logos of different formats from the source "sympy.svg"
 
 Requirements:
-    rsvg-convert    - for converting to *.png format (librsvg2-bin deb package)
+    rsvg-convert    - for converting to *.png format
+                    (librsvg2-bin deb package)
     imagemagick     - for converting to *.ico favicon format
 """
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 import xml.dom.minidom
 import os.path
 import logging
@@ -22,61 +23,69 @@ default_output_dir = os.path.join(os.path.dirname(__file__), "_build/logo")
 
 # those are the options for resizing versions without tail or text
 svg_sizes = {}
-svg_sizes['notail'] = {"prefix":"notail", "dx":-70, "dy":-20, "size":690, "title":"SymPy Logo, with no tail"}
-svg_sizes['notail-notext'] = {"prefix":"notailtext", "dx":-70, "dy":60, "size":690, "title":"SymPy Logo, with no tail, no text"}
-svg_sizes['notext'] = {"prefix":"notext", "dx":-7, "dy":90, "size":750, "title":"SymPy Logo, with no text"}
+svg_sizes['notail'] = {
+    "prefix":"notail", "dx":-70, "dy":-20, "size":690,
+    "title":"SymPy Logo, with no tail"}
+svg_sizes['notail-notext'] = {
+    "prefix":"notailtext", "dx":-70, "dy":60, "size":690,
+    "title":"SymPy Logo, with no tail, no text"}
+svg_sizes['notext'] = {
+    "prefix":"notext", "dx":-7, "dy":90, "size":750,
+    "title":"SymPy Logo, with no text"}
 
 # The list of identifiers of various versions
 versions = ['notail', 'notail-notext', 'notext']
 
-parser = OptionParser()
-parser.set_usage("%s [options ...]")
+parser = ArgumentParser(usage="%(prog)s [options ...]")
 
-parser.add_option("--source-dir", type="string", dest="source_dir",
-    help="Directory of the source *.svg file [default: %default]",
+parser.add_argument("--source-dir", type=str, dest="source_dir",
+    help="Directory of the source *.svg file [default: %(default)s]",
     default=default_source_dir)
 
-parser.add_option("--source-svg", type="string", dest="source_svg",
-    help="File name of the source *.svg file [default: %default]",
+parser.add_argument("--source-svg", type=str, dest="source_svg",
+    help="File name of the source *.svg file [default: %(default)s]",
     default=default_source_svg)
 
-parser.add_option("--svg", action="store_true", dest="generate_svg",
-    help="Generate *.svg versions without tails and without text 'SymPy' [default: %default]",
+parser.add_argument("--svg", action="store_true", dest="generate_svg",
+    help="Generate *.svg versions without tails " \
+        "and without text 'SymPy' [default: %(default)s]",
     default=False)
 
-parser.add_option("--png", action="store_true", dest="generate_png",
-    help="Generate *.png versions [default: %default]",
+parser.add_argument("--png", action="store_true", dest="generate_png",
+    help="Generate *.png versions [default: %(default)s]",
     default=False)
 
-parser.add_option("--ico", action="store_true", dest="generate_ico",
-    help="Generate *.ico versions [default: %default]",
+parser.add_argument("--ico", action="store_true", dest="generate_ico",
+    help="Generate *.ico versions [default: %(default)s]",
     default=False)
 
-parser.add_option("--clear", action="store_true", dest="clear",
-    help="Remove temporary files [default: %default]",
+parser.add_argument("--clear", action="store_true", dest="clear",
+    help="Remove temporary files [default: %(default)s]",
     default=False)
 
-parser.add_option("-a", "--all", action="store_true", dest="generate_all",
-    help="Shorthand for '--svg --png --ico --clear' options [default: %default]",
+parser.add_argument("-a", "--all", action="store_true", dest="generate_all",
+    help="Shorthand for '--svg --png --ico --clear' options " \
+        "[default: %(default)s]",
     default=True)
 
-parser.add_option("-s", "--sizes", type="string", dest="sizes",
-    help="Sizes of png pictures [default: %default]",
+parser.add_argument("-s", "--sizes", type=str, dest="sizes",
+    help="Sizes of png pictures [default: %(default)s]",
     default="160,500")
 
-parser.add_option("--icon-sizes", type="string", dest="icon_sizes",
-    help="Sizes of icons embedded in favicon file [default: %default]",
+parser.add_argument("--icon-sizes", type=str, dest="icon_sizes",
+    help="Sizes of icons embedded in favicon file [default: %(default)s]",
     default="16,32,48,64")
 
-parser.add_option("--output-dir", type="string", dest="output_dir",
-    help="Outpu dir [default: %default]",
+parser.add_argument("--output-dir", type=str, dest="output_dir",
+    help="Output dir [default: %(default)s]",
     default=default_output_dir)
 
-parser.add_option("-d", "--debug", action="store_true", dest="debug",
+parser.add_argument("-d", "--debug", action="store_true", dest="debug",
+    help="Print debug log [default: %(default)s]",
     default=False)
 
 def main():
-    options, args = parser.parse_args()
+    options, args = parser.parse_known_args()
     if options.debug:
         logging.basicConfig(level=logging.DEBUG)
 
@@ -126,7 +135,9 @@ def generate_notail_notext_versions(fn_source, output_dir):
         title.firstChild.data = properties["title"]
 
         desc = svg.getElementsByTagName("desc")[0]
-        desc.appendChild(doc.createTextNode("\n\nThis file is generated from %s !" % fn_source))
+        desc.appendChild(
+            doc.createTextNode(
+                "\n\nThis file is generated from %s !" % fn_source))
 
         fn_out = get_svg_filename_from_versionkey(fn_source, ver)
         fn_out = os.path.join(output_dir, fn_out)
@@ -142,7 +153,8 @@ def convert_to_png(fn_source, output_dir, sizes):
                          stderr=subprocess.STDOUT)
     p.communicate()
     if p.returncode == 127:
-        logging.error("%s: command not found" % cmd)
+        logging.error(
+            "%s: command not found. Install librsvg" % cmd)
         sys.exit(p.returncode)
 
     for ver in svgs:
@@ -187,7 +199,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
                          stderr=subprocess.STDOUT)
     p.communicate()
     if p.returncode == 127:
-        logging.error("%s: command not found" % cmd)
+        logging.error("%s: command not found. Install imagemagick" % cmd)
         sys.exit(p.returncode)
 
     for ver in svgs:

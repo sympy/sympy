@@ -34,7 +34,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered, range
+from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
@@ -96,7 +96,7 @@ def integer_powers(exprs):
                 terms[j].append((term, a))
                 break
         else:
-            terms[term] = [(term, S(1))]
+            terms[term] = [(term, S.One)]
 
     # After we have done this, we have all the like terms together, so we just
     # need to find a common denominator so that we can get the base term and
@@ -480,9 +480,9 @@ class DifferentialExtension(object):
                     # Example: exp(x + x**2) over QQ(x, exp(x), exp(x**2))
                     self.newf = self.newf.xreplace({exp(arg): exp(const)*Mul(*[
                         u**power for u, power in ans])})
-                    self.newf = self.newf.xreplace(dict([(exp(p*exparg),
-                        exp(const*p) * Mul(*[u**power for u, power in ans]))
-                        for exparg, p in others]))
+                    self.newf = self.newf.xreplace({exp(p*exparg):
+                        exp(const*p) * Mul(*[u**power for u, power in ans])
+                        for exparg, p in others})
                     # TODO: Add something to backsubs to put exp(const*p)
                     # back together.
 
@@ -1283,7 +1283,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
             if invert:
                 h_lc = Poly(h.as_poly(DE.t).LC(), DE.t, field=True, expand=False)
-                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S(1)]
+                inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff, [s])[1]
@@ -1452,7 +1452,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
             iDta, iDtd = frac_in(iDt, DE.t, field=True)
             try:
                 va, vd = rischDE(iDta, iDtd, Poly(aa, DE.t), Poly(ad, DE.t), DE)
-                va, vd = frac_in((va, vd), t1)
+                va, vd = frac_in((va, vd), t1, cancel=True)
             except NonElementaryIntegralException:
                 b = False
             else:
@@ -1742,7 +1742,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             dummy=True, rewrite_complex=rewrite_complex)
     fa, fd = DE.fa, DE.fd
 
-    result = S(0)
+    result = S.Zero
     for case in reversed(DE.cases):
         if not fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
             DE.decrement_level()
@@ -1759,7 +1759,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             # handle polynomials correctly.
             ans = integrate(fa.as_expr()/fd.as_expr(), DE.x, risch=False)
             b = False
-            i = S(0)
+            i = S.Zero
         else:
             raise NotImplementedError("Only exponential and logarithmic "
             "extensions are currently supported.")

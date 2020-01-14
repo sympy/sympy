@@ -1,14 +1,14 @@
-"""Options manager for :class:`Poly` and public API functions. """
+"""Options manager for :class:`~.Poly` and public API functions. """
 
 from __future__ import print_function, division
 
 __all__ = ["Options"]
 
 from sympy.core import S, Basic, sympify
-from sympy.core.compatibility import string_types, with_metaclass
+from sympy.core.compatibility import with_metaclass
+from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
-from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
 import sympy.polys
 
@@ -405,7 +405,7 @@ class Domain(with_metaclass(OptionType, Option)):
     _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
     _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ)\[(.+)\]$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|R|RR|C|CC)\[(.+)\]$")
     _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
     _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
@@ -415,7 +415,7 @@ class Domain(with_metaclass(OptionType, Option)):
             return domain
         elif hasattr(domain, 'to_domain'):
             return domain.to_domain()
-        elif isinstance(domain, string_types):
+        elif isinstance(domain, str):
             if domain in ['Z', 'ZZ']:
                 return sympy.polys.domains.ZZ
 
@@ -459,8 +459,12 @@ class Domain(with_metaclass(OptionType, Option)):
 
                 if ground in ['Z', 'ZZ']:
                     return sympy.polys.domains.ZZ.poly_ring(*gens)
-                else:
+                elif ground in ['Q', 'QQ']:
                     return sympy.polys.domains.QQ.poly_ring(*gens)
+                elif ground in ['R', 'RR']:
+                    return sympy.polys.domains.RR.poly_ring(*gens)
+                else:
+                    return sympy.polys.domains.CC.poly_ring(*gens)
 
             r = cls._re_fraction.match(domain)
 

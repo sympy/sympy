@@ -1,7 +1,6 @@
 """Tools for manipulation of expressions using paths. """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import range
 
 from sympy.core import Basic
 
@@ -304,9 +303,9 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     * select slice: ``/[0]`` or ``/[1:5]`` or ``/[1:5:2]``
           Supports standard Python's slice syntax.
     * select by type: ``/list`` or ``/list|tuple``
-          Emulates :func:`isinstance`.
+          Emulates ``isinstance()``.
     * select by attribute: ``/__iter__?``
-          Emulates :func:`hasattr`.
+          Emulates ``hasattr()``.
 
     Parameters
     ==========

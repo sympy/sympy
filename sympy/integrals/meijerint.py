@@ -32,13 +32,13 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.compatibility import range
+from sympy.core.numbers import Rational
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.hyperbolic import \
@@ -70,7 +70,7 @@ def _create_lookup_table(table):
     n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
     t = p*z**q
 
-    def add(formula, an, ap, bm, bq, arg=t, fac=S(1), cond=True, hint=True):
+    def add(formula, an, ap, bm, bq, arg=t, fac=S.One, cond=True, hint=True):
         table.setdefault(_mytype(formula, z), []).append((formula,
                                      [(fac, meijerg(an, ap, bm, bq, arg))], cond, hint))
 
@@ -116,7 +116,7 @@ def _create_lookup_table(table):
 
     # 12
     def A1(r, sign, nu):
-        return pi**(-S(1)/2)*(-sign*nu/2)**(1 - 2*r)
+        return pi**Rational(-1, 2)*(-sign*nu/2)**(1 - 2*r)
 
     def tmpadd(r, sgn):
         # XXX the a**2 is bad for matching
@@ -126,18 +126,18 @@ def _create_lookup_table(table):
             a**(b - 2*r)*A1(r, sgn, b))
     tmpadd(0, 1)
     tmpadd(0, -1)
-    tmpadd(S(1)/2, 1)
-    tmpadd(S(1)/2, -1)
+    tmpadd(S.Half, 1)
+    tmpadd(S.Half, -1)
 
     # 13
     def tmpadd(r, sgn):
         add((sqrt(a + p*z**q) + sgn*sqrt(p)*z**(q/2))**b/(a + p*z**q)**r,
-            [1 - r + sgn*b/2], [1 - r - sgn*b/2], [0, S(1)/2], [],
+            [1 - r + sgn*b/2], [1 - r - sgn*b/2], [0, S.Half], [],
             p*z**q/a, a**(b/2 - r)*A1(r, sgn, b))
     tmpadd(0, 1)
     tmpadd(0, -1)
-    tmpadd(S(1)/2, 1)
-    tmpadd(S(1)/2, -1)
+    tmpadd(S.Half, 1)
+    tmpadd(S.Half, -1)
     # (those after look obscure)
 
     # Section 8.4.3
@@ -145,16 +145,16 @@ def _create_lookup_table(table):
 
     # TODO can do sin^n, sinh^n by expansion ... where?
     # 8.4.4 (hyperbolic functions)
-    add(sinh(t), [], [1], [S(1)/2], [1, 0], t**2/4, pi**(S(3)/2))
-    add(cosh(t), [], [S(1)/2], [0], [S(1)/2, S(1)/2], t**2/4, pi**(S(3)/2))
+    add(sinh(t), [], [1], [S.Half], [1, 0], t**2/4, pi**Rational(3, 2))
+    add(cosh(t), [], [S.Half], [0], [S.Half, S.Half], t**2/4, pi**Rational(3, 2))
 
     # Section 8.4.5
     # TODO can do t + a. but can also do by expansion... (XXX not really)
-    add(sin(t), [], [], [S(1)/2], [0], t**2/4, sqrt(pi))
-    add(cos(t), [], [], [0], [S(1)/2], t**2/4, sqrt(pi))
+    add(sin(t), [], [], [S.Half], [0], t**2/4, sqrt(pi))
+    add(cos(t), [], [], [0], [S.Half], t**2/4, sqrt(pi))
 
     # Section 8.4.6 (sinc function)
-    add(sinc(t), [], [], [0], [S(-1)/2], t**2/4, sqrt(pi)/2)
+    add(sinc(t), [], [], [0], [Rational(-1, 2)], t**2/4, sqrt(pi)/2)
 
     # Section 8.5.5
     def make_log1(subs):
@@ -176,10 +176,10 @@ def _create_lookup_table(table):
         return make_log1(subs) + make_log2(subs)
     addi(log(t)**n, make_log3, True)
     addi(log(t + a),
-         constant(log(a)) + [(S(1), meijerg([1, 1], [], [1], [0], t/a))],
+         constant(log(a)) + [(S.One, meijerg([1, 1], [], [1], [0], t/a))],
          True)
     addi(log(abs(t - a)), constant(log(abs(a))) +
-         [(pi, meijerg([1, 1], [S(1)/2], [1], [0, S(1)/2], t/a))],
+         [(pi, meijerg([1, 1], [S.Half], [1], [0, S.Half], t/a))],
          True)
     # TODO log(x)/(x+a) and log(x)/(x-1) can also be done. should they
     #      be derivable?
@@ -191,34 +191,34 @@ def _create_lookup_table(table):
     # Section 8.4.11
     from sympy import Ei, I, expint, Si, Ci, Shi, Chi, fresnels, fresnelc
     addi(Ei(t),
-         constant(-I*pi) + [(S(-1), meijerg([], [1], [0, 0], [],
+         constant(-I*pi) + [(S.NegativeOne, meijerg([], [1], [0, 0], [],
                   t*polar_lift(-1)))],
          True)
 
     # Section 8.4.12
-    add(Si(t), [1], [], [S(1)/2], [0, 0], t**2/4, sqrt(pi)/2)
-    add(Ci(t), [], [1], [0, 0], [S(1)/2], t**2/4, -sqrt(pi)/2)
+    add(Si(t), [1], [], [S.Half], [0, 0], t**2/4, sqrt(pi)/2)
+    add(Ci(t), [], [1], [0, 0], [S.Half], t**2/4, -sqrt(pi)/2)
 
     # Section 8.4.13
-    add(Shi(t), [S(1)/2], [], [0], [S(-1)/2, S(-1)/2], polar_lift(-1)*t**2/4,
+    add(Shi(t), [S.Half], [], [0], [Rational(-1, 2), Rational(-1, 2)], polar_lift(-1)*t**2/4,
         t*sqrt(pi)/4)
-    add(Chi(t), [], [S(1)/2, 1], [0, 0], [S(1)/2, S(1)/2], t**2/4, -
+    add(Chi(t), [], [S.Half, 1], [0, 0], [S.Half, S.Half], t**2/4, -
         pi**S('3/2')/2)
 
     # generalized exponential integral
     add(expint(a, t), [], [a], [a - 1, 0], [], t)
 
     # Section 8.4.14
-    add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
+    add(erf(t), [1], [], [S.Half], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
-    add(erfc(t), [], [1], [0, S(1)/2], [], t**2, 1/sqrt(pi))
+    add(erfc(t), [], [1], [0, S.Half], [], t**2, 1/sqrt(pi))
     # This formula for erfi(z) yields a wrong(?) minus sign
-    #add(erfi(t), [1], [], [S(1)/2], [0], -t**2, I/sqrt(pi))
-    add(erfi(t), [S(1)/2], [], [0], [-S(1)/2], -t**2, t/sqrt(pi))
+    #add(erfi(t), [1], [], [S.Half], [0], -t**2, I/sqrt(pi))
+    add(erfi(t), [S.Half], [], [0], [Rational(-1, 2)], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
-    add(fresnels(t), [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
-    add(fresnelc(t), [1], [], [S(1)/4], [0, S(3)/4], pi**2*t**4/16, S(1)/2)
+    add(fresnels(t), [1], [], [Rational(3, 4)], [0, Rational(1, 4)], pi**2*t**4/16, S.Half)
+    add(fresnelc(t), [1], [], [Rational(1, 4)], [0, Rational(3, 4)], pi**2*t**4/16, S.Half)
 
     ##### bessel-type functions #####
     from sympy import besselj, bessely, besseli, besselk
@@ -227,37 +227,37 @@ def _create_lookup_table(table):
     add(besselj(a, t), [], [], [a/2], [-a/2], t**2/4)
 
     # all of the following are derivable
-    #add(sin(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [(1+a)/2],
+    #add(sin(t)*besselj(a, t), [Rational(1, 4), Rational(3, 4)], [], [(1+a)/2],
     #    [-a/2, a/2, (1-a)/2], t**2, 1/sqrt(2))
-    #add(cos(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [a/2],
+    #add(cos(t)*besselj(a, t), [Rational(1, 4), Rational(3, 4)], [], [a/2],
     #    [-a/2, (1+a)/2, (1-a)/2], t**2, 1/sqrt(2))
-    #add(besselj(a, t)**2, [S(1)/2], [], [a], [-a, 0], t**2, 1/sqrt(pi))
-    #add(besselj(a, t)*besselj(b, t), [0, S(1)/2], [], [(a + b)/2],
+    #add(besselj(a, t)**2, [S.Half], [], [a], [-a, 0], t**2, 1/sqrt(pi))
+    #add(besselj(a, t)*besselj(b, t), [0, S.Half], [], [(a + b)/2],
     #    [-(a+b)/2, (a - b)/2, (b - a)/2], t**2, 1/sqrt(pi))
 
     # Section 8.4.20
     add(bessely(a, t), [], [-(a + 1)/2], [a/2, -a/2], [-(a + 1)/2], t**2/4)
 
     # TODO all of the following should be derivable
-    #add(sin(t)*bessely(a, t), [S(1)/4, S(3)/4], [(1 - a - 1)/2],
+    #add(sin(t)*bessely(a, t), [Rational(1, 4), Rational(3, 4)], [(1 - a - 1)/2],
     #    [(1 + a)/2, (1 - a)/2], [(1 - a - 1)/2, (1 - 1 - a)/2, (1 - 1 + a)/2],
     #    t**2, 1/sqrt(2))
-    #add(cos(t)*bessely(a, t), [S(1)/4, S(3)/4], [(0 - a - 1)/2],
+    #add(cos(t)*bessely(a, t), [Rational(1, 4), Rational(3, 4)], [(0 - a - 1)/2],
     #    [(0 + a)/2, (0 - a)/2], [(0 - a - 1)/2, (1 - 0 - a)/2, (1 - 0 + a)/2],
     #    t**2, 1/sqrt(2))
-    #add(besselj(a, t)*bessely(b, t), [0, S(1)/2], [(a - b - 1)/2],
+    #add(besselj(a, t)*bessely(b, t), [0, S.Half], [(a - b - 1)/2],
     #    [(a + b)/2, (a - b)/2], [(a - b - 1)/2, -(a + b)/2, (b - a)/2],
     #    t**2, 1/sqrt(pi))
     #addi(bessely(a, t)**2,
-    #     [(2/sqrt(pi), meijerg([], [S(1)/2, S(1)/2 - a], [0, a, -a],
-    #                           [S(1)/2 - a], t**2)),
-    #      (1/sqrt(pi), meijerg([S(1)/2], [], [a], [-a, 0], t**2))],
+    #     [(2/sqrt(pi), meijerg([], [S.Half, S.Half - a], [0, a, -a],
+    #                           [S.Half - a], t**2)),
+    #      (1/sqrt(pi), meijerg([S.Half], [], [a], [-a, 0], t**2))],
     #     True)
     #addi(bessely(a, t)*bessely(b, t),
-    #     [(2/sqrt(pi), meijerg([], [0, S(1)/2, (1 - a - b)/2],
+    #     [(2/sqrt(pi), meijerg([], [0, S.Half, (1 - a - b)/2],
     #                           [(a + b)/2, (a - b)/2, (b - a)/2, -(a + b)/2],
     #                           [(1 - a - b)/2], t**2)),
-    #      (1/sqrt(pi), meijerg([0, S(1)/2], [], [(a + b)/2],
+    #      (1/sqrt(pi), meijerg([0, S.Half], [], [(a + b)/2],
     #                           [-(a + b)/2, (a - b)/2, (b - a)/2], t**2))],
     #     True)
 
@@ -267,13 +267,13 @@ def _create_lookup_table(table):
     # TODO many more formulas. should all be derivable
 
     # Section 8.4.23
-    add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S(1)/2)
+    add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S.Half)
     # TODO many more formulas. should all be derivable
 
     # Complete elliptic integrals K(z) and E(z)
     from sympy import elliptic_k, elliptic_e
     add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
-    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, Rational(-1, 2)/2)
 
 
 ####################################################################
@@ -325,14 +325,14 @@ def _get_coeff_exp(expr, x):
     from sympy import powsimp
     (c, m) = expand_power_base(powsimp(expr)).as_coeff_mul(x)
     if not m:
-        return c, S(0)
+        return c, S.Zero
     [m] = m
     if m.is_Pow:
         if m.base != x:
             raise _CoeffExpValueError('expr not of form a*x**b')
         return c, m.exp
     elif m == x:
-        return c, S(1)
+        return c, S.One
     else:
         raise _CoeffExpValueError('expr not of form a*x**b: %s' % expr)
 
@@ -418,9 +418,9 @@ def _split_mul(f, x):
     (3**s, x*x**s, sin(x**2))
     """
     from sympy import polarify, unpolarify
-    fac = S(1)
-    po = S(1)
-    g = S(1)
+    fac = S.One
+    po = S.One
+    g = S.One
     f = expand_power_base(f)
 
     args = Mul.make_args(f)
@@ -445,11 +445,11 @@ def _split_mul(f, x):
 
 def _mul_args(f):
     """
-    Return a list ``L`` such that Mul(*L) == f.
+    Return a list ``L`` such that ``Mul(*L) == f``.
 
-    If f is not a Mul or Pow, L=[f].
-    If f=g**n for an integer n, L=[g]*n.
-    If f is a Mul, L comes from applying _mul_args to all factors of f.
+    If ``f`` is not a ``Mul`` or ``Pow``, ``L=[f]``.
+    If ``f=g**n`` for an integer ``n``, ``L=[g]*n``.
+    If ``f`` is a ``Mul``, ``L`` comes from applying ``_mul_args`` to all factors of ``f``.
     """
     args = Mul.make_args(f)
     gs = []
@@ -540,7 +540,7 @@ def _inflate_fox_h(g, a):
     # theorem.
     D, g = _inflate_g(g, q)
     z = g.argument
-    D /= (2*pi)**((1 - p)/2)*p**(-S(1)/2)
+    D /= (2*pi)**((1 - p)/2)*p**Rational(-1, 2)
     z /= p**p
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
@@ -595,7 +595,7 @@ def _condsimp(cond):
     """
     from sympy import (
         symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
-        periodic_argument, oo, polar_lift)
+        arg, periodic_argument, oo, polar_lift)
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
@@ -606,6 +606,10 @@ def _condsimp(cond):
         (Or(p < q, Eq(p, q)), p <= q),
         # The next two obviously are instances of a general pattern, but it is
         # easier to spell out the few cases we care about.
+        (And(abs(arg(p)) <= pi, abs(arg(p) - 2*pi) <= pi),
+         Eq(arg(p) - pi, 0)),
+        (And(abs(2*arg(p) + pi) <= pi, abs(2*arg(p) - pi) <= pi),
+         Eq(arg(p), 0)),
         (And(abs(unbranched_argument(p)) <= pi,
            abs(unbranched_argument(exp_polar(-2*pi*I)*p)) <= pi),
        Eq(unbranched_argument(exp_polar(-I*pi)*p), 0)),
@@ -619,13 +623,13 @@ def _condsimp(cond):
         for fro, to in rules:
             if fro.func != cond.func:
                 continue
-            for n, arg in enumerate(cond.args):
+            for n, arg1 in enumerate(cond.args):
                 if r in fro.args[0].free_symbols:
-                    m = arg.match(fro.args[1])
+                    m = arg1.match(fro.args[1])
                     num = 1
                 else:
                     num = 0
-                    m = arg.match(fro.args[0])
+                    m = arg1.match(fro.args[0])
                 if not m:
                     continue
                 otherargs = [x.subs(m) for x in fro.args[:num] + fro.args[num + 1:]]
@@ -647,7 +651,7 @@ def _condsimp(cond):
                             break
                 if len(otherlist) != len(otherargs) + 1:
                     continue
-                newargs = [arg for (k, arg) in enumerate(cond.args)
+                newargs = [arg_ for (k, arg_) in enumerate(cond.args)
                            if k not in otherlist] + [to.subs(m)]
                 cond = cond.func(*newargs)
                 change = True
@@ -661,10 +665,12 @@ def _condsimp(cond):
             expr = orig.lhs
         else:
             return orig
-        m = expr.match(unbranched_argument(polar_lift(p)**q))
+        m = expr.match(arg(p)**q)
+        if not m:
+            m = expr.match(unbranched_argument(polar_lift(p)**q))
         if not m:
             if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
-                    and expr.args[1] == oo:
+                    and expr.args[1] is oo:
                 return (expr.args[0] > 0)
             return orig
         return (m[p] > 0)
@@ -722,19 +728,18 @@ def _check_antecedents_1(g, x, helper=False):
     r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
-    so this is just int_0^\infty g dx.
+    so this is just $\int_0^\infty g\, dx$.
 
     See [L, section 5.6.1]. (Note that s=1.)
 
     If ``helper`` is True, only check if the MT exists at infinity, i.e. if
-    int_1^\infty g dx exists.
+    $\int_1^\infty g\, dx$ exists.
     """
     # NOTE if you update these conditions, please update the documentation as well
     from sympy import Eq, Not, ceiling, Ne, re, unbranched_argument as arg
     delta = g.delta
     eta, _ = _get_coeff_exp(g.argument, x)
     m, n, p, q = S([len(g.bm), len(g.an), len(g.ap), len(g.bq)])
-    xi = m + n - p
 
     if p > q:
         def tr(l):
@@ -837,7 +842,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 def _int0oo_1(g, x):
     r"""
-    Evaluate int_0^\infty g dx using G functions,
+    Evaluate $\int_0^\infty g\, dx$ using G functions,
     assuming the necessary conditions are fulfilled.
 
     >>> from sympy.abc import a, b, c, d, x, y
@@ -975,10 +980,10 @@ def _check_antecedents(g1, g2, x):
     c1 = _c1()
     c2 = And(*[re(1 + i + j) > 0 for i in g1.bm for j in g2.bm])
     c3 = And(*[re(1 + i + j) < 1 + 1 for i in g1.an for j in g2.an])
-    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > -S(3)/2 for i in g1.an])
-    c5 = And(*[(p - q)*re(1 + i) - re(mu) > -S(3)/2 for i in g1.bm])
-    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > -S(3)/2 for i in g2.an])
-    c7 = And(*[(u - v)*re(1 + i) - re(rho) > -S(3)/2 for i in g2.bm])
+    c4 = And(*[(p - q)*re(1 + i - 1) - re(mu) > Rational(-3, 2) for i in g1.an])
+    c5 = And(*[(p - q)*re(1 + i) - re(mu) > Rational(-3, 2) for i in g1.bm])
+    c6 = And(*[(u - v)*re(1 + i - 1) - re(rho) > Rational(-3, 2) for i in g2.an])
+    c7 = And(*[(u - v)*re(1 + i) - re(rho) > Rational(-3, 2) for i in g2.bm])
     c8 = (abs(phi) + 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
           1)*(v - u)) > 0)
     c9 = (abs(phi) - 2*re((rho - 1)*(q - p) + (v - u)*(q - p) + (mu -
@@ -1007,23 +1012,24 @@ def _check_antecedents(g1, g2, x):
                   Or(Ne(zos, 1), re(mu + rho + v - u) < 1,
                      re(mu + rho + q - p) < 1))
     else:
-        c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
-                  Or(And(Ne(zos, 1), abs(arg_(1 - zos)) < pi),
-                     And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
+        def _cond(z):
+            '''Returns True if abs(arg(1-z)) < pi, avoiding arg(0).
 
-        def _cond():
-            '''
-            Note: if `zso` is 1 then tmp will be NaN.  This raises a
-            TypeError on `NaN < pi`.  Previously this gave `False` so
+            Note: if `z` is 1 then arg is NaN. This raises a
+            TypeError on `NaN < pi`. Previously this gave `False` so
             this behavior has been hardcoded here but someone should
             check if this NaN is more serious! This NaN is triggered by
             test_meijerint() in test_meijerint.py:
             `meijerint_definite(exp(x), x, 0, I)`
             '''
-            tmp = abs(arg_(1 - zso))
-            return False if tmp is S.NaN else tmp < pi
+            return z != 1 and abs(arg_(1 - z)) < pi
+
+        c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
+                  Or(And(Ne(zos, 1), _cond(zos)),
+                     And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
+
         c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
-                  Or(And(Ne(zso, 1), _cond()),
+                  Or(And(Ne(zso, 1), _cond(zso)),
                      And(re(mu + rho + q - p) < 1, Eq(zso, 1))))
 
         # Since r=k=l=1, in our case there is c14_alt which is the same as calling
@@ -1311,7 +1317,7 @@ def _check_antecedents_inversion(g, x):
     rho = (tau - nu)/2
     sigma = q - p
     if sigma == 1:
-        epsilon = S(1)/2
+        epsilon = S.Half
     elif sigma > 1:
         epsilon = 1
     else:
@@ -1361,23 +1367,23 @@ def _check_antecedents_inversion(g, x):
 
     # [L], section 5.10
     conds = []
-    # Theorem 1
-    conds += [And(1 <= n, p < q, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
+    # Theorem 1 -- p < q from test above
+    conds += [And(1 <= n, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
                   E(z*exp(I*pi*(nu + 1))))]
     # Theorem 2, statements (2) and (3)
     conds += [And(p + 1 <= m, m + 1 <= q, delta > 0, delta < pi/2, n == 0,
                   (m - p + 1)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*(q - m))), Hm(z*exp(-I*pi*(q - m))))]
-    # Theorem 2, statement (5)
-    conds += [And(p < q, m == q, n == 0, delta > 0,
+    # Theorem 2, statement (5)  -- p < q from test above
+    conds += [And(m == q, n == 0, delta > 0,
                   (sigma + epsilon)*pi - delta >= pi/2, H(z))]
     # Theorem 3, statements (6) and (7)
     conds += [And(Or(And(p <= q - 2, 1 <= tau, tau <= sigma/2),
                      And(p + 1 <= m + n, m + n <= (p + q)/2)),
                   delta > 0, delta < pi/2, (tau + 1)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
-    # Theorem 4, statements (10) and (11)
-    conds += [And(p < q, 1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
+    # Theorem 4, statements (10) and (11)  -- p < q from test above
+    conds += [And(1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
                   (tau + epsilon)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
     # Trivial case
@@ -1610,7 +1616,7 @@ def meijerint_indefinite(f, x):
     from sympy import hyper, meijerg
 
     results = []
-    for a in sorted(_find_splitting_points(f, x) | {S(0)}, key=default_sort_key):
+    for a in sorted(_find_splitting_points(f, x) | {S.Zero}, key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
@@ -1643,7 +1649,7 @@ def _meijerint_indefinite_1(f, x):
 
     fac, po, gl, cond = gs
     _debug(' could rewrite:', gs)
-    res = S(0)
+    res = S.Zero
     for C, s, g in gl:
         a, b = _get_coeff_exp(g.argument, x)
         _, c = _get_coeff_exp(po, x)
@@ -1660,8 +1666,8 @@ def _meijerint_indefinite_1(f, x):
         #    which yields a well-defined function)
         # [R, section 5]
         # (Note that this dummy will immediately go away again, so we
-        #  can safely pass S(1) for ``expr``.)
-        t = _dummy('t', 'meijerint-indefinite', S(1))
+        #  can safely pass S.One for ``expr``.)
+        t = _dummy('t', 'meijerint-indefinite', S.One)
 
         def tr(p):
             return [a + rho + 1 for a in p]
@@ -1673,8 +1679,9 @@ def _meijerint_indefinite_1(f, x):
                 tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
         # The antiderivative is most often expected to be defined
         # in the neighborhood of  x = 0.
-        place = 0
-        if b < 0 or f.subs(x, 0).has(nan, zoo):
+        if b.is_extended_nonnegative and not f.subs(x, 0).has(nan, zoo):
+            place = 0  # Assume we can expand at zero
+        else:
             place = None
         r = hyperexpand(r.subs(t, a*x**b), place=place)
 
@@ -1771,17 +1778,17 @@ def meijerint_definite(f, x, a, b):
         return (S.Zero, True)
 
     results = []
-    if a == -oo and b != oo:
+    if a is -oo and b is not oo:
         return meijerint_definite(f.subs(x, -x), x, -b, -a)
 
-    elif a == -oo:
+    elif a is -oo:
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
         innermost = _find_splitting_points(f, x)
         _debug('  Sensible splitting points:', innermost)
-        for c in sorted(innermost, key=default_sort_key, reverse=True) + [S(0)]:
+        for c in sorted(innermost, key=default_sort_key, reverse=True) + [S.Zero]:
             _debug('  Trying to split at', c)
-            if not c.is_real:
+            if not c.is_extended_real:
                 _debug('  Non-real splitting point.')
                 continue
             res1 = _meijerint_definite_2(f.subs(x, x + c), x)
@@ -1801,7 +1808,7 @@ def meijerint_definite(f, x, a, b):
             res = res1 + res2
             return res, cond
 
-    elif a == oo:
+    elif a is oo:
         res = meijerint_definite(f, x, b, oo)
         return -res[0], res[1]
 
@@ -1815,7 +1822,7 @@ def meijerint_definite(f, x, a, b):
                 return res
 
     else:
-        if b == oo:
+        if b is oo:
             for split in _find_splitting_points(f, x):
                 if (a - split >= 0) == True:
                     _debug('Trying x -> x + %s' % split)
@@ -1893,7 +1900,7 @@ def _guess_expansion(f, x):
 
 def _meijerint_definite_2(f, x):
     """
-    Try to integrate f dx from zero to infinty.
+    Try to integrate f dx from zero to infinity.
 
     The body of this function computes various 'simplifications'
     f1, f2, ... of f (e.g. by calling expand_mul(), trigexpand()
@@ -1912,7 +1919,7 @@ def _meijerint_definite_2(f, x):
     x = dummy
 
     if f == 0:
-        return S(0), True
+        return S.Zero, True
 
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
@@ -1936,7 +1943,7 @@ def _meijerint_definite_3(f, x):
         ress = [_meijerint_definite_4(g, x) for g in f.args]
         if all(r is not None for r in ress):
             conds = []
-            res = S(0)
+            res = S.Zero
             for r, c in ress:
                 res += r
                 conds += [c]
@@ -1969,7 +1976,7 @@ def _meijerint_definite_4(f, x, only_double=False):
         if gs is not None:
             fac, po, g, cond = gs
             _debug('Could rewrite as single G function:', fac, po, g)
-            res = S(0)
+            res = S.Zero
             for C, s, f in g:
                 if C == 0:
                     continue
@@ -1991,7 +1998,7 @@ def _meijerint_definite_4(f, x, only_double=False):
         for full_pb in [False, True]:
             fac, po, g1, g2, cond = gs
             _debug('Could rewrite as two G functions:', fac, po, g1, g2)
-            res = S(0)
+            res = S.Zero
             for C1, s1, f1 in g1:
                 for C2, s2, f2 in g2:
                     r = _rewrite_saxena(fac*C1*C2, po*x**(s1 + s2),
@@ -2021,8 +2028,9 @@ def _meijerint_definite_4(f, x, only_double=False):
 def meijerint_inversion(f, x, t):
     r"""
     Compute the inverse laplace transform
-    :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
+    $\int_{c+i\infty}^{c-i\infty} f(x) e^{tx}\, dx$,
     for real c larger than the real part of all singularities of f.
+
     Note that ``t`` is always assumed real and positive.
 
     Return None if the integral does not exist or could not be evaluated.
@@ -2035,21 +2043,28 @@ def meijerint_inversion(f, x, t):
     >>> meijerint_inversion(1/x, x, t)
     Heaviside(t)
     """
-    from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
+    from sympy import exp, expand, log, Add, Mul, Heaviside
     f_ = f
     t_ = t
     t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc
     f = f.subs(t_, t)
-    c = Dummy('c')
     _debug('Laplace-inverting', f)
     if not _is_analytic(f, x):
         _debug('But expression is not analytic.')
         return None
-    # We filter out exponentials here. If we are given an Add this will not
+    # Exponentials correspond to shifts; we filter them out and then
+    # shift the result later.  If we are given an Add this will not
     # work, but the calling code will take care of that.
-    shift = 0
+    shift = S.Zero
+
     if f.is_Mul:
         args = list(f.args)
+    elif isinstance(f, exp):
+        args = [f]
+    else:
+        args = None
+
+    if args:
         newargs = []
         exponentials = []
         while args:
@@ -2085,11 +2100,23 @@ def meijerint_inversion(f, x, t):
         shift = Add(*exponentials)
         f = Mul(*newargs)
 
+    if x not in f.free_symbols:
+        _debug('Expression consists of constant and exp shift:', f, shift)
+        from sympy import Eq, im
+        cond = Eq(im(shift), 0)
+        if cond == False:
+            _debug('but shift is nonreal, cannot be a Laplace transform')
+            return None
+        res = f*DiracDelta(t + shift)
+        _debug('Result is a delta function, possibly conditional:', res, cond)
+        # cond is True or Eq
+        return Piecewise((res.subs(t, t_), cond))
+
     gs = _rewrite1(f, x)
     if gs is not None:
         fac, po, g, cond = gs
         _debug('Could rewrite as single G function:', fac, po, g)
-        res = S(0)
+        res = S.Zero
         for C, s, f in g:
             C, f = _rewrite_inversion(fac*C, po*x**s, f, x)
             res += C*_int_inversion(f, x, t)
@@ -2107,5 +2134,6 @@ def meijerint_inversion(f, x, t):
             res = res.subs(t, t + shift)
             if not isinstance(cond, bool):
                 cond = cond.subs(t, t + shift)
+            from sympy import InverseLaplaceTransform
             return Piecewise((res.subs(t, t_), cond),
-                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_), True))
+                             (InverseLaplaceTransform(f_.subs(t, t_), x, t_, None), True))

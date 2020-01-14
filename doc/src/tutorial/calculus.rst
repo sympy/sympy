@@ -1,3 +1,5 @@
+.. _calculus:
+
 ==========
  Calculus
 ==========
@@ -165,8 +167,8 @@ As with ``Derivative``, you can create an unevaluated integral using
 ``integrate`` uses powerful algorithms that are always improving to compute
 both definite and indefinite integrals, including heuristic pattern matching
 type algorithms, a partial implementation of the `Risch algorithm
-<http://en.wikipedia.org/wiki/Risch_algorithm>`_, and an algorithm using
-`Meijer G-functions <http://en.wikipedia.org/wiki/Meijer_g-function>`_ that is
+<https://en.wikipedia.org/wiki/Risch_algorithm>`_, and an algorithm using
+`Meijer G-functions <https://en.wikipedia.org/wiki/Meijer_g-function>`_ that is
 useful for computing integrals in terms of special functions, especially
 definite integrals.  Here is a sampling of some of the power of ``integrate``.
 
@@ -194,11 +196,11 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎮ sin⎝x ⎠ dx
     ⌡
     >>> integ.doit()
-                    ⎛√2⋅x⎞
-    3⋅√2⋅√π⋅fresnels⎜────⎟⋅Γ(3/4)
-                    ⎝ √π ⎠
-    ─────────────────────────────
-               8⋅Γ(7/4)
+             ⎛√2⋅x⎞
+    3⋅√2⋅√π⋅S⎜────⎟⋅Γ(3/4)
+             ⎝ √π ⎠
+    ──────────────────────
+           8⋅Γ(7/4)
 
     >>> integ = Integral(x**y*exp(-x), (x, 0, oo))
     >>> integ
@@ -209,7 +211,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⌡
     0
     >>> integ.doit()
-    ⎧ Γ(y + 1)    for -re(y) < 1
+    ⎧ Γ(y + 1)    for re(y) > -1
     ⎪
     ⎪∞
     ⎪⌠
@@ -259,7 +261,7 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
     >>> expr.doit()
     0
 
-To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a third
+To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a fourth
 argument to ``limit``.  For example, to compute
 
 .. math::
@@ -291,7 +293,7 @@ which case the defaults ``x0=0`` and ``n=6`` will be used.
     1 + x + ── + O⎝x ⎠
             2
 
-The `O\left (x^4\right )` term at the end represents the Landau order term at
+The `O\left(x^4\right)` term at the end represents the Landau order term at
 `x=0` (not to be confused with big O notation used in computer science, which
 generally represents the Landau order term at `x=\infty`).  It means that all
 x terms with power greater than or equal to `x^4` are omitted.  Order terms
@@ -319,6 +321,8 @@ The ``O`` notation supports arbitrary limit points (other than 0):
          (x - 6)    (x - 6)    (x - 6)    (x - 6)         ⎛       6       ⎞
     -5 + ──────── + ──────── + ──────── + ──────── + x + O⎝(x - 6) ; x → 6⎠
             2          6          24        120
+
+.. _calculus-finite-differences:
 
 Finite differences
 ==================

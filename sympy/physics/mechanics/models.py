@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """This module contains some sample symbolic models used for testing and
 examples."""
 

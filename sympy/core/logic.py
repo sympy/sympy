@@ -8,7 +8,6 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 
 
 def _torf(args):
@@ -186,7 +185,35 @@ def fuzzy_or(args):
     None
 
     """
-    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
+    rv = False
+    for ai in args:
+        ai = fuzzy_bool(ai)
+        if ai is True:
+            return True
+        if rv is False:  # this will stop updating if a None is ever trapped
+            rv = ai
+    return rv
+
+
+def fuzzy_xor(args):
+    """Return None if any element of args is not True or False, else
+    True (if there are an odd number of True elements), else False."""
+    t = f = 0
+    for a in args:
+        ai = fuzzy_bool(a)
+        if ai:
+            t += 1
+        elif ai is False:
+            f += 1
+        else:
+            return
+    return t % 2 == 1
+
+
+def fuzzy_nand(args):
+    """Return False if all args are True, True if they are all False,
+    else None."""
+    return fuzzy_not(fuzzy_and(args))
 
 
 class Logic(object):
@@ -203,7 +230,7 @@ class Logic(object):
         return self.args
 
     def __hash__(self):
-        return hash( (type(self).__name__,) + tuple(self.args) )
+        return hash((type(self).__name__,) + tuple(self.args))
 
     def __eq__(a, b):
         if not isinstance(b, type(a)):
@@ -232,7 +259,8 @@ class Logic(object):
         return (a > b) - (a < b)
 
     def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(str(a) for a in self.args))
+        return '%s(%s)' % (self.__class__.__name__,
+                           ', '.join(str(a) for a in self.args))
 
     __repr__ = __str__
 
@@ -337,7 +365,7 @@ class And(AndOr_Base):
 
     def _eval_propagate_not(self):
         # !(a&b&c ...) == !a | !b | !c ...
-        return Or( *[Not(a) for a in self.args] )
+        return Or(*[Not(a) for a in self.args])
 
     # (a|b|...) & c == (a&c) | (b&c) | ...
     def expand(self):
@@ -348,7 +376,7 @@ class And(AndOr_Base):
             if isinstance(arg, Or):
                 arest = self.args[:i] + self.args[i + 1:]
 
-                orterms = [And( *(arest + (a,)) ) for a in arg.args]
+                orterms = [And(*(arest + (a,))) for a in arg.args]
                 for j in range(len(orterms)):
                     if isinstance(orterms[j], Logic):
                         orterms[j] = orterms[j].expand()
@@ -356,8 +384,7 @@ class And(AndOr_Base):
                 res = Or(*orterms)
                 return res
 
-        else:
-            return self
+        return self
 
 
 class Or(AndOr_Base):
@@ -365,7 +392,7 @@ class Or(AndOr_Base):
 
     def _eval_propagate_not(self):
         # !(a|b|c ...) == !a & !b & !c ...
-        return And( *[Not(a) for a in self.args] )
+        return And(*[Not(a) for a in self.args])
 
 
 class Not(Logic):

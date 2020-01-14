@@ -9,11 +9,10 @@ Math object where possible.
 
 from __future__ import print_function, division
 
-from sympy.core import S
 from sympy.codegen.ast import Assignment
+from sympy.core import S
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
-from sympy.core.compatibility import string_types, range
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
@@ -55,6 +54,7 @@ class JavascriptCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True
     }
 
@@ -102,7 +102,7 @@ class JavascriptCodePrinter(CodePrinter):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'Math.sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == S(1)/3:
+        elif expr.exp == S.One/3:
             return 'Math.cbrt(%s)' % self._print(expr.base)
         else:
             return 'Math.pow(%s, %s)' % (self._print(expr.base),
@@ -111,6 +111,12 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d/%d' % (p, q)
+
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -177,7 +183,7 @@ class JavascriptCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

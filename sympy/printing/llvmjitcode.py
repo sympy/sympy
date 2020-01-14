@@ -22,6 +22,9 @@ if llvmlite:
     llvm.initialize_native_asmprinter()
 
 
+__doctest_requires__ = {('llvm_callable'): ['llvmlite']}
+
+
 class LLVMJitPrinter(Printer):
     '''Convert expressions to LLVM IR'''
     def __init__(self, module, builder, fn, *args, **kwargs):
@@ -39,7 +42,7 @@ class LLVMJitPrinter(Printer):
     def _add_tmp_var(self, name, value):
         self.tmp_var[name] = value
 
-    def _print_Number(self, n, **kwargs):
+    def _print_Number(self, n):
         return ll.Constant(self.fp_type, float(n))
 
     def _print_Integer(self, expr):
@@ -365,6 +368,7 @@ def llvm_callable(args, expr, callback_type=None):
 
     Parameters
     ==========
+
     args : List of Symbol
         Arguments to the generated function.  Usually the free symbols in
         the expression.  Currently each one is assumed to convert to
@@ -380,10 +384,12 @@ def llvm_callable(args, expr, callback_type=None):
 
     Returns
     =======
+
     Compiled function that can evaluate the expression.
 
     Examples
     ========
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> e = a*a + a + 1
@@ -442,7 +448,7 @@ def llvm_callable(args, expr, callback_type=None):
 
     arg_ctypes = []
     if callback_type is None:
-        for arg in args:
+        for _ in args:
             arg_ctype = ctypes.c_double
             arg_ctypes.append(arg_ctype)
     elif callback_type == 'scipy.integrate' or callback_type == 'scipy.integrate.test':
