@@ -382,7 +382,7 @@ def test_beta():
     B = Beta('x', a, b)
     assert expand_func(E(B)) == a / S(a + b)
     assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
-    assert median(B).round(2) == Float(0.29, 2)
+    assert median(B) == 1 - 1/sqrt(2)
 
 def test_beta_noncentral():
     a, b = symbols('a b', positive=True)
@@ -592,7 +592,7 @@ def test_exponential():
 
     assert where(X <= 1).set == Interval(0, 1)
     X = Exponential('x', 1)
-    assert median(X).round(3) == Float(0.693, 3)
+    assert median(X) == log(2)
 
 def test_exponential_power():
     mu = Symbol('mu')
@@ -858,7 +858,7 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
     X = Nakagami('x',1 ,1)
-    assert median(X).round(2) == Float(0.83, 2)
+    assert median(X) == sqrt(log(2))
 
 def test_gaussian_inverse():
     # test for symbolic parameters
@@ -925,7 +925,7 @@ def test_pareto_numeric():
 
     assert E(X) == alpha*xm/S(alpha - 1)
     assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
-    assert median(X).round(2) == Float(3.31, 3)
+    assert median(X) == 3*2**Rational(1, 7)
     # Skewness tests too slow. Try shortcutting function?
 
 
@@ -952,7 +952,7 @@ def test_PowerFunction():
     assert E(X) == Rational(2,3)
     assert P(X < 0) == 0
     assert P(X < 1) == 1
-    assert median(X).round(3) == Float(0.707, 3)
+    assert median(X) == 1/sqrt(2)
 
 def test_raised_cosine():
     mu = Symbol("mu", real=True)
@@ -1034,7 +1034,7 @@ def test_trapezoidal():
     assert E(X) == Rational(3, 2)
     assert variance(X) == Rational(5, 12)
     assert P(X < 2) == Rational(3, 4)
-    assert median(X).round(2) == Float(1.50, 3)
+    assert median(X) == Rational(3, 2)
 
 def test_triangular():
     a = Symbol("a")

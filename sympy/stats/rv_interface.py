@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from sympy.sets import FiniteSet
-from sympy import sqrt, log, exp, FallingFactorial, Float
+from sympy import sqrt, log, exp, FallingFactorial, Rational, simplify
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile)
@@ -371,10 +371,10 @@ def median(X, evaluate=True, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
 
     """
-    result = quantile(X, evaluate=evaluate, **kwargs)(1/2)
+    result = quantile(X, evaluate=evaluate, **kwargs)(Rational(1, 2))
     if isinstance(result, FiniteSet):
         for elem in result:
-                if cdf(X)(elem).round(8) == Float(1/2, 8):
+                if simplify(cdf(X)(elem)) == Rational(1, 2):
                     return elem
     return result
 
