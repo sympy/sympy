@@ -136,14 +136,14 @@ class PartialDerivative(TensExpr):
 
         return result
 
-    def _eval_partial_derivative(self):
+    def _perform_derivative(self):
         result = self.expr
         for v in self.variables:
             if isinstance(result, TensExpr):
                 result = result._eval_partial_derivative(v)
             else:
-                if isinstance(v, Symbol):
-                    result = result.diff(v)
+                if v._diff_wrt:
+                    result = result._eval_derivative(v)
                 else:
                     result = S.Zero
         return result

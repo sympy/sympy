@@ -2260,6 +2260,7 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
                     if isinstance(a, TensExpr) else a
                     for a in self.args])
 
+
 class TensAdd(TensExpr, AssocOp):
     """
     Sum of tensors
@@ -2598,16 +2599,16 @@ class TensAdd(TensExpr, AssocOp):
 
     def _eval_partial_derivative(self, s):
         # Evaluation like Add
-        my_diffs = []
+        list_addends = []
         for a in self.args:
             if isinstance(a, TensExpr):
-                my_diffs.append(a._eval_partial_derivative(s))
-            else:
-                # do not call diff if s is no symbol
-                if isinstance(s, Symbol):
-                    my_diffs.append(a.diff(s))
+                list_addends.append(a._eval_partial_derivative(s))
+            # do not call diff if s is no symbol
+            elif s._diff_wrt:
+                list_addends.append(a._eval_derivative(s))
 
-        return self.func(*my_diffs)
+        return self.func(*list_addends)
+
 
 class Tensor(TensExpr):
     """
@@ -3833,24 +3834,22 @@ class TensMul(TensExpr, AssocOp):
 
     def _eval_partial_derivative(self, s):
         # Evaluation like Mul
-        args = list(self.args)
         terms = []
-        for i in range(len(args)):
-            myarg = args[i]
-            d = S.Zero
+        for i, arg in enumerate(self.args):
             # checking whether some tensor instance is differentiated
             # or some other thing is necessary, but ugly
-            if isinstance(myarg, TensExpr):
-                d = args[i]._eval_partial_derivative(s)
+            if isinstance(arg, TensExpr):
+                d = arg._eval_partial_derivative(s)
             else:
                 # do not call diff is s is no symbol
-                if isinstance(s, Symbol):
-                    d = args[i].diff(s)
+                if s._diff_wrt:
+                    d = arg._eval_derivative(s)
                 else:
                     d = S.Zero
             if d:
-                terms.append(TensMul(*(args[:i] + [d] + args[i + 1:])))
+                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
         return TensAdd.fromiter(terms)
+
 
 class TensorElement(TensExpr):
     """
