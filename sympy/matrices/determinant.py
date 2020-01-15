@@ -924,13 +924,17 @@ def _minor_submatrix(M, i, j):
 # this is clearer.
 
 def adjugate(M, method="berkowitz", dotprodsimp=None):
-    if isinstance(M, Expr):
+    from .matrices import MatrixBase
+
+    if isinstance(M, Expr) and not isinstance (M, (MatrixBase)):
         raise NotImplementedError('adjugate for matrix expressions not supported yet')
 
     return sympify(_adjugate(M, method=method, dotprodsimp=dotprodsimp))
 
 def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
-    if isinstance(M, Expr):
+    from .matrices import MatrixBase
+
+    if isinstance(M, Expr) and not isinstance (M, (MatrixBase)):
         raise NotImplementedError('charpoly for matrix expressions not supported yet')
 
     return _charpoly(M, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
@@ -942,11 +946,10 @@ def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     return sympify(_cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp))
 
 def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
+    from .matrices import MatrixBase
     from .expressions import Determinant
-    from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
 
-    if isinstance(M, Expr) and \
-            not isinstance (M, (ImmutableDenseMatrix, ImmutableSparseMatrix)):
+    if isinstance(M, Expr) and not isinstance (M, (MatrixBase)):
         return Determinant(M).doit()
 
     return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)

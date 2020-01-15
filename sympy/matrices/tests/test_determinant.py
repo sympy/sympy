@@ -25,6 +25,9 @@ def test_adjugate():
     assert isinstance(R, ImmutableSparseMatrix)
     assert R == A
 
+    assert adjugate(ImmutableDenseMatrix(M)) == A
+    assert adjugate(ImmutableSparseMatrix(M)) == A
+
 
 def test_charpoly():
     M = Matrix([[1, 2], [3, 4]])
@@ -32,6 +35,8 @@ def test_charpoly():
 
     assert charpoly(M, x='x') == A
     assert charpoly(SparseMatrix(M), x='x') == A
+    assert charpoly(ImmutableDenseMatrix(M), x='x') == A
+    assert charpoly(ImmutableSparseMatrix(M), x='x') == A
 
 
 def test_cofactor():
@@ -39,6 +44,8 @@ def test_cofactor():
 
     assert cofactor(M, 1, 1) == -12
     assert cofactor(SparseMatrix(M), 1, 1) == -12
+    assert cofactor(ImmutableDenseMatrix(M), 1, 1) == -12
+    assert cofactor(ImmutableSparseMatrix(M), 1, 1) == -12
 
 
 def test_cofactor_matrix():
@@ -53,20 +60,38 @@ def test_cofactor_matrix():
     assert isinstance(R, ImmutableSparseMatrix)
     assert R == A
 
+    assert cofactor_matrix(ImmutableDenseMatrix(M)) == A
+    assert cofactor_matrix(ImmutableSparseMatrix(M)) == A
+
 
 def test_det():
     M = Matrix([[1, 2], [3, 4]])
-    S = SparseMatrix(M)
 
     assert det(M) == -2
     assert det_bareiss(M) == -2
     assert det_berkowitz(M) == -2
     assert det_LU(M) == -2
 
-    assert det(S) == -2
-    assert det_bareiss(S) == -2
-    assert det_berkowitz(S) == -2
-    assert det_LU(S) == -2
+    M = SparseMatrix([[1, 2], [3, 4]])
+
+    assert det(M) == -2
+    assert det_bareiss(M) == -2
+    assert det_berkowitz(M) == -2
+    assert det_LU(M) == -2
+
+    M = ImmutableDenseMatrix([[1, 2], [3, 4]])
+
+    assert det(M) == -2
+    assert det_bareiss(M) == -2
+    assert det_berkowitz(M) == -2
+    assert det_LU(M) == -2
+
+    M = ImmutableSparseMatrix([[1, 2], [3, 4]])
+
+    assert det(M) == -2
+    assert det_bareiss(M) == -2
+    assert det_berkowitz(M) == -2
+    assert det_LU(M) == -2
 
 
 def test_minor():
@@ -74,6 +99,8 @@ def test_minor():
 
     assert minor(M, 1, 1) == -12
     assert minor(SparseMatrix(M), 1, 1) == -12
+    assert minor(ImmutableDenseMatrix(M), 1, 1) == -12
+    assert minor(ImmutableSparseMatrix(M), 1, 1) == -12
 
 
 def test_minor_submatrix():
@@ -88,9 +115,11 @@ def test_minor_submatrix():
     assert isinstance(R, ImmutableSparseMatrix)
     assert R == A
 
+    assert minor_submatrix(ImmutableDenseMatrix(M), 1, 1) == A
+    assert minor_submatrix(ImmutableSparseMatrix(M), 1, 1) == A
+
 
 def test_determinant():
-
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
