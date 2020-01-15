@@ -13,7 +13,7 @@ AutolevLexer = getattr(autolevlexer, 'AutolevLexer', None)
 AutolevListener = getattr(autolevlistener, 'AutolevListener', None)
 
 
-def parse_autolev(autolev_code, include_numeric):
+def parse_autolev(autolev_code, include_numeric, include_numpy=False):
     antlr4 = import_module('antlr4', warn_not_installed=True)
     if not antlr4:
         raise ImportError("Autolev parsing requires the antlr4 python package,"
@@ -32,7 +32,7 @@ def parse_autolev(autolev_code, include_numeric):
         token_stream = antlr4.CommonTokenStream(lexer)
         parser = AutolevParser(token_stream)
         tree = parser.prog()
-        my_listener = MyListener(include_numeric)
+        my_listener = MyListener(include_numeric, include_numpy=include_numpy)
         walker = antlr4.ParseTreeWalker()
         walker.walk(my_listener, tree)
         return "".join(my_listener.output_code)
