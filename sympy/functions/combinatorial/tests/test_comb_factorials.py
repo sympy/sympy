@@ -499,9 +499,8 @@ def test_binomial_Mod_slow():
     assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
     assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
     assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
-    assert Mod(binomial(23, 38), q) == S.Zero
-    assert Mod(binomial(4556, 38635874), q) == S.Zero
-    assert Mod(binomial(456, 789), q) == S.Zero
+    assert Mod(binomial(23, -38, evaluate=False), q) is S.Zero
+    assert Mod(binomial(23, 38, evaluate=False), q) is S.Zero
 
     # binomial factorize
     assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)
