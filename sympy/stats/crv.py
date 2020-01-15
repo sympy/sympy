@@ -301,8 +301,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         pdf = self.pdf(x)
         cdf = integrate(pdf, (x, left_bound, x), **kwargs)
-
-        quantile = solveset(cdf - p, x, S.Reals)
+        quantile = solveset(cdf - p, x, self.set)
         return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
 
     def _quantile(self, x):
@@ -446,7 +445,7 @@ class ContinuousPSpace(PSpace):
             expr = condition.lhs - condition.rhs
             dens = density(expr, **kwargs)
             if not isinstance(dens, ContinuousDistribution):
-                dens = ContinuousDistributionHandmade(dens)
+                dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))

@@ -373,9 +373,10 @@ def median(X, evaluate=True, **kwargs):
     """
     result = quantile(X, evaluate=evaluate, **kwargs)(Rational(1, 2))
     if isinstance(result, FiniteSet):
-        for elem in result:
-                if simplify(cdf(X)(elem)) == Rational(1, 2):
-                    return elem
+        if len(result) == 1:
+            return list(result)[0]
+        else:
+            raise ValueError("There does not exit single value of median.")
     return result
 
 P = probability
