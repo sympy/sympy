@@ -652,7 +652,7 @@ def _is_nthpow_residue_bign(a, n, m):
     """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
     # assert n > 2
     # assert a > 0 and m > 0
-    if primitive_root(m) is None:
+    if primitive_root(m) is None or igcd(a, m) != 1:
         # assert m >= 8
         for prime, power in factorint(m).items():
             if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
