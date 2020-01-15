@@ -232,6 +232,8 @@ def test_factorial_Mod():
     assert Mod(factorial(q - 1800, evaluate=False), q) == 905504050
     assert Mod(factorial(153, evaluate=False), r) == Mod(factorial(153), r)
     assert Mod(factorial(255, evaluate=False), s) == Mod(factorial(255), s)
+    assert Mod(factorial(4, evaluate=False), 3) == S.Zero
+    assert Mod(factorial(5, evaluate=False), 6) == S.Zero
 
 
 def test_factorial_diff():
