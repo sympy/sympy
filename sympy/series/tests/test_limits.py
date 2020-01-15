@@ -480,6 +480,11 @@ def test_issue_9205():
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
+def test_issue_9471():
+    assert limit((((27**(log(n,3))))/n**3),n,oo) == 1
+    assert limit((((27**(log(n,3)+1)))/n**3),n,oo) == 27
+
+
 def test_issue_11879():
     assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
 
