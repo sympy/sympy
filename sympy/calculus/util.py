@@ -418,25 +418,9 @@ def periodicity(f, symbol, check=False):
 
     >>> class F(Function):
     ...     nargs = 1
-    ...     def _period(self, general_period, symbol):  # This emulates trigonometric function's method.
-    ...         arg = self.args[0]
-    ...         if not arg.has(symbol):
-    ...             return S.Zero
-    ...         if arg == symbol:
-    ...             return general_period
-    ...         if symbol in arg.free_symbols:
-    ...             if arg.is_Mul:
-    ...                 g, h = arg.as_independent(symbol)
-    ...                 if h == symbol:
-    ...                     return general_period/abs(g)
-    ...             if arg.is_Add:
-    ...                 a, h = arg.as_independent(symbol)
-    ...                 g, h = h.as_independent(symbol, as_Add=False)
-    ...                 if h == symbol:
-    ...                     return general_period/abs(g)
-    ...         raise NotImplementedError("Use the periodicity function instead.")
-    ...     def period(self, symbol):
-    ...         return self._period(2*pi, symbol)
+    ...     period = sin.period     # sin's period method calls _period method,
+    ...                             # so _period method must be defined as well.
+    ...     _period = sin._period
     >>> periodicity(F(x), x)
     2*pi
     """
