@@ -1480,7 +1480,7 @@ def _val_poly(root, coefficients, p):
     return f_val % p
 
 
-def polynomial_congruence(expr, m):
+def polynomial_congruence(coefficients, m):
     """
     Find the solutions to a polynomial congruence equation modulo m.
 
@@ -1494,18 +1494,13 @@ def polynomial_congruence(expr, m):
     ========
 
     >>> from sympy.ntheory import polynomial_congruence
+    >>> from sympy import Poly
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
-    >>> polynomial_congruence(expr, 6125)
+    >>> polynomial_congruence(Poly(expr).all_coeffs(), 6125)
     [3257]
     """
 
-    from sympy import Poly
-    if not expr.is_polynomial():
-        raise ValueError("The expression should be a polynomial")
-    if len(Poly(expr).free_symbols) > 1:
-        raise ValueError("Do not support for more than one symbol")
-    coefficients = Poly(expr).all_coeffs()
     rank = len(coefficients)
     if rank == 3:
         return quadratic_congruence(coefficients[0], coefficients[1],
