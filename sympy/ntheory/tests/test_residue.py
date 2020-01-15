@@ -276,5 +276,5 @@ def test_residue():
     assert polynomial_congruence(Poly(65*x**2 + 121*x + 72).all_coeffs(), 277) == [249, 252]
     assert polynomial_congruence(Poly(35*x**3 - 6*x**2 - 567*x + 2308).all_coeffs(),
         148225) == [86957, 111157, 122531, 146731]
-
+    assert polynomial_congruence(Poly(x**16 - 9).all_coeffs(), 36) == [3, 9, 15, 21, 27, 33]
     assert polynomial_congruence(Poly(x**6 - 2*x**5 - 35).all_coeffs(), 6125) == [3257]
