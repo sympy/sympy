@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from sympy.sets import FiniteSet
-from sympy import sqrt, log, exp, FallingFactorial, Rational, simplify
+from sympy import sqrt, log, exp, FallingFactorial, Rational
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile)
