@@ -1,7 +1,7 @@
 from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo,
                    powsimp, Rational)
 from sympy.core.function import _mexpand
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.functions.elementary.trigonometric import sin
 from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,

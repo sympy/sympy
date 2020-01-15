@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import as_int, is_sequence, range
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul

@@ -38,10 +38,6 @@ Moved modules:
     * `cStringIO()` (same as `StingIO()` in Python 3)
     * Python 2 `__builtin__`, access with Python 3 name, `builtins`
 
-Iterator/list changes:
-    * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
-      compatible iterator version of range.
-
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
 
@@ -59,7 +55,7 @@ __all__ = [
     'PY3', 'long', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
     'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
-    'StringIO', 'cStringIO', 'exec_', 'range', 'round', 'Mapping', 'Callable',
+    'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
     'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
@@ -93,7 +89,6 @@ if PY3:
 
     exec_ = getattr(builtins, "exec")
 
-    range = range
     round = round
 
     from collections.abc import (Mapping, Callable, MutableMapping,
@@ -138,7 +133,6 @@ else:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
 
-    range = xrange  # noqa:F821
     _round = round
     def round(x, *args):
         try:

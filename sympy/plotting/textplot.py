@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
-from sympy.core.compatibility import range
 from sympy.utilities.lambdify import lambdify
 
 import math
