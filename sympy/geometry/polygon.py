@@ -1381,13 +1381,11 @@ class Polygon(GeometrySet):
 
         >>> from sympy import Polygon, Point
         >>> p = Polygon(Point(0, 0), Point(2, 0), Point(1, 1), Point(0, 3))
-        >>> for k, v in p.bisectors(2).items():
-        ...     print(k, v)
-        ...
-        (Point2D(0, 3), Ray2D(Point2D(0, 3), Point2D(0.23, 2.0)))
-        (Point2D(0, 0), Ray2D(Point2D(0, 0), Point2D(0.71, 0.71)))
-        (Point2D(2, 0), Ray2D(Point2D(2, 0), Point2D(1.1, 0.38)))
-        (Point2D(1, 1), Ray2D(Point2D(1, 1), Point2D(0.19, 0.42)))
+        >>> p.bisectors(2)
+        {Point2D(0, 3): Ray2D(Point2D(0, 3), Point2D(0.23, 2.0)),
+         Point2D(0, 0): Ray2D(Point2D(0, 0), Point2D(0.71, 0.71)),
+         Point2D(2, 0): Ray2D(Point2D(2, 0), Point2D(1.1, 0.38)),
+         Point2D(1, 1): Ray2D(Point2D(1, 1), Point2D(0.19, 0.42))}
         """
         b = {}
         pts = list(p.args)
