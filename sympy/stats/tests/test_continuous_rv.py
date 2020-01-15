@@ -593,6 +593,10 @@ def test_exponential():
     assert where(X <= 1).set == Interval(0, 1)
     X = Exponential('x', 1)
     assert median(X) == log(2)
+    #Test issue 9970
+    z = Dummy('z')
+    assert P(X > z) == exp(-z*rate)
+    assert P(X < z) == 0
 
 def test_exponential_power():
     mu = Symbol('mu')
