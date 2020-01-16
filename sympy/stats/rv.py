@@ -142,10 +142,10 @@ class PSpace(Basic):
     sympy.stats.frv.FinitePSpace
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-    is_real = None
+    is_Finite = None  # type: bool
+    is_Continuous = None  # type: bool
+    is_Discrete = None  # type: bool
+    is_real = None  # type: bool
 
     @property
     def domain(self):
