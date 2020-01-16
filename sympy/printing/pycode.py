@@ -689,12 +689,19 @@ class NumPyPrinter(PythonCodePrinter):
             ')' * (len(expr.args) - 1))
 
     def _print_Adjoint(self, expr):
-        return '{}.getH()'.format(self._print(expr.arg))
+        return '{}({}({}))'.format(
+            self._module_format('numpy.conjugate'),
+            self._module_format('numpy.transpose'),
+            self._print(expr.args[0]))
 
     def _print_DiagonalOf(self, expr):
-        return '{}({})'.format(self._module_format('numpy.diag'), self._print(expr.arg))
+        vect = '{}({})'.format(
+            self._module_format('numpy.diag'),
+            self._print(expr.arg))
+        return '{}({}, (-1, 1))'.format(
+            self._module_format('numpy.reshape'), vect)
 
-    def _print_DiagonalizeVector(self, expr):
+    def _print_DiagMatrix(self, expr):
         return '{}({})'.format(self._module_format('numpy.diagflat'),
             self._print(expr.args[0]))
 

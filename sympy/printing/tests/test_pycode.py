@@ -77,7 +77,7 @@ def test_MpmathPrinter():
 def test_NumPyPrinter():
     from sympy import (Lambda, ZeroMatrix, OneMatrix, FunctionMatrix,
         HadamardProduct, KroneckerProduct, Adjoint, DiagonalOf,
-        DiagonalizeVector, DiagonalMatrix)
+        DiagMatrix, DiagonalMatrix)
     from sympy.abc import a, b
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
@@ -100,9 +100,9 @@ def test_NumPyPrinter():
         "numpy.fromfunction(lambda a, b: a + b, (4, 5))"
     assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
     assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
-    assert p.doprint(Adjoint(A)) == "A.getH()"
-    assert p.doprint(DiagonalOf(A)) == "numpy.diag(A)"
-    assert p.doprint(DiagonalizeVector(C)) == "numpy.diagflat(C)"
+    assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
+    assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
     assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"
 
     # Workaround for numpy negative integer power errors
