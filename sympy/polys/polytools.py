@@ -6240,12 +6240,14 @@ def sqf_list(f, *gens, **args):
     facs = _sorted_factors(facs, 'sqf')
     if facs:
         new_facs = [facs[0]]
-        for i in range(1, len(facs)):
-            l = len(new_facs)
-            if facs[i-1][1] == facs[i][1]:
-                new_facs[l-1] = new_facs[l-1][0] * facs[i][0], new_facs[l-1][1]
+        fac, exp = facs[0]
+        for f, e in facs[1:]:
+            if exp == e:
+                fac *= f
+                new_facs[-1] = fac, exp
             else:
-                new_facs.append(facs[i])
+                fac, exp = f, e
+                new_facs.append((f, e))
         if not opt.polys:
             new_facs = [(f.as_expr(), k) for f, k in new_facs]
         res = (coeff, new_facs,)
