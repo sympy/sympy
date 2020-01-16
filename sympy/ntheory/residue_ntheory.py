@@ -753,9 +753,12 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
     ==========
 
     m : positive integer
-    prime_modulo_method : function to calculate when m is prime
-    diff_method : function to calculate differentiation of expression
-    expr_val : function to calculate value of the expression
+    prime_modulo_method : function to calculate the root of the congruence
+    equation when m is prime
+    diff_method : function to calculate derivative of expression at any
+    given point
+    expr_val : function to calculate value of the expression at any
+    given point
     """
     from sympy.ntheory.modular import crt
     f = factorint(m)
@@ -1441,8 +1444,8 @@ def _polynomial_congruence_prime(coefficients, p):
 
 def _diff_poly(root, coefficients, p):
     """A helper function used by polynomial_congruence.
-    It returns the derivative of the polynomial evaluated at the root
-    (modulo p).
+    It returns the derivative of the polynomial evaluated at the
+    root (mod p).
 
     Parameters
     ==========
