@@ -37,7 +37,7 @@ from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy import Rational, prod, Integer
+from sympy import Rational, prod, Integer, default_sort_key
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
@@ -2306,6 +2306,7 @@ class TensAdd(TensExpr, AssocOp):
     def __new__(cls, *args, **kw_args):
         args = [_sympify(x) for x in args if x]
         args = TensAdd._tensAdd_flatten(args)
+        args.sort(key=default_sort_key)
         if not args:
             return S.Zero
         if len(args) == 1:

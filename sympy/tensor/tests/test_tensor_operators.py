@@ -133,14 +133,12 @@ def test_expand_partial_derivative_sum_rule():
 
     expr1ab = PartialDerivative(A(i) + B(i), tau)
 
-    # This fails in Python2.7
     assert (expr1ab._expand_partial_derivative() ==
             PartialDerivative(A(i), tau) +
             PartialDerivative(B(i), tau))
 
     expr1ac = PartialDerivative(A(i) + B(i) + C(i), tau)
 
-    # This fails in Python2.7
     assert (expr1ac._expand_partial_derivative() ==
             PartialDerivative(A(i), tau) +
             PartialDerivative(B(i), tau) +
@@ -153,7 +151,6 @@ def test_expand_partial_derivative_sum_rule():
         PartialDerivative(A(i), D(j))
     expr1bb = PartialDerivative(A(i) + B(i), D(j))
 
-    # This fails in Python 2.7
     assert (expr1bb._expand_partial_derivative() ==
             PartialDerivative(A(i), D(j)) +
             PartialDerivative(B(i), D(j)))
