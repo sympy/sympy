@@ -2526,6 +2526,44 @@ class Line3D(LinearEntity3D, Line):
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
+    def bisection(self, line):
+        """Returns the line which is the bisection between the self line and another one.
+
+        Parameters
+        ==========
+
+        x : Line3D
+
+        Returns
+        =======
+
+        Line3D
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Line3D
+        >>> r1 = Line3D(Point3D(0, 0, 0), direction_ratio=[1, 1, 1])
+        >>> r2 = Line3D(Point3D(2, 0, 0), direction_ratio=[-1, 1, 1])
+        >>> r3 = r1.bisection(r2); r3
+        Line3D(Point3D(1, 1, 1), Point3D(1, 2, 2))
+
+        """
+        d1 = self.direction_ratio
+        d2 = line.direction_ratio
+
+        d3 = [(d1[i]+d2[i])/2 for i in range(3)]
+        
+        point = self.intersection(line)
+        if point:
+            if isinstance(point[0], Point3D):
+                return Line3D(p[0], direction_ratio=[*d3])
+            else:
+                # Lines are equal, the bisection the own line
+                return self
+        else:
+            return GeometryError("The lines don't have any common point")
+
 
 class Ray3D(LinearEntity3D, Ray):
     """
