@@ -138,4 +138,3 @@ def test_issue_11538():
         assert construct_domain(x + n)[0] == ZZ[x, n]
     assert construct_domain(GoldenRatio)[0] == EX
     assert construct_domain(x + GoldenRatio)[0] == EX
-
