@@ -6231,11 +6231,11 @@ def sqf_list(f, *gens, **args):
         except PolificationFailed:
             coeff *= b
         else:
-            gen_set.add(poly.gens)
+            for gen in poly.gens:
+                gen_set.add(gen)
             if len(gen_set) > 1:
                 raise PolynomialError("a univariate polynomial expected")
             cf, sqf_facs = poly.sqf_list()
-            coeff *= cf
             for sqf_fac in sqf_facs:
                 facs.append((sqf_fac[0] , e*sqf_fac[1]))
     facs = _sorted_factors(facs, 'sqf')
@@ -6252,8 +6252,6 @@ def sqf_list(f, *gens, **args):
         res = (coeff, new_facs,)
         return res
     else:
-        if not opt.polys:
-            facs = [(f.as_expr(), k) for f, k in facs]
         return coeff, facs
 
 @public
