@@ -1364,7 +1364,9 @@ def evalf(x, prec, options):
 
 
 class EvalfMixin(object):
-    """Mixin class adding evalf capabililty."""
+    """Mixin class adding evalf capabililty.
+       Methods on the EvalfMixin are available on any Expr instance.
+    """
 
     __slots__ = []
 
