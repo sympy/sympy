@@ -632,7 +632,7 @@ if cin:
 
             return statement
 else:
-    class CCodeConverter():
+    class CCodeConverter():  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError("Module not Installed")
 

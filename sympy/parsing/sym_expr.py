@@ -17,7 +17,7 @@ else:
         from sympy.parsing.c.c_parser import parse_c
 
     @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
-    class SymPyExpression(object):
+    class SymPyExpression(object):  # type: ignore
         """Class to store and handle SymPy expressions
 
         This class will hold SymPy Expressions and handle the API for the
