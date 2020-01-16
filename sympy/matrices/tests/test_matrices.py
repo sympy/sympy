@@ -4182,3 +4182,12 @@ def test_issue_17827():
     raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
     raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
     raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
+
+def test_issue_8207():
+    a = Matrix(MatrixSymbol('a', 3, 1))
+    b = Matrix(MatrixSymbol('b', 3, 1))
+    c = a.dot(b)
+    d = diff(c, a[0, 0])
+    e = diff(d, a[0, 0])
+    assert d == b[0, 0]
+    assert e == 0
