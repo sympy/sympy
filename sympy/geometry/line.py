@@ -2553,7 +2553,7 @@ class Line3D(LinearEntity3D, Line):
         d2 = line.direction_ratio
 
         d3 = [(d1[i]+d2[i])/2 for i in range(3)]
-        
+
         point = self.intersection(line)
         if point:
             if isinstance(point[0], Point3D):
