@@ -6231,8 +6231,7 @@ def sqf_list(f, *gens, **args):
         except PolificationFailed:
             coeff *= b
         else:
-            for gen in poly.gens:
-                gen_set.add(gen)
+            gen_set.update(poly.gens)
             if len(gen_set) > 1:
                 raise PolynomialError("a univariate polynomial expected")
             cf, sqf_facs = poly.sqf_list()
