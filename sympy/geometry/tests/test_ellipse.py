@@ -523,6 +523,7 @@ def test_auxiliary_circle():
     # a special case where Ellipse is a Circle
     assert Circle((3, 4), 8).auxiliary_circle() == Circle((3, 4), 8)
 
+
 def test_director_circle():
     x, y, a, b = symbols('x y a b')
     e = Ellipse((x, y), a, b)
@@ -530,6 +531,7 @@ def test_director_circle():
     assert e.director_circle() == Circle((x, y), sqrt(a**2 + b**2))
     # a special case where Ellipse is a Circle
     assert Circle((3, 4), 8).director_circle() == Circle((3, 4), 8*sqrt(2))
+
 
 def test_evolute():
     #ellipse centered at h,k
@@ -546,3 +548,4 @@ def test_evolute():
     t2 = (3*(y - 1))**Rational(2, 3)
     E = t1 + t2 - (27)**Rational(2, 3)
     assert e.evolute() == E
+
