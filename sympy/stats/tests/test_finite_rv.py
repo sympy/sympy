@@ -98,8 +98,8 @@ def test_dice():
 
     assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
     assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
-    assert median(X) == 3
-    assert median(Y) == 3
+    assert median(X) == FiniteSet(3)
+    assert median(Y) == FiniteSet(3)
     # Bayes test for die
     BayesTest(X > 3, X + Y < 5)
     BayesTest(Eq(X - Y, Z), Z > Y)
