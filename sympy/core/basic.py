@@ -1771,10 +1771,13 @@ class Basic(with_metaclass(ManagedProperties)):
             if isinstance(args[-1], str):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                name = getattr(args[-1], '__name__', None)
-                if name is None:
-                    name = args[-1].__class__.__name__
-                rule = '_eval_rewrite_as_' + name
+                # rewrite arg is usually a class but can also be a
+                # singleton (e.g. GoldenRatio) so we check
+                # __name__ or __class__.__name__
+                clsname = getattr(args[-1], "__name__", None)
+                if clsname is None:
+                    clsname = args[-1].__class__.__name__
+                rule = '_eval_rewrite_as_' + clsname
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)

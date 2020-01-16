@@ -527,12 +527,12 @@ def _solve_trig(f, symbol, domain):
     sol1 = sol = None
     try:
         sol1 = _solve_trig1(f, symbol, domain)
-    except BaseException:
+    except NotImplementedError:
         pass
     if sol1 is None or isinstance(sol1, ConditionSet):
         try:
             sol = _solve_trig2(f, symbol, domain)
-        except BaseException:
+        except ValueError:
             sol = sol1
         if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
             if sol1.count_ops() < sol.count_ops():

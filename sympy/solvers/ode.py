@@ -2612,12 +2612,11 @@ def odesimp(ode, eq, func, hint):
             # future. In addition, collect is splitting exponentials with
             # rational powers for no reason.  We have to do a match
             # to fix this using Wilds.
+            #
+            # XXX: This global collectterms hack should be removed.
             global collectterms
-            try:
-                collectterms.sort(key=default_sort_key)
-                collectterms.reverse()
-            except Exception:
-                pass
+            collectterms.sort(key=default_sort_key)
+            collectterms.reverse()
             assert len(eq) == 1 and eq[0].lhs == f(x)
             sol = eq[0].rhs
             sol = expand_mul(sol)
@@ -3213,7 +3212,7 @@ def constantsimp(expr, constants):
             else:
                 rexpr = rexpr.subs(*s)
         expr = rexpr
-    except Exception:
+    except IndexError:
         pass
     expr = __remove_linear_redundancies(expr, Cs)
 
@@ -3311,6 +3310,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     else:
         iter_constants = (sym for sym in newconstants if sym not in variables)
 
+    # XXX: This global newstartnumber hack should be removed
     global newstartnumber
     newstartnumber = 1
     endnumber = len(constantsymbols)
@@ -3372,6 +3372,7 @@ def _handle_Integral(expr, func, hint):
     For most hints, this simply runs ``expr.doit()``.
 
     """
+    # XXX: This global y hack should be removed
     global y
     x = func.args[0]
     f = func.func
@@ -3480,6 +3481,7 @@ def ode_1st_exact(eq, func, order, match):
     r = match  # d+e*diff(f(x),x)
     e = r[r['e']]
     d = r[r['d']]
+    # XXX: This global y hack should be removed
     global y  # This is the only way to pass dummy y to _handle_Integral
     y = r['y']
     C1 = get_numbered_constants(eq, num=1)
@@ -4897,6 +4899,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     # indirect doctest
 
     """
+    # XXX: This global collectterms hack should be removed.
     global collectterms
     collectterms = []
 
@@ -5569,6 +5572,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         charroots[root] += 1
     # We need to keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
+    #
+    # XXX: This global collectterms hack should be removed.
     global collectterms
     collectterms = []
     gensols = []
@@ -5714,6 +5719,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     gsol = r['sol']
     trialset = r['trialset']
     notneedset = set([])
+    # XXX: This global collectterms hack should be removed.
     global collectterms
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
