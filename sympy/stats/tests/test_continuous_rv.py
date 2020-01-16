@@ -44,7 +44,7 @@ def test_single_normal():
     assert P(X**2 < 1) == erf(2**S.Half/2)
     assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
     assert E(X, Eq(X, mu)) == mu
-    assert median(X) == 0
+    assert median(X) == FiniteSet(0)
 
 def test_conditional_1d():
     X = Normal('x', 0, 1)
@@ -116,7 +116,7 @@ def test_symbolic():
     assert E(Z) == 1/rate
     assert E(a*Z + b) == a*E(Z) + b
     assert E(X + a*Z + b) == mu1 + a/rate + b
-    assert median(X) == mu1
+    assert median(X) == FiniteSet(mu1)
 
 
 def test_cdf():
@@ -381,7 +381,7 @@ def test_beta():
     B = Beta('x', a, b)
     assert expand_func(E(B)) == a / S(a + b)
     assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
-    assert median(B) == 1 - 1/sqrt(2)
+    assert median(B) == FiniteSet(1 - 1/sqrt(2))
 
 def test_beta_noncentral():
     a, b = symbols('a b', positive=True)
@@ -431,7 +431,7 @@ def test_betaprime():
     betap = Symbol("beta", nonpositive=True)
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
     X = BetaPrime('x', 1, 1)
-    assert median(X) == 1
+    assert median(X) == FiniteSet(1)
 
 def test_cauchy():
     x0 = Symbol("x0")
@@ -448,7 +448,7 @@ def test_cauchy():
 
     gamma = Symbol("gamma", nonpositive=True)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
-    assert median(X) == x0
+    assert median(X) == FiniteSet(x0)
 
 def test_chi():
     from sympy import I
@@ -534,7 +534,7 @@ def test_dagum():
     a = Symbol("a", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
     X = Dagum('x', 1 , 1, 1)
-    assert median(X) == 1
+    assert median(X) == FiniteSet(1)
 
 def test_erlang():
     k = Symbol("k", integer=True, positive=True)
@@ -590,8 +590,8 @@ def test_exponential():
     assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
-    X = Exponential('x', 1)
-    assert median(X) == log(2)
+    Y = Exponential('y', 1)
+    assert median(Y) == FiniteSet(log(2))
     #Test issue 9970
     z = Dummy('z')
     assert P(X > z) == exp(-z*rate)
@@ -799,7 +799,7 @@ def test_loglogistic():
     X = LogLogistic('x', a, b)
     assert E(X) == pi*a/(b*sin(pi/b))
     X = LogLogistic('x', 1, 2)
-    assert median(X) == 1
+    assert median(X) == FiniteSet(1)
 
 def test_lognormal():
     mean = Symbol('mu', real=True)
@@ -861,7 +861,7 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
     X = Nakagami('x',1 ,1)
-    assert median(X) == sqrt(log(2))
+    assert median(X) == FiniteSet(sqrt(log(2)))
 
 def test_gaussian_inverse():
     # test for symbolic parameters
@@ -928,7 +928,7 @@ def test_pareto_numeric():
 
     assert E(X) == alpha*xm/S(alpha - 1)
     assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
-    assert median(X) == 3*2**Rational(1, 7)
+    assert median(X) == FiniteSet(3*2**Rational(1, 7))
     # Skewness tests too slow. Try shortcutting function?
 
 
@@ -955,7 +955,7 @@ def test_PowerFunction():
     assert E(X) == Rational(2,3)
     assert P(X < 0) == 0
     assert P(X < 1) == 1
-    assert median(X) == 1/sqrt(2)
+    assert median(X) == FiniteSet(1/sqrt(2))
 
 def test_raised_cosine():
     mu = Symbol("mu", real=True)
@@ -1037,7 +1037,7 @@ def test_trapezoidal():
     assert E(X) == Rational(3, 2)
     assert variance(X) == Rational(5, 12)
     assert P(X < 2) == Rational(3, 4)
-    assert median(X) == Rational(3, 2)
+    assert median(X) == FiniteSet(Rational(3, 2))
 
 def test_triangular():
     a = Symbol("a")
@@ -1079,7 +1079,7 @@ def test_uniform():
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
-    assert median(X) == 4
+    assert median(X) == FiniteSet(4)
 
     z = Symbol('z')
     p = density(X)(z)

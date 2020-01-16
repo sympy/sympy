@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from sympy.sets import FiniteSet
+from sympy.sets import Interval, FiniteSet
 from sympy import sqrt, log, exp, FallingFactorial, Rational
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
@@ -352,7 +352,8 @@ def median(X, evaluate=True, **kwargs):
     Returns
     =======
 
-    The median of the random expression.
+    The FiniteSet or an Interval which contains the median of the
+    random expression.
 
     Examples
     ========
@@ -360,10 +361,10 @@ def median(X, evaluate=True, **kwargs):
     >>> from sympy.stats import Normal, Die, median
     >>> N = Normal('N', 3, 1)
     >>> median(N)
-    3
+    FiniteSet(3)
     >>> D = Die('D')
     >>> median(D)
-    3
+    FiniteSet(3)
 
     References
     ==========
@@ -372,12 +373,9 @@ def median(X, evaluate=True, **kwargs):
 
     """
     result = quantile(X, evaluate=evaluate, **kwargs)(Rational(1, 2))
-    if isinstance(result, FiniteSet):
-        if len(result) == 1:
-            return list(result)[0]
-        else:
-            raise ValueError("There does not exit single value of median.")
-    return result
+    if isinstance(result, FiniteSet) or isinstance(result, Interval):
+        return result
+    return FiniteSet(result)
 
 P = probability
 E = expectation
