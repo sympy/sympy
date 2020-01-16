@@ -60,19 +60,19 @@ if matchpy:
     Operation.register(acsch)
     Operation.register(asech)
 
-    @op_iter.register(Integral)
+    @op_iter.register(Integral)  # type: ignore
     def _(operation):
         return iter((operation._args[0],) + operation._args[1])
 
-    @op_iter.register(Basic)
+    @op_iter.register(Basic)  # type: ignore
     def _(operation):
         return iter(operation._args)
 
-    @op_len.register(Integral)
+    @op_len.register(Integral)  # type: ignore
     def _(operation):
         return 1 + len(operation._args[1])
 
-    @op_len.register(Basic)
+    @op_len.register(Basic)  # type: ignore
     def _(operation):
         return len(operation._args)
 
