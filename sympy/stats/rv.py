@@ -1139,14 +1139,11 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
-    try:
-        d = ps.sample()  # a dictionary that maps RVs to values
-        args = [d[rv] for rv in rvs]
-        fn(*args)
-        if condition:
-            given_fn(*args)
-    except Exception:
-        raise TypeError("Expr/condition too complex for lambdify")
+    d = ps.sample()  # a dictionary that maps RVs to values
+    args = [d[rv] for rv in rvs]
+    fn(*args)
+    if condition:
+        given_fn(*args)
 
     def return_generator():
         count = 0

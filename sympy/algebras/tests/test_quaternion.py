@@ -1,4 +1,4 @@
-from sympy import symbols, re, im, I, Abs, Symbol, \
+from sympy import symbols, re, im, sign, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
      Matrix, diff, integrate, trigsimp, S, Rational
 from sympy.algebras.quaternion import Quaternion
@@ -18,7 +18,7 @@ def test_quaternion_construction():
 
     M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
-    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(-2*cos(phi) + 2)/2)
+    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))

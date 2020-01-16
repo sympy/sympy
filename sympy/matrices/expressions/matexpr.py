@@ -1113,10 +1113,7 @@ class _LeftRightArgs(object):
         self._second_pointer_parent[self._second_pointer_index] = value
 
     def __repr__(self):
-        try:
-            built = [self._build(i) for i in self._lines]
-        except Exception:
-            built = self._lines
+        built = [self._build(i) for i in self._lines]
         return "_LeftRightArgs(lines=%s, higher=%s)" % (
             built,
             self.higher,
