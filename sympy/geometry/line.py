@@ -2557,7 +2557,7 @@ class Line3D(LinearEntity3D, Line):
         point = self.intersection(line)
         if point:
             if isinstance(point[0], Point3D):
-                return Line3D(p[0], direction_ratio=[*d3])
+                return Line3D(point[0], direction_ratio=[*d3])
             else:
                 # Lines are equal, the bisection the own line
                 return self
