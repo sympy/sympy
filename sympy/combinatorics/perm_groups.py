@@ -2595,7 +2595,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S3 = SymmetricGroup(3)
         >>> S3.conjugacy_class(Permutation(0, 1, 2))
-        set([Permutation(0, 1, 2), Permutation(0, 2, 1)])
+        {(0 1 2), (0 2 1)}
 
         Notes
         =====
@@ -2638,9 +2638,7 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import SymmetricGroup
         >>> SymmetricGroup(3).conjugacy_classes()
-        [set([Permutation(2)]),
-         set([Permutation(0, 1, 2), Permutation(0, 2, 1)]),
-         set([Permutation(1, 2), Permutation(2)(0, 1), Permutation(0, 2)])]
+        [{(2)}, {(0 1 2), (0 2 1)}, {(0 2), (1 2), (2)(0 1)}]
 
         """
         identity = _af_new(list(range(self.degree)))
