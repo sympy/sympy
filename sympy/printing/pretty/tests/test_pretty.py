@@ -6934,3 +6934,31 @@ def test_is_combining():
 def test_issue_17857():
     assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
     assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
+
+def test_issue_18272():
+    from sympy.solvers import solveset
+    from sympy import pretty, ConditionSet
+    x = Symbol('x')
+    n = Symbol('n')
+
+    assert pretty(solveset(exp(x) - x, x)) == \
+    '⎧            ⎛      x    ⎞⎫\n'\
+    '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
+    '⎩                         ⎭'
+    assert pretty(solveset(Abs(2*x) - n, x, S.Reals)) == \
+    '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
+    '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
+    '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
+    assert pretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
+                (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
+    '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
+    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
+    '⎨x | x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
+    '⎪                 ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
+    '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'

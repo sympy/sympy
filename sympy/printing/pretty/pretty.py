@@ -2058,7 +2058,7 @@ class PrettyPrinter(Printer):
         else:
             cond = self._print(ts.condition)
             if self._use_unicode:
-                cond = self._print_seq(cond, "(", ")")
+                cond = prettyForm(*cond.parens("(", ")", ifascii_nougly=True))
 
         bar = self._print("|")
 
