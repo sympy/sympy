@@ -2251,6 +2251,9 @@ class Expr(Basic, EvalfMixin):
                 return Add._from_args(newargs)
         elif self.is_Mul:
             args = list(self.args)
+            # XXX: If we have a Mul with a zero in it
+            if any(arg.is_zero for arg in args):
+                return None
             for i, arg in enumerate(args):
                 newarg = arg.extract_multiplicatively(c)
                 if newarg is not None:
@@ -2334,8 +2337,9 @@ class Expr(Basic, EvalfMixin):
         if c.is_Add and c.args[0].is_Number:
             # whole term as a term factor
             co = self.coeff(c)
-            xa0 = (co.extract_additively(1) or 0)*c
-            if xa0:
+            coea = co.extract_additively(1)
+            if coea:
+                xa0 = coea*c
                 diff = self - co*c
                 return (xa0 + (diff.extract_additively(c) or diff)) or None
             # term-wise
@@ -2351,8 +2355,9 @@ class Expr(Basic, EvalfMixin):
 
         # whole term as a term factor
         co = self.coeff(c)
-        xa0 = (co.extract_additively(1) or 0)*c
-        if xa0:
+        coea = co.extract_additively(1)
+        if coea:
+            xa0 = coea*c
             diff = self - co*c
             return (xa0 + (diff.extract_additively(c) or diff)) or None
         # term-wise
