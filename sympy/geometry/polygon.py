@@ -1395,8 +1395,8 @@ class Polygon(GeometrySet):
             pts = list(reversed(pts))
         for v, a in p.angles.items():
             i = pts.index(v)
-            ray = Ray(pts[i], pts[i + 1]).rotate(a/2, v)
-            # normalize so distance from p1 to p2 is 1
+            p1, p2 = Point._normalize_dimension(pts[i], pts[i + 1])
+            ray = Ray(p1, p2).rotate(a/2, v)
             dir = ray.direction
             ray = Ray(ray.p1, ray.p1 + dir/dir.distance((0, 0)))
             if prec is not None:
