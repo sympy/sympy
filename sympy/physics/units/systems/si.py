@@ -7,7 +7,11 @@ Added kelvin, candela and mole.
 
 from __future__ import division
 
+from typing import List
+
 from sympy.physics.units import DimensionSystem, Dimension, dHg0
+
+from sympy.physics.units.quantities import Quantity
 
 from sympy import Rational, pi, sqrt, S
 from sympy.physics.units.definitions.dimension_definitions import (
@@ -47,7 +51,8 @@ base_dims = (amount_of_substance, luminous_intensity, temperature)
 units = [mol, cd, K, lux, hertz, newton, pascal, joule, watt, coulomb, volt,
         farad, ohm, siemens, weber, tesla, henry, candela, lux, becquerel,
         gray, katal]
-all_units = []
+
+all_units = []  # type: List[Quantity]
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
@@ -305,7 +310,9 @@ for _scale_factor, _dimension in zip(
 ):
     dimex = SI.get_dimensional_expr(_scale_factor)
     if dimex != 1:
-        if not DimensionSystem.equivalent_dims(_dimension, Dimension(dimex)):
+        # XXX: equivalent_dims is an instance method taking two arguments in
+        # addition to self so this can not work:
+        if not DimensionSystem.equivalent_dims(_dimension, Dimension(dimex)):  # type: ignore
             raise ValueError("quantity value and dimension mismatch")
 del _scale_factor, _dimension
 

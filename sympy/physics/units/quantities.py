@@ -118,10 +118,9 @@ class Quantity(AtomicExpr):
         return self._name
 
     @property
-    def dimension(self, unit_system=None):
+    def dimension(self):
         from sympy.physics.units import UnitSystem
-        if unit_system is None:
-            unit_system = UnitSystem.get_default_unit_system()
+        unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_dimension(self)
 
     @property
@@ -134,13 +133,12 @@ class Quantity(AtomicExpr):
         return self._abbrev
 
     @property
-    def scale_factor(self, unit_system=None):
+    def scale_factor(self):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
         from sympy.physics.units import UnitSystem
-        if unit_system is None:
-            unit_system = UnitSystem.get_default_unit_system()
+        unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_scale_factor(self)
 
     def _eval_is_positive(self):
