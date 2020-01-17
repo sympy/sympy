@@ -209,7 +209,7 @@ class factorial(CombinatorialFunction):
             aq = abs(q)
             d = aq - n
             if d.is_nonpositive:
-                return 0
+                return S.Zero
             else:
                 isprime = aq.is_prime
                 if d == 1:
@@ -218,9 +218,9 @@ class factorial(CombinatorialFunction):
                     # its inverse (if n > 4 is a composite number, then
                     # (n-1)! = 0 mod n)
                     if isprime:
-                        return -1 % q
+                        return S(-1 % q)
                     elif isprime is False and (aq - 6).is_nonnegative:
-                        return 0
+                        return S.Zero
                 elif n.is_Integer and q.is_Integer:
                     n, d, aq = map(int, (n, d, aq))
                     if isprime and (d - 1 < n):
@@ -231,7 +231,7 @@ class factorial(CombinatorialFunction):
                     else:
                         fc = self._facmod(n, aq)
 
-                    return Integer(fc % q)
+                    return S(fc % q)
 
     def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
@@ -931,14 +931,14 @@ class binomial(CombinatorialFunction):
 
             # handle negative integers k or n
             if k < 0:
-                return 0
+                return S.Zero
             if n < 0:
                 n = -n + k - 1
                 res = -1 if k%2 else 1
 
             # non negative integers k and n
             if k > n:
-                return 0
+                return S.Zero
 
             isprime = aq.is_prime
             aq = int(aq)
@@ -997,7 +997,7 @@ class binomial(CombinatorialFunction):
                             res *= pow(prime, exp, aq)
                             res %= aq
 
-            return Integer(res % q)
+            return S(res % q)
 
     def _eval_expand_func(self, **hints):
         """
