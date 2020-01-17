@@ -1,6 +1,6 @@
 from __future__ import print_function, division
-from sympy.sets import Interval, FiniteSet
-from sympy import sqrt, log, exp, FallingFactorial, Rational
+from sympy.sets import FiniteSet
+from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile)
@@ -343,6 +343,11 @@ def factorial_moment(X, n, condition=None, **kwargs):
 def median(X, evaluate=True, **kwargs):
     """
     Calculuates the median of the probability distribution.
+    Mathematically, median of Probability distribution is defined as all those
+    values of `m` for which the following condition is satisfied
+
+    .. math::
+        P(X\geq m)\geq 1/2 \hspace{5} \text{and} \hspace{5} P(X\leq m)\geq 1/2
 
     Parameters
     ==========
@@ -364,7 +369,7 @@ def median(X, evaluate=True, **kwargs):
     FiniteSet(3)
     >>> D = Die('D')
     >>> median(D)
-    FiniteSet(3)
+    FiniteSet(3, 4)
 
     References
     ==========
@@ -372,10 +377,24 @@ def median(X, evaluate=True, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
 
     """
-    result = quantile(X, evaluate=evaluate, **kwargs)(Rational(1, 2))
-    if isinstance(result, FiniteSet) or isinstance(result, Interval):
+    from sympy.stats.crv import ContinuousPSpace
+    from sympy.stats.drv import DiscretePSpace
+    from sympy.stats.frv import FinitePSpace
+
+    if isinstance(pspace(X), FinitePSpace):
+        cdf = pspace(X).compute_cdf(X)
+        result = []
+        for key, value in cdf.items():
+            if value>= Rational(1,2) and (1 - value) + \
+            pspace(X).probability(Eq(X, key)) >= Rational(1,2):
+                result.append(key)
+        return FiniteSet(*result)
+    if isinstance(pspace(X), ContinuousPSpace) or isinstance(pspace(X), DiscretePSpace):
+        cdf = pspace(X).compute_cdf(X)
+        x = Dummy('x')
+        result = solveset(piecewise_fold(cdf(x) - Rational(1,2)), x, pspace(X).set)
         return result
-    return FiniteSet(result)
+    raise NotImplementedError("The median of %s is not implemeted.", str(pspace(X)))
 
 P = probability
 E = expectation

@@ -587,6 +587,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(x0, gamma):
         _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
+        _value_check(x0.is_real, "Location parametet must be real.")
 
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))

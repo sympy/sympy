@@ -2,7 +2,7 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re,
+                   besseli, floor, expand_func, Rational, I, re, Lambda,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj)
 from sympy.external import import_module
@@ -19,7 +19,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
-from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.crv_types import NormalDistribution, ContinuousDistributionHandmade
+from sympy.stats.crv import SingleContinuousPSpace
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -434,7 +435,7 @@ def test_betaprime():
     assert median(X) == FiniteSet(1)
 
 def test_cauchy():
-    x0 = Symbol("x0")
+    x0 = Symbol("x0", real=True)
     gamma = Symbol("gamma", positive=True)
     p = Symbol("p", positive=True)
 
@@ -446,6 +447,8 @@ def test_cauchy():
     assert diff(cdf(X)(x), x) == density(X)(x)
     assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
 
+    x1 = Symbol("x1", real=False)
+    raises(ValueError, lambda: Cauchy('x', x1, gamma))
     gamma = Symbol("gamma", nonpositive=True)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
     assert median(X) == FiniteSet(x0)
@@ -1401,3 +1404,16 @@ def test_conditional_eq():
     assert P(Eq(E, 1), Eq(E, 2)) == 0
     assert P(E > 1, Eq(E, 2)) == 1
     assert P(E < 1, Eq(E, 2)) == 0
+
+def test_median_ContinuousDistributionHandmade():
+    x = Symbol('x')
+    z = Dummy('z')
+    dens = Lambda(x, Piecewise((S.Half, (0<=x)&(x<1)), (0, (x>=1)&(x<2)),
+        (S.Half, (x>=2)&(x<3)), (0, True)))
+    dens = ContinuousDistributionHandmade(dens, set=Interval(0, 3))
+    space = SingleContinuousPSpace(z, dens)
+    assert dens.pdf == Lambda(x, Piecewise((1/2, (x >= 0) & (x < 1)),
+        (0, (x >= 1) & (x < 2)), (1/2, (x >= 2) & (x < 3)), (0, True)))
+    assert median(space.value) == Interval(1, 2)
+    assert E(space.value) == Rational(3, 2)
+    assert variance(space.value) == Rational(13, 12)
