@@ -754,7 +754,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
 
     m : positive integer
     prime_modulo_method : function to calculate the root of the congruence
-    equation when m is prime
+    equation for the prime divisors of m
     diff_method : function to calculate derivative of expression at any
     given point
     expr_val : function to calculate value of the expression at any
@@ -1426,6 +1426,7 @@ def _polynomial_congruence_prime(coefficients, p):
 
     Parameters
     ==========
+
     coefficients : list of integers
     p : prime number
     """
@@ -1449,6 +1450,7 @@ def _diff_poly(root, coefficients, p):
 
     Parameters
     ==========
+
     coefficients : list of integers
     p : prime number
     root : integer
@@ -1470,6 +1472,7 @@ def _val_poly(root, coefficients, p):
 
     Parameters
     ==========
+
     coefficients : list of integers
     p : prime number
     root : integer
