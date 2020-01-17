@@ -6941,15 +6941,15 @@ def test_issue_18272():
     x = Symbol('x')
     n = Symbol('n')
 
-    assert xpretty(solveset(exp(x) - x, x)) == \
+    assert upretty(solveset(exp(x) - x, x)) == \
     '⎧            ⎛      x    ⎞⎫\n'\
     '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
     '⎩                         ⎭'
-    assert xpretty(solveset(Abs(2*x) - n, x, S.Reals)) == \
+    assert upretty(solveset(Abs(2*x) - n, x, S.Reals)) == \
     '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
     '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
     '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
-    assert xpretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
+    assert upretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
                 (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
     '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
     '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
