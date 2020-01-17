@@ -5,7 +5,7 @@ from sympy import Basic, Tuple, S
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
-
+from sympy.simplify import simplify
 
 
 class DenseNDimArray(NDimArray):
@@ -150,6 +150,8 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
     def as_mutable(self):
         return MutableDenseNDimArray(self)
 
+    def _eval_simplify(self, **kwargs):
+        return [simplify(x, **kwargs) for x in self]
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
