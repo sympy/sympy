@@ -12,12 +12,12 @@ question of adding time to length has no meaning.
 
 from __future__ import division
 
-from typing import Dict as tDict, Union
+from typing import Dict as tDict
 
 import collections
 
-from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Expr, Tuple,
-    Dict, default_sort_key)
+from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
+    default_sort_key)
 from sympy.core.compatibility import reduce
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
