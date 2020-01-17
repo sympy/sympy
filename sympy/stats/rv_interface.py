@@ -341,7 +341,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
 
 def median(X, evaluate=True, **kwargs):
-    """
+    r"""
     Calculuates the median of the probability distribution.
     Mathematically, median of Probability distribution is defined as all those
     values of `m` for which the following condition is satisfied

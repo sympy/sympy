@@ -1405,7 +1405,7 @@ def test_conditional_eq():
     assert P(E > 1, Eq(E, 2)) == 1
     assert P(E < 1, Eq(E, 2)) == 0
 
-def test_median_ContinuousDistributionHandmade():
+def test_ContinuousDistributionHandmade():
     x = Symbol('x')
     z = Dummy('z')
     dens = Lambda(x, Piecewise((S.Half, (0<=x)&(x<1)), (0, (x>=1)&(x<2)),
