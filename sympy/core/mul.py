@@ -607,7 +607,8 @@ class Mul(Expr, AssocOp):
                 return [coeff], nc_part, order_symbols
             if any(c.is_finite == False for c in c_part):
                 return [S.NaN], [], order_symbols
-            return [coeff], [], order_symbols
+            elif all(c.is_finite == True for c in c_part):
+                return [coeff], [], order_symbols
 
         # check for straggling Numbers that were produced
         _new = []
