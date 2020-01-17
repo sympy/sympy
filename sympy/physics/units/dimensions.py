@@ -12,7 +12,7 @@ question of adding time to length has no meaning.
 
 from __future__ import division
 
-from typing import Dict as tDict
+from typing import Dict as tDict, Union
 
 import collections
 
