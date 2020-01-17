@@ -444,12 +444,12 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            comp = 0
             if len(random_symbols(expr)) == 0:
                 dens = self.density
                 comp = condition.rhs
             else:
                 dens = density(expr, **kwargs)
+                comp = 0
             if not isinstance(dens, ContinuousDistribution):
                 dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
