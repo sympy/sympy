@@ -1500,7 +1500,6 @@ def _valid_expr(expr):
     polynomial = Poly(expr)
     if not  polynomial.is_univariate:
         raise ValueError("The expression should be univariate")
-    
     if not polynomial.domain == ZZ:
         raise ValueError("The expression should should have integer coefficients")
     return polynomial.all_coeffs()
