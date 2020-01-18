@@ -2333,13 +2333,13 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     # eq.subs(*sol_simp.args) doesn't simplify to zero without help
     (t, zero) = checkodesol(eq, sol_simp, order=5, solve_for_func=False)
     # if this fails because zero.is_zero, replace this block with
-    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    # assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
     # \-----------
     (t, zero) = checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)
     # if this fails because zero.is_zero, replace this block with
-    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert zero == 0
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    # assert zero == 0
     # \-----------
     assert t
 
@@ -3827,4 +3827,16 @@ def test_issue_5096():
     eq = 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2)
     sol = Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)
     assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_15996():
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
+    sol = Eq(f(x), C1 + x**2 + (C2 - x**2/8 + x*(C3 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x))*sin(x) + (C4 + I*x**2/8 + x*(C5 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x))*cos(x) - I*exp(I*x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x)
+    sol = Eq(f(x), C1 + (C2 + C3*x - x**2/8 + 5*exp(2*I*x)/16)*sin(x) + (C4 + C5*x + I*x**2/8 + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
     assert checkodesol(eq, sol) == (True, 0)
