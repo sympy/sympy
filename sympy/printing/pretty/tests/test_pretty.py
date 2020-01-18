@@ -36,7 +36,6 @@ from sympy import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
-from sympy.solvers import solveset
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
@@ -6941,11 +6940,11 @@ def test_issue_18272():
     x = Symbol('x')
     n = Symbol('n')
 
-    assert upretty(solveset(exp(x) - x, x)) == \
+    assert upretty(ConditionSet(x, Eq(-x + exp(x), 0), S.Complexes)) == \
     '⎧            ⎛      x    ⎞⎫\n'\
     '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
     '⎩                         ⎭'
-    assert upretty(solveset(Abs(2*x) - n, x, S.Reals)) == \
+    assert upretty(ConditionSet(x, Contains(n/2, Interval(0, oo)), FiniteSet(-n/2, n/2))) == \
     '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
     '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
     '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
