@@ -1494,15 +1494,16 @@ def _valid_expr(expr):
     """
 
     from sympy import Poly
+    from sympy.polys.domains import ZZ
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
     polynomial = Poly(expr)
     if not  polynomial.is_univariate:
         raise ValueError("The expression should be univariate")
-    coefficients = polynomial.all_coeffs()
-    for i in coefficients:
-        as_int(i)
-    return coefficients
+    
+    if not polynomial.domain == ZZ:
+        raise ValueError("The expression should should have integer coefficients")
+    return polynomial.all_coeffs()
 
 
 def polynomial_congruence(expr, m):
