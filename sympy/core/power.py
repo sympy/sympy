@@ -71,9 +71,12 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
-    if HAS_GMPY:
-        x, t = gmpy.iroot(y, n)
-        return as_int(x), t
+    if HAS_GMPY and n < 2**63:
+        if HAS_GMPY >= 2:
+            x, t = gmpy.iroot(y, n)
+        else:
+            x, t = gmpy.root(y, n)
+        return as_int(x), bool(t)
     return _integer_nthroot_python(y, n)
 
 def _integer_nthroot_python(y, n):
