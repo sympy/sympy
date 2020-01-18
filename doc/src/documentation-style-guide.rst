@@ -197,6 +197,10 @@ If you get matplotlib error, install python-matplotlib package::
 
    apt-get install python-matplotlib
 
+If you get fonttools error, install python-fonttools package::
+
+   apt-get install -y python-fonttools
+
 And to view it, do::
 
    firefox _build/html/index.html
@@ -221,6 +225,10 @@ If you get matplotlib error, install python3-matplotlib package::
 
    dnf install python3-matplotlib
 
+If you get fonttools error, install python-fonttools package::
+
+   dnf install python3-fonttools
+
 And view it at::
 
    _build/html/index.html
@@ -235,11 +243,12 @@ Then install these packages with homebrew::
 
 Install these packages with either pip or conda::
 
-   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar
+   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar fonttools
 
 Or::
 
    conda install -c conda-forge mpmpath matplotlib sphinx sphinx-math-dollar
+   fonttools
 
 **Windows 10**
 

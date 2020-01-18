@@ -54,6 +54,7 @@ html: _build/logo/sympy-notailtext-favicon.ico
 	cp -r src/pics _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
+html: font
 
 htmlapi:
 	mkdir -p api/.static
@@ -145,3 +146,7 @@ logo: src/logo/sympy.svg
 	$(PYTHON) ./generate_logos.py -d
 	@echo
 	@echo "Logo generated."
+
+font:
+	$(PYTHON) ./generate_fonts.py -d
+	@echo "Font generated."
