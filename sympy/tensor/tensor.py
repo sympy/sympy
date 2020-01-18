@@ -3040,9 +3040,9 @@ class Tensor(TensExpr):
 
             kronecker_delta_list = []
 
-            # using args[1], because free_indices is set and does
             # not guarantee a correct index order
-            for iself, iother in zip(self.get_free_indices(), s.get_free_indices()):
+
+            for (count, (iself, iother)) in enumerate(zip(self.get_free_indices(), s.get_free_indices())):
                 if iself.tensor_index_type != iother.tensor_index_type:
                     raise ValueError("index types not compatible")
                 else:
@@ -3051,11 +3051,11 @@ class Tensor(TensExpr):
                     if iself.is_up == iother.is_up:
                         kroneckerdelta = tensor_index_type.delta(iself, -iother)
                     else:
-                        dummy = TensorIndex('dummy', tensor_index_type,
+                        dummy = TensorIndex("d_" + str(count), tensor_index_type,
                                             is_up=iself.is_up)
                         kroneckerdelta = (
-                            tensor_metric(iself, dummy) *
-                            tensor_index_type.delta(-dummy, -iother)
+                            TensMul(tensor_metric(iself, dummy),
+                                    tensor_index_type.delta(-dummy, -iother))
                         )
                     kronecker_delta_list.append(kroneckerdelta)
             return TensMul.fromiter(kronecker_delta_list)

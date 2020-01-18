@@ -381,7 +381,7 @@ def test_eval_partial_derivative_single_2nd_rank_tensors_by_tensor():
     assert expr3._perform_derivative() - L.delta(i, -m) * L.metric(j, L_0) * L.delta(-L_0, m1) == 0
 
     expr4 = PartialDerivative(H(i, j), H(-m, -m1))
-    assert expr4._perform_derivative() - L.metric(i, L_0) * L.delta(-L_0, m) * L.metric(j, L_0) * L.delta(-L_0, m1) == 0
+    assert expr4._perform_derivative() - L.metric(i, L_0) * L.delta(-L_0, m) * L.metric(j, L_1) * L.delta(-L_1, m1) == 0
 
 
 def test_eval_partial_derivative_expr1():
