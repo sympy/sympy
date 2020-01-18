@@ -1242,18 +1242,18 @@ def test_NormalDistribution():
     _z = Dummy('_z')
 
     expected1 = Integral(sqrt(2)*exp(-(_z - 2)**2/32)/(8*sqrt(pi)),(_z, -oo, 1))
-    assert (a.probability(x < 1, evaluate=False)).dummy_eq(expected1) is True
+    assert a.probability(x < 1, evaluate=False).dummy_eq(expected1) is True
 
     expected2 = Integral(sqrt(2)*exp(-(_z - 2)**2/32)/(8*sqrt(pi)),(_z, 1, oo))
-    assert (a.probability(x > 1, evaluate=False)).dummy_eq(expected2) is True
+    assert a.probability(x > 1, evaluate=False).dummy_eq(expected2) is True
 
-    b= SingleContinuousPSpace(x, NormalDistribution(1, 9))
+    b = SingleContinuousPSpace(x, NormalDistribution(1, 9))
 
     expected3 = Integral(sqrt(2)*exp(-(_z - 1)**2/162)/(18*sqrt(pi)),(_z, 6, oo))
-    assert (b.probability(x > 6, evaluate=False)).dummy_eq(expected3) is True
+    assert b.probability(x > 6, evaluate=False).dummy_eq(expected3) is True
 
     expected4 = Integral(sqrt(2)*exp(-(_z - 1)**2/162)/(18*sqrt(pi)),(_z, -oo, 6))
-    assert (b.probability(x < 6, evaluate=False)).dummy_eq(expected4) is True
+    assert b.probability(x < 6, evaluate=False).dummy_eq(expected4) is True
 
 
 def test_random_parameters():
