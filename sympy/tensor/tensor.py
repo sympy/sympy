@@ -3038,7 +3038,7 @@ class Tensor(TensExpr):
             # A contravariante index in the derivative becomes covariant
             # after performing the derivative and vice versa
 
-            kronecker_delta_list = []
+            kronecker_delta_list = [1]
 
             # not guarantee a correct index order
 
@@ -3048,17 +3048,18 @@ class Tensor(TensExpr):
                 else:
                     tensor_index_type = iself.tensor_index_type
                     tensor_metric = tensor_index_type.metric
+                    dummy = TensorIndex("d_" + str(count), tensor_index_type,
+                                        is_up=iself.is_up)
                     if iself.is_up == iother.is_up:
                         kroneckerdelta = tensor_index_type.delta(iself, -iother)
                     else:
-                        dummy = TensorIndex("d_" + str(count), tensor_index_type,
-                                            is_up=iself.is_up)
                         kroneckerdelta = (
                             TensMul(tensor_metric(iself, dummy),
                                     tensor_index_type.delta(-dummy, -iother))
                         )
                     kronecker_delta_list.append(kroneckerdelta)
-            return TensMul.fromiter(kronecker_delta_list)
+            return TensMul.fromiter(kronecker_delta_list).doit()
+            # doit necessary to rename dummy indices accordingly
 
 
 class TensMul(TensExpr, AssocOp):

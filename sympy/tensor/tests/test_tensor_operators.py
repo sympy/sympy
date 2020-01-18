@@ -383,6 +383,28 @@ def test_eval_partial_derivative_single_2nd_rank_tensors_by_tensor():
     expr4 = PartialDerivative(H(i, j), H(-m, -m1))
     assert expr4._perform_derivative() - L.metric(i, L_0) * L.delta(-L_0, m) * L.metric(j, L_1) * L.delta(-L_1, m1) == 0
 
+def test_eval_partial_derivative_divergence_type():
+    expr1a = PartialDerivative(A(i), A(i))
+    expr1b = PartialDerivative(A(i), A(k))
+    expr1c = PartialDerivative(L.delta(-i, k) * A(i), A(k))
+
+    assert (expr1a._perform_derivative()
+            - (L.delta(-i, k) * expr1b._perform_derivative())).contract_delta(L.delta) == 0
+
+    assert (expr1a._perform_derivative()
+            - expr1c._perform_derivative()).contract_delta(L.delta) == 0
+
+    expr2a = PartialDerivative(H(i, j), H(i, j))
+    expr2b = PartialDerivative(H(i, j), H(k, m))
+    expr2c = PartialDerivative(L.delta(-i, k) * L.delta(-j, m) * H(i, j), H(k, m))
+
+    assert (expr2a._perform_derivative()
+            - (L.delta(-i, k) * L.delta(-j, m) * expr2b._perform_derivative())).contract_delta(L.delta) == 0
+
+    assert (expr2a._perform_derivative()
+            - expr2c._perform_derivative()).contract_delta(L.delta) == 0
+
+
 
 def test_eval_partial_derivative_expr1():
 
