@@ -3796,3 +3796,35 @@ def test_issue_15889():
     sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
     assert sol == dsolve(eq, hint='lie_group')
     assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_5096():
+    eq = f(x).diff(x, x) + f(x) - x*sin(x - 2)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**2*cos(x - 2)/4 + x*sin(x - 2)/4)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) + f(x) - x**4*sin(x-1)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**5*cos(x - 1)/10 + x**4*sin(x - 1)/4 + x**3*cos(x - 1)/2 - 3*x**2*sin(x - 1)/4 - 3*x*cos(x - 1)/4)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) - f(x) - exp(x - 1)
+    sol = Eq(f(x), C1*exp(-x) + C2*exp(x) + x*exp(x - 1)/2)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2)+f(x)-(sin(x-2)+1)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x*cos(x - 2)/2 + 1)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = 2*x**2*f(x).diff(x, 2) + f(x) + sqrt(2*x)*sin(log(2*x)/2)
+    sol = Eq(f(x), sqrt(x)*(C1*sin(log(x)/2) + C2*cos(log(x)/2) + sqrt(2)*log(x)*cos(log(2*x)/2)/2))
+    assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2)
+    sol = Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)
+    assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
