@@ -1488,8 +1488,9 @@ def _val_poly(root, coefficients, p):
 
 def _valid_expr(expr):
     """This function is used by `polynomial_congruence`.
-    If `expr` is a univariate polynomial the it returns
-    its coefficients, otherwise it raises Valuerror
+    If `expr` is a univariate polynomial will integer
+    coefficients the it returns its coefficients,
+    otherwise it raises Valuerror
     """
 
     from sympy import Poly
@@ -1498,7 +1499,10 @@ def _valid_expr(expr):
     polynomial = Poly(expr)
     if not  polynomial.is_univariate:
         raise ValueError("The expression should be univariate")
-    return polynomial.all_coeffs()
+    coefficients = polynomial.all_coeffs()
+    for i in coefficients:
+        as_int(i)
+    return coefficients
 
 
 def polynomial_congruence(expr, m):

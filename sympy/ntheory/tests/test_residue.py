@@ -278,3 +278,4 @@ def test_residue():
     assert polynomial_congruence(x**6 - 2*x**5 - 35, 6125) == [3257]
     raises(ValueError, lambda: polynomial_congruence(x**x, 6125))
     raises(ValueError, lambda: polynomial_congruence(x**i, 6125))
+    raises(ValueError, lambda: polynomial_congruence(0.1*x**2 + 6, 100))
