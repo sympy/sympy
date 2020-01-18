@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo, Rational)
+    Matrix, Range, Add, symbols, zoo, Rational,factor)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -1474,3 +1474,7 @@ def test_issue_16878b():
     # that handles the base_set of S.Reals like there is
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
+def test_issue_18064():
+    # In FiniteSet Class there is no method called factor
+    s = FiniteSet(x**2 + x)
+    assert s.factor() == factor(s)
