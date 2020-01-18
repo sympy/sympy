@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from operator import add, mul, lt, le, gt, ge
 from types import GeneratorType
 
@@ -190,7 +192,7 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache = {}
+_ring_cache = {}  # type: Dict[Any, Any]
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """

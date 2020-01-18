@@ -49,14 +49,16 @@ elif HAS_GMPY == 2:
         qdiv as gmpy_qdiv,
     )
 else:
-    class GMPYInteger(object):
+    class _GMPYInteger(object):
         def __init__(self, obj):
             pass
 
-    class GMPYRational(object):
+    class _GMPYRational(object):
         def __init__(self, obj):
             pass
 
+    GMPYInteger = _GMPYInteger
+    GMPYRational = _GMPYRational
     gmpy_factorial = None
     gmpy_numer = None
     gmpy_denom = None

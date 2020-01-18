@@ -51,7 +51,8 @@ class Particle(object):
     def __str__(self):
         return self._name
 
-    __repr__ = __str__
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def mass(self):

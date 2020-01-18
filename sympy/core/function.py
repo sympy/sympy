@@ -31,6 +31,8 @@ There are three types of functions implemented in SymPy:
 """
 from __future__ import print_function, division
 
+from typing import Any, Dict as tDict, Optional, Set as tSet
+
 from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
@@ -44,7 +46,7 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.compatibility import with_metaclass, PY3
+from sympy.core.compatibility import PY3
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and
@@ -267,7 +269,7 @@ class FunctionClass(ManagedProperties):
         return cls.__name__
 
 
-class Application(with_metaclass(FunctionClass, Basic)):
+class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
 
@@ -915,7 +917,7 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _kwargs = {}
+    _kwargs = {}  # type: tDict[str, Optional[bool]]
 
     def __hash__(self):
         return hash((self.class_key(), frozenset(self._kwargs.items())))
@@ -933,7 +935,16 @@ class UndefinedFunction(FunctionClass):
         return False
 
 
-class WildFunction(Function, AtomicExpr):
+# XXX: The type: ignore on WildFunction is because mypy complains:
+#
+# sympy/core/function.py:939: error: Cannot determine type of 'sort_key' in
+# base class 'Expr'
+#
+# Somehow this is because of the @cacheit decorator but it is not clear how to
+# fix it.
+
+
+class WildFunction(Function, AtomicExpr):  # type: ignore
     """
     A WildFunction function matches any function (with its arguments).
 
@@ -981,7 +992,8 @@ class WildFunction(Function, AtomicExpr):
 
     """
 
-    include = set()
+    # XXX: What is this class attribute used for?
+    include = set()  # type: tSet[Any]
 
     def __init__(cls, name, **assumptions):
         from sympy.sets.sets import Set, FiniteSet

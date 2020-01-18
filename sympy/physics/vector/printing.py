@@ -417,5 +417,5 @@ def init_vprinting(**kwargs):
     kwargs['latex_printer'] = vlatex
     init_printing(**kwargs)
 
-params = init_printing.__doc__.split('Examples\n    ========')[0]
-init_vprinting.__doc__ = init_vprinting.__doc__.format(params)
+params = init_printing.__doc__.split('Examples\n    ========')[0]  # type: ignore
+init_vprinting.__doc__ = init_vprinting.__doc__.format(params)  # type: ignore

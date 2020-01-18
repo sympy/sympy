@@ -66,7 +66,6 @@ class CoordSys3D(Basic):
 
         name = str(name)
         Vector = sympy.vector.Vector
-        BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
 
         if not isinstance(name, str):
@@ -1047,3 +1046,7 @@ def _check_strings(arg_name, arg):
     for s in arg:
         if not isinstance(s, str):
             raise TypeError(errorstr)
+
+
+# Delayed import to avoid cyclic import problems:
+from sympy.vector.vector import BaseVector

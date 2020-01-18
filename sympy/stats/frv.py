@@ -191,7 +191,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def check(*args):
         pass
 
-    @property
+    @property # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:
@@ -388,7 +388,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     def pmf(self, expr):
         return self.distribution.pmf(expr)
 
-    @property
+    @property # type: ignore
     @cacheit
     def _density(self):
         return dict((FiniteSet((self.symbol, val)), prob)
@@ -488,7 +488,7 @@ class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
 
-    @property
+    @property  # type: ignore
     @cacheit
     def _density(self):
         proditer = product(*[iter(space._density.items())
@@ -501,7 +501,7 @@ class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
             d[elem] = d.get(elem, S.Zero) + prob
         return Dict(d)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def density(self):
         return Dict(self._density)

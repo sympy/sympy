@@ -32,7 +32,7 @@ m = Symbol('m')
 ndim = Integer(4)
 
 np = import_module('numpy')
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 ad_rep_sympy = represent(ad, basis=N, ndim=4, format='sympy')
 a_rep = represent(a, basis=N, ndim=4, format='sympy')

@@ -177,7 +177,9 @@ class AskNonZeroHandler(CommonHandler):
     def Pow(expr, assumptions):
         return ask(Q.nonzero(expr.base), assumptions)
 
-    NaN = staticmethod(CommonHandler.AlwaysTrue)
+    @staticmethod
+    def NaN(expr, assumptions):
+        return True
 
     @staticmethod
     def Abs(expr, assumptions):

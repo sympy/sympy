@@ -5,6 +5,8 @@ here for easy import.
 """
 from __future__ import print_function, division
 
+from typing import Tuple, Type
+
 import operator
 from collections import defaultdict
 from sympy.external import import_module
@@ -745,7 +747,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = (int, )
+SYMPY_INTS = (int, )  # type: Tuple[Type, ...]
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
@@ -761,7 +763,7 @@ from threading import RLock
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 
 class _HashedSeq(list):
-    __slots__ = 'hashvalue'
+    __slots__ = ('hashvalue',)
 
     def __init__(self, tup, hash=hash):
         self[:] = tup
@@ -927,7 +929,4 @@ else:
         return decorating_function
     ### End of backported lru_cache
 
-try:
-    from time import clock
-except ImportError: # Python 3.8+
-    from time import perf_counter as clock
+from time import perf_counter as clock

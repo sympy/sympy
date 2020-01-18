@@ -124,8 +124,6 @@ modules = [
     'sympy.parsing',
     'sympy.parsing.autolev',
     'sympy.parsing.autolev._antlr',
-    'sympy.parsing.autolev.test-examples',
-    'sympy.parsing.autolev.test-examples.pydy-example-repo',
     'sympy.parsing.c',
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
@@ -437,9 +435,11 @@ if __name__ == '__main__':
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
-              'sympy.parsing.autolev': ['*.g4'],
-              'sympy.parsing.autolev.test-examples': ['*.al'],
-              'sympy.parsing.autolev.test-examples.pydy-example-repo': ['*.al'],
+              'sympy.parsing.autolev': [
+                  '*.g4', 'test-examples/*.al', 'test-examples/*.py',
+                  'test-examples/pydy-example-repo/*.al',
+                  'test-examples/pydy-example-repo/*.py',
+                  ],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               'sympy.plotting.tests': ['test_region_*.png'],

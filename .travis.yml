@@ -274,19 +274,23 @@ install:
   # SyntaxWarning flag for catching errors in Python3.8
   # Issue -  #16973. -We:invalid can be dropped from 3.8 onwards, but
   # it needs to be there for earlier versions.
+  #
+  # This would fail due to invalid Python 2.7 syntax so we disable it while
+  # testing import under Python 2.
   - |
-    if [[ "${TEST_SETUP}" == "true" ]]; then
-      # The install cycle below is to test installation on systems without
-      # setuptools.
-      virtualenv ~/.venv-no-setuptools;
-      ~/.venv-no-setuptools/bin/pip install mpmath;
-      ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
-      ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
+    if [[ -z "${TEST_PY2_IMPORT}" ]]; then
+        if [[ "${TEST_SETUP}" == "true" ]]; then
+          # The install cycle below is to test installation on systems without
+          # setuptools.
+          virtualenv ~/.venv-no-setuptools;
+          ~/.venv-no-setuptools/bin/pip install mpmath;
+          ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
+          ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
+        fi
+        python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/;
+        python -We:invalid setup.py -q install;
+        pip list --format=columns;
     fi
-    python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/;
-    python -We:invalid setup.py -q install;
-    pip list --format=columns;
-
 script:
   # Don't run doctr if the build fails
   - set -e

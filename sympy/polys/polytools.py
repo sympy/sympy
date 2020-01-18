@@ -98,7 +98,7 @@ class Poly(Expr):
 
     """
 
-    __slots__ = ['rep', 'gens']
+    __slots__ = ('rep', 'gens')
 
     is_commutative = True
     is_Poly = True

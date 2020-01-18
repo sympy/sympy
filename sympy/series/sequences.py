@@ -2,8 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (with_metaclass,
-                                      is_sequence, iterable, ordered)
+from sympy.core.compatibility import is_sequence, iterable, ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
 from sympy.core.parameters import global_parameters
@@ -371,7 +370,7 @@ class SeqBase(Basic):
                     d -= coeffs[i]*gfvar**(i+1)
                 return coeffs, simplify(factor(n)/factor(d))
 
-class EmptySequence(with_metaclass(Singleton, SeqBase)):
+class EmptySequence(SeqBase, metaclass=Singleton):
     """Represents an empty sequence.
 
     The empty sequence is also available as a singleton as

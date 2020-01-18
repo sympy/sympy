@@ -6,7 +6,7 @@ from sympy.testing.pytest import raises
 
 N = CoordSys3D('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
-A = N.orient_new_axis('A', q1, N.k)
+A = N.orient_new_axis('A', q1, N.k)  # type: ignore
 B = A.orient_new_axis('B', q2, A.i)
 C = B.orient_new_axis('C', q3, B.j)
 

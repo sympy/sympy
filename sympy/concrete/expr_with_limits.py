@@ -161,7 +161,7 @@ def _process_limits(*symbols):
 
 
 class ExprWithLimits(Expr):
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)

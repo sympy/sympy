@@ -1,3 +1,5 @@
+from typing import List
+
 from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne,
                    oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And,
                    real_root)
@@ -20,7 +22,7 @@ unset_show()
 # entirely
 class TmpFileManager:
 
-    tmp_files = []
+    tmp_files = []  # type: List[str]
 
     @classmethod
     def tmp_file(cls, name=''):
