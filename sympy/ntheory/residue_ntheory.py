@@ -775,7 +775,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
                     m_inv = mod_inverse(diff, p)
                     for j in range(1, e):
                         ppow *= p
-                        root = (root - expr_val(root, ppow) * (m_inv % ppow)) % ppow
+                        root = (root - expr_val(root, ppow) * m_inv) % ppow
                     tot_roots.add(root)
                 else:
                     new_base = p
@@ -1486,7 +1486,22 @@ def _val_poly(root, coefficients, p):
     return f_val % p
 
 
-def polynomial_congruence(coefficients, m):
+def _valid_expr(expr):
+    """This function is used by `polynomial_congruence`.
+    If `expr` is a univariate polynomial the it returns
+    its coefficients, otherwise it raises Valuerror
+    """
+
+    from sympy import Poly
+    if not expr.is_polynomial():
+        raise ValueError("The expression should be a polynomial")
+    polynomial = Poly(expr)
+    if not  polynomial.is_univariate:
+        raise ValueError("The expression should be univariate")
+    return polynomial.all_coeffs()
+
+
+def polynomial_congruence(expr, m):
     """
     Find the solutions to a polynomial congruence equation modulo m.
 
@@ -1503,10 +1518,10 @@ def polynomial_congruence(coefficients, m):
     >>> from sympy import Poly
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
-    >>> polynomial_congruence(Poly(expr).all_coeffs(), 6125)
+    >>> polynomial_congruence(expr, 6125)
     [3257]
     """
-
+    coefficients = _valid_expr(expr)
     rank = len(coefficients)
     if rank == 3:
         return quadratic_congruence(coefficients[0], coefficients[1],
