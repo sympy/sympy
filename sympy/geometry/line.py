@@ -2532,7 +2532,7 @@ class Line3D(LinearEntity3D, Line):
         Parameters
         ==========
 
-        x : Line3D
+        line : Line3D
 
         Returns
         =======
