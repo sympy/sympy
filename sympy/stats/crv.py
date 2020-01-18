@@ -444,7 +444,7 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            if not random_symbols:
+            if not random_symbols(expr):
                 dens = self.density
                 comp = condition.rhs
             else:
