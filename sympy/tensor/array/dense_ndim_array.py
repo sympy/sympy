@@ -151,7 +151,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
         return MutableDenseNDimArray(self)
 
     def _eval_simplify(self, **kwargs):
-        return [simplify(x, **kwargs) for x in self]
+        return self.applyfunc(simplify)
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
