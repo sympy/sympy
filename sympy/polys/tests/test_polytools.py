@@ -56,7 +56,7 @@ from sympy import (
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable, PY3
+from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.testing.pytest import raises, XFAIL
 
