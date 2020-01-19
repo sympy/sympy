@@ -395,7 +395,7 @@ class FirstLinear(Solver):
             if deriv_coeff not in (1, 0):
                 coeffs = deriv_coeff.match(a*f(x)**c1)
                 if coeffs and coeffs[c1]:
-                    denom = f(x)**r[c1]
+                    denom = f(x)**coeffs[c1]
                     reduced_eq = Add(*[arg/denom for arg in eq.args])
         if not reduced_eq:
             reduced_eq = eq
@@ -478,9 +478,6 @@ class FirstLinear(Solver):
         x = self.func.args[0]
         f = self.func.func
         r = self._get_coeffs_linear_ode()  # a*diff(f(x),x) + b*f(x) + c
-        C1 = get_numbered_constants(self.eq, num=1)
-        t = exp(Integral(r[r['b']]/r[r['a']], x))
-        tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
         f = r.get('u', f(x))  # take almost-linear u if present, else f(x)
         hints = {'default': '1st_linear',
                 '1st_linear': r,
@@ -494,7 +491,7 @@ all_solvers = [FirstLinear]
 
 def _dsolve(eq, func=None, hint="default", simplify=True,
     ics=None, **kwargs):
-    s = Solver(eq, func, hint="default", simplify=True, ics=None)
+    Solver(eq, func, hint="default", simplify=True, ics=None)
     solvers = []
     for solvercls in all_solvers:
         solver = solvercls(eq, func)
