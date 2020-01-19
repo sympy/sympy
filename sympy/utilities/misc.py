@@ -432,7 +432,6 @@ def translate(s, a, b=None, c=None):
     >>> translate(abc, {'ab': 'x', 'bc': 'y'}) in ('xc', 'ay')
     True
     """
-    from sympy.core.compatibility import PY3
 
     mr = {}
     if a is None:
