@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict, Tuple, Type
+
 import operator
 
 from sympy.polys.polyutils import PicklableWithSlots
@@ -16,7 +18,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
 
     mod, dom, sym, _parent = None, None, None, None
 
-    __slots__ = ['val']
+    __slots__ = ('val',)
 
     def parent(self):
         return self._parent
@@ -132,11 +134,11 @@ class ModularInteger(PicklableWithSlots, DomainElement):
             return self.__class__(self.dom.one)
 
         if exp < 0:
-            val, exp = self.invert(), -exp
+            val, exp = self.invert().val, -exp
         else:
             val = self.val
 
-        return self.__class__(val**exp)
+        return self.__class__(pow(val, int(exp), self.mod))
 
     def _compare(self, other, op):
         val = self._get_val(other)
@@ -176,7 +178,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def invert(self):
         return self.__class__(self._invert(self.val))
 
-_modular_integer_cache = {}
+_modular_integer_cache = {}  # type: Dict[Tuple[Any, Any, Any], Type[ModularInteger]]
 
 def ModularIntegerFactory(_mod, _dom, _sym, parent):
     """Create custom class for specific integer modulus."""

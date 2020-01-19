@@ -1,56 +1,29 @@
 from __future__ import print_function, division
-
-from .str import StrPrinter
+from .pycode import (
+    PythonCodePrinter,
+    MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
+    NumPyPrinter  # NumPyPrinter is imported for backward compatibility
+)
 from sympy.utilities import default_sort_key
 
 
-class LambdaPrinter(StrPrinter):
+__all__ = [
+    'PythonCodePrinter',
+    'MpmathPrinter',
+    'NumPyPrinter',
+    'LambdaPrinter',
+    'NumPyPrinter',
+    'lambdarepr',
+]
+
+
+class LambdaPrinter(PythonCodePrinter):
     """
     This printer converts expressions into strings that can be used by
     lambdify.
     """
+    printmethod = "_lambdacode"
 
-    def _print_MatrixBase(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__,
-                           self._print((expr.tolist())))
-
-    _print_SparseMatrix = \
-        _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-
-    def _print_Piecewise(self, expr):
-        result = []
-        i = 0
-        for arg in expr.args:
-            e = arg.expr
-            c = arg.cond
-            result.append('((')
-            result.append(self._print(e))
-            result.append(') if (')
-            result.append(self._print(c))
-            result.append(') else (')
-            i += 1
-        result = result[:-1]
-        result.append(') else None)')
-        result.append(')'*(2*i - 2))
-        return ''.join(result)
-
-    def _print_Sum(self, expr):
-        loops = (
-            'for {i} in range({a}, {b}+1)'.format(
-                i=self._print(i),
-                a=self._print(a),
-                b=self._print(b))
-            for i, a, b in expr.limits)
-        return '(builtins.sum({function} {loops}))'.format(
-            function=self._print(expr.function),
-            loops=' '.join(loops))
 
     def _print_And(self, expr):
         result = ['(']
@@ -88,196 +61,13 @@ class LambdaPrinter(StrPrinter):
         ]
         return ''.join(result)
 
-class TensorflowPrinter(LambdaPrinter):
-    """
-    Tensorflow printer which handles vectorized piecewise functions,
-    logical operators, max/min, and relational operators.
-    """
+    def _print_NumberSymbol(self, expr):
+        return str(expr)
 
-    def _print_And(self, expr):
-        "Logical And printer"
-        # We have to override LambdaPrinter because it uses Python 'and' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_and' to TENSORFLOW_TRANSLATIONS.
-        return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Or(self, expr):
-        "Logical Or printer"
-        # We have to override LambdaPrinter because it uses Python 'or' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_or' to TENSORFLOW_TRANSLATIONS.
-        return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Not(self, expr):
-        "Logical Not printer"
-        # We have to override LambdaPrinter because it uses Python 'not' keyword.
-        # If LambdaPrinter didn't define it, we would still have to define our
-        #     own because StrPrinter doesn't define it.
-        return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Min(self, expr, **kwargs):
-        from sympy import Min
-        if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
-
-        return 'minimum({0}, {1})'.format(
-            self._print(expr.args[0], **kwargs),
-            self._print(Min(*expr.args[1:]), **kwargs))
-
-    def _print_Max(self, expr, **kwargs):
-        from sympy import Max
-        if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
-
-        return 'maximum({0}, {1})'.format(
-            self._print(expr.args[0], **kwargs),
-            self._print(Max(*expr.args[1:]), **kwargs))
-
-    def _print_Piecewise(self, expr, **kwargs):
-        from sympy import Piecewise
-        e, cond = expr.args[0].args
-        if len(expr.args) == 1:
-            return 'select({0}, {1}, {2})'.format(
-                self._print(cond, **kwargs),
-                self._print(e, **kwargs),
-                0)
-
-        return 'select({0}, {1}, {2})'.format(
-            self._print(cond, **kwargs),
-            self._print(e, **kwargs),
-            self._print(Piecewise(*expr.args[1:]), **kwargs))
-
-    def _print_Relational(self, expr):
-        "Relational printer for Equality and Unequality"
-        op = {
-            '==' :'equal',
-            '!=' :'not_equal',
-            '<'  :'less',
-            '<=' :'less_equal',
-            '>'  :'greater',
-            '>=' :'greater_equal',
-        }
-        if expr.rel_op in op:
-            lhs = self._print(expr.lhs)
-            rhs = self._print(expr.rhs)
-            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
-                                               lhs=lhs,
-                                               rhs=rhs)
-        return super(TensorflowPrinter, self)._print_Relational(expr)
-
-
-class NumPyPrinter(LambdaPrinter):
-    """
-    Numpy printer which handles vectorized piecewise functions,
-    logical operators, etc.
-    """
-    _default_settings = {
-        "order": "none",
-        "full_prec": "auto",
-    }
-
-    def _print_seq(self, seq, delimiter=', '):
-        "General sequence printer: converts to tuple"
-        # Print tuples here instead of lists because numba supports
-        #     tuples in nopython mode.
-        return '({},)'.format(delimiter.join(self._print(item) for item in seq))
-
-    def _print_MatMul(self, expr):
-        "Matrix multiplication printer"
-        return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
-
-    def _print_DotProduct(self, expr):
-        # DotProduct allows any shape order, but numpy.dot does matrix
-        # multiplication, so we have to make sure it gets 1 x n by n x 1.
-        arg1, arg2 = expr.args
-        if arg1.shape[0] != 1:
-            arg1 = arg1.T
-        if arg2.shape[1] != 1:
-            arg2 = arg2.T
-
-        return "dot(%s, %s)" % (self._print(arg1), self._print(arg2))
-
-    def _print_Piecewise(self, expr):
-        "Piecewise function printer"
-        exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
-        conds = '[{0}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
-        # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
-        #     it will behave the same as passing the 'default' kwarg to select()
-        #     *as long as* it is the last element in expr.args.
-        # If this is not the case, it may be triggered prematurely.
-        return 'select({0}, {1}, default=nan)'.format(conds, exprs)
-
-    def _print_Relational(self, expr):
-        "Relational printer for Equality and Unequality"
-        op = {
-            '==' :'equal',
-            '!=' :'not_equal',
-            '<'  :'less',
-            '<=' :'less_equal',
-            '>'  :'greater',
-            '>=' :'greater_equal',
-        }
-        if expr.rel_op in op:
-            lhs = self._print(expr.lhs)
-            rhs = self._print(expr.rhs)
-            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
-                                               lhs=lhs,
-                                               rhs=rhs)
-        return super(NumPyPrinter, self)._print_Relational(expr)
-
-    def _print_And(self, expr):
-        "Logical And printer"
-        # We have to override LambdaPrinter because it uses Python 'and' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Or(self, expr):
-        "Logical Or printer"
-        # We have to override LambdaPrinter because it uses Python 'or' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
-        return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Not(self, expr):
-        "Logical Not printer"
-        # We have to override LambdaPrinter because it uses Python 'not' keyword.
-        # If LambdaPrinter didn't define it, we would still have to define our
-        #     own because StrPrinter doesn't define it.
-        return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Min(self, expr):
-        return '{0}(({1}))'.format('amin', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Max(self, expr):
-        return '{0}(({1}))'.format('amax', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Pow(self, expr):
-        if expr.exp == 0.5:
-            return '{0}({1})'.format('sqrt', self._print(expr.base))
-        else:
-            return super(NumPyPrinter, self)._print_Pow(expr)
-
-    def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
-        return 'log10({0})'.format(self._print(expr.args[0]))
-
-    def _print_Sqrt(self, expr):
-        return 'sqrt({0})'.format(self._print(expr.args[0]))
-
-    def _print_hypot(self, expr):
-        return 'hypot({0}, {1})'.format(*map(self._print, expr.args))
-
-    def _print_expm1(self, expr):
-        return 'expm1({0})'.format(self._print(expr.args[0]))
-
-    def _print_log1p(self, expr):
-        return 'log1p({0})'.format(self._print(expr.args[0]))
-
-    def _print_exp2(self, expr):
-        return 'exp2({0})'.format(self._print(expr.args[0]))
-
-    def _print_log2(self, expr):
-        return 'log2({0})'.format(self._print(expr.args[0]))
+    def _print_Pow(self, expr, **kwargs):
+        # XXX Temporary workaround. Should python math printer be
+        # isolated from PythonCodePrinter?
+        return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
 
 
 # numexpr works by altering the string passed to numexpr.evaluate
@@ -285,6 +75,8 @@ class NumPyPrinter(LambdaPrinter):
 class NumExprPrinter(LambdaPrinter):
     # key, value pairs correspond to sympy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
+    printmethod = "_numexprcode"
+
     _numexpr_functions = {
         'sin' : 'sin',
         'cos' : 'cos',
@@ -336,6 +128,31 @@ class NumExprPrinter(LambdaPrinter):
                                 func_name)
         return "%s(%s)" % (nstr, self._print_seq(e.args))
 
+    def _print_Piecewise(self, expr):
+        "Piecewise function printer"
+        exprs = [self._print(arg.expr) for arg in expr.args]
+        conds = [self._print(arg.cond) for arg in expr.args]
+        # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
+        #     it will behave the same as passing the 'default' kwarg to select()
+        #     *as long as* it is the last element in expr.args.
+        # If this is not the case, it may be triggered prematurely.
+        ans = []
+        parenthesis_count = 0
+        is_last_cond_True = False
+        for cond, expr in zip(conds, exprs):
+            if cond == 'True':
+                ans.append(expr)
+                is_last_cond_True = True
+                break
+            else:
+                ans.append('where(%s, %s, ' % (cond, expr))
+                parenthesis_count += 1
+        if not is_last_cond_True:
+            # simplest way to put a nan but raises
+            # 'RuntimeWarning: invalid value encountered in log'
+            ans.append('log(-1)')
+        return ''.join(ans) + ')' * parenthesis_count
+
     def blacklisted(self, expr):
         raise TypeError("numexpr cannot be used with %s" %
                         expr.__class__.__name__)
@@ -362,24 +179,9 @@ class NumExprPrinter(LambdaPrinter):
         lstr = super(NumExprPrinter, self).doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
 
-class MpmathPrinter(LambdaPrinter):
-    """
-    Lambda printer for mpmath which maintains precision for floats
-    """
-    def _print_Float(self, e):
-        # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
-        # the caller of the lambdified function will have set it to sufficient
-        # precision to match the Floats in the expression.
 
-        # Remove 'mpz' if gmpy is installed.
-        args = str(tuple(map(int, e._mpf_)))
-        return 'mpf(%s)' % args
-
-    def _print_uppergamma(self,e): #printer for the uppergamma function
-        return "gammainc({0}, {1}, inf)".format(self._print(e.args[0]), self._print(e.args[1]))
-
-    def _print_lowergamma(self,e): #printer for the lowergamma functioin
-        return "gammainc({0}, 0, {1})".format(self._print(e.args[0]), self._print(e.args[1]))
+for k in NumExprPrinter._numexpr_functions:
+    setattr(NumExprPrinter, '_print_%s' % k, NumExprPrinter._print_Function)
 
 def lambdarepr(expr, **settings):
     """

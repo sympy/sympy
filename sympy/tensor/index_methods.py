@@ -12,23 +12,46 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
+from sympy.utilities import sift
 
-
-from sympy.core.compatibility import reduce
-
+from collections import OrderedDict
 
 class IndexConformanceException(Exception):
     pass
 
+def _unique_and_repeated(inds):
+    """
+    Returns the unique and repeated indices. Also note, from the examples given below
+    that the order of indices is maintained as given in the input.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.index_methods import _unique_and_repeated
+    >>> _unique_and_repeated([2, 3, 1, 3, 0, 4, 0])
+    ([2, 1, 4], [3, 0])
+    """
+    uniq = OrderedDict()
+    for i in inds:
+        if i in uniq:
+            uniq[i] = 0
+        else:
+            uniq[i] = 1
+    return sift(uniq, lambda x: uniq[x], binary=True)
 
 def _remove_repeated(inds):
-    """Removes repeated objects from sequences
+    """
+    Removes repeated objects from sequences
 
     Returns a set of the unique objects and a tuple of all that have been
     removed.
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _remove_repeated
     >>> l1 = [1, 2, 3, 2]
@@ -36,18 +59,15 @@ def _remove_repeated(inds):
     ({1, 3}, (2,))
 
     """
-    sum_index = {}
-    for i in inds:
-        if i in sum_index:
-            sum_index[i] += 1
-        else:
-            sum_index[i] = 0
-    inds = [x for x in inds if not sum_index[x]]
-    return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
+    u, r = _unique_and_repeated(inds)
+    return set(u), tuple(r)
 
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _get_indices_Mul
     >>> from sympy.tensor.indexed import IndexedBase, Idx
@@ -106,6 +126,9 @@ def _get_indices_Pow(expr):
     contractable with its own base.  Note however, that indices in the same
     exponent can be contracted with each other.
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _get_indices_Pow
     >>> from sympy import Pow, exp, IndexedBase, Idx
     >>> A = IndexedBase('A')
@@ -144,6 +167,9 @@ def _get_indices_Add(expr):
         x(i)*y(j) - z(j)*z(j)
 
     FIXME: Add support for Numpy broadcasting
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _get_indices_Add
     >>> from sympy.tensor.indexed import IndexedBase, Idx
@@ -275,7 +301,7 @@ def get_contraction_structure(expr):
 
     By *dummy* we mean indices that are summation indices.
 
-    The stucture of the expression is determined and described as follows:
+    The structure of the expression is determined and described as follows:
 
     1) A conforming summation of Indexed objects is described with a dict where
        the keys are summation indices and the corresponding values are sets
@@ -289,10 +315,10 @@ def get_contraction_structure(expr):
        itself will be stored as a key in the dict.  For that key, the
        corresponding value is a list of dicts, each of which is the result of a
        recursive call to get_contraction_structure().  The list contains only
-       dicts for the non-trivial deeper contractions, ommitting dicts with None
+       dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
-    .. Note:: The presence of expressions among the dictinary keys indicates
+    .. Note:: The presence of expressions among the dictionary keys indicates
        multiple levels of index contractions.  A nested dict displays nested
        contractions and may itself contain dicts from a deeper level.  In
        practical calculations the summation in the deepest nested level must be

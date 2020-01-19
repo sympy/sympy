@@ -8,7 +8,6 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.orthopolys import (legendre_poly, laguerre_poly,
                                     hermite_poly, jacobi_poly)
 from sympy.polys.rootoftools import RootOf
-from sympy.core.compatibility import range
 
 
 def gauss_legendre(n, n_digits):
@@ -53,7 +52,7 @@ def gauss_legendre(n, n_digits):
     >>> x
     [-0.86114, -0.33998, 0.33998, 0.86114]
     >>> w
-    [0.34786, 0.65215, 0.65215, 0.34786]
+    [0.34785, 0.65215, 0.65215, 0.34785]
 
     See Also
     ========
@@ -63,7 +62,7 @@ def gauss_legendre(n, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gaussian_quadrature
+    .. [1] https://en.wikipedia.org/wiki/Gaussian_quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/legendre_rule/legendre_rule.html
     """
     x = Dummy("x")
@@ -73,7 +72,7 @@ def gauss_legendre(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((2/((1-r**2) * pd.subs(x, r)**2)).n(n_digits))
     return xi, w
@@ -132,7 +131,7 @@ def gauss_laguerre(n, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
+    .. [1] https://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/laguerre_rule/laguerre_rule.html
     """
     x = Dummy("x")
@@ -142,7 +141,7 @@ def gauss_laguerre(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((r/((n+1)**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
@@ -202,7 +201,7 @@ def gauss_hermite(n, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature
+    .. [1] https://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/hermite_rule/hermite_rule.html
     .. [3] http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_hermite_rule/gen_hermite_rule.html
     """
@@ -213,7 +212,7 @@ def gauss_hermite(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append(((2**(n-1) * factorial(n) * sqrt(pi)) /
                  (n**2 * p1.subs(x, r)**2)).n(n_digits))
@@ -278,7 +277,7 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
+    .. [1] https://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_laguerre_rule/gen_laguerre_rule.html
     """
     x = Dummy("x")
@@ -289,7 +288,7 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((gamma(alpha+n) /
                  (n*gamma(n)*p1.subs(x, r)*p2.subs(x, r))).n(n_digits))
@@ -352,7 +351,7 @@ def gauss_chebyshev_t(n, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature
+    .. [1] https://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev1_rule/chebyshev1_rule.html
     """
     xi = []
@@ -419,7 +418,7 @@ def gauss_chebyshev_u(n, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature
+    .. [1] https://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev2_rule/chebyshev2_rule.html
     """
     xi = []
@@ -493,7 +492,7 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gauss%E2%80%93Jacobi_quadrature
+    .. [1] https://en.wikipedia.org/wiki/Gauss%E2%80%93Jacobi_quadrature
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/jacobi_rule/jacobi_rule.html
     .. [3] http://people.sc.fsu.edu/~jburkardt/cpp_src/gegenbauer_rule/gegenbauer_rule.html
     """
@@ -505,7 +504,7 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((
             - (2*n+alpha+beta+2) / (n+alpha+beta+S.One) *
@@ -568,7 +567,7 @@ def gauss_lobatto(n, n_digits):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
+    .. [1] https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
     .. [2] http://people.math.sfu.ca/~cbm/aands/page_888.htm
     """
     x = Dummy("x")
@@ -578,7 +577,7 @@ def gauss_lobatto(n, n_digits):
     w = []
     for r in pd.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((2/(n*(n-1) * p.subs(x, r)**2)).n(n_digits))
 

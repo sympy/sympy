@@ -10,9 +10,9 @@ def test_lagrange_2forces():
     ### Equations for two damped springs in serie with two forces
 
     ### generalized coordinates
-    qs = q1, q2 = dynamicsymbols('q1, q2')
+    q1, q2 = dynamicsymbols('q1, q2')
     ### generalized speeds
-    qds = q1d, q2d = dynamicsymbols('q1, q2', 1)
+    q1d, q2d = dynamicsymbols('q1, q2', 1)
 
     ### Mass, spring strength, friction coefficient
     m, k, nu = symbols('m, k, nu')

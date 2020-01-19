@@ -3,11 +3,10 @@
 """Vandermonde matrix example
 
 Demonstrates matrix computations using the Vandermonde matrix.
-  * http://en.wikipedia.org/wiki/Vandermonde_matrix
+  * https://en.wikipedia.org/wiki/Vandermonde_matrix
 """
 
-from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
-from sympy.core.compatibility import range
+from sympy import Matrix, pprint, Rational, symbols, Symbol, zeros
 
 
 def symbol_gen(sym_str):

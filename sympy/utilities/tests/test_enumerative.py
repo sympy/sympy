@@ -1,15 +1,15 @@
-from sympy.core.compatibility import range, zip_longest
+from itertools import zip_longest
+
 from sympy.utilities.enumerative import (
     list_visitor,
     MultisetPartitionTraverser,
     multiset_partitions_taocp
     )
 from sympy.utilities.iterables import _set_partitions
-from sympy.utilities.pytest import slow
 
 # first some functions only useful as test scaffolding - these provide
 # straightforward, but slow reference implementations against which to
-# compare the real versions, and also a comparision to verify that
+# compare the real versions, and also a comparison to verify that
 # different versions are giving identical results.
 
 def part_range_filter(partition_iterator, lb, ub):
@@ -169,7 +169,7 @@ def test_subrange():
     ub = 2
     subrange_exercise(mult, lb, ub)
 
-@slow
+
 def test_subrange_large():
     # takes a second or so, depending on cpu, Python version, etc.
     mult = [6,3,2,1]

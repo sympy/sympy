@@ -20,7 +20,7 @@ import random
 
 from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence, unicode, range
+from sympy.core.compatibility import is_sequence, unicode
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -1230,7 +1230,6 @@ def gate_sort(circuit):
                         new_args = (circuit.args[:i] + (circuit.args[i + 1],) +
                                    (circuit.args[i],) + circuit.args[i + 2:])
                         circuit = Mul(*new_args)
-                        circ_array = circuit.args
                         changes = True
                         break
                     if AntiCommutator(first_base, second_base).doit() == 0:
@@ -1238,7 +1237,6 @@ def gate_sort(circuit):
                                    (circuit.args[i],) + circuit.args[i + 2:])
                         sign = Integer(-1)**(first_exp*second_exp)
                         circuit = sign*Mul(*new_args)
-                        circ_array = circuit.args
                         changes = True
                         break
     return circuit

@@ -63,7 +63,7 @@ some of the constant modifications that were made):
 2. The while loop to evaluate whether the series has converged quits
 when the addition amount `dt` has dropped to zero.
 
-3. the formatting string to convert the decimal to hexidecimal is
+3. the formatting string to convert the decimal to hexadecimal is
 calculated for the given precision.
 
 4. pi_hex_digits(n) changed to have coefficient to the formula in an
@@ -74,7 +74,7 @@ array (perhaps just a matter of preference).
 from __future__ import print_function, division
 
 import math
-from sympy.core.compatibility import range, as_int
+from sympy.core.compatibility import as_int
 
 
 def _series(j, n, prec=14):
