@@ -179,38 +179,21 @@ def test_periodicity_check():
     assert periodicity(Abs(sec(sec(x))), x) == pi
 
 
-def test_periodicity_customclass():
+def test_periodicity_Function():
     x = Symbol('x')
     class f(Function):
         nargs = 1
-        def _period(self, general_period, symbol):
+        def period(self, sym):
             arg = self.args[0]
-            if not arg.has(symbol):
-                return S.Zero
-            if arg == symbol:
-                return general_period
-            if symbol in arg.free_symbols:
-                if arg.is_Mul:
-                    g, h = arg.as_independent(symbol)
-                    if h == symbol:
-                        return general_period/abs(g)
+            return 1/arg.coeff(sym)
 
-                if arg.is_Add:
-                    a, h = arg.as_independent(symbol)
-                    g, h = h.as_independent(symbol, as_Add=False)
-                    if h == symbol:
-                        return general_period/abs(g)
-            raise NotImplementedError("Use the periodicity function instead.")
-        def period(self, symbol):
-            return self._period(2*pi, symbol)
-
-    assert periodicity(f(x), x) == 2*pi
-    assert periodicity(f(2*x), x) == pi
-    assert periodicity(2*f(x), x) == 2*pi
+    assert periodicity(f(x), x) == 1
+    assert periodicity(f(2*x), x) == S(1)/2
+    assert periodicity(2*f(x), x) == 1
     assert periodicity(x*f(2*x), x) is None
-    assert periodicity(f(x)*f(x), x) == 2*pi
-    assert periodicity(exp(f(x)), x) == 2*pi
-    assert periodicity(sin(x/2)*f(x), x) == 4*pi
+    assert periodicity(f(x)*f(x), x) == 1
+    assert periodicity(exp(f(x)), x) == 1
+    assert periodicity(sin(x*pi)*f(x), x) == 2
 
 
 

@@ -401,7 +401,7 @@ def periodicity(f, symbol, check=False):
 
     Examples
     ========
-    >>> from sympy import Symbol, sin, cos, tan, exp, Function, pi, S
+    >>> from sympy import Symbol, sin, cos, tan, exp, Function
     >>> from sympy.calculus.util import periodicity
     >>> x = Symbol('x')
     >>> f = sin(x) + sin(2*x) + sin(3*x)
@@ -418,11 +418,11 @@ def periodicity(f, symbol, check=False):
 
     >>> class F(Function):
     ...     nargs = 1
-    ...     period = sin.period     # sin's period method calls _period method,
-    ...                             # so _period method must be defined as well.
-    ...     _period = sin._period
-    >>> periodicity(F(x), x)
-    2*pi
+    ...     def period(self, sym):
+    ...         arg = self.args[0]
+    ...         return 1/arg.coeff(sym)
+    >>> periodicity(F(2*x), x)
+    1/2
     """
     from sympy.core.mod import Mod
     from sympy.core.relational import Relational
