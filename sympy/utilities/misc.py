@@ -432,7 +432,6 @@ def translate(s, a, b=None, c=None):
     >>> translate(abc, {'ab': 'x', 'bc': 'y'}) in ('xc', 'ay')
     True
     """
-    from sympy.core.compatibility import PY3
 
     mr = {}
     if a is None:
@@ -456,42 +455,13 @@ def translate(s, a, b=None, c=None):
                 a = b = ''
         elif len(a) != len(b):
             raise ValueError('oldchars and newchars have different lengths')
-    if PY3:
-        if c:
-            val = str.maketrans('', '', c)
-            s = s.translate(val)
-        s = replace(s, mr)
-        n = str.maketrans(a, b)
-        return s.translate(n)
-    else:
-        # when support for Python 2 is dropped, this if-else-block
-        # can be replaced with the if-clause
-        if c:
-            c = list(c)
-            rem = {}
-            for i in range(-1, -1 - len(c), -1):
-                if ord(c[i]) > 255:
-                    rem[c[i]] = ''
-                    c.pop(i)
-            s = s.translate(None, ''.join(c))
-            s = replace(s, rem)
-            if a:
-                a = list(a)
-                b = list(b)
-                for i in range(-1, -1 - len(a), -1):
-                    if ord(a[i]) > 255 or ord(b[i]) > 255:
-                        mr[a.pop(i)] = b.pop(i)
-                a = ''.join(a)
-                b = ''.join(b)
-        s = replace(s, mr)
-        table = str.maketrans(a, b)
-        # s may have become unicode which uses the py3 syntax for translate
-        if isinstance(table, str) and isinstance(s, str):
-            s = s.translate(table)
-        else:
-            s = s.translate(dict(
-                [(i, ord(c)) for i, c in enumerate(table)]))
-        return s
+
+    if c:
+        val = str.maketrans('', '', c)
+        s = s.translate(val)
+    s = replace(s, mr)
+    n = str.maketrans(a, b)
+    return s.translate(n)
 
 
 def ordinal(num):
