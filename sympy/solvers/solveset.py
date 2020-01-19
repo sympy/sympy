@@ -40,7 +40,7 @@ from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import Matrix, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
-from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
+from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod, polynomial_congruence
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.polys.polyerrors import CoercionFailed
@@ -1175,7 +1175,12 @@ def _invert_modular(modterm, rhs, n, symbol):
         if g is not S.One:
             x_indep_term = rhs*invert(g, m)
             return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
-
+    if a.is_polynomial():
+        remainder_list = polynomial_congruence(a - rhs, int(m))
+        g_n = EmptySet
+        for rem in remainder_list:
+            g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
+        return a, g_n
     if a.is_Pow:
         # base**expo = a
         base, expo = a.args
@@ -1284,8 +1289,9 @@ def _solve_modular(f, symbol, domain):
 
     if f_x is modterm and g_n is rhs:
         return unsolved_result
-
-    if f_x is symbol:
+    if g_n == EmptySet:
+        return g_n
+    if f_x is symbol or modterm.args[0].is_polynomial():
         if domain is not S.Integers:
             return domain.intersect(g_n)
         return g_n
