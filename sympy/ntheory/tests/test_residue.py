@@ -130,7 +130,7 @@ def test_residue():
     #issue 10816
     assert is_nthpow_residue(1, 0, 1) is False
     assert is_nthpow_residue(1, 0, 2) is True
-    assert is_nthpow_residue(3, 0, 2) is False
+    assert is_nthpow_residue(3, 0, 2) is True
     assert is_nthpow_residue(0, 1, 8) is True
     assert is_nthpow_residue(2, 3, 2) is True
     assert is_nthpow_residue(2, 3, 9) is False
@@ -274,6 +274,7 @@ def test_residue():
     assert polynomial_congruence(10*x**2 + 14*x + 20, 2) == [0, 1]
     assert polynomial_congruence(x**3 + 3, 16) == [5]
     assert polynomial_congruence(65*x**2 + 121*x + 72, 277) == [249, 252]
+    assert polynomial_congruence(x**4 - 4, 27) == [5, 22]
     assert polynomial_congruence(35*x**3 - 6*x**2 - 567*x + 2308, 148225) == [86957,
         111157, 122531, 146731]
     assert polynomial_congruence(x**16 - 9, 36) == [3, 9, 15, 21, 27, 33]
