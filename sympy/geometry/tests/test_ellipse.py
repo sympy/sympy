@@ -1,9 +1,8 @@
 from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs
-from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.functions.elementary.miscellaneous import Max

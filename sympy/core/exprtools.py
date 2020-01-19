@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS, range
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -287,7 +287,7 @@ def decompose_power_rat(expr):
 class Factors(object):
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 
-    __slots__ = ['factors', 'gens']
+    __slots__ = ('factors', 'gens')
 
     def __init__(self, factors=None):  # Factors
         """Initialize Factors from dict or expr.
@@ -815,7 +815,7 @@ class Factors(object):
 class Term(object):
     """Efficient representation of ``coeff*(numer/denom)``. """
 
-    __slots__ = ['coeff', 'numer', 'denom']
+    __slots__ = ('coeff', 'numer', 'denom')
 
     def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:

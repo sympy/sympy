@@ -1,7 +1,7 @@
 from sympy.core.compatibility import PY3
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
     fuzzy_or, _fuzzy_group, _torf, fuzzy_nand, fuzzy_xor)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 T = True
 F = False

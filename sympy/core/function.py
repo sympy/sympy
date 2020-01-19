@@ -31,6 +31,8 @@ There are three types of functions implemented in SymPy:
 """
 from __future__ import print_function, division
 
+from typing import Any, Dict as tDict, Optional, Set as tSet
+
 from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
@@ -44,7 +46,7 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.compatibility import string_types, with_metaclass, PY3, range
+from sympy.core.compatibility import PY3
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and
@@ -171,6 +173,13 @@ class FunctionClass(ManagedProperties):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
         nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
+        if nargs is None and 'nargs' not in cls.__dict__:
+            for supcls in cls.__mro__:
+                if hasattr(supcls, '_nargs'):
+                    nargs = supcls._nargs
+                    break
+                else:
+                    continue
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -260,7 +269,7 @@ class FunctionClass(ManagedProperties):
         return cls.__name__
 
 
-class Application(with_metaclass(FunctionClass, Basic)):
+class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
 
@@ -744,24 +753,16 @@ class Function(Application, Expr):
         ix = argindex - 1
         A = self.args[ix]
         if A._diff_wrt:
-            if len(self.args) == 1:
+            if len(self.args) == 1 or not A.is_Symbol:
                 return Derivative(self, A)
-            if A.is_Symbol:
-                for i, v in enumerate(self.args):
-                    if i != ix and A in v.free_symbols:
-                        # it can't be in any other argument's free symbols
-                        # issue 8510
-                        break
-                else:
-                    return Derivative(self, A)
+            for i, v in enumerate(self.args):
+                if i != ix and A in v.free_symbols:
+                    # it can't be in any other argument's free symbols
+                    # issue 8510
+                    break
             else:
-                free = A.free_symbols
-                for i, a in enumerate(self.args):
-                    if ix != i and a.free_symbols & free:
-                        break
-                else:
-                    # there is no possible interaction bewtween args
                     return Derivative(self, A)
+
         # See issue 4624 and issue 4719, 5600 and 8510
         D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
         args = self.args[:ix] + (D,) + self.args[ix + 1:]
@@ -888,7 +889,7 @@ class UndefinedFunction(FunctionClass):
         if isinstance(name, Symbol):
             assumptions = name._merge(assumptions)
             name = name.name
-        elif not isinstance(name, string_types):
+        elif not isinstance(name, str):
             raise TypeError('expecting string or Symbol for name')
         else:
             commutative = assumptions.get('commutative', None)
@@ -916,7 +917,7 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _kwargs = {}
+    _kwargs = {}  # type: tDict[str, Optional[bool]]
 
     def __hash__(self):
         return hash((self.class_key(), frozenset(self._kwargs.items())))
@@ -934,7 +935,16 @@ class UndefinedFunction(FunctionClass):
         return False
 
 
-class WildFunction(Function, AtomicExpr):
+# XXX: The type: ignore on WildFunction is because mypy complains:
+#
+# sympy/core/function.py:939: error: Cannot determine type of 'sort_key' in
+# base class 'Expr'
+#
+# Somehow this is because of the @cacheit decorator but it is not clear how to
+# fix it.
+
+
+class WildFunction(Function, AtomicExpr):  # type: ignore
     """
     A WildFunction function matches any function (with its arguments).
 
@@ -982,7 +992,8 @@ class WildFunction(Function, AtomicExpr):
 
     """
 
-    include = set()
+    # XXX: What is this class attribute used for?
+    include = set()  # type: tSet[Any]
 
     def __init__(cls, name, **assumptions):
         from sympy.sets.sets import Set, FiniteSet
@@ -3212,7 +3223,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         return expr.applyfunc(lambda e: nfloat(e, **kw))
 
     # handling of iterable containers
-    if iterable(expr, exclude=string_types):
+    if iterable(expr, exclude=str):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
                 args = [tuple(map(lambda i: nfloat(i, **kw), a))

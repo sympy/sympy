@@ -2,9 +2,11 @@
 
 from __future__ import print_function, division
 
+from typing import Dict, Type, Callable, Any
+
 from inspect import getmro
 
-from .compatibility import iterable, string_types, range
+from .compatibility import iterable
 from .parameters import global_parameters
 
 
@@ -21,7 +23,10 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {}  # See sympify docstring.
+
+# See sympify docstring.
+converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
+
 
 class CantSympify(object):
     """
@@ -318,7 +323,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 from ..tensor.array import Array
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
-    if not isinstance(a, string_types):
+    if not isinstance(a, str):
         for coerce in (float, int):
             try:
                 coerced = coerce(a)
@@ -494,9 +499,6 @@ def kernS(s):
         try:
             expr = sympify(s)
             break
-        # XXX: What exception can be caught here? Broad except should not be
-        # used without a clear reason. Running the test suite does not lead to
-        # any errors at this point...
         except TypeError:  # the kern might cause unknown errors...
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s
@@ -517,3 +519,7 @@ def kernS(s):
     expr = _clear(expr)
     # hope that kern is not there anymore
     return expr
+
+
+# Avoid circular import
+from .basic import Basic

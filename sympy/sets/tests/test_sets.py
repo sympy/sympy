@@ -6,11 +6,10 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Matrix, Range, Add, symbols, zoo, Rational)
 from mpmath import mpi
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
-from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 
@@ -187,6 +186,11 @@ def test_union():
 
     assert Union(Interval(0, 1), *[FiniteSet(1.0/n) for n in range(1, 10)]) == \
         Interval(0, 1)
+    # issue #18241:
+    x = Symbol('x')
+    assert Union(Interval(0, 1), FiniteSet(1, x)) == Union(
+        Interval(0, 1), FiniteSet(x))
+    assert unchanged(Union, Interval(0, 1), FiniteSet(2, x))
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
         Interval(1, 2) + Interval(2, 3)
@@ -627,6 +631,15 @@ def test_interval_to_mpi():
     assert Interval(0, 1).to_mpi() == mpi(0, 1)
     assert Interval(0, 1, True, False).to_mpi() == mpi(0, 1)
     assert type(Interval(0, 1).to_mpi()) == type(mpi(0, 1))
+
+
+def test_set_evalf():
+    assert Interval(S(11)/64, S.Half).evalf() == Interval(
+        Float('0.171875'), Float('0.5'))
+    assert Interval(x, S.Half, right_open=True).evalf() == Interval(
+        x, Float('0.5'), right_open=True)
+    assert Interval(-oo, S.Half).evalf() == Interval(-oo, Float('0.5'))
+    assert FiniteSet(2, x).evalf() == FiniteSet(Float('2.0'), x)
 
 
 def test_measure():

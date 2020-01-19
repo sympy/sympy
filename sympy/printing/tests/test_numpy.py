@@ -11,8 +11,8 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd)
 from sympy.printing.lambdarepr import NumPyPrinter
 
-from sympy.utilities.pytest import warns_deprecated_sympy
-from sympy.utilities.pytest import skip, raises
+from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')

@@ -4,7 +4,7 @@ import random
 
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, range, reduce
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
 from sympy.core.singleton import S
@@ -38,7 +38,7 @@ def _compare_sequence(a, b):
 
 class DenseMatrix(MatrixBase):
 
-    is_MatrixExpr = False
+    is_MatrixExpr = False  # type: bool
 
     _op_priority = 10.01
     _class_priority = 4

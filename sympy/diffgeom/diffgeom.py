@@ -1,10 +1,12 @@
 from __future__ import print_function, division
 
+from typing import Any, Set
+
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
 from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
-from sympy.core.compatibility import range, reduce
+from sympy.core.compatibility import reduce
 from sympy.core.numbers import Zero
 from sympy.functions import factorial
 from sympy.matrices import Matrix
@@ -483,7 +485,7 @@ class BaseScalarField(AtomicExpr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()
+    free_symbols = set()  # type: Set[Any]
 
     def doit(self):
         return self
@@ -535,17 +537,17 @@ class BaseVectorField(AtomicExpr):
 
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
-    /  d              \|
-    |-----(g(x, xi_2))||
-    \dxi_2            /|xi_2=y
+    / d           \|
+    |---(g(x, xi))||
+    \dxi          /|xi=y
     >>> pprint(v(s_field).rcall(point_r).doit())
      d
     ---(g(x0, y0))
     dy0
     >>> pprint(v(s_field).rcall(point_p))
-    /  d                           \|
-    |-----(g(r0*cos(theta0), xi_2))||
-    \dxi_2                         /|xi_2=r0*sin(theta0)
+    / d                        \|
+    |---(g(r0*cos(theta0), xi))||
+    \dxi                       /|xi=r0*sin(theta0)
 
     """
 
@@ -704,13 +706,13 @@ class Differential(Expr):
     >>> dg
     d(g(x, y))
     >>> pprint(dg(e_x))
-    /  d              \|
-    |-----(g(xi_1, y))||
-    \dxi_1            /|xi_1=x
+    / d           \|
+    |---(g(xi, y))||
+    \dxi          /|xi=x
     >>> pprint(dg(e_y))
-    /  d              \|
-    |-----(g(x, xi_2))||
-    \dxi_2            /|xi_2=y
+    / d           \|
+    |---(g(x, xi))||
+    \dxi          /|xi=y
 
     Applying the exterior derivative operator twice always results in:
 

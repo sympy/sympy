@@ -1,9 +1,11 @@
+from typing import Dict, Any
+
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.utilities.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, XFAIL, warns
 from functools import partial
 
-test_namespace = dict()
+test_namespace = dict()  # type: Dict[str, Any]
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)

@@ -7,7 +7,7 @@ from sympy.physics.quantum.identitysearch import (generate_gate_rules,
         generate_equivalent_ids, GateIdentity, bfs_identity_search,
         is_scalar_sparse_matrix,
         is_scalar_nonsparse_matrix, is_degenerate, is_reducible)
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 
 def create_gate_sequence(qubit=0):
@@ -309,7 +309,7 @@ def test_is_scalar_sparse_matrix():
     if not np:
         skip("numpy not installed.")
 
-    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+    scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
     if not scipy:
         skip("scipy not installed.")
 

@@ -1,19 +1,20 @@
 from __future__ import print_function, division
 
+from typing import Optional
+
 from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3, reduce)
-from sympy.core.cache import cacheit
+from sympy.core.compatibility import iterable, ordered, PY3, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
 from sympy.core.evalf import EvalfMixin
 from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
-from sympy.core.logic import fuzzy_bool, fuzzy_or, fuzzy_and, fuzzy_not
+from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
+    fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
@@ -57,15 +58,15 @@ class Set(Basic):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
-    is_Intersection = None
-    is_UniversalSet = None
-    is_Complement = None
+    is_Intersection = None  # type: Optional[bool]
+    is_UniversalSet = None  # type: Optional[bool]
+    is_Complement = None  # type: Optional[bool]
     is_ComplexRegion = False
 
-    is_empty = None
-    is_finite_set = None
+    is_empty = None  # type: FuzzyBool
+    is_finite_set = None  # type: FuzzyBool
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is S.EmptySet or is_empty",
             issue=16946, deprecated_since_version="1.5")
     def is_EmptySet(self):
@@ -1098,9 +1099,8 @@ class Interval(Set, EvalfMixin):
             mpf(self.end._eval_evalf(prec)))
 
     def _eval_evalf(self, prec):
-        return Interval(self.left._eval_evalf(prec),
-            self.right._eval_evalf(prec),
-                        left_open=self.left_open, right_open=self.right_open)
+        return Interval(self.left._evalf(prec), self.right._evalf(prec),
+            left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
@@ -1189,7 +1189,6 @@ class Union(Set, LatticeOp, EvalfMixin):
         return obj
 
     @property
-    @cacheit
     def args(self):
         return self._args
 
@@ -1362,7 +1361,6 @@ class Intersection(Set, LatticeOp):
         return obj
 
     @property
-    @cacheit
     def args(self):
         return self._args
 
@@ -1618,7 +1616,7 @@ class Complement(Set, EvalfMixin):
                 continue
 
 
-class EmptySet(with_metaclass(Singleton, Set)):
+class EmptySet(Set, metaclass=Singleton):
     """
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
@@ -1647,7 +1645,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     is_finite_set = True
     is_FiniteSet = True
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is S.EmptySet or is_empty",
             issue=16946, deprecated_since_version="1.5")
     def is_EmptySet(self):
@@ -1683,7 +1681,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return other
 
 
-class UniversalSet(with_metaclass(Singleton, Set)):
+class UniversalSet(Set, metaclass=Singleton):
     """
     Represents the set of all things.
     The universal set is available as a singleton as S.UniversalSet
@@ -1912,7 +1910,7 @@ class FiniteSet(Set, EvalfMixin):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem._eval_evalf(prec) for elem in self])
+        return FiniteSet(*[elem._evalf(prec) for elem in self])
 
     @property
     def _sorted_args(self):

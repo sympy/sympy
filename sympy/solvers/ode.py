@@ -231,13 +231,15 @@ of those tests will surely fail.
 """
 from __future__ import print_function, division
 
+from typing import Dict, Type
+
 from collections import defaultdict
 from itertools import islice
 
 from sympy.functions import hyper
 
 from sympy.core import Add, S, Mul, Pow, oo, Rational
-from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
+from sympy.core.compatibility import ordered, iterable, is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import AtomicExpr, Expr
@@ -262,8 +264,8 @@ from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
-from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse, besselsimp
+from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
+    separatevars, simplify, trigsimp, posify, cse, besselsimp)
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import checksol, solve
@@ -1199,6 +1201,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
+        if r is None and 'factorable' not in matching_hints:
+            roots = solve(reduced_eq, df)
+            if roots:
+                meq = Mul(*[(df - i) for i in roots])*Dummy()
+                m = _ode_factorable_match(meq, func, kwargs.get('x0', 0))
+                matching_hints['factorable'] = m
         if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
@@ -1418,7 +1426,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r and not any(r[i].has(x) for i in r if i >= 0):
             # Inhomogeneous case: F(x) is not identically 0
             if r[-1]:
-                undetcoeff = _undetermined_coefficients_match(r[-1], x)
+                eq_homogeneous = Add(eq,-r[-1])
+                undetcoeff = _undetermined_coefficients_match(r[-1], x, func, eq_homogeneous)
                 s = "nth_linear_constant_coeff_variation_of_parameters"
                 matching_hints[s] = r
                 matching_hints[s + "_Integral"] = r
@@ -2606,12 +2615,11 @@ def odesimp(ode, eq, func, hint):
             # future. In addition, collect is splitting exponentials with
             # rational powers for no reason.  We have to do a match
             # to fix this using Wilds.
+            #
+            # XXX: This global collectterms hack should be removed.
             global collectterms
-            try:
-                collectterms.sort(key=default_sort_key)
-                collectterms.reverse()
-            except Exception:
-                pass
+            collectterms.sort(key=default_sort_key)
+            collectterms.reverse()
             assert len(eq) == 1 and eq[0].lhs == f(x)
             sol = eq[0].rhs
             sol = expand_mul(sol)
@@ -2803,7 +2811,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             else:
                 testnum += 1
                 continue
-            ss = simplify(s)
+            ss = simplify(s.rewrite(exp))
             if ss:
                 # with the new numer_denom in power.py, if we do a simple
                 # expansion then testnum == 0 verifies all solutions.
@@ -3207,7 +3215,7 @@ def constantsimp(expr, constants):
             else:
                 rexpr = rexpr.subs(*s)
         expr = rexpr
-    except Exception:
+    except IndexError:
         pass
     expr = __remove_linear_redundancies(expr, Cs)
 
@@ -3305,6 +3313,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     else:
         iter_constants = (sym for sym in newconstants if sym not in variables)
 
+    # XXX: This global newstartnumber hack should be removed
     global newstartnumber
     newstartnumber = 1
     endnumber = len(constantsymbols)
@@ -3366,6 +3375,7 @@ def _handle_Integral(expr, func, hint):
     For most hints, this simply runs ``expr.doit()``.
 
     """
+    # XXX: This global y hack should be removed
     global y
     x = func.args[0]
     f = func.func
@@ -3474,6 +3484,7 @@ def ode_1st_exact(eq, func, order, match):
     r = match  # d+e*diff(f(x),x)
     e = r[r['e']]
     d = r[r['d']]
+    # XXX: This global y hack should be removed
     global y  # This is the only way to pass dummy y to _handle_Integral
     y = r['y']
     C1 = get_numbered_constants(eq, num=1)
@@ -4564,7 +4575,7 @@ def ode_nth_order_reducible(eq, func, order, match):
 # be stored in cached results we need to ensure that we always get the
 # same class back for each particular integration variable so we store these
 # classes in a global dict:
-_nth_algebraic_diffx_stored = {}
+_nth_algebraic_diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
 
 def _nth_algebraic_diffx(var):
     cls = _nth_algebraic_diffx_stored.get(var, None)
@@ -4730,7 +4741,7 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     constants1 = soln1.free_symbols.difference(eq.free_symbols)
     constants2 = soln2.free_symbols.difference(eq.free_symbols)
 
-    constants1_new = get_numbered_constants(soln1 - soln2, len(constants1))
+    constants1_new = get_numbered_constants(Tuple(soln1, soln2), len(constants1))
     if len(constants1) == 1:
         constants1_new = {constants1_new}
     for c_old, c_new in zip(constants1, constants1_new):
@@ -4891,6 +4902,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     # indirect doctest
 
     """
+    # XXX: This global collectterms hack should be removed.
     global collectterms
     collectterms = []
 
@@ -4902,7 +4914,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i, string_types) and i >= 0:
+        if not isinstance(i, str) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
@@ -5018,7 +5030,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i, string_types) and i >= 0:
+        if not isinstance(i, str) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     for i in range(1,degree(Poly(chareq, symbol))+1):
@@ -5030,7 +5042,8 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     eq += e.subs(re)
 
     match = _nth_linear_match(eq, f(x), ode_order(eq, f(x)))
-    match['trialset'] = r['trialset']
+    eq_homogeneous = Add(eq,-match[-1])
+    match['trialset'] = _undetermined_coefficients_match(match[-1], x, func, eq_homogeneous)['trialset']
     return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
 
 
@@ -5563,6 +5576,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         charroots[root] += 1
     # We need to keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
+    #
+    # XXX: This global collectterms hack should be removed.
     global collectterms
     collectterms = []
     gensols = []
@@ -5707,50 +5722,14 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     gensols = r['list']
     gsol = r['sol']
     trialset = r['trialset']
-    notneedset = set([])
-    global collectterms
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
         " solutions to the homogeneous equation necessary to apply" +
         " undetermined coefficients to " + str(eq) +
         " (number of terms != order)")
-    usedsin = set([])
-    mult = 0  # The multiplicity of the root
-    getmult = True
-    for i, reroot, imroot in collectterms:
-        if getmult:
-            mult = i + 1
-            getmult = False
-        if i == 0:
-            getmult = True
-        if imroot:
-            # Alternate between sin and cos
-            if (i, reroot) in usedsin:
-                check = x**i*exp(reroot*x)*cos(imroot*x)
-            else:
-                check = x**i*exp(reroot*x)*sin(abs(imroot)*x)
-                usedsin.add((i, reroot))
-        else:
-            check = x**i*exp(reroot*x)
-
-        if check in trialset:
-            # If an element of the trial function is already part of the
-            # homogeneous solution, we need to multiply by sufficient x to
-            # make it linearly independent.  We also don't need to bother
-            # checking for the coefficients on those elements, since we
-            # already know it will be 0.
-            while True:
-                if check*x**mult in trialset:
-                    mult += 1
-                else:
-                    break
-            trialset.add(check*x**mult)
-            notneedset.add(check)
-
-    newtrialset = trialset - notneedset
 
     trialfunc = 0
-    for i in newtrialset:
+    for i in trialset:
         c = next(coeffs)
         coefflist.append(c)
         trialfunc += c*i
@@ -5763,7 +5742,10 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
-        coeffsdict[s[x]] += s['coeff']
+        if coeffsdict.get(s[x]):
+            coeffsdict[s[x]] += s['coeff']
+        else:
+            coeffsdict[s[x]] = s['coeff']
 
     coeffvals = solve(list(coeffsdict.values()), coefflist)
 
@@ -5778,7 +5760,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     return Eq(f(x), gsol.rhs + psol)
 
 
-def _undetermined_coefficients_match(expr, x):
+def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     r"""
     Returns a trial function match if undetermined coefficients can be applied
     to ``expr``, and ``None`` otherwise.
@@ -5910,6 +5892,11 @@ def _undetermined_coefficients_match(expr, x):
             exprs = tmpset
         return exprs
 
+    def is_homogeneous_solution(term):
+        r""" This function checks whether the given trialset contains any root
+             of homogenous equation"""
+        return expand(sub_func_doit(eq_homogeneous, func, term)).is_zero
+
     retdict['test'] = _test_term(expr, x)
     if retdict['test']:
         # Try to generate a list of trial solutions that will have the
@@ -5918,7 +5905,15 @@ def _undetermined_coefficients_match(expr, x):
         # then they will need to be multiplied by sufficient x to make them so.
         # This function DOES NOT do that (it doesn't even look at the
         # homogeneous equation).
-        retdict['trialset'] = _get_trial_set(expr, x)
+        temp_set = set([])
+        for i in Add.make_args(expr):
+            act = _get_trial_set(i,x)
+            if eq_homogeneous is not S.Zero:
+                while any(is_homogeneous_solution(ts) for ts in act):
+                    act = {x*ts for ts in act}
+            temp_set = temp_set.union(act)
+
+        retdict['trialset'] = temp_set
 
     return retdict
 
@@ -6335,8 +6330,7 @@ def _ode_lie_group( s, func, order, match):
 
     match = {'h': h, 'y': y}
 
-    # This is done so that if:
-    # a] any heuristic raises a ValueError
+    # This is done so that if any heuristic raises a ValueError
     # another heuristic can be used.
     sol = None
     for heuristic in heuristics:
@@ -6349,9 +6343,9 @@ def ode_lie_group(eq, func, order, match):
     r"""
     This hint implements the Lie group method of solving first order differential
     equations. The aim is to convert the given differential equation from the
-    given coordinate given system into another coordinate system where it becomes
-    invariant under the one-parameter Lie group of translations. The converted ODE is
-    quadrature and can be solved easily. It makes use of the
+    given coordinate system into another coordinate system where it becomes
+    invariant under the one-parameter Lie group of translations. The converted
+    ODE can be easily solved by quadrature. It makes use of the
     :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
     infinitesimals of the transformation.
 
@@ -6417,14 +6411,12 @@ def ode_lie_group(eq, func, order, match):
 def _lie_group_remove(coords):
     r"""
     This function is strictly meant for internal use by the Lie group ODE solving
-    method. It replaces arbitrary functions returned by pdsolve with either 0 or 1 or the
-    args of the arbitrary function.
+    method. It replaces arbitrary functions returned by pdsolve as follows:
 
-    The algorithm used is:
-    1] If coords is an instance of an Undefined Function, then the args are returned
-    2] If the arbitrary function is present in an Add object, it is replaced by zero.
-    3] If the arbitrary function is present in an Mul object, it is replaced by one.
-    4] If coords has no Undefined Function, it is returned as it is.
+    1] If coords is an arbitrary function, then its argument is returned.
+    2] An arbitrary function in an Add object is replaced by zero.
+    3] An arbitrary function in a Mul object is replaced by one.
+    4] If there is no arbitrary function coords is returned unchanged.
 
     Examples
     ========
@@ -6439,7 +6431,7 @@ def _lie_group_remove(coords):
     >>> eq = F(x**2*y)
     >>> _lie_group_remove(eq)
     x**2*y
-    >>> eq = y**2*x + F(x**3)
+    >>> eq = x*y**2 + F(x**3)
     >>> _lie_group_remove(eq)
     x*y**2
     >>> eq = (F(x**3) + y)*x**4

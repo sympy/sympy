@@ -31,6 +31,8 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict as tDict, List, Set
+
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
@@ -41,7 +43,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS, with_metaclass
+from sympy.core.compatibility import reduce, SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -392,8 +394,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = dict()
-    _substitutions_dict_tensmul = dict()
+    _substitutions_dict = dict()  # type: tDict[Any, Any]
+    _substitutions_dict_tensmul = dict()  # type: tDict[Any, Any]
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -984,12 +986,12 @@ class TensorIndexType(Basic):
                                     deprecated_since_version="1.5").warn()
             dummy_name = kwargs.get('dummy_fmt')
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name = Symbol(name)
 
         if dummy_name is None:
             dummy_name = str(name)[0]
-        if isinstance(dummy_name, string_types):
+        if isinstance(dummy_name, str):
             dummy_name = Symbol(dummy_name)
 
         if dim is None:
@@ -1004,7 +1006,7 @@ class TensorIndexType(Basic):
 
         metric_symmetry = sympify(metric_symmetry)
 
-        if isinstance(metric_name, string_types):
+        if isinstance(metric_name, str):
             metric_name = Symbol(metric_name)
 
         if 'metric' in kwargs:
@@ -1231,7 +1233,7 @@ class TensorIndex(Basic):
     A(-L_0, L_0)
     """
     def __new__(cls, name, tensor_index_type, is_up=True):
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
             name_symbol = name
@@ -1291,7 +1293,7 @@ def tensor_indices(s, typ):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         a = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')
@@ -1548,7 +1550,7 @@ class TensorType(Basic):
         ``comm``: commutation group number
         see ``_TensorManager.set_comm``
         """
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             names = [x.name for x in symbols(s, seq=True)]
         else:
             raise ValueError('expecting a string')
@@ -1698,7 +1700,7 @@ class TensorHead(Basic):
     is_commutative = False
 
     def __new__(cls, name, index_types, symmetry=None, comm=0):
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
             name_symbol = name
@@ -1835,7 +1837,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     """
     Returns a sequence of TensorHeads from a string `s`
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         names = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')
@@ -1850,7 +1852,7 @@ class _TensorMetaclass(ManagedProperties, ABCMeta):
     pass
 
 
-class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
+class TensExpr(Expr, metaclass=_TensorMetaclass):
     """
     Abstract base class for tensor expressions
 
@@ -1958,20 +1960,24 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
     @property
     @abstractmethod
     def nocoeff(self):
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @property
     @abstractmethod
     def coeff(self):
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @abstractmethod
     def get_indices(self):
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
 
     @abstractmethod
     def get_free_indices(self):  # type: () -> List[TensorIndex]
-        raise NotImplemented("abstract method")
+        raise NotImplementedError("abstract method")
+
+    @abstractmethod
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+        raise NotImplementedError("abstract method")
 
     def fun_eval(self, *index_tuples):
         deprecate_fun_eval()
@@ -2310,6 +2316,10 @@ class TensAdd(TensExpr, AssocOp):
     def get_free_indices(self):  # type: () -> List[TensorIndex]
         return self.free_indices
 
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+        newargs = [arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args]
+        return self.func(*newargs)
+
     @memoize_property
     def rank(self):
         if isinstance(self.args[0], TensExpr):
@@ -2369,7 +2379,7 @@ class TensAdd(TensExpr, AssocOp):
         def sort_key(t):
             if not isinstance(t, TensExpr):
                 return [], [], []
-            if hasattr(t, "_index_structure"):
+            if hasattr(t, "_index_structure") and hasattr(t, "components"):
                 x = get_index_structure(t)
                 return t.components, x.free, x.dum
             return [], [], []
@@ -2616,6 +2626,8 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
+    _index_structure = None  # type: _IndexStructure
+
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         indices = cls._parse_indices(tensor_head, indices)
@@ -2796,6 +2808,11 @@ class Tensor(TensExpr):
         Get a list of free indices, corresponding to those of the tensor.
         """
         return self._index_structure.get_free_indices()
+
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> Tensor
+        # TODO: this could be optimized by only swapping the indices
+        # instead of visiting the whole expression tree:
+        return self.xreplace(repl)
 
     def as_base_exp(self):
         return self, S.One
@@ -3024,6 +3041,8 @@ class TensMul(TensExpr, AssocOp):
     """
     identity = S.One
 
+    _index_structure = None  # type: _IndexStructure
+
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
         args = list(map(_sympify, args))
@@ -3136,7 +3155,9 @@ class TensMul(TensExpr, AssocOp):
                 replacements[pos1contra][-old_index] = -dummy
                 indices[pos2cov] = dummy
                 indices[pos2contra] = -dummy
-            args = [arg.xreplace(repl) for arg, repl in zip(args, replacements)]
+            args = [
+                arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg
+                for arg, repl in zip(args, replacements)]
 
         dum = TensMul._dummy_data_to_dum(dummy_data)
         return args, indices, free, dum
@@ -3336,6 +3357,9 @@ class TensMul(TensExpr, AssocOp):
         [m2]
         """
         return self._index_structure.get_free_indices()
+
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+        return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
     def split(self):
         """
@@ -3824,6 +3848,10 @@ class TensorElement(TensExpr):
 
     def get_free_indices(self):
         return self._free_indices
+
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+        # TODO: can be improved:
+        return self.xreplace(repl)
 
     def get_indices(self):
         return self.get_free_indices()

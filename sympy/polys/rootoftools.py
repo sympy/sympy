@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -153,7 +153,7 @@ class RootOf(Expr):
     Only complex roots are currently supported.
     """
 
-    __slots__ = ['poly']
+    __slots__ = ('poly',)
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``CRootOf`` object for ``k``-th root of ``f``."""
@@ -286,7 +286,7 @@ class ComplexRootOf(RootOf):
 
     """
 
-    __slots__ = ['index']
+    __slots__ = ('index',)
     is_complex = True
     is_number = True
     is_finite = True
@@ -999,7 +999,7 @@ CRootOf = ComplexRootOf
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'fun', 'auto']
+    __slots__ = ('poly', 'fun', 'auto')
 
     def __new__(cls, expr, func=None, x=None, auto=True, quadratic=False):
         """Construct a new ``RootSum`` instance of roots of a polynomial."""

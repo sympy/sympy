@@ -1,11 +1,10 @@
-from sympy.core.compatibility import range
 from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy import trigsimp, simplify, solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
                                      find_dynamicsymbols, KanesMethod, inertia,
                                      inertia_of_point_mass, Point,
                                      ReferenceFrame, RigidBody)
-from sympy.utilities.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_aux_dep():

@@ -6,6 +6,8 @@ Import diagnostics. Run bin/diagnose_imports.py --help for details.
 
 from __future__ import print_function
 
+from typing import Dict
+
 if __name__ == "__main__":
 
     import sys
@@ -107,7 +109,8 @@ if __name__ == "__main__":
             return 'Definition(%s, ..., %s)' % (
                 repr(self.name), repr(self.definer))
 
-    symbol_definers = {} # Maps each function/variable to name of module to define it
+    # Maps each function/variable to name of module to define it
+    symbol_definers = {}  # type: Dict[Definition, str]
 
     def in_module(a, b):
         """Is a the same module as or a submodule of b?"""

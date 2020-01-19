@@ -1,4 +1,6 @@
-from sympy.utilities.pytest import raises
+from typing import Any, Dict
+
+from sympy.testing.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
@@ -14,7 +16,7 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {}
+ENV = {}  # type: Dict[str, Any]
 exec_("from sympy import *", ENV)
 
 

@@ -4,6 +4,8 @@ Unit system for physical quantities; include definition of constants.
 
 from __future__ import division
 
+from typing import Dict
+
 from sympy import S, Mul, Pow, Add, Function, Derivative
 from sympy.physics.units.dimensions import _QuantityMapper
 
@@ -22,7 +24,7 @@ class UnitSystem(_QuantityMapper):
     It is much better if all base units have a symbol.
     """
 
-    _unit_systems = {}
+    _unit_systems = {}  # type: Dict[str, UnitSystem]
 
     def __init__(self, base_units, units=(), name="", descr="", dimension_system=None):
 

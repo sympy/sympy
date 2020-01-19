@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Dict, Type, Union
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
@@ -42,7 +44,7 @@ class Relational(Boolean, EvalfMixin):
     ==========
     rop : str or None
         Indicates what subclass to instantiate.  Valid values can be found
-        in the keys of Relational.ValidRelationalOperator.
+        in the keys of Relational.ValidRelationOperator.
 
     Examples
     ========
@@ -53,7 +55,9 @@ class Relational(Boolean, EvalfMixin):
     Eq(y, x**2 + x)
 
     """
-    __slots__ = []
+    __slots__ = ()
+
+    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -465,7 +469,7 @@ class Equality(Relational):
     """
     rel_op = '=='
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Equality = True
 
@@ -713,7 +717,7 @@ class Unequality(Relational):
     """
     rel_op = '!='
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
@@ -760,7 +764,7 @@ class _Inequality(Relational):
     comparing two real numbers.
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)

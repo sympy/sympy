@@ -1,13 +1,13 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest, range, PY3, Mapping)
+    PY3, Mapping)
 from .singleton import S
 
 from inspect import getmro
@@ -26,7 +26,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(with_metaclass(ManagedProperties)):
+class Basic(metaclass=ManagedProperties):
     """
     Base class for all objects in SymPy.
 
@@ -56,10 +56,10 @@ class Basic(with_metaclass(ManagedProperties)):
     (x,)
 
     """
-    __slots__ = ['_mhash',              # hash value
+    __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
                  '_assumptions'
-                ]
+                )
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -914,11 +914,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if isinstance(s[0], string_types):
+            if isinstance(s[0], str):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, string_types))
+                s = [sympify(_, strict=not isinstance(_, str))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -1768,13 +1768,16 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
         else:
             pattern = args[:-1]
-            if isinstance(args[-1], string_types):
+            if isinstance(args[-1], str):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                name = getattr(args[-1], '__name__', None)
-                if name is None:
-                    name = args[-1].__class__.__name__
-                rule = '_eval_rewrite_as_' + name
+                # rewrite arg is usually a class but can also be a
+                # singleton (e.g. GoldenRatio) so we check
+                # __name__ or __class__.__name__
+                clsname = getattr(args[-1], "__name__", None)
+                if clsname is None:
+                    clsname = args[-1].__class__.__name__
+                rule = '_eval_rewrite_as_' + clsname
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
@@ -1789,7 +1792,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
-    _constructor_postprocessor_mapping = {}
+    _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
@@ -1834,7 +1837,7 @@ class Atom(Basic):
 
     is_Atom = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:

@@ -1,4 +1,4 @@
-from sympy.core.compatibility import range, PY3
+from sympy.core.compatibility import PY3
 from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
@@ -9,7 +9,7 @@ from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
                    Dummy, floor, And, Eq)
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t
 
 import itertools
@@ -320,12 +320,7 @@ def test_Range_set():
         assert r.inf == rev.inf and r.sup == rev.sup
         assert r.step == -rev.step
 
-    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
-    # compatibility imports above)
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange # noqa
+    builtin_range = range
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)

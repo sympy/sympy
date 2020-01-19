@@ -6,7 +6,7 @@ from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
-from sympy.core.compatibility import exec_, iterable, range
+from sympy.core.compatibility import exec_, iterable
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
@@ -518,7 +518,7 @@ class MonomialOps(object):
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 
-    __slots__ = ['exponents', 'gens']
+    __slots__ = ('exponents', 'gens')
 
     def __init__(self, monom, gens=None):
         if not iterable(monom):

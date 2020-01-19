@@ -93,6 +93,12 @@ class PartialDerivative(TensExpr):
         free = sorted(self._free, key=lambda x: x[1])
         return [i[0] for i in free]
 
+    def _replace_indices(self, repl):
+        expr = self.expr.xreplace(repl)
+        mirrored = {-k: -v for k, v in repl.items()}
+        variables = [i.xreplace(mirrored) for i in self.variables]
+        return self.func(expr, *variables)
+
     @property
     def expr(self):
         return self.args[0]

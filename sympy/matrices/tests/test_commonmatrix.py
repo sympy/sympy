@@ -1,6 +1,5 @@
 from sympy.assumptions import Q
 from sympy.core.add import Add
-from sympy.core.compatibility import range
 from sympy.core.function import Function
 from sympy.core.numbers import Float, I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
@@ -19,7 +18,7 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.utilities.iterables import flatten
-from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z
 

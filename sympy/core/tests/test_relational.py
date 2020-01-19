@@ -1,8 +1,8 @@
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
     log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
-from sympy.core.compatibility import range, PY3
+from sympy.core.compatibility import PY3
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -15,7 +15,7 @@ x, y, z, t = symbols('x,y,z,t')
 
 
 def rel_check(a, b):
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
     for do in range(len(set([type(a), type(b)]))):
         if S.NaN in (a, b):

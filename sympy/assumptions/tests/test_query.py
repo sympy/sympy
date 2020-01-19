@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.utilities.pytest import XFAIL, slow, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy
 from sympy.assumptions.assume import assuming
 import math
 
@@ -1902,6 +1902,18 @@ def test_matrix():
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11))))) == True
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, I, 0), (-5, 0, 11))))) == False
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) == None
+
+    # antihermitian
+    A = Matrix([[0, -2 - I, 0], [2 - I, 0, -I], [0, -I, 0]])
+    B = Matrix([[-I, 2 + I, 0], [-2 + I, 0, 2 + I], [0, -2 + I, -I]])
+    assert ask(Q.antihermitian(A)) is True
+    assert ask(Q.antihermitian(B)) is True
+    assert ask(Q.antihermitian(A**2)) is False
+    C = (B**3)
+    C.simplify()
+    assert ask(Q.antihermitian(C)) is True
+    _A = Matrix([[0, -2 - I, 0], [z, 0, -I], [0, -I, 0]])
+    assert ask(Q.antihermitian(_A)) is None
 
 
 def test_algebraic():
