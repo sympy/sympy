@@ -23,7 +23,6 @@ from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
@@ -911,13 +910,6 @@ class MatrixSpecial(MatrixRequired):
             If it is not specified, the class type where the method is
             being executed on will be returned.
 
-        rows, cols : Integer, optional
-            Specifies the shape of the Jordan block matrix. See Notes
-            section for the details of how these key works.
-
-            .. note::
-                This feature will be deprecated in the future.
-
 
         Returns
         =======
@@ -965,54 +957,15 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, x, 1],
         [0, 0, 0, x]])
 
-        Notes
-        =====
-
-        .. note::
-            This feature will be deprecated in the future.
-
-        The keyword arguments ``size``, ``rows``, ``cols`` relates to
-        the Jordan block size specifications.
-
-        If you want to create a square Jordan block, specify either
-        one of the three arguments.
-
-        If you want to create a rectangular Jordan block, specify
-        ``rows`` and ``cols`` individually.
-
-        +--------------------------------+---------------------+
-        |        Arguments Given         |     Matrix Shape    |
-        +----------+----------+----------+----------+----------+
-        |   size   |   rows   |   cols   |   rows   |   cols   |
-        +==========+==========+==========+==========+==========+
-        |   size   |         Any         |   size   |   size   |
-        +----------+----------+----------+----------+----------+
-        |          |        None         |     ValueError      |
-        |          +----------+----------+----------+----------+
-        |   None   |   rows   |   None   |   rows   |   rows   |
-        |          +----------+----------+----------+----------+
-        |          |   None   |   cols   |   cols   |   cols   |
-        +          +----------+----------+----------+----------+
-        |          |   rows   |   cols   |   rows   |   cols   |
-        +----------+----------+----------+----------+----------+
-
         References
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
+
         """
-        if 'rows' in kwargs or 'cols' in kwargs:
-            SymPyDeprecationWarning(
-                feature="Keyword arguments 'rows' or 'cols'",
-                issue=16102,
-                useinstead="a more generic banded matrix constructor",
-                deprecated_since_version="1.4"
-            ).warn()
 
         klass = kwargs.pop('cls', kls)
         band = kwargs.pop('band', 'upper')
-        rows = kwargs.pop('rows', None)
-        cols = kwargs.pop('cols', None)
 
         eigenval = kwargs.get('eigenval', None)
         if eigenvalue is None and eigenval is None:
@@ -1025,19 +978,10 @@ class MatrixSpecial(MatrixRequired):
             if eigenval is not None:
                 eigenvalue = eigenval
 
-        if (size, rows, cols) == (None, None, None):
+        if size is None:
             raise ValueError("Must supply a matrix size")
 
-        if size is not None:
-            rows, cols = size, size
-        elif rows is not None and cols is None:
-            cols = rows
-        elif cols is not None and rows is None:
-            rows = cols
-
-        rows, cols = as_int(rows), as_int(cols)
-
-        return klass._eval_jordan_block(rows, cols, eigenvalue, band)
+        return klass._eval_jordan_block(as_int(size), as_int(size), eigenvalue, band)
 
     @classmethod
     def ones(kls, rows, cols=None, **kwargs):
