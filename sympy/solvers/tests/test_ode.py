@@ -5,7 +5,7 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
 from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
-    checksysodesol, solve_ics, dsolve, get_numbered_constants)
+    checksysodesol, solve_ics, _dsolve, dsolve, get_numbered_constants)
 
 from sympy.functions import airyai, airybi, besselj, bessely
 
@@ -3829,4 +3829,16 @@ def test_issue_15996():
     eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x)
     sol = Eq(f(x), C1 + (C2 + C3*x - x**2/8 + 5*exp(2*I*x)/16)*sin(x) + (C4 + C5*x + I*x**2/8 + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert checkodesol(eq, sol) == (True, 0)
+
+def test_FirstLinear():
+    eq = x + (x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
+    sol = Eq(f(x), (C1 - x*exp(x))*exp(-x))
+    assert sol == _dsolve(eq, hint='1st_linear')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + x*f(x), x**2)
+    sol = Eq(f(x), (C1 + x*exp(x**2/2)
+                    - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2)*exp(-x**2/2))
+    assert sol == _dsolve(eq, hint='1st_linear')
     assert checkodesol(eq, sol) == (True, 0)

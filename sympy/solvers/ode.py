@@ -346,6 +346,163 @@ lie_heuristics = (
     )
 
 
+class Solver:
+    def __init__(self, eq, func, hint="default", simplify=True, ics=None):
+        # Store the inputs passed to dsolve
+        self.eq, self.func = self.pre_process(eq, func)
+        self.x = self.func.args[0]
+        self.order = ode_order(eq, self.func.func(self.x))
+        self.ics = ics
+        self.simplify = simplify
+        self.hint = hint
+
+    def pre_process(self, eq, func):
+        # To convert equality to expression and find function f if not given by user.
+        # Same as that used by _desolve()
+        if isinstance(eq, Equality):
+            eq = eq.lhs - eq.rhs
+        if isinstance(eq, Pow):
+            if (eq.exp).is_positive:
+                eq = eq.base
+        derivs = eq.atoms(Derivative)
+        if not func:
+            funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+            if len(funcs) != 1:
+                raise ValueError('The function cannot be '
+                    'automatically detected for %s.' % eq)
+            func = funcs.pop()
+        return eq, func
+
+class FirstLinear(Solver):
+    def _get_coeffs_linear_ode(self):
+        order = self.order
+        if order != 1:
+            return None
+
+        f = self.func.func
+        x = self.func.args[0]
+        a = Wild('a', exclude=[f(x)])
+        b = Wild('b', exclude=[f(x)])
+        c = Wild('c', exclude=[f(x)])
+        c1 = Wild('c1', exclude=[x])
+        df = f(x).diff(x)
+
+        eq = expand(self.eq)
+
+        reduced_eq = None
+        if eq.is_Add:
+            deriv_coeff = eq.coeff(df)
+            if deriv_coeff not in (1, 0):
+                coeffs = deriv_coeff.match(a*f(x)**c1)
+                if coeffs and coeffs[c1]:
+                    denom = f(x)**r[c1]
+                    reduced_eq = Add(*[arg/denom for arg in eq.args])
+        if not reduced_eq:
+            reduced_eq = eq
+
+        if eq.is_Add:
+            ind, dep = reduced_eq.as_independent(f)
+        else:
+            u = Dummy('u')
+            ind, dep = (reduced_eq + u).as_independent(f)
+            ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
+        r = {a: dep.coeff(df),
+            b: dep.coeff(f(x)),
+            c: ind}
+
+        if not r[a].has(f) and not r[b].has(f) and (
+                r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
+            r['a'] = a
+            r['b'] = b
+            r['c'] = c
+
+        return r
+
+    def match(self):
+        # return True if this method can solve the equation
+        if self.order == 1:
+            r = self._get_coeffs_linear_ode()
+            if r is not None and r['a'] != 0:
+                return True
+        return False
+
+    def general_solution(self):
+        r"""
+        Solves 1st order linear differential equations.
+
+        These are differential equations of the form
+
+        .. math:: dy/dx + P(x) y = Q(x)\text{.}
+
+        These kinds of differential equations can be solved in a general way.  The
+        integrating factor `e^{\int P(x) \,dx}` will turn the equation into a
+        separable equation.  The general solution is::
+
+            >>> from sympy import Function, _dsolve, Eq, pprint, diff, sin
+            >>> from sympy.abc import x
+            >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
+            >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x))
+            >>> pprint(genform)
+                        d
+            P(x)*f(x) + --(f(x)) = Q(x)
+                        dx
+            >>> pprint(_dsolve(genform, f(x), hint='1st_linear_Integral'))
+                /       /                   \
+                |      |                    |
+                |      |         /          |     /
+                |      |        |           |    |
+                |      |        | P(x) dx   |  - | P(x) dx
+                |      |        |           |    |
+                |      |       /            |   /
+            f(x) = |C1 +  | Q(x)*e           dx|*e
+                |      |                    |
+                \     /                     /
+
+
+        Examples
+        ========
+
+        >>> f = Function('f')
+        >>> pprint(_dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
+        ... f(x), '1st_linear'))
+        f(x) = x*(C1 - cos(x))
+
+        References
+        ==========
+
+        - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+        Dover 1963, pp. 92
+
+        """
+        x = self.func.args[0]
+        f = self.func.func
+        r = self._get_coeffs_linear_ode()  # a*diff(f(x),x) + b*f(x) + c
+        C1 = get_numbered_constants(self.eq, num=1)
+        t = exp(Integral(r[r['b']]/r[r['a']], x))
+        tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
+        f = r.get('u', f(x))  # take almost-linear u if present, else f(x)
+        hints = {'default': '1st_linear',
+                '1st_linear': r,
+                'order': 1,
+                'hint': '1st_linear',
+                'func': f,
+                }
+        return _helper_simplify(self.eq, hints['hint'], hints, self.simplify, self.ics)
+
+all_solvers = [FirstLinear]
+
+def _dsolve(eq, func=None, hint="default", simplify=True,
+    ics=None, **kwargs):
+    s = Solver(eq, func, hint="default", simplify=True, ics=None)
+    solvers = []
+    for solvercls in all_solvers:
+        solver = solvercls(eq, func)
+        if solver.match():
+            solvers.append(solver)
+
+    return solvers[0].general_solution()
+
 def sub_func_doit(eq, func, new):
     r"""
     When replacing the func with something else, we usually want the
