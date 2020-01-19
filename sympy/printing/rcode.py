@@ -10,6 +10,8 @@ using the functions defined in math.h where possible.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -88,7 +90,7 @@ class RCodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }
+    }  # type: Dict[str, Any]
     _operators = {
        'and': '&',
         'or': '|',
@@ -96,7 +98,7 @@ class RCodePrinter(CodePrinter):
     }
 
     _relationals = {
-    }
+    }  # type: Dict[str, str]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)

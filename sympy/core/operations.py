@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Tuple
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -23,7 +25,7 @@ class AssocOp(Basic):
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -459,7 +461,9 @@ class LatticeOp(AssocOp):
         else:
             return frozenset([sympify(expr)])
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe _argset can just be sorted in the constructor?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))

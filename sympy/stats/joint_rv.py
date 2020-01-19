@@ -160,7 +160,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         return ProductDomain(self.symbols)
 
     @property
-    def pdf(self, *args):
+    def pdf(self):
         return self.density.args[1]
 
     def cdf(self, other):

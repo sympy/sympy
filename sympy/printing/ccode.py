@@ -13,13 +13,15 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict, Tuple
+
 from functools import wraps
 from itertools import chain
 
 from sympy.core import S
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Variable, Declaration,
+    Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
@@ -160,7 +162,7 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }
+    }  # type: Dict[str, Any]
 
     type_aliases = {
         real: float64,
@@ -183,7 +185,7 @@ class C89CodePrinter(CodePrinter):
         uint16: 'int16_t',
         uint32: 'int32_t',
         uint64: 'int64_t',
-    }
+    }  # type: Dict[Type, Any]
 
     type_headers = {
         bool_: {'stdbool.h'},
@@ -196,7 +198,9 @@ class C89CodePrinter(CodePrinter):
         uint32: {'stdint.h'},
         uint64: {'stdint.h'},
     }
-    type_macros = {}  # Macros needed to be defined when using a Type
+
+    # Macros needed to be defined when using a Type
+    type_macros = {}  # type: Dict[Type, Tuple[str, ...]]
 
     type_func_suffixes = {
         float32: 'f',
@@ -217,7 +221,8 @@ class C89CodePrinter(CodePrinter):
     math_macros = None
 
     _ns = ''  # namespace, C++ uses 'std::'
-    _kf = known_functions_C89  # known_functions-dict to copy
+    # known_functions-dict to copy
+    _kf = known_functions_C89  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         settings = settings or {}
@@ -663,7 +668,9 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         complex64: {'complex.h'},
         complex128: {'complex.h'}
     }.items()))
-    _kf = known_functions_C99  # known_functions-dict to copy
+
+    # known_functions-dict to copy
+    _kf = known_functions_C99  # type: Dict[str, Any]
 
     # functions with versions with 'f' and 'l' suffixes:
     _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'

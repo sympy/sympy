@@ -94,7 +94,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     def p(self):
         return Rational(1, len(self.args))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
         return dict((k, self.p) for k in self.set)
@@ -333,7 +333,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
         return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:

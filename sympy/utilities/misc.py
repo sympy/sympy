@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import List
+
 import sys
 import os
 import re as _re
@@ -172,7 +174,7 @@ ARCH = str(struct.calcsize('P') * 8) + "-bit"
 # XXX: PyPy doesn't support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
-_debug_tmp = []
+_debug_tmp = []  # type: List[str]
 _debug_iter = 0
 
 def debug_decorator(func):

@@ -51,9 +51,9 @@ class Registry(object):
     classes behave singletonically: all their instances share the same state,
     which is stored in the class object.
 
-    All subclasses should set `__slots__ = []`.
+    All subclasses should set `__slots__ = ()`.
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __setattr__(self, name, obj):
         setattr(self.__class__, name, obj)

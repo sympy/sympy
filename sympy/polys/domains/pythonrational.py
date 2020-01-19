@@ -34,7 +34,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
     """
 
-    __slots__ = ['p', 'q']
+    __slots__ = ('p', 'q')
 
     def parent(self):
         from sympy.polys.domains import PythonRationalField

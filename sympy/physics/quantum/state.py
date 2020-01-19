@@ -285,7 +285,7 @@ class BraBase(StateBase):
 
     @classmethod
     def _operators_to_state(self, ops, **options):
-        state = self.dual_class().operators_to_state(ops, **options)
+        state = self.dual_class()._operators_to_state(ops, **options)
         return state.dual
 
     def _state_to_operators(self, op_classes, **options):
@@ -868,7 +868,7 @@ class Wavefunction(Function):
 
         return (self.norm == 1.0)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def norm(self):
         """

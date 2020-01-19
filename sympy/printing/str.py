@@ -4,6 +4,8 @@ A Printer for generating readable representation of most sympy classes.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
 from .printer import Printer
@@ -22,9 +24,9 @@ class StrPrinter(Printer):
         "sympy_integers": False,
         "abbrev": False,
         "perm_cyclic": True,
-    }
+    }  # type: Dict[str, Any]
 
-    _relationals = dict()
+    _relationals = dict()  # type: Dict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -227,14 +229,31 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+
+    def _print_MutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_SparseMatrix(self, expr):
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr))
+
+    def _print_ImmutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_Matrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_DenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_MutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
@@ -741,10 +760,6 @@ class StrPrinter(Printer):
         if not s:
             return "frozenset()"
         return "frozenset(%s)" % self._print_set(s)
-
-    def _print_SparseMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr))
 
     def _print_Sum(self, expr):
         def _xab_tostr(xab):

@@ -5,6 +5,8 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import inspect
 import keyword
 import re
@@ -20,13 +22,13 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}
-MPMATH_DEFAULT = {}
-NUMPY_DEFAULT = {"I": 1j}
-SCIPY_DEFAULT = {"I": 1j}
-TENSORFLOW_DEFAULT = {}
-SYMPY_DEFAULT = {}
-NUMEXPR_DEFAULT = {}
+MATH_DEFAULT = {}  # type: Dict[str, Any]
+MPMATH_DEFAULT = {}  # type: Dict[str, Any]
+NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
+SYMPY_DEFAULT = {}  # type: Dict[str, Any]
+NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -79,12 +81,12 @@ MPMATH_TRANSLATIONS = {
     "FallingFactorial": "ff",
 }
 
-NUMPY_TRANSLATIONS = {}
-SCIPY_TRANSLATIONS = {}
+NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
+SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
-TENSORFLOW_TRANSLATIONS = {}
+TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
-NUMEXPR_TRANSLATIONS = {}
+NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
 
 # Available modules:
 MODULES = {
@@ -900,19 +902,13 @@ def lambdastr(args, expr, printer=None, dummify=None):
                 return str(args)
 
     def sub_expr(expr, dummies_dict):
-        try:
-            expr = sympify(expr).xreplace(dummies_dict)
-        except Exception:
-            if isinstance(expr, DeferredVector):
-                pass
-            elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
-                expr = dict(zip(k, v))
-            elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
-            elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+        expr = sympify(expr)
+        # dict/tuple are sympified to Basic
+        if isinstance(expr, Basic):
+            expr = expr.xreplace(dummies_dict)
+        # list is not sympified to Basic
+        elif isinstance(expr, list):
+            expr = [sub_expr(a, dummies_dict) for a in expr]
         return expr
 
     # Transform args

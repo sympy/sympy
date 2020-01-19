@@ -10,17 +10,19 @@ using the usual `coord_sys.coord_function(index, name)` interface.
 
 from __future__ import print_function, division
 
+from typing import Any
+
 from .diffgeom import Manifold, Patch, CoordSystem
 from sympy import sqrt, atan2, acos, sin, cos, Dummy
 
 ###############################################################################
 # R2
 ###############################################################################
-R2 = Manifold('R^2', 2)
+R2 = Manifold('R^2', 2)  # type: Any
 # Patch and coordinate systems.
-R2_origin = Patch('origin', R2)
-R2_r = CoordSystem('rectangular', R2_origin, ['x', 'y'])
-R2_p = CoordSystem('polar', R2_origin, ['r', 'theta'])
+R2_origin = Patch('origin', R2)  # type: Any
+R2_r = CoordSystem('rectangular', R2_origin, ['x', 'y'])  # type: Any
+R2_p = CoordSystem('polar', R2_origin, ['r', 'theta'])  # type: Any
 
 # Connecting the coordinate charts.
 x, y, r, theta = [Dummy(s) for s in ['x', 'y', 'r', 'theta']]
@@ -50,12 +52,12 @@ R2.dr, R2.dtheta = R2_origin.dr, R2_origin.dtheta = R2_p.dr, R2_p.dtheta = R2_p.
 ###############################################################################
 # R3
 ###############################################################################
-R3 = Manifold('R^3', 3)
+R3 = Manifold('R^3', 3)  # type: Any
 # Patch and coordinate systems.
-R3_origin = Patch('origin', R3)
-R3_r = CoordSystem('rectangular', R3_origin, ['x', 'y', 'z'])
-R3_c = CoordSystem('cylindrical', R3_origin, ['rho', 'psi', 'z'])
-R3_s = CoordSystem('spherical', R3_origin, ['r', 'theta', 'phi'])
+R3_origin = Patch('origin', R3)  # type: Any
+R3_r = CoordSystem('rectangular', R3_origin, ['x', 'y', 'z'])  # type: Any
+R3_c = CoordSystem('cylindrical', R3_origin, ['rho', 'psi', 'z'])  # type: Any
+R3_s = CoordSystem('spherical', R3_origin, ['r', 'theta', 'phi'])  # type: Any
 
 # Connecting the coordinate charts.
 x, y, z, rho, psi, r, theta, phi = [Dummy(s) for s in ['x', 'y', 'z',

@@ -236,7 +236,7 @@ def test_Permutation_subclassing():
             try:
                 perm_obj = i[0]
                 return [self._array_form[j] for j in perm_obj]
-            except Exception:
+            except TypeError:
                 raise TypeError('unrecognized argument')
 
         def __eq__(self, other):

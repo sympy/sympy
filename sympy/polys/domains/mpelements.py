@@ -16,7 +16,7 @@ from mpmath.rational import mpq
 class RealElement(_mpf, DomainElement):
     """An element of a real domain. """
 
-    __slots__ = ['__mpf__']
+    __slots__ = ('__mpf__',)
 
     def _set_mpf(self, val):
         self.__mpf__ = val
@@ -30,7 +30,7 @@ class RealElement(_mpf, DomainElement):
 class ComplexElement(_mpc, DomainElement):
     """An element of a complex domain. """
 
-    __slots__ = ['__mpc__']
+    __slots__ = ('__mpc__',)
 
     def _set_mpc(self, val):
         self.__mpc__ = val
