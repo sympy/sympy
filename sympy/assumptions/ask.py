@@ -5,7 +5,6 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
                                  BooleanFunction, BooleanAtom)
