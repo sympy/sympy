@@ -1462,7 +1462,7 @@ def get_known_facts_keys():
     return [
         getattr(Q, attr)
         for attr in Q.__class__.__dict__
-        if not (attr.startswith('__')]
+        if not attr.startswith('__')]
 
 @cacheit
 def get_known_facts():
