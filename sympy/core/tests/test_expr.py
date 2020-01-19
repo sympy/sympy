@@ -8,7 +8,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import round, PY3
+from sympy.core.compatibility import round
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
@@ -19,7 +19,7 @@ from sympy.abc import a, b, c, n, t, u, x, y, z
 
 # replace 3 instances with int when PY2 is dropped and
 # delete this line
-_rint = int if PY3 else float
+_rint = int
 
 class DummyNumber(object):
     """
@@ -337,16 +337,14 @@ def test_cooperative_operations():
             raises(TypeError, lambda : divmod(na, e))
             raises(TypeError, lambda : e ** na)
             raises(TypeError, lambda : na ** e)
-            # XXX: Remove the if when PY2 support is dropped:
-            if PY3:
-                raises(TypeError, lambda : e > na)
-                raises(TypeError, lambda : na > e)
-                raises(TypeError, lambda : e < na)
-                raises(TypeError, lambda : na < e)
-                raises(TypeError, lambda : e >= na)
-                raises(TypeError, lambda : na >= e)
-                raises(TypeError, lambda : e <= na)
-                raises(TypeError, lambda : na <= e)
+            raises(TypeError, lambda : e > na)
+            raises(TypeError, lambda : na > e)
+            raises(TypeError, lambda : e < na)
+            raises(TypeError, lambda : na < e)
+            raises(TypeError, lambda : e >= na)
+            raises(TypeError, lambda : na >= e)
+            raises(TypeError, lambda : e <= na)
+            raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
