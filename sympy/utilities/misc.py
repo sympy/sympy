@@ -456,13 +456,13 @@ def translate(s, a, b=None, c=None):
                 a = b = ''
         elif len(a) != len(b):
             raise ValueError('oldchars and newchars have different lengths')
-    if PY3:
-        if c:
-            val = str.maketrans('', '', c)
-            s = s.translate(val)
-        s = replace(s, mr)
-        n = str.maketrans(a, b)
-        return s.translate(n)
+
+    if c:
+        val = str.maketrans('', '', c)
+        s = s.translate(val)
+    s = replace(s, mr)
+    n = str.maketrans(a, b)
+    return s.translate(n)
 
 
 def ordinal(num):
