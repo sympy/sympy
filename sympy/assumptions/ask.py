@@ -14,13 +14,6 @@ from sympy.utilities.decorator import memoize_property
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
-# Deprecated predicates should be added to this list
-deprecated_predicates = [
-    'bounded',
-    'infinity',
-    'infinitesimal'
-]
-
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
 # This is because assumption handlers are registered on those objects.
@@ -355,13 +348,6 @@ class AssumptionKeys(object):
         """
         return Predicate('finite')
 
-    @memoize_property
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
-    def bounded(self):
-        """
-        See documentation of ``Q.finite``.
-        """
-        return Predicate('finite')
 
     @memoize_property
     def infinite(self):
@@ -375,21 +361,6 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('infinite')
 
-    @memoize_property
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
-    def infinity(self):
-        """
-        See documentation of ``Q.infinite``.
-        """
-        return Predicate('infinite')
-
-    @memoize_property
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
-    def infinitesimal(self):
-        """
-        See documentation of ``Q.zero``.
-        """
-        return Predicate('zero')
 
     @memoize_property
     def positive(self):

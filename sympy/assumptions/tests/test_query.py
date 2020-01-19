@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 import math
 
@@ -2164,15 +2164,6 @@ def test_issue_7246_failing():
     #Move this test to test_issue_7246 once
     #the new assumptions module is improved.
     assert ask(Q.positive(acos(x)), Q.zero(x)) is True
-
-
-def test_deprecated_Q_bounded():
-    with warns_deprecated_sympy():
-        Q.bounded
-
-def test_deprecated_Q_infinity():
-    with warns_deprecated_sympy():
-        Q.infinity
 
 
 def test_check_old_assumption():
