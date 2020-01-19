@@ -56,6 +56,7 @@ Continuous Types
 .. autofunction:: Nakagami
 .. autofunction:: Normal
 .. autofunction:: Pareto
+.. autofunction:: PowerFunction
 .. autofunction:: QuadraticU
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh

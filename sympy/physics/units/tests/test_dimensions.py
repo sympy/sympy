@@ -1,5 +1,4 @@
 from sympy.physics.units.systems.si import dimsys_SI
-from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import S, Symbol, sqrt
 from sympy.physics.units.dimensions import Dimension
@@ -7,7 +6,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     length, time
 )
 from sympy.physics.units import foot
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_Dimension_definition():

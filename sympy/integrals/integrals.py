@@ -34,7 +34,7 @@ from sympy.utilities.misc import filldedent
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         """Create an unevaluated integral.
@@ -1279,20 +1279,20 @@ class Integral(AddWithLimits):
     def _sage_(self):
         import sage.all as sage
         f, limits = self.function._sage_(), list(self.limits)
-        for limit in limits:
-            if len(limit) == 1:
-                x = limit[0]
+        for limit_ in limits:
+            if len(limit_) == 1:
+                x = limit_[0]
                 f = sage.integral(f,
                                     x._sage_(),
                                     hold=True)
-            elif len(limit) == 2:
-                x, b = limit
+            elif len(limit_) == 2:
+                x, b = limit_
                 f = sage.integral(f,
                                     x._sage_(),
                                     b._sage_(),
                                     hold=True)
             else:
-                x, a, b = limit
+                x, a, b = limit_
                 f = sage.integral(f,
                                   (x._sage_(),
                                     a._sage_(),

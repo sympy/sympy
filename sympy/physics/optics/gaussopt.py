@@ -43,8 +43,8 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
-    together)
+from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
+    together, MutableDenseMatrix)
 from sympy.utilities.misc import filldedent
 
 ###
@@ -52,7 +52,7 @@ from sympy.utilities.misc import filldedent
 ###
 
 
-class RayTransferMatrix(Matrix):
+class RayTransferMatrix(MutableDenseMatrix):
     """
     Base class for a Ray Transfer Matrix.
 
@@ -374,7 +374,7 @@ class ThinLens(RayTransferMatrix):
 # Representation for geometric ray
 ###
 
-class GeometricRay(Matrix):
+class GeometricRay(MutableDenseMatrix):
     """
     Representation for a geometric ray in the Ray Transfer Matrix formalism.
 
@@ -515,7 +515,7 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    __slots__ = ['z', 'z_r', 'wavelen']
+    __slots__ = ('z', 'z_r', 'wavelen')
 
     def __new__(cls, wavelen, z, **kwargs):
         wavelen, z = map(sympify, (wavelen, z))

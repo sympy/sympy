@@ -5,14 +5,15 @@ various operations on them.
 
 from __future__ import print_function, division
 
-from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
+from sympy import (Symbol, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.core.compatibility import range, ordered, string_types
+from sympy.core.compatibility import ordered
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.integrals import meijerint
 from sympy.matrices import Matrix
 from sympy.polys.rings import PolyElement
 from sympy.polys.fields import FracElement
@@ -114,7 +115,7 @@ class DifferentialOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = Symbol('Dx', commutative=False)
         else:
-            if isinstance(generator, string_types):
+            if isinstance(generator, str):
                 self.gen_symbol = Symbol(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator

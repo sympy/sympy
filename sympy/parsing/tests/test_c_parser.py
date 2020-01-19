@@ -1,8 +1,8 @@
 from sympy.parsing.sym_expr import SymPyExpression
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.external import import_module
 
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if cin:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
@@ -26,10 +26,15 @@ if cin:
             'float b;' + '\n' +
             'int c;'
         )
+        c_src4 = (
+            'int x = 1, y = 6.78;' + '\n' +
+            'float p = 2, q = 9.67;'
+        )
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
         res3 = SymPyExpression(c_src3, 'c').return_expr()
+        res4 = SymPyExpression(c_src4, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -38,6 +43,7 @@ if cin:
                 value=Integer(0)
             )
         )
+
         assert res1[1] == Declaration(
             Variable(
                 Symbol('b'),
@@ -85,6 +91,38 @@ if cin:
             )
         )
 
+        assert res4[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=IntBaseType(String('integer')),
+                value=Integer(1)
+            )
+        )
+
+        assert res4[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=IntBaseType(String('integer')),
+                value=Integer(6)
+            )
+        )
+
+        assert res4[2] == Declaration(
+            Variable(
+                Symbol('p'),
+                type=FloatBaseType(String('real')),
+                value=Float('2.0', precision=53)
+            )
+        )
+
+        assert res4[3] == Declaration(
+            Variable(
+                Symbol('q'),
+                type=FloatBaseType(String('real')),
+                value=Float('9.67', precision=53)
+            )
+        )
+
 
     def test_int():
         c_src1 = 'int a = 1;'
@@ -92,9 +130,13 @@ if cin:
             'int a = 1;' + '\n' +
             'int b = 2;' + '\n'
         )
+        c_src3 = 'int a = 2.345, b = 5.67;'
+        c_src4 = 'int p = 6, q = 23.45;'
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
+        res3 = SymPyExpression(c_src3, 'c').return_expr()
+        res4 = SymPyExpression(c_src4, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -120,6 +162,38 @@ if cin:
             )
         )
 
+        assert res3[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=IntBaseType(String('integer')),
+                value=Integer(2)
+            )
+        )
+
+        assert res3[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=IntBaseType(String('integer')),
+                value=Integer(5)
+            )
+        )
+
+        assert res4[0] == Declaration(
+            Variable(
+                Symbol('p'),
+                type=IntBaseType(String('integer')),
+                value=Integer(6)
+            )
+        )
+
+        assert res4[1] == Declaration(
+            Variable(
+                Symbol('q'),
+                type=IntBaseType(String('integer')),
+                value=Integer(23)
+            )
+        )
+
 
     def test_float():
         c_src1 = 'float a = 1.0;'
@@ -127,9 +201,13 @@ if cin:
             'float a = 1.25;' + '\n' +
             'float b = 2.39;' + '\n'
         )
+        c_src3 = 'float x = 1, y = 2;'
+        c_src4 = 'float p = 5, e = 7.89;'
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
+        res3 = SymPyExpression(c_src3, 'c').return_expr()
+        res4 = SymPyExpression(c_src4, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -152,6 +230,38 @@ if cin:
                 Symbol('b'),
                 type=FloatBaseType(String('real')),
                 value=Float('2.3900000000000001', precision=53)
+            )
+        )
+
+        assert res3[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatBaseType(String('real')),
+                value=Float('1.0', precision=53)
+            )
+        )
+
+        assert res3[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatBaseType(String('real')),
+                value=Float('2.0', precision=53)
+            )
+        )
+
+        assert res4[0] == Declaration(
+            Variable(
+                Symbol('p'),
+                type=FloatBaseType(String('real')),
+                value=Float('5.0', precision=53)
+            )
+        )
+
+        assert res4[1] == Declaration(
+            Variable(
+                Symbol('e'),
+                type=FloatBaseType(String('real')),
+                value=Float('7.89', precision=53)
             )
         )
 

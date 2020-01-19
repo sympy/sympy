@@ -22,7 +22,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -527,12 +527,12 @@ def _solve_trig(f, symbol, domain):
     sol1 = sol = None
     try:
         sol1 = _solve_trig1(f, symbol, domain)
-    except BaseException:
+    except NotImplementedError:
         pass
     if sol1 is None or isinstance(sol1, ConditionSet):
         try:
             sol = _solve_trig2(f, symbol, domain)
-        except BaseException:
+        except ValueError:
             sol = sol1
         if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
             if sol1.count_ops() < sol.count_ops():
@@ -547,7 +547,13 @@ def _solve_trig(f, symbol, domain):
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary Helper to solve trigonometric equations """
+    """Primary helper to solve trigonometric and hyperbolic equations"""
+    if _is_function_class_equation(HyperbolicFunction, f, symbol):
+        cov = exp(symbol)
+        inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
+    else:
+        cov = exp(I*symbol)
+        inverter = invert_complex
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
@@ -555,9 +561,9 @@ def _solve_trig1(f, symbol, domain):
     g, h = fraction(f)
     y = Dummy('y')
     g, h = g.expand(), h.expand()
-    g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
+    g, h = g.subs(cov, y), h.subs(cov, y)
     if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f, 0), domain)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
     if isinstance(solns, ConditionSet):
@@ -566,13 +572,16 @@ def _solve_trig1(f, symbol, domain):
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
             raise NotImplementedError
-        result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
-                       for s in solns])
-        return Intersection(result, domain)
+        result = Union(*[inverter(cov, s, symbol)[1] for s in solns])
+        # avoid spurious intersections with C in solution set
+        if domain is S.Complexes:
+            return result
+        else:
+            return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
 
 
 def _solve_trig2(f, symbol, domain):
@@ -980,7 +989,10 @@ def _solveset(f, symbol, domain, _check=False):
             result = ConditionSet(symbol, Eq(f, 0), domain)
 
     if isinstance(result, ConditionSet):
-        num, den = f.as_numer_denom()
+        if isinstance(f, Expr):
+            num, den = f.as_numer_denom()
+        else:
+            num, den = f, S.One
         if den.has(symbol):
             _result = _solveset(num, symbol, domain)
             if not isinstance(_result, ConditionSet):
@@ -995,8 +1007,11 @@ def _solveset(f, symbol, domain, _check=False):
 
         # whittle away all but the symbol-containing core
         # to use this for testing
-        fx = orig_f.as_independent(symbol, as_Add=True)[1]
-        fx = fx.as_independent(symbol, as_Add=False)[1]
+        if isinstance(orig_f, Expr):
+            fx = orig_f.as_independent(symbol, as_Add=True)[1]
+            fx = fx.as_independent(symbol, as_Add=False)[1]
+        else:
+            fx = orig_f
 
         if isinstance(result, FiniteSet):
             # check the result for invalid solutions
@@ -1188,7 +1203,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         elif base.has(symbol) and not expo.has(symbol):
             try:
                 remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
-                if remainder_list is None:
+                if remainder_list == []:
                     return symbol, EmptySet
             except (ValueError, NotImplementedError):
                 return modterm, rhs
@@ -1951,10 +1966,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if f is S.false:
         return S.EmptySet
 
-    if not isinstance(f, (Expr, Number)):
+    if not isinstance(f, (Expr, Relational, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, Expr) and  symbol is not None:
+    if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % symbol)
 
     if not isinstance(domain, Set):
@@ -2317,7 +2332,7 @@ def linear_eq_to_matrix(equations, *symbols):
     equations = sympify(equations)
     if isinstance(equations, MatrixBase):
         equations = list(equations)
-    elif isinstance(equations, Expr):
+    elif isinstance(equations, (Expr, Eq)):
         equations = [equations]
     elif not is_sequence(equations):
         raise ValueError(filldedent('''

@@ -74,7 +74,7 @@ def JointRV(symbol, pdf, _set=None):
 # Multivariate Normal distribution ---------------------------------------------------------
 
 class MultivariateNormalDistribution(JointDistribution):
-    _argnames = ['mu', 'sigma']
+    _argnames = ('mu', 'sigma')
 
     is_Continuous=True
 
@@ -118,7 +118,7 @@ class MultivariateNormalDistribution(JointDistribution):
 # Multivariate Laplace distribution ---------------------------------------------------------
 
 class MultivariateLaplaceDistribution(JointDistribution):
-    _argnames = ['mu', 'sigma']
+    _argnames = ('mu', 'sigma')
     is_Continuous=True
 
     @property
@@ -154,7 +154,7 @@ class MultivariateLaplaceDistribution(JointDistribution):
 # Multivariate StudentT distribution ---------------------------------------------------------
 
 class MultivariateTDistribution(JointDistribution):
-    _argnames = ['mu', 'shape_mat', 'dof']
+    _argnames = ('mu', 'shape_mat', 'dof')
     is_Continuous=True
 
     @property
@@ -206,7 +206,7 @@ def MultivariateT(syms, mu, sigma, v):
 
 class NormalGammaDistribution(JointDistribution):
 
-    _argnames = ['mu', 'lamda', 'alpha', 'beta']
+    _argnames = ('mu', 'lamda', 'alpha', 'beta')
     is_Continuous=True
 
     @staticmethod
@@ -269,7 +269,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
 
 class MultivariateBetaDistribution(JointDistribution):
 
-    _argnames = ['alpha']
+    _argnames = ('alpha',)
     is_Continuous = True
 
     @staticmethod
@@ -342,7 +342,7 @@ Dirichlet = MultivariateBeta
 
 class MultivariateEwensDistribution(JointDistribution):
 
-    _argnames = ['n', 'theta']
+    _argnames = ('n', 'theta')
     is_Discrete = True
     is_Continuous = False
 
@@ -431,7 +431,7 @@ def MultivariateEwens(syms, n, theta):
 
 class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
-    _argnames = ['delta', 'v', 'lamda', 'mu']
+    _argnames = ('delta', 'v', 'lamda', 'mu')
     is_Continuous=True
 
     def check(self, delta, v, l, mu):
@@ -585,7 +585,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
 
 class MultinomialDistribution(JointDistribution):
 
-    _argnames = ['n', 'p']
+    _argnames = ('n', 'p')
     is_Continuous=False
     is_Discrete = True
 
@@ -654,7 +654,7 @@ def Multinomial(syms, n, *p):
 
 class NegativeMultinomialDistribution(JointDistribution):
 
-    _argnames = ['k0', 'p']
+    _argnames = ('k0', 'p')
     is_Continuous=False
     is_Discrete = True
 

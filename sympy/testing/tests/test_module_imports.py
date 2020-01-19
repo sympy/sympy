@@ -21,7 +21,7 @@ import sys
 from os.path import abspath, dirname, join, normpath
 import inspect
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 @XFAIL
 def test_module_imports_are_direct():

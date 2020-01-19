@@ -73,8 +73,8 @@ PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 4)):
-    print("SymPy requires Python 2.7 or 3.4 or newer. Python %d.%d detected"
+    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
+    print("SymPy requires Python 2.7 or 3.5 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -124,8 +124,6 @@ modules = [
     'sympy.parsing',
     'sympy.parsing.autolev',
     'sympy.parsing.autolev._antlr',
-    'sympy.parsing.autolev.test-examples',
-    'sympy.parsing.autolev.test-examples.pydy-example-repo',
     'sympy.parsing.c',
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
@@ -162,6 +160,7 @@ modules = [
     'sympy.strategies.branch',
     'sympy.tensor',
     'sympy.tensor.array',
+    'sympy.testing',
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities._compilation',
@@ -401,6 +400,7 @@ tests = [
     'sympy.strategies.tests',
     'sympy.tensor.array.tests',
     'sympy.tensor.tests',
+    'sympy.testing.tests',
     'sympy.unify.tests',
     'sympy.utilities._compilation.tests',
     'sympy.utilities.tests',
@@ -435,11 +435,14 @@ if __name__ == '__main__':
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
-              'sympy.parsing.autolev': ['*.g4'],
-              'sympy.parsing.autolev.test-examples': ['*.al'],
-              'sympy.parsing.autolev.test-examples.pydy-example-repo': ['*.al'],
+              'sympy.parsing.autolev': [
+                  '*.g4', 'test-examples/*.al', 'test-examples/*.py',
+                  'test-examples/pydy-example-repo/*.al',
+                  'test-examples/pydy-example-repo/*.py',
+                  ],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
+              'sympy.plotting.tests': ['test_region_*.png'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
@@ -449,6 +452,7 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
+          python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',

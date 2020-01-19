@@ -1,21 +1,18 @@
-from sympy.physics.units import DimensionSystem, joule, second, ampere, electronvolt, convert_to, coulomb
-from sympy.physics.units.systems import cgs
-from sympy.utilities.pytest import warns_deprecated_sympy
+from sympy.physics.units import DimensionSystem, joule, second, ampere
+from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy import Rational, S
 from sympy.physics.units.definitions import c, kg, m, s
-from sympy.physics.units.definitions.dimension_definitions import (
-    action, current, length, mass, time, velocity)
+from sympy.physics.units.definitions.dimension_definitions import length, time
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
-from sympy.utilities.pytest import raises
 
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
     dm = Quantity("dm")
     base = (m, s)
-    base_dim = (m.dimension, s.dimension)
+    # base_dim = (m.dimension, s.dimension)
     ms = UnitSystem(base, (c, dm), "MS", "MS system")
     ms.set_quantity_dimension(dm, length)
     ms.set_quantity_scale_factor(dm, Rational(1, 10))

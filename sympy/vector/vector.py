@@ -1,7 +1,9 @@
+from typing import Type
+
 from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import range, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy import sqrt, ImmutableMatrix as Matrix, Add
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
@@ -18,6 +20,13 @@ class Vector(BasisDependent):
 
     is_Vector = True
     _op_priority = 12.0
+
+    _expr_type = None  # type: Type[Vector]
+    _mul_func = None  # type: Type[Vector]
+    _add_func = None  # type: Type[Vector]
+    _zero_func = None  # type: Type[Vector]
+    _base_func = None  # type: Type[Vector]
+    zero = None  # type: VectorZero
 
     @property
     def components(self):
@@ -321,6 +330,17 @@ class Vector(BasisDependent):
                                   vect * measure)
         return parts
 
+    def _div_helper(one, other):
+        """ Helper for division involving vectors. """
+        if isinstance(one, Vector) and isinstance(other, Vector):
+            raise TypeError("Cannot divide two vectors")
+        elif isinstance(one, Vector):
+            if other == S.Zero:
+                raise ValueError("Cannot divide a vector by zero")
+            return VectorMul(one, Pow(other, S.NegativeOne))
+        else:
+            raise TypeError("Invalid division involving a vector")
+
 
 class BaseVector(Vector, AtomicExpr):
     """
@@ -535,11 +555,13 @@ def cross(vect1, vect2):
             n3 = ({0,1,2}.difference({n1, n2})).pop()
             sign = 1 if ((n1 + 1) % 3 == n2) else -1
             return sign*vect1._sys.base_vectors()[n3]
+        from .functions import express
         try:
-            from .functions import express
-            return cross(express(vect1, vect2._sys), vect2)
-        except:
+            v = express(vect1, vect2._sys)
+        except ValueError:
             return Cross(vect1, vect2)
+        else:
+            return cross(v, vect2)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return Vector.zero
     if isinstance(vect1, VectorMul):
@@ -575,11 +597,13 @@ def dot(vect1, vect2):
     if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
         if vect1._sys == vect2._sys:
             return S.One if vect1 == vect2 else S.Zero
+        from .functions import express
         try:
-            from .functions import express
-            return dot(vect1, express(vect2, vect1._sys))
-        except:
+            v = express(vect2, vect1._sys)
+        except ValueError:
             return Dot(vect1, vect2)
+        else:
+            return dot(vect1, v)
     if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
         return S.Zero
     if isinstance(vect1, VectorMul):
@@ -592,22 +616,9 @@ def dot(vect1, vect2):
     return Dot(vect1, vect2)
 
 
-def _vect_div(one, other):
-    """ Helper for division involving vectors. """
-    if isinstance(one, Vector) and isinstance(other, Vector):
-        raise TypeError("Cannot divide two vectors")
-    elif isinstance(one, Vector):
-        if other == S.Zero:
-            raise ValueError("Cannot divide a vector by zero")
-        return VectorMul(one, Pow(other, S.NegativeOne))
-    else:
-        raise TypeError("Invalid division involving a vector")
-
-
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
 Vector._add_func = VectorAdd
 Vector._zero_func = VectorZero
 Vector._base_func = BaseVector
-Vector._div_helper = _vect_div
 Vector.zero = VectorZero()

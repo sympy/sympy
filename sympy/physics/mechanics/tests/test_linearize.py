@@ -1,9 +1,9 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S, Rational
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, Rational
 from sympy import solve, simplify, sympify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.utilities.pytest import slow, warns_deprecated_sympy
+from sympy.testing.pytest import slow, warns_deprecated_sympy
 
 
 @slow
@@ -81,7 +81,7 @@ def test_linearize_rolling_disc_kane():
     linearizer = KM.to_linearizer()
     assert linearizer.f_c == f_c
     assert linearizer.f_v == f_v
-    assert linearizer.f_a == f_v.diff(t)
+    assert linearizer.f_a == f_v.diff(t).subs(KM.kindiffdict())
     sol = solve(linearizer.f_0 + linearizer.f_1, qd)
     for qi in qdots.keys():
         assert sol[qi] == qdots[qi]

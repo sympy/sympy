@@ -87,7 +87,7 @@ from __future__ import print_function, division
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.core import Dict, Symbol
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.printing import latex
 from sympy.sets import FiniteSet
 from sympy.utilities import default_sort_key

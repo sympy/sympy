@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy
 from sympy.core.basic import as_Basic
-from sympy.core.compatibility import range
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)

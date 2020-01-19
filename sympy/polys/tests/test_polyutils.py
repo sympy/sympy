@@ -2,7 +2,7 @@
 
 from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
     Eq, Integral, exp, Mul)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
     _nsort,

@@ -8,11 +8,11 @@
 
 from __future__ import print_function, division
 
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from sympy.core import S
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, range, MutableSet
+from sympy.core.compatibility import as_int, MutableSet
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 

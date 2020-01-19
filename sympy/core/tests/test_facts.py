@@ -1,7 +1,7 @@
 from sympy.core.facts import (deduce_alpha_implications,
         apply_beta_to_alpha_route, rules_2prereq, FactRules, FactKB)
 from sympy.core.logic import And, Not
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 T = True
 F = False

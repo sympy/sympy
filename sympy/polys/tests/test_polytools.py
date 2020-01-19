@@ -58,10 +58,10 @@ from sympy import (
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable, PY3
 from sympy.core.mul import _keep_coeff
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, Matrix
 
 def _epsilon_eq(a, b):
     for u, v in zip(a, b):
@@ -2032,8 +2032,10 @@ def test_terms_gcd():
         sin(x*(y + 1))
 
     eq = Eq(2*x, 2*y + 2*z*y)
-    assert terms_gcd(eq) == eq
+    assert terms_gcd(eq) == Eq(2*x, 2*y*(z + 1))
     assert terms_gcd(eq, deep=True) == Eq(2*x, 2*y*(z + 1))
+
+    raises(TypeError, lambda: terms_gcd(x < 2))
 
 
 def test_trunc():
@@ -3313,3 +3315,9 @@ def test_issue_15669():
     expr = (16*x**3/(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**2 -
         2*2**Rational(4, 5)*x*(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**Rational(3, 5) + 10*x)
     assert factor(expr, deep=True) == x*(x**2 + 2)
+
+def test_issue_17988():
+    x = Symbol('x')
+    p = poly(x - 1)
+    M = Matrix([[poly(x + 1), poly(x + 1)]])
+    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])

@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from sympy.core.logic import FuzzyBool
+
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
@@ -8,9 +10,7 @@ from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
 
-from sympy import pi, Eq
-from sympy.logic import Or, And
-from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_bool
+from sympy.core.logic import fuzzy_or, fuzzy_and
 
 
 
@@ -629,7 +629,6 @@ class tanh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import cos, sinh
         arg = self.args[0]
         if arg.is_real:
             return True
@@ -824,8 +823,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     #To be defined in class
     _reciprocal_of = None
-    _is_even = None
-    _is_odd = None
+    _is_even = None  # type: FuzzyBool
+    _is_odd = None  # type: FuzzyBool
 
     @classmethod
     def eval(cls, arg):

@@ -18,7 +18,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     class Expression(PicklableWithSlots):
         """An arbitrary expression. """
 
-        __slots__ = ['ex']
+        __slots__ = ('ex',)
 
         def __init__(self, ex):
             if not isinstance(ex, self.__class__):

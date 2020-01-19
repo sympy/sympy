@@ -10,8 +10,8 @@ from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
-from .compatibility import as_int, range
-from .evaluate import global_evaluate
+from .compatibility import as_int, HAS_GMPY, gmpy
+from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
@@ -71,6 +71,12 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
+    if HAS_GMPY:
+        x, t = gmpy.iroot(y, n)
+        return as_int(x), t
+    return _integer_nthroot_python(y, n)
+
+def _integer_nthroot_python(y, n):
     if y in (0, 1):
         return y, True
     if n == 1:
@@ -252,16 +258,22 @@ class Pow(Expr):
     """
     is_Pow = True
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
         if evaluate is None:
-            evaluate = global_evaluate[0]
+            evaluate = global_parameters.evaluate
         from sympy.functions.elementary.exponential import exp_polar
 
         b = _sympify(b)
         e = _sympify(e)
+
+        # XXX: Maybe only Expr should be allowed...
+        from sympy.core.relational import Relational
+        if isinstance(b, Relational) or isinstance(e, Relational):
+            raise TypeError('Relational can not be used in Pow')
+
         if evaluate:
             if e is S.ComplexInfinity:
                 return S.NaN
@@ -330,7 +342,7 @@ class Pow(Expr):
                 return -Pow(-b, e)
 
     def _eval_power(self, other):
-        from sympy import Abs, arg, exp, floor, im, log, re, sign
+        from sympy import arg, exp, floor, im, log, re, sign
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
@@ -370,8 +382,8 @@ class Pow(Expr):
                     if _half(other):
                         if b.is_negative is True:
                             return S.NegativeOne**other*Pow(-b, e*other)
-                        if b.is_extended_real is False:
-                            return Pow(b.conjugate()/Abs(b)**2, other)
+                        elif b.is_negative is False:
+                            return Pow(b, -other)
                 elif e.is_even:
                     if b.is_extended_real:
                         b = abs(b)

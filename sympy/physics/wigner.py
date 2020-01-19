@@ -50,7 +50,6 @@ from __future__ import print_function, division
 from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
                    Function, sin, cos, exp, I, factorial, binomial,
                    Add, ImmutableMatrix)
-from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients

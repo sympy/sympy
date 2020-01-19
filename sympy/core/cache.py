@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
+
 class _cache(list):
     """ List of cached functions """
 
@@ -34,13 +35,13 @@ class _cache(list):
                 else:
                     myfunc = myfunc.__wrapped__
 
+
 # global cache registry:
 CACHE = _cache()
 # make clear and print methods available
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from sympy.core.compatibility import lru_cache
 from functools import update_wrapper
 
 try:
@@ -62,6 +63,7 @@ try:
     lru_cache = fastcache.clru_cache
 
 except ImportError:
+    from sympy.core.compatibility import lru_cache
 
     def __cacheit(maxsize):
         """caching decorator.

@@ -4,9 +4,7 @@ Several methods to simplify expressions involving unit objects.
 
 from __future__ import division
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-from sympy import Add, Mul, Pow, Tuple, sympify, default_sort_key
+from sympy import Add, Mul, Pow, Tuple, sympify
 from sympy.core.compatibility import reduce, Iterable, ordered
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix

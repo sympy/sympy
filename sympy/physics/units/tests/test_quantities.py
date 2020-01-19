@@ -1,9 +1,9 @@
-from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
-                   diff, exp, integrate, log, sin, sqrt, symbols, Matrix)
+from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
+                   diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
                                  volume, kilometer)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
-    day, foot, grams, hour, inch, kg, km, m, meter, mile, millimeter,
+    day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
     kilogram, gravitational_constant)
@@ -15,7 +15,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.systems import SI
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
 k = PREFIXES["k"]
 
@@ -414,9 +414,6 @@ def test_binary_information():
 
 
 def test_conversion_with_2_nonstandard_dimensions():
-    smartness = Dimension("smartness")
-    generousness = Dimension("generousness")
-
     good_grade = Quantity("good_grade")
     kilo_good_grade = Quantity("kilo_good_grade")
     centi_good_grade = Quantity("centi_good_grade")

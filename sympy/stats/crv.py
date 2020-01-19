@@ -13,6 +13,7 @@ from __future__ import print_function, division
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+from sympy.core.function import PoleError
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -446,7 +447,7 @@ class ContinuousPSpace(PSpace):
             expr = condition.lhs - condition.rhs
             dens = density(expr, **kwargs)
             if not isinstance(dens, ContinuousDistribution):
-                dens = ContinuousDistributionHandmade(dens)
+                dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
@@ -517,7 +518,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         x = self.value.symbol
         try:
             return self.distribution.expectation(expr, x, evaluate=evaluate, **kwargs)
-        except Exception:
+        except PoleError:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):

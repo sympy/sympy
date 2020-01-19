@@ -1,6 +1,6 @@
 from sympy.combinatorics.free_groups import free_group, FreeGroup
 from sympy.core import Symbol
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import oo
 
 F, x, y, z = free_group("x, y, z")
