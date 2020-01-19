@@ -5,6 +5,7 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
+
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
                                  BooleanFunction, BooleanAtom)
@@ -1462,7 +1463,7 @@ def get_known_facts_keys():
     return [
         getattr(Q, attr)
         for attr in Q.__class__.__dict__
-        if not (attr.startswith('__')
+        if not (attr.startswith('__')]
 
 @cacheit
 def get_known_facts():
