@@ -47,6 +47,7 @@ if __name__ == '__main__':
         [
             'pyftsubset', font_path,
             '--text="{}"'.format(text),
-            '--output-file={}'.format(output_font_path)
+            '--output-file={}'.format(output_font_path),
+            '--flavor=woff'
         ]
     )
