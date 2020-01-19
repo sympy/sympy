@@ -7,10 +7,7 @@ import inspect
 import textwrap
 import re
 import pydoc
-try:
-    from collections.abc import Mapping
-except ImportError: # Python 2
-    from collections import Mapping
+from collections.abc import Mapping
 import sys
 
 
