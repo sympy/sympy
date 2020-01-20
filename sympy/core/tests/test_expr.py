@@ -17,10 +17,6 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
 
-# replace 3 instances with int when PY2 is dropped and
-# delete this line
-_rint = int
-
 class DummyNumber(object):
     """
     Minimal implementation of a number that works with SymPy.
@@ -1952,14 +1948,14 @@ def test_round():
     for i in range(2):
         f = float(i)
         # 2 args
-        assert all(type(round(i, p)) is _rint for p in (-1, 0, 1))
+        assert all(type(round(i, p)) is int for p in (-1, 0, 1))
         assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
         assert all(type(round(f, p)) is float for p in (-1, 0, 1))
         assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
         # 1 arg (p is None)
-        assert type(round(i)) is _rint
+        assert type(round(i)) is int
         assert S(i).round().is_Integer
-        assert type(round(f)) is _rint
+        assert type(round(f)) is int
         assert S(f).round().is_Integer
 
 
