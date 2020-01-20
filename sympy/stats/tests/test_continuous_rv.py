@@ -19,11 +19,9 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
-<<<<<<< HEAD
+
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
-=======
-from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution
->>>>>>> master
+
 from sympy.stats.crv import SingleContinuousPSpace
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
