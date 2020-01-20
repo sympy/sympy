@@ -71,7 +71,7 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
-    if HAS_GMPY and n < 9223372036854775808:  # n < 2**63 
+    if HAS_GMPY and n < 9223372036854775808:  # n < 2**63
         if HAS_GMPY >= 2:
             x, t = gmpy.iroot(y, n)
         else:
