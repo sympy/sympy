@@ -685,6 +685,5 @@ unicode_strings = {
     'DoubleStruckCapitalQ' :     u'\N{DOUBLE-STRUCK CAPITAL Q}',
     'DoubleStruckCapitalR' :     u'\N{DOUBLE-STRUCK CAPITAL R}',
     'DoubleStruckCapitalC' :     u'\N{DOUBLE-STRUCK CAPITAL C}',
-    'DoubleStruckItalicSmallD' : u'\N{DOUBLE-STRUCK ITALIC SMALL D} ',
     'BoxDrawLightHorizontal&RightArrow' : u'\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'
 }

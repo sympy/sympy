@@ -232,11 +232,8 @@ class PrettyPrinter(Printer):
             arg = e.args[0]
             pform = self._print(arg)
             if isinstance(arg, Equivalent):
-<<<<<<< HEAD
                 return self._print_Equivalent(arg, altchar=unicode_strings['NotIdenticalTo'])
-=======
-                return self._print_Equivalent(arg, altchar=u"\N{LEFT RIGHT DOUBLE ARROW WITH STROKE}")
->>>>>>> master
+
             if isinstance(arg, Implies):
                 return self._print_Implies(arg, altchar=unicode_strings['RightArrowWithStroke'])
 
@@ -306,11 +303,7 @@ class PrettyPrinter(Printer):
 
     def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-<<<<<<< HEAD
             return self.__print_Boolean(e, altchar or unicode_strings['IdenticalTo'])
-=======
-            return self.__print_Boolean(e, altchar or u"\N{LEFT RIGHT DOUBLE ARROW}")
->>>>>>> master
         else:
             return self._print_Function(e, sort=True)
 
@@ -1018,28 +1011,9 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-<<<<<<< HEAD
                 tempstr = tempstr.replace(unicode_strings['RightParenthesisUpperHook'],
                                           unicode_strings['RightParenthesisUpperHook']
                                           + ' ' + vectstrs[i])
-=======
-                if u'\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
-                    for paren in range(len(tempstr)):
-                        flag[i] = 1
-                        if tempstr[paren] == u'\N{right parenthesis extension}':
-                            tempstr = tempstr[:paren] + u'\N{right parenthesis extension}'\
-                                         + ' '  + vectstrs[i] + tempstr[paren + 1:]
-                            break
-                elif u'\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
-                    flag[i] = 1
-                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS LOWER HOOK}',
-                                        u'\N{RIGHT PARENTHESIS LOWER HOOK}'
-                                        + ' ' + vectstrs[i])
-                else:
-                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                        u'\N{RIGHT PARENTHESIS UPPER HOOK}'
-                                        + ' ' + vectstrs[i])
->>>>>>> master
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
