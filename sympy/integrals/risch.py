@@ -772,7 +772,7 @@ def gcdex_diophantine(a, b, c):
     q = c.exquo(g)  # Inexact division means c is not in (a, b)
     s = q*s
 
-    if not s.is_zero and b.degree() >= b.degree():
+    if not s.is_zero and s.degree() >= b.degree():
         q, s = s.div(b)
 
     t = (c - s*a).exquo(b)
