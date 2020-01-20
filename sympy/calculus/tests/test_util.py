@@ -194,8 +194,8 @@ def test_periodicity_Function():
     assert periodicity(f(x)*f(x), x) == 1
     assert periodicity(exp(f(x)), x) == 1
     assert periodicity(sin(x*pi)*f(x), x) == 2
-
-
+    assert periodicity(f(x/2) + 1, x) == 2
+    assert periodicity(f(x/2) + sin(x), x) is None
 
 
 def test_lcim():
