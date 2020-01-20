@@ -1564,7 +1564,7 @@ class Pow(Expr):
 
             nuse = n - ei
 
-            if e.is_extended_real and e.is_positive:
+            if e.is_real:
                 lt = b.as_leading_term(x)
 
                 # Try to correct nuse (= m) guess from:
