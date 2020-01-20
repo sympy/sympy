@@ -231,6 +231,8 @@ of those tests will surely fail.
 """
 from __future__ import print_function, division
 
+from typing import Dict, Type
+
 from collections import defaultdict
 from itertools import islice
 
@@ -251,7 +253,7 @@ from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
-from sympy.functions import cos, exp, im, log, sinh, cosh, re, sin, tan, sqrt, \
+from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, tan, sqrt, \
     atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
@@ -262,8 +264,8 @@ from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
-from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse, besselsimp
+from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
+    separatevars, simplify, trigsimp, posify, cse, besselsimp)
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import checksol, solve
