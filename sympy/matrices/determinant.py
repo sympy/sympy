@@ -576,14 +576,6 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     >>> M = Matrix([[1, 2], [3, 4]])
     >>> M.det()
     -2
-
-    See Also
-    ========
-
-    det_bareiss
-    det_berkowitz
-    det_LU
-    Determinant
     """
 
     # sanitize `method`
