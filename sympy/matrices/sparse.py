@@ -1041,7 +1041,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
     def as_mutable(self):
         return self.copy()
 
-    __hash__ = None
+    __hash__ = None  # type: ignore
 
     def col_del(self, k):
         """Delete the given column of the matrix.

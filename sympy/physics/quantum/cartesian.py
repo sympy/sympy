@@ -236,7 +236,10 @@ class PositionKet3D(Ket, PositionState3D):
         return PositionBra3D
 
 
-class PositionBra3D(Bra, PositionState3D):
+# XXX: The type:ignore here is because mypy gives Definition of
+# "_state_to_operators" in base class "PositionState3D" is incompatible with
+# definition in base class "BraBase"
+class PositionBra3D(Bra, PositionState3D):  # type: ignore
     """ 3D cartesian position eigenbra """
 
     @classmethod

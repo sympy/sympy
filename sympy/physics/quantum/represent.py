@@ -496,9 +496,12 @@ def get_basis(expr, **options):
 
 
 def _make_default(expr):
+    # XXX: Catching TypeError like this is a bad way of distinguishing
+    # instances from classes. The logic using this function should be
+    # rewritten somehow.
     try:
         expr = expr()
-    except Exception:
+    except TypeError:
         return expr
 
     return expr

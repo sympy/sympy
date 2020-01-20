@@ -97,7 +97,7 @@ def test_matrix_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_to_scipy_sparse():

@@ -15,6 +15,8 @@ sympy.stats.rv_interface
 
 from __future__ import print_function, division
 
+from typing import Tuple as tTuple
+
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function)
@@ -140,10 +142,10 @@ class PSpace(Basic):
     sympy.stats.frv.FinitePSpace
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-    is_real = None
+    is_Finite = None  # type: bool
+    is_Continuous = None  # type: bool
+    is_Discrete = None  # type: bool
+    is_real = None  # type: bool
 
     @property
     def domain(self):
@@ -1139,14 +1141,11 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
-    try:
-        d = ps.sample()  # a dictionary that maps RVs to values
-        args = [d[rv] for rv in rvs]
-        fn(*args)
-        if condition:
-            given_fn(*args)
-    except Exception:
-        raise TypeError("Expr/condition too complex for lambdify")
+    d = ps.sample()  # a dictionary that maps RVs to values
+    args = [d[rv] for rv in rvs]
+    fn(*args)
+    if condition:
+        given_fn(*args)
 
     def return_generator():
         count = 0
@@ -1377,7 +1376,7 @@ def rv_subs(expr, symbols=None):
     return expr.subs(swapdict)
 
 class NamedArgsMixin(object):
-    _argnames = ()
+    _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):
         try:

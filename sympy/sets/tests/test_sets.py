@@ -186,6 +186,11 @@ def test_union():
 
     assert Union(Interval(0, 1), *[FiniteSet(1.0/n) for n in range(1, 10)]) == \
         Interval(0, 1)
+    # issue #18241:
+    x = Symbol('x')
+    assert Union(Interval(0, 1), FiniteSet(1, x)) == Union(
+        Interval(0, 1), FiniteSet(x))
+    assert unchanged(Union, Interval(0, 1), FiniteSet(2, x))
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
         Interval(1, 2) + Interval(2, 3)

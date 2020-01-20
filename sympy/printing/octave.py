@@ -11,6 +11,9 @@ complete source code files.
 """
 
 from __future__ import print_function, division
+
+from typing import Any, Dict
+
 from sympy.codegen.ast import Assignment
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
@@ -82,7 +85,7 @@ class OctaveCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }
+    }  # type: Dict[str, Any]
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.

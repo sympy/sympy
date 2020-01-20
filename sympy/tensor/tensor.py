@@ -31,7 +31,7 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-from typing import List, Set
+from typing import Any, Dict as tDict, List, Set
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
@@ -43,7 +43,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import reduce, SYMPY_INTS, with_metaclass
+from sympy.core.compatibility import reduce, SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -394,8 +394,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = dict()
-    _substitutions_dict_tensmul = dict()
+    _substitutions_dict = dict()  # type: tDict[Any, Any]
+    _substitutions_dict_tensmul = dict()  # type: tDict[Any, Any]
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -1852,7 +1852,7 @@ class _TensorMetaclass(ManagedProperties, ABCMeta):
     pass
 
 
-class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
+class TensExpr(Expr, metaclass=_TensorMetaclass):
     """
     Abstract base class for tensor expressions
 
@@ -1976,7 +1976,7 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
         raise NotImplementedError("abstract method")
 
     @abstractmethod
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         raise NotImplementedError("abstract method")
 
     def fun_eval(self, *index_tuples):
@@ -2316,7 +2316,7 @@ class TensAdd(TensExpr, AssocOp):
     def get_free_indices(self):  # type: () -> List[TensorIndex]
         return self.free_indices
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         newargs = [arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args]
         return self.func(*newargs)
 
@@ -2626,6 +2626,8 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
+    _index_structure = None  # type: _IndexStructure
+
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         indices = cls._parse_indices(tensor_head, indices)
@@ -2807,7 +2809,7 @@ class Tensor(TensExpr):
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> Tensor
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> Tensor
         # TODO: this could be optimized by only swapping the indices
         # instead of visiting the whole expression tree:
         return self.xreplace(repl)
@@ -3038,6 +3040,8 @@ class TensMul(TensExpr, AssocOp):
 
     """
     identity = S.One
+
+    _index_structure = None  # type: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -3354,7 +3358,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
     def split(self):
@@ -3845,7 +3849,7 @@ class TensorElement(TensExpr):
     def get_free_indices(self):
         return self._free_indices
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         # TODO: can be improved:
         return self.xreplace(repl)
 

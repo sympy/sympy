@@ -60,7 +60,7 @@ class AppliedPredicate(Boolean):
     <class 'sympy.assumptions.assume.AppliedPredicate'>
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, predicate, arg):
         arg = _sympify(arg)

@@ -118,7 +118,6 @@ def test_Min():
 
     # issue 7233
     e = Min(0, x)
-    assert e.evalf == e.n
     assert e.n().args == (0, x)
 
     # issue 8643
@@ -185,7 +184,6 @@ def test_Max():
         + Heaviside(x - Max(1, x**2) + 1)
 
     e = Max(0, x)
-    assert e.evalf == e.n
     assert e.n().args == (0, x)
 
     # issue 8643

@@ -1,5 +1,8 @@
 from __future__ import print_function, division
 
+from typing import Any, Callable
+from sympy.core.logic import FuzzyBool
+
 from functools import wraps, reduce
 import collections
 
@@ -57,9 +60,9 @@ class MatrixExpr(Expr):
 
     _op_priority = 11.0
 
-    is_Matrix = True
-    is_MatrixExpr = True
-    is_Identity = None
+    is_Matrix = True  # type: bool
+    is_MatrixExpr = True  # type: bool
+    is_Identity = None  # type: FuzzyBool
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
@@ -151,8 +154,8 @@ class MatrixExpr(Expr):
         raise NotImplementedError()
         #return MatMul(other, Pow(self, S.NegativeOne))
 
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
+    __truediv__ = __div__  # type: Callable[[MatrixExpr, Any], Any]
+    __rtruediv__ = __rdiv__  # type: Callable[[MatrixExpr, Any], Any]
 
     @property
     def rows(self):
@@ -171,7 +174,7 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
-    def as_real_imag(self):
+    def as_real_imag(self, deep=True, **hints):
         from sympy import I
         real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*I)
@@ -256,12 +259,16 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.transpose import transpose
         return transpose(self)
 
-    T = property(transpose, None, None, 'Matrix transposition.')
+    @property
+    def T(self):
+        '''Matrix transposition'''
+        return self.transpose()
 
     def inverse(self):
         return self._eval_inverse()
 
-    inv = inverse
+    def inv(self):
+        return self.inverse()
 
     @property
     def I(self):
@@ -1113,10 +1120,7 @@ class _LeftRightArgs(object):
         self._second_pointer_parent[self._second_pointer_index] = value
 
     def __repr__(self):
-        try:
-            built = [self._build(i) for i in self._lines]
-        except Exception:
-            built = self._lines
+        built = [self._build(i) for i in self._lines]
         return "_LeftRightArgs(lines=%s, higher=%s)" % (
             built,
             self.higher,

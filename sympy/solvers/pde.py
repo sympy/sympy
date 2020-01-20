@@ -35,7 +35,7 @@ more information on each (run help(pde)):
 from __future__ import print_function, division
 
 from itertools import combinations_with_replacement
-from sympy.simplify import simplify
+from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
 from sympy.core.compatibility import reduce, is_sequence
 from sympy.core.function import Function, expand, AppliedUndef, Subs
