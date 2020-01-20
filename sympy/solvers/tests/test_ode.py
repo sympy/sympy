@@ -3830,3 +3830,15 @@ def test_issue_15996():
     sol = Eq(f(x), C1 + (C2 + C3*x - x**2/8 + 5*exp(2*I*x)/16)*sin(x) + (C4 + C5*x + I*x**2/8 + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
     assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_18408():
+    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x)
+    sol = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + x*sinh(x)/2)
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) - 49*f(x) - sinh(3*x)
+    sol = Eq(f(x), C1*exp(-7*x) + C2*exp(7*x) - sinh(3*x)/40)
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
