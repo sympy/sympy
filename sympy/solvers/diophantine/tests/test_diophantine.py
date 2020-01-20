@@ -9,13 +9,15 @@ from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     prime_as_sum_of_two_squares, square_factor, sum_of_four_squares,
     sum_of_three_squares, transformation_to_DN, transformation_to_normal,
     classify_diop, base_solution_linear, cornacchia, sqf_normal,
-    diop_ternary_quadratic_normal, _diop_ternary_quadratic_normal,
+    diop_ternary_quadratic_normal,
     gaussian_reduce, holzer,diop_general_pythagorean,
-    _diop_general_sum_of_squares, _nint_or_floor, _odd, _even,
-    _remove_gcd, check_param, parametrize_ternary_quadratic,
+    check_param, parametrize_ternary_quadratic,
     diop_ternary_quadratic, diop_linear, diop_quadratic,
     diop_general_sum_of_squares, sum_of_powers, sum_of_squares,
-    diop_general_sum_of_even_powers, _can_do_sum_of_squares)
+    diop_general_sum_of_even_powers)
+from sympy.solvers.diophantine.diophantine import (_diop_ternary_quadratic_normal,
+     _diop_general_sum_of_squares, _nint_or_floor, _odd, _even,
+     _remove_gcd, _can_do_sum_of_squares)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL
