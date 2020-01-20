@@ -1,7 +1,7 @@
 from sympy import (
     Abs, acos, Add, asin, atan, Basic, binomial, besselsimp,
     cos, cosh, count_ops, csch, diff, E,
-    Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
+    Eq, erf, exp, exp_polar, expand, expand_multinomial, Expr, factor,
     factorial, Float, Function, gamma, GoldenRatio, hyper,
     hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
@@ -657,6 +657,18 @@ def test_polymorphism():
 
     a = A(5, 2)
     assert simplify(a) == 1
+
+    class B(Expr):
+        def _eval_simplify(self, **kwargs):
+            myoption = kwargs.get('myoption', True)
+            if myoption:
+                return S.One
+            else:
+                return self
+    
+    b = B()
+    assert simplify(b) == 1
+    assert simplify(b, myoption=False) != 1
 
 
 def test_issue_from_PR1599():
