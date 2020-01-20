@@ -489,6 +489,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             i, j, value = rv
             self._mat[i*self.cols + j] = value
 
+    def __hash__(self):
+        return hash(tuple(self))
+
     def as_mutable(self):
         return self.copy()
 
