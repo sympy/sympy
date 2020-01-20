@@ -445,12 +445,17 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            dens = density(expr, **kwargs)
+            if not random_symbols(expr):
+                dens = self.density
+                comp = condition.rhs
+            else:
+                dens = density(expr, **kwargs)
+                comp = 0
             if not isinstance(dens, ContinuousDistribution):
                 dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
-            result = space.probability(condition.__class__(space.value, 0))
+            result = space.probability(condition.__class__(space.value, comp))
             return result if not cond_inv else S.One - result
 
     def where(self, condition):
