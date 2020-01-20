@@ -605,3 +605,6 @@ def test_issue_17431():
 
 def test_issue_17671():
     assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
+
+def test_issue_18306():
+    assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
