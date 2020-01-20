@@ -1344,7 +1344,7 @@ def _special_diop_DN(D, N):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import _special_diop_DN
+    >>> from sympy.solvers.diophantine.diophantine import _special_diop_DN
     >>> _special_diop_DN(13, -3) # Solves equation x**2 - 13*y**2 = -3
     [(7, 2), (137, 38)]
 
