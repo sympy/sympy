@@ -2,10 +2,8 @@ from __future__ import division, print_function
 
 from types import FunctionType
 
-from sympy import Expr
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
 from sympy.core.symbol import _uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
