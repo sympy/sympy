@@ -37,7 +37,7 @@ from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy import Rational, prod, Integer
+from sympy import Rational, prod, Integer, default_sort_key
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
@@ -2252,6 +2252,14 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
             expr = Sum(expr, *sum_indices)
         return expr
 
+    def _expand_partial_derivative(self):
+        # simply delegate the _expand_partial_derivative() to
+        # its arguments to expand a possibly found PartialDerivative
+        return self.func(*[
+                    a._expand_partial_derivative()
+                    if isinstance(a, TensExpr) else a
+                    for a in self.args])
+
 
 class TensAdd(TensExpr, AssocOp):
     """
@@ -2298,6 +2306,7 @@ class TensAdd(TensExpr, AssocOp):
     def __new__(cls, *args, **kw_args):
         args = [_sympify(x) for x in args if x]
         args = TensAdd._tensAdd_flatten(args)
+        args.sort(key=default_sort_key)
         if not args:
             return S.Zero
         if len(args) == 1:
@@ -2545,7 +2554,6 @@ class TensAdd(TensExpr, AssocOp):
         args = self.args
         for x in args:
             a.append(str(x))
-        a.sort()
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')
         return s
@@ -2589,6 +2597,18 @@ class TensAdd(TensExpr, AssocOp):
 
     def _eval_rewrite_as_Indexed(self, *args):
         return Add.fromiter(args)
+
+    def _eval_partial_derivative(self, s):
+        # Evaluation like Add
+        list_addends = []
+        for a in self.args:
+            if isinstance(a, TensExpr):
+                list_addends.append(a._eval_partial_derivative(s))
+            # do not call diff if s is no symbol
+            elif s._diff_wrt:
+                list_addends.append(a._eval_derivative(s))
+
+        return self.func(*list_addends)
 
 
 class Tensor(TensExpr):
@@ -2998,6 +3018,50 @@ class Tensor(TensExpr):
         index_symbols = [i.args[0] for i in self.get_indices()]
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
+
+    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+
+        if not isinstance(s, Tensor):
+            return S.Zero
+        else:
+
+            # @a_i/@a_k = delta_i^k
+            # @a_i/@a^k = g_ij delta^j_k
+            # @a^i/@a^k = delta^i_k
+            # @a^i/@a_k = g^ij delta_j^k
+            # TODO: if there is no metric present, the derivative should be zero?
+
+            if self.head != s.head:
+                return S.Zero
+
+            # if heads are the same, provide delta and/or metric products
+            # for every free index pair in the appropriate tensor
+            # assumed that the free indices are in proper order
+            # A contravariante index in the derivative becomes covariant
+            # after performing the derivative and vice versa
+
+            kronecker_delta_list = [1]
+
+            # not guarantee a correct index order
+
+            for (count, (iself, iother)) in enumerate(zip(self.get_free_indices(), s.get_free_indices())):
+                if iself.tensor_index_type != iother.tensor_index_type:
+                    raise ValueError("index types not compatible")
+                else:
+                    tensor_index_type = iself.tensor_index_type
+                    tensor_metric = tensor_index_type.metric
+                    dummy = TensorIndex("d_" + str(count), tensor_index_type,
+                                        is_up=iself.is_up)
+                    if iself.is_up == iother.is_up:
+                        kroneckerdelta = tensor_index_type.delta(iself, -iother)
+                    else:
+                        kroneckerdelta = (
+                            TensMul(tensor_metric(iself, dummy),
+                                    tensor_index_type.delta(-dummy, -iother))
+                        )
+                    kronecker_delta_list.append(kroneckerdelta)
+            return TensMul.fromiter(kronecker_delta_list).doit()
+            # doit necessary to rename dummy indices accordingly
 
 
 class TensMul(TensExpr, AssocOp):
@@ -3774,6 +3838,24 @@ class TensMul(TensExpr, AssocOp):
         expr = Mul.fromiter(args)
         return self._check_add_Sum(expr, index_symbols)
 
+    def _eval_partial_derivative(self, s):
+        # Evaluation like Mul
+        terms = []
+        for i, arg in enumerate(self.args):
+            # checking whether some tensor instance is differentiated
+            # or some other thing is necessary, but ugly
+            if isinstance(arg, TensExpr):
+                d = arg._eval_partial_derivative(s)
+            else:
+                # do not call diff is s is no symbol
+                if s._diff_wrt:
+                    d = arg._eval_derivative(s)
+                else:
+                    d = S.Zero
+            if d:
+                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
+        return TensAdd.fromiter(terms)
+
 
 class TensorElement(TensExpr):
     """
@@ -3873,6 +3955,7 @@ def canon_bp(p):
     if isinstance(p, TensExpr):
         return p.canon_bp()
     return p
+
 
 def tensor_mul(*a):
     """

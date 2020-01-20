@@ -6544,14 +6544,14 @@ u("""\
     expr = A(i) + 3*B(i)
     ascii_str = \
 """\
- i      i\n\
-A  + 3*B \n\
+   i    i\n\
+3*B  + A \n\
          \
 """
     ucode_str = \
 u("""\
- i      i\n\
-A  + 3⋅B \n\
+   i    i\n\
+3⋅B  + A \n\
          \
 """)
     assert pretty(expr) == ascii_str
@@ -6612,16 +6612,16 @@ A  ⋅───⎜H   ⎟\n\
     expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
     ascii_str = \
 """\
- L_0  d / k           k   \\\n\
-A   *---|B *C    + 3*H    |\n\
+ L_0  d /   k       k     \\\n\
+A   *---|3*H     + B *C   |\n\
        j\\    L_0       L_0/\n\
      dA                    \n\
                            \
 """
     ucode_str = \
 u("""\
- L₀  ∂ ⎛ k          k  ⎞\n\
-A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
+ L₀  ∂ ⎛   k      k    ⎞\n\
+A  ⋅───⎜3⋅H    + B ⋅C  ⎟\n\
       j⎝    L₀       L₀⎠\n\
     ∂A                  \n\
                         \
