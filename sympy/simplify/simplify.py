@@ -554,7 +554,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     it may not be simplified at all. For this case, pass ``recursive=True`` to simplify
     the arguments of expression recursively.
     Since this may greatly decrease the performance, default value for ``recursive`` is False.
-    
+
     >>> simplify(a+1)
     1 + MyExpr()
     >>> simplify(a+1, recursive=True)
