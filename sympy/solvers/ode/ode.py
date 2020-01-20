@@ -355,7 +355,7 @@ def sub_func_doit(eq, func, new):
     ========
 
     >>> from sympy import Derivative, symbols, Function
-    >>> from sympy.solvers.ode import sub_func_doit
+    >>> from sympy.solvers.ode.ode import sub_func_doit
     >>> x, z = symbols('x, z')
     >>> y = Function('y')
 
@@ -759,7 +759,7 @@ def solve_ics(sols, funcs, constants, ics):
     =======
     >>> # From dsolve(f(x).diff(x) - f(x), f(x))
     >>> from sympy import symbols, Eq, exp, Function
-    >>> from sympy.solvers.ode import solve_ics
+    >>> from sympy.solvers.ode.ode import solve_ics
     >>> f = Function('f')
     >>> x, C1 = symbols('x C1')
     >>> sols = [Eq(f(x), C1*exp(x))]
@@ -1852,7 +1852,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     ========
 
     >>> from sympy import Function, Eq, symbols, diff
-    >>> from sympy.solvers.ode import classify_sysode
+    >>> from sympy.solvers.ode.ode import classify_sysode
     >>> from sympy.abc import t
     >>> f, x, y = symbols('f, x, y', cls=Function)
     >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -2443,7 +2443,7 @@ def checksysodesol(eqs, sols, func=None):
     ========
 
     >>> from sympy import Eq, diff, symbols, sin, cos, exp, sqrt, S, Function
-    >>> from sympy.solvers.ode import checksysodesol
+    >>> from sympy.solvers.ode.ode import checksysodesol
     >>> C1, C2 = symbols('C1:3')
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', cls=Function)
@@ -2534,7 +2534,7 @@ def odesimp(ode, eq, func, hint):
     ========
 
     >>> from sympy import sin, symbols, dsolve, pprint, Function
-    >>> from sympy.solvers.ode import odesimp
+    >>> from sympy.solvers.ode.ode import odesimp
     >>> x , u2, C1= symbols('x,u2,C1')
     >>> f = Function('f')
 
@@ -2971,7 +2971,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     f(x)))``.
 
     >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
-    >>> from sympy.solvers.ode import ode_sol_simplicity
+    >>> from sympy.solvers.ode.ode import ode_sol_simplicity
     >>> x, C1, C2 = symbols('x, C1, C2')
     >>> f = Function('f')
 
@@ -3172,7 +3172,7 @@ def constantsimp(expr, constants):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.solvers.ode import constantsimp
+    >>> from sympy.solvers.ode.ode import constantsimp
     >>> C1, C2, C3, x, y = symbols('C1, C2, C3, x, y')
     >>> constantsimp(2*C1*x, {C1, C2, C3})
     C1*x
@@ -3272,7 +3272,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     ========
 
     >>> from sympy import symbols, Eq, pprint
-    >>> from sympy.solvers.ode import constant_renumber
+    >>> from sympy.solvers.ode.ode import constant_renumber
     >>> x, C1, C2, C3 = symbols('x,C1:4')
     >>> expr = C3 + C2*x + C1*x**2
     >>> expr
@@ -4804,7 +4804,7 @@ def _nth_linear_match(eq, func, order):
 
     >>> from sympy import Function, cos, sin
     >>> from sympy.abc import x
-    >>> from sympy.solvers.ode import _nth_linear_match
+    >>> from sympy.solvers.ode.ode import _nth_linear_match
     >>> f = Function('f')
     >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
     ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
@@ -5203,7 +5203,7 @@ def _linear_coeff_match(expr, func):
 
     >>> from sympy import Function
     >>> from sympy.abc import x
-    >>> from sympy.solvers.ode import _linear_coeff_match
+    >>> from sympy.solvers.ode.ode import _linear_coeff_match
     >>> from sympy.functions.elementary.trigonometric import sin
     >>> f = Function('f')
     >>> _linear_coeff_match((
@@ -5788,7 +5788,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     ========
 
     >>> from sympy import log, exp
-    >>> from sympy.solvers.ode import _undetermined_coefficients_match
+    >>> from sympy.solvers.ode.ode import _undetermined_coefficients_match
     >>> from sympy.abc import x
     >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
     {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
@@ -6421,7 +6421,7 @@ def _lie_group_remove(coords):
     Examples
     ========
 
-    >>> from sympy.solvers.ode import _lie_group_remove
+    >>> from sympy.solvers.ode.ode import _lie_group_remove
     >>> from sympy import Function
     >>> from sympy.abc import x, y
     >>> F = Function("F")

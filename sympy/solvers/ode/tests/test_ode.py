@@ -2,10 +2,15 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper)
-from sympy.solvers.ode import (_undetermined_coefficients_match,
-    checkodesol, classify_ode, classify_sysode, constant_renumber,
-    constantsimp, homogeneous_order, infinitesimals, checkinfsol,
-    checksysodesol, solve_ics, dsolve, get_numbered_constants)
+from sympy.solvers.ode import (
+    checkodesol, classify_ode,
+    homogeneous_order, infinitesimals, checkinfsol,
+    dsolve)
+
+from sympy.solvers.ode.ode import (_linear_coeff_match,
+    _ode_factorable_match, _remove_redundant_solutions,
+    _undetermined_coefficients_match, checksysodesol, classify_sysode,
+    constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
 from sympy.functions import airyai, airybi, besselj, bessely
 
@@ -2718,7 +2723,6 @@ def test_homogeneous_function():
 
 
 def test_linear_coeff_match():
-    from sympy.solvers.ode import _linear_coeff_match
     n, d = z*(2*x + 3*f(x) + 5), z*(7*x + 9*f(x) + 11)
     rat = n/d
     eq1 = sin(rat) + cos(rat.expand())
@@ -3535,7 +3539,6 @@ def test_nth_algebraic_redundant_solutions():
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(dsolve(eqn, f(x)))
 
-    from sympy.solvers.ode import _remove_redundant_solutions
     solns = [Eq(f(x), exp(x)),
              Eq(f(x), C1*exp(C2*x))]
     solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)
@@ -3643,7 +3646,6 @@ def test_factorable():
     # Unable to get coverage on this without explicit testing because _desolve
     # already handles Pow before we get there but that should be disabled in
     # future so that factorable gets the raw ODE.
-    from sympy.solvers.ode import _ode_factorable_match
     eq = f(x).diff(x)-1
     assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
 
