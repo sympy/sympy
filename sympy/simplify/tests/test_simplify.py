@@ -665,10 +665,13 @@ def test_polymorphism():
                 return S.One
             else:
                 return self
-    
+
     b = B()
     assert simplify(b) == 1
     assert simplify(b, myoption=False) != 1
+    assert simplify(b+1) != 2
+    assert simplify(b+1, recursive=True) == 2
+    assert simplify(b+1, recursive=True, myoption=False) != 2
 
 
 def test_issue_from_PR1599():

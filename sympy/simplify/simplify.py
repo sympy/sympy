@@ -392,7 +392,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, recursive=False, **kwargs):
     """Simplifies the given expression.
 
     Simplification is not a well defined term and the exact strategies
@@ -528,6 +528,37 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     Note that ``simplify()`` automatically calls ``doit()`` on the final
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
+
+    User can define ``_eval_simplify`` method on custom-defined class to determine
+    its behavior when simplified. If this method is defined, it holds top priority
+    over any other heuristic simplification methods (except when the instance is zero.)
+
+    For example,
+
+    >>> from sympy import Expr, S
+    >>> class MyExpr(Expr):
+    ...     def _eval_simplify(self, myoption=True, **kwargs):
+    ...         if myoption:
+    ...             result = S.One
+    ...         else:
+    ...             result = self
+    ...         return result
+
+    >>> a = MyExpr()
+    >>> simplify(a)
+    1
+    >>> simplify(a, myoption=False)
+    MyExpr()
+
+    However, if user-defined instance is included in ``args`` of other expression,
+    it may not be simplified at all. For this case, pass ``recursive=True`` to simplify
+    the arguments of expression recursively.
+    Since this may greatly decrease the performance, default value for ``recursive`` is False.
+    
+    >>> simplify(a+1)
+    1 + MyExpr()
+    >>> simplify(a+1, recursive=True)
+    2
     """
 
     def shorter(*choices):
@@ -716,6 +747,13 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # restore floats
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
+
+    # Apply simplify recursively
+    if recursive:
+        simp_args = [simplify(a, **kwargs) for a in expr.args]
+        expr = expr.func(*simp_args)
+        kwargs['recursive'] = False
+        expr = simplify(expr, **kwargs)
 
     return done(expr)
 
