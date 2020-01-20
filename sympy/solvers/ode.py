@@ -1517,12 +1517,18 @@ def equivalence(max_num_pow, dem_pow):
     if max_num_pow == 2:
         if dem_pow in [[2, 2], [2, 2, 2]]:
             return "2F1"
+        elif dem_pow in [[2, 4], [0], [2], [6], [4]]:
+            return "1F1"
     elif max_num_pow == 1:
         if dem_pow in [[1, 2, 2], [2, 2, 2], [1, 2], [2, 2]]:
             return "2F1"
+        elif dem_pow in [[1, 4], [1], [4], [6]]:
+            return "1F1"
     elif max_num_pow == 0:
         if dem_pow in [[1, 1, 2], [2, 2], [1 ,2, 2], [1, 1], [2], [1, 2], [2, 2]]:
             return "2F1"
+        elif dem_pow in [[0, 4], [0], [4], [6]]:
+            return "1F1"
 
     return None
 
@@ -1565,7 +1571,6 @@ def equivalence_hypergeometric(A, B, func):
 
     _pow = pow_dem
     k = gcd(_pow)
-
     # computing I0 of the given equation
     I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))), force=True)
     I0 = factor(cancel(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
@@ -1592,6 +1597,8 @@ def equivalence_hypergeometric(A, B, func):
 
     if equivalence(max_num_pow, dem_pow) == "2F1":
         return {'I0':I0, 'k':k, 'sing_point':sing_point, 'type':"2F1"}
+    elif equivalence(max_num_pow, dem_pow) == "1F1":
+        return {'I0':I0, 'k':k, 'sing_point':sing_point, 'type':"1F1"}
     else:
         return None
 
@@ -1642,6 +1649,8 @@ def ode_2nd_hypergeometric(eq, func, order, match):
 
         sol = cancel((e)*x**((-match['k']+1)/2))*sol
         sol = Eq(func, sol)
+    elif match['type'] == "1F1":
+        sol = None
 
     return sol
 
