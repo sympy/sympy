@@ -333,13 +333,8 @@ def _adjugate(M, method="berkowitz", dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import adjugate
     >>> M = Matrix([[1, 2], [3, 4]])
     >>> M.adjugate()
-    Matrix([
-    [ 4, -2],
-    [-3,  1]])
-    >>> adjugate(M)
     Matrix([
     [ 4, -2],
     [-3,  1]])
@@ -382,12 +377,9 @@ def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import charpoly
     >>> from sympy.abc import x, y
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
-    PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
-    >>> charpoly(M)
     PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
     >>> M.charpoly(x) == M.charpoly(y)
     True
@@ -461,11 +453,8 @@ def _cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import cofactor
     >>> M = Matrix([[1, 2], [3, 4]])
     >>> M.cofactor(0, 1)
-    -3
-    >>> cofactor(M, 0, 1)
     -3
 
     See Also
@@ -501,13 +490,8 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import cofactor_matrix
     >>> M = Matrix([[1, 2], [3, 4]])
     >>> M.cofactor_matrix()
-    Matrix([
-    [ 4, -3],
-    [-2,  1]])
-    >>> cofactor_matrix(M)
     Matrix([
     [ 4, -3],
     [-2,  1]])
@@ -594,11 +578,6 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     >>> M = Matrix([[1, 2], [3, 4]])
     >>> M.det()
     -2
-    >>> det(M)
-    -2
-    >>> M = MatrixSymbol('M', 3, 3)
-    >>> det(M)
-    Determinant(M)
 
     See Also
     ========
@@ -649,11 +628,11 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
             return _dotprodsimp(m) if dotprodsimp else m
 
     if method == "bareiss":
-        return M.det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return M._eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     elif method == "berkowitz":
-        return M.det_berkowitz(dotprodsimp=dotprodsimp)
+        return M._eval_det_berkowitz(dotprodsimp=dotprodsimp)
     elif method == "lu":
-        return M.det_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return M._eval_det_lu(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     else:
         raise MatrixError('unknown method for calculating determinant')
 
@@ -848,11 +827,8 @@ def _minor(M, i, j, method="berkowitz", dotprodsimp=None):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import minor
     >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> M.minor(1, 1)
-    -12
-    >>> minor(M, 1, 1)
     -12
 
     See Also
@@ -883,13 +859,8 @@ def _minor_submatrix(M, i, j):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices import minor_submatrix
     >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> M.minor_submatrix(1, 1)
-    Matrix([
-    [1, 3],
-    [7, 9]])
-    >>> minor_submatrix(M, 1, 1)
     Matrix([
     [1, 3],
     [7, 9]])
@@ -914,70 +885,3 @@ def _minor_submatrix(M, i, j):
     cols = [a for a in range(M.cols) if a != j]
 
     return M.extract(rows, cols)
-
-
-# The following are top level stand-alone interface functions which sympify the
-# matrix where needed (so it becomes immutable and returns immutable), otherwise
-# the implementations above do not sympify due to problems in other parts of the
-# codebase using matrices of unsympifiable objects. Technically could just
-# assign these via 'charpoly = _charpoly' where sympification is not needed but
-# this is clearer.
-
-def adjugate(M, method="berkowitz", dotprodsimp=None):
-    from .matrices import MatrixBase
-
-    if isinstance(M, Expr) and not isinstance (M, (MatrixBase)):
-        raise NotImplementedError('adjugate for matrix expressions not supported yet')
-
-    return sympify(_adjugate(M, method=method, dotprodsimp=dotprodsimp))
-
-def charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
-    from .matrices import MatrixBase
-
-    if isinstance(M, Expr) and not isinstance (M, (MatrixBase)):
-        raise NotImplementedError('charpoly for matrix expressions not supported yet')
-
-    return _charpoly(M, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
-
-def cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
-    return _cofactor(M, i, j, method=method, dotprodsimp=dotprodsimp)
-
-def cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
-    return sympify(_cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp))
-
-def det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
-    from .matrices import MatrixBase
-    from .expressions import Determinant
-
-    if isinstance(M, Expr) and not isinstance (M, (MatrixBase)):
-        return Determinant(M).doit()
-
-    return _det(M, method=method, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-
-def det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
-    return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-
-def det_berkowitz(M, dotprodsimp=None):
-    return _det_berkowitz(M, dotprodsimp=dotprodsimp)
-
-def det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
-    return _det_LU(M, iszerofunc=iszerofunc, simpfunc=simpfunc,
-            dotprodsimp=dotprodsimp)
-
-def minor(M, i, j, method="berkowitz", dotprodsimp=None):
-    return _minor(M, i, j, method=method, dotprodsimp=dotprodsimp)
-
-def minor_submatrix(M, i, j):
-    return sympify(_minor_submatrix(M, i, j))
-
-
-adjugate.__doc__        = _adjugate.__doc__
-charpoly.__doc__        = _charpoly.__doc__
-cofactor.__doc__        = _cofactor.__doc__
-cofactor_matrix.__doc__ = _cofactor_matrix.__doc__
-det.__doc__             = _det.__doc__
-det_bareiss.__doc__     = _det_bareiss.__doc__
-det_berkowitz.__doc__   = _det_berkowitz.__doc__
-det_LU.__doc__          = _det_LU.__doc__
-minor.__doc__           = _minor.__doc__
-minor_submatrix.__doc__ = _minor_submatrix.__doc__
