@@ -1063,16 +1063,18 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(*finite_points)
 
     def _contains(self, other):
-        if not isinstance(other, Expr) or (
+        if (not isinstance(other, Expr) or
                 other is S.Infinity or
                 other is S.NegativeInfinity or
                 other is S.NaN or
-                other is S.ComplexInfinity) or other.is_extended_real is False:
+                other is S.ComplexInfinity or
+                other.is_extended_real is False or
+                other.is_real is False):
             return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
-            if not other.is_extended_real is None:
-                return other.is_extended_real
+            if not other.is_real is None:
+                return other.is_real
 
         d = Dummy()
         return self.as_relational(d).subs(d, other)
