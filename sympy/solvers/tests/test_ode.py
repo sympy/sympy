@@ -3843,7 +3843,7 @@ def test_issue_18408():
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
     assert checkodesol(eq, sol) == (True, 0)
 
-    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(3*x) -exp(x)
+    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x) - exp(x)
     sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
     assert checkodesol(eq, sol) == (True, 0)
