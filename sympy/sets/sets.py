@@ -6,7 +6,7 @@ from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered, PY3, reduce
+from sympy.core.compatibility import iterable, ordered, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
@@ -2107,10 +2107,8 @@ def imageset(*args):
             else:
                 s = [Symbol('x%i' % i) for i in range(1, N + 1)]
         else:
-            if PY3:
-                s = inspect.signature(f).parameters
-            else:
-                s = inspect.getargspec(f).args
+            s = inspect.signature(f).parameters
+
         dexpr = _sympify(f(*[Dummy() for i in s]))
         var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
         f = Lambda(var, f(*var))

@@ -13,9 +13,8 @@ from sympy.core.compatibility import (
     reduce)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.logic import fuzzy_and, fuzzy_or
-from sympy.core.numbers import Float, Integer, mod_inverse
+from sympy.core.numbers import Float, mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
@@ -23,7 +22,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.polys import PurePoly, cancel, roots
+from sympy.polys import cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
@@ -36,16 +35,12 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, NonPositiveDefiniteMatrixError)
 
+from .utilities import _iszero, _is_zero_after_expand_mul
 
-def _iszero(x):
-    """Returns True if x is zero."""
-    return getattr(x, 'is_zero', None)
-
-
-def _is_zero_after_expand_mul(x):
-    """Tests by expand_mul only, suitable for polynomials and rational
-    functions."""
-    return expand_mul(x) == 0
+from .determinant import (
+    _find_reasonable_pivot, _find_reasonable_pivot_naive,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -80,547 +75,67 @@ class DeferredVector(Symbol, NotIterable):
 
 
 class MatrixDeterminant(MatrixCommon):
-    """Provides basic matrix determinant operations.
-    Should not be instantiated directly."""
+    """Provides basic matrix determinant operations. Should not be instantiated
+    directly. See ``determinant.py`` for their implementations."""
 
-    def _eval_berkowitz_toeplitz_matrix(self, dotprodsimp=None):
-        """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
-        corresponding to ``self`` and A is the first principal submatrix.
+    def _find_reasonable_pivot(self, iszerofunc=_iszero, simpfunc=_simplify):
+        return _find_reasonable_pivot(self, iszerofunc=iszerofunc,
+                simpfunc=iszerofunc)
 
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-
-        # the 0 x 0 case is trivial
-        if self.rows == 0 and self.cols == 0:
-            return self._new(1,1, [self.one])
-
-        #
-        # Partition self = [ a_11  R ]
-        #                  [ C     A ]
-        #
-
-        a, R = self[0,0],   self[0, 1:]
-        C, A = self[1:, 0], self[1:,1:]
-
-        #
-        # The Toeplitz matrix looks like
-        #
-        #  [ 1                                     ]
-        #  [ -a         1                          ]
-        #  [ -RC       -a        1                 ]
-        #  [ -RAC     -RC       -a       1         ]
-        #  [ -RA**2C -RAC      -RC      -a       1 ]
-        #  etc.
-
-        # Compute the diagonal entries.
-        # Because multiplying matrix times vector is so much
-        # more efficient than matrix times matrix, recursively
-        # compute -R * A**n * C.
-        diags = [C]
-        for i in range(self.rows - 2):
-            diags.append(A.multiply(diags[i], dotprodsimp=dotprodsimp))
-        diags = [(-R).multiply(d, dotprodsimp=dotprodsimp)[0, 0] for d in diags]
-        diags = [self.one, -a] + diags
-
-        def entry(i,j):
-            if j > i:
-                return self.zero
-            return diags[i - j]
-
-        toeplitz = self._new(self.cols + 1, self.rows, entry)
-        return (A, toeplitz)
-
-    def _eval_berkowitz_vector(self, dotprodsimp=None):
-        """ Run the Berkowitz algorithm and return a vector whose entries
-            are the coefficients of the characteristic polynomial of ``self``.
-
-            Given N x N matrix, efficiently compute
-            coefficients of characteristic polynomials of ``self``
-            without division in the ground domain.
-
-            This method is particularly useful for computing determinant,
-            principal minors and characteristic polynomial when ``self``
-            has complicated coefficients e.g. polynomials. Semi-direct
-            usage of this algorithm is also important in computing
-            efficiently sub-resultant PRS.
-
-            Assuming that M is a square matrix of dimension N x N and
-            I is N x N identity matrix, then the Berkowitz vector is
-            an N x 1 vector whose entries are coefficients of the
-            polynomial
-
-                           charpoly(M) = det(t*I - M)
-
-            As a consequence, all polynomials generated by Berkowitz
-            algorithm are monic.
-
-            Parameters
-            ==========
-
-            dotprodsimp : bool, optional
-                Specifies whether intermediate term algebraic simplification is
-                used during matrix multiplications to control expression blowup
-                and thus speed up calculation.
-
-           For more information on the implemented algorithm refer to:
-
-           [1] S.J. Berkowitz, On computing the determinant in small
-               parallel time using a small number of processors, ACM,
-               Information Processing Letters 18, 1984, pp. 147-150
-
-           [2] M. Keber, Division-Free computation of sub-resultants
-               using Bezout matrices, Tech. Report MPI-I-2006-1-006,
-               Saarbrucken, 2006
-        """
-
-        # handle the trivial cases
-        if self.rows == 0 and self.cols == 0:
-            return self._new(1, 1, [self.one])
-        elif self.rows == 1 and self.cols == 1:
-            return self._new(2, 1, [self.one, -self[0,0]])
-
-        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix(dotprodsimp=dotprodsimp)
-        return toeplitz.multiply(submat._eval_berkowitz_vector(dotprodsimp=dotprodsimp),
-                dotprodsimp=dotprodsimp)
+    def _find_reasonable_pivot_naive(self, iszerofunc=_iszero, simpfunc=None):
+        return _find_reasonable_pivot_naive(self, iszerofunc=iszerofunc,
+                simpfunc=simpfunc)
 
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul,
             dotprodsimp=None):
-        """Compute matrix determinant using Bareiss' fraction-free
-        algorithm which is an extension of the well known Gaussian
-        elimination method. This approach is best suited for dense
-        symbolic matrices and will result in a determinant with
-        minimal number of fractions. It means that less term
-        rewriting is needed on resulting formulae.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        TODO: Implement algorithm for sparse matrices (SFF),
-        http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-        """
-
-        # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
-        # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
-        def bareiss(mat, cumm=1):
-            if mat.rows == 0:
-                return mat.one
-            elif mat.rows == 1:
-                return mat[0, 0]
-
-            # find a pivot and extract the remaining matrix
-            # With the default iszerofunc, _find_reasonable_pivot slows down
-            # the computation by the factor of 2.5 in one test.
-            # Relevant issues: #10279 and #13877.
-            pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
-                                         iszerofunc=iszerofunc)
-            if pivot_pos is None:
-                return mat.zero
-
-            # if we have a valid pivot, we'll do a "row swap", so keep the
-            # sign of the det
-            sign = (-1) ** (pivot_pos % 2)
-
-            # we want every row but the pivot row and every column
-            rows = list(i for i in range(mat.rows) if i != pivot_pos)
-            cols = list(range(mat.cols))
-            tmp_mat = mat.extract(rows, cols)
-
-            def entry(i, j):
-                ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-                if dotprodsimp:
-                    return _dotprodsimp(ret)
-                elif not ret.is_Atom:
-                    return cancel(ret)
-                return ret
-
-            return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
-
-        return bareiss(self)
+        return _det_bareiss(self, iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
 
     def _eval_det_berkowitz(self, dotprodsimp=None):
-        """ Use the Berkowitz algorithm to compute the determinant.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-
-        berk_vector = self._eval_berkowitz_vector(dotprodsimp=dotprodsimp)
-        return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
+        return _det_berkowitz(self, dotprodsimp=dotprodsimp)
 
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
-        """ Computes the determinant of a matrix from its LU decomposition.
-        This function uses the LU decomposition computed by
-        LUDecomposition_Simple().
-
-        The keyword arguments iszerofunc and simpfunc are passed to
-        LUDecomposition_Simple().
-        iszerofunc is a callable that returns a boolean indicating if its
-        input is zero, or None if it cannot make the determination.
-        simpfunc is a callable that simplifies its input.
-        The default is simpfunc=None, which indicate that the pivot search
-        algorithm should not attempt to simplify any candidate pivots.
-        If simpfunc fails to simplify its input, then it must return its input
-        instead of a copy.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-
-        if self.rows == 0:
-            return self.one
-            # sympy/matrices/tests/test_matrices.py contains a test that
-            # suggests that the determinant of a 0 x 0 matrix is one, by
-            # convention.
-
-        lu, row_swaps = self.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None,
+        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
                 dotprodsimp=dotprodsimp)
-        # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
-        # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
-        # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).
-        # LUdecomposition_Simple() returns a list of row exchange index pairs, rather
-        # than a permutation matrix, but det(P) = (-1)**len(row_swaps).
 
-        # Avoid forming the potentially time consuming  product of U's diagonal entries
-        # if the product is zero.
-        # Bottom right entry of U is 0 => det(A) = 0.
-        # It may be impossible to determine if this entry of U is zero when it is symbolic.
-        if iszerofunc(lu[lu.rows-1, lu.rows-1]):
-            return self.zero
-
-        # Compute det(P)
-        det = -self.one if len(row_swaps)%2 else self.one
-
-        # Compute det(U) by calculating the product of U's diagonal entries.
-        # The upper triangular portion of lu is the upper triangular portion of the
-        # U factor in the LU decomposition.
-        for k in range(lu.rows):
-            det *= lu[k, k]
-
-        # return det(P)*det(U)
-        return det
-
-    def _eval_determinant(self):
-        """Assumed to exist by matrix expressions; If we subclass
-        MatrixDeterminant, we can fully evaluate determinants."""
-        return self.det()
+    def _eval_determinant(self): # for expressions.determinant.Determinant
+        return _det(self)
 
     def adjugate(self, method="berkowitz", dotprodsimp=None):
-        """Returns the adjugate, or classical adjoint, of
-        a matrix.  That is, the transpose of the matrix of cofactors.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during matrix multiplication. If this
-            is true then the simplify function is not used.
-
-        https://en.wikipedia.org/wiki/Adjugate
-
-        See Also
-        ========
-
-        cofactor_matrix
-        sympy.matrices.common.MatrixCommon.transpose
-        """
-        return self.cofactor_matrix(method, dotprodsimp=dotprodsimp).transpose()
+        return _adjugate(self, method=method, dotprodsimp=dotprodsimp)
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
-        """Computes characteristic polynomial det(x*I - self) where I is
-        the identity matrix.
-
-        A PurePoly is returned, so using different variables for ``x`` does
-        not affect the comparison or the polynomials:
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x, y
-        >>> A = Matrix([[1, 3], [2, 0]])
-        >>> A.charpoly(x) == A.charpoly(y)
-        True
-
-        Specifying ``x`` is optional; a symbol named ``lambda`` is used by
-        default (which looks good when pretty-printed in unicode):
-
-        >>> A.charpoly().as_expr()
-        lambda**2 - lambda - 6
-
-        And if ``x`` clashes with an existing symbol, underscores will
-        be prepended to the name to make it unique:
-
-        >>> A = Matrix([[1, 2], [x, 0]])
-        >>> A.charpoly(x).as_expr()
-        _x**2 - _x - 2*x
-
-        Whether you pass a symbol or not, the generator can be obtained
-        with the gen attribute since it may not be the same as the symbol
-        that was passed:
-
-        >>> A.charpoly(x).gen
-        _x
-        >>> A.charpoly(x).gen == x
-        False
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during matrix multiplication. If this
-            is true then the simplify function is not used.
-
-        Notes
-        =====
-
-        The Samuelson-Berkowitz algorithm is used to compute
-        the characteristic polynomial efficiently and without any
-        division operations.  Thus the characteristic polynomial over any
-        commutative ring without zero divisors can be computed.
-
-        See Also
-        ========
-
-        det
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError()
-
-        if dotprodsimp:
-            simplify = lambda e: e
-
-        berk_vector = self._eval_berkowitz_vector(dotprodsimp=dotprodsimp)
-        x = _uniquely_named_symbol(x, berk_vector)
-        return PurePoly([simplify(a) for a in berk_vector], x)
+        return _charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
 
     def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
-        """Calculate the cofactor of an element.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during matrix multiplication. If this
-            is true then the simplify function is not used.
-
-        See Also
-        ========
-
-        cofactor_matrix
-        minor
-        minor_submatrix
-        """
-
-        if not self.is_square or self.rows < 1:
-            raise NonSquareMatrixError()
-
-        return (-1)**((i + j) % 2) * self.minor(i, j, method, dotprodsimp=dotprodsimp)
+        return _cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
 
     def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
-        """Return a matrix containing the cofactor of each element.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            to control expression blowup during matrix multiplication. If this
-            is true then the simplify function is not used.
-
-        See Also
-        ========
-
-        cofactor
-        minor
-        minor_submatrix
-        adjugate
-        """
-
-        if not self.is_square or self.rows < 1:
-            raise NonSquareMatrixError()
-
-        return self._new(self.rows, self.cols,
-                         lambda i, j: self.cofactor(i, j, method, dotprodsimp=dotprodsimp))
+        return _cofactor_matrix(self, method=method, dotprodsimp=dotprodsimp)
 
     def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
-        """Computes the determinant of a matrix.
-
-        Parameters
-        ==========
-
-        method : string, optional
-            Specifies the algorithm used for computing the matrix determinant.
-
-            If the matrix is at most 3x3, a hard-coded formula is used and the
-            specified method is ignored. Otherwise, it defaults to
-            ``'bareiss'``.
-
-            If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
-            be used.
-
-            If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
-
-            Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
-
-            .. note::
-                For backward compatibility, legacy keys like "bareis" and
-                "det_lu" can still be used to indicate the corresponding
-                methods.
-                And the keys are also case-insensitive for now. However, it is
-                suggested to use the precise keys for specifying the method.
-
-        iszerofunc : FunctionType or None, optional
-            If it is set to ``None``, it will be defaulted to ``_iszero`` if the
-            method is set to ``'bareiss'``, and ``_is_zero_after_expand_mul`` if
-            the method is set to ``'lu'``.
-
-            It can also accept any user-specified zero testing function, if it
-            is formatted as a function which accepts a single symbolic argument
-            and returns ``True`` if it is tested as zero and ``False`` if it
-            tested as non-zero, and also ``None`` if it is undecidable.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Returns
-        =======
-
-        det : Basic
-            Result of determinant.
-
-        Raises
-        ======
-
-        ValueError
-            If unrecognized keys are given for ``method`` or ``iszerofunc``.
-
-        NonSquareMatrixError
-            If attempted to calculate determinant from a non-square matrix.
-        """
-
-        # sanitize `method`
-        method = method.lower()
-        if method == "bareis":
-            method = "bareiss"
-        if method == "det_lu":
-            method = "lu"
-        if method not in ("bareiss", "berkowitz", "lu"):
-            raise ValueError("Determinant method '%s' unrecognized" % method)
-
-        if iszerofunc is None:
-            if method == "bareiss":
-                iszerofunc = _is_zero_after_expand_mul
-            elif method == "lu":
-                iszerofunc = _iszero
-        elif not isinstance(iszerofunc, FunctionType):
-            raise ValueError("Zero testing method '%s' unrecognized" % iszerofunc)
-
-        # if methods were made internal and all determinant calculations
-        # passed through here, then these lines could be factored out of
-        # the method routines
-        if not self.is_square:
-            raise NonSquareMatrixError()
-
-        n = self.rows
-        if n == 0:
-            return self.one
-        elif n == 1:
-            return self[0,0]
-        elif n == 2:
-            m = self[0, 0] * self[1, 1] - self[0, 1] * self[1, 0]
-            return _dotprodsimp(m) if dotprodsimp else m
-        elif n == 3:
-            m =  (self[0, 0] * self[1, 1] * self[2, 2]
-                + self[0, 1] * self[1, 2] * self[2, 0]
-                + self[0, 2] * self[1, 0] * self[2, 1]
-                - self[0, 2] * self[1, 1] * self[2, 0]
-                - self[0, 0] * self[1, 2] * self[2, 1]
-                - self[0, 1] * self[1, 0] * self[2, 2])
-            return _dotprodsimp(m) if dotprodsimp else m
-
-        if method == "bareiss":
-            return self._eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "berkowitz":
-            return self._eval_det_berkowitz(dotprodsimp=dotprodsimp)
-        elif method == "lu":
-            return self._eval_det_lu(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return _det(self, method=method, iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
 
     def minor(self, i, j, method="berkowitz", dotprodsimp=None):
-        """Return the (i,j) minor of ``self``.  That is,
-        return the determinant of the matrix obtained by deleting
-        the `i`th row and `j`th column from ``self``.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        minor_submatrix
-        cofactor
-        det
-        """
-
-        if not self.is_square or self.rows < 1:
-            raise NonSquareMatrixError()
-
-        return self.minor_submatrix(i, j).det(method=method, dotprodsimp=dotprodsimp)
+        return _minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
 
     def minor_submatrix(self, i, j):
-        """Return the submatrix obtained by removing the `i`th row
-        and `j`th column from ``self``.
+        return _minor_submatrix(self, i, j)
 
-        See Also
-        ========
-
-        minor
-        cofactor
-        """
-
-        if i < 0:
-            i += self.rows
-        if j < 0:
-            j += self.cols
-
-        if not 0 <= i < self.rows or not 0 <= j < self.cols:
-            raise ValueError("`i` and `j` must satisfy 0 <= i < ``self.rows`` "
-                             "(%d)" % self.rows + "and 0 <= j < ``self.cols`` (%d)." % self.cols)
-
-        rows = [a for a in range(self.rows) if a != i]
-        cols = [a for a in range(self.cols) if a != j]
-        return self.extract(rows, cols)
+    _find_reasonable_pivot.__doc__       = _find_reasonable_pivot.__doc__
+    _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
+    _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
+    _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
+    _eval_det_lu.__doc__                 = _det_LU.__doc__
+    _eval_determinant.__doc__            = _det.__doc__
+    adjugate.__doc__                     = _adjugate.__doc__
+    charpoly.__doc__                     = _charpoly.__doc__
+    cofactor.__doc__                     = _cofactor.__doc__
+    cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
+    det.__doc__                          = _det.__doc__
+    minor.__doc__                        = _minor.__doc__
+    minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
 
 class MatrixReductions(MatrixDeterminant):
@@ -2166,7 +1681,6 @@ class MatrixEigen(MatrixSubspaces):
         return vals
 
 
-
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
@@ -2443,26 +1957,7 @@ class MatrixDeprecated(MatrixCommon):
         return self.cofactor_matrix(method=method)
 
     def det_bareis(self):
-        return self.det(method='bareiss')
-
-    def det_bareiss(self):
-        """Compute matrix determinant using Bareiss' fraction-free
-        algorithm which is an extension of the well known Gaussian
-        elimination method. This approach is best suited for dense
-        symbolic matrices and will result in a determinant with
-        minimal number of fractions. It means that less term
-        rewriting is needed on resulting formulae.
-
-        TODO: Implement algorithm for sparse matrices (SFF),
-        http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-
-        See Also
-        ========
-
-        det
-        berkowitz_det
-        """
-        return self.det(method='bareiss')
+        return _det_bareiss(self)
 
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
@@ -5575,187 +5070,3 @@ def classof(A, B):
 def a2idx(j, n=None):
     from sympy.matrices.common import a2idx as a2idx_
     return a2idx_(j, n)
-
-
-def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
-    """ Find the lowest index of an item in ``col`` that is
-    suitable for a pivot.  If ``col`` consists only of
-    Floats, the pivot with the largest norm is returned.
-    Otherwise, the first element where ``iszerofunc`` returns
-    False is used.  If ``iszerofunc`` doesn't return false,
-    items are simplified and retested until a suitable
-    pivot is found.
-
-    Returns a 4-tuple
-        (pivot_offset, pivot_val, assumed_nonzero, newly_determined)
-    where pivot_offset is the index of the pivot, pivot_val is
-    the (possibly simplified) value of the pivot, assumed_nonzero
-    is True if an assumption that the pivot was non-zero
-    was made without being proved, and newly_determined are
-    elements that were simplified during the process of pivot
-    finding."""
-
-    newly_determined = []
-    col = list(col)
-    # a column that contains a mix of floats and integers
-    # but at least one float is considered a numerical
-    # column, and so we do partial pivoting
-    if all(isinstance(x, (Float, Integer)) for x in col) and any(
-            isinstance(x, Float) for x in col):
-        col_abs = [abs(x) for x in col]
-        max_value = max(col_abs)
-        if iszerofunc(max_value):
-            # just because iszerofunc returned True, doesn't
-            # mean the value is numerically zero.  Make sure
-            # to replace all entries with numerical zeros
-            if max_value != 0:
-                newly_determined = [(i, 0) for i, x in enumerate(col) if x != 0]
-            return (None, None, False, newly_determined)
-        index = col_abs.index(max_value)
-        return (index, col[index], False, newly_determined)
-
-    # PASS 1 (iszerofunc directly)
-    possible_zeros = []
-    for i, x in enumerate(col):
-        is_zero = iszerofunc(x)
-        # is someone wrote a custom iszerofunc, it may return
-        # BooleanFalse or BooleanTrue instead of True or False,
-        # so use == for comparison instead of `is`
-        if is_zero == False:
-            # we found something that is definitely not zero
-            return (i, x, False, newly_determined)
-        possible_zeros.append(is_zero)
-
-    # by this point, we've found no certain non-zeros
-    if all(possible_zeros):
-        # if everything is definitely zero, we have
-        # no pivot
-        return (None, None, False, newly_determined)
-
-    # PASS 2 (iszerofunc after simplify)
-    # we haven't found any for-sure non-zeros, so
-    # go through the elements iszerofunc couldn't
-    # make a determination about and opportunistically
-    # simplify to see if we find something
-    for i, x in enumerate(col):
-        if possible_zeros[i] is not None:
-            continue
-        simped = simpfunc(x)
-        is_zero = iszerofunc(simped)
-        if is_zero == True or is_zero == False:
-            newly_determined.append((i, simped))
-        if is_zero == False:
-            return (i, simped, False, newly_determined)
-        possible_zeros[i] = is_zero
-
-    # after simplifying, some things that were recognized
-    # as zeros might be zeros
-    if all(possible_zeros):
-        # if everything is definitely zero, we have
-        # no pivot
-        return (None, None, False, newly_determined)
-
-    # PASS 3 (.equals(0))
-    # some expressions fail to simplify to zero, but
-    # ``.equals(0)`` evaluates to True.  As a last-ditch
-    # attempt, apply ``.equals`` to these expressions
-    for i, x in enumerate(col):
-        if possible_zeros[i] is not None:
-            continue
-        if x.equals(S.Zero):
-            # ``.iszero`` may return False with
-            # an implicit assumption (e.g., ``x.equals(0)``
-            # when ``x`` is a symbol), so only treat it
-            # as proved when ``.equals(0)`` returns True
-            possible_zeros[i] = True
-            newly_determined.append((i, S.Zero))
-
-    if all(possible_zeros):
-        return (None, None, False, newly_determined)
-
-    # at this point there is nothing that could definitely
-    # be a pivot.  To maintain compatibility with existing
-    # behavior, we'll assume that an illdetermined thing is
-    # non-zero.  We should probably raise a warning in this case
-    i = possible_zeros.index(None)
-    return (i, col[i], True, newly_determined)
-
-def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
-    """
-    Helper that computes the pivot value and location from a
-    sequence of contiguous matrix column elements. As a side effect
-    of the pivot search, this function may simplify some of the elements
-    of the input column. A list of these simplified entries and their
-    indices are also returned.
-    This function mimics the behavior of _find_reasonable_pivot(),
-    but does less work trying to determine if an indeterminate candidate
-    pivot simplifies to zero. This more naive approach can be much faster,
-    with the trade-off that it may erroneously return a pivot that is zero.
-
-    ``col`` is a sequence of contiguous column entries to be searched for
-    a suitable pivot.
-    ``iszerofunc`` is a callable that returns a Boolean that indicates
-    if its input is zero, or None if no such determination can be made.
-    ``simpfunc`` is a callable that simplifies its input. It must return
-    its input if it does not simplify its input. Passing in
-    ``simpfunc=None`` indicates that the pivot search should not attempt
-    to simplify any candidate pivots.
-
-    Returns a 4-tuple:
-    (pivot_offset, pivot_val, assumed_nonzero, newly_determined)
-    ``pivot_offset`` is the sequence index of the pivot.
-    ``pivot_val`` is the value of the pivot.
-    pivot_val and col[pivot_index] are equivalent, but will be different
-    when col[pivot_index] was simplified during the pivot search.
-    ``assumed_nonzero`` is a boolean indicating if the pivot cannot be
-    guaranteed to be zero. If assumed_nonzero is true, then the pivot
-    may or may not be non-zero. If assumed_nonzero is false, then
-    the pivot is non-zero.
-    ``newly_determined`` is a list of index-value pairs of pivot candidates
-    that were simplified during the pivot search.
-    """
-
-    # indeterminates holds the index-value pairs of each pivot candidate
-    # that is neither zero or non-zero, as determined by iszerofunc().
-    # If iszerofunc() indicates that a candidate pivot is guaranteed
-    # non-zero, or that every candidate pivot is zero then the contents
-    # of indeterminates are unused.
-    # Otherwise, the only viable candidate pivots are symbolic.
-    # In this case, indeterminates will have at least one entry,
-    # and all but the first entry are ignored when simpfunc is None.
-    indeterminates = []
-    for i, col_val in enumerate(col):
-        col_val_is_zero = iszerofunc(col_val)
-        if col_val_is_zero == False:
-            # This pivot candidate is non-zero.
-            return i, col_val, False, []
-        elif col_val_is_zero is None:
-            # The candidate pivot's comparison with zero
-            # is indeterminate.
-            indeterminates.append((i, col_val))
-
-    if len(indeterminates) == 0:
-        # All candidate pivots are guaranteed to be zero, i.e. there is
-        # no pivot.
-        return None, None, False, []
-
-    if simpfunc is None:
-        # Caller did not pass in a simplification function that might
-        # determine if an indeterminate pivot candidate is guaranteed
-        # to be nonzero, so assume the first indeterminate candidate
-        # is non-zero.
-        return indeterminates[0][0], indeterminates[0][1], True, []
-
-    # newly_determined holds index-value pairs of candidate pivots
-    # that were simplified during the search for a non-zero pivot.
-    newly_determined = []
-    for i, col_val in indeterminates:
-        tmp_col_val = simpfunc(col_val)
-        if id(col_val) != id(tmp_col_val):
-            # simpfunc() simplified this candidate pivot.
-            newly_determined.append((i, tmp_col_val))
-            if iszerofunc(tmp_col_val) == False:
-                # Candidate pivot simplified to a guaranteed non-zero value.
-                return i, tmp_col_val, False, newly_determined
-
-    return indeterminates[0][0], indeterminates[0][1], True, newly_determined

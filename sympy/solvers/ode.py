@@ -253,7 +253,7 @@ from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
+from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, tan, sqrt, \
     atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
@@ -5822,7 +5822,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
                             foundtrig = True
             return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Function:
-            if expr.func in (sin, cos, exp):
+            if expr.func in (sin, cos, exp, sinh, cosh):
                 if expr.args[0].match(a*x + b):
                     return True
                 else:

@@ -1955,6 +1955,9 @@ class LatexPrinter(Printer):
     def _print_Range(self, s):
         dots = r'\ldots'
 
+        if s.has(Symbol):
+            return self._print_Basic(s)
+
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:
                 printset = dots, -1, 0, 1, dots
