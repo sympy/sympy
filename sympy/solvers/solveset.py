@@ -1176,11 +1176,16 @@ def _invert_modular(modterm, rhs, n, symbol):
             x_indep_term = rhs*invert(g, m)
             return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
     if a.is_polynomial():
-        remainder_list = polynomial_congruence(a - rhs, int(m))
+        try:
+            remainder_list = polynomial_congruence(a - rhs, int(m))
+            if remainder_list == []:
+                return symbol, EmptySet
+        except (ValueError, NotImplementedError):
+            return modterm, rhs
         g_n = EmptySet
         for rem in remainder_list:
             g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
-        return a, g_n
+        return symbol, g_n
     if a.is_Pow:
         # base**expo = a
         base, expo = a.args
@@ -1289,9 +1294,8 @@ def _solve_modular(f, symbol, domain):
 
     if f_x is modterm and g_n is rhs:
         return unsolved_result
-    if g_n == EmptySet:
-        return g_n
-    if f_x is symbol or modterm.args[0].is_polynomial():
+
+    if f_x is symbol:
         if domain is not S.Integers:
             return domain.intersect(g_n)
         return g_n

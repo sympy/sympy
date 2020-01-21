@@ -2172,15 +2172,15 @@ def test_invert_modular():
     assert invert_modular(Mod(x + 8, 7), S(5), n, x) == \
             (x, ImageSet(Lambda(n, 7*n + 4), S.Integers))
     assert invert_modular(Mod(x**2 + x, 7), S(5), n, x) == \
-            (x**2 + x, ImageSet(Lambda(n, 7*n + 3), S.Integers))
+            (x, ImageSet(Lambda(n, 7*n + 3), S.Integers))
     # a.is_Mul
     assert invert_modular(Mod(3*x, 7), S(5), n, x) == \
             (x, ImageSet(Lambda(n, 7*n + 4), S.Integers))
     assert invert_modular(Mod((x + 1)*(x + 2), 7), S(5), n, x) == \
-            ((x + 1)*(x + 2), ImageSet(Lambda(n, 7*n + 2), S.Integers))
+            (x, ImageSet(Lambda(n, 7*n + 2), S.Integers))
     # a.is_Pow
     assert invert_modular(Mod(x**4, 7), S(5), n, x) == \
-            (x**4, EmptySet())
+            (x, EmptySet())
     assert invert_modular(Mod(3**x, 4), S(3), n, x) == \
             (x, ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x) == \
