@@ -121,7 +121,6 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = {l: (g(l), G(l)) for l in greek_letters}
 greek_unicode = dict((L, g(L)) for L in greek_letters)
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
@@ -146,7 +145,6 @@ greek_bold_letters = list(greeks) # make a copy, not strictly required here
 greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_bold_unicode = {l: (g(l), G(l)) for l in greek_bold_letters}
 greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
 greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
 greek_bold_unicode['lambda'] = greek_unicode['lamda']

@@ -156,7 +156,7 @@ class Symbol(AtomicExpr, Boolean):
 
     is_comparable = False
 
-    __slots__ = ['name']
+    __slots__ = ('name',)
 
     is_Symbol = True
     is_symbol = True
@@ -347,7 +347,7 @@ class Dummy(Symbol):
     _prng = random.Random()
     _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
-    __slots__ = ['dummy_index']
+    __slots__ = ('dummy_index',)
 
     is_Dummy = True
 
@@ -470,7 +470,7 @@ class Wild(Symbol):
     """
     is_Wild = True
 
-    __slots__ = ['exclude', 'properties']
+    __slots__ = ('exclude', 'properties')
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])

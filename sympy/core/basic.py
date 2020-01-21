@@ -7,7 +7,7 @@ from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
-    with_metaclass, PY3, Mapping)
+    PY3, Mapping)
 from .singleton import S
 
 from inspect import getmro
@@ -26,7 +26,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(with_metaclass(ManagedProperties)):
+class Basic(metaclass=ManagedProperties):
     """
     Base class for all objects in SymPy.
 
@@ -56,10 +56,10 @@ class Basic(with_metaclass(ManagedProperties)):
     (x,)
 
     """
-    __slots__ = ['_mhash',              # hash value
+    __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
                  '_assumptions'
-                ]
+                )
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -1792,7 +1792,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
-    _constructor_postprocessor_mapping = {}
+    _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
@@ -1837,7 +1837,7 @@ class Atom(Basic):
 
     is_Atom = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:

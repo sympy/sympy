@@ -19,7 +19,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
-from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution
+from sympy.stats.crv import SingleContinuousPSpace
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -590,6 +591,16 @@ def test_exponential():
     z = Dummy('z')
     assert P(X > z) == exp(-z*rate)
     assert P(X < z) == 0
+    #Test issue 10076 (Distribution with interval(0,oo))
+    x = Symbol('x')
+    _z = Dummy('_z')
+    b = SingleContinuousPSpace(x, ExponentialDistribution(2))
+
+    expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
+    assert b.probability(x > 3, evaluate=False).dummy_eq(expected1) is True
+
+    expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
+    assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
 
 def test_exponential_power():
     mu = Symbol('mu')
@@ -1226,6 +1237,23 @@ def test_NormalDistribution():
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
+    #Test issue 10076
+    a = SingleContinuousPSpace(x, NormalDistribution(2, 4))
+    _z = Dummy('_z')
+
+    expected1 = Integral(sqrt(2)*exp(-(_z - 2)**2/32)/(8*sqrt(pi)),(_z, -oo, 1))
+    assert a.probability(x < 1, evaluate=False).dummy_eq(expected1) is True
+
+    expected2 = Integral(sqrt(2)*exp(-(_z - 2)**2/32)/(8*sqrt(pi)),(_z, 1, oo))
+    assert a.probability(x > 1, evaluate=False).dummy_eq(expected2) is True
+
+    b = SingleContinuousPSpace(x, NormalDistribution(1, 9))
+
+    expected3 = Integral(sqrt(2)*exp(-(_z - 1)**2/162)/(18*sqrt(pi)),(_z, 6, oo))
+    assert b.probability(x > 6, evaluate=False).dummy_eq(expected3) is True
+
+    expected4 = Integral(sqrt(2)*exp(-(_z - 1)**2/162)/(18*sqrt(pi)),(_z, -oo, 6))
+    assert b.probability(x < 6, evaluate=False).dummy_eq(expected4) is True
 
 
 def test_random_parameters():

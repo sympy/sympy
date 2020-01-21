@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Dict, List
+
 from sympy.core import S
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
@@ -109,7 +111,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}
+_free_group_cache = {}  # type: Dict[int, FreeGroup]
 
 class FreeGroup(DefaultPrinting):
     """
@@ -134,7 +136,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
-    relators = tuple()
+    relators = []  # type: List[Expr]
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))

@@ -2329,19 +2329,9 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     sol_simp = dsolve(eq, f(x), hint=our_hint, simplify=True)
     sol_nsimp = dsolve(eq, f(x), hint=our_hint, simplify=False)
     assert sol_simp != sol_nsimp
-    # /----------
-    # eq.subs(*sol_simp.args) doesn't simplify to zero without help
-    (t, zero) = checkodesol(eq, sol_simp, order=5, solve_for_func=False)
-    # if this fails because zero.is_zero, replace this block with
-    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
-    # \-----------
-    (t, zero) = checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)
-    # if this fails because zero.is_zero, replace this block with
-    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert zero == 0
-    # \-----------
-    assert t
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
+
 
 def test_Liouville_ODE():
     hint = 'Liouville'
@@ -3795,4 +3785,48 @@ def test_issue_15889():
     eq = f(x).diff(x)**2 - f(x)**3
     sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
     assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_5096():
+    eq = f(x).diff(x, x) + f(x) - x*sin(x - 2)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**2*cos(x - 2)/4 + x*sin(x - 2)/4)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) + f(x) - x**4*sin(x-1)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**5*cos(x - 1)/10 + x**4*sin(x - 1)/4 + x**3*cos(x - 1)/2 - 3*x**2*sin(x - 1)/4 - 3*x*cos(x - 1)/4)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) - f(x) - exp(x - 1)
+    sol = Eq(f(x), C1*exp(-x) + C2*exp(x) + x*exp(x - 1)/2)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2)+f(x)-(sin(x-2)+1)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x*cos(x - 2)/2 + 1)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = 2*x**2*f(x).diff(x, 2) + f(x) + sqrt(2*x)*sin(log(2*x)/2)
+    sol = Eq(f(x), sqrt(x)*(C1*sin(log(x)/2) + C2*cos(log(x)/2) + sqrt(2)*log(x)*cos(log(2*x)/2)/2))
+    assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2)
+    sol = Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)
+    assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_15996():
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
+    sol = Eq(f(x), C1 + x**2 + (C2 - x**2/8 + x*(C3 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x))*sin(x) + (C4 + I*x**2/8 + x*(C5 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x))*cos(x) - I*exp(I*x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x)
+    sol = Eq(f(x), C1 + (C2 + C3*x - x**2/8 + 5*exp(2*I*x)/16)*sin(x) + (C4 + C5*x + I*x**2/8 + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
     assert checkodesol(eq, sol) == (True, 0)

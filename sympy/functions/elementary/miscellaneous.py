@@ -15,7 +15,6 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import with_metaclass
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.logic.boolalg import And, Or
 
@@ -31,7 +30,7 @@ def _minmax_as_Piecewise(op, *args):
     return Piecewise(*ec)
 
 
-class IdentityFunction(with_metaclass(Singleton, Lambda)):
+class IdentityFunction(Lambda, metaclass=Singleton):
     """
     The identity function
 
@@ -631,9 +630,11 @@ class MinMaxBase(Expr, LatticeOp):
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
-    def evalf(self, prec=None, **options):
-        return self.func(*[a.evalf(prec, **options) for a in self.args])
-    n = evalf
+    def evalf(self, n=15, **options):
+        return self.func(*[a.evalf(n, **options) for a in self.args])
+
+    def n(self, *args, **kwargs):
+        return self.evalf(*args, **kwargs)
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
     _eval_is_antihermitian = lambda s: _torf(i.is_antihermitian for i in s.args)

@@ -21,13 +21,10 @@ def test_issue_7263():
             673.447451402970) < 1e-12
 
 
-@XFAIL
 def test_factorial_simplify():
-    # There are more tests in test_factorials.py. These are just to
-    # ensure that simplify() calls factorial_simplify correctly
-    from sympy.specfun.factorials import factorial
+    # There are more tests in test_factorials.py.
     x = Symbol('x')
-    assert simplify(factorial(x)/x) == factorial(x - 1)
+    assert simplify(factorial(x)/x) == gamma(x)
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 

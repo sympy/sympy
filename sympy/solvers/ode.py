@@ -231,6 +231,8 @@ of those tests will surely fail.
 """
 from __future__ import print_function, division
 
+from typing import Dict, Type
+
 from collections import defaultdict
 from itertools import islice
 
@@ -262,8 +264,8 @@ from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
-from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse, besselsimp
+from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
+    separatevars, simplify, trigsimp, posify, cse, besselsimp)
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import checksol, solve
@@ -1424,7 +1426,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r and not any(r[i].has(x) for i in r if i >= 0):
             # Inhomogeneous case: F(x) is not identically 0
             if r[-1]:
-                undetcoeff = _undetermined_coefficients_match(r[-1], x)
+                eq_homogeneous = Add(eq,-r[-1])
+                undetcoeff = _undetermined_coefficients_match(r[-1], x, func, eq_homogeneous)
                 s = "nth_linear_constant_coeff_variation_of_parameters"
                 matching_hints[s] = r
                 matching_hints[s + "_Integral"] = r
@@ -2808,7 +2811,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             else:
                 testnum += 1
                 continue
-            ss = simplify(s)
+            ss = simplify(s.rewrite(exp))
             if ss:
                 # with the new numer_denom in power.py, if we do a simple
                 # expansion then testnum == 0 verifies all solutions.
@@ -4572,7 +4575,7 @@ def ode_nth_order_reducible(eq, func, order, match):
 # be stored in cached results we need to ensure that we always get the
 # same class back for each particular integration variable so we store these
 # classes in a global dict:
-_nth_algebraic_diffx_stored = {}
+_nth_algebraic_diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
 
 def _nth_algebraic_diffx(var):
     cls = _nth_algebraic_diffx_stored.get(var, None)
@@ -5039,7 +5042,8 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     eq += e.subs(re)
 
     match = _nth_linear_match(eq, f(x), ode_order(eq, f(x)))
-    match['trialset'] = r['trialset']
+    eq_homogeneous = Add(eq,-match[-1])
+    match['trialset'] = _undetermined_coefficients_match(match[-1], x, func, eq_homogeneous)['trialset']
     return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
 
 
@@ -5718,51 +5722,14 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     gensols = r['list']
     gsol = r['sol']
     trialset = r['trialset']
-    notneedset = set([])
-    # XXX: This global collectterms hack should be removed.
-    global collectterms
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
         " solutions to the homogeneous equation necessary to apply" +
         " undetermined coefficients to " + str(eq) +
         " (number of terms != order)")
-    usedsin = set([])
-    mult = 0  # The multiplicity of the root
-    getmult = True
-    for i, reroot, imroot in collectterms:
-        if getmult:
-            mult = i + 1
-            getmult = False
-        if i == 0:
-            getmult = True
-        if imroot:
-            # Alternate between sin and cos
-            if (i, reroot) in usedsin:
-                check = x**i*exp(reroot*x)*cos(imroot*x)
-            else:
-                check = x**i*exp(reroot*x)*sin(abs(imroot)*x)
-                usedsin.add((i, reroot))
-        else:
-            check = x**i*exp(reroot*x)
-
-        if check in trialset:
-            # If an element of the trial function is already part of the
-            # homogeneous solution, we need to multiply by sufficient x to
-            # make it linearly independent.  We also don't need to bother
-            # checking for the coefficients on those elements, since we
-            # already know it will be 0.
-            while True:
-                if check*x**mult in trialset:
-                    mult += 1
-                else:
-                    break
-            trialset.add(check*x**mult)
-            notneedset.add(check)
-
-    newtrialset = trialset - notneedset
 
     trialfunc = 0
-    for i in newtrialset:
+    for i in trialset:
         c = next(coeffs)
         coefflist.append(c)
         trialfunc += c*i
@@ -5775,7 +5742,10 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
-        coeffsdict[s[x]] += s['coeff']
+        if coeffsdict.get(s[x]):
+            coeffsdict[s[x]] += s['coeff']
+        else:
+            coeffsdict[s[x]] = s['coeff']
 
     coeffvals = solve(list(coeffsdict.values()), coefflist)
 
@@ -5790,7 +5760,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     return Eq(f(x), gsol.rhs + psol)
 
 
-def _undetermined_coefficients_match(expr, x):
+def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     r"""
     Returns a trial function match if undetermined coefficients can be applied
     to ``expr``, and ``None`` otherwise.
@@ -5922,6 +5892,11 @@ def _undetermined_coefficients_match(expr, x):
             exprs = tmpset
         return exprs
 
+    def is_homogeneous_solution(term):
+        r""" This function checks whether the given trialset contains any root
+             of homogenous equation"""
+        return expand(sub_func_doit(eq_homogeneous, func, term)).is_zero
+
     retdict['test'] = _test_term(expr, x)
     if retdict['test']:
         # Try to generate a list of trial solutions that will have the
@@ -5930,7 +5905,15 @@ def _undetermined_coefficients_match(expr, x):
         # then they will need to be multiplied by sufficient x to make them so.
         # This function DOES NOT do that (it doesn't even look at the
         # homogeneous equation).
-        retdict['trialset'] = _get_trial_set(expr, x)
+        temp_set = set([])
+        for i in Add.make_args(expr):
+            act = _get_trial_set(i,x)
+            if eq_homogeneous is not S.Zero:
+                while any(is_homogeneous_solution(ts) for ts in act):
+                    act = {x*ts for ts in act}
+            temp_set = temp_set.union(act)
+
+        retdict['trialset'] = temp_set
 
     return retdict
 

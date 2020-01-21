@@ -3,6 +3,11 @@ Mathematica code printer
 """
 
 from __future__ import print_function, division
+
+from typing import Any, Dict, Set, Tuple
+
+from sympy.core import Basic, Expr, Float
+
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -124,10 +129,10 @@ class MCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
-    }
+    }  # type: Dict[str, Any]
 
-    _number_symbols = set()
-    _not_supported = set()
+    _number_symbols = set()  # type: Set[Tuple[Expr, Float]]
+    _not_supported = set()  # type: Set[Basic]
 
     def __init__(self, settings={}):
         """Register function mappings supplied by user"""
