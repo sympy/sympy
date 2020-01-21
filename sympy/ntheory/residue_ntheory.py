@@ -1528,12 +1528,10 @@ def polynomial_congruence(expr, m):
     coefficients = [num % m for num in coefficients]
     rank = len(coefficients)
     if rank == 3:
-        return quadratic_congruence(coefficients[0], coefficients[1],
-            coefficients[2], m)
+        return quadratic_congruence(*coefficients, m)
     if rank == 2:
-        return quadratic_congruence(0, coefficients[0], coefficients[1],
-            m)
-    if coefficients[0] == 1 and 1 + coefficients[-1] = sum(coefficients):
+        return quadratic_congruence(0, *coefficients, m)
+    if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
         return nthroot_mod(-coefficients[-1], rank - 1, m, True)
     if isprime(m):
         return _polynomial_congruence_prime(coefficients, m)

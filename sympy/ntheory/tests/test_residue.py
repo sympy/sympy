@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sympy import S, Symbol, Tuple
+from sympy import S, Symbol, Tuple, Dummy
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
@@ -165,6 +165,7 @@ def test_residue():
     assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
+    assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
 
     assert nthroot_mod(29, 31, 74) == [45]
     assert nthroot_mod(1801, 11, 2663) == 44
