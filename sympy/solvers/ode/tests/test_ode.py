@@ -3367,7 +3367,7 @@ def test_sysode_linear_neq_order1():
 
 @slow
 def test_nth_order_reducible():
-    from sympy.solvers.ode import _nth_order_reducible_match
+    from sympy.solvers.ode.ode import _nth_order_reducible_match
 
     eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2), 0)
     sol = Eq(f(x),
