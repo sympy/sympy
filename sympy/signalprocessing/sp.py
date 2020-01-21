@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+# Function for obtaining the poles and zeros of a transfer function
 def pole_zero(expression, symbol):
     num, den = fraction(expression)
     poles_2 = solve(den, symbol)
@@ -36,6 +37,8 @@ def pole_zero(expression, symbol):
             zeros.append(zeros_1[i])
     return np.asarray(poles), np.asarray(zeros)
 
+
+# Function for obtaining the poles and zeros of a transfer function
 def pole_zero_plot(expression, symbol):
     poles, zeros = pole_zero(expression, symbol)
     circle_points = np.linspace(0.1, 200, 200)
@@ -54,7 +57,7 @@ def pole_zero_plot(expression, symbol):
     plt.show()
 
 
-
+# Function for obtaining the Magnitude and Phase Response of a transfer function
 def magnitude_and_phase_response(expression, symbol):
     w = Symbol('w')
     expr = expression.subs(symbol, exp(I*w))
@@ -62,6 +65,8 @@ def magnitude_and_phase_response(expression, symbol):
     phase_resp = arg(expr)
     return magnitude_resp, phase_resp, w
 
+
+# Function for plotting the Magnitude Response
 def plot_mag(expression,  symbol):
     magnitude_resp, _, w = magnitude_and_phase_response(expression, symbol)
     x_val = np.linspace(0.1, 100, 100)
@@ -71,9 +76,11 @@ def plot_mag(expression,  symbol):
     plt.plot(x_val, y_val)
     plt.title('Magnitude Response')
     plt.ylabel('Magnitude')
-    plt.xlabel('Freq (in Rad)')
+    plt.xlabel('Freq (in Rad/s)')
     plt.show()
 
+
+# Function for plotting the Phase Response
 def plot_phase(expression,  symbol):
     _, phase_resp, w = magnitude_and_phase_response(expression, symbol)
     x_val = np.linspace(0.1, 100, 100)
@@ -83,7 +90,7 @@ def plot_phase(expression,  symbol):
     plt.plot(x_val, y_val)
     plt.title('Phase Response')
     plt.ylabel('Phase')
-    plt.xlabel('Freq (in Rad)')
+    plt.xlabel('Freq (in Rad/s)')
     plt.show()
 
 
