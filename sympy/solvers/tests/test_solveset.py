@@ -2172,12 +2172,12 @@ def test_invert_modular():
     assert invert_modular(Mod(x + 8, 7), S(5), n, x) == \
             (x, ImageSet(Lambda(n, 7*n + 4), S.Integers))
     assert invert_modular(Mod(x**2 + x, 7), S(5), n, x) == \
-            (x, ImageSet(Lambda(n, 7*n + 3), S.Integers))
+            (Mod(x**2 + x, 7), 5)
     # a.is_Mul
     assert invert_modular(Mod(3*x, 7), S(5), n, x) == \
             (x, ImageSet(Lambda(n, 7*n + 4), S.Integers))
     assert invert_modular(Mod((x + 1)*(x + 2), 7), S(5), n, x) == \
-            (x, ImageSet(Lambda(n, 7*n + 2), S.Integers))
+            (Mod((x + 1)*(x + 2), 7), 5)
     # a.is_Pow
     assert invert_modular(Mod(x**4, 7), S(5), n, x) == \
             (x, EmptySet())
@@ -2253,6 +2253,14 @@ def test_solve_modular():
     # domain intersection
     assert solveset(3 - Mod(5*x - 8, 7), x, S.Naturals0) == \
             Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0)
+
+    assert solveset(Mod(x**16 - 7, 36) - 2, x, S.Integers) == \
+            Union(ImageSet(Lambda(n, 36*n + 3), S.Integers),
+            ImageSet(Lambda(n, 36*n + 9), S.Integers),
+            ImageSet(Lambda(n, 36*n + 15), S.Integers),
+            ImageSet(Lambda(n, 36*n + 21), S.Integers),
+            ImageSet(Lambda(n, 36*n + 27), S.Integers),
+            ImageSet(Lambda(n, 36*n + 33), S.Integers))
     # Complex args
     assert solveset(Mod(x, 3) - I, x, S.Integers) == \
             EmptySet()

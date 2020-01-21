@@ -1143,7 +1143,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
     (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
-    (x, EmptySet)
+    (x**4, EmptySet)
     >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
@@ -1175,17 +1175,6 @@ def _invert_modular(modterm, rhs, n, symbol):
         if g is not S.One:
             x_indep_term = rhs*invert(g, m)
             return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
-    if a.is_polynomial():
-        try:
-            remainder_list = polynomial_congruence(a - rhs, int(m))
-            if remainder_list == []:
-                return symbol, EmptySet
-        except (ValueError, NotImplementedError):
-            return modterm, rhs
-        g_n = EmptySet
-        for rem in remainder_list:
-            g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
-        return symbol, g_n
     if a.is_Pow:
         # base**expo = a
         base, expo = a.args
@@ -1290,7 +1279,20 @@ def _solve_modular(f, symbol, domain):
         return unsolved_result
 
     n = Dummy('n', integer=True)
-    f_x, g_n = _invert_modular(modterm, rhs, n, symbol)
+
+    if modterm.args[0].is_polynomial():
+        a, m = modterm.args
+        f_x = symbol
+        g_n = EmptySet
+        if abs(rhs) < abs(m):
+            try:
+                remainder_list = polynomial_congruence(a - rhs, int(m))
+                for rem in remainder_list:
+                    g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
+            except (ValueError, NotImplementedError):
+                return unsolved_result
+    else:
+        f_x, g_n = _invert_modular(modterm, rhs, n, symbol)
 
     if f_x is modterm and g_n is rhs:
         return unsolved_result
