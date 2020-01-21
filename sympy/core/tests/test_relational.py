@@ -849,6 +849,11 @@ def test_issue_10304():
     assert simplify(Eq(e, 0)) is S.false
 
 
+def test_issue_18412():
+    d = (Rational(1, 6) + z / 4 / y)
+    assert Eq(x, pi * y**3 * d).replace(y**3, z) == Eq(x, pi * z * d)
+
+
 def test_issue_10401():
     x = symbols('x')
     fin = symbols('inf', finite=True)
