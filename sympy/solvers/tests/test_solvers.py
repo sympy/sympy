@@ -7,7 +7,6 @@ from sympy import (
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
     E, cbrt, denom, Add, Piecewise)
 
-from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -19,8 +18,8 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import slow, XFAIL, SKIP, raises
+from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
@@ -1105,6 +1104,10 @@ def test_unrad1():
     raises(NotImplementedError,
            lambda: unrad(root(x, 3) + root(y, 3) + root(x*y, 5)))
 
+    # Test unrad with an Equality
+    eq = Eq(-x**(S(1)/5) + x**(S(1)/3), -3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5))
+    assert check(unrad(eq),
+        (-s**5 + s**3 - 3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5), [s, s**15 - x]))
 
 @slow
 def test_unrad_slow():

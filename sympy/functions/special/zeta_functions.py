@@ -2,7 +2,6 @@
 from __future__ import print_function, division
 
 from sympy.core import Function, S, sympify, pi, I
-from sympy.core.compatibility import range
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.exponential import log, exp_polar

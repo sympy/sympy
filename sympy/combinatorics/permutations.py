@@ -3,11 +3,11 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core.basic import Atom, Basic
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
-    is_sequence, reduce, range, as_int, Iterable
+    is_sequence, reduce, as_int, Iterable
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import as_Boolean
@@ -3002,7 +3002,10 @@ class AppliedPermutation(Expr):
     >>> _.subs(x, 1)
     2
     """
-    def __new__(cls, perm, x, evaluate=global_evaluate[0]):
+    def __new__(cls, perm, x, evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+
         perm = _sympify(perm)
         x = _sympify(x)
 

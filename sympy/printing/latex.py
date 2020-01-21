@@ -4,6 +4,8 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
@@ -23,7 +25,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -142,7 +144,7 @@ class LatexPrinter(Printer):
         "gothic_re_im": False,
         "decimal_separator": "period",
         "perm_cyclic": True,
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -1811,6 +1813,19 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
         )
 
+    def _print_PartialDerivative(self, expr):
+        if len(expr.variables) == 1:
+            return r"\frac{\partial}{\partial {%s}}{%s}" % (
+                self._print(expr.variables[0]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+        else:
+            return r"\frac{\partial^{%s}}{%s}{%s}" % (
+                len(expr.variables),
+                " ".join([r"\partial {%s}" % self._print(i) for i in expr.variables]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
@@ -2110,7 +2125,7 @@ class LatexPrinter(Printer):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
             return r"\left\{%s \mid %s \right\}" % \
-                (vars_print, self._print(s.condition.as_expr()))
+                (vars_print, self._print(s.condition))
 
         return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
             vars_print,

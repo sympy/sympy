@@ -40,7 +40,8 @@ class OmegaPower(Basic):
                 return NotImplemented
         return self.args == other.args
 
-    __hash__ = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__(self)
 
     def __lt__(self, other):
         if not isinstance(other, OmegaPower):

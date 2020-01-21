@@ -5,7 +5,7 @@ from sympy import (
     )
 
 from sympy.core.compatibility import long
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
 
@@ -369,7 +369,7 @@ def test_issue_15129_trigsimp_methods():
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.utilities.randtest import verify_numerically as tn
+        from sympy.testing.randtest import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True

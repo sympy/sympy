@@ -2,8 +2,8 @@ from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log, Rational,
                    cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
 from sympy.abc import x, z, k
 from sympy.series.limits import limit
-from sympy.utilities.pytest import raises, slow
-from sympy.utilities.randtest import (
+from sympy.testing.pytest import raises, slow
+from sympy.testing.randtest import (
     random_complex_number as randcplx,
     verify_numerically as tn,
     test_derivative_numerically as td)

@@ -10,7 +10,7 @@ cache instead.
 import logging
 
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, SKIP
+from sympy.testing.pytest import raises, SKIP
 
 theanologger = logging.getLogger('theano.configdefaults')
 theanologger.setLevel(logging.CRITICAL)

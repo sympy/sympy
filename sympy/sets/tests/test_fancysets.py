@@ -1,4 +1,4 @@
-from sympy.core.compatibility import range, PY3
+from sympy.core.compatibility import PY3
 from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
@@ -9,7 +9,7 @@ from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
                    Dummy, floor, And, Eq)
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t
 
 import itertools
@@ -29,6 +29,8 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.boundary == N
+    assert N.is_open == False
+    assert N.is_closed == True
 
     assert N.inf == 1
     assert N.sup is oo
@@ -71,6 +73,8 @@ def test_integers():
     assert Z.sup is oo
 
     assert Z.boundary == Z
+    assert Z.is_open == False
+    assert Z.is_closed == True
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -316,12 +320,7 @@ def test_Range_set():
         assert r.inf == rev.inf and r.sup == rev.sup
         assert r.step == -rev.step
 
-    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
-    # compatibility imports above)
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange # noqa
+    builtin_range = range
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)
@@ -333,11 +332,14 @@ def test_Range_set():
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x, floor(x))
     assert Range(oo, 1, -2).as_relational(x) == (x >= 3) & (x < oo) & Eq(x, floor(x))
 
+
+def test_Range_symbolic():
     # symbolic Range
     sr = Range(x, y, t)
     i = Symbol('i', integer=True)
     ip = Symbol('i', integer=True, positive=True)
     ir = Range(i, i + 20, 2)
+    inf = symbols('inf', infinite=True)
     # args
     assert sr.args == (x, y, t)
     assert ir.args == (i, i + 20, 2)
@@ -381,9 +383,27 @@ def test_Range_set():
     assert Range(ip).inf == 0
     assert Range(ip).sup == ip - 1
     raises(ValueError, lambda: Range(i).inf)
+    # as_relational
     raises(ValueError, lambda: sr.as_relational(x))
     assert ir.as_relational(x) == (
         x >= i) & Eq(x, floor(x)) & (x <= i + 18)
+    assert Range(i, i + 1).as_relational(x) == Eq(x, i)
+    # contains() for symbolic values (issue #18146)
+    e = Symbol('e', integer=True, even=True)
+    o = Symbol('o', integer=True, odd=True)
+    assert Range(5).contains(i) == And(i >= 0, i <= 4)
+    assert Range(1).contains(i) == Eq(i, 0)
+    assert Range(-oo, 5, 1).contains(i) == (i <= 4)
+    assert Range(-oo, oo).contains(i) == True
+    assert Range(0, 8, 2).contains(i) == Contains(i, Range(0, 8, 2))
+    assert Range(0, 8, 2).contains(e) == And(e >= 0, e <= 6)
+    assert Range(0, 8, 2).contains(2*i) == And(2*i >= 0, 2*i <= 6)
+    assert Range(0, 8, 2).contains(o) == False
+    assert Range(1, 9, 2).contains(e) == False
+    assert Range(1, 9, 2).contains(o) == And(o >= 1, o <= 7)
+    assert Range(8, 0, -2).contains(o) == False
+    assert Range(9, 1, -2).contains(o) == And(o >= 3, o <= 9)
+    assert Range(-oo, 8, 2).contains(i) == Contains(i, Range(-oo, 8, 2))
 
 
 def test_range_range_intersection():
@@ -593,6 +613,49 @@ def test_imageset_intersect_interval():
     assert f9.intersect(Interval(1, 2)) == Intersection(f9, Interval(1, 2))
 
 
+def test_imageset_intersect_diophantine():
+    from sympy.abc import m, n
+    # Check that same lambda variable for both ImageSets is handled correctly
+    img1 = ImageSet(Lambda(n, 2*n + 1), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n + 1), S.Integers)
+    assert img1.intersect(img2) == img2
+    # Empty solution set returned by diophantine:
+    assert ImageSet(Lambda(n, 2*n), S.Integers).intersect(
+            ImageSet(Lambda(n, 2*n + 1), S.Integers)) == S.EmptySet
+    # Check intersection with S.Integers:
+    assert ImageSet(Lambda(n, 9/n + 20*n/3), S.Integers).intersect(
+            S.Integers) == FiniteSet(-61, -23, 23, 61)
+    # Single solution (2, 3) for diophantine solution:
+    assert ImageSet(Lambda(n, (n - 2)**2), S.Integers).intersect(
+            ImageSet(Lambda(n, -(n - 3)**2), S.Integers)) == FiniteSet(0)
+    # Single parametric solution for diophantine solution:
+    assert ImageSet(Lambda(n, n**2 + 5), S.Integers).intersect(
+            ImageSet(Lambda(m, 2*m), S.Integers)) == ImageSet(
+            Lambda(n, 4*n**2 + 4*n + 6), S.Integers)
+    # 4 non-parametric solution couples for dioph. equation:
+    assert ImageSet(Lambda(n, n**2 - 9), S.Integers).intersect(
+            ImageSet(Lambda(m, -m**2), S.Integers)) == FiniteSet(-9, 0)
+    # Double parametric solution for diophantine solution:
+    assert ImageSet(Lambda(m, m**2 + 40), S.Integers).intersect(
+            ImageSet(Lambda(n, 41*n), S.Integers)) == Intersection(
+            ImageSet(Lambda(m, m**2 + 40), S.Integers),
+            ImageSet(Lambda(n, 41*n), S.Integers))
+    # Check that diophantine returns *all* (8) solutions (permute=True)
+    assert ImageSet(Lambda(n, n**4 - 2**4), S.Integers).intersect(
+            ImageSet(Lambda(m, -m**4 + 3**4), S.Integers)) == FiniteSet(0, 65)
+    assert ImageSet(Lambda(n, pi/12 + n*5*pi/12), S.Integers).intersect(
+            ImageSet(Lambda(n, 7*pi/12 + n*11*pi/12), S.Integers)) == ImageSet(
+            Lambda(n, 55*pi*n/12 + 17*pi/4), S.Integers)
+    # TypeError raised by diophantine (#18081)
+    assert ImageSet(Lambda(n, n*log(2)), S.Integers).intersection(S.Integers) \
+            == Intersection(ImageSet(Lambda(n, n*log(2)), S.Integers), S.Integers)
+    # NotImplementedError raised by diophantine (no solver for cubic_thue)
+    assert ImageSet(Lambda(n, n**3 + 1), S.Integers).intersect(
+            ImageSet(Lambda(n, n**3), S.Integers)) == Intersection(
+            ImageSet(Lambda(n, n**3 + 1), S.Integers),
+            ImageSet(Lambda(n, n**3), S.Integers))
+
+
 def test_infinitely_indexed_set_3():
     from sympy.abc import n, m, t
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
@@ -631,7 +694,6 @@ def test_ImageSet_contains():
 
 
 def test_ComplexRegion_contains():
-
     # contains in ComplexRegion
     a = Interval(2, 3)
     b = Interval(4, 6)
@@ -662,7 +724,6 @@ def test_ComplexRegion_contains():
 
 
 def test_ComplexRegion_intersect():
-
     # Polar form
     X_axis = ComplexRegion(Interval(0, oo)*FiniteSet(0, S.Pi), polar=True)
 
@@ -710,7 +771,6 @@ def test_ComplexRegion_intersect():
 
 
 def test_ComplexRegion_union():
-
     # Polar form
     c1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
     c2 = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
@@ -757,7 +817,6 @@ def test_ComplexRegion_measure():
 
 
 def test_normalize_theta_set():
-
     # Interval
     assert normalize_theta_set(Interval(pi, 2*pi)) == \
         Union(FiniteSet(0), Interval.Ropen(pi, 2*pi))
@@ -948,7 +1007,19 @@ def test_Rationals():
     r = symbols('r', rational=True)
     assert r in S.Rationals
     raises(TypeError, lambda: x in S.Rationals)
-    assert S.Rationals.boundary == S.Rationals
+    # issue #18134:
+    assert S.Rationals.boundary == S.Reals
+    assert S.Rationals.closure == S.Reals
+    assert S.Rationals.is_open == False
+    assert S.Rationals.is_closed == False
+
+
+def test_NZQRC_unions():
+    # check that all trivial number set unions are simplified:
+    nbrsets = (S.Naturals, S.Naturals0, S.Integers, S.Rationals,
+        S.Reals, S.Complexes)
+    unions = (Union(a, b) for a in nbrsets for b in nbrsets)
+    assert all(u.is_Union is False for u in unions)
 
 
 def test_imageset_intersection():
@@ -964,3 +1035,11 @@ def test_issue_17858():
     assert 0 in Range(oo, -oo, -1)
     assert oo not in Range(-oo, oo)
     assert -oo not in Range(-oo, oo)
+
+def test_issue_17859():
+    r = Range(-oo,oo)
+    raises(ValueError,lambda: r[::2])
+    raises(ValueError, lambda: r[::-2])
+    r = Range(oo,-oo,-1)
+    raises(ValueError,lambda: r[::2])
+    raises(ValueError, lambda: r[::-2])

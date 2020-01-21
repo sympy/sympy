@@ -4,8 +4,8 @@ from collections import defaultdict
 from functools import cmp_to_key
 
 from .basic import Basic
-from .compatibility import reduce, is_sequence, range
-from .evaluate import global_distribute
+from .compatibility import reduce, is_sequence
+from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
@@ -72,7 +72,7 @@ def _unevaluated_Add(*args):
 
 class Add(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Add = True
 
@@ -1085,7 +1085,7 @@ class Add(Expr, AssocOp):
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
 
     def __neg__(self):
-        if not global_distribute[0]:
+        if not global_parameters.distribute:
             return super(Add, self).__neg__()
         return Add(*[-i for i in self.args])
 

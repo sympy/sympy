@@ -3,8 +3,7 @@
 from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
     pi, cos, sin, exp)
 
-from sympy.utilities.pytest import raises, slow
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
 
 from sympy.polys.numberfields import (
     minimal_polynomial,

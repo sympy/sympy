@@ -6,8 +6,8 @@ from sympy import (
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import (test_derivative_numerically as td,
+from sympy.testing.pytest import raises
+from sympy.testing.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 

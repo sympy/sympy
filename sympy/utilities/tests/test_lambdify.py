@@ -1,10 +1,9 @@
-from distutils.version import LooseVersion as V
 from itertools import product
 import math
 import inspect
 
 import mpmath
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
@@ -12,14 +11,14 @@ from sympy import (
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
     MatrixSymbol, fresnelc, fresnels)
-from sympy.functions.elementary.complexes import re, im, Abs, arg
+from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma

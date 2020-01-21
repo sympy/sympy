@@ -2,7 +2,7 @@ from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains)
 from sympy import (Symbol, Eq, S, Abs, sin, pi, Interval,
     And, Mod, oo, Function)
-from sympy.utilities.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 
 w = Symbol('w')

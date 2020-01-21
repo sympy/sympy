@@ -7,15 +7,16 @@ from sympy import (
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.utilities.pytest import raises, slow, skip, ON_TRAVIS
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
+    warns_deprecated_sympy)
+from sympy.testing.randtest import verify_numerically
+
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
 n = Symbol('n', integer=True)
@@ -864,6 +865,15 @@ def test_issue_4884():
             4*I*sqrt(-x)/15, True))
     assert integrate(x**x*(1 + log(x))) == x**x
 
+def test_issue_18153():
+    assert integrate(x**n*log(x),x) == \
+    Piecewise(
+        (n*x*x**n*log(x)/(n**2 + 2*n + 1) +
+    x*x**n*log(x)/(n**2 + 2*n + 1) - x*x**n/(n**2 + 2*n + 1)
+    , Ne(n, -1)), (log(x)**2/2, True)
+    )
+
+
 
 def test_is_number():
     from sympy.abc import x, y, z
@@ -1495,9 +1505,18 @@ def test_issue_15124():
 
 
 def test_issue_15218():
-    assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
-    assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
-    assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+    with warns_deprecated_sympy():
+        Integral(Eq(x, y))
+    with warns_deprecated_sympy():
+        assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
+    with warns_deprecated_sympy():
+        assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
+    with warns_deprecated_sympy():
+        assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
+
+    # These are not deprecated because they are definite integrals
+    assert integrate(Eq(x, y), (x, 0, 1)) == Eq(S.Half, y)
+    assert Eq(x, y).integrate((x, 0, 1)) == Eq(S.Half, y)
 
 
 def test_issue_15292():
@@ -1623,3 +1642,9 @@ def test_issue_17671():
     assert integrate(log(log(x)) / x**2, [x, 1, oo]) == -EulerGamma
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
     assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -2*log(3)/9 - EulerGamma/9
+
+def test_issue_2975():
+    w = Symbol('w')
+    C = Symbol('C')
+    y = Symbol('y')
+    assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))

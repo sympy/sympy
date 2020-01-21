@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import with_metaclass, range, PY3
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
@@ -20,7 +19,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import cartes
 
 
-class Rationals(with_metaclass(Singleton, Set)):
+class Rationals(Set, metaclass=Singleton):
     """
     Represents the rational numbers. This set is also available as
     the Singleton, S.Rationals.
@@ -66,10 +65,10 @@ class Rationals(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return self
+        return S.Reals
 
 
-class Naturals(with_metaclass(Singleton, Set)):
+class Naturals(Set, metaclass=Singleton):
     """
     Represents the natural numbers (or counting numbers) which are all
     positive integers starting from 1. This set is also available as
@@ -160,7 +159,7 @@ class Naturals0(Naturals):
         return Range(oo).is_superset(other)
 
 
-class Integers(with_metaclass(Singleton, Set)):
+class Integers(Set, metaclass=Singleton):
     """
     Represents all integers: positive, negative and zero. This set is also
     available as the Singleton, S.Integers.
@@ -231,7 +230,7 @@ class Integers(with_metaclass(Singleton, Set)):
         return Range(-oo, oo).is_superset(other)
 
 
-class Reals(with_metaclass(Singleton, Interval)):
+class Reals(Interval, metaclass=Singleton):
     """
     Represents all real numbers
     from negative infinity to positive infinity,
@@ -683,11 +682,17 @@ class Range(Set):
             ref = self.start
         elif self.stop.is_finite:
             ref = self.stop
-        else:
-            return other.is_Integer
-        if (ref - other) % self.step:  # off sequence
+        else:  # both infinite; step is +/- 1 (enforced by __new__)
+            return S.true
+        if self.size == 1:
+            return Eq(other, self[0])
+        res = (ref - other) % self.step
+        if res == S.Zero:
+            return And(other >= self.inf, other <= self.sup)
+        elif res.is_Integer:  # off sequence
             return S.false
-        return _sympify(other >= self.inf and other <= self.sup)
+        else:  # symbolic/unsimplified residue modulo step
+            return None
 
     def __iter__(self):
         if self.has(Symbol):
@@ -733,6 +738,7 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
+        infinite = "slicing not possible on range with infinite start"
         # if we had to take every other element in the following
         # oo, ..., 6, 4, 2, 0
         # we might get oo, ..., 4, 0 or oo, ..., 6, 2
@@ -755,6 +761,12 @@ class Range(Set):
                     raise ValueError(zerostep)
                 step = i.step or 1
                 ss = step*self.step
+                #---------------------
+                # handle infinite Range
+                #   i.e. Range(-oo, oo) or Range(oo, -oo, -1)
+                # --------------------
+                if self.start.is_infinite and self.stop.is_infinite:
+                    raise ValueError(infinite)
                 #---------------------
                 # handle infinite on right
                 #   e.g. Range(0, oo) or Range(0, -oo, -1)
@@ -899,18 +911,15 @@ class Range(Set):
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
         from sympy.functions.elementary.integers import floor
-        return And(
-            Eq(x, floor(x)),
-            x >= self.inf if self.inf in self else x > self.inf,
-            x <= self.sup if self.sup in self else x < self.sup)
+        if self.size == 1:
+            return Eq(x, self[0])
+        else:
+            return And(
+                Eq(x, floor(x)),
+                x >= self.inf if self.inf in self else x > self.inf,
+                x <= self.sup if self.sup in self else x < self.sup)
 
-
-# Using range from compatibility above (xrange on Py2)
-if PY3:
-    converter[range] = lambda r: Range(r.start, r.stop, r.step)
-else:
-    converter[range] = lambda r: Range(*r.__reduce__()[1])
-
+converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
     """
@@ -1380,7 +1389,7 @@ class PolarComplexRegion(ComplexRegion):
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 
 
-class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
+class Complexes(CartesianComplexRegion, metaclass=Singleton):
     """
     The Set of all complex numbers
 

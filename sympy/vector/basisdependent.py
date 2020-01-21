@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
@@ -55,7 +57,7 @@ class BasisDependent(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def evalf(self, prec=None, **options):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -63,12 +65,14 @@ class BasisDependent(Expr):
         =====================
 
         """
+        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
+                'quad':quad, 'verbose':verbose}
         vec = self.zero
         for k, v in self.components.items():
-            vec += v.evalf(prec, **options) * k
+            vec += v.evalf(n, **options) * k
         return vec
 
-    evalf.__doc__ += Expr.evalf.__doc__
+    evalf.__doc__ += Expr.evalf.__doc__  # type: ignore
 
     n = evalf
 
@@ -84,7 +88,7 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
 
-    simplify.__doc__ += simp.__doc__
+    simplify.__doc__ += simp.__doc__  # type: ignore
 
     def trigsimp(self, **opts):
         """
@@ -98,7 +102,7 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*trig_components)
 
-    trigsimp.__doc__ += tsimp.__doc__
+    trigsimp.__doc__ += tsimp.__doc__  # type: ignore
 
     def _eval_simplify(self, **kwargs):
         return self.simplify(**kwargs)
@@ -137,7 +141,7 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*fctr_components)
 
-    factor.__doc__ += fctr.__doc__
+    factor.__doc__ += fctr.__doc__  # type: ignore
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
@@ -163,7 +167,7 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*diff_components)
 
-    diff.__doc__ += df.__doc__
+    diff.__doc__ += df.__doc__  # type: ignore
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
@@ -300,7 +304,9 @@ class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    components = {}
+    # XXX: Can't type the keys as BaseVector because of cyclic import
+    # problems.
+    components = {}  # type: Dict[Any, Expr]
 
     def __new__(cls):
         obj = super(BasisDependentZero, cls).__new__(cls)

@@ -1,5 +1,7 @@
 from __future__ import division, print_function
 
+from typing import Callable
+
 from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
@@ -13,7 +15,7 @@ def sympify_matrix(arg):
     return arg.as_immutable()
 sympify_converter[MatrixBase] = sympify_matrix
 
-class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
+class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
     """Create an immutable version of a matrix.
 
     Examples
@@ -41,7 +43,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
-    __hash__ = MatrixExpr.__hash__
+    __hash__ = MatrixExpr.__hash__  # type: Callable[[MatrixExpr], int]
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -120,11 +122,16 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     is_diagonalizable = cacheit(is_diagonalizable)
 
 
-# This is included after the class definition as a workaround for issue 7213.
-# See https://github.com/sympy/sympy/issues/7213
-# the object is non-zero
-# See https://github.com/sympy/sympy/issues/7213
-ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero
+# XXX: The assumptions system correctly infers that is_zero is always False
+# because commutative is False and zero is commutative. This assignment of
+# the property has to take place after the class definition so that the
+# ManagedProperties metaclass that handles the assumptions has finished
+# post-processing the class first. This should be removed because a Matrix
+# should always have is_zero=False.
+# https://github.com/sympy/sympy/issues/7213
+# https://github.com/sympy/sympy/issues/17131
+# mypy (correctly) complains about this line:
+ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero  # type: ignore
 
 # make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
 ImmutableMatrix = ImmutableDenseMatrix
