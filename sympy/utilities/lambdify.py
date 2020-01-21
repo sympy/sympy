@@ -9,12 +9,11 @@ from typing import Any, Dict
 
 import inspect
 import keyword
-import re
 import textwrap
 import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, builtins, PY3)
+    NotIterable, builtins)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -1024,18 +1023,10 @@ class _EvaluatorPrinter(object):
 
         return '\n'.join(funclines) + '\n'
 
-    if PY3:
-        @classmethod
-        def _is_safe_ident(cls, ident):
-            return isinstance(ident, str) and ident.isidentifier() \
-                    and not keyword.iskeyword(ident)
-    else:
-        _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
-
-        @classmethod
-        def _is_safe_ident(cls, ident):
-            return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
-                and not (keyword.iskeyword(ident) or ident == 'None')
+    @classmethod
+    def _is_safe_ident(cls, ident):
+        return isinstance(ident, str) and ident.isidentifier() \
+                and not keyword.iskeyword(ident)
 
     def _preprocess(self, args, expr):
         """Preprocess args, expr to replace arguments that do not map

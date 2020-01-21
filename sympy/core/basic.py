@@ -6,8 +6,7 @@ from itertools import chain, zip_longest
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import (iterable, Iterator, ordered,
-    PY3, Mapping)
+from .compatibility import iterable, Iterator, ordered, Mapping
 from .singleton import S
 
 from inspect import getmro
@@ -334,7 +333,7 @@ class Basic(metaclass=ManagedProperties):
             # __cmp__. Until we can remove it
             # (https://github.com/sympy/sympy/issues/4269), we only compare
             # types in Python 2 directly if they actually have __ne__.
-            if PY3 or type(tself).__ne__ is not type.__ne__:
+            if type(tself).__ne__ is not type.__ne__:
                 if tself != tother:
                     return False
             elif tself is not tother:
