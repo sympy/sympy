@@ -769,14 +769,10 @@ def gcdex_diophantine(a, b, c):
     # XXX: Bettter name?
 
     s, g = a.half_gcdex(b)
-    q = c.exquo(g)  # Inexact division means c is not in (a, b)
-    s = q*s
-
-    if not s.is_zero and s.degree() >= b.degree():
-        q, s = s.div(b)
-
+    s *= c.exquo(g)  # Inexact division means c is not in (a, b)
+    if s and s.degree() >= b.degree():
+        _, s = s.div(b)
     t = (c - s*a).exquo(b)
-
     return (s, t)
 
 
