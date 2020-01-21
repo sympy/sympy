@@ -1143,7 +1143,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
     (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
-    (x**4, EmptySet)
+    (x, EmptySet)
     >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
     (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
 
