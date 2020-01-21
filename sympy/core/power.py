@@ -71,7 +71,10 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
-    if HAS_GMPY and n < 9223372036854775808:  # n < 2**63
+    if HAS_GMPY and n < 2**63:
+        # Currently it works only for n < 2**63, else it produces TypeError
+        # sympy issue: https://github.com/sympy/sympy/issues/18374
+        # gmpy2 issue: https://github.com/aleaxit/gmpy/issues/257
         if HAS_GMPY >= 2:
             x, t = gmpy.iroot(y, n)
         else:
