@@ -1768,6 +1768,8 @@ class Rational(Number):
                     return S.ComplexInfinity
                 else:
                     return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
+            elif isinstance(other, DecimalRational):
+                return self*(1/other)
             elif isinstance(other, Rational):
                 return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             elif isinstance(other, Float):
@@ -1775,11 +1777,14 @@ class Rational(Number):
             else:
                 return Number.__div__(self, other)
         return Number.__div__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
+            elif isinstance(other, DecimalRational):
+                return other*(1/self)
             elif isinstance(other, Rational):
                 return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             elif isinstance(other, Float):
@@ -1837,7 +1842,7 @@ class Rational(Number):
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
                     return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(
+                return Integer(self.q)**expt.__class__(
                 expt.p*(expt.q - 1), expt.q) / \
                     Integer(self.q)**Integer(expt.p)
 
@@ -2131,6 +2136,74 @@ class DecimalRational(Rational):
         return Number.__mul__(self, other)
     __rmul__ = __mul__
 
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if global_parameters.evaluate:
+            if isinstance(other, Integer):
+                if self.p and other.p == S.Zero:
+                    return S.ComplexInfinity
+                else:
+                    return self.__class__(self.p, self.q*other.p, igcd(self.p, other.p))
+            elif isinstance(other, Rational):
+                return self.__class__(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+            elif isinstance(other, Float):
+                return self*(1/other)
+            else:
+                return Number.__div__(self, other)
+        return Number.__div__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rdiv__(self, other):
+        if global_parameters.evaluate:
+            if isinstance(other, Integer):
+                return self.__class__(other.p*self.q, self.p, igcd(self.p, other.p))
+            elif isinstance(other, Rational):
+                return self.__class__(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+            elif isinstance(other, Float):
+                return other*(1/self)
+            else:
+                return Number.__rdiv__(self, other)
+        return Number.__rdiv__(self, other)
+    __truediv__ = __div__
+
+    def _eval_power(self, expt):
+        if isinstance(expt, Number):
+            if isinstance(expt, Float):
+                return self._eval_evalf(expt._prec)**expt
+            if expt.is_extended_negative:
+                # DecimalRational(3, 4)**-2 -> DecimalRational(4,3)**2
+                ne = -expt
+                if (ne is S.One):
+                    return self.__class__(self.q, self.p)
+                if self.is_negative:
+                    return S.NegativeOne**expt*self.__class__(self.q, -self.p)**ne
+                else:
+                    return self.__class__(self.q, self.p)**ne
+            if expt is S.Infinity:  # -oo already caught by test for negative
+                if self.p > self.q:
+                    # DecimalRational(3,2)**oo -> oo
+                    return S.Infinity
+                if self.p < -self.q:
+                    # DecimalRational(-3,2)**oo -> oo + I*oo
+                    return S.Infinity + S.Infinity*S.ImaginaryUnit
+                return S.Zero
+            if isinstance(expt, Integer):
+                # DecimalRational(4,3)**2 -> DecimalRational(4**2, 3**2)
+                return self.__class__(self.p**expt.p, self.q**expt.p, 1)
+            if isinstance(expt, Rational):
+                # see if base is a perfect root, sqrt(.25) -> .5
+                x, xexact = integer_nthroot(abs(self.p), expt.q)
+                y, yexact = integer_nthroot(self.q, expt.q)
+                if xexact and yexact:
+                    # if it's a perfect root we can simplify
+                    result = self.__class__(x**abs(expt.p), y**abs(expt.p))
+                    if self.is_negative:
+                        result *= S.NegativeOne**expt
+                    return result
+                #otherwise return self**expt unevaluated, e.g. sqrt(.5)
+                return Pow(self.__class__(self.p, self.q), \
+                    expt.__class__(expt.p, expt.q), evaluate = False)
+
 
 class Integer(Rational):
     """Represents integer numbers of any size.
@@ -2417,7 +2490,7 @@ class Integer(Rational):
             return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
-        if expt is S.Half and self.is_negative:
+        if (expt.p, expt.q) == (1,2) and self.is_negative:
             # we extract I for this special case since everyone is doing so
             return S.ImaginaryUnit*Pow(-self, expt)
         if expt.is_negative:
@@ -2464,7 +2537,7 @@ class Integer(Rational):
                 # (2**2)**(1/10) -> 2**(1/5)
                 g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g))
+                    out_rad *= Pow(prime, expt.__class__(div_m//g, expt.q//g))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -2480,7 +2553,7 @@ class Integer(Rational):
         if sqr_int == b_pos and out_int == 1 and out_rad == 1:
             result = None
         else:
-            result = out_int*out_rad*Pow(sqr_int, Rational(sqr_gcd, expt.q))
+            result = out_int*out_rad*Pow(sqr_int, expt.__class__(sqr_gcd, expt.q))
             if self.is_negative:
                 result *= Pow(S.NegativeOne, expt)
         return result
@@ -2838,7 +2911,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
                     return S.ImaginaryUnit**Integer(expt.p)
                 i, r = divmod(expt.p, expt.q)
                 if i:
-                    return self**i*self**Rational(r, expt.q)
+                    return self**i*self**expt.__class__(r, expt.q)
         return
 
 

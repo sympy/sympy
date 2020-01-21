@@ -553,7 +553,7 @@ class Mul(Expr, AssocOp):
             elif p:
                 # see if there is any positive base this power of
                 # -1 can join
-                neg1e = Rational(p, q)
+                neg1e = neg1e.__class__(p, q)
                 for e, b in pnew.items():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
