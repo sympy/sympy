@@ -1,7 +1,5 @@
 from __future__ import division, print_function
 
-from typing import Any
-
 from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
@@ -9,8 +7,7 @@ from mpmath.libmp.libmpf import prec_to_dps
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (
-    Callable, NotIterable, as_int, default_sort_key, is_sequence,
-    reduce)
+    Callable, NotIterable, as_int, default_sort_key, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_and, fuzzy_or
@@ -25,11 +22,15 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
-from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
+from sympy.simplify.simplify import (
+    simplify as _simplify, dotprodsimp as _dotprodsimp)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
+
+from .common import (
+    MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
+    ShapeError)
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
@@ -41,6 +42,9 @@ from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix,
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+
+from .reductions import _is_echelon, _echelon_form, _rank, _rref
+from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -139,8 +143,31 @@ class MatrixDeterminant(MatrixCommon):
 
 
 class MatrixReductions(MatrixDeterminant):
-    """Provides basic matrix row/column operations.
-    Should not be instantiated directly."""
+    """Provides basic matrix row/column operations. Should not be instantiated
+    directly. See ``reductions.py`` for some of their implementations."""
+
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
+            dotprodsimp=None):
+        return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
+                with_pivots=with_pivots, dotprodsimp=dotprodsimp)
+
+    @property
+    def is_echelon(self):
+        return _is_echelon(self)
+
+    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
+        return _rank(self, iszerofunc=iszerofunc, simplify=simplify,
+                dotprodsimp=dotprodsimp)
+
+    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
+            normalize_last=True, dotprodsimp=None):
+        return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
+            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+
+    echelon_form.__doc__ = _echelon_form.__doc__
+    is_echelon.__doc__   = _is_echelon.__doc__
+    rank.__doc__         = _rank.__doc__
+    rref.__doc__         = _rref.__doc__
 
     def _eval_col_op_swap(self, col1, col2):
         def entry(i, j):
@@ -187,31 +214,6 @@ class MatrixReductions(MatrixDeterminant):
                 return self[i, j] + k * self[row2, j]
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
-
-    def _eval_echelon_form(self, iszerofunc, simpfunc, dotprodsimp=None):
-        """Returns (mat, swaps) where ``mat`` is a row-equivalent matrix
-        in echelon form and ``swaps`` is a list of row-swaps performed."""
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last=True,
-                                                      normalize=False,
-                                                      zero_above=False,
-                                                      dotprodsimp=dotprodsimp)
-        return reduced, pivot_cols, swaps
-
-    def _eval_is_echelon(self, iszerofunc):
-        if self.rows <= 0 or self.cols <= 0:
-            return True
-        zeros_below = all(iszerofunc(t) for t in self[1:, 0])
-        if iszerofunc(self[0, 0]):
-            return zeros_below and self[:, 1:]._eval_is_echelon(iszerofunc)
-        return zeros_below and self[1:, 1:]._eval_is_echelon(iszerofunc)
-
-    def _eval_rref(self, iszerofunc, simpfunc, normalize_last=True, dotprodsimp=None):
-        reduced, pivot_cols, swaps = self._row_reduce(iszerofunc, simpfunc,
-                                                      normalize_last, normalize=True,
-                                                      zero_above=True,
-                                                      dotprodsimp=dotprodsimp)
-        return reduced, pivot_cols
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
         """Validate the arguments for a row/column operation.  ``error_str``
@@ -264,160 +266,6 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
 
         return op, col, k, col1, col2
-
-    def _permute_complexity_right(self, iszerofunc):
-        """Permute columns with complicated elements as
-        far right as they can go.  Since the ``sympy`` row reduction
-        algorithms start on the left, having complexity right-shifted
-        speeds things up.
-
-        Returns a tuple (mat, perm) where perm is a permutation
-        of the columns to perform to shift the complex columns right, and mat
-        is the permuted matrix."""
-
-        def complexity(i):
-            # the complexity of a column will be judged by how many
-            # element's zero-ness cannot be determined
-            return sum(1 if iszerofunc(e) is None else 0 for e in self[:, i])
-        complex = [(complexity(i), i) for i in range(self.cols)]
-        perm = [j for (i, j) in sorted(complex)]
-
-        return (self.permute(perm, orientation='cols'), perm)
-
-    def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
-                    normalize=True, zero_above=True, dotprodsimp=None):
-        """Row reduce ``self`` and return a tuple (rref_matrix,
-        pivot_cols, swaps) where pivot_cols are the pivot columns
-        and swaps are any row swaps that were used in the process
-        of row reduction.
-
-        Parameters
-        ==========
-
-        iszerofunc : determines if an entry can be used as a pivot
-
-        simpfunc : used to simplify elements and test if they are
-            zero if ``iszerofunc`` returns `None`
-
-        normalize_last : indicates where all row reduction should
-            happen in a fraction-free manner and then the rows are
-            normalized (so that the pivots are 1), or whether
-            rows should be normalized along the way (like the naive
-            row reduction algorithm)
-
-        normalize : whether pivot rows should be normalized so that
-            the pivot value is 1
-
-        zero_above : whether entries above the pivot should be zeroed.
-            If ``zero_above=False``, an echelon matrix will be returned.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        """
-
-        def get_col(i):
-            return mat[i::cols]
-
-        def row_swap(i, j):
-            mat[i*cols:(i + 1)*cols], mat[j*cols:(j + 1)*cols] = \
-                mat[j*cols:(j + 1)*cols], mat[i*cols:(i + 1)*cols]
-
-        def cross_cancel(a, i, b, j):
-            """Does the row op row[i] = a*row[i] - b*row[j]"""
-            q = (j - i)*cols
-            for p in range(i*cols, (i + 1)*cols):
-                mat[p] = dps(a*mat[p] - b*mat[p + q])
-
-        dps = _dotprodsimp if dotprodsimp else lambda e: e
-        rows, cols = self.rows, self.cols
-        mat = list(self)
-        piv_row, piv_col = 0, 0
-        pivot_cols = []
-        swaps = []
-
-        # use a fraction free method to zero above and below each pivot
-        while piv_col < cols and piv_row < rows:
-            pivot_offset, pivot_val, \
-            assumed_nonzero, newly_determined = _find_reasonable_pivot(
-                get_col(piv_col)[piv_row:], iszerofunc, simpfunc)
-
-            # _find_reasonable_pivot may have simplified some things
-            # in the process.  Let's not let them go to waste
-            for (offset, val) in newly_determined:
-                offset += piv_row
-                mat[offset*cols + piv_col] = val
-
-            if pivot_offset is None:
-                piv_col += 1
-                continue
-
-            pivot_cols.append(piv_col)
-            if pivot_offset != 0:
-                row_swap(piv_row, pivot_offset + piv_row)
-                swaps.append((piv_row, pivot_offset + piv_row))
-
-            # if we aren't normalizing last, we normalize
-            # before we zero the other rows
-            if normalize_last is False:
-                i, j = piv_row, piv_col
-                mat[i*cols + j] = self.one
-                for p in range(i*cols + j + 1, (i + 1)*cols):
-                    mat[p] = dps(mat[p] / pivot_val)
-                # after normalizing, the pivot value is 1
-                pivot_val = self.one
-
-            # zero above and below the pivot
-            for row in range(rows):
-                # don't zero our current row
-                if row == piv_row:
-                    continue
-                # don't zero above the pivot unless we're told.
-                if zero_above is False and row < piv_row:
-                    continue
-                # if we're already a zero, don't do anything
-                val = mat[row*cols + piv_col]
-                if iszerofunc(val):
-                    continue
-
-                cross_cancel(pivot_val, row, val, piv_row)
-            piv_row += 1
-
-        # normalize each row
-        if normalize_last is True and normalize is True:
-            for piv_i, piv_j in enumerate(pivot_cols):
-                pivot_val = mat[piv_i*cols + piv_j]
-                mat[piv_i*cols + piv_j] = self.one
-                for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                    mat[p] = dps(mat[p] / pivot_val)
-
-        return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
-
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
-            dotprodsimp=None):
-        """Returns a matrix row-equivalent to ``self`` that is
-        in echelon form.  Note that echelon form of a matrix
-        is *not* unique, however, properties like the row
-        space and the null space are preserved.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-
-        mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc,
-                dotprodsimp=dotprodsimp)
-        if with_pivots:
-            return mat, pivots
-        return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
         """Performs the elementary column operation `op`.
@@ -479,311 +327,30 @@ class MatrixReductions(MatrixDeterminant):
         if op == "n->n+km":
             return self._eval_row_op_add_multiple_to_other_row(row, k, row2)
 
-    @property
-    def is_echelon(self):
-        """Returns `True` if the matrix is in echelon form.
-        That is, all rows of zeros are at the bottom, and below
-        each leading non-zero in a row are exclusively zeros."""
-
-        return self._eval_is_echelon(_iszero)
-
-    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
-        """
-        Returns the rank of a matrix
-
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x
-        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
-        >>> m.rank()
-        2
-        >>> n = Matrix(3, 3, range(1, 10))
-        >>> n.rank()
-        2
-        """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-
-        # for small matrices, we compute the rank explicitly
-        # if is_zero on elements doesn't answer the question
-        # for small matrices, we fall back to the full routine.
-        if self.rows <= 0 or self.cols <= 0:
-            return 0
-        if self.rows <= 1 or self.cols <= 1:
-            zeros = [iszerofunc(x) for x in self]
-            if False in zeros:
-                return 1
-        if self.rows == 2 and self.cols == 2:
-            zeros = [iszerofunc(x) for x in self]
-            if not False in zeros and not None in zeros:
-                return 0
-            det = self.det(dotprodsimp=dotprodsimp)
-            if iszerofunc(det) and False in zeros:
-                return 1
-            if iszerofunc(det) is False:
-                return 2
-
-        mat, _ = self._permute_complexity_right(iszerofunc=iszerofunc)
-        echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc,
-                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
-        return len(pivots)
-
-    def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True, dotprodsimp=None):
-        """Return reduced row-echelon form of matrix and indices of pivot vars.
-
-        Parameters
-        ==========
-
-        iszerofunc : Function
-            A function used for detecting whether an element can
-            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
-
-        simplify : Function
-            A function used to simplify elements when looking for a pivot.
-            By default SymPy's ``simplify`` is used.
-
-        pivots : True or False
-            If ``True``, a tuple containing the row-reduced matrix and a tuple
-            of pivot columns is returned.  If ``False`` just the row-reduced
-            matrix is returned.
-
-        normalize_last : True or False
-            If ``True``, no pivots are normalized to `1` until after all
-            entries above and below each pivot are zeroed.  This means the row
-            reduction algorithm is fraction free until the very last step.
-            If ``False``, the naive row reduction procedure is used where
-            each pivot is normalized to be `1` before row operations are
-            used to zero above and below the pivot.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Notes
-        =====
-
-        The default value of ``normalize_last=True`` can provide significant
-        speedup to row reduction, especially on matrices with symbols.  However,
-        if you depend on the form row reduction algorithm leaves entries
-        of the matrix, set ``noramlize_last=False``
-
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x
-        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
-        >>> m.rref()
-        (Matrix([
-        [1, 0],
-        [0, 1]]), (0, 1))
-        >>> rref_matrix, rref_pivots = m.rref()
-        >>> rref_matrix
-        Matrix([
-        [1, 0],
-        [0, 1]])
-        >>> rref_pivots
-        (0, 1)
-        """
-        simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
-
-        ret, pivot_cols = self._eval_rref(iszerofunc=iszerofunc,
-                                          simpfunc=simpfunc,
-                                          normalize_last=normalize_last,
-                                          dotprodsimp=dotprodsimp)
-        if pivots:
-            ret = (ret, pivot_cols)
-        return ret
-
 
 class MatrixSubspaces(MatrixReductions):
-    """Provides methods relating to the fundamental subspaces
-    of a matrix.  Should not be instantiated directly."""
+    """Provides methods relating to the fundamental subspaces of a matrix.
+    Should not be instantiated directly. See ``subspaces.py`` for their
+    implementations."""
 
     def columnspace(self, simplify=False, dotprodsimp=None):
-        """Returns a list of vectors (Matrix objects) that span columnspace of ``self``
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.columnspace()
-        [Matrix([
-        [ 1],
-        [-2],
-        [ 3]]), Matrix([
-        [0],
-        [0],
-        [6]])]
-
-        See Also
-        ========
-
-        nullspace
-        rowspace
-        """
-        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
-                dotprodsimp=dotprodsimp)
-
-        return [self.col(i) for i in pivots]
+        return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
 
     def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
-        """Returns list of vectors (Matrix objects) that span nullspace of ``self``
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.nullspace()
-        [Matrix([
-        [-3],
-        [ 1],
-        [ 0]])]
-
-        See Also
-        ========
-
-        columnspace
-        rowspace
-        """
-
-        reduced, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify,
+        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
-
-        free_vars = [i for i in range(self.cols) if i not in pivots]
-
-        basis = []
-        for free_var in free_vars:
-            # for each free variable, we will set it to 1 and all others
-            # to 0.  Then, we will use back substitution to solve the system
-            vec = [self.zero]*self.cols
-            vec[free_var] = self.one
-            for piv_row, piv_col in enumerate(pivots):
-                vec[piv_col] -= reduced[piv_row, free_var]
-            basis.append(vec)
-
-        return [self._new(self.cols, 1, b) for b in basis]
 
     def rowspace(self, simplify=False, dotprodsimp=None):
-        """Returns a list of vectors that span the row space of ``self``.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-        """
-
-        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True,
-                dotprodsimp=dotprodsimp)
-
-        return [reduced.row(i) for i in range(len(pivots))]
+        return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
 
     @classmethod
     def orthogonalize(cls, *vecs, **kwargs):
-        """Apply the Gram-Schmidt orthogonalization procedure
-        to vectors supplied in ``vecs``.
+        return _orthogonalize(cls, *vecs, **kwargs)
 
-        Parameters
-        ==========
-
-        vecs
-            vectors to be made orthogonal
-
-        normalize : bool
-            If ``True``, return an orthonormal basis.
-
-        rankcheck : bool
-            If ``True``, the computation does not stop when encountering
-            linearly dependent vectors.
-
-            If ``False``, it will raise ``ValueError`` when any zero
-            or linearly dependent vectors are found.
-
-        Returns
-        =======
-
-        list
-            List of orthogonal (or orthonormal) basis vectors.
-
-        See Also
-        ========
-
-        MatrixBase.QRdecomposition
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
-        """
-        normalize = kwargs.get('normalize', False)
-        rankcheck = kwargs.get('rankcheck', False)
-
-        def project(a, b):
-            return b * (a.dot(b, hermitian=True) / b.dot(b, hermitian=True))
-
-        def perp_to_subspace(vec, basis):
-            """projects vec onto the subspace given
-            by the orthogonal basis ``basis``"""
-            components = [project(vec, b) for b in basis]
-            if len(basis) == 0:
-                return vec
-            return vec - reduce(lambda a, b: a + b, components)
-
-        ret = []
-        # make sure we start with a non-zero vector
-        vecs = list(vecs)
-        while len(vecs) > 0 and vecs[0].is_zero:
-            if rankcheck is False:
-                del vecs[0]
-            else:
-                raise ValueError(
-                    "GramSchmidt: vector set not linearly independent")
-
-        for vec in vecs:
-            perp = perp_to_subspace(vec, ret)
-            if not perp.is_zero:
-                ret.append(perp)
-            elif rankcheck is True:
-                raise ValueError(
-                    "GramSchmidt: vector set not linearly independent")
-
-        if normalize:
-            ret = [vec / vec.norm() for vec in ret]
-
-        return ret
+    columnspace.__doc__   = _columnspace.__doc__
+    nullspace.__doc__     = _nullspace.__doc__
+    rowspace.__doc__      = _rowspace.__doc__
+    orthogonalize.__doc__ = _orthogonalize.__doc__
 
 
 class MatrixEigen(MatrixSubspaces):
