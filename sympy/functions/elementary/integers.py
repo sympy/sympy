@@ -32,8 +32,6 @@ class RoundFunction(Function):
                 return cls(i)*S.ImaginaryUnit
             return cls(arg, evaluate=False)
 
-
-
         # Integral, numerical, symbolic part
         ipart = npart = spart = S.Zero
 
