@@ -917,7 +917,8 @@ class Interval(Set, EvalfMixin):
 
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_extended_real=True').
-        if not all(i.is_extended_real is not False or i in inftys for i in (start, end)):
+        if not all(i.is_extended_real is not False or i in inftys
+            for i in (start, end, end - start)):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
