@@ -32,15 +32,15 @@ specific hint.  See also the docstring on
     :py:meth:`~sympy.solvers.ode.dsolve` to obtain the functionality provided
     by these functions:
 
-    - :py:meth:`~sympy.solvers.ode.odesimp` - Does all forms of ODE
+    - :py:meth:`~sympy.solvers.ode.ode.odesimp` - Does all forms of ODE
       simplification.
-    - :py:meth:`~sympy.solvers.ode.ode_sol_simplicity` - A key function for
+    - :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity` - A key function for
       comparing solutions by simplicity.
-    - :py:meth:`~sympy.solvers.ode.constantsimp` - Simplifies arbitrary
+    - :py:meth:`~sympy.solvers.ode.ode.constantsimp` - Simplifies arbitrary
       constants.
-    - :py:meth:`~sympy.solvers.ode.constant_renumber` - Renumber arbitrary
+    - :py:meth:`~sympy.solvers.ode.ode.constant_renumber` - Renumber arbitrary
       constants.
-    - :py:meth:`~sympy.solvers.ode._handle_Integral` - Evaluate unevaluated
+    - :py:meth:`~sympy.solvers.ode.ode._handle_Integral` - Evaluate unevaluated
       Integrals.
 
     See also the docstrings of these functions.
@@ -84,7 +84,7 @@ in the ODE and any match expression gathered by
 this result has any integrals in it, the hint function will return an
 unevaluated :py:class:`~sympy.integrals.integrals.Integral` class.
 :py:meth:`~sympy.solvers.ode.dsolve`, which is the user wrapper function
-around all of this, will then call :py:meth:`~sympy.solvers.ode.odesimp` on
+around all of this, will then call :py:meth:`~sympy.solvers.ode.ode.odesimp` on
 the result, which, among other things, will attempt to solve the equation for
 the dependent variable (the function we are solving for), simplify the
 arbitrary constants in the expression, and evaluate any integrals, if the hint
@@ -109,7 +109,7 @@ If there is more than one way to solve ODEs with your method, include a hint
 for each one, as well as a ``<hint>_best`` hint.  Your ``ode_<hint>_best()``
 function should choose the best using min with ``ode_sol_simplicity`` as the
 key argument.  See
-:py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best`, for example.
+:py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best`, for example.
 The function that uses your method will be called ``ode_<hint>()``, so the
 hint must only use characters that are allowed in a Python function name
 (alphanumeric characters and the underscore '``_``' character).  Include a
@@ -141,7 +141,7 @@ much faster.
 Next, you need to have a match expression or a function that matches the type
 of the ODE, which you should put in :py:meth:`~sympy.solvers.ode.classify_ode`
 (if the match function is more than just a few lines, like
-:py:meth:`~sympy.solvers.ode._undetermined_coefficients_match`, it should go
+:py:meth:`~sympy.solvers.ode.ode._undetermined_coefficients_match`, it should go
 outside of :py:meth:`~sympy.solvers.ode.classify_ode`).  It should match the
 ODE without solving for it as much as possible, so that
 :py:meth:`~sympy.solvers.ode.classify_ode` remains fast and is not hindered by
@@ -181,24 +181,24 @@ If your solution method involves integrating, use :py:obj:`~.Integral` instead o
 hard/slow integration by using the ``_Integral`` variant of your hint.  In
 most cases, calling :py:meth:`sympy.core.basic.Basic.doit` will integrate your
 solution.  If this is not the case, you will need to write special code in
-:py:meth:`~sympy.solvers.ode._handle_Integral`.  Arbitrary constants should be
+:py:meth:`~sympy.solvers.ode.ode._handle_Integral`.  Arbitrary constants should be
 symbols named ``C1``, ``C2``, and so on.  All solution methods should return
 an equality instance.  If you need an arbitrary number of arbitrary constants,
 you can use ``constants = numbered_symbols(prefix='C', cls=Symbol, start=1)``.
 If it is possible to solve for the dependent function in a general way, do so.
 Otherwise, do as best as you can, but do not call solve in your
-``ode_<hint>()`` function.  :py:meth:`~sympy.solvers.ode.odesimp` will attempt
+``ode_<hint>()`` function.  :py:meth:`~sympy.solvers.ode.ode.odesimp` will attempt
 to solve the solution for you, so you do not need to do that.  Lastly, if your
 ODE has a common simplification that can be applied to your solutions, you can
-add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
+add a special case in :py:meth:`~sympy.solvers.ode.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
 have many :obj:`~sympy.functions.elementary.exponential.log` terms, so
-:py:meth:`~sympy.solvers.ode.odesimp` calls
+:py:meth:`~sympy.solvers.ode.ode.odesimp` calls
 :py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write
 the arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
 consider common ways that you can rearrange your solution to have
-:py:meth:`~sympy.solvers.ode.constantsimp` take better advantage of it.  It is
-better to put simplification in :py:meth:`~sympy.solvers.ode.odesimp` than in
+:py:meth:`~sympy.solvers.ode.ode.constantsimp` take better advantage of it.  It is
+better to put simplification in :py:meth:`~sympy.solvers.ode.ode.odesimp` than in
 your method, because it can then be turned off with the simplify flag in
 :py:meth:`~sympy.solvers.ode.dsolve`.  If you have any extraneous
 simplification in your function, be sure to only run it using ``if
@@ -439,7 +439,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             Hints below for more options that you can use for hint.
 
         ``simplify`` enables simplification by
-            :py:meth:`~sympy.solvers.ode.odesimp`.  See its docstring for more
+            :py:meth:`~sympy.solvers.ode.ode.odesimp`.  See its docstring for more
             information.  Turn this off, for example, to disable solving of
             solutions for ``func`` or simplification of arbitrary constants.
             It will still integrate with this hint. Note that the solution may
@@ -2514,7 +2514,7 @@ def checksysodesol(eqs, sols, func=None):
 def odesimp(ode, eq, func, hint):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
-    running :py:meth:`~sympy.solvers.ode.constantsimp`.
+    running :py:meth:`~sympy.solvers.ode.ode.constantsimp`.
 
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
@@ -2525,8 +2525,8 @@ def odesimp(ode, eq, func, hint):
     This function should have no effect on expressions returned by
     :py:meth:`~sympy.solvers.ode.dsolve`, as
     :py:meth:`~sympy.solvers.ode.dsolve` already calls
-    :py:meth:`~sympy.solvers.ode.odesimp`, but the individual hint functions
-    do not call :py:meth:`~sympy.solvers.ode.odesimp` (because the
+    :py:meth:`~sympy.solvers.ode.ode.odesimp`, but the individual hint functions
+    do not call :py:meth:`~sympy.solvers.ode.ode.odesimp` (because the
     :py:meth:`~sympy.solvers.ode.dsolve` wrapper does).  Therefore, this
     function is designed for mainly internal use.
 
@@ -3156,7 +3156,7 @@ def constantsimp(expr, constants):
     2. powers with exponents that are :py:class:`~sympy.core.add.Add`\s are
        expanded so `e^{C_1 + x}` will be simplified to `C_1 e^x`.
 
-    Use :py:meth:`~sympy.solvers.ode.constant_renumber` to renumber constants
+    Use :py:meth:`~sympy.solvers.ode.ode.constant_renumber` to renumber constants
     after simplification or else arbitrary numbers on constants may appear,
     e.g. `C_1 + C_3 x`.
 
@@ -3266,7 +3266,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     produce different results on different machines.
 
     The structure of this function is very similar to that of
-    :py:meth:`~sympy.solvers.ode.constantsimp`.
+    :py:meth:`~sympy.solvers.ode.ode.constantsimp`.
 
     Examples
     ========
@@ -3501,12 +3501,12 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     ``1st_homogeneous_coeff_subs_dep_div_indep`` and
     ``1st_homogeneous_coeff_subs_indep_div_dep``.
 
-    This is as determined by :py:meth:`~sympy.solvers.ode.ode_sol_simplicity`.
+    This is as determined by :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity`.
 
     See the
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
     and
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
     docstrings for more information on these hints.  Note that there is no
     ``ode_1st_homogeneous_coeff_best_Integral`` hint.
 
@@ -3600,8 +3600,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`.
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`.
 
     Examples
     ========
@@ -3695,8 +3695,8 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     Where `u_2 g(u_2) + h(u_2) \ne 0` and `f(x) \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`.
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best` and
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`.
 
     Examples
     ========
@@ -3758,8 +3758,8 @@ def homogeneous_order(eq, *symbols):
     or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
 
     Symbols can be functions, but every argument of the function must be a
     symbol, and the arguments of the function that appear in the expression
@@ -3906,7 +3906,7 @@ def ode_Bernoulli(eq, func, order, match):
 
     The substitution `w = 1/y^{1-n}` will transform an equation of this form
     into one that is linear (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode_1st_linear`).  The general solution is::
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_linear`).  The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
@@ -3933,7 +3933,7 @@ def ode_Bernoulli(eq, func, order, match):
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode_separable`).
+    :py:meth:`~sympy.solvers.ode.ode.ode_separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
@@ -5151,7 +5151,7 @@ def ode_almost_linear(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode_1st_linear`
+    :meth:`sympy.solvers.ode.ode.ode_1st_linear`
 
     Examples
     ========
@@ -5285,9 +5285,9 @@ def ode_linear_coefficients(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode_1st_homogeneous_coeff_best`
-    :meth:`sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
-    :meth:`sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_best`
+    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
+    :meth:`sympy.solvers.ode.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
 
     Examples
     ========
@@ -5352,7 +5352,7 @@ def ode_separable_reduced(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode_separable`
+    :meth:`sympy.solvers.ode.ode.ode_separable`
 
     Examples
     ========
@@ -5694,7 +5694,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     Helper function for the method of undetermined coefficients.
 
     See the
-    :py:meth:`~sympy.solvers.ode.ode_nth_linear_constant_coeff_undetermined_coefficients`
+    :py:meth:`~sympy.solvers.ode.ode.ode_nth_linear_constant_coeff_undetermined_coefficients`
     docstring for more information on this method.
 
     The parameter ``match`` should be a dictionary that has the following
@@ -6000,7 +6000,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
     Helper function for the method of variation of parameters and nonhomogeneous euler eq.
 
     See the
-    :py:meth:`~sympy.solvers.ode.ode_nth_linear_constant_coeff_variation_of_parameters`
+    :py:meth:`~sympy.solvers.ode.ode.ode_nth_linear_constant_coeff_variation_of_parameters`
     docstring for more information on this method.
 
     The parameter ``match`` should be a dictionary that has the following
