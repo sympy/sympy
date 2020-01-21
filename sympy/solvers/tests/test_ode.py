@@ -3835,10 +3835,15 @@ def test_issue_15996():
 def test_issue_18408():
     eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x)
     sol = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + x*sinh(x)/2)
-    assert sol == dsolve(eq)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) - 49*f(x) - sinh(3*x)
     sol = Eq(f(x), C1*exp(-7*x) + C2*exp(7*x) - sinh(3*x)/40)
-    assert sol == dsolve(eq)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(3*x) -exp(x)
+    sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
     assert checkodesol(eq, sol) == (True, 0)
