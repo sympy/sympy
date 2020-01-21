@@ -46,7 +46,6 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.compatibility import PY3
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and
@@ -135,30 +134,15 @@ def arity(cls):
     True
     """
     eval_ = getattr(cls, 'eval', cls)
-    if PY3:
-        parameters = inspect.signature(eval_).parameters.items()
-        if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
-            return
-        p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
-        # how many have no default and how many have a default value
-        no, yes = map(len, sift(p_or_k,
-            lambda p:p.default == p.empty, binary=True))
-        return no if not yes else tuple(range(no, no + yes + 1))
-    else:
-        cls_ = int(hasattr(cls, 'eval'))  # correction for cls arguments
-        evalargspec = inspect.getargspec(eval_)
-        if evalargspec.varargs:
-            return
-        else:
-            evalargs = len(evalargspec.args) - cls_
-            if evalargspec.defaults:
-                # if there are default args then they are optional; the
-                # fewest args will occur when all defaults are used and
-                # the most when none are used (i.e. all args are given)
-                fewest = evalargs - len(evalargspec.defaults)
-                return tuple(range(fewest, evalargs + 1))
-            return evalargs
 
+    parameters = inspect.signature(eval_).parameters.items()
+    if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
+        return
+    p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+    # how many have no default and how many have a default value
+    no, yes = map(len, sift(p_or_k,
+        lambda p:p.default == p.empty, binary=True))
+    return no if not yes else tuple(range(no, no + yes + 1))
 
 class FunctionClass(ManagedProperties):
     """
