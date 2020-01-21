@@ -92,11 +92,3 @@ def plot_phase(expression,  symbol):
     plt.ylabel('Phase')
     plt.xlabel('Freq (in Rad/s)')
     plt.show()
-
-
-
-
-
-
-
-
