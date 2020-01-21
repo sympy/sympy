@@ -341,7 +341,9 @@ class MatrixSubspaces(MatrixReductions):
     def rowspace(self, simplify=False, dotprodsimp=None):
         return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
 
-    @classmethod
+    # This is a classmethod but is converted to such later in order to allow
+    # assignment of __doc__ since that does not work for already wrapped
+    # classmethods in Python 3.6.
     def orthogonalize(cls, *vecs, **kwargs):
         return _orthogonalize(cls, *vecs, **kwargs)
 
@@ -349,6 +351,8 @@ class MatrixSubspaces(MatrixReductions):
     nullspace.__doc__     = _nullspace.__doc__
     rowspace.__doc__      = _rowspace.__doc__
     orthogonalize.__doc__ = _orthogonalize.__doc__
+
+    orthogonalize         = classmethod(orthogonalize)
 
 
 class MatrixEigen(MatrixSubspaces):
