@@ -1,5 +1,7 @@
 from __future__ import division, print_function
 
+from typing import Any
+
 from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
@@ -27,10 +29,6 @@ from sympy.simplify.simplify import (
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
-
-from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError)
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,

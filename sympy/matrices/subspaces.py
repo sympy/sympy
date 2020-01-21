@@ -1,7 +1,6 @@
 from __future__ import division, print_function
 
 from sympy.core.compatibility import reduce
-from sympy.core.sympify import sympify
 
 from .utilities import _iszero
 
