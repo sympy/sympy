@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
@@ -113,7 +112,7 @@ class StateBase(QExpr):
 
     @classmethod
     def dual_class(self):
-        """Return the class used to construt the dual."""
+        """Return the class used to construct the dual."""
         raise NotImplementedError(
             'dual_class must be implemented in a subclass'
         )
@@ -234,7 +233,7 @@ class KetBase(StateBase):
     #-------------------------------------------------------------------------
 
     def _eval_innerproduct(self, bra, **hints):
-        """Evaluate the inner product betweeen this ket and a bra.
+        """Evaluate the inner product between this ket and a bra.
 
         This is called to compute <bra|ket>, where the ket is ``self``.
 
@@ -286,7 +285,7 @@ class BraBase(StateBase):
 
     @classmethod
     def _operators_to_state(self, ops, **options):
-        state = self.dual_class().operators_to_state(ops, **options)
+        state = self.dual_class()._operators_to_state(ops, **options)
         return state.dual
 
     def _state_to_operators(self, op_classes, **options):
@@ -388,7 +387,7 @@ class Ket(State, KetBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -449,7 +448,7 @@ class Bra(State, BraBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -715,7 +714,7 @@ class Wavefunction(Function):
                 new_args[ct] = arg
             ct += 1
 
-        return super(Function, cls).__new__(cls, *new_args, **options)
+        return super(Wavefunction, cls).__new__(cls, *new_args, **options)
 
     def __call__(self, *args, **options):
         var = self.variables
@@ -869,7 +868,7 @@ class Wavefunction(Function):
 
         return (self.norm == 1.0)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def norm(self):
         """
@@ -928,13 +927,13 @@ class Wavefunction(Function):
         """
         const = self.norm
 
-        if const == oo:
+        if const is oo:
             raise NotImplementedError("The function is not normalizable!")
         else:
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])
 
     def prob(self):
-        """
+        r"""
         Return the absolute magnitude of the w.f., `|\psi(x)|^2`
 
         Examples

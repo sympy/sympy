@@ -1,14 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.tensor.indexed import Idx
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.core.compatibility import range
 
 
 class Product(ExprWithIntLimits):
@@ -109,10 +107,10 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*factorial(n)**2)
+    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
     >>> Pe = Pe.rewrite(gamma)
     >>> Pe
-    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 + pi/2)*gamma(-pi/2 + 1)*gamma(n + 1)**2)
+    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 - pi/2)*gamma(1 + pi/2)*gamma(n + 1)**2)
     >>> Pe = simplify(Pe)
     >>> Pe
     sin(pi**2/2)*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/gamma(n + 1)**2
@@ -182,17 +180,17 @@ class Product(ExprWithIntLimits):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-    .. [2] http://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
-    .. [3] http://en.wikipedia.org/wiki/Empty_product
+    .. [2] https://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
+    .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
-    def _eval_rewrite_as_Sum(self, *args):
+    def _eval_rewrite_as_Sum(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         return exp(Sum(log(self.function), *self.limits))
 
@@ -202,20 +200,74 @@ class Product(ExprWithIntLimits):
     function = term
 
     def _eval_is_zero(self):
-        # a Product is zero only if its term is zero.
-        return self.term.is_zero
+        if self.has_empty_sequence:
+            return False
+
+        z = self.term.is_zero
+        if z is True:
+            return True
+        if self.has_finite_limits:
+            # A Product is zero only if its term is zero assuming finite limits.
+            return z
+
+    def _eval_is_extended_real(self):
+        if self.has_empty_sequence:
+            return True
+
+        return self.function.is_extended_real
+
+    def _eval_is_positive(self):
+        if self.has_empty_sequence:
+            return True
+        if self.function.is_positive and self.has_finite_limits:
+            return True
+
+    def _eval_is_nonnegative(self):
+        if self.has_empty_sequence:
+            return True
+        if self.function.is_nonnegative and self.has_finite_limits:
+            return True
+
+    def _eval_is_extended_nonnegative(self):
+        if self.has_empty_sequence:
+            return True
+        if self.function.is_extended_nonnegative:
+            return True
+
+    def _eval_is_extended_nonpositive(self):
+        if self.has_empty_sequence:
+            return True
+
+    def _eval_is_finite(self):
+        if self.has_finite_limits and self.function.is_finite:
+            return True
 
     def doit(self, **hints):
-        f = self.function
+        # first make sure any definite limits have product
+        # variables with matching assumptions
+        reps = {}
+        for xab in self.limits:
+            # Must be imported here to avoid circular imports
+            from .summations import _dummy_with_inherited_properties_concrete
+            d = _dummy_with_inherited_properties_concrete(xab)
+            if d:
+                reps[xab[0]] = d
+        if reps:
+            undo = dict([(v, k) for k, v in reps.items()])
+            did = self.xreplace(reps).doit(**hints)
+            if type(did) is tuple:  # when separate=True
+                did = tuple([i.xreplace(undo) for i in did])
+            else:
+                did = did.xreplace(undo)
+            return did
 
+        f = self.function
         for index, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_Integer and dif < 0:
+            if dif.is_integer and dif.is_negative:
                 a, b = b + 1, a - 1
                 f = 1 / f
-            if isinstance(i, Idx):
-                i = i.label
 
             g = self._eval_product(f, (i, a, b))
             if g in (None, S.NaN):
@@ -255,8 +307,9 @@ class Product(ExprWithIntLimits):
             return deltaproduct(term, limits)
 
         dif = n - a
-        if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
+        definite = dif.is_Integer
+        if definite and (dif < 100):
+            return self._eval_product_direct(term, limits)
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
@@ -278,31 +331,39 @@ class Product(ExprWithIntLimits):
             return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
-            p, q = term.as_numer_denom()
-
-            p = self._eval_product(p, (k, a, n))
-            q = self._eval_product(q, (k, a, n))
-
-            return p / q
+            factored = factor_terms(term, fraction=True)
+            if factored.is_Mul:
+                return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
-            exclude, include = [], []
+            # Factor in part without the summation variable and part with
+            without_k, with_k = term.as_coeff_mul(k)
 
-            for t in term.args:
-                p = self._eval_product(t, (k, a, n))
+            if len(with_k) >= 2:
+                # More than one term including k, so still a multiplication
+                exclude, include = [], []
+                for t in with_k:
+                    p = self._eval_product(t, (k, a, n))
 
-                if p is not None:
-                    exclude.append(p)
+                    if p is not None:
+                        exclude.append(p)
+                    else:
+                        include.append(t)
+
+                if not exclude:
+                    return None
                 else:
-                    include.append(t)
-
-            if not exclude:
-                return None
+                    arg = term._new_rawargs(*include)
+                    A = Mul(*exclude)
+                    B = self.func(arg, (k, a, n)).doit()
+                    return without_k**(n - a + 1)*A * B
             else:
-                arg = term._new_rawargs(*include)
-                A = Mul(*exclude)
-                B = self.func(arg, (k, a, n)).doit()
-                return A * B
+                # Just a single term
+                p = self._eval_product(with_k[0], (k, a, n))
+                if p is None:
+                    p = self.func(with_k[0], (k, a, n)).doit()
+                return without_k**(n - a + 1)*p
+
 
         elif term.is_Pow:
             if not term.base.has(k):
@@ -323,18 +384,26 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
-    def _eval_simplify(self, ratio, measure):
+        if definite:
+            return self._eval_product_direct(term, limits)
+
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import product_simplify
-        return product_simplify(self)
+        rv = product_simplify(self)
+        return rv.doit() if kwargs['doit'] else rv
 
     def _eval_transpose(self):
         if self.is_commutative:
             return self.func(self.function.transpose(), *self.limits)
         return None
 
+    def _eval_product_direct(self, term, limits):
+        (k, a, n) = limits
+        return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
+
     def is_convergent(self):
         r"""
-        See docs of Sum.is_convergent() for explanation of convergence
+        See docs of :obj:`.Sum.is_convergent()` for explanation of convergence
         in SymPy.
 
         The infinite product:
@@ -358,11 +427,6 @@ class Product(ExprWithIntLimits):
 
         converges.
 
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Infinite_product
-
         Examples
         ========
 
@@ -376,6 +440,11 @@ class Product(ExprWithIntLimits):
         True
         >>> Product(exp(-n**2), (n, 1, oo)).is_convergent()
         False
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Infinite_product
         """
         from sympy.concrete.summations import Sum
 
@@ -448,7 +517,9 @@ class Product(ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index,
+        reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -456,6 +527,7 @@ class Product(ExprWithIntLimits):
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
                http://dl.acm.org/citation.cfm?doid=322248.322255
+
         """
         l_indices = list(indices)
 

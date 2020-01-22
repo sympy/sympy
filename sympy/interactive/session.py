@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
-from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -19,7 +18,7 @@ init_printing()
 verbose_message = """\
 These commands were executed:
 %(source)s
-Documentation can be found at http://docs.sympy.org/%(version)s
+Documentation can be found at https://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\
@@ -38,6 +37,9 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     import sys
     import os
+
+    if quiet:
+        return ""
 
     python_version = "%d.%d.%d" % sys.version_info[:3]
 
@@ -59,26 +61,25 @@ def _make_message(ipython=True, quiet=False, source=None):
     args = shell_name, sympy_version, python_version, ARCH, ', '.join(info)
     message = "%s console for SymPy %s (Python %s-%s) (%s)\n" % args
 
-    if not quiet:
-        if source is None:
-            source = preexec_source
+    if source is None:
+        source = preexec_source
 
-        _source = ""
+    _source = ""
 
-        for line in source.split('\n')[:-1]:
-            if not line:
-                _source += '\n'
-            else:
-                _source += '>>> ' + line + '\n'
-
-        doc_version = sympy_version
-        if 'dev' in doc_version:
-            doc_version = "dev"
+    for line in source.split('\n')[:-1]:
+        if not line:
+            _source += '\n'
         else:
-            doc_version = "%s/" % doc_version
+            _source += '>>> ' + line + '\n'
 
-        message += '\n' + verbose_message % {'source': _source,
-                                             'version': doc_version}
+    doc_version = sympy_version
+    if 'dev' in doc_version:
+        doc_version = "dev"
+    else:
+        doc_version = "%s/" % doc_version
+
+    message += '\n' + verbose_message % {'source': _source,
+                                         'version': doc_version}
 
     return message
 
@@ -91,6 +92,7 @@ def int_to_Integer(s):
     http://docs.python.org/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
+
     Examples
     ========
 
@@ -135,17 +137,12 @@ def int_to_Integer(s):
     return untokenize(result)
 
 
-def enable_automatic_int_sympification(app):
+def enable_automatic_int_sympification(shell):
     """
     Allow IPython to automatically convert integer literals to Integer.
     """
-    hasshell = hasattr(app, 'shell')
-
     import ast
-    if hasshell:
-        old_run_cell = app.shell.run_cell
-    else:
-        old_run_cell = app.run_cell
+    old_run_cell = shell.run_cell
 
     def my_run_cell(cell, *args, **kwargs):
         try:
@@ -161,14 +158,11 @@ def enable_automatic_int_sympification(app):
             cell = int_to_Integer(cell)
         old_run_cell(cell, *args, **kwargs)
 
-    if hasshell:
-        app.shell.run_cell = my_run_cell
-    else:
-        app.run_cell = my_run_cell
+    shell.run_cell = my_run_cell
 
 
-def enable_automatic_symbols(app):
-    """Allow IPython to automatially create symbols (``isympy -a``). """
+def enable_automatic_symbols(shell):
+    """Allow IPython to automatically create symbols (``isympy -a``). """
     # XXX: This should perhaps use tokenize, like int_to_Integer() above.
     # This would avoid re-executing the code, which can lead to subtle
     # issues.  For example:
@@ -235,40 +229,37 @@ def enable_automatic_symbols(app):
             etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
 
-    if hasattr(app, 'shell'):
-        app.shell.set_custom_exc((NameError,), _handler)
-    else:
-        # This was restructured in IPython 0.13
-        app.set_custom_exc((NameError,), _handler)
+    shell.set_custom_exc((NameError,), _handler)
 
 
-def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
+def init_ipython_session(shell=None, argv=[], auto_symbols=False, auto_int_to_Integer=False):
     """Construct new IPython session. """
     import IPython
 
     if V(IPython.__version__) >= '0.11':
-        # use an app to parse the command line, and init config
-        # IPython 1.0 deprecates the frontend module, so we import directly
-        # from the terminal module to prevent a deprecation message from being
-        # shown.
-        if V(IPython.__version__) >= '1.0':
-            from IPython.terminal import ipapp
-        else:
-            from IPython.frontend.terminal import ipapp
-        app = ipapp.TerminalIPythonApp()
+        if not shell:
+            # use an app to parse the command line, and init config
+            # IPython 1.0 deprecates the frontend module, so we import directly
+            # from the terminal module to prevent a deprecation message from being
+            # shown.
+            if V(IPython.__version__) >= '1.0':
+                from IPython.terminal import ipapp
+            else:
+                from IPython.frontend.terminal import ipapp
+            app = ipapp.TerminalIPythonApp()
 
-        # don't draw IPython banner during initialization:
-        app.display_banner = False
-        app.initialize(argv)
+            # don't draw IPython banner during initialization:
+            app.display_banner = False
+            app.initialize(argv)
+
+            shell = app.shell
 
         if auto_symbols:
-            readline = import_module("readline")
-            if readline:
-                enable_automatic_symbols(app)
+            enable_automatic_symbols(shell)
         if auto_int_to_Integer:
-            enable_automatic_int_sympification(app)
+            enable_automatic_int_sympification(shell)
 
-        return app.shell
+        return shell
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
@@ -380,7 +371,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     sin(x)
     >>> sqrt(5) #doctest: +SKIP
       ___
-    \/ 5
+    \\/ 5
     >>> init_session(pretty_print=False) #doctest: +SKIP
     >>> sqrt(5) #doctest: +SKIP
     sqrt(5)
@@ -414,15 +405,11 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
-            if V(IPython.__version__) >= '0.11':
-                try:
-                    ip = get_ipython()
-                except NameError:
-                    ip = None
-            else:
-                ip = IPython.ipapi.get()
-                if ip:
-                    ip = ip.IP
+            try:
+                from IPython import get_ipython
+                ip = get_ipython()
+            except ImportError:
+                ip = None
         in_ipython = bool(ip)
         if ipython is None:
             ipython = in_ipython
@@ -431,9 +418,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = init_python_session()
         mainloop = ip.interact
     else:
-        if ip is None:
-            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-                auto_int_to_Integer=auto_int_to_Integer)
+        ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
+            auto_int_to_Integer=auto_int_to_Integer)
 
         if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
@@ -453,9 +439,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if not in_ipython:
             mainloop = ip.mainloop
 
-    readline = import_module("readline")
-    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11' or not readline):
-        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
+    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11'):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
     if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
@@ -470,9 +455,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
     message = _make_message(ipython, quiet, _preexec_source)
 
     if not in_ipython:
-        mainloop(message)
+        print(message)
+        mainloop()
         sys.exit('Exiting ...')
     else:
-        ip.write(message)
+        print(message)
         import atexit
-        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)
+        atexit.register(lambda: print("Exiting ...\n"))

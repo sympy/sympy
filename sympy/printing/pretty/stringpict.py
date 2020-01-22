@@ -14,9 +14,8 @@ TODO:
 
 from __future__ import print_function, division
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
-from sympy.core.compatibility import u, string_types, range
-
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
+from sympy.core.compatibility import unicode
 
 class stringPict(object):
     """An ASCII picture.
@@ -37,12 +36,19 @@ class stringPict(object):
         self.binding = None
 
     @staticmethod
+    def line_width(line):
+        """Unicode combining symbols (modifiers) are not ever displayed as
+        separate symbols and thus shouldn't be counted
+        """
+        return sum(1 for sym in line if not is_combining(sym))
+
+    @staticmethod
     def equalLengths(lines):
         # empty lines
         if not lines:
             return ['']
 
-        width = max(len(line) for line in lines)
+        width = max(stringPict.line_width(line) for line in lines)
         return [line.center(width) for line in lines]
 
     def height(self):
@@ -51,7 +57,7 @@ class stringPict(object):
 
     def width(self):
         """The width of the picture in characters."""
-        return len(self.picture[0])
+        return stringPict.line_width(self.picture[0])
 
     @staticmethod
     def next(*args):
@@ -61,7 +67,7 @@ class stringPict(object):
         #convert everything to stringPicts
         objects = []
         for arg in args:
-            if isinstance(arg, string_types):
+            if isinstance(arg, str):
                 arg = stringPict(arg)
             objects.append(arg)
 
@@ -122,7 +128,7 @@ class stringPict(object):
         #convert everything to stringPicts; keep LINE
         objects = []
         for arg in args:
-            if arg is not stringPict.LINE and isinstance(arg, string_types):
+            if arg is not stringPict.LINE and isinstance(arg, str):
                 arg = stringPict(arg)
             objects.append(arg)
 
@@ -346,7 +352,7 @@ class stringPict(object):
         return str.join('\n', self.picture)
 
     def __unicode__(self):
-        return unicode.join(u('\n'), self.picture)
+        return unicode.join(u'\n', self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)" % ('\n'.join(self.picture), self.baseline)
@@ -430,15 +436,19 @@ class prettyForm(stringPict):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
+        quantity = {
+            'degree': u"\N{DEGREE SIGN}"
+        }
+
         if len(others) == 0:
             return self # We aren't actually multiplying... So nothing to do here.
-
         args = self
         if args.binding > prettyForm.MUL:
             arg = stringPict(*args.parens())
         result = [args]
         for arg in others:
-            result.append(xsym('*'))
+            if arg.picture[0] not in quantity.values():
+                result.append(xsym('*'))
             #add parentheses for weak binders
             if arg.binding > prettyForm.MUL:
                 arg = stringPict(*arg.parens())

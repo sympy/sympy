@@ -1,7 +1,8 @@
 """Tests for the implementation of RootOf class and related tools. """
 
 from sympy.polys.polytools import Poly
-from sympy.polys.rootoftools import rootof, RootOf, CRootOf, RootSum
+from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
+    _pure_key_dict as D)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -11,11 +12,11 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
+    solve, legendre_poly, Integral
 )
 
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
+from sympy.core.expr import unchanged
 
 from sympy.abc import a, b, x, y, z, r
 
@@ -78,8 +79,9 @@ def test_CRootOf___new__():
 
     raises(PolynomialError, lambda: rootof(Poly(0, x), 0))
     raises(PolynomialError, lambda: rootof(Poly(1, x), 0))
-
     raises(PolynomialError, lambda: rootof(x - y, 0))
+    # issue 8617
+    raises(PolynomialError, lambda: rootof(exp(x), 0))
 
     raises(NotImplementedError, lambda: rootof(x**3 - x + sqrt(2), 0))
     raises(NotImplementedError, lambda: rootof(x**3 - x + I, 0))
@@ -131,26 +133,27 @@ def test_CRootOf___eq__():
 
 def test_CRootOf___eval_Eq__():
     f = Function('f')
-    r = rootof(x**3 + x + 3, 2)
-    r1 = rootof(x**3 + x + 3, 1)
+    eq = x**3 + x + 3
+    r = rootof(eq, 2)
+    r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
-    assert Eq(r, x) is S.false
+    assert unchanged(Eq, r, x)
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
-    assert Eq(r, f(0)) is S.false
-    assert Eq(r, f(0)) is S.false
-    sol = solve(r.expr)
+    assert unchanged(Eq, r, f(0))
+    sol = solve(eq)
     for s in sol:
         if s.is_real:
             assert Eq(r, s) is S.false
-    r = rootof(r.expr, 0)
+    r = rootof(eq, 0)
     for s in sol:
         if s.is_real:
             assert Eq(r, s) is S.true
-    eq = (x**3 + x + 1)
-    assert [Eq(rootof(eq,i), j) for i in range(3) for j in solve(eq)] == [
+    eq = x**3 + x + 1
+    sol = solve(eq)
+    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
         False, False, True, False, True, False, True, False, False]
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
@@ -174,6 +177,7 @@ def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
 
 
+@slow
 def test_CRootOf_evalf():
     real = rootof(x**3 + x + 3, 0).evalf(n=20)
 
@@ -191,6 +195,10 @@ def test_CRootOf_evalf():
 
     p = legendre_poly(4, x, polys=True)
     roots = [str(r.n(17)) for r in p.real_roots()]
+    # magnitudes are given by
+    # sqrt(3/S(7) - 2*sqrt(6/S(5))/7)
+    #   and
+    # sqrt(3/S(7) + 2*sqrt(6/S(5))/7)
     assert roots == [
             "-0.86113631159405258",
             "-0.33998104358485626",
@@ -230,9 +238,6 @@ def test_CRootOf_evalf():
     # issue 6451
     r = rootof(legendre_poly(64, x), 7)
     assert r.n(2) == r.n(100).n(2)
-    # issue 8617
-    ans = [w.n(2) for w in solve(x**3 - x - 4)]
-    assert rootof(exp(x)**3 - exp(x) - 4, 0).n(2) in ans
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
@@ -244,7 +249,24 @@ def test_CRootOf_evalf():
 
     # watch out for UnboundLocalError
     c = CRootOf(90720*x**6 - 4032*x**4 + 84*x**2 - 1, 0)
-    assert str(c._eval_evalf(2)) == '-0.e-1'
+    assert c._eval_evalf(2)  # doesn't fail
+
+    # watch out for imaginary parts that don't want to evaluate
+    assert str(RootOf(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 +
+        39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 +
+        877969, 10).n(2)) == '-3.4*I'
+    assert abs(RootOf(x**4 + 10*x**2 + 1, 0).n(2)) < 0.4
+
+    # check reset and args
+    r = [RootOf(x**3 + x + 3, i) for i in range(3)]
+    r[0]._reset()
+    for ri in r:
+        i = ri._get_interval()
+        ri.n(2)
+        assert i != ri._get_interval()
+        ri._reset()
+        assert i == ri._get_interval()
+        assert i == i.func(*i.args)
 
 
 def test_CRootOf_evalf_caching_bug():
@@ -266,8 +288,8 @@ def test_CRootOf_real_roots():
 def test_CRootOf_all_roots():
     assert Poly(x**5 + x + 1).all_roots() == [
         rootof(x**3 - x**2 + 1, 0),
-        -S(1)/2 - sqrt(3)*I/2,
-        -S(1)/2 + sqrt(3)*I/2,
+        Rational(-1, 2) - sqrt(3)*I/2,
+        Rational(-1, 2) + sqrt(3)*I/2,
         rootof(x**3 - x**2 + 1, 1),
         rootof(x**3 - x**2 + 1, 2),
     ]
@@ -283,13 +305,10 @@ def test_CRootOf_all_roots():
 
 def test_CRootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
-    roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
-    for r in roots:
-        assert isinstance(r, Rational)
-    # All we know is that the Rational instance will be at most 1/10^20 from
-    # the exact root. So if we evaluate to 17 digits, it must be exactly equal
-    # to:
-    roots = [str(r.n(17)) for r in roots]
+    roots = [r.eval_rational(n=18) for r in p.real_roots()]
+    for root in roots:
+        assert isinstance(root, Rational)
+    roots = [str(root.n(17)) for root in roots]
     assert roots == [
             "-0.86113631159405258",
             "-0.33998104358485626",
@@ -329,8 +348,8 @@ def test_RootSum___new__():
 
     assert RootSum(f, auto=False).is_commutative is True
 
-    assert RootSum(f, Lambda(x, 1/(x + x**2))) == S(11)/3
-    assert RootSum(f, Lambda(x, y/(x + x**2))) == S(11)/3*y
+    assert RootSum(f, Lambda(x, 1/(x + x**2))) == Rational(11, 3)
+    assert RootSum(f, Lambda(x, y/(x + x**2))) == Rational(11, 3)*y
 
     assert RootSum(x**2 - 1, Lambda(x, 3*x**2), x) == 6
     assert RootSum(x**2 - y, Lambda(x, 3*x**2), x) == 6*y
@@ -379,10 +398,8 @@ def test_RootSum_doit():
 def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
-    assert rs.evalf(n=20, chop=True).epsilon_eq(
-        Float("1.0806046117362794348", 20), Float("1e-20")) is S.true
-    assert rs.evalf(n=15, chop=True).epsilon_eq(
-        Float("1.08060461173628", 15), Float("1e-15")) is S.true
+    assert rs.evalf(n=20, chop=True).epsilon_eq(Float("1.0806046117362794348"))
+    assert rs.evalf(n=15, chop=True).epsilon_eq(Float("1.08060461173628"))
 
     rs = RootSum(x**2 + a, exp, x)
 
@@ -415,7 +432,7 @@ def test_RootSum_rational():
 
     f = 161*z**3 + 115*z**2 + 19*z + 1
     g = Lambda(z, z*log(
-        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - 125*z/2 - 5 + exp(x)))
+        -3381*z**4/4 - 3381*z**3/4 - 625*z**2/2 - z*Rational(125, 2) - 5 + exp(x)))
 
     assert RootSum(f, g).diff(x) == -(
         (5*exp(2*x) - 6*exp(x) + 4)*exp(x)/(exp(3*x) - exp(2*x) + 1))/7
@@ -444,3 +461,116 @@ def test_issue_8316():
     assert len(f.all_roots()) == 8
     f = Poly(7*x**8 - 10)
     assert len(f.all_roots()) == 8
+
+
+def test__imag_count():
+    from sympy.polys.rootoftools import _imag_count_of_factor
+    def imag_count(p):
+        return sum([_imag_count_of_factor(f)*m for f, m in
+        p.factor_list()[1]])
+    assert imag_count(Poly(x**6 + 10*x**2 + 1)) == 2
+    assert imag_count(Poly(x**2)) == 0
+    assert imag_count(Poly([1]*3 + [-1], x)) == 0
+    assert imag_count(Poly(x**3 + 1)) == 0
+    assert imag_count(Poly(x**2 + 1)) == 2
+    assert imag_count(Poly(x**2 - 1)) == 0
+    assert imag_count(Poly(x**4 - 1)) == 2
+    assert imag_count(Poly(x**4 + 1)) == 0
+    assert imag_count(Poly([1, 2, 3], x)) == 0
+    assert imag_count(Poly(x**3 + x + 1)) == 0
+    assert imag_count(Poly(x**4 + x + 1)) == 0
+    def q(r1, r2, p):
+        return Poly(((x - r1)*(x - r2)).subs(x, x**p), x)
+    assert imag_count(q(-1, -2, 2)) == 4
+    assert imag_count(q(-1, 2, 2)) == 2
+    assert imag_count(q(1, 2, 2)) == 0
+    assert imag_count(q(1, 2, 4)) == 4
+    assert imag_count(q(-1, 2, 4)) == 2
+    assert imag_count(q(-1, -2, 4)) == 0
+
+
+def test_RootOf_is_imaginary():
+    r = RootOf(x**4 + 4*x**2 + 1, 1)
+    i = r._get_interval()
+    assert r.is_imaginary and i.ax*i.bx <= 0
+
+
+def test_is_disjoint():
+    eq = x**3 + 5*x + 1
+    ir = rootof(eq, 0)._get_interval()
+    ii = rootof(eq, 1)._get_interval()
+    assert ir.is_disjoint(ii)
+    assert ii.is_disjoint(ir)
+
+
+def test_pure_key_dict():
+    p = D()
+    assert (x in p) is False
+    assert (1 in p) is False
+    p[x] = 1
+    assert x in p
+    assert y in p
+    assert p[y] == 1
+    raises(KeyError, lambda: p[1])
+    def dont(k):
+        p[k] = 2
+    raises(ValueError, lambda: dont(1))
+
+
+@slow
+def test_eval_approx_relative():
+    CRootOf.clear_cache()
+    t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
+    assert [i.eval_rational(1e-1) for i in t] == [
+        Rational(-21, 220), Rational(15, 256) - I*Rational(805, 256),
+        Rational(15, 256) + I*Rational(805, 256)]
+    t[0]._reset()
+    assert [i.eval_rational(1e-1, 1e-4) for i in t] == [
+        Rational(-21, 220), Rational(3275, 65536) - I*Rational(414645, 131072),
+        Rational(3275, 65536) + I*Rational(414645, 131072)]
+    assert S(t[0]._get_interval().dx) < 1e-1
+    assert S(t[1]._get_interval().dx) < 1e-1
+    assert S(t[1]._get_interval().dy) < 1e-4
+    assert S(t[2]._get_interval().dx) < 1e-1
+    assert S(t[2]._get_interval().dy) < 1e-4
+    t[0]._reset()
+    assert [i.eval_rational(1e-4, 1e-4) for i in t] == [
+        Rational(-2001, 20020), Rational(6545, 131072) - I*Rational(414645, 131072),
+        Rational(6545, 131072) + I*Rational(414645, 131072)]
+    assert S(t[0]._get_interval().dx) < 1e-4
+    assert S(t[1]._get_interval().dx) < 1e-4
+    assert S(t[1]._get_interval().dy) < 1e-4
+    assert S(t[2]._get_interval().dx) < 1e-4
+    assert S(t[2]._get_interval().dy) < 1e-4
+    # in the following, the actual relative precision is
+    # less than tested, but it should never be greater
+    t[0]._reset()
+    assert [i.eval_rational(n=2) for i in t] == [
+        Rational(-202201, 2024022), Rational(104755, 2097152) - I*Rational(6634255, 2097152),
+        Rational(104755, 2097152) + I*Rational(6634255, 2097152)]
+    assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-2
+    assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-2
+    assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-2
+    assert abs(S(t[2]._get_interval().dx)/t[2]).n() < 1e-2
+    assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-2
+    t[0]._reset()
+    assert [i.eval_rational(n=3) for i in t] == [
+        Rational(-202201, 2024022), Rational(1676045, 33554432) - I*Rational(106148135, 33554432),
+        Rational(1676045, 33554432) + I*Rational(106148135, 33554432)]
+    assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-3
+    assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-3
+    assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-3
+    assert abs(S(t[2]._get_interval().dx)/t[2]).n() < 1e-3
+    assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-3
+
+    t[0]._reset()
+    a = [i.eval_approx(2) for i in t]
+    assert [str(i) for i in a] == [
+        '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
+    assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
+
+
+def test_issue_15920():
+    r = rootof(x**5 - x + 1, 0)
+    p = Integral(x, (x, 1, y))
+    assert unchanged(Eq, r, p)

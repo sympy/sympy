@@ -8,7 +8,6 @@ Authors:
 from __future__ import print_function, division
 
 from sympy import Basic, Interval, oo, sympify
-from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -18,6 +17,9 @@ from sympy.core.compatibility import reduce
 __all__ = [
     'HilbertSpaceError',
     'HilbertSpace',
+    'TensorProductHilbertSpace',
+    'TensorPowerHilbertSpace',
+    'DirectSumHilbertSpace',
     'ComplexSpace',
     'L2',
     'FockSpace'
@@ -53,7 +55,7 @@ class HilbertSpace(Basic):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space
     """
 
     def __new__(cls):
@@ -195,11 +197,11 @@ class L2(HilbertSpace):
     >>> from sympy.physics.quantum.hilbert import L2
     >>> hs = L2(Interval(0,oo))
     >>> hs
-    L2([0, oo))
+    L2(Interval(0, oo))
     >>> hs.dimension
     oo
     >>> hs.interval
-    [0, oo)
+    Interval(0, oo)
 
     """
 
@@ -254,7 +256,7 @@ class FockSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fock_space
+    .. [1] https://en.wikipedia.org/wiki/Fock_space
     """
 
     def __new__(cls):
@@ -319,7 +321,7 @@ class TensorProductHilbertSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -417,7 +419,7 @@ class TensorProductHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u(' ') + u('\N{N-ARY CIRCLED TIMES OPERATOR}') + u(' ')))
+                    pform = prettyForm(*pform.right(u' ' + u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
                 else:
                     pform = prettyForm(*pform.right(' x '))
         return pform
@@ -465,7 +467,7 @@ class DirectSumHilbertSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
     """
     def __new__(cls, *args):
         r = cls.eval(args)
@@ -528,7 +530,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u(' ') + u('\N{CIRCLED PLUS}') + u(' ')))
+                    pform = prettyForm(*pform.right(u' \N{CIRCLED PLUS} '))
                 else:
                     pform = prettyForm(*pform.right(' + '))
         return pform
@@ -582,7 +584,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] https://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -623,7 +625,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
 
     @property
     def dimension(self):
-        if self.base.dimension == oo:
+        if self.base.dimension is oo:
             return oo
         else:
             return self.base.dimension**self.exp

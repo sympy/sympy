@@ -1,10 +1,9 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
-from plot_rotation import get_spherical_rotatation
-from util import get_model_matrix
-from util import screen_to_model, model_to_screen
-from util import vec_subs
+import pyglet.gl as pgl
+from sympy.plotting.pygletplot.plot_rotation import get_spherical_rotatation
+from sympy.plotting.pygletplot.util import get_model_matrix, model_to_screen, \
+                                            screen_to_model, vec_subs
 
 
 class PlotCamera(object):
@@ -32,10 +31,10 @@ class PlotCamera(object):
         self.reset()
 
     def init_rot_matrix(self):
-        glPushMatrix()
-        glLoadIdentity()
+        pgl.glPushMatrix()
+        pgl.glLoadIdentity()
         self._rot = get_model_matrix()
-        glPopMatrix()
+        pgl.glPopMatrix()
 
     def set_rot_preset(self, preset_name):
         self.init_rot_matrix()
@@ -62,35 +61,35 @@ class PlotCamera(object):
         self.init_rot_matrix()
 
     def mult_rot_matrix(self, rot):
-        glPushMatrix()
-        glLoadMatrixf(rot)
-        glMultMatrixf(self._rot)
+        pgl.glPushMatrix()
+        pgl.glLoadMatrixf(rot)
+        pgl.glMultMatrixf(self._rot)
         self._rot = get_model_matrix()
-        glPopMatrix()
+        pgl.glPopMatrix()
 
     def setup_projection(self):
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
+        pgl.glMatrixMode(pgl.GL_PROJECTION)
+        pgl.glLoadIdentity()
         if self.ortho:
             # yep, this is pseudo ortho (don't tell anyone)
-            gluPerspective(
+            pgl.gluPerspective(
                 0.3, float(self.window.width)/float(self.window.height),
                 self.min_ortho_dist - 0.01, self.max_ortho_dist + 0.01)
         else:
-            gluPerspective(
+            pgl.gluPerspective(
                 30.0, float(self.window.width)/float(self.window.height),
                 self.min_dist - 0.01, self.max_dist + 0.01)
-        glMatrixMode(GL_MODELVIEW)
+        pgl.glMatrixMode(pgl.GL_MODELVIEW)
 
     def _get_scale(self):
         return 1.0, 1.0, 1.0
 
     def apply_transformation(self):
-        glLoadIdentity()
-        glTranslatef(self._x, self._y, -self._dist)
+        pgl.glLoadIdentity()
+        pgl.glTranslatef(self._x, self._y, -self._dist)
         if self._rot is not None:
-            glMultMatrixf(self._rot)
-        glScalef(*self._get_scale())
+            pgl.glMultMatrixf(self._rot)
+        pgl.glScalef(*self._get_scale())
 
     def spherical_rotate(self, p1, p2, sensitivity=1.0):
         mat = get_spherical_rotatation(p1, p2, self.window.width,
@@ -99,11 +98,11 @@ class PlotCamera(object):
             self.mult_rot_matrix(mat)
 
     def euler_rotate(self, angle, x, y, z):
-        glPushMatrix()
-        glLoadMatrixf(self._rot)
-        glRotatef(angle, x, y, z)
+        pgl.glPushMatrix()
+        pgl.glLoadMatrixf(self._rot)
+        pgl.glRotatef(angle, x, y, z)
         self._rot = get_model_matrix()
-        glPopMatrix()
+        pgl.glPopMatrix()
 
     def zoom_relative(self, clicks, sensitivity):
 
@@ -121,11 +120,11 @@ class PlotCamera(object):
             self._dist = new_dist
 
     def mouse_translate(self, x, y, dx, dy):
-        glPushMatrix()
-        glLoadIdentity()
-        glTranslatef(0, 0, -self._dist)
+        pgl.glPushMatrix()
+        pgl.glLoadIdentity()
+        pgl.glTranslatef(0, 0, -self._dist)
         z = model_to_screen(0, 0, 0)[2]
         d = vec_subs(screen_to_model(x, y, z), screen_to_model(x - dx, y - dy, z))
-        glPopMatrix()
+        pgl.glPopMatrix()
         self._x += d[0]
         self._y += d[1]

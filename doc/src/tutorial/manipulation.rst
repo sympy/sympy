@@ -37,30 +37,31 @@ tree:
     digraph{
 
     # Graph style
+    "ordering"="out"
     "rankdir"="TD"
 
     #########
     # Nodes #
     #########
 
-    "Symbol(x)_(0, 0)" ["color"="black", "label"="Symbol('x')", "shape"="ellipse"];
-    "Integer(2)_(1, 1)" ["color"="black", "label"="Integer(2)", "shape"="ellipse"];
-    "Symbol(y)_(0, 1)" ["color"="black", "label"="Symbol('y')", "shape"="ellipse"];
-    "Symbol(x)_(1, 0)" ["color"="black", "label"="Symbol('x')", "shape"="ellipse"];
-    "Mul(Symbol(x), Symbol(y))_(0,)" ["color"="black", "label"="Mul", "shape"="ellipse"];
-    "Pow(Symbol(x), Integer(2))_(1,)" ["color"="black", "label"="Pow", "shape"="ellipse"];
-    "Add(Mul(Symbol(x), Symbol(y)), Pow(Symbol(x), Integer(2)))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Add(Pow(Symbol('x'), Integer(2)), Mul(Symbol('x'), Symbol('y')))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Pow(Symbol('x'), Integer(2))_(0,)" ["color"="black", "label"="Pow", "shape"="ellipse"];
+    "Symbol('x')_(0, 0)" ["color"="black", "label"="Symbol('x')", "shape"="ellipse"];
+    "Integer(2)_(0, 1)" ["color"="black", "label"="Integer(2)", "shape"="ellipse"];
+    "Mul(Symbol('x'), Symbol('y'))_(1,)" ["color"="black", "label"="Mul", "shape"="ellipse"];
+    "Symbol('x')_(1, 0)" ["color"="black", "label"="Symbol('x')", "shape"="ellipse"];
+    "Symbol('y')_(1, 1)" ["color"="black", "label"="Symbol('y')", "shape"="ellipse"];
 
     #########
     # Edges #
     #########
 
-    "Mul(Symbol(x), Symbol(y))_(0,)" -> "Symbol(x)_(0, 0)";
-    "Mul(Symbol(x), Symbol(y))_(0,)" -> "Symbol(y)_(0, 1)";
-    "Pow(Symbol(x), Integer(2))_(1,)" -> "Symbol(x)_(1, 0)";
-    "Pow(Symbol(x), Integer(2))_(1,)" -> "Integer(2)_(1, 1)";
-    "Add(Mul(Symbol(x), Symbol(y)), Pow(Symbol(x), Integer(2)))_()" -> "Mul(Symbol(x), Symbol(y))_(0,)";
-    "Add(Mul(Symbol(x), Symbol(y)), Pow(Symbol(x), Integer(2)))_()" -> "Pow(Symbol(x), Integer(2))_(1,)";
+    "Add(Pow(Symbol('x'), Integer(2)), Mul(Symbol('x'), Symbol('y')))_()" -> "Pow(Symbol('x'), Integer(2))_(0,)";
+    "Add(Pow(Symbol('x'), Integer(2)), Mul(Symbol('x'), Symbol('y')))_()" -> "Mul(Symbol('x'), Symbol('y'))_(1,)";
+    "Pow(Symbol('x'), Integer(2))_(0,)" -> "Symbol('x')_(0, 0)";
+    "Pow(Symbol('x'), Integer(2))_(0,)" -> "Integer(2)_(0, 1)";
+    "Mul(Symbol('x'), Symbol('y'))_(1,)" -> "Symbol('x')_(1, 0)";
+    "Mul(Symbol('x'), Symbol('y'))_(1,)" -> "Symbol('y')_(1, 1)";
     }
 
 .. note::
@@ -191,7 +192,6 @@ One level up, we see we have ``Mul(-1, Pow(x, 2))``.  There is no subtraction
 class in SymPy.  ``x - y`` is represented as ``x + -y``, or, more completely,
 ``x + -1*y``, i.e., ``Add(x, Mul(-1, y))``.
 
-    >>> expr = x - y
     >>> srepr(x - y)
     "Add(Symbol('x'), Mul(Integer(-1), Symbol('y')))"
 
@@ -274,7 +274,7 @@ when we divide by 2, it is represented as multiplying by 1/2.
 
 Finally, one last note.  You may have noticed that the order we entered our
 expression and the order that it came out from ``srepr`` or in the graph were
-different.  You may have also noticed this phenonemon earlier in the
+different.  You may have also noticed this phenomenon earlier in the
 tutorial.  For example
 
      >>> 1 + x
@@ -465,6 +465,103 @@ traversals easy.  We could have also written our algorithm as
     x*y
     x
     y
+
+
+Prevent expression evaluation
+=============================
+
+There are generally two ways to prevent the evaluation, either pass an 
+``evaluate=False`` parameter while constructing the expression, or create
+an evaluation stopper by wrapping the expression with ``UnevaluatedExpr``.
+
+For example:
+
+    >>> from sympy import Add
+    >>> from sympy.abc import x, y, z
+    >>> x + x
+    2*x
+    >>> Add(x, x)
+    2*x
+    >>> Add(x, x, evaluate=False)
+    x + x
+
+If you don't remember the class corresponding to the expression you
+want to build (operator overloading usually assumes ``evaluate=True``),
+just use ``sympify`` and pass a string:
+
+    >>> from sympy import sympify
+    >>> sympify("x + x", evaluate=False)
+    x + x
+
+Note that ``evaluate=False`` won't prevent future evaluation in later
+usages of the expression:
+
+    >>> expr = Add(x, x, evaluate=False)
+    >>> expr
+    x + x
+    >>> expr + x
+    3*x
+
+That's why the class ``UnevaluatedExpr`` comes handy.
+``UnevaluatedExpr`` is a method provided by SymPy which lets the user keep
+an expression unevaluated. By *unevaluated* it is meant that the value
+inside of it will not interact with the expressions outside of it to give
+simplified outputs. For example:
+
+    >>> from sympy import UnevaluatedExpr
+    >>> expr = x + UnevaluatedExpr(x)
+    >>> expr
+    x + x
+    >>> x + expr
+    2*x + x
+
+The `x` remaining alone is the `x` wrapped by ``UnevaluatedExpr``.
+To release it:
+
+    >>> (x + expr).doit()
+    3*x
+
+Other examples:
+
+    >>> from sympy import *
+    >>> from sympy.abc import x, y, z
+    >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
+    >>> uexpr
+    (5/7)*(3/4)
+    >>> x*UnevaluatedExpr(1/x)
+    x*1/x
+
+A point to be noted is that  ``UnevaluatedExpr`` cannot prevent the
+evaluation of an expression which is given as argument. For example:
+
+    >>> expr1 = UnevaluatedExpr(x + x)
+    >>> expr1
+    2*x
+    >>> expr2 = sympify('x + x', evaluate=False)
+    >>> expr2
+    x + x
+
+Remember that ``expr2`` will be evaluated if included into another
+expression. Combine both of the methods to prevent both inside and outside
+evaluations:
+
+    >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
+    y + x + x
+
+``UnevalutedExpr`` is supported by SymPy printers and can be used to print the
+result in different output forms. For example
+
+    >>> from sympy import latex
+    >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
+    >>> print(latex(uexpr))
+    \frac{5}{7} \frac{3}{4}
+
+In order to release the expression and get the evaluated LaTeX form,
+just use ``.doit()``:
+
+    >>> print(latex(uexpr.doit()))
+    \frac{15}{28}
+
 
 .. rubric:: Footnotes
 

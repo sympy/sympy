@@ -9,7 +9,7 @@ The Matrix expression module allows users to write down statements like
     >>> X = MatrixSymbol('X', 3, 3)
     >>> Y = MatrixSymbol('Y', 3, 3)
     >>> (X.T*X).I*Y
-    X^-1*X'^-1*Y
+    X**(-1)*X.T**(-1)*Y
 
     >>> Matrix(X)
     Matrix([
@@ -34,6 +34,10 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: MatPow
    :members:
+.. autoclass:: HadamardProduct
+   :members:
+.. autoclass:: HadamardPower
+   :members:
 .. autoclass:: Inverse
    :members:
 .. autoclass:: Transpose
@@ -41,6 +45,10 @@ Matrix Expressions Core Reference
 .. autoclass:: Trace
    :members:
 .. autoclass:: FunctionMatrix
+   :members:
+.. autoclass:: PermutationMatrix
+   :members:
+.. autoclass:: MatrixPermute
    :members:
 .. autoclass:: Identity
    :members:
@@ -52,7 +60,7 @@ Block Matrices
 
 Block matrices allow you to construct larger matrices out of smaller
 sub-blocks. They can work with :class:`MatrixExpr` or
-:class:`ImmutableMatrix` objects.
+:obj:`~.ImmutableMatrix` objects.
 
 .. module:: sympy.matrices.expressions.blockmatrix
 

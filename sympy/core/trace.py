@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy import Expr, Add, Mul, Pow, sympify, Matrix, Tuple
-from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 
 
@@ -43,7 +42,7 @@ def _cycle_permute(l):
     indices.append(len(l) + indices[0])
 
     # create sublist of items with first item as min_item and last_item
-    # in each of the sublist is item just before the next occurence of
+    # in each of the sublist is item just before the next occurrence of
     # minitem in the cycle formed.
     sublist = [[le[indices[i]:indices[i + 1]]] for i in
                range(len(indices) - 1)]

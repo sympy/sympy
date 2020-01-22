@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
-from sympy.core.compatibility import u, with_metaclass
 from sympy.printing.pretty.stringpict import prettyForm
 import mpmath.libmp as mlib
 
@@ -13,11 +12,12 @@ import mpmath.libmp as mlib
 #-----------------------------------------------------------------------------
 
 __all__ = [
-    'hbar'
+    'hbar',
+    'HBar',
 ]
 
 
-class HBar(with_metaclass(Singleton, NumberSymbol)):
+class HBar(NumberSymbol, metaclass=Singleton):
     """Reduced Plank's constant in numerical and symbolic form [1]_.
 
     Examples
@@ -30,7 +30,7 @@ class HBar(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Planck_constant
+    .. [1] https://en.wikipedia.org/wiki/Planck_constant
     """
 
     is_real = True
@@ -38,7 +38,7 @@ class HBar(with_metaclass(Singleton, NumberSymbol)):
     is_negative = False
     is_irrational = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def _as_mpf_val(self, prec):
         return mlib.from_float(1.05457162e-34, prec)

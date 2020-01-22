@@ -133,7 +133,7 @@ def run_examples(windowed=False, quiet=False, summary=True):
         examples += WINDOWED_EXAMPLES
 
     if quiet:
-        from sympy.utilities.runtests import PyTestReporter
+        from sympy.testing.runtests import PyTestReporter
         reporter = PyTestReporter()
         reporter.write("Testing Examples\n")
         reporter.write("-" * reporter.terminal_width)
@@ -171,6 +171,8 @@ def run_example(example, reporter=None):
         else:
             mod.main()
         return True
+    except KeyboardInterrupt as e:
+        raise e
     except:
         if reporter:
             reporter.write("[FAIL]", "Red", align="right")

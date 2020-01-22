@@ -1,13 +1,15 @@
 from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
      simplify
-from sympy.vector import (CoordSysCartesian, Vector, Dyadic,
+from sympy.vector import (CoordSys3D, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)
 
+from sympy.testing.pytest import nocache_fail
 
-A = CoordSysCartesian('A')
+A = CoordSys3D('A')
 
 
+@nocache_fail
 def test_dyadic():
     a, b = symbols('a, b')
     assert Dyadic.zero != 0
@@ -62,6 +64,7 @@ def test_dyadic():
     q = symbols('q')
     B = A.orient_new_axis('B', q, A.k)
     assert express(d1, B) == express(d1, B, B)
+    # This assertion fails when running with the cache off:
     assert express(d1, B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
             (B.i | B.j) + (-sin(q) * cos(q)) * (B.j | B.i) + (sin(q)**2) *
             (B.j | B.j))
@@ -88,7 +91,7 @@ def test_dyadic():
 
 def test_dyadic_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
-    N = CoordSysCartesian('N')
+    N = CoordSys3D('N')
 
     dy = N.i | N.i
     test1 = (1 / x + 1 / y) * dy

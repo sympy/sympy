@@ -16,8 +16,8 @@ named ``i``, ``j`` and ``k`` respectively. Hence, to define a vector
 :math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with
 respect to a given frame :math:`\mathbf{R}`, you would do
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D
+  >>> R = CoordSys3D('R')
   >>> v = 3*R.i + 4*R.j + 5*R.k
 
 Vector math and basic calculus operations with respect to vectors have
@@ -36,8 +36,8 @@ and ``R.z`` expressions respectively.
 Therefore, to generate the expression for the aforementioned electric
 potential field :math:`2{x}^{2}y`, you would have to do
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D
+  >>> R = CoordSys3D('R')
   >>> electric_potential = 2*R.x**2*R.y
   >>> electric_potential
   2*R.x**2*R.y
@@ -51,8 +51,8 @@ for any math/calculus functionality. Hence, to differentiate the above
 electric potential with respect to :math:`x` (i.e. ``R.x``), you would
 use the ``diff`` method.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D
+  >>> R = CoordSys3D('R')
   >>> electric_potential = 2*R.x**2*R.y
   >>> from sympy import diff
   >>> diff(electric_potential, R.x)
@@ -66,8 +66,8 @@ constant.
 Like scalar fields, vector fields that vary with position can also be
 constructed using ``BaseScalar`` s in the measure-number expressions.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D
+  >>> R = CoordSys3D('R')
   >>> v = R.x**2*R.i + 2*R.x*R.z*R.k
 
 The Del operator
@@ -76,7 +76,7 @@ The Del operator
 The Del, or 'Nabla' operator - written as :math:`\mathbf{\nabla}` is
 commonly known as the vector differential operator. Depending on its
 usage in a mathematical expression, it may denote the gradient of a
-scalar field, or the divergence of a vector field, or the curl of a
+scalar field, the divergence of a vector field, or the curl of a
 vector field.
 
 Essentially, :math:`\mathbf{\nabla}` is not technically an 'operator',
@@ -84,19 +84,19 @@ but a convenient mathematical notation to denote any one of the
 aforementioned field operations.
 
 In :mod:`sympy.vector`, :math:`\mathbf{\nabla}` has been implemented
-as the ``delop`` property of the ``CoordSysCartesian`` class.
-Hence, assuming ``C`` is a coordinate system, the
-:math:`\mathbf{\nabla}` operator corresponding to the vector
-differentials wrt ``C``'s coordinate variables and basis vectors
-would be accessible as ``C.delop``.
+as the ``Del()``  class. The instance of this class is independent of
+coordinate system. Hence, the :math:`\mathbf{\nabla}` operator would
+be accessible as ``Del()``.
 
-Given below is an example of usage of the ``delop`` object.
+Given below is an example of usage of the ``Del()`` class.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
-  >>> gradient_field = C.delop(C.x*C.y*C.z)
+  >>> from sympy.vector import CoordSys3D, Del
+  >>> C = CoordSys3D('C')
+  >>> delop = Del()
+  >>> gradient_field = delop(C.x*C.y*C.z)
   >>> gradient_field
-  (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j + (Derivative(C.x*C.y*C.z, C.z))*C.k
+  (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j
+  + (Derivative(C.x*C.y*C.z, C.z))*C.k
 
 The above expression can be evaluated using the SymPy ``doit()``
 routine.
@@ -135,19 +135,20 @@ where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 Computing the curl of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
-One, by using the ``delop`` property
+One, by using the ``Del()`` class
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
-  >>> C.delop.cross(C.x*C.y*C.z*C.i).doit()
+  >>> from sympy.vector import CoordSys3D, Del
+  >>> C = CoordSys3D('C')
+  >>> delop = Del()
+  >>> delop.cross(C.x*C.y*C.z*C.i).doit()
   C.x*C.y*C.j + (-C.x*C.z)*C.k
-  >>> (C.delop ^ C.x*C.y*C.z*C.i).doit()
+  >>> (delop ^ C.x*C.y*C.z*C.i).doit()
   C.x*C.y*C.j + (-C.x*C.z)*C.k
 
 Or by using the dedicated function
 
   >>> from sympy.vector import curl
-  >>> curl(C.x*C.y*C.z*C.i, C)
+  >>> curl(C.x*C.y*C.z*C.i)
   C.x*C.y*C.j + (-C.x*C.z)*C.k
 
 Divergence
@@ -172,19 +173,20 @@ where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 Computing the divergence of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
-One, by using the ``delop`` property
+One, by using the ``Del()`` class
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
-  >>> C.delop.dot(C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
+  >>> from sympy.vector import CoordSys3D, Del
+  >>> C = CoordSys3D('C')
+  >>> delop = Del()
+  >>> delop.dot(C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
-  >>> (C.delop & C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
+  >>> (delop & C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
 
 Or by using the dedicated function
 
   >>> from sympy.vector import divergence
-  >>> divergence(C.x*C.y*C.z*(C.i + C.j + C.k), C)
+  >>> divergence(C.x*C.y*C.z*(C.i + C.j + C.k))
   C.x*C.y + C.x*C.z + C.y*C.z
 
 Gradient
@@ -205,19 +207,20 @@ denoted by :math:`\nabla f` is given by -
 Computing the divergence of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
-One, by using the ``delop`` property
+One, by using the ``Del()`` class
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
-  >>> C.delop.gradient(C.x*C.y*C.z).doit()
+  >>> from sympy.vector import CoordSys3D, Del
+  >>> C = CoordSys3D('C')
+  >>> delop = Del()
+  >>> delop.gradient(C.x*C.y*C.z).doit()
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
-  >>> C.delop(C.x*C.y*C.z).doit()
+  >>> delop(C.x*C.y*C.z).doit()
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
 Or by using the dedicated function
 
   >>> from sympy.vector import gradient
-  >>> gradient(C.x*C.y*C.z, C)
+  >>> gradient(C.x*C.y*C.z)
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
 Directional Derivative
@@ -234,18 +237,39 @@ velocity :math:`v`. It is represented mathematically as:
 :math:`(\vec v \cdot \nabla) \, \mathbf{F}(x)`.
 
 Directional derivatives of vector and scalar fields can be computed in
-:mod:`sympy.vector` using the ``delop`` property of
-``CoordSysCartesian``.
+:mod:`sympy.vector` using the ``Del()`` class
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> C = CoordSysCartesian('C')
+  >>> from sympy.vector import CoordSys3D, Del
+  >>> C = CoordSys3D('C')
+  >>> delop = Del()
   >>> vel = C.i + C.j + C.k
   >>> scalar_field = C.x*C.y*C.z
   >>> vector_field = C.x*C.y*C.z*C.i
-  >>> (vel.dot(C.delop))(scalar_field)
+  >>> (vel.dot(delop))(scalar_field)
   C.x*C.y + C.x*C.z + C.y*C.z
-  >>> (vel & C.delop)(vector_field)
+  >>> (vel & delop)(vector_field)
   (C.x*C.y + C.x*C.z + C.y*C.z)*C.i
+
+Or by using the dedicated function
+  >>> from sympy.vector import directional_derivative
+  >>> directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k)
+  C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
+
+Field operator in orthogonal curvilinear coordinate system
+==========================================================
+
+``vector`` package supports calculation in different kind of orthogonal
+curvilinear coordinate system. To do that, scaling factor (also known as
+Lame coefficients) are used to express ``curl``, ``divergence`` or ``gradient``
+in desired type of coordinate system.
+
+For example if we want to calculate ``gradient`` in cylindrical coordinate
+system all we need to do is to create proper coordinate system
+
+  >>> from sympy.vector import CoordSys3D
+  >>> c = CoordSys3D('c', transformation='cylindrical', variable_names=("r", "theta", "z"))
+  >>> gradient(c.r*c.theta*c.z)
+      c.theta*c.z*c.i + c.z*c.j + c.r*c.theta*c.k
 
 Conservative and Solenoidal fields
 ==================================
@@ -263,12 +287,12 @@ energy is conserved.
 To check if a vector field is conservative in :mod:`sympy.vector`, the
 ``is_conservative`` function can be used.
 
-  >>> from sympy.vector import CoordSysCartesian, is_conservative
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D, is_conservative
+  >>> R = CoordSys3D('R')
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_conservative(field)
   True
-  >>> curl(field, R)
+  >>> curl(field)
   0
 
 A solenoidal field, on the other hand, is a vector field whose divergence
@@ -277,12 +301,12 @@ is zero at all points in space.
 To check if a vector field is solenoidal in :mod:`sympy.vector`, the
 ``is_solenoidal`` function can be used.
 
-  >>> from sympy.vector import CoordSysCartesian, is_solenoidal
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D, is_solenoidal
+  >>> R = CoordSys3D('R')
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_solenoidal(field)
   True
-  >>> divergence(field, R)
+  >>> divergence(field)
   0
 
 Scalar potential functions
@@ -298,8 +322,8 @@ scalar potential field corresponding to a given conservative vector field in
 
 Example of usage -
 
-  >>> from sympy.vector import CoordSysCartesian, scalar_potential
-  >>> R = CoordSysCartesian('R')
+  >>> from sympy.vector import CoordSys3D, scalar_potential
+  >>> R = CoordSys3D('R')
   >>> conservative_field = 4*R.x*R.y*R.z*R.i + 2*R.x**2*R.z*R.j + 2*R.x**2*R.y*R.k
   >>> scalar_potential(conservative_field, R)
   2*R.x**2*R.y*R.z
@@ -315,9 +339,9 @@ function, since it depends only on the endpoints of the path.
 
 This computation is performed as follows in :mod:`sympy.vector`.
 
-  >>> from sympy.vector import CoordSysCartesian, Point
+  >>> from sympy.vector import CoordSys3D, Point
   >>> from sympy.vector import scalar_potential_difference
-  >>> R = CoordSysCartesian('R')
+  >>> R = CoordSys3D('R')
   >>> P = R.origin.locate_new('P', 1*R.i + 2*R.j + 3*R.k)
   >>> vectfield = 4*R.x*R.y*R.i + 2*R.x**2*R.j
   >>> scalar_potential_difference(vectfield, R, R.origin, P)

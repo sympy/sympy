@@ -2,18 +2,19 @@
 
 from __future__ import print_function, division
 
-from sympy import pi, oo
+from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.sympify import sympify
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.trigonometric import sin, cos
-from sympy.sets.sets import Interval
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
+from sympy.sets.sets import Interval
+from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
 
 
 def fourier_cos_seq(func, limits, n):
@@ -59,9 +60,9 @@ def _process_limits(func, limits):
     """
     def _find_x(func):
         free = func.free_symbols
-        if len(func.free_symbols) == 1:
+        if len(free) == 1:
             return free.pop()
-        elif len(func.free_symbols) == 0:
+        elif not free:
             return Dummy('k')
         else:
             raise ValueError(
@@ -88,6 +89,35 @@ def _process_limits(func, limits):
         raise ValueError("Both the start and end value should be bounded")
 
     return sympify((x, start, stop))
+
+
+def finite_check(f, x, L):
+
+    def check_fx(exprs, x):
+        return x not in exprs.free_symbols
+
+    def check_sincos(_expr, x, L):
+        if isinstance(_expr, (sin, cos)):
+            sincos_args = _expr.args[0]
+
+            if sincos_args.match(a*(pi/L)*x + b) is not None:
+                return True
+            else:
+                return False
+
+    _expr = sincos_to_sum(TR2(TR1(f)))
+    add_coeff = _expr.as_coeff_add()
+
+    a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
+    b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
+
+    for s in add_coeff[1]:
+        mul_coeffs = s.as_coeff_mul()[1]
+        for t in mul_coeffs:
+            if not (check_fx(t, x) or check_sincos(t, x, L)):
+                return False, f
+
+    return True, _expr
 
 
 class FourierSeries(SeriesBase):
@@ -148,15 +178,44 @@ class FourierSeries(SeriesBase):
     def length(self):
         return oo
 
+    @property
+    def L(self):
+        return abs(self.period[1] - self.period[0]) / 2
+
     def _eval_subs(self, old, new):
         x = self.x
         if old.has(x):
             return self
 
     def truncate(self, n=3):
-        """Returns the first n (non-zero)terms of the series.
+        """
+        Return the first n nonzero terms of the series.
 
-        If n is ``None`` returns an iterator.
+        If n is None return an iterator.
+
+        Parameters
+        ==========
+        n : int or None
+            Amount of non-zero terms in approximation or None.
+
+        Returns
+        =======
+        Expr or iterator
+            Approximation of function expanded into Fourier series.
+
+        Examples
+        ========
+
+        >>> from sympy import fourier_series, pi
+        >>> from sympy.abc import x
+        >>> s = fourier_series(x, (x, -pi, pi))
+        >>> s.truncate(4)
+        2*sin(x) - sin(2*x) + 2*sin(3*x)/3 - sin(4*x)/2
+
+        See Also
+        ========
+
+        sympy.series.fourier.FourierSeries.sigma_approximation
         """
         if n is None:
             return iter(self)
@@ -168,6 +227,71 @@ class FourierSeries(SeriesBase):
             if t is not S.Zero:
                 terms.append(t)
 
+        return Add(*terms)
+
+    def sigma_approximation(self, n=3):
+        r"""
+        Return :math:`\sigma`-approximation of Fourier series with respect
+        to order n.
+
+        Sigma approximation adjusts a Fourier summation to eliminate the Gibbs
+        phenomenon which would otherwise occur at discontinuities.
+        A sigma-approximated summation for a Fourier series of a T-periodical
+        function can be written as
+
+        .. math::
+            s(\theta) = \frac{1}{2} a_0 + \sum _{k=1}^{m-1}
+            \operatorname{sinc} \Bigl( \frac{k}{m} \Bigr) \cdot
+            \left[ a_k \cos \Bigl( \frac{2\pi k}{T} \theta \Bigr)
+            + b_k \sin \Bigl( \frac{2\pi k}{T} \theta \Bigr) \right],
+
+        where :math:`a_0, a_k, b_k, k=1,\ldots,{m-1}` are standard Fourier
+        series coefficients and
+        :math:`\operatorname{sinc} \Bigl( \frac{k}{m} \Bigr)` is a Lanczos
+        :math:`\sigma` factor (expressed in terms of normalized
+        :math:`\operatorname{sinc}` function).
+
+        Parameters
+        ==========
+        n : int
+            Highest order of the terms taken into account in approximation.
+
+        Returns
+        =======
+        Expr
+            Sigma approximation of function expanded into Fourier series.
+
+        Examples
+        ========
+
+        >>> from sympy import fourier_series, pi
+        >>> from sympy.abc import x
+        >>> s = fourier_series(x, (x, -pi, pi))
+        >>> s.sigma_approximation(4)
+        2*sin(x)*sinc(pi/4) - 2*sin(2*x)/pi + 2*sin(3*x)*sinc(3*pi/4)/3
+
+        See Also
+        ========
+
+        sympy.series.fourier.FourierSeries.truncate
+
+        Notes
+        =====
+
+        The behaviour of
+        :meth:`~sympy.series.fourier.FourierSeries.sigma_approximation`
+        is different from :meth:`~sympy.series.fourier.FourierSeries.truncate`
+        - it takes all nonzero terms of degree smaller than n, rather than
+        first n nonzero ones.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Gibbs_phenomenon
+        .. [2] https://en.wikipedia.org/wiki/Sigma_approximation
+        """
+        terms = [sinc(pi * i / n) * t for i, t in enumerate(self[:n])
+                 if t is not S.Zero]
         return Add(*terms)
 
     def shift(self, s):
@@ -318,7 +442,145 @@ class FourierSeries(SeriesBase):
         return self.__add__(-other)
 
 
-def fourier_series(f, limits=None):
+class FiniteFourierSeries(FourierSeries):
+    r"""Represents Finite Fourier sine/cosine series.
+
+    For how to compute Fourier series, see the :func:`fourier_series`
+    docstring.
+
+    Parameters
+    ==========
+    f : Expr
+        Expression for finding fourier_series
+
+    limits : ( x, start, stop)
+        x is the independent variable for the expression f
+        (start, stop) is the period of the fourier series
+
+    exprs: (a0, an, bn) or Expr
+        a0 is the constant term a0 of the fourier series
+        an is a dictionary of coefficients of cos terms
+         an[k] = coefficient of cos(pi*(k/L)*x)
+        bn is a dictionary of coefficients of sin terms
+         bn[k] = coefficient of sin(pi*(k/L)*x)
+
+        or exprs can be an expression to be converted to fourier form
+
+    Methods
+    =======
+    This class is an extension of FourierSeries class.
+    Please refer to sympy.series.fourier.FourierSeries for
+    further information.
+
+    See Also
+    ========
+
+    sympy.series.fourier.FourierSeries
+    sympy.series.fourier.fourier_series
+    """
+
+    def __new__(cls, f, limits, exprs):
+        if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+            # Converts the expression to fourier form
+            c, e = exprs.as_coeff_add()
+            rexpr = c + Add(*[TR10(i) for i in e])
+            a0, exp_ls = rexpr.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
+
+            x = limits[0]
+            L = abs(limits[2] - limits[1]) / 2
+
+            a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k is not S.Zero, ])
+            b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
+
+            an = dict()
+            bn = dict()
+
+            # separates the coefficients of sin and cos terms in dictionaries an, and bn
+            for p in exp_ls:
+                t = p.match(b * cos(a * (pi / L) * x))
+                q = p.match(b * sin(a * (pi / L) * x))
+                if t:
+                    an[t[a]] = t[b] + an.get(t[a], S.Zero)
+                elif q:
+                    bn[q[a]] = q[b] + bn.get(q[a], S.Zero)
+                else:
+                    a0 += p
+
+            exprs = (a0, an, bn)
+
+        args = map(sympify, (f, limits, exprs))
+
+        return Expr.__new__(cls, *args)
+
+    @property
+    def interval(self):
+        _length = 1 if self.a0 else 0
+        _length += max(set(self.an.keys()).union(set(self.bn.keys()))) + 1
+        return Interval(0, _length)
+
+    @property
+    def length(self):
+        return self.stop - self.start
+
+    def shiftx(self, s):
+        s, x = sympify(s), self.x
+
+        if x in s.free_symbols:
+            raise ValueError("'%s' should be independent of %s" % (s, x))
+
+        _expr = self.truncate().subs(x, x + s)
+        sfunc = self.function.subs(x, x + s)
+
+        return self.func(sfunc, self.args[1], _expr)
+
+    def scale(self, s):
+        s, x = sympify(s), self.x
+
+        if x in s.free_symbols:
+            raise ValueError("'%s' should be independent of %s" % (s, x))
+
+        _expr = self.truncate() * s
+        sfunc = self.function * s
+
+        return self.func(sfunc, self.args[1], _expr)
+
+    def scalex(self, s):
+        s, x = sympify(s), self.x
+
+        if x in s.free_symbols:
+            raise ValueError("'%s' should be independent of %s" % (s, x))
+
+        _expr = self.truncate().subs(x, x * s)
+        sfunc = self.function.subs(x, x * s)
+
+        return self.func(sfunc, self.args[1], _expr)
+
+    def _eval_term(self, pt):
+        if pt == 0:
+            return self.a0
+
+        _term = self.an.get(pt, S.Zero) * cos(pt * (pi / self.L) * self.x) \
+                + self.bn.get(pt, S.Zero) * sin(pt * (pi / self.L) * self.x)
+        return _term
+
+    def __add__(self, other):
+        if isinstance(other, FourierSeries):
+            return other.__add__(fourier_series(self.function, self.args[1],\
+                                                finite=False))
+        elif isinstance(other, FiniteFourierSeries):
+            if self.period != other.period:
+                raise ValueError("Both the series should have same periods")
+
+            x, y = self.x, other.x
+            function = self.function + other.function.subs(y, x)
+
+            if self.x not in function.free_symbols:
+                return function
+
+            return fourier_series(function, limits=self.args[1])
+
+
+def fourier_series(f, limits=None, finite=True):
     """Computes Fourier sine/cosine series expansion.
 
     Returns a :class:`FourierSeries` object.
@@ -379,6 +641,12 @@ def fourier_series(f, limits=None):
 
     if x not in f.free_symbols:
         return f
+
+    if finite:
+        L = abs(limits[2] - limits[1]) / 2
+        is_finite, res_f = finite_check(f, x, L)
+        if is_finite:
+            return FiniteFourierSeries(f, limits, res_f)
 
     n = Dummy('n')
     neg_f = f.subs(x, -x)

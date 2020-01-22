@@ -12,10 +12,27 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve
+from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
-    is_sequence, range, string_types)
+    is_sequence, ordered)
+from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
+
+
+def find(x, equation):
+    """
+    Checks whether the parameter 'x' is present in 'equation' or not.
+    If it is present then it returns the passed parameter 'x' as a free
+    symbol, else, it returns a ValueError.
+    """
+
+    free = equation.free_symbols
+    xs = [i for i in free if (i.name if isinstance(x, str) else i) == x]
+    if not xs:
+        raise ValueError('could not find %s' % x)
+    if len(xs) != 1:
+        raise ValueError('ambiguous %s' % x)
+    return xs[0]
 
 
 def _ordered_points(p):
@@ -23,202 +40,295 @@ def _ordered_points(p):
     return tuple(sorted(p, key=lambda x: x.args))
 
 
-def idiff(eq, y, x, n=1):
-    """Return ``dy/dx`` assuming that ``eq == 0``.
+def are_coplanar(*e):
+    """ Returns True if the given entities are coplanar otherwise False
 
     Parameters
     ==========
 
-    y : the dependent variable or a list of dependent variables (with y first)
-    x : the variable that the derivative is being taken with respect to
-    n : the order of the derivative (default is 1)
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x, y, a
-    >>> from sympy.geometry.util import idiff
-
-    >>> circ = x**2 + y**2 - 4
-    >>> idiff(circ, y, x)
-    -x/y
-    >>> idiff(circ, y, x, 2).simplify()
-    -(x**2 + y**2)/y**3
-
-    Here, ``a`` is assumed to be independent of ``x``:
-
-    >>> idiff(x + a + y, y, x)
-    -1
-
-    Now the x-dependence of ``a`` is made explicit by listing ``a`` after
-    ``y`` in a list.
-
-    >>> idiff(x + a + y, [y, a], x)
-    -Derivative(a, x) - 1
-
-    See Also
-    ========
-
-    sympy.core.function.Derivative: represents unevaluated derivatives
-    sympy.core.function.diff: explicitly differentiates wrt symbols
-
-    """
-    if is_sequence(y):
-        dep = set(y)
-        y = y[0]
-    elif isinstance(y, Symbol):
-        dep = {y}
-    else:
-        raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
-
-    f = dict([(s, Function(
-        s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
-    dydx = Function(y.name)(x).diff(x)
-    eq = eq.subs(f)
-    derivs = {}
-    for i in range(n):
-        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
-        if i == n - 1:
-            return yp.subs([(v, k) for k, v in f.items()])
-        derivs[dydx] = yp
-        eq = dydx - yp
-        dydx = dydx.diff(x)
-
-
-def _symbol(s, matching_symbol=None):
-    """Return s if s is a Symbol, else return either a new Symbol (real=True)
-    with the same name s or the matching_symbol if s is a string and it matches
-    the name of the matching_symbol.
-
-    >>> from sympy import Symbol
-    >>> from sympy.geometry.util import _symbol
-    >>> x = Symbol('x')
-    >>> _symbol('y')
-    y
-    >>> _.is_real
-    True
-    >>> _symbol(x)
-    x
-    >>> _.is_real is None
-    True
-    >>> arb = Symbol('foo')
-    >>> _symbol('arb', arb) # arb's name is foo so foo will not be returned
-    arb
-    >>> _symbol('foo', arb) # now it will
-    foo
-
-    NB: the symbol here may not be the same as a symbol with the same
-    name defined elsewhere as a result of different assumptions.
-
-    See Also
-    ========
-
-    sympy.core.symbol.Symbol
-
-    """
-    if isinstance(s, string_types):
-        if matching_symbol and matching_symbol.name == s:
-            return matching_symbol
-        return Symbol(s, real=True)
-    elif isinstance(s, Symbol):
-        return s
-    else:
-        raise ValueError('symbol must be string for symbol name or Symbol')
-
-
-def _uniquely_named_symbol(xname, *exprs):
-    """Return a symbol which, when printed, will have a name unique
-    from any other already in the expressions given. The name is made
-    unique by prepending underscores.
-    """
-    prefix = '%s'
-    x = prefix % xname
-    syms = set().union(*[e.free_symbols for e in exprs])
-    while any(x == str(s) for s in syms):
-        prefix = '_' + prefix
-        x = prefix % xname
-    return _symbol(x)
-
-
-def intersection(*entities):
-    """The intersection of a collection of GeometryEntity instances.
-
-    Parameters
-    ==========
-
-    entities : sequence of GeometryEntity
+    e: entities to be checked for being coplanar
 
     Returns
     =======
 
-    intersection : list of GeometryEntity
-
-    Raises
-    ======
-
-    NotImplementedError
-        When unable to calculate intersection.
-
-    Notes
-    =====
-
-    The intersection of any geometrical entity with itself should return
-    a list with one item: the entity in question.
-    An intersection requires two or more entities. If only a single
-    entity is given then the function will return an empty list.
-    It is possible for `intersection` to miss intersections that one
-    knows exists because the required quantities were not fully
-    simplified internally.
-    Reals should be converted to Rationals, e.g. Rational(str(real_num))
-    or else failures due to floating point issues may result.
-
-    See Also
-    ========
-
-    sympy.geometry.entity.GeometryEntity.intersection
+    Boolean
 
     Examples
     ========
 
-    >>> from sympy.geometry import Point, Line, Circle, intersection
-    >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)
-    >>> l1, l2 = Line(p1, p2), Line(p3, p2)
-    >>> c = Circle(p2, 1)
-    >>> intersection(l1, p2)
-    [Point2D(1, 1)]
-    >>> intersection(l1, l2)
-    [Point2D(1, 1)]
-    >>> intersection(c, p2)
-    []
-    >>> intersection(c, Point(1, 0))
-    [Point2D(1, 0)]
-    >>> intersection(c, l2)
-    [Point2D(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),
-     Point2D(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
+    >>> from sympy import Point3D, Line3D
+    >>> from sympy.geometry.util import are_coplanar
+    >>> a = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
+    >>> b = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
+    >>> c = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
+    >>> are_coplanar(a, b, c)
+    False
 
     """
-    from .entity import GeometryEntity
-    from .point import Point
+    from sympy.geometry.line import LinearEntity3D
+    from sympy.geometry.entity import GeometryEntity
+    from sympy.geometry.point import Point3D
+    from sympy.geometry.plane import Plane
+    # XXX update tests for coverage
 
-    if len(entities) <= 1:
-        return []
+    e = set(e)
+    # first work with a Plane if present
+    for i in list(e):
+        if isinstance(i, Plane):
+            e.remove(i)
+            return all(p.is_coplanar(i) for p in e)
 
-    # entities may be an immutable tuple
-    entities = list(entities)
-    for i, e in enumerate(entities):
-        if not isinstance(e, GeometryEntity):
-            try:
-                entities[i] = Point(e)
-            except NotImplementedError:
-                raise ValueError('%s is not a GeometryEntity and cannot be made into Point' % str(e))
+    if all(isinstance(i, Point3D) for i in e):
+        if len(e) < 3:
+            return False
 
-    res = entities[0].intersection(entities[1])
-    for entity in entities[2:]:
-        newres = []
-        for x in res:
-            newres.extend(x.intersection(entity))
-        res = newres
-    return res
+        # remove pts that are collinear with 2 pts
+        a, b = e.pop(), e.pop()
+        for i in list(e):
+            if Point3D.are_collinear(a, b, i):
+                e.remove(i)
+
+        if not e:
+            return False
+        else:
+            # define a plane
+            p = Plane(a, b, e.pop())
+            for i in e:
+                if i not in p:
+                    return False
+            return True
+    else:
+        pt3d = []
+        for i in e:
+            if isinstance(i, Point3D):
+                pt3d.append(i)
+            elif isinstance(i, LinearEntity3D):
+                pt3d.extend(i.args)
+            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't handle above, an error should be raised
+                # all 2D objects have some Point that defines them; so convert those points to 3D pts by making z=0
+                for p in i.args:
+                    if isinstance(p, Point):
+                        pt3d.append(Point3D(*(p.args + (0,))))
+        return are_coplanar(*pt3d)
+
+
+def are_similar(e1, e2):
+    """Are two geometrical entities similar.
+
+    Can one geometrical entity be uniformly scaled to the other?
+
+    Parameters
+    ==========
+
+    e1 : GeometryEntity
+    e2 : GeometryEntity
+
+    Returns
+    =======
+
+    are_similar : boolean
+
+    Raises
+    ======
+
+    GeometryError
+        When `e1` and `e2` cannot be compared.
+
+    Notes
+    =====
+
+    If the two objects are equal then they are similar.
+
+    See Also
+    ========
+
+    sympy.geometry.entity.GeometryEntity.is_similar
+
+    Examples
+    ========
+
+    >>> from sympy import Point, Circle, Triangle, are_similar
+    >>> c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)
+    >>> t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
+    >>> t2 = Triangle(Point(0, 0), Point(2, 0), Point(0, 2))
+    >>> t3 = Triangle(Point(0, 0), Point(3, 0), Point(0, 1))
+    >>> are_similar(t1, t2)
+    True
+    >>> are_similar(t1, t3)
+    False
+
+    """
+    from .exceptions import GeometryError
+
+    if e1 == e2:
+        return True
+    is_similar1 = getattr(e1, 'is_similar', None)
+    if is_similar1:
+        return is_similar1(e2)
+    is_similar2 = getattr(e2, 'is_similar', None)
+    if is_similar2:
+        return is_similar2(e1)
+    n1 = e1.__class__.__name__
+    n2 = e2.__class__.__name__
+    raise GeometryError(
+        "Cannot test similarity between %s and %s" % (n1, n2))
+
+
+def centroid(*args):
+    """Find the centroid (center of mass) of the collection containing only Points,
+    Segments or Polygons. The centroid is the weighted average of the individual centroid
+    where the weights are the lengths (of segments) or areas (of polygons).
+    Overlapping regions will add to the weight of that region.
+
+    If there are no objects (or a mixture of objects) then None is returned.
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point, sympy.geometry.line.Segment,
+    sympy.geometry.polygon.Polygon
+
+    Examples
+    ========
+
+    >>> from sympy import Point, Segment, Polygon
+    >>> from sympy.geometry.util import centroid
+    >>> p = Polygon((0, 0), (10, 0), (10, 10))
+    >>> q = p.translate(0, 20)
+    >>> p.centroid, q.centroid
+    (Point2D(20/3, 10/3), Point2D(20/3, 70/3))
+    >>> centroid(p, q)
+    Point2D(20/3, 40/3)
+    >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
+    >>> centroid(p, q)
+    Point2D(1, 2 - sqrt(2))
+    >>> centroid(Point(0, 0), Point(2, 0))
+    Point2D(1, 0)
+
+    Stacking 3 polygons on top of each other effectively triples the
+    weight of that polygon:
+
+    >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+    >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
+    >>> centroid(p, q)
+    Point2D(3/2, 1/2)
+    >>> centroid(p, p, p, q) # centroid x-coord shifts left
+    Point2D(11/10, 1/2)
+
+    Stacking the squares vertically above and below p has the same
+    effect:
+
+    >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
+    Point2D(11/10, 1/2)
+
+    """
+
+    from sympy.geometry import Polygon, Segment, Point
+    if args:
+        if all(isinstance(g, Point) for g in args):
+            c = Point(0, 0)
+            for g in args:
+                c += g
+            den = len(args)
+        elif all(isinstance(g, Segment) for g in args):
+            c = Point(0, 0)
+            L = 0
+            for g in args:
+                l = g.length
+                c += g.midpoint*l
+                L += l
+            den = L
+        elif all(isinstance(g, Polygon) for g in args):
+            c = Point(0, 0)
+            A = 0
+            for g in args:
+                a = g.area
+                c += g.centroid*a
+                A += a
+            den = A
+        c /= den
+        return c.func(*[i.simplify() for i in c.args])
+
+
+def closest_points(*args):
+    """Return the subset of points from a set of points that were
+    the closest to each other in the 2D plane.
+
+    Parameters
+    ==========
+
+    args : a collection of Points on 2D plane.
+
+    Notes
+    =====
+
+    This can only be performed on a set of points whose coordinates can
+    be ordered on the number line. If there are no ties then a single
+    pair of Points will be in the set.
+
+    References
+    ==========
+
+    [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+
+    [2] Sweep line algorithm
+    https://en.wikipedia.org/wiki/Sweep_line_algorithm
+
+    Examples
+    ========
+
+    >>> from sympy.geometry import closest_points, Point2D, Triangle
+    >>> Triangle(sss=(3, 4, 5)).args
+    (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
+    >>> closest_points(*_)
+    {(Point2D(0, 0), Point2D(3, 0))}
+
+    """
+    from collections import deque
+    from math import sqrt as _sqrt
+    from sympy.functions.elementary.miscellaneous import sqrt
+
+    p = [Point2D(i) for i in set(args)]
+    if len(p) < 2:
+        raise ValueError('At least 2 distinct points must be given.')
+
+    try:
+        p.sort(key=lambda x: x.args)
+    except TypeError:
+        raise ValueError("The points could not be sorted.")
+
+    if any(not i.is_Rational for j in p for i in j.args):
+        def hypot(x, y):
+            arg = x*x + y*y
+            if arg.is_Rational:
+                return _sqrt(arg)
+            return sqrt(arg)
+    else:
+        from math import hypot
+
+    rv = [(0, 1)]
+    best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
+    i = 2
+    left = 0
+    box = deque([0, 1])
+    while i < len(p):
+        while left < i and p[i][0] - p[left][0] > best_dist:
+            box.popleft()
+            left += 1
+
+        for j in box:
+            d = hypot(p[i].x - p[j].x, p[i].y - p[j].y)
+            if d < best_dist:
+                rv = [(j, i)]
+            elif d == best_dist:
+                rv.append((j, i))
+            else:
+                continue
+            best_dist = d
+        box.append(i)
+        i += 1
+
+    return {tuple([p[i] for i in pair]) for pair in rv}
 
 
 def convex_hull(*args, **kwargs):
@@ -243,7 +353,7 @@ def convex_hull(*args, **kwargs):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Graham_scan
+    [1] https://en.wikipedia.org/wiki/Graham_scan
 
     [2] Andrew's Monotone Chain Algorithm
     (A.M. Andrew,
@@ -273,7 +383,7 @@ def convex_hull(*args, **kwargs):
     from .polygon import Polygon
 
     polygon = kwargs.get('polygon', True)
-    p = set()
+    p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
             try:
@@ -332,86 +442,6 @@ def convex_hull(*args, **kwargs):
         U.reverse()
         return (U, L)
 
-
-def closest_points(*args):
-    """Return the subset of points from a set of points that were
-    the closest to each other in the 2D plane.
-
-    Parameters
-    ==========
-
-    args : a collection of Points on 2D plane.
-
-    Notes
-    =====
-
-    This can only be performed on a set of points whose coordinates can
-    be ordered on the number line. If there are no ties then a single
-    pair of Points will be in the set.
-
-    References
-    ==========
-
-    [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
-
-    [2] Sweep line algorithm
-    https://en.wikipedia.org/wiki/Sweep_line_algorithm
-
-    Examples
-    ========
-
-    >>> from sympy.geometry import closest_points, Point2D, Triangle
-    >>> Triangle(sss=(3, 4, 5)).args
-    (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
-    >>> closest_points(*_)
-    set([(Point2D(0, 0), Point2D(3, 0))])
-
-    """
-    from collections import deque
-    from math import hypot, sqrt as _sqrt
-    from sympy.functions.elementary.miscellaneous import sqrt
-
-    p = [Point2D(i) for i in set(args)]
-    if len(p) < 2:
-        raise ValueError('At least 2 distinct points must be given.')
-
-    try:
-        p.sort(key=lambda x: x.args)
-    except TypeError:
-        raise ValueError("The points could not be sorted.")
-
-    if any(not i.is_Rational for j in p for i in j.args):
-        def hypot(x, y):
-            arg = x*x + y*y
-            if arg.is_Rational:
-                return _sqrt(arg)
-            return sqrt(arg)
-
-    rv = [(0, 1)]
-    best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
-    i = 2
-    left = 0
-    box = deque([0, 1])
-    while i < len(p):
-        while left < i and p[i][0] - p[left][0] > best_dist:
-            box.popleft()
-            left += 1
-
-        for j in box:
-            d = hypot(p[i].x - p[j].x, p[i].y - p[j].y)
-            if d < best_dist:
-                rv = [(j, i)]
-            elif d == best_dist:
-                rv.append((j, i))
-            else:
-                continue
-            best_dist = d
-        box.append(i)
-        i += 1
-
-    return {tuple([p[i] for i in pair]) for pair in rv}
-
-
 def farthest_points(*args):
     """Return the subset of points from a set of points that were
     the furthest apart from each other in the 2D plane.
@@ -443,10 +473,10 @@ def farthest_points(*args):
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> farthest_points(*_)
-    set([(Point2D(0, 0), Point2D(3, 4))])
+    {(Point2D(0, 0), Point2D(3, 4))}
 
     """
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -481,6 +511,8 @@ def farthest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = []
     diam = 0
@@ -498,210 +530,163 @@ def farthest_points(*args):
     return set(rv)
 
 
-def are_coplanar(*e):
-    """ Returns True if the given entities are coplanar otherwise False
+def idiff(eq, y, x, n=1):
+    """Return ``dy/dx`` assuming that ``eq == 0``.
 
     Parameters
     ==========
 
-    e: entities to be checked for being coplanar
-
-    Returns
-    =======
-
-    Boolean
+    y : the dependent variable or a list of dependent variables (with y first)
+    x : the variable that the derivative is being taken with respect to
+    n : the order of the derivative (default is 1)
 
     Examples
     ========
 
-    >>> from sympy import Point3D, Line3D
-    >>> from sympy.geometry.util import are_coplanar
-    >>> a = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
-    >>> b = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
-    >>> c = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
-    >>> are_coplanar(a, b, c)
-    False
+    >>> from sympy.abc import x, y, a
+    >>> from sympy.geometry.util import idiff
+
+    >>> circ = x**2 + y**2 - 4
+    >>> idiff(circ, y, x)
+    -x/y
+    >>> idiff(circ, y, x, 2).simplify()
+    -(x**2 + y**2)/y**3
+
+    Here, ``a`` is assumed to be independent of ``x``:
+
+    >>> idiff(x + a + y, y, x)
+    -1
+
+    Now the x-dependence of ``a`` is made explicit by listing ``a`` after
+    ``y`` in a list.
+
+    >>> idiff(x + a + y, [y, a], x)
+    -Derivative(a, x) - 1
+
+    See Also
+    ========
+
+    sympy.core.function.Derivative: represents unevaluated derivatives
+    sympy.core.function.diff: explicitly differentiates wrt symbols
 
     """
-    from sympy.geometry.line3d import LinearEntity3D
-    from sympy.geometry.point import Point3D
-    from sympy.geometry.plane import Plane
-    # XXX update tests for coverage
-
-    e = set(e)
-    # first work with a Plane if present
-    for i in list(e):
-        if isinstance(i, Plane):
-            e.remove(i)
-            return all(p.is_coplanar(i) for p in e)
-
-    if all(isinstance(i, Point3D) for i in e):
-        if len(e) < 3:
-            return False
-
-        # remove pts that are collinear with 2 pts
-        a, b = e.pop(), e.pop()
-        for i in list(e):
-            if Point3D.are_collinear(a, b, i):
-                e.remove(i)
-
-        if not e:
-            return False
-        else:
-            # define a plane
-            p = Plane(a, b, e.pop())
-            for i in e:
-                if i not in p:
-                    return False
-            return True
+    if is_sequence(y):
+        dep = set(y)
+        y = y[0]
+    elif isinstance(y, Symbol):
+        dep = {y}
+    elif isinstance(y, Function):
+        pass
     else:
-        pt3d = []
-        for i in e:
-            if isinstance(i, Point3D):
-                pt3d.append(i)
-            elif isinstance(i, LinearEntity3D):
-                pt3d.extend(i.args)
-            elif isinstance(i, GeometryEntity):  # XXX we should have a GeometryEntity3D class so we can tell the difference between 2D and 3D -- here we just want to deal with 2D objects; if new 3D objects are encountered that we didn't hanlde above, an error should be raised
-                # all 2D objects have some Point that defines them; so convert those points to 3D pts by making z=0
-                for p in i.args:
-                    if isinstance(p, Point):
-                        pt3d.append(Point3D(*(p.args + (0,))))
-        return are_coplanar(*pt3d)
+        raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
+
+    f = {s: Function(s.name)(x) for s in eq.free_symbols
+        if s != x and s in dep}
+
+    if isinstance(y, Symbol):
+        dydx = Function(y.name)(x).diff(x)
+    else:
+        dydx = y.diff(x)
+
+    eq = eq.subs(f)
+    derivs = {}
+    for i in range(n):
+        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
+        if i == n - 1:
+            return yp.subs([(v, k) for k, v in f.items()])
+        derivs[dydx] = yp
+        eq = dydx - yp
+        dydx = dydx.diff(x)
 
 
-def are_similar(e1, e2):
-    """Are two geometrical entities similar.
-
-    Can one geometrical entity be uniformly scaled to the other?
+def intersection(*entities, **kwargs):
+    """The intersection of a collection of GeometryEntity instances.
 
     Parameters
     ==========
-
-    e1 : GeometryEntity
-    e2 : GeometryEntity
+    entities : sequence of GeometryEntity
+    pairwise (keyword argument) : Can be either True or False
 
     Returns
     =======
-
-    are_similar : boolean
+    intersection : list of GeometryEntity
 
     Raises
     ======
-
-    GeometryError
-        When `e1` and `e2` cannot be compared.
+    NotImplementedError
+        When unable to calculate intersection.
 
     Notes
     =====
+    The intersection of any geometrical entity with itself should return
+    a list with one item: the entity in question.
+    An intersection requires two or more entities. If only a single
+    entity is given then the function will return an empty list.
+    It is possible for `intersection` to miss intersections that one
+    knows exists because the required quantities were not fully
+    simplified internally.
+    Reals should be converted to Rationals, e.g. Rational(str(real_num))
+    or else failures due to floating point issues may result.
 
-    If the two objects are equal then they are similar.
+    Case 1: When the keyword argument 'pairwise' is False (default value):
+    In this case, the function returns a list of intersections common to
+    all entities.
 
-    See Also
-    ========
-
-    sympy.geometry.entity.GeometryEntity.is_similar
-
-    Examples
-    ========
-
-    >>> from sympy import Point, Circle, Triangle, are_similar
-    >>> c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)
-    >>> t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
-    >>> t2 = Triangle(Point(0, 0), Point(2, 0), Point(0, 2))
-    >>> t3 = Triangle(Point(0, 0), Point(3, 0), Point(0, 1))
-    >>> are_similar(t1, t2)
-    True
-    >>> are_similar(t1, t3)
-    False
-
-    """
-    from .exceptions import GeometryError
-
-    if e1 == e2:
-        return True
-    try:
-        return e1.is_similar(e2)
-    except AttributeError:
-        try:
-            return e2.is_similar(e1)
-        except AttributeError:
-            n1 = e1.__class__.__name__
-            n2 = e2.__class__.__name__
-            raise GeometryError(
-                "Cannot test similarity between %s and %s" % (n1, n2))
-
-
-def centroid(*args):
-    """Find the centroid (center of mass) of the collection containing only Points,
-    Segments or Polygons. The centroid is the weighted average of the individual centroid
-    where the weights are the lengths (of segments) or areas (of polygons).
-    Overlapping regions will add to the weight of that region.
-
-    If there are no objects (or a mixture of objects) then None is returned.
+    Case 2: When the keyword argument 'pairwise' is True:
+    In this case, the functions returns a list intersections that occur
+    between any pair of entities.
 
     See Also
     ========
 
-    sympy.geometry.point.Point, sympy.geometry.line.Segment,
-    sympy.geometry.polygon.Polygon
+    sympy.geometry.entity.GeometryEntity.intersection
 
     Examples
     ========
 
-    >>> from sympy import Point, Segment, Polygon
-    >>> from sympy.geometry.util import centroid
-    >>> p = Polygon((0, 0), (10, 0), (10, 10))
-    >>> q = p.translate(0, 20)
-    >>> p.centroid, q.centroid
-    (Point2D(20/3, 10/3), Point2D(20/3, 70/3))
-    >>> centroid(p, q)
-    Point2D(20/3, 40/3)
-    >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
-    >>> centroid(p, q)
-    Point2D(1, -sqrt(2) + 2)
-    >>> centroid(Point(0, 0), Point(2, 0))
-    Point2D(1, 0)
-
-    Stacking 3 polygons on top of each other effectively triples the
-    weight of that polygon:
-
-        >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
-        >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
-        >>> centroid(p, q)
-        Point2D(3/2, 1/2)
-        >>> centroid(p, p, p, q) # centroid x-coord shifts left
-        Point2D(11/10, 1/2)
-
-    Stacking the squares vertically above and below p has the same
-    effect:
-
-        >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
-        Point2D(11/10, 1/2)
+    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> c = Circle((0, 1), 1)
+    >>> intersection(c, c.center)
+    []
+    >>> right = Ray((0, 0), (1, 0))
+    >>> up = Ray((0, 0), (0, 1))
+    >>> intersection(c, right, up)
+    [Point2D(0, 0)]
+    >>> intersection(c, right, up, pairwise=True)
+    [Point2D(0, 0), Point2D(0, 2)]
+    >>> left = Ray((1, 0), (0, 0))
+    >>> intersection(right, left)
+    [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
 
-    from sympy.geometry import Polygon, Segment, Point
-    if args:
-        if all(isinstance(g, Point) for g in args):
-            c = Point(0, 0)
-            for g in args:
-                c += g
-            den = len(args)
-        elif all(isinstance(g, Segment) for g in args):
-            c = Point(0, 0)
-            L = 0
-            for g in args:
-                l = g.length
-                c += g.midpoint*l
-                L += l
-            den = L
-        elif all(isinstance(g, Polygon) for g in args):
-            c = Point(0, 0)
-            A = 0
-            for g in args:
-                a = g.area
-                c += g.centroid*a
-                A += a
-            den = A
-        c /= den
-        return c.func(*[i.simplify() for i in c.args])
+    from .entity import GeometryEntity
+    from .point import Point
+
+    pairwise = kwargs.pop('pairwise', False)
+
+    if len(entities) <= 1:
+        return []
+
+    # entities may be an immutable tuple
+    entities = list(entities)
+    for i, e in enumerate(entities):
+        if not isinstance(e, GeometryEntity):
+            entities[i] = Point(e)
+
+    if not pairwise:
+        # find the intersection common to all objects
+        res = entities[0].intersection(entities[1])
+        for entity in entities[2:]:
+            newres = []
+            for x in res:
+                newres.extend(x.intersection(entity))
+            res = newres
+        return res
+
+    # find all pairwise intersections
+    ans = []
+    for j in range(0, len(entities)):
+        for k in range(j + 1, len(entities)):
+            ans.extend(intersection(entities[j], entities[k]))
+    return list(ordered(set(ans)))

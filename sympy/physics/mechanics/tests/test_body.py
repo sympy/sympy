@@ -1,7 +1,7 @@
-from sympy import Symbol, symbols
+from sympy.core.backend import Symbol, symbols
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_default():
     body = Body('body')

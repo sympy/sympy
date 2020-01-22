@@ -138,7 +138,7 @@ Level zero contains the bulk code of the polynomial manipulation module.
 Manipulation of dense, multivariate polynomials
 ***********************************************
 
-These functions can be used to manipulate polynomials in `K[X_0, \dots, X_u]`.
+These functions can be used to manipulate polynomials in `K[X_0, \ldots, X_u]`.
 Functions for manipulating multivariate polynomials in the dense representation
 have the prefix ``dmp_``. Functions which only apply to univariate polynomials
 (i.e. `u = 0`)
@@ -372,7 +372,7 @@ rudimentary low-level support for finitely generated free modules. This is
 mainly used for Groebner basis computations (see there), so manipulation
 functions are only provided to the extend needed. They carry the prefix
 ``sdm_``. Note that in examples, the generators of the free module are called
-`f_1, f_2, \dots`.
+`f_1, f_2, \ldots`.
 
 .. currentmodule:: sympy.polys.distributedmodules
 
@@ -420,7 +420,7 @@ if `g` is such a polynomial and `f` is any element of `I`,
 hence must be zero; therefore `f` is a multiple of `g`.
 
 Using this result it is possible to find a `greatest common
-divisor <http://en.wikipedia.org/wiki/Greatest_common_divisor>`_
+divisor <https://en.wikipedia.org/wiki/Greatest_common_divisor>`_
 (gcd) of any polynomials `f,g,\ldots` in `K[X]`.
 If `I` is the ideal formed by all linear combinations of the given polynomials
 with coefficients in `K[X]`, and `d` is its generator,
@@ -444,7 +444,7 @@ alone as `f_{k+1} = 0`. Hence `d = f_k` is a gcd of `f` and `g`.
 The sequence of polynomials `f_0`, `f_1,\ldots, f_k` is called the
 *Euclidean polynomial remainder sequence* determined by `(f,g)` because
 of the analogy with the classical `Euclidean algorithm
-<http://en.wikipedia.org/wiki/Euclidean_algorithm>`_ for the gcd of
+<https://en.wikipedia.org/wiki/Euclidean_algorithm>`_ for the gcd of
 natural numbers.
 
 The algorithm may be extended to obtain an expression for `d` in terms of
@@ -457,7 +457,7 @@ This leads to an equation
    d = uf + vg\qquad (u,v \in K[X])
 
 analogous to `Bézout's identity
-<http://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity>`_
+<https://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity>`_
 in the case of integers.
 
 .. autofunction:: dmp_half_gcdex
@@ -552,10 +552,10 @@ Taking `l = n + m - j - 1`, we obtain `\deg(u) = m - j - 1` and
 `\deg(v) = n - j - 1`.
 
 In the case `j = 0` the matrix of the resulting system of linear equations
-is the `Sylvester matrix <http://en.wikipedia.org/wiki/Sylvester_matrix>`_
+is the `Sylvester matrix <https://en.wikipedia.org/wiki/Sylvester_matrix>`_
 `S(f,g)` associated to `f` and `g`,
 an `(n+m)\times (n+m)` matrix with coefficients of `f` and `g` as entries.
-Its determinant is the `resultant <http://en.wikipedia.org/wiki/Resultant>`_
+Its determinant is the `resultant <https://en.wikipedia.org/wiki/Resultant>`_
 `\mathrm{res}(f,g)` of the pair `(f,g)`.
 It is non-zero if and only if `f` and `g` are relatively prime.
 
@@ -577,7 +577,7 @@ This construction of subresultants applies to any `j` between
 `\deg(S_j(f,g)) < j`.
 
 The properties of subresultants are as follows. Let `n_0 = \deg(f)`,
-`n_1 = \deg(g)`, `n_2, \dots, n_k` be the decreasing sequence of
+`n_1 = \deg(g)`, `n_2, \ldots, n_k` be the decreasing sequence of
 degrees of polynomials in a remainder sequence.
 Let `0 \le j \le n_1`; then
 
@@ -703,6 +703,21 @@ Groebner basis algorithms for modules are also provided:
 .. autofunction:: sdm_nf_mora
 .. autofunction:: sdm_groebner
 
+Options
+=======
+
+.. automodule:: sympy.polys.polyoptions
+
+.. autoclass:: sympy.polys.polyoptions.Options
+.. autofunction:: sympy.polys.polyoptions.build_options
+
+Configuration
+=============
+
+.. automodule:: sympy.polys.polyconfig
+
+.. autofunction:: sympy.polys.polyconfig.setup
+
 Exceptions
 ==========
 
@@ -749,6 +764,7 @@ Modular GCD
 .. autofunction:: modgcd_univariate
 .. autofunction:: modgcd_bivariate
 .. autofunction:: modgcd_multivariate
+.. autofunction:: _modgcd_multivariate_p
 .. autofunction:: func_field_modgcd
 
 Undocumented

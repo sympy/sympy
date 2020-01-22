@@ -1,15 +1,17 @@
 import itertools
 
-import collections
+from sympy import S, Tuple, diff, Basic
 
-from sympy import S, Tuple, MatrixBase
-from sympy import S, Tuple, diff, MatrixBase
-
+from sympy.core.compatibility import Iterable
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.array.dense_ndim_array import DenseNDimArray
+from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 
 
 def _arrayfy(a):
+    from sympy.matrices import MatrixBase
+
     if isinstance(a, NDimArray):
         return a
     if isinstance(a, (MatrixBase, list, tuple, Tuple)):
@@ -43,6 +45,8 @@ def tensorproduct(*args):
     >>> p
     [[[[x, y], [z, t]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[x, y], [z, t]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]], [[x, y], [z, t]]]]
     """
+    from sympy.tensor.array import SparseNDimArray, ImmutableSparseNDimArray
+
     if len(args) == 0:
         return S.One
     if len(args) == 1:
@@ -56,10 +60,12 @@ def tensorproduct(*args):
     if not isinstance(a, NDimArray) or not isinstance(b, NDimArray):
         return a*b
 
-    al = list(a)
-    bl = list(b)
+    if isinstance(a, SparseNDimArray) and isinstance(b, SparseNDimArray):
+        lp = len(b)
+        new_array = {k1*lp + k2: v1*v2 for k1, v1 in a._sparse_array.items() for k2, v2 in b._sparse_array.items()}
+        return ImmutableSparseNDimArray(new_array, a.shape + b.shape)
 
-    product_list = [i*j for i in al for j in bl]
+    product_list = [i*j for i in Flatten(a) for j in Flatten(b)]
     return ImmutableDenseNDimArray(product_list, a.shape + b.shape)
 
 
@@ -70,7 +76,7 @@ def tensorcontraction(array, *contraction_axes):
     Examples
     ========
 
-    >>> from sympy.tensor.array import Array, tensorcontraction
+    >>> from sympy import Array, tensorcontraction
     >>> from sympy import Matrix, eye
     >>> tensorcontraction(eye(3), (0, 1))
     3
@@ -83,7 +89,7 @@ def tensorcontraction(array, *contraction_axes):
     Matrix multiplication may be emulated with a proper combination of
     ``tensorcontraction`` and ``tensorproduct``
 
-    >>> from sympy.tensor.array import tensorproduct
+    >>> from sympy import tensorproduct
     >>> from sympy.abc import a,b,c,d,e,f,g,h
     >>> m1 = Matrix([[a, b], [c, d]])
     >>> m2 = Matrix([[e, f], [g, h]])
@@ -102,7 +108,7 @@ def tensorcontraction(array, *contraction_axes):
     # Verify contraction_axes:
     taken_dims = set([])
     for axes_group in contraction_axes:
-        if not isinstance(axes_group, collections.Iterable):
+        if not isinstance(axes_group, Iterable):
             raise ValueError("collections of contraction axes expected")
 
         dim = array.shape[axes_group[0]]
@@ -123,16 +129,40 @@ def tensorcontraction(array, *contraction_axes):
         cum_shape[rank - i - 1] = _cumul
         _cumul *= int(array.shape[rank - i - 1])
 
+    # DEFINITION: by absolute position it is meant the position along the one
+    # dimensional array containing all the tensor components.
+
+    # Possible future work on this module: move computation of absolute
+    # positions to a class method.
+
+    # Determine absolute positions of the uncontracted indices:
     remaining_indices = [[cum_shape[i]*j for j in range(array.shape[i])]
                          for i in range(rank) if i not in taken_dims]
 
+    # Determine absolute positions of the contracted indices:
+    summed_deltas = []
+    for axes_group in contraction_axes:
+        lidx = []
+        for js in range(array.shape[axes_group[0]]):
+            lidx.append(sum([cum_shape[ig] * js for ig in axes_group]))
+        summed_deltas.append(lidx)
+
+    # Compute the contracted array:
+    #
+    # 1. external for loops on all uncontracted indices.
+    #    Uncontracted indices are determined by the combinatorial product of
+    #    the absolute positions of the remaining indices.
+    # 2. internal loop on all contracted indices.
+    #    It sum the values of the absolute contracted index and the absolute
+    #    uncontracted index for the external loop.
     contracted_array = []
     for icontrib in itertools.product(*remaining_indices):
-        i = sum(icontrib)
+        index_base_position = sum(icontrib)
         isum = S.Zero
-        for axes_group in contraction_axes:
-            for js in range(array.shape[axes_group[0]]):
-                isum += array[i + sum([cum_shape[ig]*js for ig in axes_group])]
+        for sum_to_index in itertools.product(*summed_deltas):
+            idx = array._get_tuple_index(index_base_position + sum(sum_to_index))
+            isum += array[idx]
+
         contracted_array.append(isum)
 
     if len(remaining_indices) == 0:
@@ -154,7 +184,7 @@ def derive_by_array(expr, dx):
     Examples
     ========
 
-    >>> from sympy.tensor.array import derive_by_array
+    >>> from sympy import derive_by_array
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import cos
     >>> derive_by_array(cos(x*t), x)
@@ -165,7 +195,9 @@ def derive_by_array(expr, dx):
     [[[1, 0], [0, 2*y*z]], [[0, y**2], [0, 0]]]
 
     """
-    array_types = (collections.Iterable, MatrixBase, NDimArray)
+    from sympy.matrices import MatrixBase
+    from sympy.tensor.array import SparseNDimArray
+    array_types = (Iterable, MatrixBase, NDimArray)
 
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)
@@ -174,14 +206,163 @@ def derive_by_array(expr, dx):
                 raise ValueError("cannot derive by this array")
 
     if isinstance(expr, array_types):
-        expr = ImmutableDenseNDimArray(expr)
+        if isinstance(expr, NDimArray):
+            expr = expr.as_immutable()
+        else:
+            expr = ImmutableDenseNDimArray(expr)
+
         if isinstance(dx, array_types):
-            new_array = [[y.diff(x) for y in expr] for x in dx]
+            if isinstance(expr, SparseNDimArray):
+                lp = len(expr)
+                new_array = {k + i*lp: v
+                             for i, x in enumerate(Flatten(dx))
+                             for k, v in expr.diff(x)._sparse_array.items()}
+            else:
+                new_array = [[y.diff(x) for y in Flatten(expr)] for x in Flatten(dx)]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
             return expr.diff(dx)
     else:
         if isinstance(dx, array_types):
-            return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
+            return ImmutableDenseNDimArray([expr.diff(i) for i in Flatten(dx)], dx.shape)
         else:
             return diff(expr, dx)
+
+
+def permutedims(expr, perm):
+    """
+    Permutes the indices of an array.
+
+    Parameter specifies the permutation of the indices.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z, t
+    >>> from sympy import sin
+    >>> from sympy import Array, permutedims
+    >>> a = Array([[x, y, z], [t, sin(x), 0]])
+    >>> a
+    [[x, y, z], [t, sin(x), 0]]
+    >>> permutedims(a, (1, 0))
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    If the array is of second order, ``transpose`` can be used:
+
+    >>> from sympy import transpose
+    >>> transpose(a)
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    Examples on higher dimensions:
+
+    >>> b = Array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    >>> permutedims(b, (2, 1, 0))
+    [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
+    >>> permutedims(b, (1, 2, 0))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    ``Permutation`` objects are also allowed:
+
+    >>> from sympy.combinatorics import Permutation
+    >>> permutedims(b, Permutation([1, 2, 0]))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    """
+    from sympy.tensor.array import SparseNDimArray
+
+    if not isinstance(expr, NDimArray):
+        raise TypeError("expression has to be an N-dim array")
+
+    from sympy.combinatorics import Permutation
+    if not isinstance(perm, Permutation):
+        perm = Permutation(list(perm))
+
+    if perm.size != expr.rank():
+        raise ValueError("wrong permutation size")
+
+    # Get the inverse permutation:
+    iperm = ~perm
+    new_shape = perm(expr.shape)
+
+    if isinstance(expr, SparseNDimArray):
+        return type(expr)({tuple(perm(expr._get_tuple_index(k))): v
+                           for k, v in expr._sparse_array.items()}, new_shape)
+
+    indices_span = perm([range(i) for i in expr.shape])
+
+    new_array = [None]*len(expr)
+    for i, idx in enumerate(itertools.product(*indices_span)):
+        t = iperm(idx)
+        new_array[i] = expr[t]
+
+    return type(expr)(new_array, new_shape)
+
+
+class Flatten(Basic):
+    '''
+    Flatten an iterable object to a list in a lazy-evaluation way.
+
+    Notes
+    =====
+
+    This class is an iterator with which the memory cost can be economised.
+    Optimisation has been considered to ameliorate the performance for some
+    specific data types like DenseNDimArray and SparseNDimArray.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array.arrayop import Flatten
+    >>> from sympy.tensor.array import Array
+    >>> A = Array(range(6)).reshape(2, 3)
+    >>> Flatten(A)
+    Flatten([[0, 1, 2], [3, 4, 5]])
+    >>> [i for i in Flatten(A)]
+    [0, 1, 2, 3, 4, 5]
+    '''
+    def __init__(self, iterable):
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import NDimArray
+
+        if not isinstance(iterable, (Iterable, MatrixBase)):
+            raise NotImplementedError("Data type not yet supported")
+
+        if isinstance(iterable, list):
+            iterable = NDimArray(iterable)
+
+        self._iter = iterable
+        self._idx = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        from sympy.matrices.matrices import MatrixBase
+
+        if len(self._iter) > self._idx:
+            if isinstance(self._iter, DenseNDimArray):
+                result = self._iter._array[self._idx]
+
+            elif isinstance(self._iter, SparseNDimArray):
+                if self._idx in self._iter._sparse_array:
+                    result = self._iter._sparse_array[self._idx]
+                else:
+                    result = 0
+
+            elif isinstance(self._iter, MatrixBase):
+                result = self._iter[self._idx]
+
+            elif hasattr(self._iter, '__next__'):
+                result = next(self._iter)
+
+            else:
+                result = self._iter[self._idx]
+
+        else:
+            raise StopIteration
+
+        self._idx += 1
+        return result
+
+    def next(self):
+        return self.__next__()

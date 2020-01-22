@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence, string_types, u
+from sympy.core.compatibility import is_sequence
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -61,7 +61,7 @@ def __qsympify_sequence_helper(seq):
     if not is_sequence(seq):
         if isinstance(seq, Matrix):
             return seq
-        elif isinstance(seq, string_types):
+        elif isinstance(seq, str):
             return Symbol(seq)
         else:
             return sympify(seq)
@@ -89,7 +89,7 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ['hilbert_space']
+    __slots__ = ('hilbert_space')
 
     is_commutative = False
 
@@ -100,7 +100,7 @@ class QExpr(Expr):
     def free_symbols(self):
         return {self}
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args, **kwargs):
         """Construct a new quantum object.
 
         Parameters
@@ -129,10 +129,10 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        args = cls._eval_args(args)
+        args = cls._eval_args(args, **kwargs)
         if len(args) == 0:
-            args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **old_assumptions)
+            args = cls._eval_args(tuple(cls.default_args()), **kwargs)
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
@@ -180,7 +180,7 @@ class QExpr(Expr):
         of arguments to be run through the constructor.
 
         NOTE: Any classes that override this MUST return a tuple of arguments.
-        Should be overidden by subclasses to specify the default arguments for kets and operators
+        Should be overridden by subclasses to specify the default arguments for kets and operators
         """
         raise NotImplementedError("No default arguments for this class!")
 
@@ -322,25 +322,6 @@ class QExpr(Expr):
     def doit(self, **kw_args):
         return self
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints)
-                    for a in self.args ]
-        else:
-            args = self.args
-
-        # TODO: Make Basic.rewrite use hints in evaluating
-        # self.rule(*args, **hints), not having hints breaks spin state
-        # (un)coupling on rewrite
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args, **hints)
-
-                if rewritten is not None:
-                    return rewritten
-
-        return self
-
     #-------------------------------------------------------------------------
     # Represent
     #-------------------------------------------------------------------------
@@ -364,7 +345,7 @@ class QExpr(Expr):
             def _represent_Position(self, basis, **options):
 
         Usually, basis object will be instances of Operator subclasses, but
-        there is a chance we will relax this in the future to accomodate other
+        there is a chance we will relax this in the future to accommodate other
         types of basis sets that are not associated with an operator.
 
         If the ``format`` option is given it can be ("sympy", "numpy",

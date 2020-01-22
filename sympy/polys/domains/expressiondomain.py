@@ -2,13 +2,12 @@
 
 from __future__ import print_function, division
 
+from sympy.core import sympify, SympifyError
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
-
-from sympy.core import sympify, SympifyError
-from sympy.utilities import public
 from sympy.polys.polyutils import PicklableWithSlots
+from sympy.utilities import public
 
 @public
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
@@ -19,7 +18,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     class Expression(PicklableWithSlots):
         """An arbitrary expression. """
 
-        __slots__ = ['ex']
+        __slots__ = ('ex',)
 
         def __init__(self, ex):
             if not isinstance(ex, self.__class__):
@@ -119,7 +118,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return f.ex == f.__class__(g).ex
 
         def __ne__(f, g):
-            return not f.__eq__(g)
+            return not f == g
 
         def __nonzero__(f):
             return f.ex != 0

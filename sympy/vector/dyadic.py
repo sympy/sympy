@@ -1,9 +1,10 @@
+from typing import Type
+
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import ImmutableMatrix as Matrix
-from sympy.core.compatibility import u
 import sympy.vector
 
 
@@ -14,13 +15,20 @@ class Dyadic(BasisDependent):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dyadic_tensor
+    .. [1] https://en.wikipedia.org/wiki/Dyadic_tensor
     .. [2] Kane, T., Levinson, D. Dynamics Theory and Applications. 1985
            McGraw-Hill
 
     """
 
     _op_priority = 13.0
+
+    _expr_type = None  # type: Type[Dyadic]
+    _mul_func = None  # type: Type[Dyadic]
+    _add_func = None  # type: Type[Dyadic]
+    _zero_func = None  # type: Type[Dyadic]
+    _base_func = None  # type: Type[Dyadic]
+    zero = None  # type: DyadicZero
 
     @property
     def components(self):
@@ -50,8 +58,8 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> D1 = N.i.outer(N.j)
         >>> D2 = N.j.outer(N.j)
         >>> D1.dot(D2)
@@ -101,8 +109,8 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> d = N.i.outer(N.i)
         >>> d.cross(N.j)
         (N.i|N.k)
@@ -136,19 +144,19 @@ class Dyadic(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The coordinate system that the rows and columns of the matrix
             correspond to. If a second system is provided, this
             only corresponds to the rows of the matrix.
-        second_system : CoordSysCartesian, optional, default=None
+        second_system : CoordSys3D, optional, default=None
             The coordinate system that the columns of the matrix correspond
             to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> v = N.i + 2*N.j
         >>> d = v.outer(N.i)
         >>> d.to_matrix(N)
@@ -173,6 +181,15 @@ class Dyadic(BasisDependent):
         return Matrix([i.dot(self).dot(j) for i in system for j in
                        second_system]).reshape(3, 3)
 
+    def _div_helper(one, other):
+        """ Helper for division involving dyadics """
+        if isinstance(one, Dyadic) and isinstance(other, Dyadic):
+            raise TypeError("Cannot divide two dyadics")
+        elif isinstance(one, Dyadic):
+            return DyadicMul(one, Pow(other, S.NegativeOne))
+        else:
+            raise TypeError("Cannot divide by a dyadic")
+
 
 class BaseDyadic(Dyadic, AtomicExpr):
     """
@@ -195,9 +212,9 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj = super(BaseDyadic, cls).__new__(cls, vector1, vector2)
         obj._base_instance = obj
         obj._measure_number = 1
-        obj._components = {obj: S(1)}
+        obj._components = {obj: S.One}
         obj._sys = vector1._sys
-        obj._pretty_form = u('(' + vector1._pretty_form + '|' +
+        obj._pretty_form = (u'(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
         obj._latex_form = ('(' + vector1._latex_form + "{|}" +
                            vector2._latex_form + ')')
@@ -258,21 +275,11 @@ class DyadicZero(BasisDependentZero, Dyadic):
 
     _op_priority = 13.1
     _pretty_form = u'(0|0)'
-    _latex_form = '(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
+    _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
         return obj
-
-
-def _dyad_div(one, other):
-    """ Helper for division involving dyadics """
-    if isinstance(one, Dyadic) and isinstance(other, Dyadic):
-        raise TypeError("Cannot divide two dyadics")
-    elif isinstance(one, Dyadic):
-        return DyadicMul(one, Pow(other, S.NegativeOne))
-    else:
-        raise TypeError("Cannot divide by a dyadic")
 
 
 Dyadic._expr_type = Dyadic
@@ -280,5 +287,4 @@ Dyadic._mul_func = DyadicMul
 Dyadic._add_func = DyadicAdd
 Dyadic._zero_func = DyadicZero
 Dyadic._base_func = BaseDyadic
-Dyadic._div_helper = _dyad_div
 Dyadic.zero = DyadicZero()

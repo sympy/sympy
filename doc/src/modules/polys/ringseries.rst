@@ -182,6 +182,7 @@ by ``polys.ring.ring``.
 .. autofunction:: rs_atan
 .. autofunction:: rs_asin
 .. autofunction:: rs_tan
+.. autofunction:: _tan1
 .. autofunction:: rs_cot
 .. autofunction:: rs_sin
 .. autofunction:: rs_cos
