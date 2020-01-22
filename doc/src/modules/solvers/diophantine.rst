@@ -41,7 +41,7 @@ structured in the following manner.
 
   - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`
 
-    - :py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop`
+    - :py:meth:`~sympy.solvers.diophantine.classify_diop`
     - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear`
     - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_quadratic`
     - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic`
@@ -58,10 +58,10 @@ factor by calling :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` s
 Then all the results are combined using :py:meth:`~sympy.solvers.diophantine.diophantine.merge_solution`.
 
 :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` internally uses
-:py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop`
+:py:meth:`~sympy.solvers.diophantine.classify_diop`
 to find the type of the equation(and some other details) given to it and then
 calls the appropriate solver function based on the type returned. For example,
-if :py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop` returned "linear" as the
+if :py:meth:`~sympy.solvers.diophantine.classify_diop` returned "linear" as the
 type of the equation, then :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`
 calls :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear` to solve the equation.
 
