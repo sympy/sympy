@@ -21,7 +21,7 @@ that the equation is solvable. You can read more about Diophantine equations in
 [1]_ and [2]_.
 
 Currently, following five types of Diophantine equations can be solved using
-:py:meth:`~sympy.solvers.diophantine.diophantine` and other helper functions of
+:py:meth:`~sympy.solvers.diophantine.diophantine.diophantine` and other helper functions of
 the Diophantine module.
 
 - Linear Diophantine equations: `a_1x_1 + a_2x_2 + \ldots + a_nx_n = b`.
@@ -33,43 +33,43 @@ the Diophantine module.
 Module structure
 ----------------
 
-This module contains :py:meth:`~sympy.solvers.diophantine.diophantine` and
+This module contains :py:meth:`~sympy.solvers.diophantine.diophantine.diophantine` and
 helper functions that are needed to solve certain Diophantine equations. It's
 structured in the following manner.
 
-- :py:meth:`~sympy.solvers.diophantine.diophantine`
+- :py:meth:`~sympy.solvers.diophantine.diophantine.diophantine`
 
-  - :py:meth:`~sympy.solvers.diophantine.diop_solve`
+  - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`
 
-    - :py:meth:`~sympy.solvers.diophantine.classify_diop`
-    - :py:meth:`~sympy.solvers.diophantine.diop_linear`
-    - :py:meth:`~sympy.solvers.diophantine.diop_quadratic`
-    - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`
-    - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic_normal`
-    - :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
-    - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares`
-    - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_even_powers`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_quadratic`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic_normal`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_pythagorean`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_sum_of_squares`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_sum_of_even_powers`
 
-  - :py:meth:`~sympy.solvers.diophantine.merge_solution`
+  - :py:meth:`~sympy.solvers.diophantine.diophantine.merge_solution`
 
-When an equation is given to :py:meth:`~sympy.solvers.diophantine.diophantine`,
+When an equation is given to :py:meth:`~sympy.solvers.diophantine.diophantine.diophantine`,
 it factors the equation(if possible) and solves the equation given by each
-factor by calling :py:meth:`~sympy.solvers.diophantine.diop_solve` separately.
-Then all the results are combined using :py:meth:`~sympy.solvers.diophantine.merge_solution`.
+factor by calling :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` separately.
+Then all the results are combined using :py:meth:`~sympy.solvers.diophantine.diophantine.merge_solution`.
 
-:py:meth:`~sympy.solvers.diophantine.diop_solve` internally uses
-:py:meth:`~sympy.solvers.diophantine.classify_diop`
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` internally uses
+:py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop`
 to find the type of the equation(and some other details) given to it and then
 calls the appropriate solver function based on the type returned. For example,
-if :py:meth:`~sympy.solvers.diophantine.classify_diop` returned "linear" as the
-type of the equation, then :py:meth:`~sympy.solvers.diophantine.diop_solve`
-calls :py:meth:`~sympy.solvers.diophantine.diop_linear` to solve the equation.
+if :py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop` returned "linear" as the
+type of the equation, then :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`
+calls :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear` to solve the equation.
 
-Each of the functions, :py:meth:`~sympy.solvers.diophantine.diop_linear`,
-:py:meth:`~sympy.solvers.diophantine.diop_quadratic`,
-:py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`,
-:py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
-and :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` solves a
+Each of the functions, :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear`,
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_quadratic`,
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic`,
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_pythagorean`
+and :py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_sum_of_squares` solves a
 specific type of equations and the type can be easily guessed by it's name.
 
 Apart from these functions, there are a considerable number of other functions
@@ -97,21 +97,21 @@ functions in Diophantine module, it needs to be in the form `eq = 0`.
 {(3*t_0 - 5, 5 - 2*t_0)}
 
 Note that stepping one more level below the highest API, we can solve the very
-same equation by calling :py:meth:`~sympy.solvers.diophantine.diop_solve`.
+same equation by calling :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`.
 
->>> from sympy.solvers.diophantine import diop_solve
+>>> from sympy.solvers.diophantine.diophantine import diop_solve
 >>> diop_solve(2*x + 3*y - 5)
 (3*t_0 - 5, 5 - 2*t_0)
 
 Note that it returns a tuple rather than a set.
-:py:meth:`~sympy.solvers.diophantine.diophantine` always return a set of tuples.
-But :py:meth:`~sympy.solvers.diophantine.diop_solve` may return a single tuple
+:py:meth:`~sympy.solvers.diophantine.diophantine.diophantine` always return a set of tuples.
+But :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` may return a single tuple
 or a set of tuples depending on the type of the equation given.
 
-We can also solve this equation by calling :py:meth:`~sympy.solvers.diophantine.diop_linear`,
-which is what :py:meth:`~sympy.solvers.diophantine.diop_solve` calls internally.
+We can also solve this equation by calling :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear`,
+which is what :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` calls internally.
 
->>> from sympy.solvers.diophantine import diop_linear
+>>> from sympy.solvers.diophantine.diophantine import diop_linear
 >>> diop_linear(2*x + 3*y - 5)
 (3*t_0 - 5, 5 - 2*t_0)
 
@@ -197,13 +197,13 @@ are. For example consider the following example where we set n equal to 9.
 Any binary quadratic of the form `ax^2 + bxy + cy^2 + dx + ey + f = 0` can be
 transformed to an equivalent form `X^2 - DY^2 = N`.
 
->>> from sympy.solvers.diophantine import find_DN, diop_DN, transformation_to_DN
+>>> from sympy.solvers.diophantine.diophantine import find_DN, diop_DN, transformation_to_DN
 >>> find_DN(x**2 - 3*x*y + y**2 - 7*x + 5*y - 3)
 (5, 920)
 
 So, the above equation is equivalent to the equation `X^2 - 5Y^2 = 920` after
 a linear transformation. If we want to find the linear transformation, we can
-use :py:meth:`~sympy.solvers.diophantine.transformation_to_DN`
+use :py:meth:`~sympy.solvers.diophantine.diophantine.transformation_to_DN`
 
 >>> A, B = transformation_to_DN(x**2 - 3*x*y + y**2 - 7*x + 5*y - 3)
 
@@ -225,7 +225,7 @@ Matrix([
 [-11/5]])
 
 We can solve an equation of the form `X^2 - DY^2 = N` by passing `D` and `N` to
-:py:meth:`~sympy.solvers.diophantine.diop_DN`
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_DN`
 
 >>> diop_DN(5, 920)
 []
@@ -244,21 +244,21 @@ solution (0, 0, 0))
 
 If you are only interested in a base solution rather than the parameterized
 general solution (to be more precise, one of the general solutions), you can
-use :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`.
+use :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic`.
 
->>> from sympy.solvers.diophantine import diop_ternary_quadratic
+>>> from sympy.solvers.diophantine.diophantine import diop_ternary_quadratic
 >>> diop_ternary_quadratic(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y - 7*y*z + 7*z*x)
 (-4, 5, 1)
 
-:py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic` first converts the
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic` first converts the
 given equation to an equivalent equation of the form `w^2 = AX^2 + BY^2` and
-then it uses :py:meth:`~sympy.solvers.diophantine.descent` to solve the latter
+then it uses :py:meth:`~sympy.solvers.diophantine.diophantine.descent` to solve the latter
 equation. You can refer to the docs of
-:py:meth:`~sympy.solvers.diophantine.transformation_to_normal` to find more on
+:py:meth:`~sympy.solvers.diophantine.diophantine.transformation_to_normal` to find more on
 this. The equation `w^2 = AX^2 + BY^2` can be solved more easily by using the
-Aforementioned :py:meth:`~sympy.solvers.diophantine.descent`.
+Aforementioned :py:meth:`~sympy.solvers.diophantine.diophantine.descent`.
 
->>> from sympy.solvers.diophantine import descent
+>>> from sympy.solvers.diophantine.diophantine import descent
 >>> descent(3, 1) # solves the equation w**2 = 3*Y**2 + Z**2
 (1, 0, 1)
 
@@ -273,26 +273,26 @@ also be solved using the Diophantine module.
 >>> diophantine(9*a**2 + 16*b**2 + c**2 + 49*d**2 + 4*e**2 - 25*f**2)
 {(70*t1**2 + 70*t2**2 + 70*t3**2 + 70*t4**2 - 70*t5**2, 105*t1*t5, 420*t2*t5, 60*t3*t5, 210*t4*t5, 42*t1**2 + 42*t2**2 + 42*t3**2 + 42*t4**2 + 42*t5**2)}
 
-function :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` can
+function :py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_pythagorean` can
 also be called directly to solve the same equation. Either you can call
-:py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` or use the high
+:py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_pythagorean` or use the high
 level API. For the general sum of squares, this is also true, but one advantage
-of calling :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` is that
+of calling :py:meth:`~sympy.solvers.diophantine.diophantine.diop_general_sum_of_squares` is that
 you can control how many solutions are returned.
 
->>> from sympy.solvers.diophantine import diop_general_sum_of_squares
+>>> from sympy.solvers.diophantine.diophantine import diop_general_sum_of_squares
 >>> eq = a**2 + b**2 + c**2 + d**2 - 18
 >>> diophantine(eq)
 {(0, 0, 3, 3), (0, 1, 1, 4), (1, 2, 2, 3)}
 >>> diop_general_sum_of_squares(eq, 2)
 {(0, 0, 3, 3), (1, 2, 2, 3)}
 
-The :py:meth:`~sympy.solvers.diophantine.sum_of_squares` routine will
+The :py:meth:`~sympy.solvers.diophantine.diophantine.sum_of_squares` routine will
 providean iterator that returns solutions and one may control whether
 the solutions contain zeros or not (and the solutions not containing
 zeros are returned first):
 
->>> from sympy.solvers.diophantine import sum_of_squares
+>>> from sympy.solvers.diophantine.diophantine import sum_of_squares
 >>> sos = sum_of_squares(18, 4, zeros=True)
 >>> next(sos)
 (1, 2, 2, 3)
@@ -334,7 +334,7 @@ with ``from sympy import *``:
 
 diophantine
 ^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine
+.. autofunction:: sympy.solvers.diophantine.diophantine.diophantine
 
 And this function is imported with ``from sympy.solvers.diophantine import *``:
 
@@ -349,136 +349,136 @@ These functions are intended for internal use in the Diophantine module.
 
 diop_solve
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_solve
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_solve
 
 diop_linear
 ^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_linear
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_linear
 
 base_solution_linear
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.base_solution_linear
+.. autofunction:: sympy.solvers.diophantine.diophantine.base_solution_linear
 
 diop_quadratic
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_quadratic
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_quadratic
 
 diop_DN
 ^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_DN
 
 cornacchia
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.cornacchia
+.. autofunction:: sympy.solvers.diophantine.diophantine.cornacchia
 
 diop_bf_DN
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_bf_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_bf_DN
 
 transformation_to_DN
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.transformation_to_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine.transformation_to_DN
 
 transformation_to_normal
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.transformation_to_normal
+.. autofunction:: sympy.solvers.diophantine.diophantine.transformation_to_normal
 
 find_DN
 ^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.find_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine.find_DN
 
 diop_ternary_quadratic
 ^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_ternary_quadratic
 
 square_factor
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.square_factor
+.. autofunction:: sympy.solvers.diophantine.diophantine.square_factor
 
 descent
 ^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.descent
+.. autofunction:: sympy.solvers.diophantine.diophantine.descent
 
 diop_general_pythagorean
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_general_pythagorean
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_pythagorean
 
 diop_general_sum_of_squares
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_sum_of_squares
 
 diop_general_sum_of_even_powers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_even_powers
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_sum_of_even_powers
 
 power_representation
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.power_representation
+.. autofunction:: sympy.solvers.diophantine.diophantine.power_representation
 
 partition
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.partition
+.. autofunction:: sympy.solvers.diophantine.diophantine.partition
 
 sum_of_three_squares
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.sum_of_three_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_three_squares
 
 sum_of_four_squares
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.sum_of_four_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_four_squares
 
 sum_of_powers
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.sum_of_powers
+.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_powers
 
 sum_of_squares
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.sum_of_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_squares
 
 merge_solution
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.merge_solution
+.. autofunction:: sympy.solvers.diophantine.diophantine.merge_solution
 
 divisible
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.divisible
+.. autofunction:: sympy.solvers.diophantine.diophantine.divisible
 
 PQa
 ^^^
-.. autofunction:: sympy.solvers.diophantine.PQa
+.. autofunction:: sympy.solvers.diophantine.diophantine.PQa
 
 equivalent
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.equivalent
+.. autofunction:: sympy.solvers.diophantine.diophantine.equivalent
 
 parametrize_ternary_quadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.parametrize_ternary_quadratic
+.. autofunction:: sympy.solvers.diophantine.diophantine.parametrize_ternary_quadratic
 
 diop_ternary_quadratic_normal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic_normal
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_ternary_quadratic_normal
 
 ldescent
 ^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.ldescent
+.. autofunction:: sympy.solvers.diophantine.diophantine.ldescent
 
 gaussian_reduce
 ^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.gaussian_reduce
+.. autofunction:: sympy.solvers.diophantine.diophantine.gaussian_reduce
 
 holzer
 ^^^^^^
-.. autofunction:: sympy.solvers.diophantine.holzer
+.. autofunction:: sympy.solvers.diophantine.diophantine.holzer
 
 prime_as_sum_of_two_squares
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine.prime_as_sum_of_two_squares
 
 sqf_normal
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.sqf_normal
+.. autofunction:: sympy.solvers.diophantine.diophantine.sqf_normal
 
 reconstruct
 ^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.reconstruct
+.. autofunction:: sympy.solvers.diophantine.diophantine.reconstruct

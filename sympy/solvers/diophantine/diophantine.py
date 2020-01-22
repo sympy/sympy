@@ -416,7 +416,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_solve
+    >>> from sympy.solvers.diophantine.diophantine import diop_solve
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
     (3*t_0 - 5, 5 - 2*t_0)
@@ -622,7 +622,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_linear
+    >>> from sympy.solvers.diophantine.diophantine import diop_linear
     >>> from sympy.abc import x, y, z, t
     >>> diop_linear(2*x - 3*y - 5) # solves equation 2*x - 3*y - 5 == 0
     (3*t_0 - 5, 2*t_0 - 5)
@@ -838,7 +838,7 @@ def base_solution_linear(c, a, b, t=None):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import base_solution_linear
+    >>> from sympy.solvers.diophantine.diophantine import base_solution_linear
     >>> from sympy.abc import t
     >>> base_solution_linear(5, 2, 3) # equation 2*x + 3*y = 5
     (-5, 5)
@@ -907,7 +907,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     ========
 
     >>> from sympy.abc import x, y, t
-    >>> from sympy.solvers.diophantine import diop_quadratic
+    >>> from sympy.solvers.diophantine.diophantine import diop_quadratic
     >>> diop_quadratic(x**2 + y**2 + 2*x + 2*y + 2, t)
     {(-1, -1)}
 
@@ -1152,7 +1152,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_DN
+    >>> from sympy.solvers.diophantine.diophantine import diop_DN
     >>> diop_DN(13, -4) # Solves equation x**2 - 13*y**2 = -4
     [(3, 1), (393, 109), (36, 10)]
 
@@ -1429,7 +1429,7 @@ def cornacchia(a, b, m):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import cornacchia
+    >>> from sympy.solvers.diophantine.diophantine import cornacchia
     >>> cornacchia(2, 3, 35) # equation 2x**2 + 3y**2 = 35
     {(2, 3), (4, 1)}
     >>> cornacchia(1, 1, 25) # equation x**2 + y**2 = 25
@@ -1499,7 +1499,7 @@ def PQa(P_0, Q_0, D):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import PQa
+    >>> from sympy.solvers.diophantine.diophantine import PQa
     >>> pqa = PQa(13, 4, 5) # (13 + sqrt(5))/4
     >>> next(pqa) # (P_0, Q_0, a_0, A_0, B_0, G_0)
     (13, 4, 3, 3, 1, -1)
@@ -1563,7 +1563,7 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_bf_DN
+    >>> from sympy.solvers.diophantine.diophantine import diop_bf_DN
     >>> diop_bf_DN(13, -4)
     [(3, 1), (-3, 1), (36, 10)]
     >>> diop_bf_DN(986, 1)
@@ -1646,7 +1646,7 @@ def equivalent(u, v, r, s, D, N):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import equivalent
+    >>> from sympy.solvers.diophantine.diophantine import equivalent
     >>> equivalent(18, 5, -18, -5, 13, -1)
     True
     >>> equivalent(3, 1, -18, 393, 109, -4)
@@ -1686,7 +1686,7 @@ def length(P, Q, D):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import length
+    >>> from sympy.solvers.diophantine.diophantine import length
     >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
     3
     >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
@@ -1730,7 +1730,7 @@ def transformation_to_DN(eq):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.diophantine import transformation_to_DN
+    >>> from sympy.solvers.diophantine.diophantine import transformation_to_DN
     >>> from sympy.solvers.diophantine import classify_diop
     >>> A, B = transformation_to_DN(x**2 - 3*x*y - y**2 - 2*y + 1)
     >>> A
@@ -1858,7 +1858,7 @@ def find_DN(eq):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.diophantine import find_DN
+    >>> from sympy.solvers.diophantine.diophantine import find_DN
     >>> find_DN(x**2 - 3*x*y - y**2 - 2*y + 1)
     (13, -884)
 
@@ -1952,7 +1952,7 @@ def diop_ternary_quadratic(eq):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.diophantine import diop_ternary_quadratic
+    >>> from sympy.solvers.diophantine.diophantine import diop_ternary_quadratic
     >>> diop_ternary_quadratic(x**2 + 3*y**2 - z**2)
     (1, 0, 1)
     >>> diop_ternary_quadratic(4*x**2 + 5*y**2 - z**2)
@@ -2180,7 +2180,7 @@ def parametrize_ternary_quadratic(eq):
 
     >>> from sympy import Tuple, ordered
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
+    >>> from sympy.solvers.diophantine.diophantine import parametrize_ternary_quadratic
 
     The parametrized solution may be returned with three parameters:
 
@@ -2294,7 +2294,7 @@ def diop_ternary_quadratic_normal(eq):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.diophantine import diop_ternary_quadratic_normal
+    >>> from sympy.solvers.diophantine.diophantine import diop_ternary_quadratic_normal
     >>> diop_ternary_quadratic_normal(x**2 + 3*y**2 - z**2)
     (1, 0, 1)
     >>> diop_ternary_quadratic_normal(4*x**2 + 5*y**2 - z**2)
@@ -2384,7 +2384,7 @@ def sqf_normal(a, b, c, steps=False):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import sqf_normal
+    >>> from sympy.solvers.diophantine.diophantine import sqf_normal
     >>> sqf_normal(2 * 3**2 * 5, 2 * 5 * 11, 2 * 7**2 * 11)
     (11, 1, 5)
     >>> sqf_normal(2 * 3**2 * 5, 2 * 5 * 11, 2 * 7**2 * 11, True)
@@ -2433,7 +2433,7 @@ def square_factor(a):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import square_factor
+    >>> from sympy.solvers.diophantine.diophantine import square_factor
     >>> square_factor(24)
     2
     >>> square_factor(-36*3)
@@ -2478,7 +2478,7 @@ def ldescent(A, B):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import ldescent
+    >>> from sympy.solvers.diophantine.diophantine import ldescent
     >>> ldescent(1, 1) # w^2 = x^2 + y^2
     (1, 1, 0)
     >>> ldescent(4, -7) # w^2 = 4x^2 - 7y^2
@@ -2547,7 +2547,7 @@ def descent(A, B):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import descent
+    >>> from sympy.solvers.diophantine.diophantine import descent
     >>> descent(3, 1) # x**2 = 3*y**2 + z**2
     (1, 0, 1)
 
@@ -2732,7 +2732,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_general_pythagorean
+    >>> from sympy.solvers.diophantine.diophantine import diop_general_pythagorean
     >>> from sympy.abc import a, b, c, d, e
     >>> diop_general_pythagorean(a**2 + b**2 + c**2 - d**2)
     (m1**2 + m2**2 - m3**2, 2*m1*m3, 2*m2*m3, m1**2 + m2**2 + m3**2)
@@ -2800,7 +2800,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_general_sum_of_squares
+    >>> from sympy.solvers.diophantine.diophantine import diop_general_sum_of_squares
     >>> from sympy.abc import a, b, c, d, e, f
     >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
     {(15, 22, 22, 24, 24)}
@@ -2861,7 +2861,7 @@ def diop_general_sum_of_even_powers(eq, limit=1):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diop_general_sum_of_even_powers
+    >>> from sympy.solvers.diophantine.diophantine import diop_general_sum_of_even_powers
     >>> from sympy.abc import a, b
     >>> diop_general_sum_of_even_powers(a**4 + b**4 - (2**4 + 3**4))
     {(2, 3)}
@@ -2936,7 +2936,7 @@ def partition(n, k=None, zeros=False):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import partition
+    >>> from sympy.solvers.diophantine.diophantine import partition
     >>> f = partition(5)
     >>> next(f)
     (1, 1, 1, 1, 1)
@@ -2971,7 +2971,7 @@ def prime_as_sum_of_two_squares(p):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import prime_as_sum_of_two_squares
+    >>> from sympy.solvers.diophantine.diophantine import prime_as_sum_of_two_squares
     >>> prime_as_sum_of_two_squares(7)  # can't be done
     >>> prime_as_sum_of_two_squares(5)
     (1, 2)
@@ -3022,7 +3022,7 @@ def sum_of_three_squares(n):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import sum_of_three_squares
+    >>> from sympy.solvers.diophantine.diophantine import sum_of_three_squares
     >>> sum_of_three_squares(44542)
     (18, 37, 207)
 
@@ -3099,7 +3099,7 @@ def sum_of_four_squares(n):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import sum_of_four_squares
+    >>> from sympy.solvers.diophantine.diophantine import sum_of_four_squares
     >>> sum_of_four_squares(3456)
     (8, 8, 32, 48)
     >>> sum_of_four_squares(1294585930293)
@@ -3151,7 +3151,7 @@ def power_representation(n, p, k, zeros=False):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import power_representation
+    >>> from sympy.solvers.diophantine.diophantine import power_representation
 
     Represent 1729 as a sum of two cubes:
 
@@ -3295,7 +3295,7 @@ def sum_of_squares(n, k, zeros=False):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import sum_of_squares
+    >>> from sympy.solvers.diophantine.diophantine import sum_of_squares
     >>> list(sum_of_squares(25, 2))
     [(3, 4)]
     >>> list(sum_of_squares(25, 2, True))
