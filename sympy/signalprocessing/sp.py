@@ -5,42 +5,32 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.complexes import Abs, arg, re, im
 from sympy.utilities.lambdify import lambdify
+from sympy.core.singleton import S
+from sympy.core.compatibility import ordered
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 # Function for obtaining the poles and zeros of a transfer function
+# Credits scmichr
 def pole_zero(expression, symbol):
-    num, den = fraction(expression)
-    poles_2 = solve(den, symbol)
-    zeros_2 = solve(num, symbol)
-    poles_1 = set(poles_2) - set(zeros_2)
-    zeros_1 = set(zeros_2) - set(poles_2)
-    poles_1 = list(poles_1)
-    zeros_1 = list(zeros_1)
-    if len(zeros_1) < len(poles_1):
-        for i in range(len(poles_1) - len(zeros_1)):
-            zeros_1.append(oo)
-    elif len(poles_1) < len(zeros_1):
-        for i in range(len(zeros_1) - len(poles_1)):
-            poles_1.append(0)
-    poles_1 = poles_1
-    zeros_1 = zeros_1
-    poles = []
-    zeros = []
-    for i in range(len(zeros_1)):
-        if poles_1[i] == zeros_1[i]:
-            pass
-        else:
-            poles.append(poles_1[i])
-            zeros.append(zeros_1[i])
-    return np.asarray(poles), np.asarray(zeros)
-
+    num, den = expression.as_numer_denom()
+    poles = set(solve(den, symbol))
+    zeros = set(solve(num, symbol))
+  # keep unique elements
+    common = poles & zeros
+    poles = list(ordered(poles - common))
+    zeros = list(ordered(zeros - common))
+    poles_extra = len(poles) - len(zeros)
+  # make them the same length
+    poles += [S.Zero]*-poles_extra
+    zeros += [S.Infinity]*poles_extra
+    return poles, zeros
 
 # Function for obtaining the poles and zeros of a transfer function
 def pole_zero_plot(expression, symbol):
-    poles, zeros = pole_zero(expression, symbol)
+    poles, zeros = np.asarray(pole_zero(expression, symbol)[0]), np.asarray(pole_zero(expression, symbol)[1])
     circle_points = np.linspace(0.1, 200, 200)
     circle_points = math.pi / 100 * circle_points
     plt.figure(figsize=(5, 5))
