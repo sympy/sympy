@@ -834,8 +834,9 @@ def nthroot_mod(a, n, p, all_roots=False):
     23
     """
     from sympy.core.numbers import igcdex
-    a, n, p = as_int(a), as_int(n), as_int(p)
     a = a % p
+    a, n, p = as_int(a), as_int(n), as_int(p)
+
     if n == 2:
         return sqrt_mod(a, p, all_roots)
     # see Hackman "Elementary Number Theory" (2009), page 76
