@@ -262,13 +262,17 @@ def crt_cartesian(rem, mod):
     It outputs solutions that leave a remainder matching one of the remainders
     of the vector of remainders corresponding to a modulus.
     Assuming that moduli are pairwise relatively prime.
+    When a pair of moduli aren't relatively prime, it returns None.
     Examples
     ========
     >>> from sympy.ntheory.modular import crt_cartesian
     >>> crt_cartesian([[3,5], [3,7]], [7, 11])
     [3, 73, 47, 40]
-    >>> [(p%7, p%11) for p in [3, 40, 47, 73]]
-    [(3, 3), (5, 7), (5, 3), (3, 7)]
+    >>> [(p%7, p%11) for p in [3, 73, 47, 40]]
+    [(3, 3), (3, 7), (5, 3), (5, 7)]
+    >>> crt_cartesian([[4, 2], [5, 7], [1, 3]], [6, 11, 14])
+    >>> crt_cartesian([[1, 5], [4, 7], [6, 8]], [6, 11, 13])
+    [565, 697, 799, 73, 851, 125, 227, 359]
     """
     if len(mod) > len(rem):
         raise ValueError("Too few remainders")
@@ -278,7 +282,10 @@ def crt_cartesian(rem, mod):
     R = rem[0]
     for i in range(1,len(mod)):
         rem2 = []
-        s = mod_inverse(m, mod[i])
+        try:
+            s = mod_inverse(m, mod[i])
+        except ValueError:
+            return None
         _m = m
         m *= mod[i]
         for elem in R:
