@@ -167,7 +167,12 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
-    return x1, s.intersection(domain)
+    # Avoid adding gratuitous intersections with S.Complexes. Actual
+    # conditions should be handled by the respective inverters.
+    if domain is S.Complexes:
+        return x1, s
+    else:
+        return x1, s.intersection(domain)
 
 
 invert_complex = _invert
