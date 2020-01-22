@@ -261,8 +261,10 @@ def crt_cartesian(rem, mod):
     in the Cartesian product of the supplied remainders when divided
     by each of the supplied moduli. None is returned if the moduli
     are not pairwise-prime.
+
     Examples
     ========
+
     >>> from sympy.ntheory.modular import crt_cartesian
     >>> from sympy.utilities.iterables import cartes
     >>> rem = [[3, 5], [3, 7]]
@@ -271,6 +273,7 @@ def crt_cartesian(rem, mod):
     >>> [(p%7, p%11) for p in _]
     [(3, 3), (3, 7), (5, 3), (5, 7)]
     >>> assert _ == list(cartes(*rem))
+
     """
     if len(mod) == 0:
         raise ValueError("There must be at least 1 modulus.")
