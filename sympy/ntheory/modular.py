@@ -257,42 +257,34 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
 def crt_cartesian(rem, mod):
     """
-    Crt over a cartesian product of vectors.given a vector of moduli,
-    and for each modulus given a vector of remainders, instead of usual one remainder in crt.
-    It outputs solutions that leave a remainder matching one of the remainders
-    of the vector of remainders corresponding to a modulus.
-    Assuming that moduli are pairwise relatively prime.
-    When a pair of moduli aren't relatively prime, it returns None.
+    Return a list of values whose elements give the remainders
+    in the Cartesian product of the supplied remainders when divided
+    by each of the supplied moduli. None is returned if the moduli
+    are not pairwise-prime.
     Examples
     ========
     >>> from sympy.ntheory.modular import crt_cartesian
-    >>> crt_cartesian([[3,5], [3,7]], [7, 11])
-    [3, 73, 47, 40]
-    >>> [(p%7, p%11) for p in [3, 73, 47, 40]]
+    >>> from sympy.utilities.iterables import cartes
+    >>> rem = [[3, 5], [3, 7]]
+    >>> crt_cartesian(rem, [7, 11])
+     [3, 73, 47, 40]
+    >>> [(p%7, p%11) for p in _]
     [(3, 3), (3, 7), (5, 3), (5, 7)]
-    >>> crt_cartesian([[4, 2], [5, 7], [1, 3]], [6, 11, 14])
-    >>> crt_cartesian([[1, 5], [4, 7], [6, 8]], [6, 11, 13])
-    [565, 697, 799, 73, 851, 125, 227, 359]
+    >>> assert _ == list(cartes(*rem))
     """
-    if len(mod) > len(rem):
-        raise ValueError("Too few remainders")
     if len(mod) == 0:
-        raise ValueError("Moduli Vector can't be empty")
+        raise ValueError("There must be at least 1 modulus.")
+    if len(mod) != len(rem) or not all(rem):
+        raise ValueError(
+            "There should be a list of remainders for each modulus.")
     m = mod[0]
     R = rem[0]
     for i in range(1,len(mod)):
-        rem2 = []
         try:
-            s = mod_inverse(m, mod[i])
+            mi = mod_inverse(m, mod[i])
         except ValueError:
-            return None
-        _m = m
+            return None  # mod_inverse fails if values are not coprime
+        prev_m = m
         m *= mod[i]
-        for elem in R:
-            for k in rem[i]:
-                r = elem
-                r += _m*s*(k - r)
-                r %= m
-                rem2.append(r)
-        R = rem2
+        R = [(r + prev_m*mi*(ri - r)) % m for r in R for ri in rem[i]]
     return R
