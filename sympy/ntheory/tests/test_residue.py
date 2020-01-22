@@ -166,6 +166,7 @@ def test_residue():
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
+    assert is_nthpow_residue(Dummy(odd=True), 3, 2) == True
 
     assert nthroot_mod(29, 31, 74) == [45]
     assert nthroot_mod(1801, 11, 2663) == 44
