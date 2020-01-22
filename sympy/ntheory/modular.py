@@ -254,7 +254,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
 def crt_cartesian(rem, mod):
     """
-    Crt over a cartesian product of vectors.given a vector of moduli,
+    Chinese Remainder Theorem over a cartesian product of vectors.given a vector of moduli,
     and for each modulus given a vector of remainders, instead of usual one remainder in crt.
     It outputs solutions that leave a remainder matching one of the remainders
     of the vector of remainders corresponding to a modulus.
@@ -290,4 +290,4 @@ def crt_cartesian(rem, mod):
                 r %= m
                 rem2.append(r)
         R = rem2
-    return sorted(R)
+    return R
