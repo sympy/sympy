@@ -513,7 +513,7 @@ class StateSpaceModel(object):
                         else:
                             integral[row_idx, col_idx] = \
                                 Integral(integrand[row_idx, col_idx], (tau, t0, t))
-                except:
+                except AttributeError:
                     integral[row_idx, col_idx] = \
                         Integral(integrand[row_idx, col_idx], (tau, t0, t))
 
@@ -521,7 +521,8 @@ class StateSpaceModel(object):
         return self.represent[2] * expA * x0 + self.represent[3] * u + integral
 
     def controllability_matrix(self):
-        """ Returns the controllability matrix of the system:
+        """
+        Returns the controllability matrix of the system:
             C = [B, A * B, A^2 * B, .. , A^(n-1), B]; A in R^(n x n), B in^R^(n x m)
 
         Examples
