@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.compatibility import as_int, reduce
 from sympy.core.mul import prod
-from sympy.core.numbers import igcdex, igcd
+from sympy.core.numbers import igcdex, igcd, mod_inverse
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
@@ -253,3 +253,39 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         if symmetric:
             return symmetric_residue(n, m), m
         return n, m
+
+
+def crt_cartesian(rem, mod):
+    """
+    Crt over a cartesian product of vectors.given a vector of moduli,
+    and for each modulus given a vector of remainders, instead of usual one remainder in crt.
+    It outputs solutions that leave a remainder matching one of the remainders
+    of the vector of remainders corresponding to a modulus.
+    Assuming that moduli are pairwise relatively prime.
+    Examples
+    ========
+    >>> from sympy.ntheory.modular import crt_cartesian
+    >>> crt_cartesian([[3,5], [3,7]], [7, 11])
+    [3, 73, 47, 40]
+    >>> [(p%7, p%11) for p in [3, 40, 47, 73]]
+    [(3, 3), (5, 7), (5, 3), (3, 7)]
+    """
+    if len(mod) > len(rem):
+        raise ValueError("Too few remainders")
+    if len(mod) == 0:
+        raise ValueError("Moduli Vector can't be empty")
+    m = mod[0]
+    R = rem[0]
+    for i in range(1,len(mod)):
+        rem2 = []
+        s = mod_inverse(m, mod[i])
+        _m = m
+        m *= mod[i]
+        for elem in R:
+            for k in rem[i]:
+                r = elem
+                r += _m*s*(k - r)
+                r %= m
+                rem2.append(r)
+        R = rem2
+    return R
