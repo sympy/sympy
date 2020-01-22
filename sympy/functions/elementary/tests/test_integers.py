@@ -562,4 +562,4 @@ def test_nested_floor_ceiling():
     assert -ceiling(-ceiling(floor(x)/y)) == ceiling(floor(x)/y)
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
-    assert ceil(float(0)) is S.Zero
+    assert ceiling(float(0)) is S.Zero
