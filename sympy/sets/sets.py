@@ -915,10 +915,8 @@ class Interval(Set, EvalfMixin):
                 "left_open and right_open can have only true/false values, "
                 "got %s and %s" % (left_open, right_open))
 
-        inftys = [S.Infinity, S.NegativeInfinity]
-        # Only allow real intervals (use symbols with 'is_extended_real=True').
-        if not all(i.is_extended_real is not False or i in inftys
-            for i in (start, end, end - start)):
+        # Only allow real intervals
+        if fuzzy_not(fuzzy_and(i.is_extended_real for i in (start, end, end-start))):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
@@ -1064,17 +1062,12 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(*finite_points)
 
     def _contains(self, other):
-        if (not isinstance(other, Expr) or
-                other is S.Infinity or
-                other is S.NegativeInfinity or
-                other is S.NaN or
-                other is S.ComplexInfinity or
-                other.is_extended_real is False or
-                other.is_real is False):
-            return false
+        if (not isinstance(other, Expr) or other is S.NaN
+            or other.is_real is False):
+                return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
-            if not other.is_real is None:
+            if other.is_real is not None:
                 return other.is_real
 
         d = Dummy()
