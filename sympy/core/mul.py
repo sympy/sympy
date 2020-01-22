@@ -1318,7 +1318,9 @@ class Mul(Expr, AssocOp):
         z = self.is_zero
         if z:
             return False
-        elif z is False:
+        if self.is_finite is False:
+            return False
+        elif z is False and self.is_finite is True:
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
