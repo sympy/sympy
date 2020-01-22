@@ -279,12 +279,11 @@ def crt_cartesian(rem, mod):
             "There should be a list of remainders for each modulus.")
     m = mod[0]
     R = rem[0]
-    for i in range(1,len(mod)):
+    for i in range(1, len(mod)):
         try:
-            mi = mod_inverse(m, mod[i])
+            mi = mod_inverse(m, mod[i])*m
         except ValueError:
             return None  # mod_inverse fails if values are not coprime
-        prev_m = m
         m *= mod[i]
-        R = [(r + prev_m*mi*(ri - r)) % m for r in R for ri in rem[i]]
+        R = [(r + mi*(ri - r)) % m for r in R for ri in rem[i]]
     return R
