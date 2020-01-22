@@ -2,7 +2,7 @@ import numbers as nums
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
-                   TribonacciConstant, cos, exp,
+                   DecimalRational, TribonacciConstant, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr, Dummy, Sum)
@@ -268,7 +268,8 @@ def _strictly_equal(a, b):
 
 def _test_rational_new(cls):
     """
-    Tests that are common between Integer and Rational.
+    Tests that are common between Integer,
+    DecimalRational, and Rational.
     """
     assert cls(0) is S.Zero
     assert cls(1) is S.One
@@ -297,6 +298,15 @@ def test_Integer_new():
     raises(ValueError, lambda: Integer("10.5"))
     assert Integer(Rational('1.' + '9'*20)) == 1
 
+def test_DecimalRational_new():
+    """
+    Test for DecimalRational constructor
+    """
+    _test_rational_new(DecimalRational)
+
+    assert DecimalRational('.5') is not S.Half
+    assert DecimalRational(Float(.75)).__class__ is DecimalRational
+    assert DecimalRational('.75').__class__ is DecimalRational
 
 def test_Rational_new():
     """"

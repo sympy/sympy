@@ -2076,7 +2076,7 @@ class DecimalRational(Rational):
     def __new__(cls, *args):
         obj = super().__new__(cls, *args)
         p, q = obj.p, obj.q
-        if not isinstance(obj, DecimalRational):
+        if isinstance(obj, Half):
             obj = Expr.__new__(cls)
             obj.p = p
             obj.q = q

@@ -644,6 +644,11 @@ def test_sympy__core__numbers__ComplexInfinity():
     assert _test_args(ComplexInfinity())
 
 
+def test_sympy__core__numbers__DecimalRational():
+    from sympy.core.numbers import DecimalRational
+    assert _test_args(DecimalRational(1,7))
+
+
 def test_sympy__core__numbers__EulerGamma():
     from sympy.core.numbers import EulerGamma
     assert _test_args(EulerGamma())
