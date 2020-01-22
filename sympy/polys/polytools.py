@@ -6237,7 +6237,7 @@ def sqf_list(f, *gens, **args):
             cf, sqf_facs = poly.sqf_list()
             for sqf_fac in sqf_facs:
                 facs.append((sqf_fac[0] , e*sqf_fac[1]))
-    facs = _sorted_factors(facs, 'sqf')
+    facs = sorted(facs, key=lambda f: f[1])
     if facs:
         new_facs = [facs[0]]
         fac, exp = facs[0]
