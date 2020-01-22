@@ -1,6 +1,7 @@
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence, \
     crt_cartesian
 from sympy.testing.pytest import raises
+from sympy.utilities.iterables import cartes
 
 
 def test_crt():
