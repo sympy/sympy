@@ -61,3 +61,4 @@ def test_crt_cartesian():
     raises(ValueError, lambda: crt_cartesian(
         [[2, 3], [3, 4]], [4, 5, 6]))
     raises(ValueError, lambda: crt_cartesian([[4, 7], [3, 5]], []))
+    raises(ValueError, lambda: crt_cartesian([[4, 7], []], [9, 11]))
