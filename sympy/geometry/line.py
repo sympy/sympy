@@ -2527,7 +2527,7 @@ class Line3D(LinearEntity3D, Line):
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
     def bisection(self, line):
-        """Returns the line which is the bisection between the self line and another one.
+        """Returns the lines which are the bisections between the self line and another one.
 
         Parameters
         ==========
@@ -2542,27 +2542,32 @@ class Line3D(LinearEntity3D, Line):
         Examples
         ========
 
-        >>> from sympy import Point3D, Line3D
-        >>> r1 = Line3D(Point3D(0, 0, 0), direction_ratio=[1, 1, 1])
-        >>> r2 = Line3D(Point3D(2, 0, 0), direction_ratio=[-1, 1, 1])
-        >>> r3 = r1.bisection(r2); r3
-        Line3D(Point3D(1, 1, 1), Point3D(1, 2, 2))
+        >>> # TODO
 
         """
-        d1 = self.direction_ratio
-        d2 = line.direction_ratio
 
-        d3 = [(d1[i]+d2[i])/2 for i in range(3)]
+        p = intersection(self, line)
 
-        point = self.intersection(line)
-        if point:
-            if isinstance(point[0], Point3D):
-                return Line3D(point[0], direction_ratio=[*d3])
-            else:
-                # Lines are equal, the bisection the own line
-                return self
+        if not p:
+            return GeometryError("The lines do not intersect")
         else:
-            return GeometryError("The lines don't have any common point")
+            if not isinstance(p[0], Point3D):
+                # Intersection is a line because both lines are coincident
+                return [self]
+
+        # Normalize direction vectors:
+        def normalize(vector: list):
+            length = (vector[0]**2 + vector[1]**2 + vector[2]**2)**0.5
+            vector = [i/length for i in vector]
+            return vector
+
+        d1 = normalize(self.direction_ratio)
+        d2 = normalize(line.direction_ratio)
+
+        bis1 = Line3D(p[0], direction_ratio=[d1[i]+d2[i] for i in range(3)])
+        bis2 = Line3D(p[0], direction_ratio=[d1[i]-d2[i] for i in range(3)])
+
+        return [bis1, bis2]
 
 
 class Ray3D(LinearEntity3D, Ray):
