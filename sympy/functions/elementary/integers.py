@@ -20,10 +20,11 @@ class RoundFunction(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
-        from sympy import im
+
         if arg.is_integer or arg.is_finite is False:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
