@@ -25,7 +25,7 @@ def symmetric_residue(a, m):
 def crt(m, v, symmetric=False, check=True):
     r"""Chinese Remainder Theorem.
 
-    The moduli in m are assumed to be pairwise coprime.  The output
+    The moduli in m are assumed to be pairwise co-prime.  The output
     is then an integer f, such that f = v_i mod m_i for each pair out
     of v and m. If ``symmetric`` is False a positive integer will be
     returned, else \|f\| will be less than or equal to the LCM of the
@@ -36,7 +36,7 @@ def crt(m, v, symmetric=False, check=True):
     will be None if there is no solution.
 
     The keyword ``check`` can be set to False if it is known that the moduli
-    are coprime.
+    are co-prime.
 
     Examples
     ========
@@ -55,6 +55,11 @@ def crt(m, v, symmetric=False, check=True):
        [49, 76, 65]
 
     If the moduli are not co-prime, you will receive a ValueError.
+
+       >>> crt([12, 6, 17], [3, 4, 2])
+       Traceback (most recent call last):
+       ...
+       ValueError: All the moduli should be co-prime with one another
 
     Note: the order of gf_crt's arguments is reversed relative to crt,
     and that solve_congruence takes residue, modulus pairs.
@@ -274,7 +279,7 @@ def crt_cartesian(rem, mod):
     m = mod[0]
     R = rem[0]
     for i in range(1, len(mod)):
-        mi = mod_inverse(m, mod[i])*m
+        mi = mod_inverse(m, mod[i])*m  # fails if `mod` not pairwise-prime
         m *= mod[i]
         R = [(r + mi*(ri - r)) % m for r in R for ri in rem[i]]
     return R
