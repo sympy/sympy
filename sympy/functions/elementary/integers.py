@@ -20,6 +20,10 @@ class RoundFunction(Function):
 
     @classmethod
     def eval(cls, arg):
+
+        if arg == 0.0:
+            return S.Zero
+
         from sympy import im
         if arg.is_integer or arg.is_finite is False:
             return arg
