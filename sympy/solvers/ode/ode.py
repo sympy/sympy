@@ -36,7 +36,7 @@ specific hint.  See also the docstring on
       simplification.
     - :py:meth:`~sympy.solvers.ode.ode.ode_sol_simplicity` - A key function for
       comparing solutions by simplicity.
-    - :py:meth:`~sympy.solvers.ode.ode.constantsimp` - Simplifies arbitrary
+    - :py:meth:`~sympy.solvers.ode.constantsimp` - Simplifies arbitrary
       constants.
     - :py:meth:`~sympy.solvers.ode.ode.constant_renumber` - Renumber arbitrary
       constants.
@@ -197,7 +197,7 @@ have many :obj:`~sympy.functions.elementary.exponential.log` terms, so
 :py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write
 the arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
 consider common ways that you can rearrange your solution to have
-:py:meth:`~sympy.solvers.ode.ode.constantsimp` take better advantage of it.  It is
+:py:meth:`~sympy.solvers.ode.constantsimp` take better advantage of it.  It is
 better to put simplification in :py:meth:`~sympy.solvers.ode.ode.odesimp` than in
 your method, because it can then be turned off with the simplify flag in
 :py:meth:`~sympy.solvers.ode.dsolve`.  If you have any extraneous
@@ -2514,7 +2514,7 @@ def checksysodesol(eqs, sols, func=None):
 def odesimp(ode, eq, func, hint):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
-    running :py:meth:`~sympy.solvers.ode.ode.constantsimp`.
+    running :py:meth:`~sympy.solvers.ode.constantsimp`.
 
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
@@ -3266,7 +3266,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     produce different results on different machines.
 
     The structure of this function is very similar to that of
-    :py:meth:`~sympy.solvers.ode.ode.constantsimp`.
+    :py:meth:`~sympy.solvers.ode.constantsimp`.
 
     Examples
     ========

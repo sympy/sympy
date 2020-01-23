@@ -37,6 +37,10 @@ checkinfsol
 ^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.checkinfsol
 
+constantsimp
+^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.constantsimp
+
 Hint Functions
 --------------
 These functions are intended for internal use by
@@ -57,10 +61,6 @@ odesimp
 constant_renumber
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode.constant_renumber
-
-constantsimp
-^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.constantsimp
 
 sol_simplicity
 ^^^^^^^^^^^^^^
