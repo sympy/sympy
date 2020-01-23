@@ -19,6 +19,9 @@ def test_crt():
     assert crt([656, 350], [811, 133], symmetric=True) == (
         -56917, 114800)
 
+    raises(ValueError, lambda: crt(
+        [20, 2, 5], [1, 1, 2]))
+
 
 def test_modular():
     assert solve_congruence(*list(zip([3, 4, 2], [12, 35, 17]))
@@ -58,7 +61,8 @@ def test_crt_cartesian():
         [887, 579, 614, 306, 458, 150, 185, 878])
     check([[11, 51], [54, 72], [16, 38]], [67, 79, 43],
         [196053, 111365, 129790, 45102, 189259, 104571, 122996, 38308])
-    assert crt_cartesian([[4, 2], [5, 7], [1, 3]], [6, 11, 14]) is None
+    raises(ValueError, lambda : crt_cartesian(
+        [[4, 2], [5, 7], [1, 3]], [6, 11, 14]))
     raises(ValueError, lambda: crt_cartesian(
         [[2, 3], [3, 4]], [4, 5, 6]))
     raises(ValueError, lambda: crt_cartesian([[4, 7], [3, 5]], []))

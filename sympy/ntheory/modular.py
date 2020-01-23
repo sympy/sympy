@@ -54,17 +54,7 @@ def crt(m, v, symmetric=False, check=True):
        >>> [639985 % m for m in [99, 97, 95]]
        [49, 76, 65]
 
-    If the moduli are not co-prime, you may receive an incorrect result
-    if you use ``check=False``:
-
-       >>> crt([12, 6, 17], [3, 4, 2], check=False)
-       (954, 1224)
-       >>> [954 % m for m in [12, 6, 17]]
-       [6, 0, 2]
-       >>> crt([12, 6, 17], [3, 4, 2]) is None
-       True
-       >>> crt([3, 6], [2, 5])
-       (5, 6)
+    If the moduli are not co-prime, you will receive a ValueError.
 
     Note: the order of gf_crt's arguments is reversed relative to crt,
     and that solve_congruence takes residue, modulus pairs.
@@ -92,7 +82,8 @@ def crt(m, v, symmetric=False, check=True):
             result = solve_congruence(*list(zip(v, m)),
                     check=False, symmetric=symmetric)
             if result is None:
-                return result
+                raise ValueError(
+                    "All the moduli should be co-prime with one another")
             result, mm = result
 
     if symmetric:
@@ -259,8 +250,8 @@ def crt_cartesian(rem, mod):
     """
     Return a list of values whose elements give the remainders
     in the Cartesian product of the supplied remainders when divided
-    by each of the supplied moduli. None is returned if the moduli
-    are not pairwise-prime.
+    by each of the supplied moduli. If the moduli are not co-prime,
+    you will receive a ValueError.
 
     Examples
     ========
@@ -269,7 +260,7 @@ def crt_cartesian(rem, mod):
     >>> from sympy.utilities.iterables import cartes
     >>> rem = [[3, 5], [3, 7]]
     >>> crt_cartesian(rem, [7, 11])
-     [3, 73, 47, 40]
+    [3, 73, 47, 40]
     >>> [(p%7, p%11) for p in _]
     [(3, 3), (3, 7), (5, 3), (5, 7)]
     >>> assert _ == list(cartes(*rem))
@@ -283,10 +274,7 @@ def crt_cartesian(rem, mod):
     m = mod[0]
     R = rem[0]
     for i in range(1, len(mod)):
-        try:
-            mi = mod_inverse(m, mod[i])*m
-        except ValueError:
-            return None  # mod_inverse fails if values are not coprime
+        mi = mod_inverse(m, mod[i])*m
         m *= mod[i]
         R = [(r + mi*(ri - r)) % m for r in R for ri in rem[i]]
     return R
