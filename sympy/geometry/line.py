@@ -38,7 +38,7 @@ from sympy.solvers.solveset import linear_coeffs
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
-from sympy import intersection
+
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -2527,7 +2527,7 @@ class Line3D(LinearEntity3D, Line):
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
-    def bisection(self, line):
+    def bisector(self, line):
         """Returns the lines which are the bisections between the self line and another one.
 
         Parameters
@@ -2547,7 +2547,7 @@ class Line3D(LinearEntity3D, Line):
 
         """
 
-        p = intersection(self, line)
+        p = Intersection(self, line)
 
         if not p:
             return GeometryError("The lines do not intersect")
