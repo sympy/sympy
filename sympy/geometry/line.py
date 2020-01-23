@@ -38,6 +38,7 @@ from sympy.solvers.solveset import linear_coeffs
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
+from sympy import intersection
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
