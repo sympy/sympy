@@ -2606,6 +2606,9 @@ class _MinimalMatrix(object):
     def shape(self):
         return (self.rows, self.cols)
 
+    def as_immutable(self): # this is needed here ONLY FOR TESTS.
+        return self
+
 
 class _MatrixWrapper(object):
     """Wrapper class providing the minimum functionality for a matrix-like
