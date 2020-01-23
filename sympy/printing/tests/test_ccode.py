@@ -302,7 +302,6 @@ def test_ccode_Indexed():
     assert p._print_Indexed(x) == 'x[j]'
     assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
     assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
-    # assert p._not_c == set()
 
     A = IndexedBase('A', shape=(5,3))[i, j]
     assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
