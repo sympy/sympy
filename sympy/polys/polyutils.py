@@ -7,7 +7,7 @@ from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
 from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
-from sympy.core.numbers import ImaginaryUnit
+
 
 import re
 
@@ -228,7 +228,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     return polys, opt.gens
 
 
-def _parallel_dict_from_expr_no_gens(exprs, opt, expression=None):
+def _parallel_dict_from_expr_no_gens(exprs, opt):
     """Transform expressions into a multinomial form and figure out generators. """
     if opt.domain is not None:
         def _is_coeff(factor):
@@ -244,7 +244,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt, expression=None):
             return factor.is_number
 
     gens, reprs = set([]), []
-    terms = []
+
     for expr in exprs:
         terms = []
 
@@ -272,23 +272,6 @@ def _parallel_dict_from_expr_no_gens(exprs, opt, expression=None):
             terms.append((coeff, elements))
 
         reprs.append(terms)
-
-    imag_in_num, imag_in_denom = False, False
-    if not expression is None:
-        # is_complex returns complex_in_num = True if numerator is complex
-        # and complex_in_denom = True if denominator is complex
-        imag_in_num, imag_in_denom = has_imaginary(expression)
-    I = ImaginaryUnit()
-
-    # if expression is imaginary but gens is empty then add I in gens
-    if not I in gens and len(gens) == 0 and (imag_in_num or imag_in_denom):
-        gens.add(I)
-        imaginary_term = ([0], {I: 0})
-
-        if imag_in_num:
-            reprs[0].append(imaginary_term)
-        if imag_in_denom:
-            reprs[1].append(imaginary_term)
 
     gens = _sort_gens(gens, opt=opt)
     k, indices = len(gens), {}
@@ -337,7 +320,7 @@ def parallel_dict_from_expr(exprs, **args):
     return reps, opt.gens
 
 
-def _parallel_dict_from_expr(exprs, opt, expression=None):
+def _parallel_dict_from_expr(exprs, opt):
     """Transform expressions into a multinomial form. """
     if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
@@ -348,7 +331,7 @@ def _parallel_dict_from_expr(exprs, opt, expression=None):
     if opt.gens:
         reps, gens = _parallel_dict_from_expr_if_gens(exprs, opt)
     else:
-        reps, gens = _parallel_dict_from_expr_no_gens(exprs, opt, expression)
+        reps, gens = _parallel_dict_from_expr_no_gens(exprs, opt)
 
     return reps, opt.clone({'gens': gens})
 
@@ -437,28 +420,6 @@ def _dict_reorder(rep, gens, new_gens):
 
     return map(tuple, new_monoms), coeffs
 
-def has_imaginary(exprs):
-    """Checks whether the numerator, denominator of an expression has Imaginary Unit"""
-    has_imag_in_num_denom = [False, False]
-    I = ImaginaryUnit()
-    if len(exprs):
-        try:
-            has_I = (exprs[0]).has(I)
-        except AttributeError:
-            has_I = False
-        else:
-            if has_I:
-                has_imag_in_num_denom[0] = True
-    if len(exprs) > 1:
-        try:
-            has_I = (exprs[1]).has(I)
-        except AttributeError:
-            has_I = False
-        else:
-            if has_I:
-                has_imag_in_num_denom[1] = True
-
-    return has_imag_in_num_denom
 
 class PicklableWithSlots(object):
     """

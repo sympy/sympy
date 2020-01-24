@@ -4314,7 +4314,6 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
     from sympy.functions.elementary.piecewise import Piecewise
-    expression = exprs
 
     if len(exprs) == 2:
         f, g = exprs
@@ -4362,7 +4361,7 @@ def _parallel_poly_from_expr(exprs, opt):
         for i in _polys:
             exprs[i] = exprs[i].as_expr()
 
-    reps, opt = _parallel_dict_from_expr(exprs, opt, expression)
+    reps, opt = _parallel_dict_from_expr(exprs, opt)
     if not opt.gens:
         raise PolificationFailed(opt, origs, exprs, True)
 
