@@ -6625,7 +6625,7 @@ def cancel(f, *gens, **args):
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
         if not isinstance(f, (tuple, Tuple)):
-            return f
+            return f.expand()
         else:
             return S.One, p, q
     except PolynomialError as msg:
