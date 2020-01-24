@@ -295,12 +295,12 @@ def crt_cartesian(rem, mod):
     >>> from sympy.ntheory.modular import crt_cartesian
     >>> from sympy.utilities.iterables import cartes
 
-    >>> rem = [[3, 5], [3, 7]]
-    >>> crt_cartesian(rem, [7, 11])
-    [3, 73, 47, 40]
+    >>> rem = [[1, 3], [2, 4]]
+    >>> crt_cartesian(rem, [5, 7])
+    [16, 11, 23, 18]
 
-    >>> [(p%7, p%11) for p in _]
-    [(3, 3), (3, 7), (5, 3), (5, 7)]
+    >>> [(p%5, p%7) for p in _]
+    [(1, 2), (1, 4), (3, 2), (3, 4)]
 
     """
     if len(mod) == 0:
