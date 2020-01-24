@@ -2588,7 +2588,7 @@ def Moyal(name, mu, sigma):
 
     >>> from sympy.stats import Moyal, density, cdf
     >>> from sympy import Symbol
-    >>> mu = Symbols("mu", real=True)
+    >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True, real=True)
     >>> z = Symbol("z")
     >>> X = Moyal("x", mu, sigma)
