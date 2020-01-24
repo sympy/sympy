@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Moyal,Nakagami, Normal, GaussianInverse,
+                         LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
@@ -870,10 +870,10 @@ def test_Moyal():
 
     M = Moyal('M', 1, 2)
     assert E(M) == 1 + 2*EulerGamma + 2*log(2)
-    assert variance(M).simplify()==4 * polygamma(1,Rational(1, 2))
-    assert kurtosis(M).simplify()==3 + polygamma(3, Rational(1, 2)) \
+    assert variance(M).simplify() == 4 * polygamma(1,Rational(1, 2))
+    assert kurtosis(M).simplify() == 3 + polygamma(3, Rational(1, 2)) \
                         /polygamma(1, Rational(1, 2))**2
-    assert skewness(M).simplify()== -polygamma(2, Rational(1, 2)) \
+    assert skewness(M).simplify() == -polygamma(2, Rational(1, 2)) \
                         /polygamma(1, Rational(1, 2))**Rational(3, 2)
 
 def test_nakagami():
