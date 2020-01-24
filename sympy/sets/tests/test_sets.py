@@ -118,6 +118,7 @@ def test_interval_arguments():
     assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
     raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
+    raises(ValueError, lambda: Interval(x, x + S.ImaginaryUnit))
 
     raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
@@ -826,6 +827,11 @@ def test_interval_symbolic():
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
     assert e.contains(x) == And(S.Zero < x, x < 1)
+    c = Symbol('c', real=False)
+    assert Interval(x, x + 1).contains(c) == False
+    e = Symbol('e', extended_real=True)
+    assert Interval(-oo, oo).contains(e) == And(
+        S.NegativeInfinity < e, e < S.Infinity)
 
 
 def test_union_contains():
