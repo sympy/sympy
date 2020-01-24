@@ -36,7 +36,7 @@ def crt(m, v, symmetric=False, check=True):
     then the wrong result will be obtained.
 
     Parameters
-    =========
+    ==========
 
     m: 1D list
         List of moduli.
