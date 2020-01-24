@@ -281,7 +281,7 @@ def crt_cartesian(rem, mod):
     you will receive a ValueError.
 
     Parameters
-    =========
+    ==========
 
     rem: 2D list
         Consists of list of lists whose cartesian product gives
