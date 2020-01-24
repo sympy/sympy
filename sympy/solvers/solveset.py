@@ -707,7 +707,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                     for s in result]):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
-        if isinstance(result, FiniteSet):
+        if isinstance(result, FiniteSet) and domain != S.Complexes:
+            # Avoid adding gratuitous intersections with S.Complexes. Actual
+            # conditions should be handled elsewhere.
             result = result.intersection(domain)
         return result
     else:
