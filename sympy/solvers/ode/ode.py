@@ -231,8 +231,6 @@ of those tests will surely fail.
 """
 from __future__ import print_function, division
 
-from typing import Dict, Type
-
 from collections import defaultdict
 from itertools import islice
 
@@ -273,6 +271,9 @@ from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+
+from .single import NthAlgebraic, SingleODEProblem, SingleODESolver
+
 
 #: This is a list of hints in the order that they should be preferred by
 #: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
@@ -688,13 +689,16 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
     r = match
-    if hint.endswith('_Integral'):
-        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
-    else:
-        solvefunc = globals()['ode_' + hint]
     func = r['func']
     order = r['order']
     match = r[hint]
+
+    if isinstance(match, SingleODESolver):
+        solvefunc = match
+    elif hint.endswith('_Integral'):
+        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
+    else:
+        solvefunc = globals()['ode_' + hint]
 
     free = eq.free_symbols
     cons = lambda s: s.free_symbols.difference(free)
@@ -703,15 +707,21 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
         # simplifications
-        sols = solvefunc(eq, func, order, match)
+        if isinstance(solvefunc, SingleODESolver):
+            sols = solvefunc.get_general_solution()
+        else:
+            sols = solvefunc(eq, func, order, match)
         if iterable(sols):
             rv = [odesimp(eq, s, func, hint) for s in sols]
         else:
             rv =  odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
-        match['simplify'] = False  # Some hints can take advantage of this option
-        exprs = solvefunc(eq, func, order, match)
+        if isinstance(solvefunc, SingleODESolver):
+            exprs = solvefunc.get_general_solution(simplify=False)
+        else:
+            match['simplify'] = False  # Some hints can take advantage of this option
+            exprs = solvefunc(eq, func, order, match)
         if isinstance(exprs, list):
             rv = [_handle_Integral(expr, func, hint) for expr in exprs]
         else:
@@ -1065,10 +1075,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
     # d^3/dx^3(x y) = F(x)
-    r = _nth_algebraic_match(eq_orig, func)
-    if r['solutions']:
-        matching_hints['nth_algebraic'] = r
-        matching_hints['nth_algebraic_Integral'] = r
+    ode = SingleODEProblem(eq_orig, func, x)
+    solver = NthAlgebraic(ode)
+    if solver.matches():
+        matching_hints['nth_algebraic'] = solver
+        matching_hints['nth_algebraic_Integral'] = solver
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
@@ -4570,103 +4581,6 @@ def ode_nth_order_reducible(eq, func, order, match):
 
     return fsol
 
-# This needs to produce an invertible function but the inverse depends
-# which variable we are integrating with respect to. Since the class can
-# be stored in cached results we need to ensure that we always get the
-# same class back for each particular integration variable so we store these
-# classes in a global dict:
-_nth_algebraic_diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
-
-def _nth_algebraic_diffx(var):
-    cls = _nth_algebraic_diffx_stored.get(var, None)
-
-    if cls is None:
-        # A class that behaves like Derivative wrt var but is "invertible".
-        class diffx(Function):
-            def inverse(self):
-                # don't use integrate here because fx has been replaced by _t
-                # in the equation; integrals will not be correct while solve
-                # is at work.
-                return lambda expr: Integral(expr, var) + Dummy('C')
-
-        cls = _nth_algebraic_diffx_stored.setdefault(var, diffx)
-
-    return cls
-
-def _nth_algebraic_match(eq, func):
-    r"""
-    Matches any differential equation that nth_algebraic can solve. Uses
-    `sympy.solve` but teaches it how to integrate derivatives.
-
-    This involves calling `sympy.solve` and does most of the work of finding a
-    solution (apart from evaluating the integrals).
-    """
-
-    # The independent variable
-    var = func.args[0]
-
-    # Derivative that solve can handle:
-    diffx = _nth_algebraic_diffx(var)
-
-    # Replace derivatives wrt the independent variable with diffx
-    def replace(eq, var):
-        def expand_diffx(*args):
-            differand, diffs = args[0], args[1:]
-            toreplace = differand
-            for v, n in diffs:
-                for _ in range(n):
-                    if v == var:
-                        toreplace = diffx(toreplace)
-                    else:
-                        toreplace = Derivative(toreplace, v)
-            return toreplace
-        return eq.replace(Derivative, expand_diffx)
-
-    # Restore derivatives in solution afterwards
-    def unreplace(eq, var):
-        return eq.replace(diffx, lambda e: Derivative(e, var))
-
-    subs_eqn = replace(eq, var)
-    try:
-        # turn off simplification to protect Integrals that have
-        # _t instead of fx in them and would otherwise factor
-        # as t_*Integral(1, x)
-        solns = solve(subs_eqn, func, simplify=False)
-    except NotImplementedError:
-        solns = []
-
-    solns = [simplify(unreplace(soln, var)) for soln in solns]
-    solns = [Equality(func, soln) for soln in solns]
-    return {'var':var, 'solutions':solns}
-
-def ode_nth_algebraic(eq, func, order, match):
-    r"""
-    Solves an `n`\th order ordinary differential equation using algebra and
-    integrals.
-
-    There is no general form for the kind of equation that this can solve. The
-    the equation is solved algebraically treating differentiation as an
-    invertible algebraic function.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
-    >>> dsolve(eq, f(x), hint='nth_algebraic')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
-
-    Note that this solver can return algebraic solutions that do not have any
-    integration constants (f(x) = 0 in the above example).
-
-    # indirect doctest
-
-    """
-
-    return match['solutions']
 
 def _remove_redundant_solutions(eq, solns, order, var):
     r"""
