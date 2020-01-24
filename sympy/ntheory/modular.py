@@ -35,6 +35,22 @@ def crt(m, v, symmetric=False, check=True):
     are co-prime. If it is set to False but the moduli are not co-prime
     then the wrong result will be obtained.
 
+    Parameters
+    =========
+
+    m: 1D list
+        List of moduli.
+    v: 1D list
+        List of remainders.
+    symmetric: bool, optional
+        If true, then the output will be within half of the modulus,
+        otherwise returns the output as it is if false. Default value
+        is False.
+    check: bool, optional
+        If true, the function checks if all the moduli are co-prime or
+        not and raises a ValueError exception if they aren't. If false,
+        then there is no checking involved. Default value is True.
+
     Examples
     ========
 
@@ -264,17 +280,27 @@ def crt_cartesian(rem, mod):
     by each of the supplied moduli. If the moduli are not co-prime,
     you will receive a ValueError.
 
+    Parameters
+    =========
+
+    rem: 2D list
+        Consists of list of lists whose cartesian product gives
+        us the remainders.
+    mod: 1D list
+        List of moduli.
+
     Examples
     ========
 
     >>> from sympy.ntheory.modular import crt_cartesian
     >>> from sympy.utilities.iterables import cartes
+
     >>> rem = [[3, 5], [3, 7]]
     >>> crt_cartesian(rem, [7, 11])
     [3, 73, 47, 40]
+
     >>> [(p%7, p%11) for p in _]
     [(3, 3), (3, 7), (5, 3), (5, 7)]
-    >>> assert _ == list(cartes(*rem))
 
     """
     if len(mod) == 0:
