@@ -235,17 +235,38 @@ class MatrixReductions(MatrixDeterminant):
                "n->n+km"
         """
 
+        def _eval_col_op_multiply_col_by_const(self, col, k):
+            def entry(i, j):
+                if j == col:
+                    return k * self[i, j]
+                return self[i, j]
+            return self._new(self.rows, self.cols, entry)
+
+        def _eval_col_op_swap(self, col1, col2):
+            def entry(i, j):
+                if j == col1:
+                    return self[i, col2]
+                elif j == col2:
+                    return self[i, col1]
+                return self[i, j]
+            return self._new(self.rows, self.cols, entry)
+
+        def _eval_col_op_add_multiple_to_other_col(self, col, k, col2):
+            def entry(i, j):
+                if j == col:
+                    return self[i, j] + k * self[i, col2]
+                return self[i, j]
+            return self._new(self.rows, self.cols, entry)
+
         op, col, k, col1, col2 = self._normalize_op_args(op, col, k, col1, col2, "col")
 
-        entry = {
-            "n->kn": lambda i, j: k * self[i, j] if j == col else self[i, j],
-            "n<->m": lambda i, j: self[i, col2] if j == col1 else self[i, col1] \
-                    if j == col2 else self[i, j],
-            "n->n+km": lambda i, j: self[i, j] + k * self[i, col2] if j == col \
-                    else self [i, j]
-        }
-
-        return self._new(self.rows, self.cols, entry[op])
+        # now that we've validated, we're all good to dispatch
+        if op == "n->kn":
+            return _eval_col_op_multiply_col_by_const(self, col, k)
+        if op == "n<->m":
+            return _eval_col_op_swap(self, col1, col2)
+        if op == "n->n+km":
+            return _eval_col_op_add_multiple_to_other_col(self, col, k, col2)
 
     def elementary_row_op(self, op="n->kn", row=None, k=None, row1=None, row2=None):
         """Performs the elementary row operation `op`.
@@ -267,17 +288,38 @@ class MatrixReductions(MatrixDeterminant):
                "n->n+km"
         """
 
+        def _eval_row_op_swap(self, row1, row2):
+            def entry(i, j):
+                if i == row1:
+                    return self[row2, j]
+                elif i == row2:
+                    return self[row1, j]
+                return self[i, j]
+            return self._new(self.rows, self.cols, entry)
+
+        def _eval_row_op_multiply_row_by_const(self, row, k):
+            def entry(i, j):
+                if i == row:
+                    return k * self[i, j]
+                return self[i, j]
+            return self._new(self.rows, self.cols, entry)
+
+        def _eval_row_op_add_multiple_to_other_row(self, row, k, row2):
+            def entry(i, j):
+                if i == row:
+                    return self[i, j] + k * self[row2, j]
+                return self[i, j]
+            return self._new(self.rows, self.cols, entry)
+
         op, row, k, row1, row2 = self._normalize_op_args(op, row, k, row1, row2, "row")
 
-        entry = {
-            "n->kn": lambda i, j: k * self[i, j] if i == row else self[i, j],
-            "n<->m": lambda i, j: self[row2, j] if i == row1 else self[row1, j] \
-                    if i == row2 else self[i, j],
-            "n->n+km": lambda i, j: self[i, j] + k * self[row2, j] if i == row \
-                    else self [i, j]
-        }
-
-        return self._new(self.rows, self.cols, entry[op])
+        # now that we've validated, we're all good to dispatch
+        if op == "n->kn":
+            return _eval_row_op_multiply_row_by_const(self, row, k)
+        if op == "n<->m":
+            return _eval_row_op_swap(self, row1, row2)
+        if op == "n->n+km":
+            return _eval_row_op_add_multiple_to_other_row(self, row, k, row2)
 
 
 class MatrixSubspaces(MatrixReductions):
