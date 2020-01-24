@@ -31,12 +31,9 @@ def crt(m, v, symmetric=False, check=True):
     returned, else \|f\| will be less than or equal to the LCM of the
     moduli, and thus f may be negative.
 
-    If the moduli are not co-prime the correct result will be returned
-    if/when the test of the result is found to be incorrect. This result
-    will be None if there is no solution.
-
     The keyword ``check`` can be set to False if it is known that the moduli
-    are co-prime.
+    are co-prime. If it is set to False but the moduli are not co-prime
+    then the wrong result will be obtained.
 
     Examples
     ========
@@ -60,6 +57,15 @@ def crt(m, v, symmetric=False, check=True):
        Traceback (most recent call last):
        ...
        ValueError: All the moduli should be co-prime with one another
+
+    If you are sure the moduli are co-prime then it is safe to set
+    ``check=False``. But if the moduli are actually not co-prime
+    then the wrong result will be obtained:
+
+        >>> crt([12, 6, 17], [3, 4, 2], check=False)
+        (954, 1224)
+        >>> [954 % m for m in [12, 6, 17]]
+        [6, 0, 2]
 
     Note: the order of gf_crt's arguments is reversed relative to crt,
     and that solve_congruence takes residue, modulus pairs.
