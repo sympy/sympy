@@ -1338,8 +1338,9 @@ class AccumulationBounds(AtomicExpr):
                                 return AccumBounds(0, real_root(self.max, den))
                     return AccumBounds(real_root(self.min, den),
                                        real_root(self.max, den))
-                num_pow = self**num
-                return num_pow**(1 / den)
+                if den!=1:
+                    num_pow = self**num
+                    return num_pow**(1 / den)
             return Pow(self, other, evaluate=False)
 
         return NotImplemented
