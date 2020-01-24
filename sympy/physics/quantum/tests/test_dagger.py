@@ -52,7 +52,7 @@ def test_numpy_dagger():
     assert (Dagger(a) == adag).all()
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_scipy_sparse_dagger():

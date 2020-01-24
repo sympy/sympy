@@ -49,7 +49,6 @@ from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
-from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
 from sympy.series.formal import fps
 from sympy.series.fourier import fourier_series
@@ -938,13 +937,12 @@ def test_M14():
 
 @nocache_fail
 def test_M15():
-    if PY3:
-        n = Dummy('n')
-        # This test fails when running with the cache off:
-        assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                               ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
-                                               Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
-                                               ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+    n = Dummy('n')
+    # This test fails when running with the cache off:
+    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+                                           ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
+                                           Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
+                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
 
 
 @XFAIL

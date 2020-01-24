@@ -10,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import reduce, range
+from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
 
@@ -90,7 +90,7 @@ def _unevaluated_Mul(*args):
 
 class Mul(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Mul = True
 
@@ -1318,7 +1318,9 @@ class Mul(Expr, AssocOp):
         z = self.is_zero
         if z:
             return False
-        elif z is False:
+        if self.is_finite is False:
+            return False
+        elif z is False and self.is_finite is True:
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
@@ -1375,7 +1377,8 @@ class Mul(Expr, AssocOp):
                 return
             if a is None:
                 return
-        return False
+        if all(x.is_real for x in self.args):
+            return False
 
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it

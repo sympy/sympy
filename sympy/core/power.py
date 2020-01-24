@@ -10,7 +10,7 @@ from .evalf import PrecisionExhausted
 from .function import (_coeff_isneg, expand_complex, expand_multinomial,
     expand_mul)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
-from .compatibility import as_int, range
+from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 
@@ -71,6 +71,18 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
+    if HAS_GMPY and n < 2**63:
+        # Currently it works only for n < 2**63, else it produces TypeError
+        # sympy issue: https://github.com/sympy/sympy/issues/18374
+        # gmpy2 issue: https://github.com/aleaxit/gmpy/issues/257
+        if HAS_GMPY >= 2:
+            x, t = gmpy.iroot(y, n)
+        else:
+            x, t = gmpy.root(y, n)
+        return as_int(x), bool(t)
+    return _integer_nthroot_python(y, n)
+
+def _integer_nthroot_python(y, n):
     if y in (0, 1):
         return y, True
     if n == 1:
@@ -252,7 +264,7 @@ class Pow(Expr):
     """
     is_Pow = True
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -1558,7 +1570,7 @@ class Pow(Expr):
 
             nuse = n - ei
 
-            if e.is_extended_real and e.is_positive:
+            if e.is_real:
                 lt = b.as_leading_term(x)
 
                 # Try to correct nuse (= m) guess from:

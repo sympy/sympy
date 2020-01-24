@@ -13,7 +13,6 @@ from sympy.physics.secondquant import (
 from sympy import (Dummy, expand, Function, I, S, simplify, sqrt, Sum,
                    Symbol, symbols, srepr, Rational)
 
-from sympy.core.compatibility import range
 from sympy.testing.pytest import slow, raises
 from sympy.printing.latex import latex
 

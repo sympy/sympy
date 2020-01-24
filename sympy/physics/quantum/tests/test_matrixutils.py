@@ -6,7 +6,6 @@ from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
     matrix_to_zero, matrix_zeros, numpy_ndarray, scipy_sparse_matrix
 )
-from sympy.core.compatibility import range
 
 from sympy.external import import_module
 from sympy.testing.pytest import skip
@@ -98,7 +97,7 @@ def test_matrix_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_to_scipy_sparse():

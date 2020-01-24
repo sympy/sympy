@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import as_int, is_sequence, range
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
@@ -559,7 +559,8 @@ def classify_diop(eq, _dict=True):
         diop_classify().'''))
 
 
-classify_diop.func_doc = '''
+classify_diop.func_doc = (  # type: ignore
+    '''
     Helper routine used by diop_solve() to find information about ``eq``.
 
     Returns a tuple containing the type of the diophantine equation
@@ -594,7 +595,7 @@ classify_diop.func_doc = '''
     ([x, y, z], {1: 5, x: 1, y: 3, z: -4}, 'linear')
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y**2: 1, x*y: -1}, 'binary_quadratic')
-    ''' % ('\n    * '.join(sorted(diop_known)))
+    ''' % ('\n    * '.join(sorted(diop_known))))
 
 
 def diop_linear(eq, param=symbols("t", integer=True)):

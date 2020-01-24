@@ -15,7 +15,6 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.logic.boolalg import And, Or
 
@@ -31,7 +30,7 @@ def _minmax_as_Piecewise(op, *args):
     return Piecewise(*ec)
 
 
-class IdentityFunction(with_metaclass(Singleton, Lambda)):
+class IdentityFunction(Lambda, metaclass=Singleton):
     """
     The identity function
 
@@ -58,12 +57,15 @@ Id = S.IdentityFunction
 
 
 def sqrt(arg, evaluate=None):
-    """The square root function
+    """Returns the principal square root.
 
-    sqrt(x) -> Returns the principal square root of x.
+    Parameters
+    ==========
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -129,11 +131,15 @@ def sqrt(arg, evaluate=None):
 
 
 def cbrt(arg, evaluate=None):
-    """This function computes the principal cube root of `arg`, so
-    it's just a shortcut for `arg**Rational(1, 3)`.
+    """Returns the principal cube root.
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate.
+    Parameters
+    ==========
+
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -182,11 +188,19 @@ def cbrt(arg, evaluate=None):
 
 
 def root(arg, n, k=0, evaluate=None):
-    """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
-    principal root (k=0).
+    r"""Returns the *k*-th *n*-th root of ``arg``.
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate.
+    Parameters
+    ==========
+
+    k : int, optional
+        Should be an integer in $\{0, 1, ..., n-1\}$.
+        Defaults to the principal root if $0$.
+
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -274,13 +288,22 @@ def root(arg, n, k=0, evaluate=None):
 
 
 def real_root(arg, n=None, evaluate=None):
-    """Return the real nth-root of arg if possible. If n is omitted then
-    all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
-    will only create a real root of a principal root -- the presence of
-    other factors may cause the result to not be real.
+    """Return the real *n*'th-root of *arg* if possible.
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate.
+    Parameters
+    ==========
+
+    n : int or None, optional
+        If *n* is ``None``, then all instances of
+        ``(-n)**(1/odd)`` will be changed to ``-n**(1/odd)``.
+        This will only create a real root of a principal root.
+        The presence of other factors may cause the result to not be
+        real.
+
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -302,7 +325,6 @@ def real_root(arg, n=None, evaluate=None):
     -2*(-1)**(2/3)
     >>> real_root(_)
     -2*(-1)**(2/3)
-
 
     See Also
     ========
@@ -608,9 +630,11 @@ class MinMaxBase(Expr, LatticeOp):
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
-    def evalf(self, prec=None, **options):
-        return self.func(*[a.evalf(prec, **options) for a in self.args])
-    n = evalf
+    def evalf(self, n=15, **options):
+        return self.func(*[a.evalf(n, **options) for a in self.args])
+
+    def n(self, *args, **kwargs):
+        return self.evalf(*args, **kwargs)
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
     _eval_is_antihermitian = lambda s: _torf(i.is_antihermitian for i in s.args)

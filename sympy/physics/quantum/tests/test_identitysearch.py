@@ -309,7 +309,7 @@ def test_is_scalar_sparse_matrix():
     if not np:
         skip("numpy not installed.")
 
-    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+    scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
     if not scipy:
         skip("scipy not installed.")
 

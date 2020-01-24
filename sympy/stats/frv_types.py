@@ -23,7 +23,6 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
 from sympy.external import import_module
-from sympy.core.compatibility import range
 from sympy.tensor.array import ArrayComprehensionMap
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
@@ -95,7 +94,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     def p(self):
         return Rational(1, len(self.args))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
         return dict((k, self.p) for k in self.set)
@@ -334,7 +333,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
         return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:

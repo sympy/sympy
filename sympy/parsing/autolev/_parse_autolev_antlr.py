@@ -2,11 +2,11 @@ from sympy.external import import_module
 
 
 autolevparser = import_module('sympy.parsing.autolev._antlr.autolevparser',
-                              __import__kwargs={'fromlist': ['AutolevParser']})
+                              import_kwargs={'fromlist': ['AutolevParser']})
 autolevlexer = import_module('sympy.parsing.autolev._antlr.autolevlexer',
-                             __import__kwargs={'fromlist': ['AutolevLexer']})
+                             import_kwargs={'fromlist': ['AutolevLexer']})
 autolevlistener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
-                                __import__kwargs={'fromlist': ['AutolevListener']})
+                                import_kwargs={'fromlist': ['AutolevListener']})
 
 AutolevParser = getattr(autolevparser, 'AutolevParser', None)
 AutolevLexer = getattr(autolevlexer, 'AutolevLexer', None)

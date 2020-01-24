@@ -232,6 +232,8 @@ def test_factorial_Mod():
     assert Mod(factorial(q - 1800, evaluate=False), q) == 905504050
     assert Mod(factorial(153, evaluate=False), r) == Mod(factorial(153), r)
     assert Mod(factorial(255, evaluate=False), s) == Mod(factorial(255), s)
+    assert Mod(factorial(4, evaluate=False), 3) == S.Zero
+    assert Mod(factorial(5, evaluate=False), 6) == S.Zero
 
 
 def test_factorial_diff():
@@ -497,6 +499,8 @@ def test_binomial_Mod_slow():
     assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
     assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
     assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
+    assert Mod(binomial(23, -38, evaluate=False), q) is S.Zero
+    assert Mod(binomial(23, 38, evaluate=False), q) is S.Zero
 
     # binomial factorize
     assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)

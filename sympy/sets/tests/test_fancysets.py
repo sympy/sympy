@@ -1,4 +1,3 @@
-from sympy.core.compatibility import range, PY3
 from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
@@ -320,18 +319,11 @@ def test_Range_set():
         assert r.inf == rev.inf and r.sup == rev.sup
         assert r.step == -rev.step
 
-    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
-    # compatibility imports above)
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange # noqa
+    builtin_range = range
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)
-    if PY3:
-        assert S(builtin_range(1000000000000)) == \
-            Range(1000000000000)
+    assert S(builtin_range(1000000000000)) == Range(1000000000000)
 
     # test Range.as_relational
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x, floor(x))

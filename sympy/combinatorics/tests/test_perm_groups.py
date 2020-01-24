@@ -1,4 +1,3 @@
-from sympy.core.compatibility import range
 from sympy.combinatorics.perm_groups import (PermutationGroup,
     _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\

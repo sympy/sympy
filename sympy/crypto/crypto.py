@@ -23,7 +23,7 @@ from itertools import cycle
 from sympy import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd
-from sympy.core.compatibility import range, as_int
+from sympy.core.compatibility import as_int
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.polys.domains import FF
