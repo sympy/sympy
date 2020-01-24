@@ -284,8 +284,8 @@ def crt_cartesian(rem, mod):
     ==========
 
     rem: 2D list
-        Consists of list of lists whose cartesian product gives
-        us the remainders.
+        List of lists, each containing the remainders with respect
+        to each modulus.
     mod: 1D list
         List of moduli.
 
