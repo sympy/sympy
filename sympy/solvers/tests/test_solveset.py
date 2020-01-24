@@ -204,7 +204,7 @@ def test_issue_18449():
     sol = nonlinsolve([fx, fy, fz], [x, y, z])
     for (xs, ys, zs) in sol:
         d = {x: xs, y: ys, z: zs}
-        assert tuple(simplify(_.subs(d)) for _ in (fx, fy, fz)) == (0, 0, 0)
+        assert tuple(_.subs(d).simplify() for _ in (fx, fy, fz)) == (0, 0, 0)
     # After simplification and removal of duplicate elements, there should
     # only be 4 parametric solutions left:
     # simplifiedsolutions = FiniteSet((sqrt(1 - z**2), z, z),
