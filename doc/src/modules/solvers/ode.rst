@@ -124,7 +124,7 @@ nth_linear_constant_coeff_variation_of_parameters
 
 nth_algebraic
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_nth_algebraic
+.. autoclass:: sympy.solvers.ode.single.NthAlgebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
