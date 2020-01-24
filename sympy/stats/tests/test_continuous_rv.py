@@ -2,7 +2,7 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re,
+                   besseli, floor, expand_func, Rational, I, re, polygamma,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj)
 from sympy.external import import_module
@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
+                         LogLogistic, LogNormal, Maxwell, Moyal,Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
@@ -848,6 +848,33 @@ def test_maxwell():
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+def test_Moyal():
+    mu = Symbol('mu',real=False)
+    sigma = Symbol('sigma', real=True, positive=True)
+    raises(ValueError, lambda: Moyal('M',mu, sigma))
+
+    mu = Symbol('mu', real=True)
+    sigma = Symbol('sigma', real=True, negative=True)
+    raises(ValueError, lambda: Moyal('M',mu, sigma))
+
+    sigma = Symbol('sigma', real=True, positive=True)
+    M = Moyal('M', mu, sigma)
+    assert density(M)(z) == sqrt(2)*exp(-exp((mu - z)/sigma)/2
+                        - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+    assert cdf(M)(z) == erfc(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+    assert characteristic_function(M)(z) == 2**(-I*sigma*z)*exp(I*mu*z) \
+                        *gamma(-I*sigma*z + Rational(1, 2))/sqrt(pi)
+    assert E(M) == mu + EulerGamma*sigma + sigma*log(2)
+    assert moment_generating_function(M)(z) == 2**(-sigma*z)*exp(mu*z) \
+                        *gamma(-sigma*z + Rational(1, 2))/sqrt(pi)
+
+    M = Moyal('M', 1, 2)
+    assert E(M) == 1 + 2*EulerGamma + 2*log(2)
+    assert variance(M).simplify()==4 * polygamma(1,Rational(1, 2))
+    assert kurtosis(M).simplify()==3 + polygamma(3, Rational(1, 2)) \
+                        /polygamma(1, Rational(1, 2))**2
+    assert skewness(M).simplify()== -polygamma(2, Rational(1, 2)) \
+                        /polygamma(1, Rational(1, 2))**Rational(3, 2)
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)

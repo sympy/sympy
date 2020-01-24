@@ -1422,6 +1422,9 @@ def test_sympy__stats__crv_types__MaxwellDistribution():
     from sympy.stats.crv_types import MaxwellDistribution
     assert _test_args(MaxwellDistribution(1))
 
+def test_sympy__stats__crv_types__MoyalDistribution():
+    from sympy.stats.crv_types import MoyalDistribution
+    assert _test_args(MoyalDistribution(1,2))
 
 def test_sympy__stats__crv_types__NakagamiDistribution():
     from sympy.stats.crv_types import NakagamiDistribution

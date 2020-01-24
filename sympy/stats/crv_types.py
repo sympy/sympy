@@ -31,6 +31,7 @@ Logistic
 LogLogistic
 LogNormal
 Maxwell
+Moyal
 Nakagami
 Normal
 Pareto
@@ -100,6 +101,7 @@ __all__ = ['ContinuousRV',
 'LogLogistic',
 'LogNormal',
 'Maxwell',
+'Moyal',
 'Nakagami',
 'Normal',
 'GaussianInverse',
@@ -2524,6 +2526,86 @@ def Maxwell(name, a):
     """
 
     return rv(name, MaxwellDistribution, (a, ))
+
+#-------------------------------------------------------------------------------
+# Moyal Distribution -----------------------------------------------------------
+class MoyalDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'sigma')
+
+    @staticmethod
+    def check(mu, sigma):
+        _value_check(mu.is_real, "Location parameter must be real.")
+        _value_check(sigma.is_real and sigma > 0, "Scale parameter must be real\
+        and positive.")
+
+    def pdf(self, x):
+        mu, sigma = self.mu, self.sigma
+        num = exp(-(exp(-(x - mu)/sigma) + (x - mu)/(sigma))/2)
+        den = (sqrt(2*pi) * sigma)
+        return num/den
+
+    def _cdf(self, x):
+        mu, sigma = self.mu, self.sigma
+        return erfc(exp(-(x - mu)/(2*sigma))/sqrt(2))
+
+    def _characteristic_function(self, t):
+        mu, sigma = self.mu, self.sigma
+        term1 = exp(I*t*mu)
+        term2 = (2**(-I*sigma*t) * gamma(Rational(1, 2) - I*t*sigma))
+        return (term1 * term2)/sqrt(pi)
+
+    def _moment_generating_function(self, t):
+        mu, sigma = self.mu, self.sigma
+        term1 = exp(t*mu)
+        term2 = (2**(-1*sigma*t) * gamma(Rational(1, 2) - t*sigma))
+        return (term1 * term2)/sqrt(pi)
+
+def Moyal(name, mu, sigma):
+    r"""
+    Create a continuous random variable with a Moyal distribution.
+    The density of the Moyal distribution is given by
+
+    .. math::
+        f(x) := \frac{-/frac{1}{2}\exp\left(-\frac{x-\mu}{\sigma}\right) - \frac{x-\mu}{2\sigma}}
+
+    with :math:`x \in \mathbb{R}`.
+
+    Parameters
+    ==========
+
+    mu : Real number
+        Location parameter
+    sigma : Real positive number
+        Scale parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Moyal, density, cdf
+    >>> from sympy import Symbol
+    >>> mu = Symbols("mu", real=True)
+    >>> sigma = Symbol("sigma", positive=True, real=True)
+    >>> z = Symbol("z")
+    >>> X = Moyal("x", mu, sigma)
+    >>> density(X)(z)
+    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+    >>> cdf(X)(z)
+    erfc(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+
+    References
+    ==========
+
+    .. [1] https://reference.wolfram.com/language/ref/MoyalDistribution.html
+    .. [2] http://www.stat.rice.edu/~dobelman/textfiles/DistributionsHandbook.pdf
+
+    """
+
+    return rv(name, MoyalDistribution, (mu, sigma))
 
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
