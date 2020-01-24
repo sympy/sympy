@@ -50,7 +50,6 @@ def test_crt_cartesian():
         a = crt_cartesian(r, p)
         assert a == ans
         for i in zip([tuple([n%i for i in p]) for n in a], cartes(*r)):
-            print(i)
             assert i[0] == i[1]
 
     check([[3, 5], [3, 7]], [7, 11], [3, 73, 47, 40])
