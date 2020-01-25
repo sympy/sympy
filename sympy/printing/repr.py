@@ -307,17 +307,6 @@ class ReprPrinter(Printer):
         field = self._print(domain.field)
         return "%s(%s)" % (cls, field)
 
-    def _print_PolynomialRingBase(self, ring):
-        cls = ring.__class__.__name__
-        dom = self._print(ring.domain)
-        gens = ', '.join(map(self._print, ring.gens))
-        order = str(ring.order)
-        if order != ring.default_order:
-            orderstr = ", order=" + order
-        else:
-            orderstr = ""
-        return "%s(%s, %s%s)" % (cls, dom, gens, orderstr)
-
     def _print_DMP(self, p):
         cls = p.__class__.__name__
         rep = self._print(p.rep)
