@@ -300,8 +300,8 @@ class MultiFactorial(CombinatorialFunction):
 
         if n.is_Number:
             if not n.is_Integer:
-                raise ValueError("argument must be nonnegative integer "
-                                    "or negative odd integer")
+                raise ValueError("argument should be non negative or negative"
+                                     "argument should not be divisible by alpha")
             if n <= 0 and n > -alpha:
                 return S.One
             if n.is_nonnegative:
