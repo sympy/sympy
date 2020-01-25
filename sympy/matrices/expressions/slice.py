@@ -65,6 +65,37 @@ def _slice_sympify(i: Union[slice, tuple, list, Tuple]):
     return __sympify(start), __sympify(stop), __sympify(step)
 
 
+def _remove_slice_none(start, stop, step, parentsize):
+    """Eliminate the arbitrary ``None``s from the slice specification
+    if possible.
+    """
+    start_none = start is S.SliceNone
+    stop_none = stop is S.SliceNone
+    step_none = step is S.SliceNone
+
+    if start_none and stop_none and step_none:
+        return S.Zero, parentsize, S.One
+    elif start_none and stop_none and not step_none:
+        if step.is_positive:
+            return S.Zero, parentsize, step
+        elif step.is_negative:
+            return parentsize-1, stop, step
+    elif not start_none and stop_none and step_none:
+        return start, parentsize, S.One
+    elif start_none and not stop_none and step_none:
+        return S.Zero, stop, S.One
+    elif not start_none and not stop_none and step_none:
+        return start, stop, S.One
+    elif start_none and not stop_none and not step_none:
+        return S.Zero, stop, step
+    elif not start_none and stop_none and not step_none:
+        if step.is_positive:
+            return start, parentsize, step
+    elif not start_none and not stop_none and step_none:
+        return start, stop, S.One
+    return start, stop, step
+
+
 def normalize(i, parentsize: Basic):
     if not isinstance(i, (slice, tuple, list, Tuple)):
         if (i < -parentsize) | (i >= parentsize) == True:
@@ -76,33 +107,7 @@ def normalize(i, parentsize: Basic):
         return i, i+1, 1
 
     start, stop, step = _slice_sympify(i)
-
-    if start is S.SliceNone and stop is S.SliceNone and step is S.SliceNone:
-        start, stop, step = S.Zero, parentsize, S.One
-    elif start is S.SliceNone and stop is S.SliceNone and step is not S.SliceNone:
-        step = _sympify(step)
-        if step.is_positive:
-            start, stop = S.Zero, parentsize
-        else:
-            start, stop = parentsize-1, S.SliceNone
-    elif start is not S.SliceNone and stop is S.SliceNone and step is S.SliceNone:
-        start, stop, step = _sympify(start), parentsize, S.One
-    elif start is S.SliceNone and stop is not S.SliceNone and step is S.SliceNone:
-        start, stop, step = S.Zero, _sympify(stop), S.One
-    elif start is not S.SliceNone and stop is not S.SliceNone and step is S.SliceNone:
-        start, stop, step = _sympify(start), _sympify(stop), S.One
-    elif start is S.SliceNone and stop is not S.SliceNone and step is not S.SliceNone:
-        start, stop, step = S.Zero, _sympify(stop), _sympify(step)
-    elif start is not S.SliceNone and stop is S.SliceNone and step is not S.SliceNone:
-        start, step = _sympify(start), _sympify(step)
-        if step.is_positive:
-            stop = parentsize
-        else:
-            stop = S.SliceNone
-    elif start is not S.SliceNone and stop is not S.SliceNone and step is S.SliceNone:
-        start, stop, step = _sympify(start), _sympify(stop), S.One
-    elif start is not S.SliceNone and stop is not S.SliceNone and step is not S.SliceNone:
-        start, stop, step = _sympify(start), _sympify(stop), _sympify(step)
+    start, stop, step = _remove_slice_none(start, stop, step, parentsize)
 
     if (start <= -parentsize) == True:
         start = S.Zero
