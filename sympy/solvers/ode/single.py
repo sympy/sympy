@@ -4,14 +4,19 @@
 
 from typing import ClassVar, Dict, List, Optional, Type
 
+from sympy.core import Add
+from sympy.core.compatibility import iterable
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, Function
-from sympy.core.relational import Equality
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.function import AppliedUndef, Derivative, Function, expand
+from sympy.core.relational import Equality, Eq
+from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.integrals import Integral
 from sympy.simplify import simplify
+from sympy.utilities import numbered_symbols
+from sympy.functions import exp
 
 from sympy.solvers.solvers import solve
+from sympy.solvers.deutils import ode_order
 
 
 class ODEMatchError(NotImplementedError):
@@ -22,7 +27,7 @@ class ODEMatchError(NotImplementedError):
 class SingleODEProblem:
     """Represents an ordinary differential equation (ODE)
 
-    This class is used internally in the by dsolve and related
+    This class is used internally by dsolve and related
     functions/classes so that properties of an ODE can be computed
     efficiently.
 
@@ -54,8 +59,9 @@ class SingleODEProblem:
     func = None  # type: AppliedUndef
     sym = None  # type: Symbol
 
-    def __init__(self, eq, func, sym):
+    def __init__(self, eq, func, sym, eq_orig=None):
         self.eq = eq
+        self.eq_orig = eq_orig
         self.func = func
         self.sym = sym
 
@@ -139,6 +145,32 @@ class SingleODESolver:
     def _get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
+
+    def get_numbered_constants(self, num=1, start=1, prefix='C'):
+        """
+        Returns a list of constants that do not occur
+        in eq already.
+        """
+        ncs = self.iter_numbered_constants(start, prefix)
+        Cs = [next(ncs) for i in range(num)]
+        return (Cs[0] if num == 1 else tuple(Cs))
+
+    def iter_numbered_constants(self, start=1, prefix='C'):
+        """
+        Returns an iterator of constants that do not occur
+        in eq already.
+        """
+        eq = self.ode_problem.eq
+        if isinstance(eq, (Expr, Eq)):
+            eq = [eq]
+        elif not iterable(eq):
+            raise ValueError("Expected Expr or iterable but got %s" % eq)
+
+        atom_set = set().union(*[i.free_symbols for i in eq])
+        func_set = set().union(*[i.atoms(Function) for i in eq])
+        if func_set:
+            atom_set |= {Symbol(str(f.func)) for f in func_set}
+        return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
 class NthAlgebraic(SingleODESolver):
@@ -241,3 +273,114 @@ class NthAlgebraic(SingleODESolver):
             diffcls = NthAlgebraic._diffx_stored.setdefault(var, diffx)
 
         return diffcls
+
+
+class FirstLinear(SingleODESolver):
+    r"""
+    Solves 1st order linear differential equations.
+
+    These are differential equations of the form
+
+    .. math:: dy/dx + P(x) y = Q(x)\text{.}
+
+    These kinds of differential equations can be solved in a general way.  The
+    integrating factor `e^{\int P(x) \,dx}` will turn the equation into a
+    separable equation.  The general solution is::
+
+        >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
+        >>> from sympy.abc import x
+        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
+        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x))
+        >>> pprint(genform)
+                    d
+        P(x)*f(x) + --(f(x)) = Q(x)
+                    dx
+        >>> pprint(dsolve(genform, f(x), hint='1st_linear_Integral'))
+               /       /                   \
+               |      |                    |
+               |      |         /          |     /
+               |      |        |           |    |
+               |      |        | P(x) dx   |  - | P(x) dx
+               |      |        |           |    |
+               |      |       /            |   /
+        f(x) = |C1 +  | Q(x)*e           dx|*e
+               |      |                    |
+               \     /                     /
+
+
+    Examples
+    ========
+
+    >>> f = Function('f')
+    >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
+    ... f(x), '1st_linear'))
+    f(x) = x*(C1 - cos(x))
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 92
+
+    # indirect doctest
+
+    """
+    hint = '1st_linear'
+    has_integral = True
+
+    def _matches(self):
+        eq = expand(self.ode_problem.eq)
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = ode_order(eq, f)
+        a = Wild('a', exclude=[f(x)])
+        b = Wild('b', exclude=[f(x)])
+        c = Wild('c', exclude=[f(x)])
+        c1 = Wild('c1', exclude=[x])
+        df = f(x).diff(x)
+
+        if order != 1:
+            return False
+
+        reduced_eq = None
+        if eq.is_Add:
+            deriv_coef = eq.coeff(f(x).diff(x, order))
+            if deriv_coef not in (1, 0):
+                r = deriv_coef.match(a*f(x)**c1)
+                if r and r[c1]:
+                    den = f(x)**r[c1]
+                    reduced_eq = Add(*[arg/den for arg in eq.args])
+        if not reduced_eq:
+            reduced_eq = eq
+
+        if eq.is_Add:
+            ind, dep = reduced_eq.as_independent(f)
+        else:
+            u = Dummy('u')
+            ind, dep = (reduced_eq + u).as_independent(f)
+            ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
+        coefficients = {a: dep.coeff(df),
+                        b: dep.coeff(f(x)),
+                        c: ind}
+        # double check f[a] since the preconditioning may have failed
+        if not coefficients[a].has(f) and not coefficients[b].has(f) and (
+                coefficients[a]*df + coefficients[b]*f(x) + coefficients[c]).expand() - reduced_eq == 0:
+            coefficients['a'] = a
+            coefficients['b'] = b
+            coefficients['c'] = c
+            self.coeffs = coefficients
+            return True
+
+        return False
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        x = self.ode_problem.sym
+        f = self.ode_problem.func.func
+        r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c
+        C1 = super().get_numbered_constants(num=1)
+
+        t = exp(Integral(r[r['b']]/r[r['a']], x))
+        tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
+        f = r.get('u', f(x))  # take almost-linear u if present, else f(x)
+        return Eq(f, (tt + C1)/t)

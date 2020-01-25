@@ -272,7 +272,7 @@ from sympy.solvers.pde import pdsolve
 from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
-from .single import NthAlgebraic, SingleODEProblem, SingleODESolver
+from .single import NthAlgebraic, FirstLinear, SingleODEProblem, SingleODESolver
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -1075,11 +1075,17 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
     # d^3/dx^3(x y) = F(x)
-    ode = SingleODEProblem(eq_orig, func, x)
-    solver = NthAlgebraic(ode)
-    if solver.matches():
-        matching_hints['nth_algebraic'] = solver
-        matching_hints['nth_algebraic_Integral'] = solver
+    ode = SingleODEProblem(eq, func, x, eq_orig)
+    solvers = {
+        NthAlgebraic: ('nth_algebraic','nth_algebraic_Integral'),
+        FirstLinear: ('1st_linear','1st_linear_Integral')
+    }
+
+    for solvercls in solvers:
+        solver = solvercls(ode)
+        if solver.matches():
+            for hints in solvers[solvercls]:
+                matching_hints[hints] = solver
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
@@ -1095,25 +1101,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-
-        ## Linear case: a(x)*y'+b(x)*y+c(x) == 0
-        if eq.is_Add:
-            ind, dep = reduced_eq.as_independent(f)
-        else:
-            u = Dummy('u')
-            ind, dep = (reduced_eq + u).as_independent(f)
-            ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        r = {a: dep.coeff(df),
-             b: dep.coeff(f(x)),
-             c: ind}
-        # double check f[a] since the preconditioning may have failed
-        if not r[a].has(f) and not r[b].has(f) and (
-                r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
-            r['a'] = a
-            r['b'] = b
-            r['c'] = c
-            matching_hints["1st_linear"] = r
-            matching_hints["1st_linear_Integral"] = r
 
         ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
         r = collect(

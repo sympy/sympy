@@ -4,7 +4,7 @@
 #
 
 from sympy.core import Function, Symbol
-from sympy.solvers.ode.single import (NthAlgebraic, ODEMatchError,
+from sympy.solvers.ode.single import (NthAlgebraic, FirstLinear, ODEMatchError,
     SingleODEProblem, SingleODESolver)
 
 from sympy.testing.pytest import raises
@@ -34,4 +34,12 @@ def test_SingleODESolver():
     raises(ODEMatchError, lambda: solver.get_general_solution())
 
     solver = NthAlgebraic(problem)
+    assert solver.matches() is False
+
+    problem = SingleODEProblem(f(x).diff(x) + f(x)*f(x), f(x), x)
+
+    solver = FirstLinear(problem)
+    raises(ODEMatchError, lambda: solver.get_general_solution())
+
+    solver = FirstLinear(problem)
     assert solver.matches() is False
