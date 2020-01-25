@@ -147,7 +147,9 @@ def test_ff_eval_apply():
     for i in range(100):
         x = -500 + 500 * random.random()
         k = -500 + 500 * random.random()
-        assert (abs(mpmath_ff(x, k) - ff(x, k)) < 10**(-15))
+        a = mpmath_ff(x, k)
+        b = ff(x, k)
+        assert (abs(a - b) < abs(a) * 10**(-15))
 
 
 def test_rf_ff_eval_hiprec():
