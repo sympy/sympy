@@ -53,9 +53,9 @@ def test_slicing():
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
-    raises(IndexError, lambda: X[0:12, 2])
+    assert X[0:12, 2] == MatrixSlice(X, (0, 10, 1), (2, 3, 1))
     raises(IndexError, lambda: X[0:9, 22])
-    raises(IndexError, lambda: X[-1:5, 2])
+    assert X[-1:5, 2] == MatrixSlice(X, (9, 5, 1), (2, 3, 1))
 
 @XFAIL
 def test_symmetry():

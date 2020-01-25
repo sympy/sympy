@@ -1,42 +1,116 @@
 from __future__ import print_function, division
 
+from typing import Union
+
 from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
+from sympy.core.singleton import S
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.matrices import MatrixBase
 
 from .matexpr import MatrixExpr, MatrixSymbol, ZeroMatrix, OneMatrix, Identity
 
 
+class SliceNone(Basic):
+    """A corresponding sympy object for python singleton ``None`` used
+    in ``slice``.
 
-def normalize(i, parentsize):
+    Notes
+    =====
+
+    In some context of python array slicing, ``None`` cannot not be
+    reduced to an integer.
+
+    You cannot replace the second argument ``None`` with any integer
+    to yield the same result, for following examples.
+
+    >>> A = list(range(5))
+    >>> A[slice(None, None, -1)]
+    [4, 3, 2, 1, 0]
+    >>> A[slice(None, None, -2)]
+    [4, 2, 0]
+    >>> A[slice(2, None, -1)]
+    [2, 1, 0]
+    >>> A[slice(2, None, -2)]
+    [2, 0]
+
+    This behavior is spcific to ``slice`` specification with
+    ``step=None`` and ``step`` as a negative integer.
+    """
+    def __new__(cls):
+        return super(SliceNone, cls).__new__(cls)
+
+
+def normalize(i: Union[slice, tuple, list, Tuple], parentsize: Basic):
     if isinstance(i, slice):
-        i = (i.start, i.stop, i.step)
-    if not isinstance(i, (tuple, list, Tuple)):
+        start, stop, step = i.start, i.stop, i.step
+    elif not isinstance(i, (tuple, list, Tuple)):
+        if (i < -parentsize) | (i >= parentsize) == True:
+            raise IndexError(
+                "{} must be in the interval ({}, {}]."
+                .format(i, -parentsize, parentsize))
         if (i < 0) == True:
             i += parentsize
-        i = (i, i+1, 1)
-    i = list(i)
-    if len(i) == 2:
-        i.append(1)
-    start, stop, step = i
-    start = start or 0
-    if stop is None:
-        stop = parentsize
-    if (start < 0) == True:
-        start += parentsize
-    if (stop < 0) == True:
-        stop += parentsize
-    step = step or 1
+        return i, i+1, 1
+    else:
+        if len(i) == 1:
+            start, stop, step = i[0], parentsize, S.One
+        elif len(i) == 2:
+            start, stop = i
+            step = S.One
+        elif len(i) == 3:
+            start, stop, step = i
 
-    if ((stop - start) * step < 1) == True:
-        raise IndexError()
+    if start is None and stop is None and step is None:
+        start, stop, step = S.Zero, parentsize, S.One
+    elif start is None and stop is None and step is not None:
+        step = _sympify(step)
+        if step.is_positive:
+            start, stop = S.Zero, parentsize
+        else:
+            start, stop = parentsize-1, SliceNone()
+    elif start is not None and stop is None and step is None:
+        start, stop, step = _sympify(start), parentsize, S.One
+    elif start is None and stop is not None and step is None:
+        start, stop, step = S.Zero, _sympify(stop), S.One
+    elif start is not None and stop is not None and step is None:
+        start, stop, step = _sympify(start), _sympify(stop), S.One
+    elif start is None and stop is not None and step is not None:
+        start, stop, step = S.Zero, _sympify(stop), _sympify(step)
+    elif start is not None and stop is None and step is not None:
+        start, step = _sympify(start), _sympify(step)
+        if step.is_positive:
+            stop = parentsize
+        else:
+            stop = SliceNone()
+    elif start is not None and stop is not None and step is None:
+        start, stop, step = _sympify(start), _sympify(stop), S.One
+    elif start is not None and stop is not None and step is not None:
+        start, stop, step = _sympify(start), _sympify(stop), _sympify(step)
+
+    if (start <= -parentsize) == True:
+        start = S.Zero
+    elif (start > -parentsize) & (start < S.Zero) == True:
+        start += parentsize
+    elif start.is_zero:
+        start = S.Zero
+    elif (start > parentsize) == True:
+        start = parentsize
+
+    if (stop <= -parentsize) == True:
+        stop = S.Zero
+    elif (stop > -parentsize) & (stop < S.Zero) == True:
+        stop += parentsize
+    elif stop.is_zero:
+        stop = S.Zero
+    elif (stop > parentsize) == True:
+        stop = parentsize
 
     return (start, stop, step)
 
 class MatrixSlice(MatrixExpr):
-    """ A MatrixSlice of a Matrix Expression
+    r"""A symbolic representation for slicing a matrix.
 
     Examples
     ========
@@ -55,6 +129,128 @@ class MatrixSlice(MatrixExpr):
     Matrix([
     [2, 3],
     [6, 7]])
+
+    How slicing works
+    =================
+
+    Slicing is one of the most popular feature of python arrays.
+    However, to introduce some symbolic math or code generation
+    features on top of it, we had to reinvent some wheels.
+
+    Here, we take an example of slicing a one-dimensional vector,
+    because extending this to any multidimensional array types can
+    be done easily.
+
+    Every specifications of python array slicing can be reduced either
+    of these two cases.
+
+    Case 1
+    ======
+
+    If *start*, *stop*, and *step* are defined explicitly and denoted
+    by $i$, $j$, $k$ as:
+
+    - $A$ is a vector with $n$ elements.
+    - $i \in \mathbb{Z}$ denotes the *start*.
+    - $j \in \mathbb{Z}$ denotes the *stop*.
+    - $k \in \mathbb{Z} - \{0\}$ denotes the *step*.
+
+    If $k > 0$, the indices $i$, $j$ can be normalized to
+    $\bar{i}$, $\bar{j}$ as:
+
+    .. math::
+        \bar{i} = \begin{cases}
+        0 & \text{ if } i \leq -n \\
+        i+n & \text{ if } -n < i < 0 \\
+        0 & \text{ if } i = 0 \\
+        i & \text{ if } 0 < i < n
+        \end{cases},
+        \bar{j} = \begin{cases}
+        0 & \text{ if } j \leq -n \\
+        j+n & \text{ if } -n < j < 0 \\
+        0 & \text{ if } j = 0 \\
+        j & \text{ if } 0 < j < n \\
+        n & \text{ if } j \geq n
+        \end{cases}
+
+    And every cases of $i \geq n$ can always return an empty vector.
+
+    The slicing can be defined from the normalized indices as:
+
+    - If $\bar{i} < \bar{j}$,
+      $A[[\bar{i}:\bar{j}:k]] = [A[[\bar{i}]], A[[\bar{i}+k]], ...,
+      A[[\bar{i} + (\lceil\frac{\bar{j}-\bar{i}}{k}\rceil-1) k]]]$
+    - If $\bar{i} \geq \bar{j}$, $A[[\bar{i}:\bar{j}:k]] = []$
+
+    If $k < 0$, the indices $i$, $j$ can be normalized to
+    $\bar{i}$, $\bar{j}$ as:
+
+    .. math::
+        \bar{i} = \begin{cases}
+        0 & \text{ if } i \leq -n \\
+        i+n & \text{ if } -n < i < 0 \\
+        0 & \text{ if } i = 0 \\
+        i & \text{ if } 0 < i < n \\
+        n-1 & \text{ if } i \geq n
+        \end{cases},
+        \bar{j} = \begin{cases}
+        0 & \text{ if } j \leq -n \\
+        j+n & \text{ if } -n < j < 0 \\
+        0 & \text{ if } j = 0 \\
+        j & \text{ if } 0 < j < n
+        \end{cases}
+
+    And every cases of $j \geq n$ can always return an empty vector.
+
+    The slicing can be defined from the normalized indices as:
+
+    - If $\bar{i} \leq \bar{j}$,
+      $A[[\bar{i}:\bar{j}:k]] = []$
+    - If $\bar{i} > \bar{j}$,
+      $A[[\bar{i}:\bar{j}:k]] = [A[[\bar{i}]], A[[\bar{i}+k]], ...,
+      A[[\bar{i} + (\lceil\frac{\bar{j}-\bar{i}}{k}\rceil-1) k]]]$
+
+    Case 2
+    ======
+
+    This is a special case when *stop* is ``None`` and *step* is
+    negative.
+
+    - $A$ is a vector with $n$ elements.
+    - $i \in \mathbb{Z}$ denotes the *start*.
+    - $k \in \mathbb{Z}_{<0}$ denotes the *step*.
+
+    The index $i$ can be normalized to $\bar{i}$ as:
+
+    .. math::
+        \bar{i} = \begin{cases}
+        0 & \text{ if } i \leq -n \\
+        i+n & \text{ if } -n < i < 0 \\
+        0 & \text{ if } i = 0 \\
+        i & \text{ if } 0 < i < n \\
+        n-1 & \text{ if } i \geq n
+        \end{cases}
+
+    The slicing can be defined from the normalized indices as:
+
+    $A[[\bar{i}::k]] = [A[[\bar{i}]], A[[\bar{i}+k]], ...,
+    A[[\bar{i} + (\lceil\frac{-\bar{i}-1}{k}\rceil - 1) k]]]$
+
+    How to comprehend None in slice
+    ===============================
+
+    Every python array slicing specifications with ``None`` can be
+    reduced to one of the cases above because
+
+    - $A[[::]] = A[[0:n:1]]$
+    - $A[[::k]] = \begin{cases} A[[0:n:k]] & \text{ if } k > 0 \\
+      A[[n-1::k]] & \text{ if } k < 0 \end{cases}$
+    - $A[[:j:]] = A[[0:j:1]]$
+    - $A[[i::]] = A[[i:n:1]]$
+    - $A[[:j:k]] = A[[0:j:k]]$
+    - $A[[i::k]] = \begin{cases} A[[i:n:k]] & \text{ if } k > 0 \\
+      A[[i::k]] & \text{ if } k < 0 \end{cases}$
+    - $A[[i:j:]] = A[[i:j:1]]$
     """
     parent = property(lambda self: self.args[0])
     rowslice = property(lambda self: self.args[1])
@@ -74,19 +270,6 @@ class MatrixSlice(MatrixExpr):
         if len(colslice) != 3:
             raise IndexError(
                 "{} is not a valid column slicing.".format(colslice))
-
-        if (rowslice[0] < 0) == True:
-            raise IndexError("{} should not be negative.".format(rowslice[0]))
-        if (colslice[0] < 0) == True:
-            raise IndexError("{} should not be negative.".format(colslice[0]))
-        if (parent.shape[0] < rowslice[1]) == True:
-            raise IndexError(
-                "{} should not exceed {}."
-                .format(rowslice[1], parent.shape[0]))
-        if (parent.shape[1] < colslice[1]) == True:
-            raise IndexError(
-                "{} should not exceed {}."
-                .format(colslice[1], parent.shape[1]))
 
         if isinstance(parent, MatrixSlice):
             return mat_slice_of_slice(parent, rowslice, colslice)
