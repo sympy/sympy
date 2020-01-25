@@ -2,7 +2,7 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re, polygamma,
+                   besseli, floor, expand_func, Rational, I, re, zeta,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj)
 from sympy.external import import_module
@@ -870,11 +870,9 @@ def test_Moyal():
 
     M = Moyal('M', 1, 2)
     assert E(M) == 1 + 2*EulerGamma + 2*log(2)
-    assert variance(M).simplify() == 4 * polygamma(1,Rational(1, 2))
-    assert kurtosis(M).simplify() == 3 + polygamma(3, Rational(1, 2)) \
-                        /polygamma(1, Rational(1, 2))**2
-    assert skewness(M).simplify() == -polygamma(2, Rational(1, 2)) \
-                        /polygamma(1, Rational(1, 2))**Rational(3, 2)
+    assert variance(M).simplify() == 2*pi**2
+    assert kurtosis(M).simplify() == 7
+    assert skewness(M).simplify() == 28*sqrt(2)*zeta(3)/pi**3
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
