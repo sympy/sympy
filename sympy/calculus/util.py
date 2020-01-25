@@ -1341,7 +1341,7 @@ class AccumulationBounds(AtomicExpr):
                 if den!=1:
                     num_pow = self**num
                     return num_pow**(1 / den)
-            return Pow(self, other, evaluate=False)
+            return AccumBounds(-oo, oo)
 
         return NotImplemented
 
