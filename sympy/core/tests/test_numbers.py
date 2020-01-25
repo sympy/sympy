@@ -1230,6 +1230,13 @@ def test_powers_Float():
 def test_abs1():
     assert Rational(1, 6) != Rational(-1, 6)
     assert abs(Rational(1, 6)) == abs(Rational(-1, 6))
+    assert DecimalRational(1,2) != DecimalRational(-1,2)
+    assert abs(DecimalRational(-1,2)) is DecimalRational(1,2)
+
+
+def test__neg__():
+    assert -S.Half == Rational(-1,2)
+    assert -DecimalRational(1,2) is DecimalRational(-1,2)
 
 
 def test_accept_int():
