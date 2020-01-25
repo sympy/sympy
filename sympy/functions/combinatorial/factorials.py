@@ -298,9 +298,9 @@ class MultiFactorial(CombinatorialFunction):
         if alpha == 2:
             factorial2(n)
 
-        if n.is_Number:
+        if n.is_Number and alpha.is_Number:
             if not n.is_Integer:
-                raise ValueError("argument should be non negative or negative"
+                raise ValueError("argument should be non negative or negative "
                                      "argument should not be divisible by alpha")
             if n <= 0 and n > -alpha:
                 return S.One
@@ -311,11 +311,10 @@ class MultiFactorial(CombinatorialFunction):
                     return pow(alpha, n / alpha) * factorial(n / alpha)
                 return n * MultiFactorial(n - alpha, alpha)
 
-
             if n % alpha == 0:
-                raise ValueError("argument should be non negative or negative"
+                raise ValueError("argument should be non negative or negative "
                                      "argument should not be divisible by alpha")
-            #When n is negative
+            #When n is negative and n is less than -alpha
             return MultiFactorial(n + alpha, alpha) / (n + alpha)
 
 
