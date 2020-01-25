@@ -6603,7 +6603,7 @@ def cancel(f, *gens, **args):
     >>> cancel(x/2 + 1)
     x/2 + 1
     >>> together(_)
-    (x + 1)/2
+    (x + 2)/2
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
