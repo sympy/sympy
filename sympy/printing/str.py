@@ -443,6 +443,30 @@ class StrPrinter(Printer):
     def _print_Pi(self, expr):
         return 'pi'
 
+    def _print_Domain(self, domain):
+        return domain.rep
+
+    def _print_QuotientRing(self, ring):
+        return self._print(ring.ring) + "/" + self._print(ring.base_ideal)
+
+    def _print_PolynomialRing(self, ring):
+        domain_str = self._print(ring.domain)
+        gens_str = (self._print(x) for x in ring.symbols)
+        gens_str = ', '.join(gens_str)
+        return domain_str + '[' + gens_str + ']'
+
+    def _print_PolynomialRingBase(self, ring):
+        s_order = self._print(ring.order)
+        if s_order != ring.default_order:
+            order_str = " order=" + s_order
+        else:
+            order_str = ""
+
+        domain_str = self._print(ring.dom)
+        gens_str = (self._print(x) for x in ring.gens)
+        gens_str = ', '.join(gens_str)
+        return domain_str + '[' + gens_str + order_str + ']'
+
     def _print_PolyRing(self, ring):
         return "Polynomial ring in %s over %s with %s order" % \
             (", ".join(map(lambda rs: self._print(rs), ring.symbols)),

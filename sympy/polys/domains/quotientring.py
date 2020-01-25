@@ -129,10 +129,6 @@ class QuotientRing(Ring):
         obj.one = obj(obj.ring.one)
         return obj
 
-
-    def __str__(self):
-        return str(self.ring) + "/" + str(self.base_ideal)
-
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.ring, self.base_ideal))
 

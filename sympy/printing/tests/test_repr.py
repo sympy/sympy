@@ -213,13 +213,13 @@ def test_AlgebraicNumber():
 def test_PolyRing():
     assert srepr(ring("x", ZZ, lex)[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"
     assert srepr(ring("x,y", QQ, grlex)[0]) == "PolyRing((Symbol('x'), Symbol('y')), QQ, grlex)"
-    assert srepr(ring("x,y,z", ZZ["t"], lex)[0]) == "PolyRing((Symbol('x'), Symbol('y'), Symbol('z')), ZZ[t], lex)"
+    assert srepr(ring("x,y,z", ZZ["t"], lex)[0]) == "PolyRing((Symbol('x'), Symbol('y'), Symbol('z')), ZZ[Symbol('t')], lex)"
 
 
 def test_FracField():
     assert srepr(field("x", ZZ, lex)[0]) == "FracField((Symbol('x'),), ZZ, lex)"
     assert srepr(field("x,y", QQ, grlex)[0]) == "FracField((Symbol('x'), Symbol('y')), QQ, grlex)"
-    assert srepr(field("x,y,z", ZZ["t"], lex)[0]) == "FracField((Symbol('x'), Symbol('y'), Symbol('z')), ZZ[t], lex)"
+    assert srepr(field("x,y,z", ZZ["t"], lex)[0]) == "FracField((Symbol('x'), Symbol('y'), Symbol('z')), ZZ[Symbol('t')], lex)"
 
 
 def test_PolyElement():
@@ -242,7 +242,7 @@ def test_PolynomialRingBase():
     assert srepr(ZZ.old_poly_ring(x)) == \
         "GlobalPolynomialRing(ZZ, Symbol('x'))"
     assert srepr(ZZ[x].old_poly_ring(y)) == \
-        "GlobalPolynomialRing(ZZ[x], Symbol('y'))"
+        "GlobalPolynomialRing(ZZ[Symbol('x')], Symbol('y'))"
     assert srepr(QQ.frac_field(x).old_poly_ring(y)) == \
         "GlobalPolynomialRing(FractionField(FracField((Symbol('x'),), QQ, lex)), Symbol('y'))"
 

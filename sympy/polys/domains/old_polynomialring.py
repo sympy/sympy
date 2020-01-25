@@ -53,12 +53,6 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def new(self, element):
         return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
 
-    def __str__(self):
-        s_order = str(self.order)
-        orderstr = (
-            " order=" + s_order) if s_order != self.default_order else ""
-        return str(self.dom) + '[' + ','.join(map(str, self.gens)) + orderstr + ']'
-
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.dom,
                      self.gens, self.order))

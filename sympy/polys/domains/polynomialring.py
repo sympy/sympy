@@ -57,9 +57,6 @@ class PolynomialRing(Ring, CompositeDomain):
     def order(self):
         return self.ring.order
 
-    def __str__(self):
-        return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
-
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype.ring, self.domain, self.symbols))
 
