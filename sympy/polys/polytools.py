@@ -6588,7 +6588,7 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel, sqrt, Symbol
+    >>> from sympy import cancel, sqrt, Symbol, together
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
 
