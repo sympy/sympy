@@ -3,16 +3,16 @@ from __future__ import print_function, division
 from typing import Union
 
 from sympy.core.containers import Tuple
-from sympy.core.basic import Basic
+from sympy.core.basic import Atom, Basic
 from sympy.core.sympify import _sympify
-from sympy.core.singleton import S
+from sympy.core.singleton import S, Singleton
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.matrices import MatrixBase
 
 from .matexpr import MatrixExpr, MatrixSymbol, ZeroMatrix, OneMatrix, Identity
 
 
-class SliceNone(Basic):
+class SliceNone(Atom, metaclass=Singleton):
     """A corresponding sympy object for python singleton ``None`` used
     in ``slice``.
 
@@ -42,10 +42,31 @@ class SliceNone(Basic):
         return super(SliceNone, cls).__new__(cls)
 
 
-def normalize(i: Union[slice, tuple, list, Tuple], parentsize: Basic):
+def _slice_sympify(i: Union[slice, tuple, list, Tuple]):
     if isinstance(i, slice):
         start, stop, step = i.start, i.stop, i.step
-    elif not isinstance(i, (tuple, list, Tuple)):
+    else:
+        if len(i) == 1:
+            start, stop, step = i[0], SliceNone(), SliceNone()
+        elif len(i) == 2:
+            start, stop, step = i[0], i[1], SliceNone()
+        elif len(i) == 3:
+            start, stop, step = i
+        else:
+            raise ValueError(
+                "{} is not a valid slice specification because it has "
+                "more than 3 elements.".format(i))
+
+    def __sympify(item):
+        if item is None:
+            return S.SliceNone
+        return _sympify(item)
+
+    return __sympify(start), __sympify(stop), __sympify(step)
+
+
+def normalize(i, parentsize: Basic):
+    if not isinstance(i, (slice, tuple, list, Tuple)):
         if (i < -parentsize) | (i >= parentsize) == True:
             raise IndexError(
                 "{} must be in the interval ({}, {}]."
@@ -53,40 +74,34 @@ def normalize(i: Union[slice, tuple, list, Tuple], parentsize: Basic):
         if (i < 0) == True:
             i += parentsize
         return i, i+1, 1
-    else:
-        if len(i) == 1:
-            start, stop, step = i[0], parentsize, S.One
-        elif len(i) == 2:
-            start, stop = i
-            step = S.One
-        elif len(i) == 3:
-            start, stop, step = i
 
-    if start is None and stop is None and step is None:
+    start, stop, step = _slice_sympify(i)
+
+    if start is S.SliceNone and stop is S.SliceNone and step is S.SliceNone:
         start, stop, step = S.Zero, parentsize, S.One
-    elif start is None and stop is None and step is not None:
+    elif start is S.SliceNone and stop is S.SliceNone and step is not S.SliceNone:
         step = _sympify(step)
         if step.is_positive:
             start, stop = S.Zero, parentsize
         else:
-            start, stop = parentsize-1, SliceNone()
-    elif start is not None and stop is None and step is None:
+            start, stop = parentsize-1, S.SliceNone
+    elif start is not S.SliceNone and stop is S.SliceNone and step is S.SliceNone:
         start, stop, step = _sympify(start), parentsize, S.One
-    elif start is None and stop is not None and step is None:
+    elif start is S.SliceNone and stop is not S.SliceNone and step is S.SliceNone:
         start, stop, step = S.Zero, _sympify(stop), S.One
-    elif start is not None and stop is not None and step is None:
+    elif start is not S.SliceNone and stop is not S.SliceNone and step is S.SliceNone:
         start, stop, step = _sympify(start), _sympify(stop), S.One
-    elif start is None and stop is not None and step is not None:
+    elif start is S.SliceNone and stop is not S.SliceNone and step is not S.SliceNone:
         start, stop, step = S.Zero, _sympify(stop), _sympify(step)
-    elif start is not None and stop is None and step is not None:
+    elif start is not S.SliceNone and stop is S.SliceNone and step is not S.SliceNone:
         start, step = _sympify(start), _sympify(step)
         if step.is_positive:
             stop = parentsize
         else:
-            stop = SliceNone()
-    elif start is not None and stop is not None and step is None:
+            stop = S.SliceNone
+    elif start is not S.SliceNone and stop is not S.SliceNone and step is S.SliceNone:
         start, stop, step = _sympify(start), _sympify(stop), S.One
-    elif start is not None and stop is not None and step is not None:
+    elif start is not S.SliceNone and stop is not S.SliceNone and step is not S.SliceNone:
         start, stop, step = _sympify(start), _sympify(stop), _sympify(step)
 
     if (start <= -parentsize) == True:
