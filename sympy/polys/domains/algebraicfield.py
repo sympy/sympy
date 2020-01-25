@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.core.sympify import _sympify
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -41,6 +42,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         obj.one = obj.dtype.one(obj.mod.rep, dom)
         return obj
 
+    @property
+    def args(self):
+        # XXX Workaround for pickling
+        return (self.dom, *self.orig_ext)
 
     def new(self, element):
         return self.dtype(element, self.mod.rep, self.dom)

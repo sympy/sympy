@@ -477,6 +477,11 @@ class StrPrinter(Printer):
             (", ".join(map(lambda fs: self._print(fs), field.symbols)),
             self._print(field.domain), self._print(field.order))
 
+    def _print_FractionField(self, domain):
+        cls = domain.__class__.__name__
+        field = self._print(domain.field)
+        return "%s(%s)" % (cls, field)
+
     def _print_FreeGroupElement(self, elm):
         return elm.__str__()
 
