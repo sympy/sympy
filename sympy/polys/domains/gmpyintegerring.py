@@ -21,9 +21,6 @@ class GMPYIntegerRing(IntegerRing):
     tp = type(one)
     alias = 'ZZ_gmpy'
 
-    def __init__(self):
-        """Allow instantiation of this domain. """
-
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(int(a))

@@ -13,5 +13,6 @@ class PythonFiniteField(FiniteField):
 
     alias = 'FF_python'
 
-    def __init__(self, mod, symmetric=True):
-        return super(PythonFiniteField, self).__init__(mod, PythonIntegerRing(), symmetric)
+    def __new__(cls, mod, symmetric=True):
+        return super(PythonFiniteField, cls).__new__(
+            cls, mod, PythonIntegerRing(), symmetric)

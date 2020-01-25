@@ -19,9 +19,6 @@ class PythonIntegerRing(IntegerRing):
     one = dtype(1)
     alias = 'ZZ_python'
 
-    def __init__(self):
-        """Allow instantiation of this domain. """
-
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(a)

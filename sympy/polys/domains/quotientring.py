@@ -118,13 +118,17 @@ class QuotientRing(Ring):
     has_assoc_Field = False
     dtype = QuotientRingElement
 
-    def __init__(self, ring, ideal):
+    def __new__(cls, ring, ideal):
         if not ideal.ring == ring:
             raise ValueError('Ideal must belong to %s, got %s' % (ring, ideal))
-        self.ring = ring
-        self.base_ideal = ideal
-        self.zero = self(self.ring.zero)
-        self.one = self(self.ring.one)
+
+        obj = super(QuotientRing, cls).__new__(cls)
+        obj.ring = ring
+        obj.base_ideal = ideal
+        obj.zero = obj(obj.ring.zero)
+        obj.one = obj(obj.ring.one)
+        return obj
+
 
     def __str__(self):
         return str(self.ring) + "/" + str(self.base_ideal)

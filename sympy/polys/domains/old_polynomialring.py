@@ -33,20 +33,22 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     default_order = "grevlex"
 
-    def __init__(self, dom, *gens, **opts):
+    def __new__(cls, dom, *gens, **opts):
         if not gens:
             raise GeneratorsNeeded("generators not specified")
 
+        obj = super(PolynomialRingBase, cls).__new__(cls)
+
+        obj.ngens = len(gens)
         lev = len(gens) - 1
-        self.ngens = len(gens)
+        obj.zero = obj.dtype.zero(lev, dom, ring=obj)
+        obj.one = obj.dtype.one(lev, dom, ring=obj)
 
-        self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one = self.dtype.one(lev, dom, ring=self)
-
-        self.domain = self.dom = dom
-        self.symbols = self.gens = gens
+        obj.domain = obj.dom = dom
+        obj.symbols = obj.gens = gens
         # NOTE 'order' may not be set if inject was called through CompositeDomain
-        self.order = opts.get('order', monomial_key(self.default_order))
+        obj.order = opts.get('order', monomial_key(obj.default_order))
+        return obj
 
     def new(self, element):
         return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)

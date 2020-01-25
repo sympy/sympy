@@ -16,9 +16,6 @@ class PythonRationalField(RationalField):
     one = dtype(1)
     alias = 'QQ_python'
 
-    def __init__(self):
-        pass
-
     def get_ring(self):
         """Returns ring associated with ``self``. """
         from sympy.polys.domains import PythonIntegerRing

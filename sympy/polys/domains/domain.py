@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from typing import Any, Optional, Type
 
-from sympy.core import Basic, sympify
+from sympy.core import Atom, Basic, sympify
 from sympy.core.compatibility import HAS_GMPY, is_sequence
 from sympy.core.decorators import deprecated
 from sympy.polys.domains.domainelement import DomainElement
@@ -14,7 +14,7 @@ from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
-class Domain(object):
+class Domain(Atom):
     """Represents an abstract domain. """
 
     dtype = None  # type: Optional[Type]
@@ -58,9 +58,6 @@ class Domain(object):
     @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
     def has_Ring(self):
         return self.is_Ring
-
-    def __init__(self):
-        raise NotImplementedError
 
     def __str__(self):
         return self.rep

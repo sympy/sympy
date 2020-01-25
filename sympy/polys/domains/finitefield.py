@@ -24,18 +24,20 @@ class FiniteField(Field, SimpleDomain):
     dom = None
     mod = None
 
-    def __init__(self, mod, dom=None, symmetric=True):
+    def __new__(cls, mod, dom=None, symmetric=True):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
         if dom is None:
             from sympy.polys.domains import ZZ
             dom = ZZ
 
-        self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
-        self.zero = self.dtype(0)
-        self.one = self.dtype(1)
-        self.dom = dom
-        self.mod = mod
+        obj = super(FiniteField, cls).__new__(cls)
+        obj.dtype = ModularIntegerFactory(mod, dom, symmetric, obj)
+        obj.zero = obj.dtype(0)
+        obj.one = obj.dtype(1)
+        obj.dom = dom
+        obj.mod = mod
+        return obj
 
     def __str__(self):
         return 'GF(%s)' % self.mod

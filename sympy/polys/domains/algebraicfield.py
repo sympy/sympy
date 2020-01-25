@@ -21,23 +21,26 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self, dom, *ext):
+    def __new__(cls, dom, *ext):
         if not dom.is_QQ:
             raise DomainError("ground domain must be a rational field")
 
         from sympy.polys.numberfields import to_number_field
 
-        self.orig_ext = ext
-        self.ext = to_number_field(ext)
-        self.mod = self.ext.minpoly.rep
-        self.domain = self.dom = dom
+        obj = super(AlgebraicField, cls).__new__(cls)
+        obj.orig_ext = ext
+        obj.ext = to_number_field(ext)
+        obj.mod = obj.ext.minpoly.rep
+        obj.domain = obj.dom = dom
 
-        self.ngens = 1
-        self.symbols = self.gens = (self.ext,)
-        self.unit = self([dom(1), dom(0)])
+        obj.ngens = 1
+        obj.symbols = obj.gens = (obj.ext,)
+        obj.unit = obj([dom(1), dom(0)])
 
-        self.zero = self.dtype.zero(self.mod.rep, dom)
-        self.one = self.dtype.one(self.mod.rep, dom)
+        obj.zero = obj.dtype.zero(obj.mod.rep, dom)
+        obj.one = obj.dtype.one(obj.mod.rep, dom)
+        return obj
+
 
     def new(self, element):
         return self.dtype(element, self.mod.rep, self.dom)

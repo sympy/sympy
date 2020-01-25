@@ -13,5 +13,6 @@ class GMPYFiniteField(FiniteField):
 
     alias = 'FF_gmpy'
 
-    def __init__(self, mod, symmetric=True):
-        return super(GMPYFiniteField, self).__init__(mod, GMPYIntegerRing(), symmetric)
+    def __new__(cls, mod, symmetric=True):
+        return super(GMPYFiniteField, cls).__new__(
+            cls, mod, GMPYIntegerRing(), symmetric)

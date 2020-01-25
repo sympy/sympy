@@ -143,9 +143,6 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self):
-        pass
-
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return a.as_expr()
