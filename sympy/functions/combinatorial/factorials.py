@@ -288,7 +288,35 @@ class factorial(CombinatorialFunction):
         return self.func(arg)
 
 class MultiFactorial(CombinatorialFunction):
-    pass
+
+    @classmethod
+    def eval(cls, n, alpha):
+        if not alpha.is_integer or not alpha.is_positive:
+            raise ValueError("alpha should be a positive integer")
+        if alpha == 1:
+            return factorial(n)
+        if alpha == 2:
+            factorial2(n)
+
+        if n.is_Number:
+            if not n.is_Integer:
+                raise ValueError("argument must be nonnegative integer "
+                                    "or negative odd integer")
+            if n <= 0 and n > -alpha:
+                return S.One
+            if n.is_nonnegative:
+                if n < alpha:
+                    return n
+                if n % alpha == 0:
+                    return pow(alpha, n / alpha) * factorial(n / alpha)
+                return n * MultiFactorial(n - alpha, alpha)
+
+
+            if n % alpha == 0:
+                raise ValueError("argument should be non negative or negative"
+                                     "argument should not be divisible by alpha")
+            #When n is negative
+            return MultiFactorial(n + alpha, alpha) / (n + alpha)
 
 
 class subfactorial(CombinatorialFunction):

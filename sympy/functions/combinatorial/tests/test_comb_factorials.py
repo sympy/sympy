@@ -4,7 +4,7 @@ from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    Mod, Eq, sqrt, Poly, Dummy, I, Rational)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.functions.combinatorial.factorials import subfactorial
+from sympy.functions.combinatorial.factorials import subfactorial, MultiFactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.testing.pytest import XFAIL, raises, slow
 
@@ -547,6 +547,14 @@ def test_factorial_simplify_fail():
     from sympy.abc import x
     assert simplify(x*polygamma(0, x + 1) - x*polygamma(0, x + 2) +
                     polygamma(0, x + 1) - polygamma(0, x + 2) + 1) == 0
+
+
+def test_multifactorial():
+    assert all(MultiFactorial(i, 4) == ans for i, ans in enumerate(
+            [1, 1, 2, 3, 4, 5, 12, 21, 32, 45, 120, 231, 384, 585,
+             1680, 3465, 6144, 9945, 30240, 65835, 122880, 208845,
+             665280, 1514205, 2949120, 5221125, 17297280, 40883535,
+             82575360, 151412625, 518918400, 1267389585, 2642411520]))
 
 
 def test_subfactorial():
