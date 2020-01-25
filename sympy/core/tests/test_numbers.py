@@ -298,6 +298,7 @@ def test_Integer_new():
     raises(ValueError, lambda: Integer("10.5"))
     assert Integer(Rational('1.' + '9'*20)) == 1
 
+
 def test_DecimalRational_new():
     """
     Test for DecimalRational constructor
@@ -307,6 +308,7 @@ def test_DecimalRational_new():
     assert DecimalRational('.5') is not S.Half
     assert DecimalRational(Float(.75)).__class__ is DecimalRational
     assert DecimalRational('.75').__class__ is DecimalRational
+
 
 def test_Rational_new():
     """"
@@ -1237,6 +1239,18 @@ def test_abs1():
 def test__neg__():
     assert -S.Half == Rational(-1,2)
     assert -DecimalRational(1,2) is DecimalRational(-1,2)
+
+
+def test_DecimalRational_add():
+    assert isinstance(S.One + DecimalRational('.25'), DecimalRational)
+    assert isinstance(DecimalRational('.5') + DecimalRational('.25'), DecimalRational)
+    assert isinstance(S.Half + DecimalRational('.25'), DecimalRational)
+
+
+def test_DecimalRational_sub():
+    assert isinstance(S.One - DecimalRational('.25'), DecimalRational)
+    assert isinstance(DecimalRational('.5') - DecimalRational('.25'), DecimalRational)
+    assert isinstance(S.Half - DecimalRational('.25'), DecimalRational)
 
 
 def test_accept_int():

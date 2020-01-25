@@ -1,6 +1,7 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
-        Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
+        DecimalRational, Float, re, pi, sympify, Add, Mul, Pow, Mod,
+        I, log, S, Max, symbols, oo, zoo, Integer, sign, im, nan,
+        Dummy, factorial, comp, floor
 )
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
@@ -2034,6 +2035,9 @@ def test_add_flatten():
 
     a = Pow(2, 3, evaluate=False)
     assert a + a == 16
+
+    a = symbols('a')
+    assert a + DecimalRational('.5') is not a + S.Half
 
 
 def test_issue_5160_6087_6089_6090():
