@@ -17,7 +17,6 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
-from .determinant import _charpoly
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -131,10 +130,10 @@ def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
         flags.pop('simplify', None)  # pop unsupported flag
 
         if isinstance(simplify, FunctionType):
-            eigs = roots(_charpoly(M, x=Dummy('x'), simplify=simplify,
+            eigs = roots(M.charpoly(x=Dummy('x'), simplify=simplify,
                     dotprodsimp=dotprodsimp), **flags)
         else:
-            eigs = roots(_charpoly(M, x=Dummy('x'), dotprodsimp=dotprodsimp), **flags)
+            eigs = roots(M.charpoly(x=Dummy('x'), dotprodsimp=dotprodsimp), **flags)
 
     # make sure the algebraic multiplicity sums to the
     # size of the matrix
@@ -304,7 +303,7 @@ def _is_diagonalizable_with_eigen(M, reals_only=False, dotprodsimp=None):
     if not M.is_square:
         return False, []
 
-    eigenvecs = _eigenvects(M, simplify=True, dotprodsimp=dotprodsimp)
+    eigenvecs = M.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
 
     for val, mult, basis in eigenvecs:
         if reals_only and not val.is_real: # if we have a complex eigenvalue
@@ -503,7 +502,7 @@ def _eval_is_positive_definite(M, method="eigen", dotprodsimp=None):
 
     if M.is_hermitian:
         if method == 'eigen':
-            eigen = _eigenvals(M, dotprodsimp=dotprodsimp)
+            eigen = M.eigenvals(dotprodsimp=dotprodsimp)
             args  = [x.is_positive for x in eigen.keys()]
 
             return fuzzy_and(args)
@@ -538,7 +537,7 @@ def _is_positive_definite(M):
 
 def _is_positive_semidefinite(M):
     if M.is_hermitian:
-        eigen = _eigenvals(M)
+        eigen = M.eigenvals()
         args  = [x.is_nonnegative for x in eigen.keys()]
 
         return fuzzy_and(args)
@@ -550,7 +549,7 @@ def _is_positive_semidefinite(M):
 
 def _is_negative_definite(M):
     if M.is_hermitian:
-        eigen = _eigenvals(M)
+        eigen = M.eigenvals()
         args  = [x.is_negative for x in eigen.keys()]
 
         return fuzzy_and(args)
@@ -562,7 +561,7 @@ def _is_negative_definite(M):
 
 def _is_negative_semidefinite(M):
     if M.is_hermitian:
-        eigen = _eigenvals(M)
+        eigen = M.eigenvals()
         args  = [x.is_nonpositive for x in eigen.keys()]
 
         return fuzzy_and(args)
@@ -574,7 +573,7 @@ def _is_negative_semidefinite(M):
 
 def _is_indefinite(M):
     if M.is_hermitian:
-        eigen        = _eigenvals(M)
+        eigen = M.eigenvals()
         args1        = [x.is_positive for x in eigen.keys()]
         any_positive = fuzzy_or(args1)
         args2        = [x.is_negative for x in eigen.keys()]
@@ -952,7 +951,7 @@ def _left_eigenvects(M, **flags):
 
     """
 
-    eigs = _eigenvects(M.transpose(), **flags)
+    eigs = M.transpose().eigenvects(**flags)
 
     return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
 

@@ -3,7 +3,6 @@ from __future__ import division, print_function
 from sympy.core.compatibility import reduce
 
 from .utilities import _iszero
-from .reductions import _echelon_form, _rref
 
 
 def _columnspace(M, simplify=False, dotprodsimp=None):
@@ -43,7 +42,7 @@ def _columnspace(M, simplify=False, dotprodsimp=None):
     rowspace
     """
 
-    reduced, pivots = _echelon_form(M, simplify=simplify, with_pivots=True,
+    reduced, pivots = M.echelon_form(simplify=simplify, with_pivots=True,
             dotprodsimp=dotprodsimp)
 
     return [M.col(i) for i in pivots]
@@ -83,7 +82,7 @@ def _nullspace(M, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
     rowspace
     """
 
-    reduced, pivots = _rref(M, iszerofunc=iszerofunc, simplify=simplify,
+    reduced, pivots = M.rref(iszerofunc=iszerofunc, simplify=simplify,
             dotprodsimp=dotprodsimp)
 
     free_vars = [i for i in range(M.cols) if i not in pivots]
@@ -128,7 +127,7 @@ def _rowspace(M, simplify=False, dotprodsimp=None):
     [Matrix([[1, 3, 0]]), Matrix([[0, 0, 6]])]
     """
 
-    reduced, pivots = _echelon_form(M, simplify=simplify, with_pivots=True,
+    reduced, pivots = M.echelon_form(simplify=simplify, with_pivots=True,
             dotprodsimp=dotprodsimp)
 
     return [reduced.row(i) for i in range(len(pivots))]

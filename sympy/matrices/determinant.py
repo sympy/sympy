@@ -344,7 +344,7 @@ def _adjugate(M, method="berkowitz", dotprodsimp=None):
     sympy.matrices.common.MatrixCommon.transpose
     """
 
-    return _cofactor_matrix(M, method=method, dotprodsimp=dotprodsimp).transpose()
+    return M.cofactor_matrix(method=method, dotprodsimp=dotprodsimp).transpose()
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -466,7 +466,7 @@ def _cofactor(M, i, j, method="berkowitz", dotprodsimp=None):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return (-1)**((i + j) % 2) * _minor(M, i, j, method, dotprodsimp=dotprodsimp)
+    return (-1)**((i + j) % 2) * M.minor(i, j, method, dotprodsimp=dotprodsimp)
 
 
 def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
@@ -506,7 +506,7 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
         raise NonSquareMatrixError()
 
     return M._new(M.rows, M.cols,
-            lambda i, j: _cofactor(M, i, j, method, dotprodsimp=dotprodsimp))
+            lambda i, j: M.cofactor(i, j, method, dotprodsimp=dotprodsimp))
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -618,11 +618,11 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
             return _dotprodsimp(m) if dotprodsimp else m
 
     if method == "bareiss":
-        return _det_bareiss(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return M._eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     elif method == "berkowitz":
-        return _det_berkowitz(M, dotprodsimp=dotprodsimp)
+        return M._eval_det_berkowitz(dotprodsimp=dotprodsimp)
     elif method == "lu":
-        return _det_LU(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        return M._eval_det_lu(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
     else:
         raise MatrixError('unknown method for calculating determinant')
 
@@ -832,7 +832,7 @@ def _minor(M, i, j, method="berkowitz", dotprodsimp=None):
     if not M.is_square:
         raise NonSquareMatrixError()
 
-    return _det(_minor_submatrix(M, i, j), method=method, dotprodsimp=dotprodsimp)
+    return M.minor_submatrix(i, j).det(method=method, dotprodsimp=dotprodsimp)
 
 
 def _minor_submatrix(M, i, j):

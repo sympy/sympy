@@ -6,7 +6,7 @@ from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 
 from .utilities import _iszero
-from .determinant import _find_reasonable_pivot, _det
+from .determinant import _find_reasonable_pivot
 
 
 def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
@@ -249,7 +249,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         if not False in zeros and not None in zeros:
             return 0
 
-        d = _det(M, dotprodsimp=dotprodsimp)
+        d = M.det(dotprodsimp=dotprodsimp)
 
         if iszerofunc(d) and False in zeros:
             return 1
