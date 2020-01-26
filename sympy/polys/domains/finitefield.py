@@ -39,7 +39,7 @@ class FiniteField(Field, SimpleDomain):
         obj.zero = obj.dtype(0)
         obj.one = obj.dtype(1)
         obj.dom = dom
-        obj.mod = mod
+        obj.mod = int(mod)
         return obj
 
     def __str__(self):
