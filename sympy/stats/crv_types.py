@@ -2544,10 +2544,6 @@ class MoyalDistribution(SingleContinuousDistribution):
         den = (sqrt(2*pi) * sigma)
         return num/den
 
-    def _cdf(self, x):
-        mu, sigma = self.mu, self.sigma
-        return erfc(exp(-(x - mu)/(2*sigma))/sqrt(2))
-
     def _characteristic_function(self, t):
         mu, sigma = self.mu, self.sigma
         term1 = exp(I*t*mu)
@@ -2587,15 +2583,15 @@ def Moyal(name, mu, sigma):
     ========
 
     >>> from sympy.stats import Moyal, density, cdf
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, simplify
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True, real=True)
     >>> z = Symbol("z")
     >>> X = Moyal("x", mu, sigma)
     >>> density(X)(z)
     sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
-    >>> cdf(X)(z)
-    erfc(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+    >>> simplify(cdf(X)(z))
+    1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
 
     References
     ==========
