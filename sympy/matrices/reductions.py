@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from types import FunctionType
 
+from sympy.core.cache import cacheit
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 
@@ -128,7 +129,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
     return mat, tuple(pivot_cols), tuple(swaps)
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _row_reduce(M, iszerofunc, simpfunc, normalize_last=True,
                 normalize=True, zero_above=True, dotprodsimp=None):
 
@@ -192,7 +193,6 @@ def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
     return mat
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
 def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
     """Returns the rank of a matrix.
 

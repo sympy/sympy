@@ -4,6 +4,8 @@ from __future__ import print_function, division
 
 from sympy.matrices import MutableDenseMatrix, zeros
 
+from ..matrices.reductions import _rref
+
 class RawMatrix(MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)
 
@@ -34,8 +36,10 @@ def solve_lin_sys(eqs, ring, _raw=True):
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)
 
-    # solve by row-reduction
-    echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
+    # solve by row-reduction, use the internal `_rref` function to avoid matrix
+    # method coercion to immutable which would raise due to use of elements
+    # here derived from `CantSimplify`.
+    echelon, pivots = _rref(matrix, iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions
     keys = ring.symbols if as_expr else ring.gens

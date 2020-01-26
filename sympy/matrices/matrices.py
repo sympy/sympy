@@ -28,7 +28,7 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError)
 
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul, _toselfclass
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
@@ -147,21 +147,32 @@ class MatrixReductions(MatrixDeterminant):
 
     def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
             dotprodsimp=None):
-        return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
+        matpiv = _echelon_form(self.as_immutable(), iszerofunc=iszerofunc, simplify=simplify,
                 with_pivots=with_pivots, dotprodsimp=dotprodsimp)
+
+        if with_pivots:
+            return _toselfclass(self, matpiv[0]), matpiv[1]
+
+        return _toselfclass(self, matpiv)
 
     @property
     def is_echelon(self):
         return _is_echelon(self)
 
     def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
-        return _rank(self, iszerofunc=iszerofunc, simplify=simplify,
+        return _rank(self.as_immutable(), iszerofunc=iszerofunc, simplify=simplify,
                 dotprodsimp=dotprodsimp)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True, dotprodsimp=None):
-        return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
-            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+        matpiv = _rref(self.as_immutable(), iszerofunc=iszerofunc,
+            simplify=simplify, pivots=pivots, normalize_last=normalize_last,
+            dotprodsimp=dotprodsimp)
+
+        if pivots:
+            return _toselfclass(self, matpiv[0]), matpiv[1]
+
+        return _toselfclass(self, matpiv)
 
     echelon_form.__doc__ = _echelon_form.__doc__
     is_echelon.__doc__   = _is_echelon.__doc__

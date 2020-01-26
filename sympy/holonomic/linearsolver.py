@@ -6,6 +6,7 @@ from sympy.core import S
 from sympy.matrices.common import ShapeError
 from sympy.matrices.dense import MutableDenseMatrix
 
+from ..matrices.reductions import _rref
 
 class NewMatrix(MutableDenseMatrix):
     """
@@ -49,8 +50,10 @@ class NewMatrix(MutableDenseMatrix):
         aug = self.hstack(self.copy(), b.copy())
         row, col = aug[:, :-1].shape
 
-        # solve by reduced row echelon form
-        A, pivots = aug.rref()
+        # solve by reduced row echelon form, use the internal `_rref` function
+        # to avoid matrix method coercion to immutable which would raise due to
+        # use of elements here derived from `CantSimplify`.
+        A, pivots = _rref(aug)
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)

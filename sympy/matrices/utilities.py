@@ -12,3 +12,9 @@ def _is_zero_after_expand_mul(x):
     """Tests by expand_mul only, suitable for polynomials and rational
     functions."""
     return expand_mul(x) == 0
+
+
+def _toselfclass(self, obj):
+  cls = self.__class__
+
+  return obj if isinstance(obj, cls) else cls(obj)
