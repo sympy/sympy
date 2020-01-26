@@ -16,3 +16,6 @@ class PythonFiniteField(FiniteField):
     def __new__(cls, mod, symmetric=True):
         return super(PythonFiniteField, cls).__new__(
             cls, mod, PythonIntegerRing(), symmetric)
+
+    def __getnewargs__(self):
+        return self.args[0], self.args[2]

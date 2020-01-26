@@ -42,8 +42,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         obj.one = obj.dtype.one(obj.mod.rep, dom)
         return obj
 
-    @property
-    def args(self):
+    def __getnewargs__(self):
         # XXX Workaround for pickling
         return (self.dom, *self.orig_ext)
 

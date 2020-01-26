@@ -36,6 +36,8 @@ excluded_attrs = set([
     '_mhash',   # Cached after __hash__ is called but set to None after creation
     'message',   # This is an exception attribute that is present but deprecated in Py2 (can be removed when Py2 support is dropped
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
+    'has_Field',
+    'has_Ring',
     ])
 
 
@@ -432,13 +434,12 @@ def test_pickling_polys_elements():
     #     check(c)
 
 def test_pickling_polys_domains():
-    # from sympy.polys.domains.pythonfinitefield import PythonFiniteField
+    from sympy.polys.domains.pythonfinitefield import PythonFiniteField
     from sympy.polys.domains.pythonintegerring import PythonIntegerRing
     from sympy.polys.domains.pythonrationalfield import PythonRationalField
 
-    # TODO: fix pickling of ModularInteger
-    # for c in (PythonFiniteField, PythonFiniteField(17)):
-    #     check(c)
+    for c in (PythonFiniteField, PythonFiniteField(17)):
+        check(c)
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
         check(c, check_attr=False)
@@ -447,13 +448,12 @@ def test_pickling_polys_domains():
         check(c, check_attr=False)
 
     if HAS_GMPY:
-        # from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
+        from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
         from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
         from sympy.polys.domains.gmpyrationalfield import GMPYRationalField
 
-        # TODO: fix pickling of ModularInteger
-        # for c in (GMPYFiniteField, GMPYFiniteField(17)):
-        #     check(c)
+        for c in (GMPYFiniteField, GMPYFiniteField(17)):
+            check(c)
 
         for c in (GMPYIntegerRing, GMPYIntegerRing()):
             check(c, check_attr=False)

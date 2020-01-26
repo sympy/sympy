@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from sympy.core.basic import Basic
+from sympy.core.sympify import _sympify
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
@@ -31,7 +33,8 @@ class FiniteField(Field, SimpleDomain):
             from sympy.polys.domains import ZZ
             dom = ZZ
 
-        obj = super(FiniteField, cls).__new__(cls)
+        mod, dom, symmetric = _sympify(mod), _sympify(dom), _sympify(symmetric)
+        obj = Basic.__new__(cls, mod, dom, symmetric)
         obj.dtype = ModularIntegerFactory(mod, dom, symmetric, obj)
         obj.zero = obj.dtype(0)
         obj.one = obj.dtype(1)
