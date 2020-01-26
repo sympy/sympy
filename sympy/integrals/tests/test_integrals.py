@@ -1648,3 +1648,7 @@ def test_issue_2975():
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+
+def test_issue_17841():
+    f = diff(1/(x**2+x+I), x)
+    assert integrate(f, x) == 1/(x**2 + x + I)
