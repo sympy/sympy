@@ -861,7 +861,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms
+        from sympy import expand_mul, factor_terms, Order
 
         old = self
 
@@ -872,24 +872,46 @@ class Add(Expr, AssocOp):
         infinite = [t for t in expr.args if t.is_infinite]
         compute = False
 
-        leading_term = [t.as_leading_term(x) for t in expr.args]
-        new_expr = expr.func(*leading_term).removeO()
+        leading_terms = [t.as_leading_term(x) for t in expr.args]
 
-        if not new_expr:
+        try:
+            min = Order(leading_terms[0]).getn()
+        except Exception:
             compute = True
-        elif new_expr is not S.NaN:
-            if new_expr.is_Add:
-                final_leading_term = [t for t in new_expr.args]
-            else:
-                final_leading_term = [new_expr]
+        else:
+            new_expr = leading_terms[0]
 
-            if len(expr.args) != len(final_leading_term):
-                canceled_term = [t for t in leading_term if t not in final_leading_term]
-                expr_sum = expr.func(*canceled_term)
-                if expr_sum == S(0):
+        if compute == False:
+            for term in leading_terms[1:]:
+                try:
+                    order = Order(term).getn()
+                except Exception:
                     compute = True
+                    break
+                else:
+                    if order < min:
+                        min = order
+                        new_expr = term
+                    elif order == min:
+                        new_expr += term
 
-        expr = new_expr
+
+        if compute == False:
+            if not new_expr:
+                compute = True
+            elif new_expr is not S.NaN:
+                if new_expr.is_Add:
+                    final_leading_term = [t for t in new_expr.args]
+                else:
+                    final_leading_term = [new_expr]
+
+                if len(expr.args) != len(final_leading_term):
+                    canceled_term = [t for t in leading_terms if t not in final_leading_term]
+                    expr_sum = expr.func(*canceled_term)
+                    if expr_sum == S(0):
+                        compute = True
+
+            expr = new_expr
 
         if compute:
             # simple leading term analysis gave us cancelled terms but we have to send
