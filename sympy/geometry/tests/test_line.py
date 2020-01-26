@@ -749,13 +749,13 @@ def test_parameter_value():
     raises(ValueError, lambda: l.parameter_value((0, 0), t))
 
 
-def test_bisection():
+def test_bisections():
     r1 = Line3D(Point3D(1, 0, 0), direction_ratio=[0, 1, 1])
     r2 = Line3D(Point3D(0, 1, 0), Point3D(1, 1, 1))
 
     assert r1.intersection(r2) == [Point3D(1, 1, 1)]
 
-    r3 = r1.bisector(r2)
+    r3 = r1.bisectors(r2)
 
     # assert r3 == [Line3D(Point3D(1, 1, 1), Point3D(3/2, 3/2, 2))]
     # TODO
