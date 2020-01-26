@@ -197,8 +197,8 @@ def union_sets(a, b): # noqa:F811
         # 2nd possibility: Both sequences are alternating, i.e. they have the
         # same period and the midpoint of `a`'s period interval must be
         # contained in the second sequence.
-        midpoint = q + p/2
-        if in_sequence(midpoint, r, s):
+        midpt = q + p/2
+        if ((p - r).is_zero or (p + r).is_zero) and in_sequence(midpt, r, s):
             u, v = p/2, q
             n = Dummy('n')
             return imageset(Lambda(n, u*n + v), S.Integers)
