@@ -3,8 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.matrices import MutableDenseMatrix, zeros
-
-from ..matrices.reductions import _rref
+from sympy.matrices.reductions import _rref
 
 class RawMatrix(MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)

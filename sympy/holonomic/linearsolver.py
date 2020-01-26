@@ -5,8 +5,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.matrices.common import ShapeError
 from sympy.matrices.dense import MutableDenseMatrix
-
-from ..matrices.reductions import _rref
+from sympy.matrices.reductions import _rref
 
 class NewMatrix(MutableDenseMatrix):
     """
