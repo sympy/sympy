@@ -20,9 +20,10 @@ sympify_converter[MatrixBase] = sympify_matrix
 
 class _ImmutableNoWrappers:
     """Mixin class to eliminate the method wrappers for underlying functions
-    needed in a mutable matrix. This just points the methods to the underlying
-    functions since the matrix is already immutable for the underlying caching
-    to work properly."""
+    needed in a mutable matrix. This class overrides MatrixBase wrappers for
+    these functions by assigning the underlying functions directly to class
+    methods and thus removing the wrapper layer. Since the class is already
+    immutable those wrappers are not needed to convert to immutable."""
 
     echelon_form = _echelon_form
     is_echelon   = property(_is_echelon)
