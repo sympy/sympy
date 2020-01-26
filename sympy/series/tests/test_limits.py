@@ -610,5 +610,4 @@ def test_issue_18306():
     assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
 
 def test_issue_18442():
-    assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == \
-            AccumBounds(-oo, oo)*AccumBounds(-oo, oo)**(2**(sqrt(pi)))
+    assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == AccumBounds(-oo, oo)
