@@ -346,10 +346,10 @@ def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
 
-    The return value is guaranteed to be equal to the input. ValueError
-    is raised if the input has a non-integral value. When ``strict`` is
-    False, non-integer input that compares equal to the integer value
-    will not raise an error.
+    The return value is guaranteed to be equal to the input. ValueError is
+    raised if the input has a non-integral value. When ``strict`` is True, this
+    uses `__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>`_
+    and when it is False it uses ``int``.
 
 
     Examples
@@ -392,16 +392,19 @@ def as_int(n, strict=True):
     ...
     ValueError: ... is not an integer
     """
-    from sympy.core.numbers import Integer
-    try:
-        if strict and not isinstance(n, SYMPY_INTS + (Integer,)):
-            raise TypeError
-        result = int(n)
-        if result != n:
-            raise TypeError
+    if strict:
+        try:
+            return operator.index(n)
+        except TypeError:
+            raise ValueError('%s is not an integer' % (n,))
+    else:
+        try:
+            result = int(n)
+        except TypeError:
+            raise ValueError('%s is not an integer' % (n,))
+        if n != result:
+            raise ValueError('%s is not an integer' % (n,))
         return result
-    except TypeError:
-        raise ValueError('%s is not an integer' % (n,))
 
 
 def default_sort_key(item, order=None):
