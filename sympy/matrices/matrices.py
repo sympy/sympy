@@ -818,9 +818,6 @@ class MatrixBase(MatrixDeprecated,
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    # needed for python 2 compatibility
-    def __ne__(self, other):
-        return not self == other
 
     def _diagonal_solve(self, rhs):
         """Helper function of function diagonal_solve, without the error
