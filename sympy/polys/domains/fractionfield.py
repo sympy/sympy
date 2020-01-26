@@ -59,9 +59,6 @@ class FractionField(Field, CompositeDomain):
     def get_exact(self):
         return FractionField(self.domain.get_exact(), self.symbols)
 
-    def __str__(self):
-        return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
-
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype.field, self.domain, self.symbols))
 
