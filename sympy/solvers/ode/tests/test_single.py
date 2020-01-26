@@ -35,3 +35,11 @@ def test_SingleODESolver():
 
     solver = NthAlgebraic(problem)
     assert solver.matches() is False
+
+    #These are just test for order of ODE
+
+    problem = SingleODEProblem(f(x).diff(x) + f(x), f(x), x)
+    assert problem.order == 1
+
+    problem = SingleODEProblem(f(x).diff(x,4) + f(x).diff(x,2) - f(x).diff(x,3), f(x), x)
+    assert problem.order == 4

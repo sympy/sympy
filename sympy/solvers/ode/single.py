@@ -10,7 +10,7 @@ from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol, Dummy
 from sympy.integrals import Integral
 from sympy.simplify import simplify
-
+from sympy.solvers.deutils import ode_order
 from sympy.solvers.solvers import solve
 
 
@@ -53,12 +53,18 @@ class SingleODEProblem:
     eq = None  # type: Expr
     func = None  # type: AppliedUndef
     sym = None  # type: Symbol
+    _order = None
 
     def __init__(self, eq, func, sym):
         self.eq = eq
         self.func = func
         self.sym = sym
 
+    @property
+    def order(self):
+        if self._order is None:
+            self._order = ode_order(self.eq, self.func)
+        return self._order
     # TODO: Add methods that can be used by many ODE solvers:
     # order
     # is_linear()
