@@ -190,9 +190,9 @@ def union_sets(a, b): # noqa:F811
 
     # 1st possibility: `a` is a subset of `b` or vice-versa
     if is_subset(p, q, r, s):
-        return b
+        return b.doit()  # make output a bit more deterministic
     elif is_subset(r, s, p, q):
-        return a
+        return a.doit()
     else:
         # 2nd possibility: Both sequences are alternating, i.e. they have the
         # same period and the midpoint of `a`'s period interval must be
