@@ -2606,7 +2606,12 @@ class _MinimalMatrix(object):
     def shape(self):
         return (self.rows, self.cols)
 
-    def as_immutable(self): # this is needed here ONLY FOR TESTS.
+
+class _CastableMatrix: # this is needed here ONLY FOR TESTS.
+    def as_mutable(self):
+        return self
+
+    def as_immutable(self):
         return self
 
 
