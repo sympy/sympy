@@ -2,9 +2,9 @@
 
 from __future__ import print_function, division
 
-from sympy.matrices import Matrix, zeros
+from sympy.matrices import MutableDenseMatrix, zeros
 
-class RawMatrix(Matrix):
+class RawMatrix(MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)
 
 def eqs_to_matrix(eqs, ring):
@@ -29,7 +29,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     """
     as_expr = not _raw
 
-    assert ring.domain.has_Field
+    assert ring.domain.is_Field
 
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)

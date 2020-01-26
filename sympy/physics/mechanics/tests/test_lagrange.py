@@ -28,7 +28,7 @@ def test_disc_on_an_incline_plane():
     # is created. Finally, we create the disc.
     Do = Point('Do')
     Do.set_vel(N, yd * A.x)
-    I = m * R**2 / 2 * B.z | B.z
+    I = m * R**2/2 * B.z | B.z
     D = RigidBody('D', Do, B, m, (I, Do))
 
     # To construct the Lagrangian, 'L', of the disc, we determine its kinetic
@@ -43,7 +43,7 @@ def test_disc_on_an_incline_plane():
     # supply it the necessary arguments and generate the equations of motion.
     # The'rhs' method solves for the q_double_dots (i.e. the second derivative
     # with respect to time  of the generalized coordinates and the lagrange
-    # multiplers.
+    # multipliers.
     q = [y, theta]
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
@@ -161,7 +161,7 @@ def test_dub_pen():
     ParP.potential_energy = - m * g * l * cos(q1)
     ParR.potential_energy = - m * g * l * cos(q1) - m * g * l * cos(q2)
     L = Lagrangian(N, ParP, ParR)
-    lm = LagrangesMethod(L, [q1, q2])
+    lm = LagrangesMethod(L, [q1, q2], bodies=[ParP, ParR])
     lm.form_lagranges_equations()
 
     assert simplify(l*m*(2*g*sin(q1) + l*sin(q1)*sin(q2)*q2dd
@@ -170,6 +170,7 @@ def test_dub_pen():
     assert simplify(l*m*(g*sin(q2) + l*sin(q1)*sin(q2)*q1dd
         - l*sin(q1)*cos(q2)*q1d**2 + l*sin(q2)*cos(q1)*q1d**2
         + l*cos(q1)*cos(q2)*q1dd + l*q2dd) - lm.eom[1]) == 0
+    assert lm.bodies == [ParP, ParR]
 
 
 def test_rolling_disc():
@@ -202,7 +203,7 @@ def test_rolling_disc():
     Dmc.v2pt_theory(C, N, R)
 
     # Forming the inertia dyadic.
-    I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+    I = inertia(L, m/4 * r**2, m/2 * r**2, m/4 * r**2)
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
 
     # Finally we form the equations of motion, using the same steps we did

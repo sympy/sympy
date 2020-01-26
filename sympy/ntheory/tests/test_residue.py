@@ -1,14 +1,16 @@
 from collections import defaultdict
-from sympy import Symbol
-from sympy.core.compatibility import range
+from sympy import S, Symbol, Tuple, Dummy
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius
-from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
+    sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
+    polynomial_congruence
+from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
+    _discrete_log_trial_mul, _discrete_log_shanks_steps, \
+    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
 from sympy.polys.domains import ZZ
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_residue():
@@ -26,10 +28,6 @@ def test_residue():
     assert is_primitive_root(11, 14) is False
     assert is_primitive_root(12, 17) == is_primitive_root(29, 17)
     raises(ValueError, lambda: is_primitive_root(3, 6))
-
-    assert [primitive_root(i) for i in range(2, 31)] == [1, 2, 3, 2, 5, 3, \
-       None, 2, 3, 2, None, 2, 3, None, None, 3, 5, 2, None, None, 7, 5, \
-       None, 2, 7, 2, None, 2, None]
 
     for p in primerange(3, 100):
         it = _primitive_root_prime_iter(p)
@@ -63,6 +61,9 @@ def test_residue():
     raises(ValueError, lambda: is_quad_residue(2, 0))
 
 
+    assert quadratic_residues(S.One) == [0]
+    assert quadratic_residues(1) == [0]
+    assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]
     assert [len(quadratic_residues(i)) for i in range(1, 20)] == \
@@ -73,6 +74,8 @@ def test_residue():
     assert sqrt_mod(3, -13) == 4
     assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
+    assert sqrt_mod(67, 101) == None
+    assert sqrt_mod(1020, 104729) == None
 
     for p in range(3, 100):
         d = defaultdict(list)
@@ -123,8 +126,49 @@ def test_residue():
     assert type(next(sqrt_mod_iter(1, 7, ZZ))) is type(ZZ(1))
 
     assert is_nthpow_residue(2, 1, 5)
+
+    #issue 10816
+    assert is_nthpow_residue(1, 0, 1) is False
+    assert is_nthpow_residue(1, 0, 2) is True
+    assert is_nthpow_residue(3, 0, 2) is True
+    assert is_nthpow_residue(0, 1, 8) is True
+    assert is_nthpow_residue(2, 3, 2) is True
+    assert is_nthpow_residue(2, 3, 9) is False
+    assert is_nthpow_residue(3, 5, 30) is True
+    assert is_nthpow_residue(21, 11, 20) is True
+    assert is_nthpow_residue(7, 10, 20) is False
+    assert is_nthpow_residue(5, 10, 20) is True
+    assert is_nthpow_residue(3, 10, 48) is False
+    assert is_nthpow_residue(1, 10, 40) is True
+    assert is_nthpow_residue(3, 10, 24) is False
+    assert is_nthpow_residue(1, 10, 24) is True
+    assert is_nthpow_residue(3, 10, 24) is False
+    assert is_nthpow_residue(2, 10, 48) is False
+    assert is_nthpow_residue(81, 3, 972) is False
+    assert is_nthpow_residue(243, 5, 5103) is True
+    assert is_nthpow_residue(243, 3, 1240029) is False
+    assert is_nthpow_residue(36010, 8, 87382) is True
+    assert is_nthpow_residue(28552, 6, 2218) is True
+    assert is_nthpow_residue(92712, 9, 50026) is True
+    x = set([pow(i, 56, 1024) for i in range(1024)])
+    assert set([a for a in range(1024) if is_nthpow_residue(a, 56, 1024)]) == x
+    x = set([ pow(i, 256, 2048) for i in range(2048)])
+    assert set([a for a in range(2048) if is_nthpow_residue(a, 256, 2048)]) == x
+    x = set([ pow(i, 11, 324000) for i in range(1000)])
+    assert [ is_nthpow_residue(a, 11, 324000) for a in x]
+    x = set([ pow(i, 17, 22217575536) for i in range(1000)])
+    assert [ is_nthpow_residue(a, 17, 22217575536) for a in x]
+    assert is_nthpow_residue(676, 3, 5364)
+    assert is_nthpow_residue(9, 12, 36)
+    assert is_nthpow_residue(32, 10, 41)
+    assert is_nthpow_residue(4, 2, 64)
+    assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
+    assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
+    assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
+
+    assert nthroot_mod(29, 31, 74) == [45]
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
           (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),
@@ -132,8 +176,17 @@ def test_residue():
         r = nthroot_mod(a, q, p)
         assert pow(r, q, p) == a
     assert nthroot_mod(11, 3, 109) is None
+    assert nthroot_mod(16, 5, 36, True) == [4, 22]
+    assert nthroot_mod(9, 16, 36, True) == [3, 9, 15, 21, 27, 33]
+    assert nthroot_mod(4, 3, 3249000) == []
+    assert nthroot_mod(36010, 8, 87382, True) == [40208, 47174]
+    assert nthroot_mod(0, 12, 37, True) == [0]
+    assert nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    assert nthroot_mod(4, 4, 27, True) == [5, 22]
+    assert nthroot_mod(4, 4, 121, True) == [19, 102]
+    assert nthroot_mod(2, 3, 7, True) == []
 
-    for p in primerange(5, 100):
+    for p in range(5, 100):
         qv = range(3, p, 4)
         for q in qv:
             d = defaultdict(list)
@@ -144,7 +197,7 @@ def test_residue():
                 if d[a]:
                     assert d[a] == res
                 else:
-                    assert res is None
+                    assert res == []
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
@@ -177,3 +230,57 @@ def test_residue():
     assert mobius(p) == -1
     raises(TypeError, lambda: mobius(x))
     raises(ValueError, lambda: mobius(i))
+
+    assert _discrete_log_trial_mul(587, 2**7, 2) == 7
+    assert _discrete_log_trial_mul(941, 7**18, 7) == 18
+    assert _discrete_log_trial_mul(389, 3**81, 3) == 81
+    assert _discrete_log_trial_mul(191, 19**123, 19) == 123
+    assert _discrete_log_shanks_steps(442879, 7**2, 7) == 2
+    assert _discrete_log_shanks_steps(874323, 5**19, 5) == 19
+    assert _discrete_log_shanks_steps(6876342, 7**71, 7) == 71
+    assert _discrete_log_shanks_steps(2456747, 3**321, 3) == 321
+    assert _discrete_log_pollard_rho(6013199, 2**6, 2, rseed=0) == 6
+    assert _discrete_log_pollard_rho(6138719, 2**19, 2, rseed=0) == 19
+    assert _discrete_log_pollard_rho(36721943, 2**40, 2, rseed=0) == 40
+    assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
+    raises(ValueError, lambda: _discrete_log_pollard_rho(11, 7, 31, rseed=0))
+    raises(ValueError, lambda: _discrete_log_pollard_rho(227, 3**7, 5, rseed=0))
+
+    assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
+    assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
+    assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
+    assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert discrete_log(587, 2**9, 2) == 9
+    assert discrete_log(2456747, 3**51, 3) == 51
+    assert discrete_log(32942478, 11**127, 11) == 127
+    assert discrete_log(432751500361, 7**324, 7) == 324
+    args = 5779, 3528, 6215
+    assert discrete_log(*args) == 687
+    assert discrete_log(*Tuple(*args)) == 687
+    assert quadratic_congruence(400, 85, 125, 1600) == [295, 615, 935, 1255, 1575]
+    assert quadratic_congruence(3, 6, 5, 25) == [3, 20]
+    assert quadratic_congruence(120, 80, 175, 500) == []
+    assert quadratic_congruence(15, 14, 7, 2) == [1]
+    assert quadratic_congruence(8, 15, 7, 29) == [10, 28]
+    assert quadratic_congruence(160, 200, 300, 461) == [144, 431]
+    assert quadratic_congruence(100000, 123456, 7415263, 48112959837082048697) == [30417843635344493501, 36001135160550533083]
+    assert quadratic_congruence(65, 121, 72, 277) == [249, 252]
+    assert quadratic_congruence(5, 10, 14, 2) == [0]
+    assert quadratic_congruence(10, 17, 19, 2) == [1]
+    assert quadratic_congruence(10, 14, 20, 2) == [0, 1]
+    assert polynomial_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1,
+        972000) == [220999, 242999, 463999, 485999, 706999, 728999, 949999, 971999]
+
+    assert polynomial_congruence(x**3 - 10*x**2 + 12*x - 82, 33075) == [30287]
+    assert polynomial_congruence(x**2 + x + 47, 2401) == [785, 1615]
+    assert polynomial_congruence(10*x**2 + 14*x + 20, 2) == [0, 1]
+    assert polynomial_congruence(x**3 + 3, 16) == [5]
+    assert polynomial_congruence(65*x**2 + 121*x + 72, 277) == [249, 252]
+    assert polynomial_congruence(x**4 - 4, 27) == [5, 22]
+    assert polynomial_congruence(35*x**3 - 6*x**2 - 567*x + 2308, 148225) == [86957,
+        111157, 122531, 146731]
+    assert polynomial_congruence(x**16 - 9, 36) == [3, 9, 15, 21, 27, 33]
+    assert polynomial_congruence(x**6 - 2*x**5 - 35, 6125) == [3257]
+    raises(ValueError, lambda: polynomial_congruence(x**x, 6125))
+    raises(ValueError, lambda: polynomial_congruence(x**i, 6125))
+    raises(ValueError, lambda: polynomial_congruence(0.1*x**2 + 6, 100))

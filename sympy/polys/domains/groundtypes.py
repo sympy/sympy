@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-__all__ = []
-
 from sympy.core.compatibility import builtins, HAS_GMPY
 
 PythonInteger = builtins.int
@@ -14,7 +12,7 @@ from .pythonrational import PythonRational
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,
-    igcd as python_gcd,
+    igcd2 as python_gcd,
     ilcm as python_lcm,
 )
 
@@ -51,14 +49,16 @@ elif HAS_GMPY == 2:
         qdiv as gmpy_qdiv,
     )
 else:
-    class GMPYInteger(object):
+    class _GMPYInteger(object):
         def __init__(self, obj):
             pass
 
-    class GMPYRational(object):
+    class _GMPYRational(object):
         def __init__(self, obj):
             pass
 
+    GMPYInteger = _GMPYInteger
+    GMPYRational = _GMPYRational
     gmpy_factorial = None
     gmpy_numer = None
     gmpy_denom = None
@@ -78,3 +78,24 @@ def python_sqrt(n):
 
 def python_factorial(n):
     return int(mlib.ifac(n))
+
+
+__all__ = [
+    'PythonInteger', 'PythonReal', 'PythonComplex',
+
+    'PythonRational',
+
+    'python_gcdex', 'python_gcd', 'python_lcm',
+
+    'SymPyReal', 'SymPyInteger', 'SymPyRational',
+
+    'GMPYInteger', 'GMPYRational', 'gmpy_factorial', 'gmpy_numer',
+    'gmpy_denom', 'gmpy_gcdex', 'gmpy_gcd', 'gmpy_lcm', 'gmpy_sqrt',
+    'gmpy_qdiv',
+
+    'GMPYInteger', 'GMPYRational',
+
+    'mlib',
+
+    'python_sqrt', 'python_factorial'
+]

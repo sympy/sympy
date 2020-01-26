@@ -11,7 +11,7 @@ def test_LU():
     assert ask(Q.upper_triangular(U))
 
 def test_Cholesky():
-    L = LofCholesky(X)
+    LofCholesky(X)
 
 def test_QR():
     Q_, R = qr(X)

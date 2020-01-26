@@ -8,12 +8,12 @@ Here we test the extent to which they cooperate
 from sympy import symbols
 from sympy.matrices import (Matrix, MatrixSymbol, eye, Identity,
         ImmutableMatrix)
-from sympy.core.compatibility import range
 from sympy.matrices.expressions import MatrixExpr, MatAdd
-from sympy.matrices.matrices import classof
-from sympy.utilities.pytest import raises
+from sympy.matrices.common import classof
+from sympy.testing.pytest import raises
 
 SM = MatrixSymbol('X', 3, 3)
+SV = MatrixSymbol('v', 3, 1)
 MM = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 IM = ImmutableMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 meye = eye(3)
@@ -47,6 +47,16 @@ def test_matrix_symbol_MM():
     X = MatrixSymbol('X', 3, 3)
     Y = eye(3) + X
     assert Y[1, 1] == 1 + X[1, 1]
+
+
+def test_matrix_symbol_vector_matrix_multiplication():
+    A = MM * SV
+    B = IM * SV
+    assert A == B
+    C = (SV.T * MM.T).T
+    assert B == C
+    D = (SV.T * IM.T).T
+    assert C == D
 
 
 def test_indexing_interactions():

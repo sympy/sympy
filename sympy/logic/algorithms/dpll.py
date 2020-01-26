@@ -4,15 +4,15 @@ Further improvements: eliminate calls to pl_true, implement branching rules,
 efficient unit propagation.
 
 References:
-  - http://en.wikipedia.org/wiki/DPLL_algorithm
-  - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
+  - https://en.wikipedia.org/wiki/DPLL_algorithm
+  - https://www.researchgate.net/publication/242384772_Implementations_of_the_DPLL_Algorithm
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy import default_sort_key
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr, _find_predicates
+from sympy.assumptions.cnf import CNF
 from sympy.logic.inference import pl_true, literal_symbol
 
 
@@ -29,7 +29,10 @@ def dpll_satisfiable(expr):
     False
 
     """
-    clauses = conjuncts(to_cnf(expr))
+    if not isinstance(expr, CNF):
+        clauses = conjuncts(to_cnf(expr))
+    else:
+        clauses = expr.clauses
     if False in clauses:
         return False
     symbols = sorted(_find_predicates(expr), key=default_sort_key)
@@ -99,7 +102,7 @@ def dpll_int_repr(clauses, symbols, model):
     Arguments are expected to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import dpll_int_repr
-    >>> dpll_int_repr([set([1]), set([2]), set([3])], set([1, 2]), {3: False})
+    >>> dpll_int_repr([{1}, {2}, {3}], {1, 2}, {3: False})
     False
 
     """
@@ -148,8 +151,8 @@ def pl_true_int_repr(clause, model={}):
     inside dpll_int_repr, it is not meant to be used directly.
 
     >>> from sympy.logic.algorithms.dpll import pl_true_int_repr
-    >>> pl_true_int_repr(set([1, 2]), {1: False})
-    >>> pl_true_int_repr(set([1, 2]), {1: False, 2: False})
+    >>> pl_true_int_repr({1, 2}, {1: False})
+    >>> pl_true_int_repr({1, 2}, {1: False, 2: False})
     False
 
     """
@@ -208,11 +211,11 @@ def unit_propagate_int_repr(clauses, s):
     representation
 
     >>> from sympy.logic.algorithms.dpll import unit_propagate_int_repr
-    >>> unit_propagate_int_repr([set([1, 2]), set([3, -2]), set([2])], 2)
-    [set([3])]
+    >>> unit_propagate_int_repr([{1, 2}, {3, -2}, {2}], 2)
+    [{3}]
 
     """
-    negated = set([-s])
+    negated = {-s}
     return [clause - negated for clause in clauses if s not in clause]
 
 
@@ -246,8 +249,8 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import find_pure_symbol_int_repr
-    >>> find_pure_symbol_int_repr(set([1,2,3]),
-    ...     [set([1, -2]), set([-2, -3]), set([3, 1])])
+    >>> find_pure_symbol_int_repr({1,2,3},
+    ...     [{1, -2}, {-2, -3}, {3, 1}])
     (1, True)
 
     """
@@ -280,7 +283,7 @@ def find_unit_clause(clauses, model):
             sym = literal_symbol(literal)
             if sym not in model:
                 num_not_in_model += 1
-                P, value = sym, not (literal.func is Not)
+                P, value = sym, not isinstance(literal, Not)
         if num_not_in_model == 1:
             return P, value
     return None, None
@@ -292,8 +295,8 @@ def find_unit_clause_int_repr(clauses, model):
     integer representation.
 
     >>> from sympy.logic.algorithms.dpll import find_unit_clause_int_repr
-    >>> find_unit_clause_int_repr([set([1, 2, 3]),
-    ...     set([2, -3]), set([1, -2])], {1: True})
+    >>> find_unit_clause_int_repr([{1, 2, 3},
+    ...     {2, -3}, {1, -2}], {1: True})
     (2, False)
 
     """

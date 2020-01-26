@@ -4,12 +4,10 @@ from __future__ import print_function, division
 
 import operator
 
+from sympy.core.numbers import Rational, Integer
+from sympy.core.sympify import converter
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
-
-from sympy.core.compatibility import integer_types
-from sympy.core.sympify import converter
-from sympy.core.numbers import Rational
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 
@@ -36,13 +34,19 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
     """
 
-    __slots__ = ['p', 'q']
+    __slots__ = ('p', 'q')
 
     def parent(self):
         from sympy.polys.domains import PythonRationalField
         return PythonRationalField()
 
-    def __init__(self, p, q=1):
+    def __init__(self, p, q=1, _gcd=True):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
+        if isinstance(p, Integer):
+            p = p.p
+        elif isinstance(p, Rational):
+            p, q = p.p, p.q
+
         if not q:
             raise ZeroDivisionError('rational number')
         elif q < 0:
@@ -55,14 +59,12 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
             self.p = p
             self.q = q
         else:
-            x, y = p, q
+            if _gcd:
+                x = gcd(p, q)
 
-            while y:
-                x, y = y, x % y
-
-            if x != 1:
-                p //= x
-                q //= x
+                if x != 1:
+                    p //= x
+                    q //= x
 
             self.p = p
             self.q = q
@@ -99,88 +101,118 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.new(-self.p, self.q)
 
     def __add__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.q + self.q*other.p
-            q = self.q*other.q
-        elif isinstance(other, integer_types):
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            g = gcd(aq, bq)
+            if g == 1:
+                p = ap*bq + aq*bp
+                q = bq*aq
+            else:
+                q1, q2 = aq//g, bq//g
+                p, q = ap*q2 + bp*q1, q1*q2
+                g2 = gcd(p, g)
+                p, q = (p // g2), q * (g // g2)
+        elif isinstance(other, int):
             p = self.p + self.q*other
             q = self.q
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __radd__(self, other):
-        if not isinstance(other, integer_types):
+        if not isinstance(other, int):
             return NotImplemented
 
         p = self.p + self.q*other
         q = self.q
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __sub__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.q - self.q*other.p
-            q = self.q*other.q
-        elif isinstance(other, integer_types):
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            g = gcd(aq, bq)
+            if g == 1:
+                p = ap*bq - aq*bp
+                q = bq*aq
+            else:
+                q1, q2 = aq//g, bq//g
+                p, q = ap*q2 - bp*q1, q1*q2
+                g2 = gcd(p, g)
+                p, q = (p // g2), q * (g // g2)
+        elif isinstance(other, int):
             p = self.p - self.q*other
             q = self.q
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __rsub__(self, other):
-        if not isinstance(other, integer_types):
+        if not isinstance(other, int):
             return NotImplemented
 
         p = self.q*other - self.p
         q = self.q
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __mul__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.p
-            q = self.q*other.q
-        elif isinstance(other, integer_types):
-            p = self.p*other
-            q = self.q
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            x1 = gcd(ap, bq)
+            x2 = gcd(bp, aq)
+            p, q = ((ap//x1)*(bp//x2), (aq//x2)*(bq//x1))
+        elif isinstance(other, int):
+            x = gcd(other, self.q)
+            p = self.p*(other//x)
+            q = self.q//x
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __rmul__(self, other):
-        if not isinstance(other, integer_types):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
+        if not isinstance(other, int):
             return NotImplemented
 
-        p = self.p*other
-        q = self.q
+        x = gcd(self.q, other)
+        p = self.p*(other//x)
+        q = self.q//x
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __div__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.q
-            q = self.q*other.p
-        elif isinstance(other, integer_types):
-            p = self.p
-            q = self.q*other
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            x1 = gcd(ap, bp)
+            x2 = gcd(bq, aq)
+            p, q = ((ap//x1)*(bq//x2), (aq//x2)*(bp//x1))
+        elif isinstance(other, int):
+            x = gcd(other, self.p)
+            p = self.p//x
+            q = self.q*(other//x)
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     __truediv__ = __div__
 
     def __rdiv__(self, other):
-        if not isinstance(other, integer_types):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
+        if not isinstance(other, int):
             return NotImplemented
 
-        p = self.q*other
-        q = self.p
+        x = gcd(self.p, other)
+        p = self.q*(other//x)
+        q = self.p//x
 
         return self.__class__(p, q)
 
@@ -198,7 +230,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         if exp < 0:
             p, q, exp = q, p, -exp
 
-        return self.new(p**exp, q**exp)
+        return self.__class__(p**exp, q**exp, _gcd=False)
 
     def __nonzero__(self):
         return self.p != 0
@@ -208,13 +240,13 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     def __eq__(self, other):
         if isinstance(other, PythonRational):
             return self.q == other.q and self.p == other.p
-        elif isinstance(other, integer_types):
+        elif isinstance(other, int):
             return self.q == 1 and self.p == other
         else:
             return False
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def _cmp(self, other, op):
         try:

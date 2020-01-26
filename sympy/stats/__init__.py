@@ -13,6 +13,7 @@ Queries on random expressions can be made using the functions
 ------------------------- -----------------------------
  ``P(condition)``          Probability
  ``E(expression)``         Expected value
+ ``H(expression)``         Entropy
  ``variance(expression)``  Variance
  ``density(expression)``   Probability Density Function
  ``sample(expression)``    Produce a realization
@@ -33,38 +34,87 @@ Examples
 >>> variance(X+Y) # Variance of the sum of two dice
 35/6
 >>> simplify(P(Z>1)) # Probability of Z being greater than 1
--erf(sqrt(2)/2)/2 + 1/2
+1/2 - erf(sqrt(2)/2)/2
 """
 
-__all__ = []
+__all__ = [
+    'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
+    'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
+    'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
+    'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
+    'sampling_density', 'moment_generating_function', 'smoment', 'quantile',
 
-from . import rv_interface
-from .rv_interface import (
-    cdf, covariance, density, dependent, E, given, independent, P, pspace,
-    random_symbols, sample, sample_iter, skewness, std, variance, where,
-    correlation, moment, cmoment, smoment, sampling_density,
-)
-__all__.extend(rv_interface.__all__)
+    'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
+    'BetaBinomial', 'Hypergeometric', 'Rademacher',
 
-from . import frv_types
-from .frv_types import (
-    Bernoulli, Binomial, Coin, Die, DiscreteUniform, FiniteRV, Hypergeometric,
-    Rademacher,
-)
-__all__.extend(frv_types.__all__)
+    'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
+    'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
+    'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
+    'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal',
+    'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
+    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
+    'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
+    'Weibull', 'WignerSemicircle',
 
-from . import crv_types
-from .crv_types import (
-    ContinuousRV,
-    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
-    Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell,
-    Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-    StudentT, Triangular, Uniform, UniformSum, VonMises, Weibull,
-    WignerSemicircle
-)
-__all__.extend(crv_types.__all__)
+    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'YuleSimon', 'Zeta',
 
-from . import drv_types
-from .drv_types import (Geometric, Poisson)
-__all__.extend(drv_types.__all__)
+    'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
+    'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
+    'MultivariateEwens', 'MultivariateT', 'NegativeMultinomial',
+    'NormalGamma',
+
+    'StochasticProcess', 'DiscreteTimeStochasticProcess',
+    'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
+    'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
+
+    'CircularEnsemble', 'CircularUnitaryEnsemble',
+    'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
+    'GaussianEnsemble', 'GaussianUnitaryEnsemble',
+    'GaussianOrthogonalEnsemble', 'GaussianSymplecticEnsemble',
+    'joint_eigen_distribution', 'JointEigenDistribution',
+    'level_spacing_distribution',
+
+    'Probability', 'Expectation', 'Variance', 'Covariance',
+
+]
+from .rv_interface import (P, E, H, density, where, given, sample, cdf,
+        characteristic_function, pspace, sample_iter, variance, std, skewness,
+        kurtosis, covariance, dependent, entropy, independent, random_symbols,
+        correlation, factorial_moment, moment, cmoment, sampling_density,
+        moment_generating_function, smoment, quantile)
+
+from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
+        Binomial, BetaBinomial, Hypergeometric, Rademacher)
+
+from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
+        BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
+        ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
+        Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
+        Levy, Logistic, LogLogistic, LogNormal, Maxwell, Nakagami, Normal,
+        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
+        PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
+        VonMises, Wald, Weibull, WignerSemicircle)
+
+from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
+        Skellam, YuleSimon, Zeta)
+
+from .joint_rv_types import (JointRV, Dirichlet,
+        GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
+        Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT,
+        NegativeMultinomial, NormalGamma)
+
+from .stochastic_process_types import (StochasticProcess,
+        DiscreteTimeStochasticProcess, DiscreteMarkovChain,
+        TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
+        ContinuousMarkovChain, BernoulliProcess)
+
+from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
+        CircularOrthogonalEnsemble, CircularSymplecticEnsemble,
+        GaussianEnsemble, GaussianUnitaryEnsemble, GaussianOrthogonalEnsemble,
+        GaussianSymplecticEnsemble, joint_eigen_distribution,
+        JointEigenDistribution, level_spacing_distribution)
+
+from .symbolic_probability import (Probability, Expectation, Variance,
+        Covariance)

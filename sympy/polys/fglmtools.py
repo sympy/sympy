@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy.polys.monomials import monomial_mul, monomial_div
-from sympy.core.compatibility import range
 
 def matrix_fglm(F, ring, O_to):
     """
@@ -14,9 +13,9 @@ def matrix_fglm(F, ring, O_to):
     References
     ==========
 
-    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-    Computation of Zero-dimensional Groebner Bases by Change of
-    Ordering
+    .. [1] J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+           Computation of Zero-dimensional Groebner Bases by Change of
+           Ordering
     """
     domain = ring.domain
     ngens = ring.ngens
@@ -45,13 +44,13 @@ def matrix_fglm(F, ring, O_to):
         if all(_lambda[i] == domain.zero for i in range(s, len(old_basis))):
             # there is a linear combination of v by V
             lt = ring.term_new(_incr_k(S[t[1]], t[0]), domain.one)
-            rest = ring.from_dict(dict([ (S[i], _lambda[i]) for i in range(s) ]))
+            rest = ring.from_dict({S[i]: _lambda[i] for i in range(s)})
 
             g = (lt - rest).set_ring(ring_to)
             if g:
                 G.append(g)
         else:
-            # v is linearly independant from V
+            # v is linearly independent from V
             P = _update(s, _lambda, P)
             S.append(_incr_k(S[t[1]], t[0]))
             V.append(v)
@@ -103,7 +102,7 @@ def _update(s, _lambda, P):
 
 
 def _representing_matrices(basis, G, ring):
-    """
+    r"""
     Compute the matrices corresponding to the linear maps `m \mapsto
     x_i m` for all variables `x_i`.
     """
@@ -129,7 +128,7 @@ def _representing_matrices(basis, G, ring):
 
 
 def _basis(G, ring):
-    """
+    r"""
     Computes a list of monomials which are not divisible by the leading
     monomials wrt to ``O`` of ``G``. These monomials are a basis of
     `K[X_1, \ldots, X_n]/(G)`.

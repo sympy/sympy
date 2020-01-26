@@ -6,12 +6,12 @@ from sympy.polys.polyoptions import (
     Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
 from sympy.polys.orderings import lex
-from sympy.polys.domains import FF, GF, ZZ, QQ, EX
+from sympy.polys.domains import FF, GF, ZZ, QQ, RR, CC, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
 from sympy import Integer, Symbol, I, sqrt
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import x, y, z
 
 
@@ -99,7 +99,7 @@ def test_Sort_preprocess():
     assert Sort.preprocess('x>y>z') == ['x', 'y', 'z']
 
     raises(OptionError, lambda: Sort.preprocess(0))
-    raises(OptionError, lambda: Sort.preprocess(set([x, y, z])))
+    raises(OptionError, lambda: Sort.preprocess({x, y, z}))
 
 
 def test_Sort_postprocess():
@@ -176,15 +176,23 @@ def test_Domain_preprocess():
 
     assert Domain.preprocess('Z[x]') == ZZ[x]
     assert Domain.preprocess('Q[x]') == QQ[x]
+    assert Domain.preprocess('R[x]') == RR[x]
+    assert Domain.preprocess('C[x]') == CC[x]
 
     assert Domain.preprocess('ZZ[x]') == ZZ[x]
     assert Domain.preprocess('QQ[x]') == QQ[x]
+    assert Domain.preprocess('RR[x]') == RR[x]
+    assert Domain.preprocess('CC[x]') == CC[x]
 
     assert Domain.preprocess('Z[x,y]') == ZZ[x, y]
     assert Domain.preprocess('Q[x,y]') == QQ[x, y]
+    assert Domain.preprocess('R[x,y]') == RR[x, y]
+    assert Domain.preprocess('C[x,y]') == CC[x, y]
 
     assert Domain.preprocess('ZZ[x,y]') == ZZ[x, y]
     assert Domain.preprocess('QQ[x,y]') == QQ[x, y]
+    assert Domain.preprocess('RR[x,y]') == RR[x, y]
+    assert Domain.preprocess('CC[x,y]') == CC[x, y]
 
     raises(OptionError, lambda: Domain.preprocess('Z()'))
 
@@ -249,7 +257,7 @@ def test_Gaussian_postprocess():
 
     assert opt == {
         'gaussian': True,
-        'extension': set([I]),
+        'extension': {I},
         'domain': QQ.algebraic_field(I),
     }
 
@@ -260,21 +268,21 @@ def test_Extension_preprocess():
 
     assert Extension.preprocess([]) is None
 
-    assert Extension.preprocess(sqrt(2)) == set([sqrt(2)])
-    assert Extension.preprocess([sqrt(2)]) == set([sqrt(2)])
+    assert Extension.preprocess(sqrt(2)) == {sqrt(2)}
+    assert Extension.preprocess([sqrt(2)]) == {sqrt(2)}
 
-    assert Extension.preprocess([sqrt(2), I]) == set([sqrt(2), I])
+    assert Extension.preprocess([sqrt(2), I]) == {sqrt(2), I}
 
     raises(OptionError, lambda: Extension.preprocess(False))
     raises(OptionError, lambda: Extension.preprocess(0))
 
 
 def test_Extension_postprocess():
-    opt = {'extension': set([sqrt(2)])}
+    opt = {'extension': {sqrt(2)}}
     Extension.postprocess(opt)
 
     assert opt == {
-        'extension': set([sqrt(2)]),
+        'extension': {sqrt(2)},
         'domain': QQ.algebraic_field(sqrt(2)),
     }
 

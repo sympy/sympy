@@ -11,51 +11,58 @@ Most of the things are already documented though in this document, that is
 automatically generated using SymPy's docstrings.
 
 Click the  "modules" (:ref:`modindex`) link in the top right corner to easily
-access any SymPy module, or use this contens:
+access any SymPy module, or use the list below:
 
 .. toctree::
    :maxdepth: 2
 
-   core.rst
+   abc.rst
+   algebras.rst
+   assumptions/index.rst
+   calculus/index.rst
+   categories.rst
+   codegen.rst
    combinatorics/index.rst
-   ntheory.rst
-   crypto.rst
    concrete.rst
+   core.rst
+   crypto.rst
+   diffgeom.rst
+   solvers/diophantine.rst
+   discrete.rst
    evalf.rst
-   numeric-computation.rst
    functions/index.rst
-   galgebra/index.rst
    geometry/index.rst
+   holonomic/index.rst
+   simplify/hyperexpand.rst
+   solvers/inequalities.rst
    integrals/integrals.rst
+   integrals/g-functions.rst
+   interactive.rst
    liealgebras/index.rst
    logic.rst
    matrices/index.rst
+   ntheory.rst
+   numeric-computation.rst
+   solvers/ode.rst
+   parsing.rst
+   solvers/pde.rst
+   physics/index.rst
+   plotting.rst
    polys/index.rst
    printing.rst
-   plotting.rst
-   assumptions/index.rst
    rewriting.rst
    series/index.rst
    sets.rst
    simplify/simplify.rst
-   simplify/hyperexpand.rst
-   stats.rst
-   solvers/ode.rst
-   solvers/pde.rst
    solvers/solvers.rst
-   solvers/diophantine.rst
-   solvers/inequalities.rst
    solvers/solveset.rst
+   stats.rst
    tensor/index.rst
+   testing/index.rst
    utilities/index.rst
-   parsing.rst
-   calculus/index.rst
-   physics/index.rst
-   categories.rst
-   diffgeom.rst
    vector/index.rst
 
-Contributions to docs
+Contributions to Docs
 ---------------------
 
 All contributions are welcome. If you'd like to improve something, look into

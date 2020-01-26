@@ -9,7 +9,7 @@ import sys
 
 from sample import sample
 
-from sympy import sin, Symbol
+from sympy import Symbol
 from sympy.external import import_module
 
 
@@ -24,7 +24,7 @@ def mplot3d(f, var1, var2, show=True):
     p = import_module('pylab')
     # Try newer version first
     p3 = import_module('mpl_toolkits.mplot3d',
-        __import__kwargs={'fromlist': ['something']}) or import_module('matplotlib.axes3d')
+        import_kwargs={'fromlist': ['something']}) or import_module('matplotlib.axes3d')
     if not p or not p3:
         sys.exit("Matplotlib is required to use mplot3d.")
 

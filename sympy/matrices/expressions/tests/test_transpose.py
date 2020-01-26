@@ -36,5 +36,22 @@ def test_transpose():
     assert Transpose(A*B).doit() == Transpose(B) * Transpose(A)
 
 
+def test_transpose_MatAdd_MatMul():
+    # Issue 16807
+    from sympy.functions.elementary.trigonometric import cos
+
+    x = symbols('x')
+    M = MatrixSymbol('M', 3, 3)
+    N = MatrixSymbol('N', 3, 3)
+
+    assert (N + (cos(x) * M)).T == cos(x)*M.T + N.T
+
+
 def test_refine():
     assert refine(C.T, Q.symmetric(C)) == C
+
+
+def test_transpose1x1():
+    m = MatrixSymbol('m', 1, 1)
+    assert m == refine(m.T)
+    assert m == refine(m.T.T)

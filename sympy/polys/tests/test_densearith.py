@@ -41,7 +41,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.specialpolys import f_polys
 from sympy.polys.domains import FF, ZZ, QQ
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
@@ -862,6 +862,22 @@ def test_dup_ff_div():
 
     assert dup_ff_div(f, g, QQ) == (q, r)
 
+def test_dup_ff_div_gmpy2():
+    try:
+        from gmpy2 import mpq
+    except ImportError:
+        return
+
+    from sympy.polys.domains import GMPYRationalField
+    K = GMPYRationalField()
+
+    f = [mpq(1,3), mpq(3,2)]
+    g = [mpq(2,1)]
+    assert dmp_ff_div(f, g, 0, K) == ([mpq(1,6), mpq(3,4)], [])
+
+    f = [mpq(1,2), mpq(1,3), mpq(1,4), mpq(1,5)]
+    g = [mpq(-1,1), mpq(1,1), mpq(-1,1)]
+    assert dmp_ff_div(f, g, 0, K) == ([mpq(-1,2), mpq(-5,6)], [mpq(7,12), mpq(-19,30)])
 
 def test_dmp_ff_div():
     raises(ZeroDivisionError, lambda: dmp_ff_div([[1, 2], [3]], [[]], 1, QQ))
