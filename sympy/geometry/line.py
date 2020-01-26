@@ -18,29 +18,28 @@ Segment3D
 """
 from __future__ import division, print_function
 
-
 from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
+from sympy.core.containers import Tuple
+from sympy.core.decorators import deprecated
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol, Dummy
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.logic.boolalg import And
-from sympy.simplify.simplify import simplify
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.geometry.exceptions import GeometryError
-from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
-from sympy.sets import Intersection
+from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
+from sympy.sets import Intersection
+from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import linear_coeffs
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import Undecidable, filldedent
+from sympy.geometry.util import intersection
+
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
-from sympy.utilities.misc import Undecidable, filldedent
-
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class LinearEntity(GeometrySet):
@@ -68,6 +67,7 @@ class LinearEntity(GeometrySet):
     sympy.geometry.entity.GeometryEntity
 
     """
+
     def __new__(cls, p1, p2=None, **kwargs):
         p1, p2 = Point._normalize_dimension(p1, p2)
         if p1 == p2:
@@ -202,7 +202,7 @@ class LinearEntity(GeometrySet):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
-        return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
+        return acos(v1.dot(v2) / (abs(v1) * abs(v2)))
 
     def smallest_angle_between(l1, l2):
         """Return the smallest angle formed at the intersection of the
@@ -241,7 +241,7 @@ class LinearEntity(GeometrySet):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
-        return acos(abs(v1.dot(v2))/(abs(v1)*abs(v2)))
+        return acos(abs(v1.dot(v2)) / (abs(v1) * abs(v2)))
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
@@ -294,7 +294,7 @@ class LinearEntity(GeometrySet):
                 ''' % t.name))
         # multiply on the right so the variable gets
         # combined with the coordinates of the point
-        return self.p1 + (self.p2 - self.p1)*t
+        return self.p1 + (self.p2 - self.p1) * t
 
     @staticmethod
     def are_concurrent(*lines):
@@ -437,6 +437,7 @@ class LinearEntity(GeometrySet):
         []
 
         """
+
         def intersect_parallel_rays(ray1, ray2):
             if ray1.direction.dot(ray2.direction) > 0:
                 # rays point in the same direction
@@ -457,9 +458,9 @@ class LinearEntity(GeometrySet):
                 return []
             elif st1 >= 0 and st2 >= 0:
                 return [seg]
-            elif st1 >= 0: # st2 < 0:
+            elif st1 >= 0:  # st2 < 0:
                 return [Segment(ray.p1, seg.p1)]
-            elif st2 >= 0: # st1 < 0:
+            elif st2 >= 0:  # st1 < 0:
                 return [Segment(ray.p1, seg.p2)]
 
         def intersect_parallel_segments(seg1, seg2):
@@ -528,14 +529,14 @@ class LinearEntity(GeometrySet):
                 if len(pivots) != 2:
                     raise GeometryError("Failed when solving Mx=b when M={} and b={}".format(m, v))
                 coeff = m_rref[0, 2]
-                line_intersection = l1.direction*coeff + self.p1
+                line_intersection = l1.direction * coeff + self.p1
 
                 # if we're both lines, we can skip a containment check
                 if isinstance(self, Line) and isinstance(other, Line):
                     return [line_intersection]
 
                 if ((isinstance(self, Line) or
-                        self.contains(line_intersection)) and
+                     self.contains(line_intersection)) and
                         other.contains(line_intersection)):
                     return [line_intersection]
                 return []
@@ -1118,9 +1119,9 @@ class Line(LinearEntity):
             a, b, c = linear_coeffs(equation, x, y)
 
             if b:
-                return Line((0, -c/b), slope=-a/b)
+                return Line((0, -c / b), slope=-a / b)
             if a:
-                return Line((-c/a, 0), slope=oo)
+                return Line((-c / a, 0), slope=oo)
             raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
 
         else:
@@ -1129,7 +1130,7 @@ class Line(LinearEntity):
                 if len(args) > 1:
                     p2 = args[1]
                 else:
-                    p2=None
+                    p2 = None
 
                 if isinstance(p1, LinearEntity):
                     if p2:
@@ -1310,6 +1311,7 @@ class Ray(LinearEntity):
     1
 
     """
+
     def __new__(cls, p1, p2=None, **kwargs):
         p1 = Point(p1)
         if p2 is not None:
@@ -1344,7 +1346,7 @@ class Ray(LinearEntity):
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" '
             'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
-            ).format(2. * scale_factor, path, fill_color)
+        ).format(2. * scale_factor, path, fill_color)
 
     def contains(self, other):
         """
@@ -1552,6 +1554,7 @@ class Segment(LinearEntity):
     Point3D(5/2, 2, 8)
 
     """
+
     def __new__(cls, p1, p2, **kwargs):
         p1, p2 = Point._normalize_dimension(Point(p1), Point(p2))
         dim = len(p1)
@@ -1592,13 +1595,13 @@ class Segment(LinearEntity):
                 if isinstance(self, Segment2D):
                     # if it is collinear and is in the bounding box of the
                     # segment then it must be on the segment
-                    vert = (1/self.slope).equals(0)
+                    vert = (1 / self.slope).equals(0)
                     if vert is False:
-                        isin = (self.p1.x - other.x)*(self.p2.x - other.x) <= 0
+                        isin = (self.p1.x - other.x) * (self.p2.x - other.x) <= 0
                         if isin in (True, False):
                             return isin
                     if vert is True:
-                        isin = (self.p1.y - other.y)*(self.p2.y - other.y) <= 0
+                        isin = (self.p1.y - other.y) * (self.p2.y - other.y) <= 0
                         if isin in (True, False):
                             return isin
                 # use the triangle inequality
@@ -1815,6 +1818,7 @@ class LinearEntity2D(LinearEntity):
     sympy.geometry.entity.GeometryEntity
 
     """
+
     @property
     def bounds(self):
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
@@ -1896,7 +1900,7 @@ class LinearEntity2D(LinearEntity):
         d1, d2 = (self.p1 - self.p2).args
         if d1 == 0:
             return S.Infinity
-        return simplify(d2/d1)
+        return simplify(d2 / d1)
 
 
 class Line2D(LinearEntity2D, Line):
@@ -1944,6 +1948,7 @@ class Line2D(LinearEntity2D, Line):
     >>> Line(s).equation()
     x
     """
+
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
         if isinstance(p1, LinearEntity):
             if pt is not None:
@@ -1997,7 +2002,7 @@ class Line2D(LinearEntity2D, Line):
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" '
             'marker-start="url(#markerReverseArrow)" marker-end="url(#markerArrow)"/>'
-            ).format(2. * scale_factor, path, fill_color)
+        ).format(2. * scale_factor, path, fill_color)
 
     @property
     def coefficients(self):
@@ -2032,7 +2037,7 @@ class Line2D(LinearEntity2D, Line):
         return tuple([simplify(i) for i in
                       (self.p1.y - self.p2.y,
                        self.p2.x - self.p1.x,
-                       self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
+                       self.p1.x * self.p2.y - self.p1.y * self.p2.x)])
 
     def equation(self, x='x', y='y'):
         """The equation of the line: ax + by + c.
@@ -2074,7 +2079,7 @@ class Line2D(LinearEntity2D, Line):
             return y - p1.y
 
         a, b, c = self.coefficients
-        return a*x + b*y + c
+        return a * x + b * y + c
 
 
 class Ray2D(LinearEntity2D, Ray):
@@ -2125,6 +2130,7 @@ class Ray2D(LinearEntity2D, Ray):
     1
 
     """
+
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
         p1 = Point(p1, dim=2)
         if pt is not None and angle is None:
@@ -2157,9 +2163,9 @@ class Ray2D(LinearEntity2D, Ray):
                 if p2 is None:
                     c *= S.Pi
             else:
-                c = angle % (2*S.Pi)
+                c = angle % (2 * S.Pi)
             if not p2:
-                m = 2*c/S.Pi
+                m = 2 * c / S.Pi
                 left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
                 x = Piecewise((-1, left), (Piecewise((0, Eq(m % 1, 0)), (1, True)), True))
                 y = Piecewise((-tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (tan(c), True)), True))
@@ -2274,9 +2280,9 @@ class Ray2D(LinearEntity2D, Ray):
 
         a1 = atan2(*list(reversed(r1.direction.args)))
         a2 = atan2(*list(reversed(r2.direction.args)))
-        if a1*a2 < 0:
-            a1 = 2*S.Pi + a1 if a1 < 0 else a1
-            a2 = 2*S.Pi + a2 if a2 < 0 else a2
+        if a1 * a2 < 0:
+            a1 = 2 * S.Pi + a1 if a1 < 0 else a1
+            a2 = 2 * S.Pi + a2 if a2 < 0 else a2
         return a1 - a2
 
 
@@ -2319,6 +2325,7 @@ class Segment2D(LinearEntity2D, Segment):
     Point2D(5/2, 2)
 
     """
+
     def __new__(cls, p1, p2, **kwargs):
         p1 = Point(p1, dim=2)
         p2 = Point(p2, dim=2)
@@ -2348,7 +2355,7 @@ class Segment2D(LinearEntity2D, Segment):
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
-            ).format(2. * scale_factor, path, fill_color)
+        ).format(2. * scale_factor, path, fill_color)
 
 
 class LinearEntity3D(LinearEntity):
@@ -2510,15 +2517,15 @@ class Line3D(LinearEntity3D, Line):
         """
         if k is not None:
             SymPyDeprecationWarning(
-                            feature="equation() no longer needs 'k'",
-                            issue=13742,
-                            deprecated_since_version="1.2").warn()
+                feature="equation() no longer needs 'k'",
+                issue=13742,
+                deprecated_since_version="1.2").warn()
         from sympy import solve
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
         x1, y1, z1 = p1
-        eqs = [-d1*k + x - x1, -d2*k + y - y1, -d3*k + z - z1]
+        eqs = [-d1 * k + x - x1, -d2 * k + y - y1, -d3 * k + z - z1]
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):
             if e.has(k):
@@ -2527,7 +2534,7 @@ class Line3D(LinearEntity3D, Line):
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
-    def bisector(self, line):
+    def bisectors(self, line):
         """Returns the lines which are the bisections between the self line and another one.
 
         Parameters
@@ -2538,7 +2545,7 @@ class Line3D(LinearEntity3D, Line):
         Returns
         =======
 
-        Line3D
+        list: two Line3D instances
 
         Examples
         ========
@@ -2547,9 +2554,10 @@ class Line3D(LinearEntity3D, Line):
 
         """
 
-        p = Intersection(self, line)
+        p = intersection(self, line)
 
         if not p:
+            # TODO
             return GeometryError("The lines do not intersect")
         else:
             if not isinstance(p[0], Point3D):
@@ -2558,15 +2566,15 @@ class Line3D(LinearEntity3D, Line):
 
         # Normalize direction vectors:
         def normalize(vector: list):
-            length = (vector[0]**2 + vector[1]**2 + vector[2]**2)**0.5
-            vector = [i/length for i in vector]
+            length = (vector[0] ** 2 + vector[1] ** 2 + vector[2] ** 2) ** 0.5
+            vector = [i / length for i in vector]
             return vector
 
         d1 = normalize(self.direction_ratio)
         d2 = normalize(line.direction_ratio)
 
-        bis1 = Line3D(p[0], direction_ratio=[d1[i]+d2[i] for i in range(3)])
-        bis2 = Line3D(p[0], direction_ratio=[d1[i]-d2[i] for i in range(3)])
+        bis1 = Line3D(p[0], direction_ratio=[d1[i] + d2[i] for i in range(3)])
+        bis2 = Line3D(p[0], direction_ratio=[d1[i] - d2[i] for i in range(3)])
 
         return [bis1, bis2]
 
