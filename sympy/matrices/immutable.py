@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 from typing import Callable
 
-from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
+from sympy.core import Basic, Dict, Integer, S, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
@@ -91,8 +91,11 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
         if isinstance(other, MatrixExpr) and not isinstance(
                 other, ImmutableDenseMatrix):
             return None
-        diff = self - other
-        return sympify(diff.is_zero)
+        diff = (self - other).is_zero_matrix
+        if diff is True:
+            return S.true
+        elif diff is False:
+            return S.false
 
     def _eval_extract(self, rowsList, colsList):
         # self._mat is a Tuple.  It is slightly faster to index a
@@ -121,17 +124,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
     is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
 
-
-# XXX: The assumptions system correctly infers that is_zero is always False
-# because commutative is False and zero is commutative. This assignment of
-# the property has to take place after the class definition so that the
-# ManagedProperties metaclass that handles the assumptions has finished
-# post-processing the class first. This should be removed because a Matrix
-# should always have is_zero=False.
-# https://github.com/sympy/sympy/issues/7213
-# https://github.com/sympy/sympy/issues/17131
-# mypy (correctly) complains about this line:
-ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero  # type: ignore
 
 # make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
 ImmutableMatrix = ImmutableDenseMatrix

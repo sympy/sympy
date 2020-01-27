@@ -1967,7 +1967,7 @@ class MatrixBase(MatrixDeprecated,
 
         # check for existence of solutions
         # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, :].is_zero:
+        if not v[rank:, :].is_zero_matrix:
             raise ValueError("Linear system has no solution")
 
         # Get index of free symbols (free parameters)
@@ -3256,7 +3256,7 @@ class MatrixBase(MatrixDeprecated,
         This routine can apply for both cases by checking the shape
         and have small decision.
         """
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         if self.rows >= self.cols:
@@ -3271,7 +3271,7 @@ class MatrixBase(MatrixDeprecated,
         rank matrices, and each matrix can take pseudoinverse
         individually.
         """
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         B, C = self.rank_decomposition()
@@ -3287,7 +3287,7 @@ class MatrixBase(MatrixDeprecated,
         This routine can sometimes fail if SymPy's eigenvalue
         computation is not reliable.
         """
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         A = self
@@ -3361,7 +3361,7 @@ class MatrixBase(MatrixDeprecated,
 
         """
         # Trivial case: pseudoinverse of all-zero matrix is its transpose.
-        if self.is_zero:
+        if self.is_zero_matrix:
             return self.H
 
         if method == 'RD':
