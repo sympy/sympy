@@ -3986,7 +3986,7 @@ def classof(A, B):
 def a2idx(j, n=None):
     from sympy.matrices.common import a2idx as a2idx_
     return a2idx_(j, n)
-<<<<<<< HEAD
+
 
 def randMatrixBigDiag(rows, cols=None, lo=0, hi=100, symmetric=False):
     from sympy.matrices.dense import diag
