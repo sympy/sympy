@@ -203,7 +203,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def is_negative(self, a):
         """Returns True if ``a`` is negative. """
-        return a.ex.as_coeff_mul()[0].is_negative
+        return a.ex.could_extract_minus_sign()
 
     def is_nonpositive(self, a):
         """Returns True if ``a`` is non-positive. """
