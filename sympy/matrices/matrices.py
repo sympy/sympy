@@ -4100,4 +4100,3 @@ def lower(a, diag=0):
         for j in range(i + i0, a.cols):
             b[i, j] = 0
     return b
-
