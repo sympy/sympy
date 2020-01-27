@@ -2,7 +2,7 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re, zeta,
+                   besseli, floor, expand_func, Rational, I, re,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj)
 from sympy.external import import_module
