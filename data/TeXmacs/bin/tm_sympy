@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+#
+# TeXmacs interface for SymPy
+#
+# This plugin supports LaTeX printing of SymPy expressions
+# using sympy.printing.latex function. It handles pretty
+# printing of containers. If you wish to display raw
+# Python code, then use 'print' before an expression.
+#
+# TeXmacs encodes new-lines as spaces so we must use
+# heuristics to know where a multi-line expression is
+# broken. As a result you can't use more than one space
+# in a sequence. However you can and must indent your
+# expression using standard Python rules.
+#
+# You can retrieve the last output using '_' built-in
+# symbol. If the previous command did not generate
+# any output, it will be assigned with None.
+#
+# For a complete Python interface visit:
+#
+#  http://dkbza.org/tmPython.html
+#
+
+import os
+import re
+import traceback
+
+from sympy import __version__
+from sympy.printing import latex
+
+BEGIN, END = chr(2), chr(5)
+
+DATA_COMMAND = chr(16)
+DATA_ESCAPE = chr(27)
+
+def send(kind, output=None):
+    if output is None:
+        output = ""
+    elif kind == "latex":
+        output = latex(output)
+
+    message = "%s:%s" %  (kind, output)
+
+    os.sys.stdout.write(BEGIN)
+    os.sys.stdout.write(message)
+    os.sys.stdout.write(END)
+    os.sys.stdout.flush()
+
+send("verbatim", "Welcome to SymPy " + __version__)
+
+_globals = {}
+
+_init = \
+"""
+from sympy import *
+
+_ = None
+
+x, y, z, t = symbols('x,y,z,t')
+k, i, m, n = symbols('k,i,m,n', integer=True)
+
+f = Function('f')
+
+Gamma, Zeta = gamma, zeta
+
+_greek = 'alpha beta gamma delta epsilon zeta eta '  \
+         'theta iota kappa mu nu xi omicron rho ' \
+         'sigma tau upsilon phi chi psi omega'
+
+for _symbol in _greek.split(' '):
+    exec("%s = Symbol('%s')" % (_symbol, _symbol))
+
+del _symbol
+"""
+
+eval(compile(_init, 'tm_sympy', 'exec'), _globals)
+
+while True:
+    line = os.sys.stdin.readline().strip()
+
+    if not line:
+        send("verbatim")
+    elif line[0] != DATA_COMMAND:
+        line = re.sub(r' {2}(\s*)', r'\n \1', line)
+
+        try:
+            output = eval(line, _globals)
+        except SyntaxError:
+            try:
+                output = eval(compile(line, 'tm_sympy', 'exec'), _globals)
+            except (SyntaxError, TypeError) :
+                send("verbatim", traceback.format_exc(limit = 0))
+                continue
+
+        _globals['_'] = output
+        send("latex", output)
