@@ -1,0 +1,189 @@
+=============
+Number Theory
+=============
+
+.. module:: sympy.ntheory.generate
+
+Ntheory Class Reference
+-----------------------
+.. autoclass:: Sieve
+   :members:
+
+Ntheory Functions Reference
+---------------------------
+
+.. autofunction:: prime
+
+.. autofunction:: primepi
+
+.. autofunction:: nextprime
+
+.. autofunction:: prevprime
+
+.. autofunction:: primerange
+
+.. autofunction:: randprime
+
+.. autofunction:: primorial
+
+.. autofunction:: cycle_length
+
+.. autofunction:: composite
+
+.. autofunction:: compositepi
+
+.. module:: sympy.ntheory.factor_
+
+.. autofunction:: smoothness
+
+.. autofunction:: smoothness_p
+
+.. autofunction:: trailing
+
+.. autofunction:: multiplicity
+
+.. autofunction:: perfect_power
+
+.. autofunction:: pollard_rho
+
+.. autofunction:: pollard_pm1
+
+.. autofunction:: factorint
+
+.. autofunction:: factorrat
+
+.. autofunction:: primefactors
+
+.. autofunction:: divisors
+
+.. autofunction:: proper_divisors
+
+.. autofunction:: divisor_count
+
+.. autofunction:: proper_divisor_count
+
+.. autofunction:: udivisors
+
+.. autofunction:: udivisor_count
+
+.. autofunction:: antidivisors
+
+.. autofunction:: antidivisor_count
+
+.. autoclass:: totient
+    :members:
+
+.. autoclass:: reduced_totient
+    :members:
+
+.. autoclass:: divisor_sigma
+    :members:
+
+.. autoclass:: udivisor_sigma
+    :members:
+
+.. autofunction:: core
+
+.. autofunction:: digits
+
+.. autoclass:: primenu
+    :members:
+
+.. autoclass:: primeomega
+    :members:
+
+.. autofunction:: mersenne_prime_exponent
+
+.. autofunction:: is_perfect
+
+.. autofunction:: is_mersenne_prime
+
+.. autofunction:: abundance
+
+.. autofunction:: is_abundant
+
+.. autofunction:: is_deficient
+
+.. autofunction:: is_amicable
+
+.. module:: sympy.ntheory.modular
+
+.. autofunction:: symmetric_residue
+
+.. autofunction:: crt
+
+.. autofunction:: crt1
+
+.. autofunction:: crt2
+
+.. autofunction:: solve_congruence
+
+.. module:: sympy.ntheory.multinomial
+
+.. autofunction:: binomial_coefficients
+
+.. autofunction:: binomial_coefficients_list
+
+.. autofunction:: multinomial_coefficients
+
+.. autofunction:: multinomial_coefficients_iterator
+
+.. module:: sympy.ntheory.partitions_
+
+.. autofunction:: npartitions
+
+.. module:: sympy.ntheory.primetest
+
+.. autofunction:: is_euler_pseudoprime
+
+.. autofunction:: is_square
+
+.. autofunction:: mr
+
+.. autofunction:: is_lucas_prp
+
+.. autofunction:: is_strong_lucas_prp
+
+.. autofunction:: is_extra_strong_lucas_prp
+
+.. autofunction:: isprime
+
+.. module:: sympy.ntheory.residue_ntheory
+
+.. autofunction:: n_order
+
+.. autofunction:: is_primitive_root
+
+.. autofunction:: primitive_root
+
+.. autofunction:: sqrt_mod
+
+.. autofunction:: sqrt_mod_iter
+
+.. autofunction:: quadratic_residues
+
+.. autofunction:: nthroot_mod
+
+.. autofunction:: is_nthpow_residue
+
+.. autofunction:: is_quad_residue
+
+.. autofunction:: legendre_symbol
+
+.. autofunction:: jacobi_symbol
+
+.. autofunction:: discrete_log
+
+.. automodule:: sympy.ntheory.continued_fraction
+   :members:
+
+.. autoclass:: sympy.ntheory.mobius
+   :members:
+
+.. module:: sympy.ntheory.egyptian_fraction
+
+.. autofunction:: egyptian_fraction
+
+.. module:: sympy.ntheory.bbp_pi
+
+.. autofunction:: pi_hex_digits
