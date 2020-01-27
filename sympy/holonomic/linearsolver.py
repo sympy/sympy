@@ -6,7 +6,6 @@ from sympy.core import S
 from sympy.matrices.common import ShapeError
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.matrices.matrices import MatrixNoSympify
-from sympy.matrices.reductions import _rref
 
 class NewMatrix(MatrixNoSympify, MutableDenseMatrix):
     """

@@ -10,8 +10,6 @@ from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase, MatrixNoSympify
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 
-from .reductions import _is_echelon, _echelon_form, _rank, _rref
-
 
 def sympify_matrix(arg):
     return arg.as_immutable()

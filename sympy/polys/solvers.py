@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy.matrices import MutableDenseMatrix, zeros
 from sympy.matrices.matrices import MatrixNoSympify
-from sympy.matrices.reductions import _rref
 
 class RawMatrix(MatrixNoSympify, MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)
