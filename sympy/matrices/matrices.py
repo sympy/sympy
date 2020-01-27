@@ -31,7 +31,6 @@ from .common import (
 from .utilities import _iszero, _is_zero_after_expand_mul, _toselfclass
 
 from .determinant import (
-    _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix,
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
