@@ -287,6 +287,18 @@ you can control how many solutions are returned.
 >>> diop_general_sum_of_squares(eq, 2)
 {(0, 0, 3, 3), (1, 2, 2, 3)}
 
+The :py:meth:`~sympy.solvers.diophantine.util.sum_of_squares` routine will
+providean iterator that returns solutions and one may control whether
+the solutions contain zeros or not (and the solutions not containing
+zeros are returned first):
+
+>>> from sympy.solvers.diophantine.util import sum_of_squares
+>>> sos = sum_of_squares(18, 4, zeros=True)
+>>> next(sos)
+(1, 2, 2, 3)
+>>> next(sos)
+(0, 0, 3, 3)
+
 
 Simple Eqyptian fractions can be found with the Diophantine module, too.
 For example, here are the ways that one might represent 1/2 as a sum of two
@@ -329,3 +341,140 @@ And this function is imported with ``from sympy.solvers.diophantine import *``:
 classify_diop
 ^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.classify_diop
+
+Internal Functions
+------------------
+
+These functions are intended for internal use in the Diophantine module.
+
+diop_solve
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_solve
+
+diop_linear
+^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_linear
+
+base_solution_linear
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.base_solution_linear
+
+diop_quadratic
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_quadratic
+
+diop_DN
+^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_DN
+
+cornacchia
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.cornacchia
+
+diop_bf_DN
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_bf_DN
+
+transformation_to_DN
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.transformation_to_DN
+
+transformation_to_normal
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.transformation_to_normal
+
+find_DN
+^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.find_DN
+
+diop_ternary_quadratic
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_ternary_quadratic
+
+square_factor
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.square_factor
+
+descent
+^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.descent
+
+diop_general_pythagorean
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_pythagorean
+
+diop_general_sum_of_squares
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_sum_of_squares
+
+diop_general_sum_of_even_powers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_sum_of_even_powers
+
+power_representation
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.power_representation
+
+partition
+^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.partition
+
+sum_of_three_squares
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.sum_of_three_squares
+
+sum_of_four_squares
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.sum_of_four_squares
+
+sum_of_squares
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.sum_of_squares
+
+merge_solution
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.merge_solution
+
+divisible
+^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.divisible
+
+PQa
+^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.PQa
+
+equivalent
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.equivalent
+
+parametrize_ternary_quadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.parametrize_ternary_quadratic
+
+diop_ternary_quadratic_normal
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.diop_ternary_quadratic_normal
+
+ldescent
+^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.ldescent
+
+gaussian_reduce
+^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.gaussian_reduce
+
+holzer
+^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.holzer
+
+prime_as_sum_of_two_squares
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.util.prime_as_sum_of_two_squares
+
+sqf_normal
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.sqf_normal
+
+reconstruct
+^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diophantine.reconstruct
