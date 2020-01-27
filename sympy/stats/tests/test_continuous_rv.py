@@ -868,11 +868,6 @@ def test_Moyal():
     assert moment_generating_function(M)(z) == 2**(-sigma*z)*exp(mu*z) \
                         *gamma(-sigma*z + Rational(1, 2))/sqrt(pi)
 
-    M = Moyal('M', 1, 2)
-    assert E(M) == 1 + 2*EulerGamma + 2*log(2)
-    assert variance(M).simplify() == 2*pi**2
-    assert kurtosis(M).simplify() == 7
-    assert skewness(M).simplify() == 28*sqrt(2)*zeta(3)/pi**3
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
