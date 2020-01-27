@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+import sympy.concrete.summations as csm
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -416,6 +417,16 @@ class Integral(AddWithLimits):
         # check for the trivial zero
         if self.is_zero:
             return S.Zero
+
+        Sum = csm.Sum
+        if isinstance(self.function, Sum):
+            for variable in self.variables:
+                if variable in self.function.limits[0]:
+                    break
+                else:
+                    _i = self
+                    _sum = self.function
+                    return _sum.func(_i.func(_sum.function, *_i.limits).doit(), *_sum.limits).doit()
 
         # now compute and check the function
         function = self.function

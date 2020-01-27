@@ -4,7 +4,7 @@ from sympy import (
     EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
-    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
+    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
 from sympy.core.expr import unchanged
@@ -1648,3 +1648,17 @@ def test_issue_2975():
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+
+def test_issue_7827():
+    x, n, N = symbols('x n N')
+    assert integrate(summation(x*n, (n, 1, N)), x) == x**2*(N**2/4 + N/4)
+    assert integrate(summation(x*sin(n), (n,1,N)), x) == \
+        Sum(x**2*sin(n)/2, (n, 1, N))
+    assert integrate(summation(sin(n*x), (n,1,N)), x) == \
+        Sum(Piecewise((-cos(n*x)/n, Ne(n, 0)), (0, True)), (n, 1, N))
+    assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
+        Piecewise((Sum(Piecewise((-sin(n*x)/n**2, Ne(n, 0)), (-x/n, True)),
+        (n, 1, N)), (n > -oo) & (n < oo) & Ne(n, 0)), (0, True))
+    assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
+    assert integrate(Sum(x, (x, 1, y)), x) == x*Sum(x, (x, 1, y))
+    assert integrate(Sum(x, (x, y, n)), y) == Integral(Sum(x, (x, y, n)), y)
