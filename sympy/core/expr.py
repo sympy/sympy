@@ -140,6 +140,9 @@ class Expr(Basic, EvalfMixin):
             if not isinstance(a, Expr):
                 continue
             if a.is_Number and type(a) != type(b):
+                # allow DecimalRational and Rational numbers to be equal
+                if a.is_DecimalRational or b.is_DecimalRational:
+                    return True
                 return False
         return True
 

@@ -1,7 +1,8 @@
 from sympy import (
     sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
     collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, radsimp, diff, root, Symbol, Rational, exp, Abs)
+    Mul, radsimp, diff, root, Symbol, Rational, DecimalRational,
+    exp, Abs)
 
 from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
@@ -83,6 +84,12 @@ def test_radsimp():
     assert fraction(radsimp(1/sqrt(x))) == (sqrt(x), x)
     assert fraction(radsimp(1/sqrt(2*x + 3))) == (sqrt(2*x + 3), 2*x + 3)
     assert fraction(radsimp(1/sqrt(2*(x + 3)))) == (sqrt(2*x + 6), 2*x + 6)
+
+    # test radsimp works with DecimalRational exponents
+    e = DecimalRational('.5')
+    assert fraction(radsimp(1/x**e)) == (sqrt(x), x)
+    assert fraction(radsimp(1/(2*x + 3)**e)) == (sqrt(2*x + 3), 2*x + 3)
+    assert fraction(radsimp(1/(2*(x + 3))**e)) == (sqrt(2*x + 6), 2*x + 6)
 
     # issue 5994
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
@@ -378,6 +385,7 @@ def test_fraction():
     A = Symbol('A', commutative=False)
 
     assert fraction(S.Half) == (1, 2)
+    assert fraction(DecimalRational('.5')) == (DecimalRational(1, 2), 1)
 
     assert fraction(x) == (x, 1)
     assert fraction(1/x) == (1, x)

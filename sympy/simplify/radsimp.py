@@ -881,7 +881,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return expr
 
         if ispow2(d):
-            d2 = sqrtdenest(sqrt(d.base))**numer(d.exp)
+            d2 = sqrtdenest((d.base)**Rational(S.One, denom(d.exp)))**numer(d.exp)
             if d2 != d:
                 return handle(1/d2)
         elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
