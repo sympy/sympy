@@ -287,18 +287,6 @@ you can control how many solutions are returned.
 >>> diop_general_sum_of_squares(eq, 2)
 {(0, 0, 3, 3), (1, 2, 2, 3)}
 
-The :py:meth:`~sympy.solvers.diophantine.diophantine.sum_of_squares` routine will
-providean iterator that returns solutions and one may control whether
-the solutions contain zeros or not (and the solutions not containing
-zeros are returned first):
-
->>> from sympy.solvers.diophantine.diophantine import sum_of_squares
->>> sos = sum_of_squares(18, 4, zeros=True)
->>> next(sos)
-(1, 2, 2, 3)
->>> next(sos)
-(0, 0, 3, 3)
-
 
 Simple Eqyptian fractions can be found with the Diophantine module, too.
 For example, here are the ways that one might represent 1/2 as a sum of two
