@@ -218,7 +218,6 @@ before_install:
     fi
   - if [[ "${TEST_FLAKE8}" == "true" ]]; then
       pip install flake8;
-      flake8 sympy;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;
