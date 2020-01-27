@@ -2588,6 +2588,3 @@ def _diop_general_sum_of_even_powers(var, p, n, limit=1):
         if took == limit:
             break
     return s
-
-
-
