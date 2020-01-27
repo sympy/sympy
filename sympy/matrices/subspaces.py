@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce
 
 from .utilities import _iszero

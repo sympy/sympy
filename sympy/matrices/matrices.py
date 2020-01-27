@@ -81,64 +81,59 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""
 
-    def _find_reasonable_pivot(self, iszerofunc=_iszero, simpfunc=_simplify):
-        return _find_reasonable_pivot(self, iszerofunc=iszerofunc,
-                simpfunc=iszerofunc)
-
-    def _find_reasonable_pivot_naive(self, iszerofunc=_iszero, simpfunc=None):
-        return _find_reasonable_pivot_naive(self, iszerofunc=iszerofunc,
-                simpfunc=simpfunc)
-
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul,
             dotprodsimp=None):
-        return _det_bareiss(self, iszerofunc=iszerofunc,
+        return _det_bareiss(self.as_immutable(), iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
 
     def _eval_det_berkowitz(self, dotprodsimp=None):
-        return _det_berkowitz(self, dotprodsimp=dotprodsimp)
+        return _det_berkowitz(self.as_immutable(), dotprodsimp=dotprodsimp)
 
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
-        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                dotprodsimp=dotprodsimp)
+        return _det_LU(self.as_immutable(), iszerofunc=iszerofunc,
+                simpfunc=simpfunc, dotprodsimp=dotprodsimp)
 
     def _eval_determinant(self): # for expressions.determinant.Determinant
-        return _det(self)
+        return _det(self.as_immutable())
 
     def adjugate(self, method="berkowitz", dotprodsimp=None):
-        return _adjugate(self, method=method, dotprodsimp=dotprodsimp)
+        return _toselfclass(self, _adjugate(self.as_immutable(), method=method,
+                dotprodsimp=dotprodsimp))
 
     def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
-        return _charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+        return _charpoly(self.as_immutable(), x=x, simplify=simplify,
+                dotprodsimp=dotprodsimp)
 
     def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
-        return _cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+        return _cofactor(self.as_immutable(), i, j, method=method,
+                dotprodsimp=dotprodsimp)
 
     def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
-        return _cofactor_matrix(self, method=method, dotprodsimp=dotprodsimp)
+        return _toselfclass(self, _cofactor_matrix(self.as_immutable(),
+                method=method, dotprodsimp=dotprodsimp))
 
     def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
-        return _det(self, method=method, iszerofunc=iszerofunc,
+        return _det(self.as_immutable(), method=method, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
 
     def minor(self, i, j, method="berkowitz", dotprodsimp=None):
-        return _minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+        return _minor(self.as_immutable(), i, j, method=method,
+                dotprodsimp=dotprodsimp)
 
     def minor_submatrix(self, i, j):
-        return _minor_submatrix(self, i, j)
+        return _toselfclass(self, _minor_submatrix(self.as_immutable(), i, j))
 
-    _find_reasonable_pivot.__doc__       = _find_reasonable_pivot.__doc__
-    _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
-    _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
-    _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
-    _eval_det_lu.__doc__                 = _det_LU.__doc__
-    _eval_determinant.__doc__            = _det.__doc__
-    adjugate.__doc__                     = _adjugate.__doc__
-    charpoly.__doc__                     = _charpoly.__doc__
-    cofactor.__doc__                     = _cofactor.__doc__
-    cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
-    det.__doc__                          = _det.__doc__
-    minor.__doc__                        = _minor.__doc__
-    minor_submatrix.__doc__              = _minor_submatrix.__doc__
+    _eval_det_bareiss.__doc__   = _det_bareiss.__doc__
+    _eval_det_berkowitz.__doc__ = _det_berkowitz.__doc__
+    _eval_det_lu.__doc__        = _det_LU.__doc__
+    _eval_determinant.__doc__   = _det.__doc__
+    adjugate.__doc__            = _adjugate.__doc__
+    charpoly.__doc__            = _charpoly.__doc__
+    cofactor.__doc__            = _cofactor.__doc__
+    cofactor_matrix.__doc__     = _cofactor_matrix.__doc__
+    det.__doc__                 = _det.__doc__
+    minor.__doc__               = _minor.__doc__
+    minor_submatrix.__doc__     = _minor_submatrix.__doc__
 
 
 class MatrixReductions(MatrixDeterminant):
@@ -157,7 +152,7 @@ class MatrixReductions(MatrixDeterminant):
 
     @property
     def is_echelon(self):
-        return _is_echelon(self)
+        return _is_echelon(self.as_immutable())
 
     def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         return _rank(self.as_immutable(), iszerofunc=iszerofunc, simplify=simplify,
@@ -344,14 +339,16 @@ class MatrixSubspaces(MatrixReductions):
     implementations."""
 
     def columnspace(self, simplify=False, dotprodsimp=None):
-        return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+        return [_toselfclass(self, m) for m in _columnspace(self.as_immutable(),
+                simplify=simplify, dotprodsimp=dotprodsimp)]
 
     def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
-        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+        return [_toselfclass(self, m) for m in _nullspace(self.as_immutable(),
+                simplify=simplify, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)]
 
     def rowspace(self, simplify=False, dotprodsimp=None):
-        return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+        return [_toselfclass(self, m) for m in _rowspace(self.as_immutable(),
+                simplify=simplify, dotprodsimp=dotprodsimp)]
 
     # This is a classmethod but is converted to such later in order to allow
     # assignment of __doc__ since that does not work for already wrapped
@@ -373,56 +370,68 @@ class MatrixEigen(MatrixSubspaces):
     implementations."""
 
     def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
-        return _eval_is_positive_definite(self, method=method,
+        return _eval_is_positive_definite(self.as_immutable(), method=method,
                 dotprodsimp=dotprodsimp)
 
     def eigenvals(self, error_when_incomplete=True, dotprodsimp=None, **flags):
-        return _eigenvals(self, error_when_incomplete=error_when_incomplete,
+        return _eigenvals(self.as_immutable(),
+                error_when_incomplete=error_when_incomplete,
                 dotprodsimp=dotprodsimp, **flags)
 
     def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero,
             dotprodsimp=None, **flags):
-        return _eigenvects(self, error_when_incomplete=error_when_incomplete,
+        ret = _eigenvects(self.as_immutable(),
+                error_when_incomplete=error_when_incomplete,
                 iszerofunc=iszerofunc, dotprodsimp=dotprodsimp, **flags)
 
+        return [(v, m, [_toselfclass(self, ev) for ev in es]) for v, m, es in ret]
+
     def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
-        return _is_diagonalizable(self, reals_only=reals_only,
+        return _is_diagonalizable(self.as_immutable(), reals_only=reals_only,
                 dotprodsimp=dotprodsimp, **kwargs)
 
     def diagonalize(self, reals_only=False, sort=False, normalize=False,
             dotprodsimp=None):
-        return _diagonalize(self, reals_only=reals_only, sort=sort,
-                normalize=normalize, dotprodsimp=dotprodsimp)
+        return tuple(_toselfclass(self, m) for m in _diagonalize(self.as_immutable(),
+                reals_only=reals_only, sort=sort, normalize=normalize,
+                dotprodsimp=dotprodsimp))
 
     @property
     def is_positive_definite(self):
-        return _is_positive_definite(self)
+        return _is_positive_definite(self.as_immutable())
 
     @property
     def is_positive_semidefinite(self):
-        return _is_positive_semidefinite(self)
+        return _is_positive_semidefinite(self.as_immutable())
 
     @property
     def is_negative_definite(self):
-        return _is_negative_definite(self)
+        return _is_negative_definite(self.as_immutable())
 
     @property
     def is_negative_semidefinite(self):
-        return _is_negative_semidefinite(self)
+        return _is_negative_semidefinite(self.as_immutable())
 
     @property
     def is_indefinite(self):
-        return _is_indefinite(self)
+        return _is_indefinite(self.as_immutable())
 
     def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
-        return _jordan_form(self, calc_transform=calc_transform,
+        ret = _jordan_form(self.as_immutable(), calc_transform=calc_transform,
                 dotprodsimp=dotprodsimp, **kwargs)
 
+        if calc_transform:
+            return tuple(_toselfclass(self, m) for m in ret)
+
+        return _toselfclass(self, ret)
+
     def left_eigenvects(self, **flags):
-        return _left_eigenvects(self, **flags)
+        ret = _left_eigenvects(self.as_immutable(), **flags)
+
+        return [(v, m, [_toselfclass(self, ev) for ev in es]) for v, m, es in ret]
 
     def singular_values(self, dotprodsimp=None):
-        return _singular_values(self, dotprodsimp=dotprodsimp)
+        return _singular_values(self.as_immutable(), dotprodsimp=dotprodsimp)
 
     _eval_is_positive_definite.__doc__ = _eval_is_positive_definite.__doc__
     eigenvals.__doc__                  = _eigenvals.__doc__
@@ -605,10 +614,41 @@ class MatrixNoSympify:
     avoid sympification of matrix elements for matrix types which contain
     unsympifiable elements."""
 
-    echelon_form = _echelon_form
-    is_echelon   = property(_is_echelon)
-    rank         = _rank
-    rref         = _rref
+    _eval_det_bareiss          = _det_bareiss
+    _eval_det_berkowitz        = _det_berkowitz
+    _eval_det_lu               = _det_LU
+    _eval_determinant          = _det
+    adjugate                   = _adjugate
+    charpoly                   = _charpoly
+    cofactor                   = _cofactor
+    cofactor_matrix            = _cofactor_matrix
+    det                        = _det
+    minor                      = _minor
+    minor_submatrix            = _minor_submatrix
+
+    echelon_form               = _echelon_form
+    is_echelon                 = property(_is_echelon)
+    rank                       = _rank
+    rref                       = _rref
+
+    columnspace                = _columnspace
+    nullspace                  = _nullspace
+    rowspace                   = _rowspace
+    orthogonalize              = classmethod(_orthogonalize)
+
+    _eval_is_positive_definite = _eval_is_positive_definite
+    eigenvals                  = _eigenvals
+    eigenvects                 = _eigenvects
+    is_diagonalizable          = _is_diagonalizable
+    diagonalize                = _diagonalize
+    is_positive_definite       = property(_is_positive_definite)
+    is_positive_semidefinite   = property(_is_positive_semidefinite)
+    is_negative_definite       = property(_is_negative_definite)
+    is_negative_semidefinite   = property(_is_negative_semidefinite)
+    is_indefinite              = property(_is_indefinite)
+    jordan_form                = _jordan_form
+    left_eigenvects            = _left_eigenvects
+    singular_values            = _singular_values
 
 
 # https://github.com/sympy/sympy/pull/12854

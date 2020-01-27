@@ -4,6 +4,7 @@ from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
 
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
@@ -19,7 +20,7 @@ from .common import (MatrixError, NonSquareMatrixError,
 from .utilities import _iszero
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
     r"""Return eigenvalues using the Berkowitz agorithm to compute
     the characteristic polynomial.
@@ -156,7 +157,7 @@ def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
         return [simplify(value) for value in eigs]
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
         dotprodsimp=None, **flags):
     """Return list of triples (eigenval, multiplicity, eigenspace).
@@ -670,6 +671,7 @@ _is_negative_semidefinite.__doc__ = _doc_positive_definite
 _is_indefinite.__doc__            = _doc_positive_definite
 
 
+@cacheit
 def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
     """Return ``(P, J)`` where `J` is a Jordan block
     matrix and `P` is a matrix such that

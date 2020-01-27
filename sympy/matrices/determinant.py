@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from types import FunctionType
 
+from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import _uniquely_named_symbol
@@ -198,7 +199,7 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
     return indeterminates[0][0], indeterminates[0][1], True, newly_determined
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _berkowitz_toeplitz_matrix(M, dotprodsimp=None):
     """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
     corresponding to ``M`` and A is the first principal submatrix.
@@ -253,7 +254,7 @@ def _berkowitz_toeplitz_matrix(M, dotprodsimp=None):
     return (A, toeplitz)
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _berkowitz_vector(M, dotprodsimp=None):
     """ Run the Berkowitz algorithm and return a vector whose entries
         are the coefficients of the characteristic polynomial of ``M``.
@@ -347,7 +348,7 @@ def _adjugate(M, method="berkowitz", dotprodsimp=None):
     return M.cofactor_matrix(method=method, dotprodsimp=dotprodsimp).transpose()
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
@@ -509,7 +510,6 @@ def _cofactor_matrix(M, method="berkowitz", dotprodsimp=None):
             lambda i, j: M.cofactor(i, j, method, dotprodsimp=dotprodsimp))
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
     """Computes the determinant of a matrix if ``M`` is a concrete matrix object
     otherwise return an expressions ``Determinant(M)`` if ``M`` is a
@@ -627,7 +627,7 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
         raise MatrixError('unknown method for calculating determinant')
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
     """Compute matrix determinant using Bareiss' fraction-free
     algorithm which is an extension of the well known Gaussian
@@ -664,7 +664,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = mat[:, 0]._find_reasonable_pivot(iszerofunc=iszerofunc)
+        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0], iszerofunc=iszerofunc)
         if pivot_pos is None:
             return mat.zero
 
@@ -724,7 +724,7 @@ def _det_berkowitz(M, dotprodsimp=None):
     return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
+@cacheit
 def _det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
     """ Computes the determinant of a matrix from its LU decomposition.
     This function uses the LU decomposition computed by
