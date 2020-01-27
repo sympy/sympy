@@ -210,7 +210,6 @@ def test_remove_gcd():
 
 
 def test_descent():
-
     u = ([(13, 23), (3, -11), (41, -113), (91, -3), (1, 1), (1, -1), (17, 13), (123689, 1), (19, -570)])
     for a, b in u:
         w, x, y = descent(a, b)
