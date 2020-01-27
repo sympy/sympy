@@ -418,8 +418,8 @@ class LatexPrinter(Printer):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
         strip = False if self._settings['full_prec'] else True
-        low = self._settings["min"]
-        high = self._settings["max"]
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
         str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)

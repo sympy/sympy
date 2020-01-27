@@ -545,12 +545,6 @@ def rust_code(expr, assign_to=None, **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
-    min: Integer or None, optional
-        Sets the lower bound for the exponent to print floating point numbers in
-        fixed-point format.
-    max: Integer or None, optional
-        Sets the upper bound for the exponent to print floating point numbers in
-        fixed-point format.
 
     Examples
     ========
