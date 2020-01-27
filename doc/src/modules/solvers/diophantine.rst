@@ -252,13 +252,13 @@ use :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic`.
 
 :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic` first converts the
 given equation to an equivalent equation of the form `w^2 = AX^2 + BY^2` and
-then it uses :py:meth:`~sympy.solvers.diophantine.diophantine.descent` to solve the latter
+then it uses :py:meth:`~sympy.solvers.diophantine.util.descent` to solve the latter
 equation. You can refer to the docs of
 :py:meth:`~sympy.solvers.diophantine.diophantine.transformation_to_normal` to find more on
 this. The equation `w^2 = AX^2 + BY^2` can be solved more easily by using the
-Aforementioned :py:meth:`~sympy.solvers.diophantine.diophantine.descent`.
+Aforementioned :py:meth:`~sympy.solvers.diophantine.util.descent`.
 
->>> from sympy.solvers.diophantine.diophantine import descent
+>>> from sympy.solvers.diophantine.util import descent
 >>> descent(3, 1) # solves the equation w**2 = 3*Y**2 + Z**2
 (1, 0, 1)
 
