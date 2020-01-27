@@ -104,6 +104,8 @@ class FCodePrinter(CodePrinter):
         'contract': True,
         'standard': 77,
         'name_mangling' : True,
+        'min': None,
+        'max': None,
     }  # type: Dict[str, Any]
 
     _operators = {

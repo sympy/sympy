@@ -85,6 +85,8 @@ class OctaveCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
+        'min': None,
+        'max': None
     }  # type: Dict[str, Any]
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
@@ -622,6 +624,12 @@ def octave_code(expr, assign_to=None, **settings):
     inline: bool, optional
         If True, we try to create single-statement code instead of multiple
         statements.  [default=True].
+    min: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
 
     Examples
     ========

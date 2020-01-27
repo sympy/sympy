@@ -84,6 +84,8 @@ class MapleCodePrinter(CodePrinter):
         'human': True,
         'inline': True,
         'allow_unknown_functions': True,
+        'min': None,
+        'max': None,
     }
 
     def __init__(self, settings=None):
@@ -293,6 +295,12 @@ def maple_code(expr, assign_to=None, **settings):
     inline: bool, optional
         If True, we try to create single-statement code instead of multiple
         statements.  [default=True].
+    min: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
 
     """
     return MapleCodePrinter(settings).doprint(expr, assign_to)

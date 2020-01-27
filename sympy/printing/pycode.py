@@ -92,7 +92,9 @@ class AbstractPythonCodePrinter(CodePrinter):
         inline=True,
         fully_qualified_modules=True,
         contract=False,
-        standard='python3'
+        standard='python3',
+        min=None,
+        max=None
     )
 
     def __init__(self, settings=None):

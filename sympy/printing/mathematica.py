@@ -129,6 +129,8 @@ class MCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
+        'min': None,
+        'max': None,
     }  # type: Dict[str, Any]
 
     _number_symbols = set()  # type: Set[Tuple[Expr, Float]]

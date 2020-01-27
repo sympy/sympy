@@ -231,6 +231,8 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
+        'min': None,
+        'max': None,
     }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):
@@ -545,6 +547,12 @@ def rust_code(expr, assign_to=None, **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
+    min: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
 
     Examples
     ========

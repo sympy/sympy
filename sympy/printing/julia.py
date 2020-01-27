@@ -67,6 +67,8 @@ class JuliaCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
+        'min': None,
+        'max': None,
     }  # type: Dict[str, Any]
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully

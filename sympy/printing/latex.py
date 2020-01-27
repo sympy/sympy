@@ -125,6 +125,9 @@ class LatexPrinter(Printer):
     printmethod = "_latex"
 
     _default_settings = {
+        "full_prec": False,
+        "min": None,
+        "max": None,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
@@ -414,7 +417,10 @@ class LatexPrinter(Printer):
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+        strip = False if self._settings['full_prec'] else True
+        low = self._settings["min"]
+        high = self._settings["max"]
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator
@@ -2550,8 +2556,8 @@ def translate(s):
         return s
 
 
-def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
-          fold_short_frac=None, inv_trig_style="abbreviated",
+def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
+          fold_func_brackets=False, fold_short_frac=None, inv_trig_style="abbreviated",
           itex=False, ln_notation=False, long_frac_ratio=None,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
@@ -2561,6 +2567,14 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
 
     Parameters
     ==========
+    full_prec: boolean, optional
+        If set to True, a floating point number is printed with full precision.
+    min_: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max_: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
@@ -2739,6 +2753,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         symbol_names = {}
 
     settings = {
+        'full_prec': full_prec,
+        'min': min_,
+        'max': max_,
         'fold_frac_powers': fold_frac_powers,
         'fold_func_brackets': fold_func_brackets,
         'fold_short_frac': fold_short_frac,

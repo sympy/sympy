@@ -53,7 +53,9 @@ class GLSLPrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'error_on_reserved': False,
-        'reserved_word_suffix': '_'
+        'reserved_word_suffix': '_',
+        'min': None,
+        'max': None,
     }
 
     def __init__(self, settings={}):
