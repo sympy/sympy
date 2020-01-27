@@ -787,7 +787,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         self._mat[i0: i0 + self.cols] = [f(x, y) for x, y in zip(ri, rk)]
 
-    # Utility functions
+    is_zero = False
+
 
 MutableMatrix = Matrix = MutableDenseMatrix
 

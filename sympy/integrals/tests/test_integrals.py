@@ -1662,3 +1662,7 @@ def test_issue_7827():
     assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
     assert integrate(Sum(x, (x, 1, y)), x) == x*Sum(x, (x, 1, y))
     assert integrate(Sum(x, (x, y, n)), y) == Integral(Sum(x, (x, y, n)), y)
+
+def test_issue_17841():
+    f = diff(1/(x**2+x+I), x)
+    assert integrate(f, x) == 1/(x**2 + x + I)
