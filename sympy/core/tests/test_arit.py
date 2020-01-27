@@ -2020,6 +2020,8 @@ def test_mul_flatten_oo():
     assert p*oo is oo
     assert x_im*oo != I*oo  # i could be +/- 3*I -> +/-oo
 
+    x = symbols('x')
+    assert DecimalRational('.5')*x is not S.Half*x
 
 def test_add_flatten():
     # see https://github.com/sympy/sympy/issues/2633#issuecomment-29545524

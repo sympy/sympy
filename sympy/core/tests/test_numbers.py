@@ -1253,6 +1253,18 @@ def test_DecimalRational_sub():
     assert isinstance(S.Half - DecimalRational('.25'), DecimalRational)
 
 
+def test_DecimalRational_mul():
+    assert isinstance(S.One * DecimalRational('.25'), DecimalRational)
+    assert isinstance(DecimalRational('.5') * DecimalRational('.25'), DecimalRational)
+    assert isinstance(S.Half * DecimalRational('.25'), DecimalRational)
+
+
+def test_DecimalRational_div():
+    assert isinstance(DecimalRational('.25')/S.One, DecimalRational)
+    assert isinstance(DecimalRational('.25')/DecimalRational('.5'), DecimalRational)
+    assert isinstance(DecimalRational('.25')/S.Half, DecimalRational)
+
+
 def test_accept_int():
     assert Float(4) == 4
 
