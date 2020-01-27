@@ -1,5 +1,4 @@
-from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo,
-                   powsimp, Rational)
+from sympy import Add, Matrix, Mul, S, symbols, Eq, pi, powsimp, Rational
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import ordered
 from sympy.functions.elementary.trigonometric import sin
