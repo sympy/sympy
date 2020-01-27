@@ -105,11 +105,19 @@ the mpmath installation guide:
 
 https://github.com/fredrik-johansson/mpmath#1-download--installation
 
-To install SymPy itself, then simply run::
+To install SymPy using PyPI, run the following command::
+
+    $ pip install sympy
+
+To install SymPy from GitHub source, first clone SymPy using ``git``::
+
+    $ git clone https://github.com/sympy/sympy.git
+
+Then, in the ``sympy`` repository that you cloned, simply run::
 
     $ python setup.py install
 
-If you install it system-wide, you may need to prefix the previous command with ``sudo``::
+If you want to install it system-wide, you may need to prefix the previous command with ``sudo``::
 
     $ sudo python setup.py install
 
