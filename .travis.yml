@@ -27,6 +27,7 @@ matrix:
       sudo: true
       script: bin/test quality
       env:
+        - TEST_QUALITY="true"
     - python: 3.8
       dist: xenial
       sudo: true
