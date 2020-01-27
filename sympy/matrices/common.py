@@ -2607,6 +2607,14 @@ class _MinimalMatrix(object):
         return (self.rows, self.cols)
 
 
+class _CastableMatrix: # this is needed here ONLY FOR TESTS.
+    def as_mutable(self):
+        return self
+
+    def as_immutable(self):
+        return self
+
+
 class _MatrixWrapper(object):
     """Wrapper class providing the minimum functionality for a matrix-like
     object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix

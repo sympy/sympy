@@ -118,6 +118,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
     def shape(self):
         return tuple(int(i) for i in self.args[:2])
 
+    def as_immutable(self):
+        return self
+
     def is_diagonalizable(self, reals_only=False, **kwargs):
         return super(ImmutableDenseMatrix, self).is_diagonalizable(
             reals_only=reals_only, **kwargs)
@@ -176,6 +179,9 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
 
     _eval_Eq = ImmutableDenseMatrix._eval_Eq
+
+    def as_immutable(self):
+        return self
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
         return super(ImmutableSparseMatrix, self).is_diagonalizable(

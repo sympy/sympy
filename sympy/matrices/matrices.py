@@ -81,14 +81,6 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""
 
-    def _find_reasonable_pivot(self, iszerofunc=_iszero, simpfunc=_simplify):
-        return _find_reasonable_pivot(self, iszerofunc=iszerofunc,
-                simpfunc=iszerofunc)
-
-    def _find_reasonable_pivot_naive(self, iszerofunc=_iszero, simpfunc=None):
-        return _find_reasonable_pivot_naive(self, iszerofunc=iszerofunc,
-                simpfunc=simpfunc)
-
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul,
             dotprodsimp=None):
         return _det_bareiss(self, iszerofunc=iszerofunc,
@@ -168,19 +160,74 @@ class MatrixReductions(MatrixDeterminant):
     rank.__doc__         = _rank.__doc__
     rref.__doc__         = _rref.__doc__
 
+    def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
+        """Validate the arguments for a row/column operation.  ``error_str``
+        can be one of "row" or "col" depending on the arguments being parsed."""
+        if op not in ["n->kn", "n<->m", "n->n+km"]:
+            raise ValueError("Unknown {} operation '{}'. Valid col operations "
+                             "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
+
+        # define self_col according to error_str
+        self_cols = self.cols if error_str == 'col' else self.rows
+
+        # normalize and validate the arguments
+        if op == "n->kn":
+            col = col if col is not None else col1
+            if col is None or k is None:
+                raise ValueError("For a {0} operation 'n->kn' you must provide the "
+                                 "kwargs `{0}` and `k`".format(error_str))
+            if not 0 <= col < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+
+        elif op == "n<->m":
+            # we need two cols to swap. It doesn't matter
+            # how they were specified, so gather them together and
+            # remove `None`
+            cols = set((col, k, col1, col2)).difference([None])
+            if len(cols) > 2:
+                # maybe the user left `k` by mistake?
+                cols = set((col, col1, col2)).difference([None])
+            if len(cols) != 2:
+                raise ValueError("For a {0} operation 'n<->m' you must provide the "
+                                 "kwargs `{0}1` and `{0}2`".format(error_str))
+            col1, col2 = cols
+            if not 0 <= col1 < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
+            if not 0 <= col2 < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+
+        elif op == "n->n+km":
+            col = col1 if col is None else col
+            col2 = col1 if col2 is None else col2
+            if col is None or col2 is None or k is None:
+                raise ValueError("For a {0} operation 'n->n+km' you must provide the "
+                                 "kwargs `{0}`, `k`, and `{0}2`".format(error_str))
+            if col == col2:
+                raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
+                                 "be different.".format(error_str))
+            if not 0 <= col < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+            if not 0 <= col2 < self_cols:
+                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+
+        else:
+            raise ValueError('invalid operation %s' % repr(op))
+
+        return op, col, k, col1, col2
+
+    def _eval_col_op_multiply_col_by_const(self, col, k):
+        def entry(i, j):
+            if j == col:
+                return k * self[i, j]
+            return self[i, j]
+        return self._new(self.rows, self.cols, entry)
+
     def _eval_col_op_swap(self, col1, col2):
         def entry(i, j):
             if j == col1:
                 return self[i, col2]
             elif j == col2:
                 return self[i, col1]
-            return self[i, j]
-        return self._new(self.rows, self.cols, entry)
-
-    def _eval_col_op_multiply_col_by_const(self, col, k):
-        def entry(i, j):
-            if j == col:
-                return k * self[i, j]
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
 
@@ -213,58 +260,6 @@ class MatrixReductions(MatrixDeterminant):
                 return self[i, j] + k * self[row2, j]
             return self[i, j]
         return self._new(self.rows, self.cols, entry)
-
-    def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
-        """Validate the arguments for a row/column operation.  ``error_str``
-        can be one of "row" or "col" depending on the arguments being parsed."""
-        if op not in ["n->kn", "n<->m", "n->n+km"]:
-            raise ValueError("Unknown {} operation '{}'. Valid col operations "
-                             "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
-
-        # define self_col according to error_str
-        self_cols = self.cols if error_str == 'col' else self.rows
-
-        # normalize and validate the arguments
-        if op == "n->kn":
-            col = col if col is not None else col1
-            if col is None or k is None:
-                raise ValueError("For a {0} operation 'n->kn' you must provide the "
-                                 "kwargs `{0}` and `k`".format(error_str))
-            if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-
-        if op == "n<->m":
-            # we need two cols to swap. It doesn't matter
-            # how they were specified, so gather them together and
-            # remove `None`
-            cols = set((col, k, col1, col2)).difference([None])
-            if len(cols) > 2:
-                # maybe the user left `k` by mistake?
-                cols = set((col, col1, col2)).difference([None])
-            if len(cols) != 2:
-                raise ValueError("For a {0} operation 'n<->m' you must provide the "
-                                 "kwargs `{0}1` and `{0}2`".format(error_str))
-            col1, col2 = cols
-            if not 0 <= col1 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
-            if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
-
-        if op == "n->n+km":
-            col = col1 if col is None else col
-            col2 = col1 if col2 is None else col2
-            if col is None or col2 is None or k is None:
-                raise ValueError("For a {0} operation 'n->n+km' you must provide the "
-                                 "kwargs `{0}`, `k`, and `{0}2`".format(error_str))
-            if col == col2:
-                raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
-                                 "be different.".format(error_str))
-            if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
-            if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
-
-        return op, col, k, col1, col2
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
         """Performs the elementary column operation `op`.
