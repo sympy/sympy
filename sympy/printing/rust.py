@@ -231,8 +231,6 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-        'min': None,
-        'max': None,
     }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):

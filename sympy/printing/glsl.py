@@ -54,8 +54,6 @@ class GLSLPrinter(CodePrinter):
         'contract': True,
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-        'min': None,
-        'max': None,
     }
 
     def __init__(self, settings={}):

@@ -56,8 +56,6 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-        'min': None,
-        'max': None,
     }  # type: Dict[str, Any]
 
     # Functions which are "simple" to rewrite to other functions that

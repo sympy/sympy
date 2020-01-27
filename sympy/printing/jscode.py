@@ -58,8 +58,6 @@ class JavascriptCodePrinter(CodePrinter):
         'human': True,
         'allow_unknown_functions': False,
         'contract': True,
-        'min': None,
-        'max': None,
     }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):

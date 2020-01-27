@@ -126,8 +126,6 @@ class LatexPrinter(Printer):
 
     _default_settings = {
         "full_prec": False,
-        "min": None,
-        "max": None,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
@@ -147,6 +145,8 @@ class LatexPrinter(Printer):
         "gothic_re_im": False,
         "decimal_separator": "period",
         "perm_cyclic": True,
+        "min": None,
+        "max": None,
     }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
@@ -2569,12 +2569,6 @@ def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
     ==========
     full_prec: boolean, optional
         If set to True, a floating point number is printed with full precision.
-    min_: Integer or None, optional
-        Sets the lower bound for the exponent to print floating point numbers in
-        fixed-point format.
-    max_: Integer or None, optional
-        Sets the upper bound for the exponent to print floating point numbers in
-        fixed-point format.
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
@@ -2642,6 +2636,12 @@ def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
         separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
         ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
+    min_: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max_: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
 
     Notes
     =====
@@ -2754,8 +2754,6 @@ def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
 
     settings = {
         'full_prec': full_prec,
-        'min': min_,
-        'max': max_,
         'fold_frac_powers': fold_frac_powers,
         'fold_func_brackets': fold_func_brackets,
         'fold_short_frac': fold_short_frac,
@@ -2775,6 +2773,8 @@ def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
         'perm_cyclic' : perm_cyclic,
+        'min': min_,
+        'max': max_,
     }
 
     return LatexPrinter(settings).doprint(expr)
