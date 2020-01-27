@@ -90,8 +90,6 @@ class RCodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-        'min': None,
-        'max': None,
     }  # type: Dict[str, Any]
     _operators = {
        'and': '&',
