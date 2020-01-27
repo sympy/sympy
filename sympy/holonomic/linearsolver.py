@@ -5,9 +5,10 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.matrices.common import ShapeError
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy.matrices.matrices import MatrixNoSympify
 from sympy.matrices.reductions import _rref
 
-class NewMatrix(MutableDenseMatrix):
+class NewMatrix(MatrixNoSympify, MutableDenseMatrix):
     """
     Supports elements which can't be Sympified.
     See docstrings in sympy/matrices/matrices.py
@@ -49,10 +50,8 @@ class NewMatrix(MutableDenseMatrix):
         aug = self.hstack(self.copy(), b.copy())
         row, col = aug[:, :-1].shape
 
-        # solve by reduced row echelon form, use the internal `_rref` function
-        # to avoid matrix method coercion to immutable which would raise due to
-        # use of elements here derived from `CantSimplify`.
-        A, pivots = _rref(aug)
+        # solve by reduced row echelon form
+        A, pivots = aug.rref()
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)

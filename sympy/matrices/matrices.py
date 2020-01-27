@@ -595,6 +595,22 @@ class MatrixCalculus(MatrixCommon):
         return self.applyfunc(lambda x: x.limit(*args))
 
 
+class MatrixNoSympify:
+    """Mixin class to eliminate the method wrappers which may sympify self for
+    underlying functions needed in a mutable matrix. This class overrides
+    MatrixBase wrappers for these functions by assigning the underlying
+    functions directly to class methods and thus removing the wrapper layer. The
+    wrapper layer may need to be removed for one of two reasons, to avoid the
+    overhead of the wrappers for classes which are already immutable, or to
+    avoid sympification of matrix elements for matrix types which contain
+    unsympifiable elements."""
+
+    echelon_form = _echelon_form
+    is_echelon   = property(_is_echelon)
+    rank         = _rank
+    rref         = _rref
+
+
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""

@@ -7,7 +7,7 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrices import MatrixBase, MatrixNoSympify
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
@@ -18,20 +18,7 @@ def sympify_matrix(arg):
 sympify_converter[MatrixBase] = sympify_matrix
 
 
-class _ImmutableNoWrappers:
-    """Mixin class to eliminate the method wrappers for underlying functions
-    needed in a mutable matrix. This class overrides MatrixBase wrappers for
-    these functions by assigning the underlying functions directly to class
-    methods and thus removing the wrapper layer. Since the class is already
-    immutable those wrappers are not needed to convert to immutable."""
-
-    echelon_form = _echelon_form
-    is_echelon   = property(_is_echelon)
-    rank         = _rank
-    rref         = _rref
-
-
-class ImmutableDenseMatrix(_ImmutableNoWrappers, DenseMatrix, MatrixExpr): # type: ignore
+class ImmutableDenseMatrix(MatrixNoSympify, DenseMatrix, MatrixExpr): # type: ignore
     """Create an immutable version of a matrix.
 
     Examples
@@ -153,7 +140,7 @@ ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero  # type: ignore
 ImmutableMatrix = ImmutableDenseMatrix
 
 
-class ImmutableSparseMatrix(_ImmutableNoWrappers, SparseMatrix, Basic):
+class ImmutableSparseMatrix(MatrixNoSympify, SparseMatrix, Basic):
     """Create an immutable version of a sparse matrix.
 
     Examples
