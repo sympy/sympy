@@ -28,7 +28,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma, multigamma)
 from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
-        lerchphi, polylog, stieltjes)
+        lerchphi, polylog, stieltjes, riemann_xi)
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
 from sympy.functions.special.singularity_functions import SingularityFunction
@@ -80,7 +80,7 @@ __all__ = [
     'gamma', 'lowergamma', 'uppergamma', 'polygamma', 'loggamma', 'digamma',
     'trigamma', 'multigamma',
 
-    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes',
+    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes', 'riemann_xi',
 
     'Eijk', 'LeviCivita', 'KroneckerDelta',
 

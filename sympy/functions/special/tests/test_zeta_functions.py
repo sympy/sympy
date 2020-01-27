@@ -1,6 +1,6 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo, riemann_xi)
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.testing.pytest import raises
@@ -80,6 +80,14 @@ def test_dirichlet_eta_eval():
     assert dirichlet_eta(1) == log(2)
     assert dirichlet_eta(2) == pi**2/12
     assert dirichlet_eta(4) == pi**4*Rational(7, 720)
+
+
+def test_riemann_xi_eval():
+
+    assert riemann_xi(2) == pi/6
+    assert riemann_xi(0) == Rational(1, 2)
+    assert riemann_xi(1) == Rational(1, 2)
+    assert riemann_xi(4) == pi**2/15
 
 
 def test_rewriting():
