@@ -461,7 +461,18 @@ class Add(Expr, AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
-        """expression -> a/b -> a, b
+        """
+        Decomposes an expression to its numerator part and its
+        denominator part.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y, z
+        >>> (x*y/z).as_numer_denom()
+        (x*y, z)
+        >>> (x*(y + 1)/y**7).as_numer_denom()
+        (x*(y + 1), y**7)
 
         See Also
         ========
