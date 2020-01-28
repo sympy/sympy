@@ -464,7 +464,8 @@ def test_add():
     assert e.subs(-y + 1, x) == ans
 
     #Test issue 18747
-    assert (exp(x)+cos(x)).subs(x,oo) == oo
+    assert (exp(x) + cos(x)).subs(x, oo) == oo
+    assert Add(*[AccumBounds(-1, 1), oo]) == oo
 
 def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')

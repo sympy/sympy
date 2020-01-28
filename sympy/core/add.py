@@ -140,14 +140,14 @@ class Add(Expr, AssocOp):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number or isinstance(coeff, AccumBounds):
-                    coeff = coeff + o
+                    coeff += o
                     if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
                 continue
 
             elif isinstance(o, AccumBounds):
-                coeff = o.__add__(coeff)
+                coeff += o
                 continue
 
             elif isinstance(o, MatrixExpr):
