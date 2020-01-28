@@ -2,7 +2,6 @@ from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
         oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
 )
-from sympy.core.compatibility import long
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
@@ -1900,9 +1899,9 @@ def test_float_int_round():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
-        long(112345678901234567890)
+        int(112345678901234567890)
     assert int(Float('1.123456789012345678901234567890e25', '')) == \
-        long(11234567890123456789012345)
+        int(11234567890123456789012345)
     # decimal forces float so it's not an exact integer ending in 000000
     assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000192
