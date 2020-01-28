@@ -461,7 +461,13 @@ class Add(Expr, AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
+        """expression -> a/b -> a, b
 
+        See Also
+        ========
+
+        sympy.core.expr.Expr.as_numer_denom
+        """
         # clear rational denominator
         content, expr = self.primitive()
         ncon, dcon = content.as_numer_denom()
