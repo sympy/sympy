@@ -1,9 +1,13 @@
 from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
                    FiniteSet, Union, ComplexRegion, ProductSet)
+from sympy.core.expr import Expr
+from sympy.core.function import Lambda
+from sympy.core.symbol import Dummy
 from sympy.multipledispatch import dispatch
+from sympy.polys.polytools import cancel
 from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
-                                  Reals)
-from sympy.sets.sets import UniversalSet
+                                  Reals, ImageSet)
+from sympy.sets.sets import UniversalSet, imageset
 
 
 @dispatch(Naturals0, Naturals)  # type: ignore
@@ -136,6 +140,68 @@ def union_sets(a, b): # noqa:F811
     if any(b.contains(x) == True for x in a):
         return set((
             FiniteSet(*[x for x in a if b.contains(x) != True]), b))
+    return None
+
+@dispatch(ImageSet, ImageSet)  # type: ignore
+def union_sets(a, b): # noqa:F811
+    """Simplify union of two arithmetic sequences if possible.
+
+    Given two ``ImageSet``s *a* and *b* representing arithmetic sequences
+    respectively defined by $n \mapsto p n + q$ and $n \mapsto r n + s$, with
+    $p, q, r, s$ complex numbers, ``union_sets()`` checks whether it is
+    possible to reduce the two arithmetic sequences to a single sequence and,
+    if possible, returns a new ``ImageSet`` based on this combined arithmetic
+    sequence.
+
+    No other type of ``ImageSet`` unions is currently supported.
+
+    """
+    if (a.base_set != S.Integers or b.base_set != S.Integers or
+        not all(isinstance(imgset.lamda.expr, Expr) for imgset in (a, b))):
+            return None
+
+    def extract_linear_coeffs(imgset):
+        """Returns $p$, $q$ in $n \mapsto p n + q$; else None."""
+        expr = imgset.lamda.expr
+        var = imgset.lamda.variables
+        if len(var) > 1:
+            return None
+        var = var[0]
+        poly = expr.as_poly(var)
+        if poly and poly.is_linear:
+            return poly.LC(), poly.TC()
+
+    pq = extract_linear_coeffs(a)
+    if not pq:
+        return
+    rs = extract_linear_coeffs(b)
+    if not rs:
+        return
+    p, q, r, s = *pq, *rs
+
+    def in_sequence(x, p, q):
+        # x == p*n + q iff n == (x - q)/p
+        return cancel((x - q)/p).is_integer == True
+    def is_subset(p, q, r, s):
+        # checks whether {p*n + q} is a subset of {r*m + s}
+        if not cancel(p/r).is_integer:
+            return False
+        return in_sequence(q, r, s)
+
+    # 1st possibility: `a` is a subset of `b` or vice-versa
+    if is_subset(p, q, r, s):
+        return b.doit()  # make output a bit more deterministic
+    elif is_subset(r, s, p, q):
+        return a.doit()
+    else:
+        # 2nd possibility: Both sequences are alternating, i.e. they have the
+        # same period and the midpoint of `a`'s period interval must be
+        # contained in the second sequence.
+        midpt = q + p/2
+        if ((p - r).is_zero or (p + r).is_zero) and in_sequence(midpt, r, s):
+            u, v = p/2, q
+            n = Dummy('n')
+            return imageset(Lambda(n, u*n + v), S.Integers)
     return None
 
 @dispatch(Set, Set)  # type: ignore
