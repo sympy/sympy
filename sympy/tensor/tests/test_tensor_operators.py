@@ -7,7 +7,6 @@ from sympy.tensor.tensor import (TensorIndexType,
 from sympy import symbols, diag
 from sympy import Array, Rational
 
-from sympy import sympify
 from random import randint
 
 
@@ -191,21 +190,21 @@ def test_expand_partial_derivative_sum_rule():
 
 
 def test_expand_partial_derivative_constant_factor_rule():
-    pos_random_int1 = sympify(randint(0, 1000))
-    pos_random_int2 = sympify(randint(0, 1000))
-    neg_random_int = sympify(randint(-1000, -1))
+    nneg = randint(0, 1000)
+    pos = randint(1, 1000)
+    neg = -randint(1, 1000)
 
-    c1 = Rational(pos_random_int1, pos_random_int2)
-    c2 = Rational(neg_random_int, pos_random_int2)
-    c3 = Rational(pos_random_int1, neg_random_int)
+    c1 = Rational(nneg, pos)
+    c2 = Rational(neg, pos)
+    c3 = Rational(nneg, neg)
 
-    expr2a = PartialDerivative(pos_random_int1*A(i), D(j))
+    expr2a = PartialDerivative(nneg*A(i), D(j))
     assert expr2a._expand_partial_derivative() ==\
-        pos_random_int1*PartialDerivative(A(i), D(j))
+        nneg*PartialDerivative(A(i), D(j))
 
-    expr2b = PartialDerivative(neg_random_int*A(i), D(j))
+    expr2b = PartialDerivative(neg*A(i), D(j))
     assert expr2b._expand_partial_derivative() ==\
-        neg_random_int*PartialDerivative(A(i), D(j))
+        neg*PartialDerivative(A(i), D(j))
 
     expr2ca = PartialDerivative(c1*A(i), D(j))
     assert expr2ca._expand_partial_derivative() ==\
@@ -221,30 +220,30 @@ def test_expand_partial_derivative_constant_factor_rule():
 
 
 def test_expand_partial_derivative_full_linearity():
-    pos_random_int1 = sympify(randint(0, 1000))
-    pos_random_int2 = sympify(randint(0, 1000))
-    neg_random_int = sympify(randint(-1000, -1))
+    nneg = randint(0, 1000)
+    pos = randint(1, 1000)
+    neg = -randint(1, 1000)
 
-    c1 = Rational(pos_random_int1, pos_random_int2)
-    c2 = Rational(neg_random_int, pos_random_int2)
-    c3 = Rational(pos_random_int1, neg_random_int)
+    c1 = Rational(nneg, pos)
+    c2 = Rational(neg, pos)
+    c3 = Rational(nneg, neg)
 
     # check full linearity
 
-    expr3a = PartialDerivative(pos_random_int1*A(i) + pos_random_int2*B(i), D(j))
+    expr3a = PartialDerivative(nneg*A(i) + pos*B(i), D(j))
     assert expr3a._expand_partial_derivative() ==\
-        pos_random_int1*PartialDerivative(A(i), D(j))\
-        + pos_random_int2*PartialDerivative(B(i), D(j))
+        nneg*PartialDerivative(A(i), D(j))\
+        + pos*PartialDerivative(B(i), D(j))
 
-    expr3b = PartialDerivative(pos_random_int1*A(i) + neg_random_int*B(i), D(j))
+    expr3b = PartialDerivative(nneg*A(i) + neg*B(i), D(j))
     assert expr3b._expand_partial_derivative() ==\
-        pos_random_int1*PartialDerivative(A(i), D(j))\
-        + neg_random_int*PartialDerivative(B(i), D(j))
+        nneg*PartialDerivative(A(i), D(j))\
+        + neg*PartialDerivative(B(i), D(j))
 
-    expr3c = PartialDerivative(neg_random_int*A(i) + pos_random_int2*B(i), D(j))
+    expr3c = PartialDerivative(neg*A(i) + pos*B(i), D(j))
     assert expr3c._expand_partial_derivative() ==\
-        neg_random_int*PartialDerivative(A(i), D(j))\
-        + pos_random_int2*PartialDerivative(B(i), D(j))
+        neg*PartialDerivative(A(i), D(j))\
+        + pos*PartialDerivative(B(i), D(j))
 
     expr3d = PartialDerivative(c1*A(i) + c2*B(i), D(j))
     assert expr3d._expand_partial_derivative() ==\
