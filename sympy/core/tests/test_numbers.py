@@ -1108,6 +1108,13 @@ def test_powers_Integer():
         -(-1)**Rational(2, 3)*3**Rational(2, 3)/27
     assert (-3) ** Rational(-2, 3) == \
         -(-1)**Rational(1, 3)*3**Rational(1, 3)/3
+    assert (-3) ** DecimalRational(1, 2) == I * sqrt(3)
+    assert 4 ** DecimalRational(3, 10) == 2 ** DecimalRational(3, 5)
+    assert 4 ** DecimalRational(3, 10) is not 4 ** Rational(3, 10)
+    assert 6 ** DecimalRational(5, 3) == 6 * 6 ** DecimalRational(2, 3)
+    assert 6 ** DecimalRational(5, 3) is not 6 ** Rational(5, 3)
+    assert (-1) ** DecimalRational(5, 3) == -(-1) ** DecimalRational(2, 3)
+    assert (-1) ** DecimalRational(5, 3) is not (-1) ** Rational(5, 3)
 
     # join roots
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
@@ -1176,6 +1183,14 @@ def test_powers_Integer():
     assert (-1)**Float(.5) == 1.0*I
 
 
+def test_powers_DecimalRational():
+    """Test DecimalRational._eval_power"""
+    assert isinstance(DecimalRational(4, 3) ** -2, DecimalRational)
+    assert DecimalRational('.25') ** DecimalRational('.5') == DecimalRational('.5')
+    assert isinstance(DecimalRational('.25') ** DecimalRational('.5'), DecimalRational)
+    assert sqrt(DecimalRational(1, 2)) is not sqrt(S.Half)
+
+
 def test_powers_Rational():
     """Test Rational._eval_power"""
     # check infinity
@@ -1215,6 +1230,8 @@ def test_powers_Rational():
         8*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/81
     assert abs(Pow(Rational(-2, 3), Rational(-7, 4)).n() -
         Pow(Rational(-2, 3), Rational(-7, 4), evaluate=False).n()) < 1e-16
+    assert S.Half**DecimalRational(4, 3) == 2**DecimalRational(2, 3)/4
+    assert S.Half**DecimalRational(4, 3) is not S.Half**Rational(4, 3)
 
     # negative integer power and negative rational base
     assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
@@ -2038,6 +2055,8 @@ def test_Infinity_floor_ceiling_power():
 def test_One_power():
     assert S.One**12 is S.One
     assert S.NegativeOne**S.NaN is S.NaN
+    assert S.NegativeOne**Rational(1,2)*S.NegativeOne**Rational(1,4) is not \
+      S.NegativeOne**DecimalRational(1,2)*S.NegativeOne**DecimalRational(1,4)
 
 def test_NegativeInfinity():
     assert (-oo).floor() is -oo
