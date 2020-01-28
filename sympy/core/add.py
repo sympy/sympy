@@ -875,7 +875,7 @@ class Add(Expr, AssocOp):
         leading_terms = [t.as_leading_term(x) for t in expr.args]
 
         try:
-            min = Order(leading_terms[0]).getn()
+            min = Order(leading_terms[0], x).getn()
         except Exception:
             compute = True
         else:
@@ -884,7 +884,7 @@ class Add(Expr, AssocOp):
         if compute == False:
             for term in leading_terms[1:]:
                 try:
-                    order = Order(term).getn()
+                    order = Order(term, x).getn()
                 except Exception:
                     compute = True
                     break
@@ -895,43 +895,16 @@ class Add(Expr, AssocOp):
                     elif order == min:
                         new_expr += term
 
-
-        if compute == False:
-            if not new_expr:
-                compute = True
-            elif new_expr is not S.NaN:
-                if new_expr.is_Add:
-                    final_leading_term = [t for t in new_expr.args]
-                else:
-                    final_leading_term = [new_expr]
-
-                if len(expr.args) != len(final_leading_term):
-                    canceled_term = [t for t in leading_terms if t not in final_leading_term]
-                    expr_sum = expr.func(*canceled_term)
-                    if expr_sum == S(0):
-                        compute = True
-
-            expr = new_expr
-
-        if compute:
+        if compute or not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
-        elif expr is S.NaN:
+
+        elif new_expr is S.NaN:
             return old.func._from_args(infinite)
-        elif not expr.is_Add:
-            return expr
+
         else:
-            plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
-            rv = factor_terms(plain, fraction=False)
-            rv_simplify = rv.simplify()
-            # if it simplifies to an x-free expression, return that;
-            # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_simplify.free_symbols:
-                if rv_simplify.is_zero and plain.is_zero is not True:
-                    return (expr - plain)._eval_as_leading_term(x)
-                return rv_simplify
-            return rv
+            return new_expr
 
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args])
