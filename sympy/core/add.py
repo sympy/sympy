@@ -147,7 +147,7 @@ class Add(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
-                coeff += o
+                coeff = o.__add__(coeff)
                 continue
 
             elif isinstance(o, MatrixExpr):
