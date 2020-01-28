@@ -1298,7 +1298,6 @@ class Mul(Expr, AssocOp):
                     return  # complex terms might cancel
                 t_not_re_im = t
             else:
-                return
                 ct = t.conjugate()
                 # Find conjugate pair... (2-I) and (2+I)
                 for m in range(n+1, len(args)):
