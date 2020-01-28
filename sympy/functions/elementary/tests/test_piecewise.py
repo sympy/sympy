@@ -1351,3 +1351,6 @@ def test_issue_7370():
     f = Piecewise((1, x <= 2400))
     v = integrate(f, (x, 0, Float("252.4", 30)))
     assert str(v) == '252.400000000000000000000000000'
+
+def test_issue_16715():
+    raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())
