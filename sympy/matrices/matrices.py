@@ -3989,7 +3989,6 @@ def a2idx(j, n=None):
 
 
 def randMatrixBigDiag(rows, cols=None, lo=0, hi=100, symmetric=False):
-    from sympy.matrices.dense import diag
     """Return a matrix filled with random values such that no
     value is greater than the values on the diagonals in the same
     row or column containing the value.
@@ -4022,6 +4021,7 @@ def randMatrixBigDiag(rows, cols=None, lo=0, hi=100, symmetric=False):
     [1, 2, 9, 1],
     [2, 2, 1, 5]])
     """
+    from sympy.matrices.dense import diag
     from random import randint
     cols = rows if cols is None else cols
     d = [randint(lo, hi) for i in range(min(rows, cols))]
@@ -4040,7 +4040,6 @@ def randMatrixBigDiag(rows, cols=None, lo=0, hi=100, symmetric=False):
     return A
 
 def upper(a, diag=0):
-    from sympy import Matrix
     """
     Examples
     ========
@@ -4061,6 +4060,7 @@ def upper(a, diag=0):
     [0, 0, 1],
     [0, 0, 0]])
     """
+    from sympy import Matrix
     b = Matrix(a)
     d = min(a.rows, a.cols)
     for i in range(d):
@@ -4072,7 +4072,6 @@ def upper(a, diag=0):
     return b
 
 def lower(a, diag=0):
-    from sympy import Matrix
     """
     Examples
     ========
@@ -4094,6 +4093,7 @@ def lower(a, diag=0):
     [1, 1],
     [1, 1]])
     """
+    from sympy import Matrix
     b = Matrix(a)
     i0 = diag + 1
     for i in range(a.rows):
