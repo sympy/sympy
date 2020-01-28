@@ -4,7 +4,7 @@
 #
 
 from sympy.core import Function, Symbol
-from sympy.solvers.ode.single import (NthAlgebraic, FirstLinear, ODEMatchError,
+from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
     SingleODEProblem, SingleODESolver)
 
 from sympy.testing.pytest import raises
@@ -27,14 +27,6 @@ def test_SingleODESolver():
     # This ODE can not be solved by the NthAlgebraic solver. Here we test that
     # it does not match and the asking for a general solution gives
     # ODEMatchError
-
-    problem = SingleODEProblem(f(x).diff(x) + f(x), f(x), x)
-
-    solver = NthAlgebraic(problem)
-    raises(ODEMatchError, lambda: solver.get_general_solution())
-
-    solver = NthAlgebraic(problem)
-    assert solver.matches() is False
 
     problem = SingleODEProblem(f(x).diff(x) + f(x)*f(x), f(x), x)
 

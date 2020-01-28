@@ -4,14 +4,14 @@
 
 from typing import ClassVar, Dict, List, Optional, Type
 
-from sympy.core import Add
-from sympy.core.compatibility import iterable
+from sympy.core import Add, S
+from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.integrals import Integral
-from sympy.simplify import simplify
+from sympy.simplify import simplify, collect
 from sympy.utilities import numbered_symbols
 from sympy.functions import exp
 
@@ -146,31 +146,8 @@ class SingleODESolver:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
 
-    def get_numbered_constants(self, num=1, start=1, prefix='C'):
-        """
-        Returns a list of constants that do not occur
-        in eq already.
-        """
-        ncs = self.iter_numbered_constants(start, prefix)
-        Cs = [next(ncs) for i in range(num)]
-        return (Cs[0] if num == 1 else tuple(Cs))
-
-    def iter_numbered_constants(self, start=1, prefix='C'):
-        """
-        Returns an iterator of constants that do not occur
-        in eq already.
-        """
-        eq = self.ode_problem.eq
-        if isinstance(eq, (Expr, Eq)):
-            eq = [eq]
-        elif not iterable(eq):
-            raise ValueError("Expected Expr or iterable but got %s" % eq)
-
-        atom_set = set().union(*[i.free_symbols for i in eq])
-        func_set = set().union(*[i.atoms(Function) for i in eq])
-        if func_set:
-            atom_set |= {Symbol(str(f.func)) for f in func_set}
-        return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
+    def get_dummy_constants(self, num=None):
+        return numbered_symbols('C', cls=Dummy, start=1 if num is None else num)
 
 
 class NthAlgebraic(SingleODESolver):
@@ -333,7 +310,7 @@ class FirstLinear(SingleODESolver):
         eq = expand(self.ode_problem.eq)
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        order = ode_order(eq, f)
+        order = ode_order(eq, f(x))
         a = Wild('a', exclude=[f(x)])
         b = Wild('b', exclude=[f(x)])
         c = Wild('c', exclude=[f(x)])
@@ -378,9 +355,241 @@ class FirstLinear(SingleODESolver):
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
         r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c
-        C1 = super().get_numbered_constants(num=1)
+        C1 = Dummy('C1')
 
         t = exp(Integral(r[r['b']]/r[r['a']], x))
         tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
         f = r.get('u', f(x))  # take almost-linear u if present, else f(x)
         return Eq(f, (tt + C1)/t)
+
+
+class AlmostLinear(FirstLinear):
+    r"""
+    Solves an almost-linear differential equation.
+
+    The general form of an almost linear differential equation is
+
+    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
+                \text{where} l'(y) = g(y)\text{.}
+
+    This can be solved by substituting `l(y) = u(y)`.  Making the given
+    substitution reduces it to a linear differential equation of the form `u'
+    + P(x) u + Q(x) = 0`.
+
+    The general solution is
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x, y, n
+        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
+        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
+        >>> pprint(genform)
+             d
+        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
+             dy
+        >>> pprint(dsolve(genform, hint = 'almost_linear'))
+               /     //       y*k(x)                \\
+               |     ||       ------                ||
+               |     ||        f(x)                 ||  -y*k(x)
+               |     ||-g(x)*e                      ||  --------
+               |     ||--------------  for k(x) != 0||    f(x)
+        l(y) = |C1 + |<     k(x)                    ||*e
+               |     ||                             ||
+               |     ||   -y*g(x)                   ||
+               |     ||   --------       otherwise  ||
+               |     ||     f(x)                    ||
+               \     \\                             //
+
+
+    See Also
+    ========
+    :meth:`sympy.solvers.ode.ode.ode_1st_linear`
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = x*d + x*f(x) + 1
+    >>> dsolve(eq, f(x), hint='almost_linear')
+    Eq(f(x), (C1 - Ei(x))*exp(-x))
+    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
+                         -x
+    f(x) = (C1 - Ei(x))*e
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
+      of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+    hint = "almost_linear"
+    has_integral = True
+
+    def _matches(self):
+        ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
+        eq = expand(self.ode_problem.eq)
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = ode_order(eq, f(x))
+
+        if order != 1:
+            return False
+
+        df = f(x).diff(x)
+        c = Wild('c', exclude=[f(x)])
+        d = Wild('d', exclude=[df, f(x).diff(x, 2)])
+        e = Wild('e', exclude=[df])
+
+        r = collect(eq, [df, f(x)]).match(e*df + d)
+        if r:
+            r2 = r.copy()
+            r2[c] = S.Zero
+            if r2[d].is_Add:
+                # Separate the terms having f(x) to r[d] and
+                # remaining to r[c]
+                no_f, r2[d] = r2[d].as_independent(f(x))
+                r2[c] += no_f
+            factor = simplify(r2[d].diff(f(x))/r[e])
+            if factor and not factor.has(f(x)):
+                r2[d] = factor_terms(r2[d])
+                u = r2[d].as_independent(f(x), as_Add=False)[1]
+                r2.update({'a': e, 'b': d, 'c': c, 'u': u})
+                r2[d] /= u
+                r2[e] /= u.diff(f(x))
+                self.coeffs = r2
+                return True
+
+        return False
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        return super()._get_general_solution()
+
+
+class Bernoulli(SingleODESolver):
+    r"""
+    Solves Bernoulli differential equations.
+
+    These are equations of the form
+
+    .. math:: dy/dx + P(x) y = Q(x) y^n\text{, }n \ne 1`\text{.}
+
+    The substitution `w = 1/y^{1-n}` will transform an equation of this form
+    into one that is linear (see the docstring of
+    :py:meth:`~sympy.solvers.ode.ode.ode_1st_linear`).  The general solution is::
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x, n
+        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
+        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n)
+        >>> pprint(genform)
+                    d                n
+        P(x)*f(x) + --(f(x)) = Q(x)*f (x)
+                    dx
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
+                                                                                      1
+                                                                                    -----
+                                                                                    1 - n
+               //               /                            \                     \
+               ||              |                             |                     |
+               ||              |                  /          |             /       |
+               ||              |                 |           |            |        |
+               ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
+               ||              |                 |           |            |        |
+               ||              |                /            |           /         |
+        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
+               ||              |                             |                     |
+               \\              /                            /                     /
+
+
+    Note that the equation is separable when `n = 1` (see the docstring of
+    :py:meth:`~sympy.solvers.ode.ode.ode_separable`).
+
+    >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
+    ... hint='separable_Integral'))
+     f(x)
+       /
+      |                /
+      |  1            |
+      |  - dy = C1 +  | (-P(x) + Q(x)) dx
+      |  y            |
+      |              /
+     /
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, pprint, log
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+
+    >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
+    ... f(x), hint='Bernoulli'))
+                    1
+    f(x) = -------------------
+             /     log(x)   1\
+           x*|C1 + ------ + -|
+             \       x      x/
+
+    References
+    ==========
+
+    - https://en.wikipedia.org/wiki/Bernoulli_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 95
+
+    # indirect doctest
+
+    """
+    hint = "Bernoulli"
+    has_integral = True
+
+    def _matches(self):
+        eq = expand(self.ode_problem.eq)
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = ode_order(eq, f(x))
+        df = f(x).diff(x)
+
+        if order != 1:
+            return False
+
+        a = Wild('a', exclude=[f(x)])
+        b = Wild('b', exclude=[f(x)])
+        c = Wild('c', exclude=[f(x)])
+        n = Wild('n', exclude=[x, f(x), df])
+        c1 = Wild('c1', exclude=[x])
+
+        reduced_eq = None
+        if eq.is_Add:
+            deriv_coef = eq.coeff(f(x).diff(x, order))
+            if deriv_coef not in (1, 0):
+                r = deriv_coef.match(a*f(x)**c1)
+                if r and r[c1]:
+                    den = f(x)**r[c1]
+                    reduced_eq = Add(*[arg/den for arg in eq.args])
+        if not reduced_eq:
+            reduced_eq = eq
+
+        r = collect(
+            reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
+        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
+            r['a'] = a
+            r['b'] = b
+            r['c'] = c
+            r['n'] = n
+            self.coeffs = r
+            return True
+        return False
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        x = self.ode_problem.sym
+        f = self.ode_problem.func.func
+        r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
+        C1 = Dummy('C1')
+        t = exp((1 - r[r['n']])*Integral(r[r['b']]/r[r['a']], x))
+        tt = (r[r['n']] - 1)*Integral(t*r[r['c']]/r[r['a']], x)
+        return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))

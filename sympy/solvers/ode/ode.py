@@ -272,7 +272,7 @@ from sympy.solvers.pde import pdsolve
 from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
-from .single import NthAlgebraic, FirstLinear, SingleODEProblem, SingleODESolver
+from .single import NthAlgebraic, FirstLinear, AlmostLinear, Bernoulli, SingleODEProblem, SingleODESolver
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -1008,8 +1008,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     df = f(x).diff(x)
     a = Wild('a', exclude=[f(x)])
-    b = Wild('b', exclude=[f(x)])
-    c = Wild('c', exclude=[f(x)])
+    # b = Wild('b', exclude=[f(x)])
+    # c = Wild('c', exclude=[f(x)])
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
     k = Wild('k', exclude=[df])
@@ -1078,7 +1078,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     ode = SingleODEProblem(eq, func, x, eq_orig)
     solvers = {
         NthAlgebraic: ('nth_algebraic','nth_algebraic_Integral'),
-        FirstLinear: ('1st_linear','1st_linear_Integral')
+        FirstLinear: ('1st_linear','1st_linear_Integral'),
+        AlmostLinear: ('almost_linear','almost_linear_Integral'),
+        Bernoulli: ('Bernoulli','Bernoulli_Integral')
     }
 
     for solvercls in solvers:
@@ -1101,17 +1103,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-
-        ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
-        r = collect(
-            reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
-            r['a'] = a
-            r['b'] = b
-            r['c'] = c
-            r['n'] = n
-            matching_hints["Bernoulli"] = r
-            matching_hints["Bernoulli_Integral"] = r
 
         ## Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
         r = collect(reduced_eq,
@@ -1303,26 +1294,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                         r2.update({'power': xpart.as_base_exp()[1], 'u': test})
                         matching_hints["separable_reduced"] = r2
                         matching_hints["separable_reduced_Integral"] = r2
-
-        ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
-        r = collect(eq, [df, f(x)]).match(e*df + d)
-        if r:
-            r2 = r.copy()
-            r2[c] = S.Zero
-            if r2[d].is_Add:
-                # Separate the terms having f(x) to r[d] and
-                # remaining to r[c]
-                no_f, r2[d] = r2[d].as_independent(f(x))
-                r2[c] += no_f
-            factor = simplify(r2[d].diff(f(x))/r[e])
-            if factor and not factor.has(f(x)):
-                r2[d] = factor_terms(r2[d])
-                u = r2[d].as_independent(f(x), as_Add=False)[1]
-                r2.update({'a': e, 'b': d, 'c': c, 'u': u})
-                r2[d] /= u
-                r2[e] /= u.diff(f(x))
-                matching_hints["almost_linear"] = r2
-                matching_hints["almost_linear_Integral"] = r2
 
 
     elif order == 2:
@@ -3894,91 +3865,6 @@ def ode_1st_linear(eq, func, order, match):
     return Eq(f, (tt + C1)/t)
 
 
-def ode_Bernoulli(eq, func, order, match):
-    r"""
-    Solves Bernoulli differential equations.
-
-    These are equations of the form
-
-    .. math:: dy/dx + P(x) y = Q(x) y^n\text{, }n \ne 1`\text{.}
-
-    The substitution `w = 1/y^{1-n}` will transform an equation of this form
-    into one that is linear (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_linear`).  The general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, n
-        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n)
-        >>> pprint(genform)
-                    d                n
-        P(x)*f(x) + --(f(x)) = Q(x)*f (x)
-                    dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
-                                                                                      1
-                                                                                    -----
-                                                                                    1 - n
-               //               /                            \                     \
-               ||              |                             |                     |
-               ||              |                  /          |             /       |
-               ||              |                 |           |            |        |
-               ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
-               ||              |                 |           |            |        |
-               ||              |                /            |           /         |
-        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
-               ||              |                             |                     |
-               \\              /                            /                     /
-
-
-    Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_separable`).
-
-    >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
-    ... hint='separable_Integral'))
-     f(x)
-       /
-      |                /
-      |  1            |
-      |  - dy = C1 +  | (-P(x) + Q(x)) dx
-      |  y            |
-      |              /
-     /
-
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq, pprint, log
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-
-    >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
-    ... f(x), hint='Bernoulli'))
-                    1
-    f(x) = -------------------
-             /     log(x)   1\
-           x*|C1 + ------ + -|
-             \       x      x/
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Bernoulli_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 95
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    r = match  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
-    C1 = get_numbered_constants(eq, num=1)
-    t = exp((1 - r[r['n']])*Integral(r[r['b']]/r[r['a']], x))
-    tt = (r[r['n']] - 1)*Integral(t*r[r['c']]/r[r['a']], x)
-    return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
-
-
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
     The general Riccati equation has the form
@@ -5012,75 +4898,6 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     sol = _solve_variation_of_parameters(eq, func, order, match)
     return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
 
-
-def ode_almost_linear(eq, func, order, match):
-    r"""
-    Solves an almost-linear differential equation.
-
-    The general form of an almost linear differential equation is
-
-    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
-                \text{where} l'(y) = g(y)\text{.}
-
-    This can be solved by substituting `l(y) = u(y)`.  Making the given
-    substitution reduces it to a linear differential equation of the form `u'
-    + P(x) u + Q(x) = 0`.
-
-    The general solution is
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, y, n
-        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
-        >>> pprint(genform)
-             d
-        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
-             dy
-        >>> pprint(dsolve(genform, hint = 'almost_linear'))
-               /     //       y*k(x)                \\
-               |     ||       ------                ||
-               |     ||        f(x)                 ||  -y*k(x)
-               |     ||-g(x)*e                      ||  --------
-               |     ||--------------  for k(x) != 0||    f(x)
-        l(y) = |C1 + |<     k(x)                    ||*e
-               |     ||                             ||
-               |     ||   -y*g(x)                   ||
-               |     ||   --------       otherwise  ||
-               |     ||     f(x)                    ||
-               \     \\                             //
-
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.ode.ode_1st_linear`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> d = f(x).diff(x)
-    >>> eq = x*d + x*f(x) + 1
-    >>> dsolve(eq, f(x), hint='almost_linear')
-    Eq(f(x), (C1 - Ei(x))*exp(-x))
-    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
-                         -x
-    f(x) = (C1 - Ei(x))*e
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    # Since ode_1st_linear has already been implemented, and the
-    # coefficients have been modified to the required form in
-    # classify_ode, just passing eq, func, order and match to
-    # ode_1st_linear will give the required output.
-    return ode_1st_linear(eq, func, order, match)
 
 def _linear_coeff_match(expr, func):
     r"""
