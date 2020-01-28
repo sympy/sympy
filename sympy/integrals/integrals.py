@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-import sympy.concrete.summations as csm
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -385,6 +384,7 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
+        from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
 
@@ -418,7 +418,6 @@ class Integral(AddWithLimits):
         if self.is_zero:
             return S.Zero
 
-        Sum = csm.Sum
         if isinstance(self.function, Sum):
             for variable in self.variables:
                 if variable in self.function.limits[0]:
