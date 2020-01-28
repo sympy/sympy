@@ -31,19 +31,19 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-from typing import List, Set
+from typing import Any, Dict as tDict, List, Set
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy import Rational, prod, Integer
+from sympy import Rational, prod, Integer, default_sort_key
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import string_types, reduce, range, SYMPY_INTS, with_metaclass
+from sympy.core.compatibility import reduce, SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -394,8 +394,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = dict()
-    _substitutions_dict_tensmul = dict()
+    _substitutions_dict = dict()  # type: tDict[Any, Any]
+    _substitutions_dict_tensmul = dict()  # type: tDict[Any, Any]
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -986,12 +986,12 @@ class TensorIndexType(Basic):
                                     deprecated_since_version="1.5").warn()
             dummy_name = kwargs.get('dummy_fmt')
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name = Symbol(name)
 
         if dummy_name is None:
             dummy_name = str(name)[0]
-        if isinstance(dummy_name, string_types):
+        if isinstance(dummy_name, str):
             dummy_name = Symbol(dummy_name)
 
         if dim is None:
@@ -1006,7 +1006,7 @@ class TensorIndexType(Basic):
 
         metric_symmetry = sympify(metric_symmetry)
 
-        if isinstance(metric_name, string_types):
+        if isinstance(metric_name, str):
             metric_name = Symbol(metric_name)
 
         if 'metric' in kwargs:
@@ -1233,7 +1233,7 @@ class TensorIndex(Basic):
     A(-L_0, L_0)
     """
     def __new__(cls, name, tensor_index_type, is_up=True):
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
             name_symbol = name
@@ -1293,7 +1293,7 @@ def tensor_indices(s, typ):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_name='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         a = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')
@@ -1550,7 +1550,7 @@ class TensorType(Basic):
         ``comm``: commutation group number
         see ``_TensorManager.set_comm``
         """
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             names = [x.name for x in symbols(s, seq=True)]
         else:
             raise ValueError('expecting a string')
@@ -1700,7 +1700,7 @@ class TensorHead(Basic):
     is_commutative = False
 
     def __new__(cls, name, index_types, symmetry=None, comm=0):
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
             name_symbol = name
@@ -1837,7 +1837,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     """
     Returns a sequence of TensorHeads from a string `s`
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         names = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')
@@ -1852,7 +1852,7 @@ class _TensorMetaclass(ManagedProperties, ABCMeta):
     pass
 
 
-class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
+class TensExpr(Expr, metaclass=_TensorMetaclass):
     """
     Abstract base class for tensor expressions
 
@@ -1976,7 +1976,7 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
         raise NotImplementedError("abstract method")
 
     @abstractmethod
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         raise NotImplementedError("abstract method")
 
     def fun_eval(self, *index_tuples):
@@ -2252,6 +2252,14 @@ class TensExpr(with_metaclass(_TensorMetaclass, Expr)):
             expr = Sum(expr, *sum_indices)
         return expr
 
+    def _expand_partial_derivative(self):
+        # simply delegate the _expand_partial_derivative() to
+        # its arguments to expand a possibly found PartialDerivative
+        return self.func(*[
+                    a._expand_partial_derivative()
+                    if isinstance(a, TensExpr) else a
+                    for a in self.args])
+
 
 class TensAdd(TensExpr, AssocOp):
     """
@@ -2298,6 +2306,7 @@ class TensAdd(TensExpr, AssocOp):
     def __new__(cls, *args, **kw_args):
         args = [_sympify(x) for x in args if x]
         args = TensAdd._tensAdd_flatten(args)
+        args.sort(key=default_sort_key)
         if not args:
             return S.Zero
         if len(args) == 1:
@@ -2316,7 +2325,7 @@ class TensAdd(TensExpr, AssocOp):
     def get_free_indices(self):  # type: () -> List[TensorIndex]
         return self.free_indices
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         newargs = [arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args]
         return self.func(*newargs)
 
@@ -2545,7 +2554,6 @@ class TensAdd(TensExpr, AssocOp):
         args = self.args
         for x in args:
             a.append(str(x))
-        a.sort()
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')
         return s
@@ -2590,6 +2598,18 @@ class TensAdd(TensExpr, AssocOp):
     def _eval_rewrite_as_Indexed(self, *args):
         return Add.fromiter(args)
 
+    def _eval_partial_derivative(self, s):
+        # Evaluation like Add
+        list_addends = []
+        for a in self.args:
+            if isinstance(a, TensExpr):
+                list_addends.append(a._eval_partial_derivative(s))
+            # do not call diff if s is no symbol
+            elif s._diff_wrt:
+                list_addends.append(a._eval_derivative(s))
+
+        return self.func(*list_addends)
+
 
 class Tensor(TensExpr):
     """
@@ -2625,6 +2645,8 @@ class Tensor(TensExpr):
     """
 
     is_commutative = False
+
+    _index_structure = None  # type: _IndexStructure
 
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
@@ -2807,7 +2829,7 @@ class Tensor(TensExpr):
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> Tensor
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> Tensor
         # TODO: this could be optimized by only swapping the indices
         # instead of visiting the whole expression tree:
         return self.xreplace(repl)
@@ -2997,6 +3019,50 @@ class Tensor(TensExpr):
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
+    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+
+        if not isinstance(s, Tensor):
+            return S.Zero
+        else:
+
+            # @a_i/@a_k = delta_i^k
+            # @a_i/@a^k = g_ij delta^j_k
+            # @a^i/@a^k = delta^i_k
+            # @a^i/@a_k = g^ij delta_j^k
+            # TODO: if there is no metric present, the derivative should be zero?
+
+            if self.head != s.head:
+                return S.Zero
+
+            # if heads are the same, provide delta and/or metric products
+            # for every free index pair in the appropriate tensor
+            # assumed that the free indices are in proper order
+            # A contravariante index in the derivative becomes covariant
+            # after performing the derivative and vice versa
+
+            kronecker_delta_list = [1]
+
+            # not guarantee a correct index order
+
+            for (count, (iself, iother)) in enumerate(zip(self.get_free_indices(), s.get_free_indices())):
+                if iself.tensor_index_type != iother.tensor_index_type:
+                    raise ValueError("index types not compatible")
+                else:
+                    tensor_index_type = iself.tensor_index_type
+                    tensor_metric = tensor_index_type.metric
+                    dummy = TensorIndex("d_" + str(count), tensor_index_type,
+                                        is_up=iself.is_up)
+                    if iself.is_up == iother.is_up:
+                        kroneckerdelta = tensor_index_type.delta(iself, -iother)
+                    else:
+                        kroneckerdelta = (
+                            TensMul(tensor_metric(iself, dummy),
+                                    tensor_index_type.delta(-dummy, -iother))
+                        )
+                    kronecker_delta_list.append(kroneckerdelta)
+            return TensMul.fromiter(kronecker_delta_list).doit()
+            # doit necessary to rename dummy indices accordingly
+
 
 class TensMul(TensExpr, AssocOp):
     """
@@ -3038,6 +3104,8 @@ class TensMul(TensExpr, AssocOp):
 
     """
     identity = S.One
+
+    _index_structure = None  # type: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -3354,7 +3422,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
     def split(self):
@@ -3770,6 +3838,24 @@ class TensMul(TensExpr, AssocOp):
         expr = Mul.fromiter(args)
         return self._check_add_Sum(expr, index_symbols)
 
+    def _eval_partial_derivative(self, s):
+        # Evaluation like Mul
+        terms = []
+        for i, arg in enumerate(self.args):
+            # checking whether some tensor instance is differentiated
+            # or some other thing is necessary, but ugly
+            if isinstance(arg, TensExpr):
+                d = arg._eval_partial_derivative(s)
+            else:
+                # do not call diff is s is no symbol
+                if s._diff_wrt:
+                    d = arg._eval_derivative(s)
+                else:
+                    d = S.Zero
+            if d:
+                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
+        return TensAdd.fromiter(terms)
+
 
 class TensorElement(TensExpr):
     """
@@ -3845,7 +3931,7 @@ class TensorElement(TensExpr):
     def get_free_indices(self):
         return self._free_indices
 
-    def _replace_indices(self, repl):  # type: (Dict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
         # TODO: can be improved:
         return self.xreplace(repl)
 
@@ -3869,6 +3955,7 @@ def canon_bp(p):
     if isinstance(p, TensExpr):
         return p.canon_bp()
     return p
+
 
 def tensor_mul(*a):
     """

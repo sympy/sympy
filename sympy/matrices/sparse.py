@@ -4,8 +4,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core import SympifyError, Add
-from sympy.core.compatibility import Callable, as_int, is_sequence, range, \
-    reduce
+from sympy.core.compatibility import Callable, as_int, is_sequence, reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
@@ -235,8 +234,7 @@ class SparseMatrix(MatrixBase):
                 return self._smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    # XXX remove list() when PY2 support is dropped
-                    i = list(range(self.rows))[i]
+                    i = range(self.rows)[i]
                 elif is_sequence(i):
                     pass
                 elif isinstance(i, Expr) and not i.is_number:
@@ -247,8 +245,7 @@ class SparseMatrix(MatrixBase):
                         raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
-                    # XXX remove list() when PY2 support is dropped
-                    j = list(range(self.cols))[j]
+                    j = range(self.cols)[j]
                 elif is_sequence(j):
                     pass
                 elif isinstance(j, Expr) and not j.is_number:
@@ -320,7 +317,7 @@ class SparseMatrix(MatrixBase):
 
         return C
 
-    def _eval_inverse(self, dotprodsimp=None, **kwargs):
+    def _eval_inverse(self, method='LDL', dotprodsimp=None):
         """Return the matrix inverse using Cholesky or LDL (default)
         decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
         respectively.
@@ -356,29 +353,20 @@ class SparseMatrix(MatrixBase):
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, 1]])
-
         """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        sym = self.is_symmetric()
         M = self.as_mutable()
         I = M.eye(M.rows)
-        if not sym:
-            t = M.T
-            r1 = M[0, :]
-            M = t.multiply(M, dotprodsimp=dotprodsimp)
-            I = t*I
-        method = kwargs.get('method', 'LDL')
+        if not self.is_symmetric():
+            I = M.T
+            M = I.multiply(M, dotprodsimp=dotprodsimp)
+
         if method == "LDL":
-            solve = M._LDL_solve
+            rv = M._LDL_solve(I, dotprodsimp=dotprodsimp)
         elif method == "CH":
-            solve = M._cholesky_solve
+            rv = M._cholesky_solve(I, dotprodsimp=dotprodsimp)
         else:
             raise NotImplementedError(
                 'Method may be "CH" or "LDL", not %s.' % method)
-        rv = M.hstack(*[solve(I[:, i], dotprodsimp=dotprodsimp) for i in range(I.cols)])
-        if not sym:
-            scale = dps((r1*rv[:, 0])[0, 0])
-            rv /= scale
         return self._new(rv)
 
     def _eval_Abs(self):
@@ -1051,7 +1039,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
     def as_mutable(self):
         return self.copy()
 
-    __hash__ = None
+    __hash__ = None  # type: ignore
 
     def col_del(self, k):
         """Delete the given column of the matrix.

@@ -5,7 +5,6 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic, Dict, oo, zoo, nan, Pow)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
@@ -670,8 +669,8 @@ def test_diff_wrt():
     assert diff(f(g(x), h(y)), x) == \
         Derivative(g(x), x)*Derivative(f(g(x), h(y)), g(x))
     assert diff(f(g(x), h(x)), x) == (
-        Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
-        Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x))
     assert f(
         sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), x, sin(x))
 

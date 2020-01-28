@@ -2,7 +2,6 @@ from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
     log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
-from sympy.core.compatibility import range, PY3
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -635,8 +634,7 @@ def test_inequalities_cant_sympify_other():
 
     for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan, Rational(1, 3)):
         for op in (lt, gt, le, ge):
-            if PY3:
-                raises(TypeError, lambda: op(a, bar))
+            raises(TypeError, lambda: op(a, bar))
 
 
 def test_ineq_avoid_wild_symbol_flip():
@@ -847,6 +845,11 @@ def test_issue_10304():
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_18412():
+    d = (Rational(1, 6) + z / 4 / y)
+    assert Eq(x, pi * y**3 * d).replace(y**3, z) == Eq(x, pi * z * d)
 
 
 def test_issue_10401():

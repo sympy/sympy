@@ -167,7 +167,12 @@ def _invert(f_x, y, x, domain=S.Complexes):
     if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
-    return x1, s.intersection(domain)
+    # Avoid adding gratuitous intersections with S.Complexes. Actual
+    # conditions should be handled by the respective inverters.
+    if domain is S.Complexes:
+        return x1, s
+    else:
+        return x1, s.intersection(domain)
 
 
 invert_complex = _invert
@@ -527,12 +532,12 @@ def _solve_trig(f, symbol, domain):
     sol1 = sol = None
     try:
         sol1 = _solve_trig1(f, symbol, domain)
-    except BaseException:
+    except NotImplementedError:
         pass
     if sol1 is None or isinstance(sol1, ConditionSet):
         try:
             sol = _solve_trig2(f, symbol, domain)
-        except BaseException:
+        except ValueError:
             sol = sol1
         if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
             if sol1.count_ops() < sol.count_ops():
@@ -702,7 +707,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                     for s in result]):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
-        if isinstance(result, FiniteSet):
+        if isinstance(result, FiniteSet) and domain != S.Complexes:
+            # Avoid adding gratuitous intersections with S.Complexes. Actual
+            # conditions should be handled elsewhere.
             result = result.intersection(domain)
         return result
     else:
@@ -1203,7 +1210,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         elif base.has(symbol) and not expo.has(symbol):
             try:
                 remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
-                if remainder_list is None:
+                if remainder_list == []:
                     return symbol, EmptySet
             except (ValueError, NotImplementedError):
                 return modterm, rhs
@@ -2708,9 +2715,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                'Not type %s: %s')
         raise TypeError(filldedent(msg % (type(symbols), symbols)))
 
-    sym = getattr(symbols[0], 'is_Symbol', False)
-
-    if not sym:
+    if not getattr(symbols[0], 'is_Symbol', False):
         msg = ('Iterable of symbols must be given as '
                'second argument, not type %s: %s')
         raise ValueError(filldedent(msg % (type(symbols[0]), symbols[0])))
@@ -2746,36 +2751,39 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     eqs_in_better_order = list(
         ordered(system, lambda _: len(_unsolved_syms(_))))
 
-    def add_intersection_complement(result, sym_set, **flags):
-        # If solveset have returned some intersection/complement
-        # for any symbol. It will be added in final solution.
+    def add_intersection_complement(result, intersection_dict, complement_dict):
+        # If solveset has returned some intersection/complement
+        # for any symbol, it will be added in the final solution.
         final_result = []
         for res in result:
             res_copy = res
             for key_res, value_res in res.items():
-                # Intersection/complement is in Interval or Set.
-                intersection_true = flags.get('Intersection', True)
-                complements_true = flags.get('Complement', True)
-                for key_sym, value_sym in sym_set.items():
+                intersect_set, complement_set = None, None
+                for key_sym, value_sym in intersection_dict.items():
                     if key_sym == key_res:
-                        if intersection_true:
-                            # testcase is not added for this line(intersection)
-                            new_value = \
-                                Intersection(FiniteSet(value_res), value_sym)
-                            if new_value is not S.EmptySet:
-                                res_copy[key_res] = new_value
-                        if complements_true:
-                            new_value = \
-                                Complement(FiniteSet(value_res), value_sym)
-                            if new_value is not S.EmptySet:
-                                res_copy[key_res] = new_value
+                        intersect_set = value_sym
+                for key_sym, value_sym in complement_dict.items():
+                    if key_sym == key_res:
+                        complement_set = value_sym
+                if intersect_set or complement_set:
+                    new_value = FiniteSet(value_res)
+                    if intersect_set and intersect_set != S.Complexes:
+                        new_value = Intersection(new_value, intersect_set)
+                    if complement_set:
+                        new_value = Complement(new_value, complement_set)
+                    if new_value is S.EmptySet:
+                        res_copy = {}
+                    elif new_value.is_FiniteSet and len(new_value) == 1:
+                        res_copy[key_res] = set(new_value).pop()
+                    else:
+                        res_copy[key_res] = new_value
             final_result.append(res_copy)
         return final_result
     # end of def add_intersection_complement()
 
-    def _extract_main_soln(sol, soln_imageset):
-            """separate the Complements, Intersections, ImageSet lambda expr
-            and it's base_set.
+    def _extract_main_soln(sym, sol, soln_imageset):
+            """Separate the Complements, Intersections, ImageSet lambda expr
+            and its base_set.
             """
             # if there is union, then need to check
             # Complement, Intersection, Imageset.
@@ -2788,11 +2796,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 # using `add_intersection_complement` method
             if isinstance(sol, Intersection):
                 # Interval/Set will be at 0th index always
-                if sol.args[0] != Interval(-oo, oo):
-                    # sometimes solveset returns soln
-                    # with intersection `S.Reals`, to confirm that
-                    # soln is in `domain=S.Reals` or not. We don't consider
-                    # that intersection.
+                if sol.args[0] not in (S.Reals, S.Complexes):
+                    # Sometimes solveset returns soln with intersection
+                    # S.Reals or S.Complexes. We don't consider that
+                    # intersection.
                     intersections[sym] = sol.args[0]
                 sol = sol.args[1]
             # after intersection and complement Imageset should
@@ -3027,13 +3034,13 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
-                            soln, soln_imageset)
+                            sym, soln, soln_imageset)
 
                     for sol in soln:
                         # sol is not a `Union` since we checked it
                         # before this loop
                         sol, soln_imageset = _extract_main_soln(
-                            sol, soln_imageset)
+                            sym, sol, soln_imageset)
                         sol = set(sol).pop()
                         free = sol.free_symbols
                         if got_symbol and any([
@@ -3117,17 +3124,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # eg : [{x: -1, y : 1}, {x : -y , y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
-    if intersections and complements:
-        # no testcase is added for this block
+    if intersections or complements:
         result_all_variables = add_intersection_complement(
-            result_all_variables, intersections,
-            Intersection=True, Complement=True)
-    elif intersections:
-        result_all_variables = add_intersection_complement(
-            result_all_variables, intersections, Intersection=True)
-    elif complements:
-        result_all_variables = add_intersection_complement(
-            result_all_variables, complements, Complement=True)
+            result_all_variables, intersections, complements)
 
     # convert to ordered tuple
     result = S.EmptySet

@@ -34,7 +34,7 @@ import stat
 import tempfile
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, string_types, range, unwrap,
+from sympy.core.compatibility import (exec_, PY3, unwrap,
         unicode)
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
@@ -94,7 +94,7 @@ def _indent(s, indent=4):
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
 
-pdoctest._indent = _indent
+pdoctest._indent = _indent  # type: ignore
 
 # override reporter to maintain windows and python3
 
@@ -109,7 +109,7 @@ def _report_failure(self, out, test, example, got):
 
 
 if PY3 and IS_WINDOWS:
-    DocTestRunner.report_failure = _report_failure
+    DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
 def convert_to_native_paths(lst):
@@ -292,8 +292,8 @@ def run_all_tests(test_args=(), test_kwargs=None,
 
         # Examples
         print()
-        sys.path.append("examples")
-        from all import run_examples  # examples/all.py
+        sys.path.append("examples")   # examples/all.py
+        from all import run_examples  # type: ignore
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
 
@@ -505,7 +505,7 @@ def _test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
-    if isinstance(kw, string_types):
+    if isinstance(kw, str):
         kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
@@ -1525,7 +1525,7 @@ class SymPyDocTests(object):
             if module == 'matplotlib':
                 matplotlib = import_module(
                     'matplotlib',
-                    __import__kwargs={'fromlist':
+                    import_kwargs={'fromlist':
                                       ['pyplot', 'cm', 'collections']},
                     min_module_version='1.0.0', catch=(RuntimeError,))
                 if matplotlib is None:
@@ -1644,13 +1644,13 @@ class SymPyDocTestFinder(DocTestFinder):
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
-                if not isinstance(valname, string_types):
+                if not isinstance(valname, str):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
                                      "must be strings: %r" %
                                      (type(valname),))
                 if not (inspect.isfunction(val) or inspect.isclass(val) or
                         inspect.ismethod(val) or inspect.ismodule(val) or
-                        isinstance(val, string_types)):
+                        isinstance(val, str)):
                     raise ValueError("SymPyDocTestFinder.find: __test__ values "
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
@@ -1703,7 +1703,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
-        if isinstance(obj, string_types):
+        if isinstance(obj, str):
             # obj is a string in the case for objects in the polys package.
             # Note that source_lines is a binary string (compiled polys
             # modules), which can't be handled by _find_lineno so determine
@@ -1725,7 +1725,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     docstring = ''
                 else:
                     docstring = obj.__doc__
-                    if not isinstance(docstring, string_types):
+                    if not isinstance(docstring, str):
                         docstring = str(docstring)
             except (TypeError, AttributeError):
                 docstring = ''
@@ -1838,12 +1838,17 @@ class SymPyDocTestRunner(DocTestRunner):
             if clear_globs:
                 test.globs.clear()
 
+
 # We have to override the name mangled methods.
-SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
-    DocTestRunner._DocTestRunner__patched_linecache_getlines
-SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
-SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
-    DocTestRunner._DocTestRunner__record_outcome
+monkeypatched_methods = [
+    'patched_linecache_getlines',
+    'run',
+    'record_outcome'
+]
+for method in monkeypatched_methods:
+    oldname = '_DocTestRunner__' + method
+    newname = '_SymPyDocTestRunner__' + method
+    setattr(SymPyDocTestRunner, newname, getattr(DocTestRunner, oldname))
 
 
 class SymPyOutputChecker(pdoctest.OutputChecker):

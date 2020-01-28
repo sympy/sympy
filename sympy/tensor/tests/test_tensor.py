@@ -14,7 +14,6 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     tensorhead, tensorsymmetry, TensorType, substitute_indices
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.compatibility import range
 from sympy.matrices import diag
 
 
@@ -516,6 +515,7 @@ def test_TensorHead():
     assert A.symmetry == TensorSymmetry.no_symmetry(2)
     assert A.comm == 0
 
+
 def test_add1():
     assert TensAdd().args == ()
     assert TensAdd().doit() == 0
@@ -536,7 +536,7 @@ def test_add1():
     t2b = t2 + t1
     assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + A(b, -L_0)*B(L_0, a) + A(b, L_0)*B(a, -L_0)'
     t2b = t2b.canon_bp()
-    assert str(t2b) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
+    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + 2*A(b, L_0)*B(a, -L_0)'
     p, q, r = tensor_heads('p,q,r', [Lorentz])
     t = q(d0)*2
     assert str(t) == '2*q(d0)'
@@ -550,16 +550,16 @@ def test_add1():
     t3 = t1*t2
     assert str(t3) == 'p(L_0)*(2*q(-L_0) + p(-L_0))'
     t3 = t3.expand()
-    assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == 'p(L_0)*p(-L_0) + 2*p(L_0)*q(-L_0)'
     t3 = t2*t1
     t3 = t3.expand()
-    assert str(t3) == '2*q(-L_0)*p(L_0) + p(-L_0)*p(L_0)'
+    assert str(t3) == 'p(-L_0)*p(L_0) + 2*q(-L_0)*p(L_0)'
     t3 = t3.canon_bp()
-    assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == 'p(L_0)*p(-L_0) + 2*p(L_0)*q(-L_0)'
     t1 = p(d0) + 2*q(d0)
     t3 = t1*t2
     t3 = t3.canon_bp()
-    assert str(t3) == '4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == 'p(L_0)*p(-L_0) + 4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0)'
     t1 = p(d0) - 2*q(d0)
     assert str(t1) == '-2*q(d0) + p(d0)'
     t2 = p(-d0) + 2*q(-d0)
@@ -652,16 +652,16 @@ def test_add3():
     B = TensorHead('B', [Lorentz])
 
     expr1 = A(i0)*A(-i0) - (E**2 - px**2 - py**2 - pz**2)
-    assert expr1.args == (px**2, py**2, pz**2, -E**2, A(i0)*A(-i0))
+    assert expr1.args == (-E**2, px**2, py**2, pz**2, A(i0)*A(-i0))
 
     expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
     assert expr2.args == (E**2, -px**2, -py**2, -pz**2, -A(i0)*A(-i0))
 
     expr3 = A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
-    assert expr3.args == (px**2, py**2, pz**2, -E**2, A(i0)*A(-i0))
+    assert expr3.args == (-E**2, px**2, py**2, pz**2, A(i0)*A(-i0))
 
     expr4 = B(i1)*B(-i1) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
-    assert expr4.args == (-2*px**2, -2*py**2, -2*pz**2, 2*E**2, -A(i0)*A(-i0), B(i1)*B(-i1))
+    assert expr4.args == (2*E**2, -2*px**2, -2*py**2, -2*pz**2, B(i1)*B(-i1), -A(i0)*A(-i0))
 
 
 def test_mul():
@@ -1732,9 +1732,9 @@ def test_index_iteration():
     assert list(e5._iterate_dummy_indices) == [(L0, (0, 1, 0)), (L1, (0, 1, 1)), (-L0, (1, 1, 0)), (-L1, (1, 1, 1))]
     assert list(e5._iterate_indices) == [(L0, (0, 1, 0)), (L1, (0, 1, 1)), (-L0, (1, 1, 0)), (-L1, (1, 1, 1))]
 
-    assert list(e6._iterate_free_indices) == [(i0, (0, 1, 0)), (i2, (0, 1, 1)), (i0, (1, 0, 1, 0)), (i2, (1, 1, 1, 0))]
-    assert list(e6._iterate_dummy_indices) == [(L0, (1, 0, 1, 1)), (-L0, (1, 1, 1, 1))]
-    assert list(e6._iterate_indices) == [(i0, (0, 1, 0)), (i2, (0, 1, 1)), (i0, (1, 0, 1, 0)), (L0, (1, 0, 1, 1)), (i2, (1, 1, 1, 0)), (-L0, (1, 1, 1, 1))]
+    assert list(e6._iterate_free_indices) == [(i0, (0, 0, 1, 0)), (i2, (0, 1, 1, 0)), (i0, (1, 1, 0)), (i2, (1, 1, 1))]
+    assert list(e6._iterate_dummy_indices) == [(L0, (0, 0, 1, 1)), (-L0, (0, 1, 1, 1))]
+    assert list(e6._iterate_indices) == [(i0, (0, 0, 1, 0)), (L0, (0, 0, 1, 1)), (i2, (0, 1, 1, 0)), (-L0, (0, 1, 1, 1)), (i0, (1, 1, 0)), (i2, (1, 1, 1))]
 
     assert e1.get_indices() == [i0, i2]
     assert e1.get_free_indices() == [i0, i2]
@@ -1772,7 +1772,7 @@ def test_tensor_expand():
     assert expr != A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)*C(k)*C(-k)
     assert expr.expand() == A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)*C(k)*C(-k)
     assert str(expr) == "A(-L_0)*(A(L_0)*A(j) + A(L_0)*B(j)*C(L_1)*C(-L_1))"
-    assert str(expr.canon_bp()) == 'A(L_0)*A(-L_0)*B(j)*C(L_1)*C(-L_1) + A(j)*A(L_0)*A(-L_0)'
+    assert str(expr.canon_bp()) == 'A(j)*A(L_0)*A(-L_0) + A(L_0)*A(-L_0)*B(j)*C(L_1)*C(-L_1)'
 
     expr = A(-i)*(2*A(i)*A(j) + A(i)*B(j))
     assert expr.expand() == 2*A(-i)*A(i)*A(j) + A(-i)*A(i)*B(j)

@@ -33,8 +33,9 @@ complete source code files.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.core import S, Rational, Float, Lambda
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 
 # Rust's methods for integer and float can be found at here :
@@ -230,7 +231,7 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -299,7 +300,7 @@ class RustCodePrinter(CodePrinter):
             cond_func = self.known_functions[expr.func.__name__]
             func = None
             style = 1
-            if isinstance(cond_func, string_types):
+            if isinstance(cond_func, str):
                 func = cond_func
             else:
                 for cond, func, style in cond_func:
@@ -449,12 +450,11 @@ class RustCodePrinter(CodePrinter):
     # FIXME: Str/CodePrinter could define each of these to call the _print
     # method from higher up the class hierarchy (see _print_NumberSymbol).
     # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+    _print_Matrix = _print_MatrixBase
+    _print_DenseMatrix = _print_MatrixBase
+    _print_MutableDenseMatrix = _print_MatrixBase
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_ImmutableDenseMatrix = _print_MatrixBase
 
     def _print_Symbol(self, expr):
 
@@ -482,7 +482,7 @@ class RustCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

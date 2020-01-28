@@ -1,6 +1,5 @@
 from itertools import permutations
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
@@ -237,7 +236,7 @@ def test_Permutation_subclassing():
             try:
                 perm_obj = i[0]
                 return [self._array_form[j] for j in perm_obj]
-            except Exception:
+            except TypeError:
                 raise TypeError('unrecognized argument')
 
         def __eq__(self, other):

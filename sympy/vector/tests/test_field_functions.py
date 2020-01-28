@@ -167,7 +167,7 @@ def test_product_rules():
     assert simplify(lhs) == simplify(rhs)
 
 
-P = C.orient_new_axis('P', q, C.k)
+P = C.orient_new_axis('P', q, C.k)  # type: ignore
 scalar_field = 2*x**2*y*z
 grad_field = gradient(scalar_field)
 vector_field = y**2*i + 3*x*j + 5*y*z*k

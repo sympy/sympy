@@ -1,21 +1,21 @@
 from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo,
                    powsimp, Rational)
 from sympy.core.function import _mexpand
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.functions.elementary.trigonometric import sin
-from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
-    diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
+from sympy.solvers.diophantine import diophantine
+from sympy.solvers.diophantine.diophantine import (diop_DN,
+    diop_solve, diop_ternary_quadratic_normal,
+    diop_general_pythagorean, diop_ternary_quadratic, diop_linear,
+    diop_quadratic, diop_general_sum_of_squares, diop_general_sum_of_even_powers,
+    descent, diop_bf_DN, divisible, equivalent, find_DN, ldescent, length,
     reconstruct, partition, power_representation,
     prime_as_sum_of_two_squares, square_factor, sum_of_four_squares,
     sum_of_three_squares, transformation_to_DN, transformation_to_normal,
-    classify_diop, base_solution_linear, cornacchia, sqf_normal,
-    diop_ternary_quadratic_normal, _diop_ternary_quadratic_normal,
-    gaussian_reduce, holzer,diop_general_pythagorean,
-    _diop_general_sum_of_squares, _nint_or_floor, _odd, _even,
-    _remove_gcd, check_param, parametrize_ternary_quadratic,
-    diop_ternary_quadratic, diop_linear, diop_quadratic,
-    diop_general_sum_of_squares, sum_of_powers, sum_of_squares,
-    diop_general_sum_of_even_powers, _can_do_sum_of_squares)
+    classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
+    check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
+    _diop_ternary_quadratic_normal, _diop_general_sum_of_squares, _nint_or_floor,
+    _odd, _even, _remove_gcd, _can_do_sum_of_squares)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL

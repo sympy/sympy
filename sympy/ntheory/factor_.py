@@ -7,7 +7,7 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int, SYMPY_INTS, range, string_types
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
@@ -130,7 +130,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     elif visual not in (True, False):
         visual = None
 
-    if isinstance(n, string_types):
+    if isinstance(n, str):
         if visual:
             return n
         d = {}
@@ -1980,7 +1980,7 @@ def core(n, t=2):
     See Also
     ========
 
-    factorint, sympy.solvers.diophantine.square_factor
+    factorint, sympy.solvers.diophantine.diophantine.square_factor
 
     References
     ==========

@@ -17,7 +17,7 @@
 
 from sympy.external import import_module
 
-sage = import_module('sage.all', __import__kwargs={'fromlist': ['all']})
+sage = import_module('sage.all', import_kwargs={'fromlist': ['all']})
 if not sage:
     #bin/test will not execute any tests now
     disabled = True

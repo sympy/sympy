@@ -4,6 +4,8 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
@@ -23,7 +25,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -142,7 +144,7 @@ class LatexPrinter(Printer):
         "gothic_re_im": False,
         "decimal_separator": "period",
         "perm_cyclic": True,
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -1952,6 +1954,9 @@ class LatexPrinter(Printer):
 
     def _print_Range(self, s):
         dots = r'\ldots'
+
+        if s.has(Symbol):
+            return self._print_Basic(s)
 
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:

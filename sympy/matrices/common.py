@@ -6,15 +6,16 @@ etc.).
 
 from __future__ import division, print_function
 
+from sympy.core.logic import FuzzyBool
+
 from collections import defaultdict
 from inspect import isfunction
-from itertools import chain
 
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
-    Iterable, as_int, is_sequence, range, reduce)
+    Iterable, as_int, is_sequence, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -53,9 +54,8 @@ class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
 class MatrixRequired(object):
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
-    rows = None
-    cols = None
-    shape = None
+    rows = None  # type: int
+    cols = None  # type: int
     _simplify = None
 
     @classmethod
@@ -77,6 +77,10 @@ class MatrixRequired(object):
 
     def __len__(self):
         """The total number of entries in the matrix."""
+        raise NotImplementedError("Subclasses must implement this.")
+
+    @property
+    def shape(self):
         raise NotImplementedError("Subclasses must implement this.")
 
 
@@ -1112,14 +1116,15 @@ class MatrixProperties(MatrixRequired):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
         return mat.is_zero
 
-    def _eval_is_Identity(self):
+    def _eval_is_Identity(self) -> FuzzyBool:
         def dirac(i, j):
             if i == j:
                 return 1
             return 0
 
-        return all(self[i, j] == dirac(i, j) for i in range(self.rows) for j in
-                   range(self.cols))
+        return all(self[i, j] == dirac(i, j)
+                for i in range(self.rows)
+                for j in range(self.cols))
 
     def _eval_is_lower_hessenberg(self):
         return all(self[i, j].is_zero
@@ -1326,7 +1331,7 @@ class MatrixProperties(MatrixRequired):
         return self._eval_is_diagonal()
 
     @property
-    def is_hermitian(self, simplify=True):
+    def is_hermitian(self):
         """Checks if the matrix is Hermitian.
 
         In a Hermitian matrix element i,j is the complex conjugate of
@@ -1357,14 +1362,10 @@ class MatrixProperties(MatrixRequired):
         if not self.is_square:
             return False
 
-        simpfunc = simplify
-        if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
-
-        return self._eval_is_matrix_hermitian(simpfunc)
+        return self._eval_is_matrix_hermitian(_simplify)
 
     @property
-    def is_Identity(self):
+    def is_Identity(self) -> FuzzyBool:
         if not self.is_square:
             return False
         return self._eval_is_Identity()
@@ -1668,7 +1669,7 @@ class MatrixOperations(MatrixRequired):
         out = self._new(self.rows, self.cols, [f(x) for x in self])
         return out
 
-    def _eval_as_real_imag(self):
+    def _eval_as_real_imag(self):  # type: ignore
         from sympy.functions.elementary.complexes import re, im
 
         return (self.applyfunc(re), self.applyfunc(im))
@@ -1727,8 +1728,9 @@ class MatrixOperations(MatrixRequired):
 
         return self._eval_applyfunc(f)
 
-    def as_real_imag(self):
+    def as_real_imag(self, deep=True, **hints):
         """Returns a tuple containing the (real, imaginary) part of matrix."""
+        # XXX: Ignoring deep and hints...
         return self._eval_as_real_imag()
 
     def conjugate(self):
@@ -1763,9 +1765,11 @@ class MatrixOperations(MatrixRequired):
     def doit(self, **kwargs):
         return self.applyfunc(lambda x: x.doit())
 
-    def evalf(self, prec=None, **options):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """Apply evalf() to each element of self."""
-        return self.applyfunc(lambda i: i.evalf(prec, **options))
+        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
+                'quad':quad, 'verbose':verbose}
+        return self.applyfunc(lambda i: i.evalf(n, **options))
 
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
                mul=True, log=True, multinomial=True, basic=True, **hints):
@@ -1991,7 +1995,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map=False):
+    def replace(self, F, G, map=False, simultaneous=True, exact=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -2009,7 +2013,8 @@ class MatrixOperations(MatrixRequired):
         [G(0), G(1)],
         [G(1), G(2)]])
         """
-        return self.applyfunc(lambda x: x.replace(F, G, map))
+        return self.applyfunc(
+            lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
 
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
@@ -2097,11 +2102,19 @@ class MatrixOperations(MatrixRequired):
         """
         return self._eval_transpose()
 
-    T = property(transpose, None, None, "Matrix transposition.")
+    @property
+    def T(self):
+        '''Matrix transposition'''
+        return self.transpose()
 
-    C = property(conjugate, None, None, "By-element conjugation.")
+    @property
+    def C(self):
+        '''By-element conjugation'''
+        return self.conjugate()
 
-    n = evalf
+    def n(self, *args, **kwargs):
+        """Apply evalf() to each element of self."""
+        return self.evalf(*args, **kwargs)
 
     def xreplace(self, rule):  # should mirror core.basic.xreplace
         """Return a new matrix with xreplace applied to each entry.
@@ -2120,7 +2133,10 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.xreplace(rule))
 
-    _eval_simplify = simplify
+    def _eval_simplify(self, **kwargs):
+        # XXX: We can't use self.simplify here as mutable subclasses will
+        # override simplify and have it return None
+        return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
         from sympy.simplify import trigsimp
@@ -2485,7 +2501,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    _diff_wrt = True
+    _diff_wrt = True  # type: bool
 
 
 class _MinimalMatrix(object):
