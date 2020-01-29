@@ -1651,8 +1651,7 @@ def test_issue_2975():
 
 def test_issue_4231():
     f = (1 + 2*x + sqrt(x + log(x))*(1 + 3*x) + x**2)/(x*(x + sqrt(x + log(x)))*sqrt(x + log(x)))
-    assert integrate(f,x) == 2*sqrt(x + log(x)) + 2*log(x + sqrt(x + log(x)))
-
+    assert integrate(f, x) == 2*sqrt(x + log(x)) + 2*log(x + sqrt(x + log(x)))
 
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)

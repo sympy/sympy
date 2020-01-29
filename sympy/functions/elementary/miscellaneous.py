@@ -115,8 +115,16 @@ def sqrt(arg, evaluate=None):
     >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
 
-    sqrt(x) is Pow(x, S.Half), therefore `sqrt(x).has(sqrt)` doesn't work with
-    sqrt. 
+    sqrt(x) is Pow(x, S.Half), therefore ```sqrt(x).has(sqrt)`` doesn't work
+    with sqrt.
+
+    >>> sqrt(x).has(sqrt)
+    Traceback (most recent call last):
+      ...
+    sympy.core.sympify.SympifyError: Sympify of expression 'could not parse
+    '<function sqrt at 0x7f79ad860f80>'' failed, because of exception being
+    raised:
+    SyntaxError: invalid syntax
 
     See Also
     ========
