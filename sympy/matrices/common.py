@@ -1114,7 +1114,7 @@ class MatrixProperties(MatrixRequired):
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
-        return mat.is_zero
+        return mat.is_zero_matrix
 
     def _eval_is_Identity(self) -> FuzzyBool:
         def dirac(i, j):
@@ -1141,9 +1141,9 @@ class MatrixProperties(MatrixRequired):
 
     def _eval_is_symmetric(self, simpfunc):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i]))
-        return mat.is_zero
+        return mat.is_zero_matrix
 
-    def _eval_is_zero(self):
+    def _eval_is_zero_matrix(self):
         if any(i.is_zero == False for i in self):
             return False
         if any(i.is_zero is None for i in self):
@@ -1623,7 +1623,7 @@ class MatrixProperties(MatrixRequired):
                    for j in range(min(i, self.cols)))
 
     @property
-    def is_zero(self):
+    def is_zero_matrix(self):
         """Checks if a matrix is a zero matrix.
 
         A matrix is zero if every element is zero.  A matrix need not be square
@@ -1641,17 +1641,17 @@ class MatrixProperties(MatrixRequired):
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
         >>> e = Matrix([[x, 0], [0, 0]])
-        >>> a.is_zero
+        >>> a.is_zero_matrix
         True
-        >>> b.is_zero
+        >>> b.is_zero_matrix
         True
-        >>> c.is_zero
+        >>> c.is_zero_matrix
         False
-        >>> d.is_zero
+        >>> d.is_zero_matrix
         True
-        >>> e.is_zero
+        >>> e.is_zero_matrix
         """
-        return self._eval_is_zero()
+        return self._eval_is_zero_matrix()
 
     def values(self):
         """Return non-zero values of self."""
@@ -2605,6 +2605,14 @@ class _MinimalMatrix(object):
     @property
     def shape(self):
         return (self.rows, self.cols)
+
+
+class _CastableMatrix: # this is needed here ONLY FOR TESTS.
+    def as_mutable(self):
+        return self
+
+    def as_immutable(self):
+        return self
 
 
 class _MatrixWrapper(object):

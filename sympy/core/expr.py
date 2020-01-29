@@ -1010,6 +1010,7 @@ class Expr(Basic, EvalfMixin):
             return -self
 
     def conjugate(self):
+        """Returns the complex conjugate of 'self'."""
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 

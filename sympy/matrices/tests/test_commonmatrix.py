@@ -9,8 +9,8 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
-    _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
-    MatrixSpecial)
+    _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
+    MatrixOperations, MatrixArithmetic, MatrixSpecial)
 from sympy.matrices.matrices import (MatrixDeterminant,
     MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
 from sympy.matrices import (Matrix, diag, eye,
@@ -23,7 +23,7 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.abc import x, y, z
 
 # classes to test the basic matrix classes
-class ShapingOnlyMatrix(_MinimalMatrix, MatrixShaping):
+class ShapingOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixShaping):
     pass
 
 
@@ -35,7 +35,7 @@ def zeros_Shaping(n):
     return ShapingOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class PropertiesOnlyMatrix(_MinimalMatrix, MatrixProperties):
+class PropertiesOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixProperties):
     pass
 
 
@@ -47,7 +47,7 @@ def zeros_Properties(n):
     return PropertiesOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class OperationsOnlyMatrix(_MinimalMatrix, MatrixOperations):
+class OperationsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixOperations):
     pass
 
 
@@ -59,7 +59,7 @@ def zeros_Operations(n):
     return OperationsOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class ArithmeticOnlyMatrix(_MinimalMatrix, MatrixArithmetic):
+class ArithmeticOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixArithmetic):
     pass
 
 
@@ -71,7 +71,7 @@ def zeros_Arithmetic(n):
     return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class DeterminantOnlyMatrix(_MinimalMatrix, MatrixDeterminant):
+class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
     pass
 
 
@@ -83,7 +83,7 @@ def zeros_Determinant(n):
     return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class ReductionsOnlyMatrix(_MinimalMatrix, MatrixReductions):
+class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
 
 
@@ -95,19 +95,19 @@ def zeros_Reductions(n):
     return ReductionsOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class SpecialOnlyMatrix(_MinimalMatrix, MatrixSpecial):
+class SpecialOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSpecial):
     pass
 
 
-class SubspaceOnlyMatrix(_MinimalMatrix, MatrixSubspaces):
+class SubspaceOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSubspaces):
     pass
 
 
-class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
+class EigenOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixEigen):
     pass
 
 
-class CalculusOnlyMatrix(_MinimalMatrix, MatrixCalculus):
+class CalculusOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixCalculus):
     pass
 
 
@@ -440,14 +440,14 @@ def test_is_hessenberg():
 
 
 def test_is_zero():
-    assert PropertiesOnlyMatrix(0, 0, []).is_zero
-    assert PropertiesOnlyMatrix([[0, 0], [0, 0]]).is_zero
-    assert PropertiesOnlyMatrix(zeros(3, 4)).is_zero
-    assert not PropertiesOnlyMatrix(eye(3)).is_zero
-    assert PropertiesOnlyMatrix([[x, 0], [0, 0]]).is_zero == None
-    assert PropertiesOnlyMatrix([[x, 1], [0, 0]]).is_zero == False
+    assert PropertiesOnlyMatrix(0, 0, []).is_zero_matrix
+    assert PropertiesOnlyMatrix([[0, 0], [0, 0]]).is_zero_matrix
+    assert PropertiesOnlyMatrix(zeros(3, 4)).is_zero_matrix
+    assert not PropertiesOnlyMatrix(eye(3)).is_zero_matrix
+    assert PropertiesOnlyMatrix([[x, 0], [0, 0]]).is_zero_matrix == None
+    assert PropertiesOnlyMatrix([[x, 1], [0, 0]]).is_zero_matrix == False
     a = Symbol('a', nonzero=True)
-    assert PropertiesOnlyMatrix([[a, 0], [0, 0]]).is_zero == False
+    assert PropertiesOnlyMatrix([[a, 0], [0, 0]]).is_zero_matrix == False
 
 
 def test_values():

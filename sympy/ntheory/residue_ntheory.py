@@ -628,18 +628,17 @@ def is_nthpow_residue(a, n, m):
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
 
     """
+    a = a % m
     a, n, m = as_int(a), as_int(n), as_int(m)
     if m <= 0:
         raise ValueError('m must be > 0')
     if n < 0:
         raise ValueError('n must be >= 0')
-    if a < 0:
-        raise ValueError('a must be >= 0')
     if n == 0:
         if m == 1:
             return False
         return a == 1
-    if a % m == 0:
+    if a == 0:
         return True
     if n == 1:
         return True
@@ -835,7 +834,9 @@ def nthroot_mod(a, n, p, all_roots=False):
     23
     """
     from sympy.core.numbers import igcdex
+    a = a % p
     a, n, p = as_int(a), as_int(n), as_int(p)
+
     if n == 2:
         return sqrt_mod(a, p, all_roots)
     # see Hackman "Elementary Number Theory" (2009), page 76
@@ -1487,10 +1488,9 @@ def _val_poly(root, coefficients, p):
 
 
 def _valid_expr(expr):
-    """This function is used by `polynomial_congruence`.
-    If `expr` is a univariate polynomial will integer
-    coefficients the it returns its coefficients,
-    otherwise it raises Valuerror
+    """
+    return coefficients of expr if it is a univariate polynomial
+    with integer coefficients else raise a ValueError.
     """
 
     from sympy import Poly
@@ -1526,13 +1526,14 @@ def polynomial_congruence(expr, m):
     [3257]
     """
     coefficients = _valid_expr(expr)
+    coefficients = [num % m for num in coefficients]
     rank = len(coefficients)
     if rank == 3:
-        return quadratic_congruence(coefficients[0], coefficients[1],
-            coefficients[2], m)
+        return quadratic_congruence(*coefficients, m)
     if rank == 2:
-        return quadratic_congruence(0, coefficients[0], coefficients[1],
-            m)
+        return quadratic_congruence(0, *coefficients, m)
+    if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
+        return nthroot_mod(-coefficients[-1], rank - 1, m, True)
     if isprime(m):
         return _polynomial_congruence_prime(coefficients, m)
     return _help(m,
