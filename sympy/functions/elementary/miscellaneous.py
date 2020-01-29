@@ -115,6 +115,9 @@ def sqrt(arg, evaluate=None):
     >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
 
+    sqrt(x) is Pow(x, S.Half), therefore `sqrt(x).has(sqrt)` doesn't work with
+    sqrt. 
+
     See Also
     ========
 

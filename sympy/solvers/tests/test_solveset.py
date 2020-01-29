@@ -632,6 +632,9 @@ def test_solve_abs():
             ImageSet(Lambda(n, n*pi - (-1)**(-n)*pi/2), S.Integers)))
 
 
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x) == ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    assert solveset(cos(x)**2 - 2*cos(x) + 1, x) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
 
 def test_issue_9565():
     assert solveset_real(Abs((x - 1)/(x - 5)) <= Rational(1, 3), x) == Interval(-1, 2)
