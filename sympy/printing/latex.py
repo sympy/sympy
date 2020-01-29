@@ -2556,7 +2556,7 @@ def translate(s):
         return s
 
 
-def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
+def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
           fold_func_brackets=False, fold_short_frac=None, inv_trig_style="abbreviated",
           itex=False, ln_notation=False, long_frac_ratio=None,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
@@ -2636,10 +2636,10 @@ def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
         separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
         ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
-    min_: Integer or None, optional
+    min: Integer or None, optional
         Sets the lower bound for the exponent to print floating point numbers in
         fixed-point format.
-    max_: Integer or None, optional
+    max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
 
@@ -2773,8 +2773,8 @@ def latex(expr, full_prec=False, min_=None, max_=None, fold_frac_powers=False,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
         'perm_cyclic' : perm_cyclic,
-        'min': min_,
-        'max': max_,
+        'min': min,
+        'max': max,
     }
 
     return LatexPrinter(settings).doprint(expr)
