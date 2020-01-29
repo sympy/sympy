@@ -2,8 +2,8 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Max, Min, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range, Add, symbols, Dummy, zoo, Rational)
+    Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
+    Matrix, Range, Add, symbols, Dummy, zoo, Rational)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -1522,16 +1522,16 @@ def test_Union_imageset_linear_expression():
 
 def test_union_imageset():
     n = Dummy('n')
-    img1 = ImageSet(Lambda(n, 2 * n * pi), S.Integers)
+    img1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
     assert Union(img1) == img1
 
     assert Union(S.EmptySet, img1) == img1
     assert Union(img1, S.EmptySet) == img1
 
-    img2 = ImageSet(Lambda(n, 2 * n * pi + pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
     assert Union(img1, img2) == ImageSet(Lambda(n, n * pi), S.Integers)
 
-    img2 = ImageSet(Lambda(n, 2 * n * pi + pi), Interval(0, 10))
+    img2 = ImageSet(Lambda(n, 2*n*pi + pi), Interval(0, 10))
     uni = Union(img1, img2, evaluate=False)
     assert Union(img1, img2) == uni
 
@@ -1540,21 +1540,21 @@ def test_union_imageset():
     uni = ImageSet(Lambda(n, pi*n + pi/3), S.Integers)
     assert Union(img1, img2) == uni
 
-    img1 = ImageSet(Lambda(n, 2 * n * pi + pi / 4), S.Integers)
-    img2 = ImageSet(Lambda(n, 2 * n * pi + 5 * pi / 4), S.Integers)
-    union = ImageSet(Lambda(n, n * pi + pi / 4), S.Integers)
+    img1 = ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 2*n*pi + 5*pi/ 4), S.Integers)
+    union = ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
     assert Union(img1, img2) == union
 
-    img1 = ImageSet(Lambda(n, 2 * n * pi - pi / 3), S.Integers)
-    img2 = ImageSet(Lambda(n, 2 * n * pi + 2 * pi / 3), S.Integers)
-    img3 = ImageSet(Lambda(n, 2 * n * pi - 2 * pi / 3), S.Integers)
-    img4 = ImageSet(Lambda(n, 2 * n * pi + pi / 3), S.Integers)
-    img5 = ImageSet(Lambda(n, n * pi + pi / 3), S.Integers)
-    img6 = ImageSet(Lambda(n, n * pi + 2 * pi / 3), S.Integers)
+    img1 = ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers)
+    img3 = ImageSet(Lambda(n, 2*n*pi - 2*pi/3), S.Integers)
+    img4 = ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
+    img5 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img6 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
     assert Union(img1, img2, img3, img4) == Union(img5, img6, evaluate=False)
 
-    img1 = ImageSet(Lambda(n, 4 * n * pi + pi / 4), S.Integers)
-    img2 = ImageSet(Lambda(n, 4 * n * pi + 5 * pi / 4), S.Integers)
+    img1 = ImageSet(Lambda(n, 4*n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi + 5*pi/4), S.Integers)
     # no simplification
     assert Union(img1, img2) == Union(img1, img2, evaluate=False)
 
@@ -1581,12 +1581,12 @@ def test_union_imageset():
     uni = ImageSet(Lambda(n, 7*n*pi), S.Integers)
     assert Union(img1, img2) == uni
 
-    img1 = ImageSet(Lambda(n, n * pi + 2 * pi / 3), S.Integers)
-    img2 = ImageSet(Lambda(n, n * pi + pi / 6), S.Integers)
-    img3 = ImageSet(Lambda(n, n * pi + pi / 3), S.Integers)
-    img4 = ImageSet(Lambda(n, n * pi + 5 * pi / 6), S.Integers)
-    uni1 = ImageSet(Lambda(n, pi * n / 2 + pi / 6), S.Integers)
-    uni2 = ImageSet(Lambda(n, pi * n / 2 + pi / 3), S.Integers)
+    img1 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, n*pi + pi/6), S.Integers)
+    img3 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img4 = ImageSet(Lambda(n, n*pi + 5 * pi/6), S.Integers)
+    uni1 = ImageSet(Lambda(n, pi*n/2 + pi/6), S.Integers)
+    uni2 = ImageSet(Lambda(n, pi*n/2 + pi/3), S.Integers)
     assert Union(img1, img2) == uni1
     assert Union(img3, img4) == uni2
 
