@@ -4191,3 +4191,9 @@ def test_issue_8207():
     e = diff(d, a[0, 0])
     assert d == b[0, 0]
     assert e == 0
+
+def test_upper():
+    assert (lower(ones(4), -1) == Matrix([[0, 0, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0]]))
+
+def test_lower():
+    assert (upper(ones(4,2)) == Matrix([[1, 1], [0, 1], [0, 0], [0, 0]]))

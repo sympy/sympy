@@ -3981,3 +3981,69 @@ def classof(A, B):
 def a2idx(j, n=None):
     from sympy.matrices.common import a2idx as a2idx_
     return a2idx_(j, n)
+
+def upper(a, diag=0):
+    from sympy import Matrix
+    """
+    Examples
+    ========
+
+    >>> from sympy.matrices.matrices import upper
+    >>> from sympy.matrices.dense import ones
+    >>> upper(ones(4,2))
+    Matrix([
+    [1, 1],
+    [0, 1],
+    [0, 0],
+    [0, 0]])
+    >>> upper(ones(2,4))
+    Matrix([
+    [1, 1, 1, 1],
+    [0, 1, 1, 1]])
+    >>> upper(ones(3), diag=1)
+    Matrix([
+    [0, 1, 1],
+    [0, 0, 1],
+    [0, 0, 0]])
+    """
+    b = Matrix(a)
+    d = min(a.rows, a.cols)
+    for i in range(d):
+        for j in range(i + diag):
+            b[i, j] = 0
+    for i in range(d, a.rows):
+        for j in range(a.cols):
+            b[i, j] = 0
+    return b
+
+def lower(a, diag=0):
+    from sympy import Matrix
+    """
+    Examples
+    ========
+
+    >>> from sympy.matrices.matrices import lower
+    >>> from sympy.matrices.dense import ones
+    >>> lower(ones(4), -1)
+    Matrix([
+    [0, 0, 0, 0],
+    [1, 0, 0, 0],
+    [1, 1, 0, 0],
+    [1, 1, 1, 0]])
+    >>> lower(ones(2, 4))
+    Matrix([
+    [1, 0, 0, 0],
+    [1, 1, 0, 0]])
+    >>> lower(ones(4, 2))
+    Matrix([
+    [1, 0],
+    [1, 1],
+    [1, 1],
+    [1, 1]])
+    """
+    b = Matrix(a)
+    i0 = diag + 1
+    for i in range(a.rows):
+        for j in range(i + i0, a.cols):
+            b[i, j] = 0
+    return b
