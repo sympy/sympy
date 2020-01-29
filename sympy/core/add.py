@@ -139,7 +139,7 @@ class Add(Expr, AssocOp):
                         o.is_finite is False) and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                if coeff.is_Number:
+                if coeff.is_Number or isinstance(coeff, AccumBounds):
                     coeff += o
                     if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
@@ -461,7 +461,24 @@ class Add(Expr, AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
+        """
+        Decomposes an expression to its numerator part and its
+        denominator part.
 
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y, z
+        >>> (x*y/z).as_numer_denom()
+        (x*y, z)
+        >>> (x*(y + 1)/y**7).as_numer_denom()
+        (x*(y + 1), y**7)
+
+        See Also
+        ========
+
+        sympy.core.expr.Expr.as_numer_denom
+        """
         # clear rational denominator
         content, expr = self.primitive()
         ncon, dcon = content.as_numer_denom()

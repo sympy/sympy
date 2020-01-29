@@ -1431,3 +1431,5 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
         """
         self.row_op(i, lambda v, j: f(v, self[k, j]))
+
+    is_zero = False

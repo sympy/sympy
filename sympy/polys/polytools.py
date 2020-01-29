@@ -6593,7 +6593,7 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel, sqrt, Symbol
+    >>> from sympy import cancel, sqrt, Symbol, together
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
 
@@ -6601,6 +6601,14 @@ def cancel(f, *gens, **args):
     (2*x + 2)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
+
+    Note: due to automatic distribution of Rationals, a sum divided by an integer
+    will appear as a sum. To recover a rational form use `together` on the result:
+
+    >>> cancel(x/2 + 1)
+    x/2 + 1
+    >>> together(_)
+    (x + 2)/2
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise

@@ -664,7 +664,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = mat[:, 0]._find_reasonable_pivot(iszerofunc=iszerofunc)
+        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0], iszerofunc=iszerofunc)
         if pivot_pos is None:
             return mat.zero
 
@@ -766,7 +766,7 @@ def _det_LU(M, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
         # convention.
 
     lu, row_swaps = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
-            simpfunc=None, dotprodsimp=dotprodsimp)
+            simpfunc=simpfunc, dotprodsimp=dotprodsimp)
     # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
     # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
     # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).

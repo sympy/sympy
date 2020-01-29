@@ -1097,3 +1097,22 @@ def test_is_symmetric():
     a = Permutation(0, 1, 2, 3)
     b = Permutation(0, 3)(1, 2)
     assert PermutationGroup(a, b).is_symmetric == False
+
+def test_conjugacy_class():
+    S = SymmetricGroup(4)
+    x = Permutation(1, 2, 3)
+    C = set([Permutation(0, 1, 2, size = 4), Permutation(0, 1, 3),
+             Permutation(0, 2, 1, size = 4), Permutation(0, 2, 3),
+             Permutation(0, 3, 1), Permutation(0, 3, 2),
+             Permutation(1, 2, 3), Permutation(1, 3, 2)])
+    assert S.conjugacy_class(x) == C
+
+def test_conjugacy_classes():
+    S = SymmetricGroup(3)
+    expected = [set([Permutation(size = 3)]),
+         set([Permutation(0, 1, size = 3), Permutation(0, 2), Permutation(1, 2)]),
+         set([Permutation(0, 1, 2), Permutation(0, 2, 1)])]
+    computed = S.conjugacy_classes()
+
+    assert len(expected) == len(computed)
+    assert all(e in computed for e in expected)

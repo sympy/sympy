@@ -573,7 +573,7 @@ def _is_negative_semidefinite(M):
 
 def _is_indefinite(M):
     if M.is_hermitian:
-        eigen        = M.eigenvals()
+        eigen = M.eigenvals()
         args1        = [x.is_positive for x in eigen.keys()]
         any_positive = fuzzy_or(args1)
         args2        = [x.is_negative for x in eigen.keys()]
