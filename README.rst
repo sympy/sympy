@@ -117,10 +117,6 @@ Then, in the ``sympy`` repository that you cloned, simply run::
 
     $ python setup.py install
 
-If you want to install it system-wide, you may need to prefix the previous command with ``sudo``::
-
-    $ sudo python setup.py install
-
 See https://docs.sympy.org/dev/install.html for more information.
 
 Contributing
