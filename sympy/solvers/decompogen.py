@@ -20,7 +20,7 @@ def decompogen(f, symbol):
 
     >>> from sympy.solvers.decompogen import decompogen
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, sin, cos
+    >>> from sympy import sqrt, sin, cos, Max
     >>> decompogen(sin(cos(x)), x)
     [sin(x), cos(x)]
     >>> decompogen(sin(x)**2 + sin(x) + 1, x)
@@ -31,6 +31,8 @@ def decompogen(f, symbol):
     [sin(x), sqrt(x), cos(x), x**2 + 1]
     >>> decompogen(x**4 + 2*x**3 - x - 1, x)
     [x**2 - x - 1, x**2 + x]
+    >>> decompogen(Max(sin(x), x**2), x)
+    [Max, sin(x), x**2]
 
     """
     f = sympify(f)
