@@ -3983,7 +3983,6 @@ def a2idx(j, n=None):
     return a2idx_(j, n)
 
 def upper(a, diag=0):
-    from sympy import Matrix
     """
     Examples
     ========
@@ -4006,6 +4005,7 @@ def upper(a, diag=0):
     [0, 0, 1],
     [0, 0, 0]])
     """
+    from sympy import Matrix
     b = Matrix(a)
     d = min(a.rows, a.cols)
     for i in range(d):
@@ -4017,7 +4017,6 @@ def upper(a, diag=0):
     return b
 
 def lower(a, diag=0):
-    from sympy import Matrix
     """
     Examples
     ========
@@ -4041,6 +4040,7 @@ def lower(a, diag=0):
     [1, 1],
     [1, 1]])
     """
+    from sympy import Matrix
     b = Matrix(a)
     i0 = diag + 1
     for i in range(a.rows):
