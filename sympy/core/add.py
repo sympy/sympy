@@ -861,7 +861,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms, Order
+        from sympy import expand_mul, Order
 
         old = self
 
@@ -874,28 +874,28 @@ class Add(Expr, AssocOp):
 
         leading_terms = [t.as_leading_term(x) for t in expr.args]
 
+        min, new_expr = Order(0), 0
+
         try:
-            min = Order(leading_terms[0], x).getn()
+            for term in leading_terms:
+                order = Order(term, x)
+                if order not in min:
+                    min = order
+                    new_expr = term
+                elif order == min:
+                    new_expr += term
+
         except Exception:
             compute = True
-        else:
-            new_expr = leading_terms[0]
 
-        if compute == False:
-            for term in leading_terms[1:]:
-                try:
-                    order = Order(term, x).getn()
-                except Exception:
-                    compute = True
-                    break
-                else:
-                    if order < min:
-                        min = order
-                        new_expr = term
-                    elif order == min:
-                        new_expr += term
+        if compute:
+            return expr
 
-        if compute or not new_expr:
+        new_expr=new_expr.together()
+        if new_expr.is_Add:
+            new_expr = new_expr.simplify()
+
+        if not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
