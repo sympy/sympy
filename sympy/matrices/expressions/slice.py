@@ -103,9 +103,9 @@ def normalize(i, parentsize: Basic):
             raise IndexError(
                 "{} must be in the interval ({}, {}]."
                 .format(i, -parentsize, parentsize))
-        if (i < 0) == True:
+        if (i < S.Zero) == True:
             i += parentsize
-        return i, i+1, 1
+        return i, i+S.One, S.One
 
     start, stop, step = _slice_sympify(i)
     start, stop, step = _remove_slice_none(start, stop, step, parentsize)
