@@ -322,6 +322,16 @@ class MatrixSlice(MatrixExpr):
         return self.parent._entry(
             i*r_step + r_start, j*c_step + c_start, **kwargs)
 
+    def _normalize_slices(self):
+        rowslice, colslice = self.rowslice, self.colslice
+        parent = self.parent
+        rows, cols = parent.shape
+        if rows.is_Integer:
+            rowslice = normalize(rowslice, rows)
+        if cols.is_Integer:
+            colslice = normalize(colslice, cols)
+        return MatrixSlice(parent, rowslice, colslice)
+
     def doit(self, **kwargs):
         from sympy.combinatorics.permutations import Permutation
         from .blockmatrix import BlockMatrix, BlockDiagMatrix
@@ -329,7 +339,8 @@ class MatrixSlice(MatrixExpr):
 
         parent, rowslice, colslice = self.parent, self.rowslice, self.colslice
 
-        are_slices_integers = all(x.is_Integer for x in rowslice.args) and \
+        are_slices_integers = \
+            all(x.is_Integer for x in rowslice.args) and \
             all(x.is_Integer for x in colslice.args)
 
         if not are_slices_integers:
