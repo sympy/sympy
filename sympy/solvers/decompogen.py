@@ -2,6 +2,7 @@ from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
 from sympy.polys import Poly, decompose
 from sympy.utilities.misc import func_name
+from sympy import Min, Max
 
 
 def decompogen(f, symbol):
@@ -46,6 +47,13 @@ def decompogen(f, symbol):
             return [f]
         result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
         return result
+
+    # ===== Max/Min Functions ===== #
+    if isinstance(f, (Min, Max)):
+        rv = [type(f)]
+        for i in f.args:
+            rv.extend(decompogen(i, symbol))
+        return rv
 
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)

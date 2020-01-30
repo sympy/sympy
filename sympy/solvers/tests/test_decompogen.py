@@ -1,5 +1,5 @@
 from sympy.solvers.decompogen import decompogen, compogen
-from sympy import sin, cos, sqrt, Abs, exp, symbols
+from sympy import sin, cos, tan, sqrt, Abs, exp, symbols, Max, Min, pi
 from sympy.testing.pytest import XFAIL, raises
 
 x, y = symbols('x y')
@@ -15,6 +15,9 @@ def test_decompogen():
     assert decompogen(Abs(cos(y)**2 + 3*cos(x) - 4), x) == [Abs(x), 3*x + cos(y)**2 - 4, cos(x)]
     assert decompogen(x, y) == [x]
     assert decompogen(1, x) == [1]
+    assert decompogen(Max(x, 3), x) == [Max, 3, x]
+    assert decompogen(Max(Min(sin(tan(x**4)), pi), sin(tan(x))), x) == \
+        [Max, sin(x), tan(x), Min, pi, sin(x), tan(x), x**4]
     raises(TypeError, lambda: decompogen(x < 5, x))
 
 
