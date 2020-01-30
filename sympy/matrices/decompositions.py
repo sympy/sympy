@@ -67,7 +67,7 @@ def _cholesky(M, hermitian=True, dotprodsimp=None):
     See Also
     ========
 
-    LDLdecomposition
+    sympy.matrices.MatrixBase.LDLdecomposition
     LUdecomposition
     QRdecomposition
     """

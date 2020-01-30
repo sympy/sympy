@@ -53,7 +53,7 @@ def _lower_triangular_solve(M, rhs, dotprodsimp=None):
 
 
 def _lower_triangular_solve_sparse(M, rhs, dotprodsimp=None):
-    """Solves ``Ax = B``, where A is a sparse lower triangular matrix.
+    """Solves ``Ax = B``, where A is a lower triangular matrix.
 
     Parameters
     ==========
@@ -150,7 +150,7 @@ def _upper_triangular_solve(M, rhs, dotprodsimp=None):
 
 
 def _upper_triangular_solve_sparse(M, rhs, dotprodsimp=None):
-    """Solves ``Ax = B``, where A is a sparse upper triangular matrix.
+    """Solves ``Ax = B``, where A is an upper triangular matrix.
 
     Parameters
     ==========
@@ -216,8 +216,8 @@ def _cholesky_solve(M, rhs, dotprodsimp=None):
     See Also
     ========
 
-    lower_triangular_solve
-    upper_triangular_solve
+    sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+    sympy.matrices.dense.DenseMatrix.upper_triangular_solve
     gauss_jordan_solve
     diagonal_solve
     LDLsolve

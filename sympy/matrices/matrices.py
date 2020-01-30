@@ -1354,8 +1354,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
         LDLsolve
@@ -1809,8 +1809,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         cholesky_solve
         diagonal_solve
         LDLsolve
@@ -2228,7 +2228,7 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        cholesky
+        sympy.matrices.dense.DenseMatrix.cholesky
         LUdecomposition
         QRdecomposition
         """
@@ -2268,8 +2268,8 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         LDLdecomposition
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
@@ -2328,7 +2328,7 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        cholesky
+        sympy.matrices.dense.DenseMatrix.cholesky
         LDLdecomposition
         QRdecomposition
         LUdecomposition_Simple
@@ -2822,8 +2822,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
@@ -3060,8 +3060,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
@@ -3311,7 +3311,7 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        cholesky
+        sympy.matrices.dense.DenseMatrix.cholesky
         LDLdecomposition
         LUdecomposition
         QRsolve
@@ -3381,8 +3381,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
