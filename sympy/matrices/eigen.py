@@ -322,10 +322,10 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
 
     reals_only : bool, optional
         If ``True``, it tests whether the matrix can be diagonalized
-        without complex numbers. (Orthogonally diagonalizable)
+        without complex numbers.
 
-        If ``False``, it tests whether the matrix can be unitarily
-        diagonalizable.
+        If ``False``, it tests whether the matrix can be diagonalized
+        with complex numbers.
 
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification
@@ -348,8 +348,8 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
     >>> M.is_diagonalizable()
     False
 
-    Example of a unitarily diagonalizable, but not orthogonally
-    diagonalizable:
+    Example of a matrix which is diagonalizable with a diagonal matrix
+    with complex entries, but not with real entries:
 
     >>> M = Matrix([[0, 1], [-1, 0]])
     >>> M.is_diagonalizable(reals_only=False)
@@ -384,8 +384,7 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
     if all(e.is_real for e in M) and M.is_symmetric():
         return True
 
-    if all(e.is_complex for e in M) and M.is_hermitian \
-            and not reals_only:
+    if all(e.is_complex for e in M) and M.is_hermitian:
         return True
 
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only,
