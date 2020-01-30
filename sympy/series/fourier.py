@@ -480,7 +480,11 @@ class FiniteFourierSeries(FourierSeries):
     """
 
     def __new__(cls, f, limits, exprs):
-        if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+        f = sympify(f)
+        limits = sympify(limits)
+        expr = sympify(exprs)
+
+        if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
             rexpr = c + Add(*[TR10(i) for i in e])
@@ -506,11 +510,9 @@ class FiniteFourierSeries(FourierSeries):
                 else:
                     a0 += p
 
-            exprs = (a0, an, bn)
+            exprs = Tuple(a0, an, bn)
 
-        args = map(sympify, (f, limits, exprs))
-
-        return Expr.__new__(cls, *args)
+        return Expr.__new__(cls, f, limits, exprs)
 
     @property
     def interval(self):
