@@ -8,6 +8,7 @@ from sympy.core.sympify import _sympify
 from sympy.core.singleton import S, Singleton
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.common import ShapeError
 
 from .matexpr import MatrixExpr, MatrixSymbol, ZeroMatrix, OneMatrix, Identity
 
@@ -47,9 +48,9 @@ def _slice_sympify(i: Union[slice, tuple, list, Tuple]):
         start, stop, step = i.start, i.stop, i.step
     else:
         if len(i) == 1:
-            start, stop, step = i[0], SliceNone(), SliceNone()
+            start, stop, step = i[0], S.SliceNone, S.SliceNone
         elif len(i) == 2:
-            start, stop, step = i[0], i[1], SliceNone()
+            start, stop, step = i[0], i[1], S.SliceNone
         elif len(i) == 3:
             start, stop, step = i
         else:
@@ -295,8 +296,19 @@ class MatrixSlice(MatrixExpr):
             return mat_slice_of_slice(parent, rowslice, colslice)
         return Basic.__new__(cls, parent, Tuple(*rowslice), Tuple(*colslice))
 
+    def _is_slice_numeric(self):
+        def _pred(x):
+            return x.is_Integer or x is S.SliceNone
+        return all(_pred(x) for x in self.rowslice) and \
+            all(_pred(x) for x in self.colslice)
+
     @property
     def shape(self):
+        if not self._is_slice_numeric():
+            raise ShapeError(
+                "The matrix have an ambiguous slice specification to "
+                "determine the shape.")
+
         rows = self.rowslice[1] - self.rowslice[0]
         rows = rows if self.rowslice[2] == 1 else floor(rows/self.rowslice[2])
         cols = self.colslice[1] - self.colslice[0]
