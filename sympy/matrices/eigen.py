@@ -322,10 +322,10 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
 
     reals_only : bool, optional
         If ``True``, it tests whether the matrix can be diagonalized
-        without complex numbers.
+        with a diagonal matrix without complex numbers.
 
         If ``False``, it tests whether the matrix can be diagonalized
-        with complex numbers.
+        with a diagonal matrix with complex numbers.
 
     dotprodsimp : bool, optional
         Specifies whether intermediate term algebraic simplification
