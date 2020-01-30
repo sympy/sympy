@@ -359,8 +359,8 @@ class DenseMatrix(MatrixBase):
         return _upper_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
 
     cholesky.__doc__               = _cholesky.__doc__
-    lower_triangular_solve.__doc__ = lower_triangular_solve.__doc__
-    upper_triangular_solve.__doc__ = upper_triangular_solve.__doc__
+    lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
 
 
 def _force_mutable(x):
