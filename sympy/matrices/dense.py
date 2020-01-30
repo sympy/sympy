@@ -10,7 +10,6 @@ from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
@@ -18,6 +17,9 @@ from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
+
+from .decompositions import _cholesky
+from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
 def _iszero(x):
@@ -126,36 +128,6 @@ class DenseMatrix(MatrixBase):
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
-
-    def _cholesky(self, hermitian=True, dotprodsimp=None):
-        """Helper function of cholesky.
-        Without the error checks.
-        To be used privately.
-        Implements the Cholesky-Banachiewicz algorithm.
-        Returns L such that L*L.H == self if hermitian flag is True,
-        or L*L.T == self if hermitian is False.
-        """
-        dps = _dotprodsimp if dotprodsimp else expand_mul
-        L = zeros(self.rows, self.rows)
-        if hermitian:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / L[j, j])*(self[i, j] -
-                        sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
-                Lii2 = dps(self[i, i] -
-                    sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
-                if Lii2.is_positive is False:
-                    raise NonPositiveDefiniteMatrixError(
-                        "Matrix must be positive-definite")
-                L[i, i] = sqrt(Lii2)
-        else:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / L[j, j])*(self[i, j] -
-                        sum(L[i, k]*L[j, k] for k in range(j))))
-                L[i, i] = sqrt(dps(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i))))
-        return self._new(L)
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
@@ -307,34 +279,6 @@ class DenseMatrix(MatrixBase):
                 D[i, i] = dps(self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
         return self._new(L), self._new(D)
 
-    def _lower_triangular_solve(self, rhs, dotprodsimp=None):
-        """Helper function of function lower_triangular_solve.
-        Without the error checks.
-        To be used privately.
-        """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        X = zeros(self.rows, rhs.cols)
-        for j in range(rhs.cols):
-            for i in range(self.rows):
-                if self[i, i] == 0:
-                    raise TypeError("Matrix must be non-singular.")
-                X[i, j] = dps((rhs[i, j] - sum(self[i, k]*X[k, j]
-                                           for k in range(i))) / self[i, i])
-        return self._new(X)
-
-    def _upper_triangular_solve(self, rhs, dotprodsimp=None):
-        """Helper function of function upper_triangular_solve.
-        Without the error checks, to be used privately. """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        X = zeros(self.rows, rhs.cols)
-        for j in range(rhs.cols):
-            for i in reversed(range(self.rows)):
-                if self[i, i] == 0:
-                    raise ValueError("Matrix must be non-singular.")
-                X[i, j] = dps((rhs[i, j] - sum(self[i, k]*X[k, j]
-                                           for k in range(i + 1, self.rows))) / self[i, i])
-        return self._new(X)
-
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
@@ -404,6 +348,19 @@ class DenseMatrix(MatrixBase):
                 elif ans is not True and rv is True:
                     rv = ans
         return rv
+
+    def cholesky(self, hermitian=True, dotprodsimp=None):
+        return _cholesky(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+
+    def lower_triangular_solve(self, rhs, dotprodsimp=None):
+        return _lower_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+
+    def upper_triangular_solve(self, rhs, dotprodsimp=None):
+        return _upper_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+
+    cholesky.__doc__               = _cholesky.__doc__
+    lower_triangular_solve.__doc__ = lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = upper_triangular_solve.__doc__
 
 
 def _force_mutable(x):

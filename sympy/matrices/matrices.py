@@ -45,6 +45,8 @@ from .eigen import (
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
     _jordan_form, _left_eigenvects, _singular_values)
 
+from .solvers import _cholesky_solve
+
 
 class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
@@ -1212,123 +1214,6 @@ class MatrixBase(MatrixDeprecated,
         """Return self + b """
         return self + b
 
-    def cholesky_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B`` using Cholesky decomposition,
-        for a general square non-singular matrix.
-        For a non-square matrix with rows > cols,
-        the least squares solution is returned.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        hermitian = True
-        if self.is_symmetric():
-            hermitian = False
-            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.is_hermitian:
-            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-            rhs = self.H * rhs
-        else:
-            raise NotImplementedError('Under-determined System. '
-                                      'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        if hermitian:
-            return (L.H)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-        else:
-            return (L.T)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-
-    def cholesky(self, hermitian=True, dotprodsimp=None):
-        """Returns the Cholesky-type decomposition L of a matrix A
-        such that L * L.H == A if hermitian flag is True,
-        or L * L.T == A if hermitian is False.
-
-        A must be a Hermitian positive-definite matrix if hermitian is True,
-        or a symmetric matrix if it is False.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> A.cholesky()
-        Matrix([
-        [ 5, 0, 0],
-        [ 3, 3, 0],
-        [-1, 1, 3]])
-        >>> A.cholesky() * A.cholesky().T
-        Matrix([
-        [25, 15, -5],
-        [15, 18,  0],
-        [-5,  0, 11]])
-
-        The matrix can have complex entries:
-
-        >>> from sympy import I
-        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
-        >>> A.cholesky()
-        Matrix([
-        [ 3, 0],
-        [-I, 2]])
-        >>> A.cholesky() * A.cholesky().H
-        Matrix([
-        [   9, 3*I],
-        [-3*I,   5]])
-
-        Non-hermitian Cholesky-type decomposition may be useful when the
-        matrix is not positive-definite.
-
-        >>> A = Matrix([[1, 2], [2, 1]])
-        >>> L = A.cholesky(hermitian=False)
-        >>> L
-        Matrix([
-        [1,         0],
-        [2, sqrt(3)*I]])
-        >>> L*L.T == A
-        True
-
-        See Also
-        ========
-
-        LDLdecomposition
-        LUdecomposition
-        QRdecomposition
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
-            raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
-        return self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-
     def condition_number(self, dotprodsimp=None):
         """Returns the condition number of a matrix.
 
@@ -2405,44 +2290,12 @@ class MatrixBase(MatrixDeprecated,
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+        Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
         Z = D._diagonal_solve(Y)
         if hermitian:
-            return (L.H)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
+            return (L.H).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
         else:
-            return (L.T)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
-
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B``, where A is a lower triangular matrix.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if rhs.rows != self.rows:
-            raise ShapeError("Matrices size mismatch.")
-        if not self.is_lower:
-            raise ValueError("Matrix must be lower triangular.")
-        return self._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+            return (L.T).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
 
     def LUdecomposition(self,
                         iszerofunc=_iszero,
@@ -3888,29 +3741,6 @@ class MatrixBase(MatrixDeprecated,
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B``, where A is an upper triangular matrix.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if rhs.rows != self.rows:
-            raise TypeError("Matrix size mismatch.")
-        if not self.is_upper:
-            raise TypeError("Matrix is not upper triangular.")
-        return self._upper_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-
     def vech(self, diagonal=True, check_symmetry=True):
         """Return the unique elements of a symmetric Matrix as a one column matrix
         by stacking the elements in the lower triangle.
@@ -3965,6 +3795,12 @@ class MatrixBase(MatrixDeprecated,
                     v[count] = self[i, j]
                     count += 1
         return v
+
+    def cholesky_solve(self, rhs, dotprodsimp=None):
+        return _cholesky_solve(self, rhs, dotprodsimp=dotprodsimp)
+
+    cholesky_solve.__doc__ = _cholesky_solve.__doc__
+
 
 @deprecated(
     issue=15109,
