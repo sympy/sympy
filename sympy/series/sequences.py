@@ -6,7 +6,7 @@ from sympy.core.compatibility import is_sequence, iterable, ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
 from sympy.core.parameters import global_parameters
-from sympy.core.function import UndefinedFunction
+from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
@@ -734,9 +734,9 @@ class RecursiveSeq(SeqBase):
         equal to. For example, if :code:`a(n) = f(a(n - 1), ..., a(n - d))`,
         then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
 
-    y : function
-        The name of the recursively defined sequence without argument, e.g.,
-        :code:`y` if the recurrence function is :code:`y(n)`.
+    yn : applied undefined function
+        Represents the nth term of the sequence as e.g. :code:`y(n)` where
+        :code:`y` is an undefined function and `n` is the sequence index.
 
     n : symbolic argument
         The name of the variable that the recurrence is in, e.g., :code:`n` if
@@ -754,7 +754,7 @@ class RecursiveSeq(SeqBase):
     >>> from sympy.series.sequences import RecursiveSeq
     >>> y = Function("y")
     >>> n = symbols("n")
-    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y, n, [0, 1])
+    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1])
 
     >>> fib.coeff(3) # Value at a particular point
     2
@@ -788,14 +788,19 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __new__(cls, recurrence, y, n, initial=None, start=0):
-        if not isinstance(y, UndefinedFunction):
-            raise TypeError("recurrence sequence must be an undefined function"
-                            ", found `{}`".format(y))
+    def __new__(cls, recurrence, yn, n, initial=None, start=0):
+        if not isinstance(yn, AppliedUndef):
+            raise TypeError("recurrence sequence must be an applied undefined function"
+                            ", found `{}`".format(yn))
 
         if not isinstance(n, Basic) or not n.is_symbol:
             raise TypeError("recurrence variable must be a symbol"
                             ", found `{}`".format(n))
+
+        if yn.args != (n,):
+            raise TypeError("recurrence sequence does not match symbol")
+
+        y = yn.func
 
         k = Wild("k", exclude=(n,))
         degree = 0
@@ -829,21 +834,42 @@ class RecursiveSeq(SeqBase):
 
         initial = Tuple(*(sympify(x) for x in initial))
 
-        seq = Basic.__new__(cls, recurrence, y(n), initial, start)
+        seq = Basic.__new__(cls, recurrence, yn, n, initial, start)
 
         seq.cache = {y(start + k): init for k, init in enumerate(initial)}
-        seq._start = start
         seq.degree = degree
-        seq.y = y
-        seq.n = n
-        seq._recurrence = recurrence
 
         return seq
 
     @property
+    def recurrence(self):
+        """Equation defining recurrence."""
+        return Eq(self.yn, self.args[0])
+
+    @property
+    def yn(self):
+        """Applied function representing the nth term"""
+        return self.args[1]
+
+    @property
+    def y(self):
+        """Undefined function for the nth term of the sequence"""
+        return self.yn.func
+
+    @property
+    def n(self):
+        """Sequence index symbol"""
+        return self.args[2]
+
+    @property
+    def initial(self):
+        """The initial values of the sequence"""
+        return self.args[3]
+
+    @property
     def start(self):
         """The starting point of the sequence. This point is included"""
-        return self._start
+        return self.args[4]
 
     @property
     def stop(self):
@@ -875,11 +901,6 @@ class RecursiveSeq(SeqBase):
         while True:
             yield self._eval_coeff(index)
             index += 1
-
-    @property
-    def recurrence(self):
-        """Equation defining recurrence."""
-        return Eq(self.y(self.n), self._recurrence)
 
 
 def sequence(seq, limits=None):
