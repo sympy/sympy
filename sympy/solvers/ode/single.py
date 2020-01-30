@@ -428,7 +428,7 @@ class AlmostLinear(FirstLinear):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode.ode_1st_linear`
+    :meth:`sympy.solvers.ode.single.FirstLinear`
 
     Examples
     ========
@@ -504,7 +504,7 @@ class Bernoulli(SingleODESolver):
 
     The substitution `w = 1/y^{1-n}` will transform an equation of this form
     into one that is linear (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_linear`).  The general solution is::
+    :py:meth:`~sympy.solvers.ode.single.FirstLinear`).  The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
