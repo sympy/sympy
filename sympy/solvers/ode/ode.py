@@ -3804,66 +3804,6 @@ def homogeneous_order(eq, *symbols):
         return e
 
 
-def ode_1st_linear(eq, func, order, match):
-    r"""
-    Solves 1st order linear differential equations.
-
-    These are differential equations of the form
-
-    .. math:: dy/dx + P(x) y = Q(x)\text{.}
-
-    These kinds of differential equations can be solved in a general way.  The
-    integrating factor `e^{\int P(x) \,dx}` will turn the equation into a
-    separable equation.  The general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
-        >>> from sympy.abc import x
-        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x))
-        >>> pprint(genform)
-                    d
-        P(x)*f(x) + --(f(x)) = Q(x)
-                    dx
-        >>> pprint(dsolve(genform, f(x), hint='1st_linear_Integral'))
-               /       /                   \
-               |      |                    |
-               |      |         /          |     /
-               |      |        |           |    |
-               |      |        | P(x) dx   |  - | P(x) dx
-               |      |        |           |    |
-               |      |       /            |   /
-        f(x) = |C1 +  | Q(x)*e           dx|*e
-               |      |                    |
-               \     /                     /
-
-
-    Examples
-    ========
-
-    >>> f = Function('f')
-    >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
-    ... f(x), '1st_linear'))
-    f(x) = x*(C1 - cos(x))
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 92
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    r = match  # a*diff(f(x),x) + b*f(x) + c
-    C1 = get_numbered_constants(eq, num=1)
-    t = exp(Integral(r[r['b']]/r[r['a']], x))
-    tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
-    f = match.get('u', f(x))  # take almost-linear u if present, else f(x)
-    return Eq(f, (tt + C1)/t)
-
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""

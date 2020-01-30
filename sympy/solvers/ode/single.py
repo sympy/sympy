@@ -5,6 +5,7 @@
 from typing import ClassVar, Dict, List, Optional, Type
 
 from sympy.core import Add, S
+from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
@@ -146,8 +147,33 @@ class SingleODESolver:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
 
-    def get_dummy_constants(self, num=None):
-        return numbered_symbols('C', cls=Dummy, start=1 if num is None else num)
+    def get_numbered_constants(self, eq, num=1, start=1, prefix='C'):
+        """
+        Returns a list of constants that do not occur
+        in eq already.
+        """
+
+        ncs = self.iter_numbered_constants(eq, start, prefix)
+        Cs = [next(ncs) for i in range(num)]
+        return (Cs[0] if num == 1 else tuple(Cs))
+
+
+    def iter_numbered_constants(self, eq, start=1, prefix='C'):
+        """
+        Returns an iterator of constants that do not occur
+        in eq already.
+        """
+
+        if isinstance(eq, (Expr, Eq)):
+            eq = [eq]
+        elif not iterable(eq):
+            raise ValueError("Expected Expr or iterable but got %s" % eq)
+
+        atom_set = set().union(*[i.free_symbols for i in eq])
+        func_set = set().union(*[i.atoms(Function) for i in eq])
+        if func_set:
+            atom_set |= {Symbol(str(f.func)) for f in func_set}
+        return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
 class NthAlgebraic(SingleODESolver):
@@ -355,7 +381,7 @@ class FirstLinear(SingleODESolver):
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
         r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c
-        C1 = Dummy('C1')
+        C1 = self.get_numbered_constants(self.ode_problem.eq, num=1)
 
         t = exp(Integral(r[r['b']]/r[r['a']], x))
         tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
@@ -589,7 +615,7 @@ class Bernoulli(SingleODESolver):
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
         r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
-        C1 = Dummy('C1')
+        C1 = self.get_numbered_constants(self.ode_problem.eq, num=1)
         t = exp((1 - r[r['n']])*Integral(r[r['b']]/r[r['a']], x))
         tt = (r[r['n']] - 1)*Integral(t*r[r['c']]/r[r['a']], x)
         return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
