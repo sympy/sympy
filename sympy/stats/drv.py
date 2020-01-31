@@ -46,15 +46,38 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self,size=()):
-        """ A random realization from the distribution """
+    def sample(self, size=()):
+        """ A random realization from the distribution
+
+        Parameters
+        ==========
+
+        size: Non-negative Integer
+            The number of elements in sample, by default it returns one element.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import Poisson, sample
+        >>> P = Poisson('P', 2)
+        >>> samp = sample(P)
+        >>> samp in P.pspace.domain.set
+        True
+        >>> samp = sample(P, size=3)
+        >>> [sam in P.pspace.domain.set for sam in samp]
+        [True, True, True]
+
+        """
         if getattr(self,'_sample_scipy', None) and import_module('scipy'):
             return self._sample_scipy(size)
         icdf = self._inverse_cdf_expression()
+        samp_list = []
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
             if sample_ >= self.set.inf:
-                return sample_
+                return sample_ if not size else samp_list.append(sample_)
+            if len(samp_list) == size:
+                return samp_list
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -320,13 +343,13 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     def domain(self):
         return SingleDiscreteDomain(self.symbol, self.set)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample()}
+        return {self.value: self.distribution.sample(size)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
         rvs = rvs or (self.value,)

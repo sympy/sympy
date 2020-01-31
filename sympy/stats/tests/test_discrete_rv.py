@@ -296,7 +296,7 @@ def test_sampling_methods():
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         for X in distribs_scipy:
-            sam = X.pspace.distribution._sample_scipy(size)
+            sam = X.pspace.distribution.sample(size)
             for i in range(size):
                 assert sam[i] in X.pspace.domain.set
     pymc3 = import_module('pymc3')

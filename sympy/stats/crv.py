@@ -170,10 +170,13 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
+    def sample(self, size=()):
         """ A random realization from the distribution """
         icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
+        if not size:
+            return icdf(random.uniform(0, 1))
+        else:
+            return [icdf(random.uniform(0, 1)) for i in range(size)]
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -505,13 +508,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample()}
+        return {self.value: self.distribution.sample(size)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
