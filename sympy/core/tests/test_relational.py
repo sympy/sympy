@@ -1081,3 +1081,12 @@ def test_multivariate_linear_function_simplification():
 
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
+
+
+def test_applyfunc():
+    def op(x):
+        return x**2
+    
+    assert Ge(x, y).applyfunc(op) == Ge(x**2, y**2)
+    assert Le(x, y).applylhs(op) == Le(x**2, y)
+    assert Eq(x, y).applyrhs(op) == Eq(x, y**2)

@@ -237,9 +237,24 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         return r
 
-    def do(self, op):
-        """Do the same operation on both sides of the equation."""
+    def applyfunc(self, op):
+        """Apply the same function to both sides of the equation.
+        Calls the function for each side, passing the lhs/rhs as
+        an argument, and then returns a new equation consisting of
+        the returned values."""
         return self.__class__(op(self.lhs), op(self.rhs))
+
+    def applylhs(self, op):
+        """Call the function on the lhs and return a new equation
+        whose lhs is the result of that function and rhs is the same
+        as in the original equation."""
+        return self.__class__(op(self.lhs), self.rhs)
+
+    def applyrhs(self, op):
+        """Call the function on the rhs and return a new equation
+        whose rhs is the result of that function and lhs is the same
+        as in the original equation."""
+        return self.__class__(self.lhs, op(self.rhs))
 
     def equals(self, other, failing_expression=False):
         """Return True if the sides of the relationship are mathematically
