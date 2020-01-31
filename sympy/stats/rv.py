@@ -1024,10 +1024,18 @@ def sample(expr, condition=None, size=(), **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Die, sample
+    >>> from sympy.stats import Die, sample, Normal
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
     >>> die_roll = sample(X + Y + Z) # A random realization of three dice
+    >>> N = Normal('N', 3, 4)
+    >>> samp = sample(N)
+    >>> samp in N.pspace.domain.set
+    True
+    >>> samp_list = sample(N, size=4)
+    >>> [sam in N.pspace.domain.set for sam in samp_list]
+    [True, True, True, True]
+
     """
     return next(sample_iter(expr, condition, size=size, numsamples=1))
 

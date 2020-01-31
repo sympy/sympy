@@ -47,27 +47,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         pass
 
     def sample(self, size=()):
-        """ A random realization from the distribution
-
-        Parameters
-        ==========
-
-        size: Non-negative Integer
-            The number of elements in sample, by default it returns one element.
-
-        Examples
-        ========
-
-        >>> from sympy.stats import Poisson, sample
-        >>> P = Poisson('P', 2)
-        >>> samp = sample(P)
-        >>> samp in P.pspace.domain.set
-        True
-        >>> samp = sample(P, size=3)
-        >>> [sam in P.pspace.domain.set for sam in samp]
-        [True, True, True]
-
-        """
+        """ A random realization from the distribution"""
         if getattr(self,'_sample_scipy', None) and import_module('scipy'):
             return self._sample_scipy(size)
         icdf = self._inverse_cdf_expression()
