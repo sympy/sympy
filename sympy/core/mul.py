@@ -291,9 +291,6 @@ class Mul(Expr, AssocOp):
                 if not coeff:
                     # 0 * zoo = NaN
                     return [S.NaN], [], None
-                if coeff is S.ComplexInfinity:
-                    # zoo * zoo = zoo
-                    return [S.ComplexInfinity], [], None
                 coeff = S.ComplexInfinity
                 continue
 

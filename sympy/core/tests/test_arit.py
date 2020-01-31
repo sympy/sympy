@@ -2112,3 +2112,7 @@ def test__neg__():
     with distribute(False):
         eq = -(x + y)
         assert eq.is_Mul and eq.args == (-1, x + y)
+
+
+def test_issue_18507():
+    assert Mul(zoo, zoo, 0) is nan
