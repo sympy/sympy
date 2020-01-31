@@ -482,7 +482,7 @@ class FiniteFourierSeries(FourierSeries):
     def __new__(cls, f, limits, exprs):
         f = sympify(f)
         limits = sympify(limits)
-        expr = sympify(exprs)
+        exprs = sympify(exprs)
 
         if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
