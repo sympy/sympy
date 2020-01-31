@@ -1,7 +1,7 @@
 from sympy import (
     symbols, powsimp, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
     S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
-    Rational, oo, signsimp)
+    Rational, DecimalRational, oo, signsimp)
 
 from sympy.abc import x, y, z, a, b
 
@@ -111,6 +111,9 @@ def test_powsimp():
     # issue 14615
     assert powsimp(x**2*y**3*(x*y**2)**Rational(3, 2)
         ) == x*y*(x*y**2)**Rational(5, 2)
+
+    #check powsimp preserves DecimalRational exponents
+    assert powsimp(x**DecimalRational(3,2)) is not powsimp(x**Rational(3,2))
 
 
 def test_powsimp_negated_base():

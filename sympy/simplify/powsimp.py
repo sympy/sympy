@@ -241,6 +241,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if e is not None:  # coming from c_powers or from below
                 if e.is_Integer:
                     return (b, S.One), e
+                elif e.is_DecimalRational:
+                    return (b**e, S.One), S.One
                 elif e.is_Rational:
                     return (b, Integer(e.q)), Integer(e.p)
                 else:
