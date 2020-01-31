@@ -1643,11 +1643,13 @@ def test_issue_17671():
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
     assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -2*log(3)/9 - EulerGamma/9
 
+
 def test_issue_2975():
     w = Symbol('w')
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+
 
 def test_issue_7827():
     x, n, N = symbols('x n N')
@@ -1662,6 +1664,12 @@ def test_issue_7827():
     assert integrate(Sum(x, (x, 1, n)), n) == Integral(Sum(x, (x, 1, n)), n)
     assert integrate(Sum(x, (x, 1, y)), x) == x*Sum(x, (x, 1, y))
     assert integrate(Sum(x, (x, y, n)), y) == Integral(Sum(x, (x, y, n)), y)
+
+
+def test_issue_4231():
+    f = (1 + 2*x + sqrt(x + log(x))*(1 + 3*x) + x**2)/(x*(x + sqrt(x + log(x)))*sqrt(x + log(x)))
+    assert integrate(f, x) == 2*sqrt(x + log(x)) + 2*log(x + sqrt(x + log(x)))
+
 
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
