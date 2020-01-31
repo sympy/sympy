@@ -8,7 +8,7 @@ This module contains python code printers for plain python as well as NumPy & Sc
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
-from .precedence import precedence
+from .precedence import precedence, PRECEDENCE
 from .codeprinter import CodePrinter
 
 _kw_py2and3 = {
@@ -299,7 +299,7 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_KroneckerDelta(self, expr):
         a, b = expr.args
 
-        return '1 if ({a}) == ({b}) else 0'.format(
+        return '(1 if {a} == {b} else 0)'.format(
             a = self._print(a),
             b = self._print(b)
         )
