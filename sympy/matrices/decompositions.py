@@ -133,49 +133,6 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     True
     """
 
-    from sympy.core.numbers import nan, oo
-
-    def cholesky_sparse(M, dotprodsimp=None):
-        """Algorithm for numeric Cholesky factorization of a sparse matrix."""
-
-        dps       = _dotprodsimp if dotprodsimp else expand_mul
-        Crowstruc = M.row_structure_symbolic_cholesky()
-        C         = M.zeros(M.rows)
-
-        for i in range(len(Crowstruc)):
-            for j in Crowstruc[i]:
-                if i != j:
-                    C[i, j] = M[i, j]
-                    summ    = 0
-
-                    for p1 in Crowstruc[i]:
-                        if p1 < j:
-                            for p2 in Crowstruc[j]:
-                                if p2 < j:
-                                    if p1 == p2:
-                                        summ += C[i, p1]*C[j, p1]
-                                else:
-                                    break
-                            else:
-                                break
-
-                    C[i, j] = dps((C[i, j] - summ) / C[j, j])
-
-                else:
-                    C[j, j] = M[j, j]
-                    summ    = 0
-
-                    for k in Crowstruc[j]:
-                        if k < j:
-                            summ += C[j, k]**2
-                        else:
-                            break
-
-                    C[j, j] = dps(C[j, j] - summ)
-                    C[j, j] = sqrt(C[j, j])
-
-        return C
-
     if not M.is_square:
         raise NonSquareMatrixError("Matrix must be square.")
     if hermitian and not M.is_hermitian:
@@ -183,10 +140,51 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    ret = cholesky_sparse(M.as_mutable(), dotprodsimp=dotprodsimp)
+    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    Crowstruc = M.row_structure_symbolic_cholesky()
+    C         = M.as_mutable().zeros(M.rows)
 
-    if ret.has(nan) or ret.has(oo):
-        raise ValueError('Cholesky decomposition applies only to '
-            'positive-definite matrices')
+    for i in range(len(Crowstruc)):
+        for j in Crowstruc[i]:
+            if i != j:
+                C[i, j] = M[i, j]
+                summ    = 0
 
-    return M._new(ret)
+                for p1 in Crowstruc[i]:
+                    if p1 < j:
+                        for p2 in Crowstruc[j]:
+                            if p2 < j:
+                                if p1 == p2:
+                                    if hermitian:
+                                        summ += C[i, p1]*C[j, p1].conjugate()
+                                    else:
+                                        summ += C[i, p1]*C[j, p1]
+                            else:
+                                break
+                        else:
+                            break
+
+                C[i, j] = dps((C[i, j] - summ) / C[j, j])
+
+            else:
+                C[j, j] = M[j, j]
+                summ    = 0
+
+                for k in Crowstruc[j]:
+                    if k < j:
+                        if hermitian:
+                            summ += C[j, k]*C[j, k].conjugate()
+                        else:
+                            summ += C[j, k]**2
+                    else:
+                        break
+
+                Cjj2 = dps(C[j, j] - summ)
+
+                if hermitian and Cjj2.is_positive is False:
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
+
+                C[j, j] = sqrt(Cjj2)
+
+    return M._new(C)
