@@ -1,6 +1,5 @@
 from __future__ import division, print_function
 
-import copy
 from collections import defaultdict
 
 from sympy.core import SympifyError, Add
@@ -9,7 +8,6 @@ from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 
@@ -17,7 +15,10 @@ from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 
-from .decompositions import _cholesky_sparse
+from .decompositions import (
+    _liupc, _row_structure_symbolic_cholesky, _cholesky_sparse,
+    _LDLdecomposition_sparse)
+
 from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
 
@@ -317,7 +318,7 @@ class SparseMatrix(MatrixBase):
             M = I.multiply(M, dotprodsimp=dotprodsimp)
 
         if method == "LDL":
-            rv = M._LDL_solve(I, dotprodsimp=dotprodsimp)
+            rv = M.LDLsolve(I, dotprodsimp=dotprodsimp)
         elif method == "CH":
             rv = M.cholesky_solve(I, dotprodsimp=dotprodsimp)
         else:
@@ -498,53 +499,6 @@ class SparseMatrix(MatrixBase):
     def _eval_zeros(cls, rows, cols):
         return cls._new(rows, cols, {})
 
-    def _LDL_solve(self, rhs, dotprodsimp=None):
-        # for speed reasons, this is not uncommented, but if you are
-        # having difficulties, try uncommenting to make sure that the
-        # input matrix is symmetric
-
-        #assert self.is_symmetric()
-        L, D = self._LDL_sparse(dotprodsimp=dotprodsimp)
-        Z = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        Y = D._diagonal_solve(Z)
-        return L.T.upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-
-    def _LDL_sparse(self, dotprodsimp=None):
-        """Algorithm for numeric LDL factorization, exploiting sparse structure.
-        """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        Lrowstruc = self.row_structure_symbolic_cholesky()
-        L = self.eye(self.rows)
-        D = self.zeros(self.rows, self.cols)
-
-        for i in range(len(Lrowstruc)):
-            for j in Lrowstruc[i]:
-                if i != j:
-                    L[i, j] = self[i, j]
-                    summ = 0
-                    for p1 in Lrowstruc[i]:
-                        if p1 < j:
-                            for p2 in Lrowstruc[j]:
-                                if p2 < j:
-                                    if p1 == p2:
-                                        summ += L[i, p1]*L[j, p1]*D[p1, p1]
-                                else:
-                                    break
-                        else:
-                            break
-                    L[i, j] = dps((L[i, j] - summ) / D[j, j])
-                else: # i == j
-                    D[i, i] = self[i, i]
-                    summ = 0
-                    for k in Lrowstruc[i]:
-                        if k < i:
-                            summ += L[i, k]**2*D[k, k]
-                        else:
-                            break
-                    D[i, i] = dps(D[i, i] - summ)
-
-        return L, D
-
     @property
     def _mat(self):
         """Return a list of matrix elements.  Some routines
@@ -628,90 +582,6 @@ class SparseMatrix(MatrixBase):
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
 
-    def LDLdecomposition(self, dotprodsimp=None):
-        """
-        Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
-        ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
-        symmetric, positive-definite and non-singular.
-
-        This method eliminates the use of square root and ensures that all
-        the diagonal entries of L are 1.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1,   0, 0],
-        [ 3/5,   1, 0],
-        [-1/5, 1/3, 1]])
-        >>> D
-        Matrix([
-        [25, 0, 0],
-        [ 0, 9, 0],
-        [ 0, 0, 9]])
-        >>> L * D * L.T == A
-        True
-
-        """
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise ValueError('LDL decomposition applies only to '
-                'symmetric matrices.')
-        L, D = self.as_mutable()._LDL_sparse(dotprodsimp=dotprodsimp)
-        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
-            raise ValueError('LDL decomposition applies only to '
-                'positive-definite matrices')
-
-        return self._new(L), self._new(D)
-
-    def liupc(self):
-        """Liu's algorithm, for pre-determination of the Elimination Tree of
-        the given matrix, used in row-based symbolic Cholesky factorization.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix([
-        ... [1, 0, 3, 2],
-        ... [0, 0, 1, 0],
-        ... [4, 0, 0, 5],
-        ... [0, 6, 7, 0]])
-        >>> S.liupc()
-        ([[0], [], [0], [1, 2]], [4, 3, 4, 4])
-
-        References
-        ==========
-
-        Symbolic Sparse Cholesky Factorization using Elimination Trees,
-        Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
-        """
-        # Algorithm 2.4, p 17 of reference
-
-        # get the indices of the elements that are non-zero on or below diag
-        R = [[] for r in range(self.rows)]
-        for r, c, _ in self.row_list():
-            if c <= r:
-                R[r].append(c)
-
-        inf = len(R)  # nothing will be this large
-        parent = [inf]*self.rows
-        virtual = [inf]*self.rows
-        for r in range(self.rows):
-            for c in R[r][:-1]:
-                while virtual[c] < r:
-                    t = virtual[c]
-                    virtual[c] = r
-                    c = t
-                if virtual[c] == inf:
-                    parent[c] = virtual[c] = r
-        return R, parent
-
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""
         return len(self._smat)
@@ -738,41 +608,6 @@ class SparseMatrix(MatrixBase):
         """
         return [tuple(k + (self[k],)) for k in
             sorted(list(self._smat.keys()), key=lambda k: list(k))]
-
-    def row_structure_symbolic_cholesky(self):
-        """Symbolic cholesky factorization, for pre-determination of the
-        non-zero structure of the Cholesky factororization.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix([
-        ... [1, 0, 3, 2],
-        ... [0, 0, 1, 0],
-        ... [4, 0, 0, 5],
-        ... [0, 6, 7, 0]])
-        >>> S.row_structure_symbolic_cholesky()
-        [[0], [], [0], [1, 2]]
-
-        References
-        ==========
-
-        Symbolic Sparse Cholesky Factorization using Elimination Trees,
-        Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
-        """
-
-        R, parent = self.liupc()
-        inf = len(R)  # this acts as infinity
-        Lrow = copy.deepcopy(R)
-        for k in range(self.rows):
-            for j in R[k]:
-                while j != inf and j != k:
-                    Lrow[k].append(j)
-                    j = parent[j]
-            Lrow[k] = list(sorted(set(Lrow[k])))
-        return Lrow
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
@@ -859,11 +694,19 @@ class SparseMatrix(MatrixBase):
                     .multiply(rhs, dotprodsimp=dotprodsimp)
 
     RL = property(row_list, None, None, "Alternate faster representation")
-
     CL = property(col_list, None, None, "Alternate faster representation")
+
+    def liupc(self):
+        return _liupc(self)
+
+    def row_structure_symbolic_cholesky(self):
+        return _row_structure_symbolic_cholesky(self)
 
     def cholesky(self, hermitian=True, dotprodsimp=None):
         return _cholesky_sparse(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
+        return _LDLdecomposition_sparse(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
 
     def lower_triangular_solve(self, rhs, dotprodsimp=None):
         return _lower_triangular_solve_sparse(self, rhs, dotprodsimp=dotprodsimp)
@@ -871,9 +714,12 @@ class SparseMatrix(MatrixBase):
     def upper_triangular_solve(self, rhs, dotprodsimp=None):
         return _upper_triangular_solve_sparse(self, rhs, dotprodsimp=dotprodsimp)
 
-    cholesky.__doc__               = _cholesky_sparse.__doc__
-    lower_triangular_solve.__doc__ = lower_triangular_solve.__doc__
-    upper_triangular_solve.__doc__ = upper_triangular_solve.__doc__
+    liupc.__doc__                           = _liupc.__doc__
+    row_structure_symbolic_cholesky.__doc__ = _row_structure_symbolic_cholesky.__doc__
+    cholesky.__doc__                        = _cholesky_sparse.__doc__
+    LDLdecomposition.__doc__                = _LDLdecomposition_sparse.__doc__
+    lower_triangular_solve.__doc__          = lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__          = upper_triangular_solve.__doc__
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):

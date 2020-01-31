@@ -51,7 +51,6 @@ def _lower_triangular_solve(M, rhs, dotprodsimp=None):
 
     return M._new(X)
 
-
 def _lower_triangular_solve_sparse(M, rhs, dotprodsimp=None):
     """Solves ``Ax = B``, where A is a lower triangular matrix.
 
@@ -147,7 +146,6 @@ def _upper_triangular_solve(M, rhs, dotprodsimp=None):
                                         for k in range(i + 1, M.rows))) / M[i, i])
 
     return M._new(X)
-
 
 def _upper_triangular_solve_sparse(M, rhs, dotprodsimp=None):
     """Solves ``Ax = B``, where A is an upper triangular matrix.
@@ -247,3 +245,65 @@ def _cholesky_solve(M, rhs, dotprodsimp=None):
         return (L.H).upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
     else:
         return (L.T).upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
+
+
+def _LDLsolve(M, rhs, dotprodsimp=None):
+    """Solves ``Ax = B`` using LDL decomposition,
+    for a general square and non-singular matrix.
+
+    For a non-square matrix with rows > cols,
+    the least squares solution is returned.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import Matrix, eye
+    >>> A = eye(2)*2
+    >>> B = Matrix([[1, 2], [3, 4]])
+    >>> A.LDLsolve(B) == B/2
+    True
+
+    See Also
+    ========
+
+    LDLdecomposition
+    sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+    sympy.matrices.dense.DenseMatrix.upper_triangular_solve
+    gauss_jordan_solve
+    cholesky_solve
+    diagonal_solve
+    LUsolve
+    QRsolve
+    pinv_solve
+    """
+
+    hermitian = True
+
+    if M.is_symmetric():
+        hermitian = False
+        L, D = M.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
+    elif M.is_hermitian:
+        L, D = M.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
+    elif M.rows >= M.cols:
+        L, D = M.H.multiply(M, dotprodsimp=dotprodsimp) \
+                .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
+        rhs = M.H.multiply(rhs, dotprodsimp=dotprodsimp)
+    else:
+        raise NotImplementedError('Under-determined System. '
+                                    'Try M.gauss_jordan_solve(rhs)')
+
+    Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+    Z = D._diagonal_solve(Y)
+
+    if hermitian:
+        return (L.H).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
+    else:
+        return (L.T).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)

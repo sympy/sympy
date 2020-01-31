@@ -45,7 +45,7 @@ from .eigen import (
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
     _jordan_form, _left_eigenvects, _singular_values)
 
-from .solvers import _cholesky_solve
+from .solvers import _cholesky_solve, _LDLsolve
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -787,17 +787,6 @@ class MatrixBase(MatrixDeprecated,
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
-
-    def __getattr__(self, attr):
-        if attr in ('diff', 'integrate', 'limit'):
-            def doit(*args):
-                item_doit = lambda item: getattr(item, attr)(*args)
-                return self.applyfunc(item_doit)
-
-            return doit
-        else:
-            raise AttributeError(
-                "%s has no attribute %s." % (self.__class__.__name__, attr))
 
     def __len__(self):
         """Return the number of elements of ``self``.
@@ -2172,130 +2161,6 @@ class MatrixBase(MatrixDeprecated,
             return key.indices(len(self))[:2]
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
-
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.H == A if hermitian flag is True, or
-        L * D * L.T == A if hermitian is False.
-        This method eliminates the use of square root.
-        Further this ensures that all the diagonal entries of L are 1.
-        A must be a Hermitian positive-definite matrix if hermitian is True,
-        or a symmetric matrix otherwise.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1,   0, 0],
-        [ 3/5,   1, 0],
-        [-1/5, 1/3, 1]])
-        >>> D
-        Matrix([
-        [25, 0, 0],
-        [ 0, 9, 0],
-        [ 0, 0, 9]])
-        >>> L * D * L.T * A.inv() == eye(A.rows)
-        True
-
-        The matrix can have complex entries:
-
-        >>> from sympy import I
-        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1, 0],
-        [-I/3, 1]])
-        >>> D
-        Matrix([
-        [9, 0],
-        [0, 4]])
-        >>> L*D*L.H == A
-        True
-
-        See Also
-        ========
-
-        sympy.matrices.dense.DenseMatrix.cholesky
-        LUdecomposition
-        QRdecomposition
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
-            raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
-        return self._LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-
-    def LDLsolve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B`` using LDL decomposition,
-        for a general square and non-singular matrix.
-
-        For a non-square matrix with rows > cols,
-        the least squares solution is returned.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = eye(2)*2
-        >>> B = Matrix([[1, 2], [3, 4]])
-        >>> A.LDLsolve(B) == B/2
-        True
-
-        See Also
-        ========
-
-        LDLdecomposition
-        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
-        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        hermitian = True
-        if self.is_symmetric():
-            hermitian = False
-            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.is_hermitian:
-            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.rows >= self.cols:
-            L, D = self.H.multiply(self, dotprodsimp=dotprodsimp) \
-                    .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-            rhs = self.H.multiply(rhs, dotprodsimp=dotprodsimp)
-        else:
-            raise NotImplementedError('Under-determined System. '
-                                      'Try M.gauss_jordan_solve(rhs)')
-        Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        Z = D._diagonal_solve(Y)
-        if hermitian:
-            return (L.H).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
-        else:
-            return (L.T).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
 
     def LUdecomposition(self,
                         iszerofunc=_iszero,
@@ -3799,7 +3664,11 @@ class MatrixBase(MatrixDeprecated,
     def cholesky_solve(self, rhs, dotprodsimp=None):
         return _cholesky_solve(self, rhs, dotprodsimp=dotprodsimp)
 
+    def LDLsolve(self, rhs, dotprodsimp=None):
+        return _LDLsolve(self, rhs, dotprodsimp=dotprodsimp)
+
     cholesky_solve.__doc__ = _cholesky_solve.__doc__
+    LDLsolve.__doc__       = _LDLsolve.__doc__
 
 
 @deprecated(

@@ -6,19 +6,18 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+    a2idx, classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
-from sympy.simplify.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
+from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
-from .decompositions import _cholesky
+from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
@@ -250,35 +249,6 @@ class DenseMatrix(MatrixBase):
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
-    def _LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        """Helper function of LDLdecomposition.
-        Without the error checks.
-        To be used privately.
-        Returns L and D such that L*D*L.H == self if hermitian flag is True,
-        or L*D*L.T == self if hermitian is False.
-        """
-        # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
-        dps = _dotprodsimp if dotprodsimp else expand_mul
-        D = zeros(self.rows, self.rows)
-        L = eye(self.rows)
-        if hermitian:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / D[j, j])*(self[i, j] - sum(
-                        L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j))))
-                D[i, i] = dps(self[i, i] -
-                    sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
-                if D[i, i].is_positive is False:
-                    raise NonPositiveDefiniteMatrixError(
-                        "Matrix must be positive-definite")
-        else:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / D[j, j])*(self[i, j] - sum(
-                        L[i, k]*L[j, k]*D[k, k] for k in range(j))))
-                D[i, i] = dps(self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
-        return self._new(L), self._new(D)
-
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
@@ -352,6 +322,9 @@ class DenseMatrix(MatrixBase):
     def cholesky(self, hermitian=True, dotprodsimp=None):
         return _cholesky(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
 
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
+        return _LDLdecomposition(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+
     def lower_triangular_solve(self, rhs, dotprodsimp=None):
         return _lower_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
 
@@ -359,6 +332,7 @@ class DenseMatrix(MatrixBase):
         return _upper_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
 
     cholesky.__doc__               = _cholesky.__doc__
+    LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
     lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
     upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
 
