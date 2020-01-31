@@ -842,6 +842,11 @@ class RecursiveSeq(SeqBase):
         return seq
 
     @property
+    def _recurrence(self):
+        """Equation defining recurrence."""
+        return self.args[0]
+
+    @property
     def recurrence(self):
         """Equation defining recurrence."""
         return Eq(self.yn, self.args[0])
@@ -879,25 +884,25 @@ class RecursiveSeq(SeqBase):
     @property
     def interval(self):
         """Interval on which sequence is defined."""
-        return (self._start, S.Infinity)
+        return (self.start, S.Infinity)
 
     def _eval_coeff(self, index):
-        if index - self._start < len(self.cache):
+        if index - self.start < len(self.cache):
             return self.cache[self.y(index)]
 
         for current in range(len(self.cache), index + 1):
             # Use xreplace over subs for performance.
             # See issue #10697.
-            seq_index = self._start + current
+            seq_index = self.start + current
             current_recurrence = self._recurrence.xreplace({self.n: seq_index})
             new_term = current_recurrence.xreplace(self.cache)
 
             self.cache[self.y(seq_index)] = new_term
 
-        return self.cache[self.y(self._start + current)]
+        return self.cache[self.y(self.start + current)]
 
     def __iter__(self):
-        index = self._start
+        index = self.start
         while True:
             yield self._eval_coeff(index)
             index += 1
