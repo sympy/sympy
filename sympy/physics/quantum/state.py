@@ -670,9 +670,6 @@ class OrthogonalBra(OrthogonalState, BraBase):
         return OrthogonalKet
 
 
-
-
-
 class Wavefunction(Function):
     """Class for representations in continuous bases
 
