@@ -629,12 +629,13 @@ class OrthogonalKet(OrthogonalState, KetBase):
     The inner product of two states with different labels will give zero,
     states with the same label will give one.
 
-        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet
-        >>> OrthogonalBra(n)*OrthogonalKet(n)
+        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet, qapply
+        >>> from sympy.abc import m, n
+        >>> (OrthogonalBra(n)*OrthogonalKet(n)).doit()
         1
-        >>> OrthogonalBra(n)*OrthogonalKet(n+1)
+        >>> (OrthogonalBra(n)*OrthogonalKet(n+1)).doit()
         0
-        >>> OrthogonalBra(n)*OrthogonalKet(m)
+        >>> (OrthogonalBra(n)*OrthogonalKet(m)).doit()
         <n|m>
     """
 
@@ -649,7 +650,7 @@ class OrthogonalKet(OrthogonalState, KetBase):
 
         for i in range(len(self.args)):
             diff = self.args[i] - bra.args[i]
-            diff.simplify()
+            diff = diff.simplify()
 
             if diff.is_nonzero:
                 return 0
