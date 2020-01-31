@@ -3665,6 +3665,16 @@ def test_sympy__physics__quantum__state__StateBase():
     assert _test_args(StateBase(0))
 
 
+def test_sympy__physics__quantum__state__OrthogonalBra():
+    from sympy.physics.quantum.state import OrthogonalBra
+    assert _test_args(OrthogonalBra(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalKet():
+    from sympy.physics.quantum.state import OrthogonalKet
+    assert _test_args(OrthogonalKet(0))
+
+
 def test_sympy__physics__quantum__state__TimeDepBra():
     from sympy.physics.quantum.state import TimeDepBra
     assert _test_args(TimeDepBra('psi', 't'))
