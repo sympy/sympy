@@ -297,9 +297,9 @@ class AbstractPythonCodePrinter(CodePrinter):
         return '1j'
 
     def _print_KroneckerDelta(self, expr):
-        a,b = expr.args
+        a, b = expr.args
 
-        return '1 if {a} == {b} else 0'.format(
+        return '1 if ({a}) == ({b}) else 0'.format(
             a = self._print(a),
             b = self._print(b)
         )
