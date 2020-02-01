@@ -322,7 +322,8 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
 
     reals_only : bool, optional
         If ``True``, it tests whether the matrix can be diagonalized
-        with a diagonal matrix without complex numbers.
+        to contain only real numbers on the diagonal.
+
 
         If ``False``, it tests whether the matrix can be diagonalized
         with a diagonal matrix with complex numbers.
