@@ -352,7 +352,6 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
 
     Example of a matrix that is diagonalized in terms of non-real entries:
 
-    with complex entries, but not with real entries:
 
     >>> M = Matrix([[0, 1], [-1, 0]])
     >>> M.is_diagonalizable(reals_only=False)
