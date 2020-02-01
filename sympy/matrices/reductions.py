@@ -314,9 +314,9 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     >>> rref_pivots
     (0, 1)
     >>> m.rref(pivots=False)
-    Matrix(
+    Matrix([
     [1, 0],
-    [0, 1])
+    [0, 1]])
     >>> m.rref(pivots=True)
     (Matrix([
     [1, 0],
