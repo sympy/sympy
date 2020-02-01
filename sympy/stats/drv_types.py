@@ -15,8 +15,6 @@ Zeta
 
 from __future__ import print_function, division
 
-import random
-
 from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
                    hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy)
 from sympy.stats import density

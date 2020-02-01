@@ -176,7 +176,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not size:
             return icdf(random.uniform(0, 1))
         else:
-            return [icdf(random.uniform(0, 1)) for i in range(size)]
+            return [icdf(random.uniform(0, 1))]*size
 
     @cacheit
     def _inverse_cdf_expression(self):
