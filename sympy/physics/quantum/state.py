@@ -651,7 +651,7 @@ class OrthogonalKet(OrthogonalState, KetBase):
 
         for i in range(len(self.args)):
             diff = self.args[i] - bra.args[i]
-            diff = diff.simplify()
+            diff = diff.expand()
 
             if diff.is_zero is False:
                 return 0
