@@ -1061,11 +1061,6 @@ def _LUdecompositionFF(M):
     If the elements of the matrix belong to some integral domain I, then all
     elements of L, D and U are guaranteed to belong to I.
 
-    **Reference**
-        - W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
-            for LU and QR factors". Frontiers in Computer Science in China,
-            Vol 2, no. 1, pp. 67-80, 2008.
-
     See Also
     ========
 
