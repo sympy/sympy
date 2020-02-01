@@ -870,7 +870,6 @@ class Add(Expr, AssocOp):
             return expr.as_leading_term(x)
 
         infinite = [t for t in expr.args if t.is_infinite]
-        compute = False
 
         leading_terms = [t.as_leading_term(x) for t in expr.args]
 
@@ -879,16 +878,13 @@ class Add(Expr, AssocOp):
         try:
             for term in leading_terms:
                 order = Order(term, x)
-                if order not in min:
+                if not min or order not in min:
                     min = order
                     new_expr = term
                 elif order == min:
                     new_expr += term
 
-        except Exception:
-            compute = True
-
-        if compute:
+        except TypeError:
             return expr
 
         new_expr=new_expr.together()
