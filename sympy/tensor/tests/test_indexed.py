@@ -1,11 +1,12 @@
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
-    GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
+from sympy import (IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum,
+        Order, LessThan, StrictGreaterThan, GreaterThan, StrictLessThan,
+        Range, Subs, Function, KroneckerDelta, Derivative)
 
 
 def test_Idx_construction():

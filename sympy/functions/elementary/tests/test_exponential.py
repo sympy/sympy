@@ -8,7 +8,7 @@ from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_exp_values():
@@ -109,6 +109,8 @@ def test_exp_infinity():
     assert refine(exp(-I*oo)) is nan
     assert exp(y*I*oo) != nan
     assert exp(zoo) is nan
+    x = Symbol('x', extended_real=True, finite=False)
+    assert exp(x).is_complex is None
 
 
 def test_exp_subs():

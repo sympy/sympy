@@ -8,7 +8,6 @@ Authors:
 from __future__ import print_function, division
 
 from sympy import Basic, Interval, oo, sympify
-from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -18,6 +17,9 @@ from sympy.core.compatibility import reduce
 __all__ = [
     'HilbertSpaceError',
     'HilbertSpace',
+    'TensorProductHilbertSpace',
+    'TensorPowerHilbertSpace',
+    'DirectSumHilbertSpace',
     'ComplexSpace',
     'L2',
     'FockSpace'

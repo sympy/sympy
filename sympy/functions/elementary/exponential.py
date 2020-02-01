@@ -3,10 +3,9 @@ from __future__ import print_function, division
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range
 from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
         expand_mul)
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
 from sympy.core.power import Pow
@@ -81,9 +80,9 @@ class ExpBase(Function):
     def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_infinite:
-            if arg.is_negative:
+            if arg.is_extended_negative:
                 return True
-            if arg.is_positive:
+            if arg.is_extended_positive:
                 return False
         if arg.is_finite:
             return True
@@ -144,10 +143,10 @@ class exp_polar(ExpBase):
     See Also
     ========
 
-    sympy.simplify.simplify.powsimp
-    sympy.functions.elementary.complexes.polar_lift
-    sympy.functions.elementary.complexes.periodic_argument
-    sympy.functions.elementary.complexes.principal_branch
+    sympy.simplify.powsimp.powsimp
+    polar_lift
+    periodic_argument
+    principal_branch
     """
 
     is_polar = True
@@ -400,6 +399,12 @@ class exp(ExpBase):
         elif self.args[0].is_imaginary:
             arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
+
+    def _eval_is_complex(self):
+        def complex_extended_negative(arg):
+            yield arg.is_complex
+            yield arg.is_extended_negative
+        return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
@@ -856,6 +861,10 @@ class log(Function):
 
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_positive
+
+    def _eval_is_complex(self):
+        z = self.args[0]
+        return fuzzy_and([z.is_complex, fuzzy_not(z.is_zero)])
 
     def _eval_is_finite(self):
         arg = self.args[0]

@@ -10,7 +10,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
     recognize_derivative, laurent_series)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
@@ -20,6 +20,8 @@ def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
     Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
         (Poly((-x**2 + 4*x - 3)/5), Poly((x**3 - 7*x**2 + 16*x - 10)/5))
+    assert gcdex_diophantine(Poly(x**3 + 6*x + 7), Poly(x**2 + 3*x + 2), Poly(x + 1)) == \
+        (Poly(1/13, x, domain='QQ'), Poly(-1/13*x + 3/13, x, domain='QQ'))
 
 
 def test_frac_in():

@@ -736,7 +736,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     >>> x = Symbol('x')
 
     >>> stationary_points(1/x, x, S.Reals)
-    EmptySet()
+    EmptySet
 
     >>> pprint(stationary_points(sin(x), x), use_unicode=False)
               pi                              3*pi
@@ -744,7 +744,7 @@ def stationary_points(f, symbol, domain=S.Reals):
               2                                2
 
     >>> stationary_points(sin(x),x, Interval(0, 4*pi))
-    {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
+    FiniteSet(pi/2, 3*pi/2, 5*pi/2, 7*pi/2)
 
     """
     from sympy import solveset, diff
@@ -1338,9 +1338,10 @@ class AccumulationBounds(AtomicExpr):
                                 return AccumBounds(0, real_root(self.max, den))
                     return AccumBounds(real_root(self.min, den),
                                        real_root(self.max, den))
-                num_pow = self**num
-                return num_pow**(1 / den)
-            return Pow(self, other, evaluate=False)
+                if den!=1:
+                    num_pow = self**num
+                    return num_pow**(1 / den)
+            return AccumBounds(-oo, oo)
 
         return NotImplemented
 
@@ -1547,10 +1548,10 @@ class AccumulationBounds(AtomicExpr):
         AccumBounds(2, 3)
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
-        EmptySet()
+        EmptySet
 
         >>> AccumBounds(1, 4).intersection(FiniteSet(1, 2, 5))
-        {1, 2}
+        FiniteSet(1, 2)
 
         """
         if not isinstance(other, (AccumBounds, FiniteSet)):

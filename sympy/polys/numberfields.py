@@ -6,7 +6,7 @@ from sympy import (
     S, Rational, AlgebraicNumber,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp
@@ -806,7 +806,6 @@ def _minpoly_groebner(ex, x, cls):
 
 
 minpoly = minimal_polynomial
-__all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """

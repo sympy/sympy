@@ -124,11 +124,11 @@ There is a function constructing a loop (or a complete function) like this in
 
 from __future__ import print_function, division
 
-from itertools import chain
+from typing import Any, Dict, List
+
 from collections import defaultdict
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Lt, Le, Ge, Gt
@@ -153,7 +153,7 @@ def _mk_Tuple(args):
 
     sympy.Tuple
     """
-    args = [String(arg) if isinstance(arg, string_types) else arg for arg in args]
+    args = [String(arg) if isinstance(arg, str) else arg for arg in args]
     return Tuple(*args)
 
 
@@ -169,12 +169,12 @@ class Token(Basic):
     Subclasses should not need to override the ``__new__()`` method. They may
     define a class or static method named ``_construct_<attr>`` for each
     attribute to process the value passed to ``__new__()``. Attributes listed
-    in the class attribute ``not_in_args`` are not passed to :class:`sympy.Basic`.
+    in the class attribute ``not_in_args`` are not passed to :class:`~.Basic`.
     """
 
-    __slots__ = []
-    defaults = {}
-    not_in_args = []
+    __slots__ = ()
+    defaults = {}  # type: Dict[str, Any]
+    not_in_args = []  # type: List[str]
     indented_args = ['body']
 
     @property
@@ -499,6 +499,7 @@ class AugmentedAssignment(AssignmentBase):
        Symbol for binary operation being applied in the assignment, such as "+",
        "*", etc.
     """
+    binop = None  # type: str
 
     @property
     def op(self):
@@ -830,7 +831,7 @@ class For(Token):
         ))
     ))
     """
-    __slots__ = ['target', 'iterable', 'body']
+    __slots__ = ('target', 'iterable', 'body')
     _construct_target = staticmethod(_sympify)
 
     @classmethod
@@ -874,13 +875,13 @@ class String(Token):
     String('foo')
 
     """
-    __slots__ = ['text']
+    __slots__ = ('text',)
     not_in_args = ['text']
     is_Atom = True
 
     @classmethod
     def _construct_text(cls, text):
-        if not isinstance(text, string_types):
+        if not isinstance(text, str):
             raise TypeError("Argument text is not a string type.")
         return text
 
@@ -915,9 +916,9 @@ class Node(Token):
 
     """
 
-    __slots__ = ['attrs']
+    __slots__ = ('attrs',)
 
-    defaults = {'attrs': Tuple()}
+    defaults = {'attrs': Tuple()}  # type: Dict[str, Any]
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
@@ -981,7 +982,7 @@ class Type(Token):
     .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
-    __slots__ = ['name']
+    __slots__ = ('name',)
 
     _construct_name = String
 
@@ -1047,7 +1048,6 @@ class Type(Token):
             Absolute tolerance (in addition to ``rtol``).
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
-            Default: :attr:`default_limits`.
         type_aliases : dict
             Maps substitutions for Type, e.g. {integer: int64, real: float32}
 
@@ -1107,12 +1107,12 @@ class Type(Token):
 
 class IntBaseType(Type):
     """ Integer base type, contains no size information. """
-    __slots__ = ['name']
+    __slots__ = ('name',)
     cast_nocheck = lambda self, i: Integer(int(i))
 
 
 class _SizedIntType(IntBaseType):
-    __slots__ = ['name', 'nbits']
+    __slots__ = ('name', 'nbits',)
 
     _construct_nbits = Integer
 
@@ -1191,7 +1191,7 @@ class FloatType(FloatBaseType):
     ValueError: Maximum value for data type smaller than new value.
     """
 
-    __slots__ = ['name', 'nbits', 'nmant', 'nexp']
+    __slots__ = ('name', 'nbits', 'nmant', 'nexp',)
 
     _construct_nbits = _construct_nmant = _construct_nexp = Integer
 
@@ -1340,8 +1340,9 @@ class Attribute(Token):
     >>> a.parameters == (1, 2, 3)
     True
     """
-    __slots__ = ['name', 'parameters']
+    __slots__ = ('name', 'parameters')
     defaults = {'parameters': Tuple()}
+
     _construct_name = String
     _construct_parameters = staticmethod(_mk_Tuple)
 
@@ -1406,11 +1407,10 @@ class Variable(Node):
 
     """
 
-    __slots__ = ['symbol', 'type', 'value'] + Node.__slots__
-    defaults = dict(chain(Node.defaults.items(), {
-        'type': untyped,
-        'value': none
-    }.items()))
+    __slots__ = ('symbol', 'type', 'value') + Node.__slots__
+
+    defaults = Node.defaults.copy()
+    defaults.update({'type': untyped, 'value': none})
 
     _construct_symbol = staticmethod(sympify)
     _construct_value = staticmethod(sympify)
@@ -1547,7 +1547,7 @@ class Element(Token):
     'x[i*l + j*m + k*n + o]'
 
     """
-    __slots__ = ['symbol', 'indices', 'strides', 'offset']
+    __slots__ = ('symbol', 'indices', 'strides', 'offset')
     defaults = {'strides': none, 'offset': none}
     _construct_symbol = staticmethod(sympify)
     _construct_indices = staticmethod(lambda arg: Tuple(*arg))
@@ -1579,7 +1579,7 @@ class Declaration(Token):
     >>> z.variable.value == NoneToken()  # OK
     True
     """
-    __slots__ = ['variable']
+    __slots__ = ('variable',)
     _construct_variable = Variable
 
 
@@ -1610,7 +1610,7 @@ class While(Token):
     ... ])
 
     """
-    __slots__ = ['condition', 'body']
+    __slots__ = ('condition', 'body')
     _construct_condition = staticmethod(lambda cond: _sympify(cond))
 
     @classmethod
@@ -1631,7 +1631,7 @@ class Scope(Token):
         When passed an iterable it is used to instantiate a CodeBlock.
 
     """
-    __slots__ = ['body']
+    __slots__ = ('body',)
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1664,7 +1664,7 @@ class Stream(Token):
     print("x", file=sys.stderr)
 
     """
-    __slots__ = ['name']
+    __slots__ = ('name',)
     _construct_name = String
 
 stdout = Stream('stdout')
@@ -1690,7 +1690,7 @@ class Print(Token):
 
     """
 
-    __slots__ = ['print_args', 'format_string', 'file']
+    __slots__ = ('print_args', 'format_string', 'file')
     defaults = {'format_string': none, 'file': none}
 
     _construct_print_args = staticmethod(_mk_Tuple)
@@ -1724,7 +1724,7 @@ class FunctionPrototype(Node):
 
     """
 
-    __slots__ = ['return_type', 'name', 'parameters', 'attrs']
+    __slots__ = ('return_type', 'name', 'parameters', 'attrs')
 
     _construct_return_type = Type
     _construct_name = String
@@ -1778,7 +1778,7 @@ class FunctionDefinition(FunctionPrototype):
     }
     """
 
-    __slots__ = FunctionPrototype.__slots__[:-1] + ['body', 'attrs']
+    __slots__ = FunctionPrototype.__slots__[:-1] + ('body', 'attrs')
 
     @classmethod
     def _construct_body(cls, itr):
@@ -1817,7 +1817,7 @@ class FunctionCall(Token, Expr):
     foo(bar, baz)
 
     """
-    __slots__ = ['name', 'function_args']
+    __slots__ = ('name', 'function_args')
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))

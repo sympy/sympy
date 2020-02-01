@@ -1,9 +1,9 @@
 from sympy.parsing.sym_expr import SymPyExpression
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.external import import_module
 
 lfortran = import_module('lfortran')
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if lfortran and cin:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,

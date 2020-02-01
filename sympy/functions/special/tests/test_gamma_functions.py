@@ -6,8 +6,8 @@ from sympy import (
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import (test_derivative_numerically as td,
+from sympy.testing.pytest import raises
+from sympy.testing.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 
@@ -231,6 +231,10 @@ def test_polygamma():
     assert polygamma(3, 5) == 6*(Rational(-22369, 20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
 
+    assert polygamma(1, S.Half) == pi**2 / 2
+    assert polygamma(2, S.Half) == -14*zeta(3)
+    assert polygamma(11, S.Half) == 176896*pi**12
+
     def t(m, n):
         x = S(m)/n
         r = polygamma(0, x)
@@ -292,14 +296,14 @@ def test_polygamma():
     assert polygamma(2, 2.5).is_positive == False
     assert polygamma(2, -2.5).is_positive == False
     assert polygamma(3, 2.5).is_positive == True
-    assert polygamma(3, -2.5).is_positive is None
+    assert polygamma(3, -2.5).is_positive is True
     assert polygamma(-2, -2.5).is_positive is None
     assert polygamma(-3, -2.5).is_positive is None
 
     assert polygamma(2, 2.5).is_negative == True
     assert polygamma(3, 2.5).is_negative == False
     assert polygamma(3, -2.5).is_negative == False
-    assert polygamma(2, -2.5).is_negative is None
+    assert polygamma(2, -2.5).is_negative is True
     assert polygamma(-2, -2.5).is_negative is None
     assert polygamma(-3, -2.5).is_negative is None
 
@@ -439,8 +443,6 @@ def test_digamma_expand_func():
         polygamma(0, x + y)
 
 def test_trigamma():
-    from sympy import I
-
     assert trigamma(nan) == nan
 
     assert trigamma(oo) == 0

@@ -4,8 +4,6 @@ from sympy import S, Dict, Basic, Tuple
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
-from sympy.core.numbers import Integer
-from sympy.core.compatibility import SYMPY_INTS
 
 import functools
 

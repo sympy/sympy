@@ -2,7 +2,7 @@ from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
 from sympy.matrices.expressions.matexpr import GenericZeroMatrix, ZeroMatrix
 from sympy.matrices import eye, ImmutableMatrix
 from sympy.core import Add, Basic, S
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)

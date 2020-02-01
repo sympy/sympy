@@ -119,7 +119,7 @@ class Pauli(Symbol):
     -sigma1
     """
 
-    __slots__ = ["i", "label"]
+    __slots__ = ("i", "label")
 
     def __new__(cls, i, label="sigma"):
         if not i in [1, 2, 3]:

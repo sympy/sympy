@@ -5,7 +5,7 @@ Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
 =================================================================
 
 This document will describe how to represent masses and inertias in
-:mod:`mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
+:mod:`sympy.physics.mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
 
 It is assumed that the reader is familiar with the basics of these topics, such
 as finding the center of mass for a system of particles, how to manipulate an
@@ -21,7 +21,7 @@ expression. Keep in mind that masses can be time varying.
 Particle
 ========
 
-Particles are created with the class ``Particle`` in :mod:`mechanics`.
+Particles are created with the class ``Particle`` in :mod:`sympy.physics.mechanics`.
 A ``Particle`` object has an associated point and an associated mass which are
 the only two attributes of the object.::
 
@@ -33,14 +33,14 @@ the only two attributes of the object.::
   >>> pa = Particle('pa', po, m)
 
 The associated point contains the position, velocity and acceleration of the
-particle. :mod:`mechanics` allows one to perform kinematic analysis of points
+particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic analysis of points
 separate from their association with masses.
 
 Inertia
 =======
 
 See the Inertia (Dyadics) section in 'Advanced Topics' part of
-:mod:`physics/vector` docs.
+:mod:`sympy.physics.vector` docs.
 
 Rigid Body
 ==========
@@ -64,7 +64,7 @@ The mass is specified exactly as is in a particle. Similar to the
 must be specified. The reference frame is stored in an analogous fashion and
 holds information about the body's orientation and angular velocity. Finally,
 the inertia for a rigid body needs to be specified about a point. In
-:mod:`mechanics`, you are allowed to specify any point for this. The most
+:mod:`sympy.physics.mechanics`, you are allowed to specify any point for this. The most
 common is the center of mass, as shown in the above code. If a point is selected
 which is not the center of mass, ensure that the position between the point and
 the center of mass has been defined. The inertia is specified as a tuple of length
@@ -76,7 +76,7 @@ two with the first entry being a ``Dyadic`` and the second entry being a
 Dyadic
 ======
 
-In :mod:`mechanics`, dyadics are used to represent inertia ([Kane1985]_,
+In :mod:`sympy.physics.mechanics`, dyadics are used to represent inertia ([Kane1985]_,
 [WikiDyadics]_, [WikiDyadicProducts]_). A dyadic is a linear polynomial of
 component unit dyadics, similar to a vector being a linear polynomial of
 component unit vectors. A dyadic is the outer product between two vectors which
@@ -218,7 +218,7 @@ Using momenta functions in Mechanics
 ====================================
 
 The following example shows how to use the momenta functions in
-:mod:`mechanics`.
+:mod:`sympy.physics.mechanics`.
 
 One begins by creating the requisite symbols to describe the system. Then
 the reference frame is created and the kinematics are done. ::
@@ -261,7 +261,7 @@ of the system or of the entire system itself. ::
   (M*l1**2*q1d + 4*l1**2*m*q1d + q1d)*N.z
 
 It should be noted that the user can determine either momenta in any frame
-in :mod:`mechanics` as the user is allowed to specify the reference frame when
+in :mod:`sympy.physics.mechanics` as the user is allowed to specify the reference frame when
 calling the function. In other words the user is not limited to determining
 just inertial linear and angular momenta. Please refer to the docstrings on
 each function to learn more about how each function works precisely.
@@ -322,7 +322,7 @@ Using energy functions in Mechanics
 ===================================
 
 The following example shows how to use the energy functions in
-:mod:`mechanics`.
+:mod:`sympy.physics.mechanics`.
 
 As was discussed above in the momenta functions, one first creates the system
 by going through an identical procedure. ::
@@ -357,14 +357,15 @@ system: ::
   M*l1**2*omega(t)**2/2 + 2*l1**2*m*omega(t)**2 + omega(t)**2/2
 
 It should be noted that the user can determine either kinetic energy relative
-to any frame in :mod:`mechanics` as the user is allowed to specify the
+to any frame in :mod:`sympy.physics.mechanics` as the user is allowed to specify the
 reference frame when calling the function. In other words the user is not
 limited to determining just inertial kinetic energy.
 
 For potential energies, the user must first specify the potential energy of
-every entity of the system using the :mod:`potential_energy` property. The
-potential energy of any number of entities comprising the system can then be
-determined: ::
+every entity of the system using the
+:obj:`sympy.physics.mechanics.rigidbody.RigidBody.potential_energy` property.
+The potential energy of any number of entities comprising the system can then
+be determined: ::
 
   >>> Pa.potential_energy = m * g * h
   >>> A.potential_energy = M * g * H

@@ -5,7 +5,7 @@ from __future__ import print_function, division
 import math
 
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered, range, reduce
+from sympy.core.compatibility import ordered, reduce
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -1031,7 +1031,7 @@ def roots(f, *gens, **flags):
         handlers = {
             'Z': lambda r: r.is_Integer,
             'Q': lambda r: r.is_Rational,
-            'R': lambda r: r.is_extended_real,
+            'R': lambda r: all(a.is_real for a in r.as_numer_denom()),
             'I': lambda r: r.is_imaginary,
         }
 

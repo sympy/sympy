@@ -4,6 +4,8 @@ for mathematical functions.
 """
 from __future__ import print_function, division
 
+from typing import Tuple
+
 import math
 
 import mpmath.libmp as libmp
@@ -21,7 +23,7 @@ from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from mpmath.libmp.gammazeta import mpf_bernoulli
 
-from .compatibility import SYMPY_INTS, range
+from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .singleton import S
 
@@ -324,7 +326,10 @@ def get_integer_part(expr, no, options, return_ints=False):
         gap = fastlog(iim) - iim_acc
     else:
         # ... or maybe the expression was exactly zero
-        return None, None, None, None
+        if return_ints:
+            return 0, 0
+        else:
+            return None, None, None, None
 
     margin = 10
 
@@ -1363,7 +1368,7 @@ def evalf(x, prec, options):
 class EvalfMixin(object):
     """Mixin class adding evalf capabililty."""
 
-    __slots__ = []
+    __slots__ = ()  # type: Tuple[str, ...]
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """

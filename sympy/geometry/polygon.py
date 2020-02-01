@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range, ordered
+from sympy.core.compatibility import as_int, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -475,7 +475,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbol
+        >>> from sympy import Point, Polygon
         >>> a, b = 50, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> p = Polygon(p1, p2, p3, p4)
@@ -1370,6 +1370,40 @@ class Polygon(GeometrySet):
 
         return False
 
+    def bisectors(p, prec=None):
+        """Returns angle bisectors of a polygon. If prec is given
+        then approximate the point defining the ray to that precision.
+
+        The distance between the points defining the bisector ray is 1.
+
+        Examples
+        ========
+
+        >>> from sympy import Polygon, Point
+        >>> p = Polygon(Point(0, 0), Point(2, 0), Point(1, 1), Point(0, 3))
+        >>> p.bisectors(2)
+        {Point2D(0, 0): Ray2D(Point2D(0, 0), Point2D(0.71, 0.71)),
+         Point2D(0, 3): Ray2D(Point2D(0, 3), Point2D(0.23, 2.0)),
+         Point2D(1, 1): Ray2D(Point2D(1, 1), Point2D(0.19, 0.42)),
+         Point2D(2, 0): Ray2D(Point2D(2, 0), Point2D(1.1, 0.38))}
+        """
+        b = {}
+        pts = list(p.args)
+        pts.append(pts[0])  # close it
+        cw = Polygon._isright(*pts[:3])
+        if cw:
+            pts = list(reversed(pts))
+        for v, a in p.angles.items():
+            i = pts.index(v)
+            p1, p2 = Point._normalize_dimension(pts[i], pts[i + 1])
+            ray = Ray(p1, p2).rotate(a/2, v)
+            dir = ray.direction
+            ray = Ray(ray.p1, ray.p1 + dir/dir.distance((0, 0)))
+            if prec is not None:
+                ray = Ray(ray.p1, ray.p2.n(prec))
+            b[v] = ray
+        return b
+
 
 class RegularPolygon(Polygon):
     """
@@ -1433,7 +1467,7 @@ class RegularPolygon(Polygon):
 
     """
 
-    __slots__ = ['_n', '_center', '_radius', '_rot']
+    __slots__ = ('_n', '_center', '_radius', '_rot')
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = map(sympify, (r, n, rot))
@@ -2613,6 +2647,69 @@ class Triangle(Polygon):
                    self.sides[2]: simplify(area/(s-c))}
 
         return exradii
+
+    @property
+    def excenters(self):
+        """Excenters of the triangle.
+
+        An excenter is the center of a circle that is tangent to a side of the
+        triangle and the extensions of the other two sides.
+
+        Returns
+        =======
+
+        excenters : dict
+
+
+        Examples
+        ========
+
+        The excenters are keyed to the side of the triangle to which their corresponding
+        excircle is tangent: The center is keyed, e.g. the excenter of a circle touching
+        side 0 is:
+
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.excenters[t.sides[0]]
+        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+
+        See Also
+        ========
+
+        sympy.geometry.polygon.Triangle.exradii
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/Excircles.html
+
+        """
+
+        s = self.sides
+        v = self.vertices
+        a = s[0].length
+        b = s[1].length
+        c = s[2].length
+        x = [v[0].x, v[1].x, v[2].x]
+        y = [v[0].y, v[1].y, v[2].y]
+
+        exc_coords = {
+            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
+            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
+            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
+            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
+            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
+            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
+        }
+
+        excenters = {
+            s[0]: Point(exc_coords["x1"], exc_coords["y1"]),
+            s[1]: Point(exc_coords["x2"], exc_coords["y2"]),
+            s[2]: Point(exc_coords["x3"], exc_coords["y3"])
+        }
+
+        return excenters
 
     @property
     def medians(self):

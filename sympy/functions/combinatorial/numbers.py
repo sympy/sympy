@@ -9,9 +9,11 @@ the separate 'factorials' module.
 
 from __future__ import print_function, division
 
+from typing import Callable, Dict
+
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
@@ -813,7 +815,7 @@ class harmonic(Function):
 
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
-    _functions = {}
+    _functions = {}  # type: Dict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -1448,9 +1450,12 @@ def _multiset_histogram(n):
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all permutations of length 0
@@ -1619,9 +1624,12 @@ def _AOP_product(n):
 def nC(n, k=None, replacement=False):
     """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all combinations of length 0
@@ -1709,46 +1717,60 @@ def nC(n, k=None, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-@cacheit
-def _stirling1(n, k):
+def _eval_stirling1(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    n1 = n - 1
 
     # some special values
     if n == k:
         return S.One
-    elif k == 1:
-        return factorial(n1)
-    elif k == n1:
+    elif k == n - 1:
         return binomial(n, 2)
     elif k == n - 2:
         return (3*n - 1)*binomial(n, 3)/4
     elif k == n - 3:
         return binomial(n, 2)*binomial(n, 4)
 
-    # general recurrence
-    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+    return _stirling1(n, k)
 
 
 @cacheit
-def _stirling2(n, k):
+def _stirling1(n, k):
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(min(k,i), 0, -1):
+            row[j] = (i-1) * row[j] + row[j-1]
+    return Integer(row[k])
+
+
+def _eval_stirling2(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    n1 = n - 1
 
     # some special values
-    if k == n1:
+    if n == k:
+        return S.One
+    elif k == n - 1:
         return binomial(n, 2)
+    elif k == 1:
+        return S.One
     elif k == 2:
-        return 2**n1 - 1
+        return Integer(2**(n - 1) - 1)
 
-    # general recurrence
-    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+    return _stirling2(n, k)
+
+
+@cacheit
+def _stirling2(n, k):
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(min(k,i), 0, -1):
+            row[j] = j * row[j] + row[j-1]
+    return Integer(row[k])
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
@@ -1846,15 +1868,15 @@ def stirling(n, k, d=None, kind=2, signed=False):
     if d:
         # assert k >= d
         # kind is ignored -- only kind=2 is supported
-        return _stirling2(n - d + 1, k - d + 1)
+        return _eval_stirling2(n - d + 1, k - d + 1)
     elif signed:
         # kind is ignored -- only kind=1 is supported
-        return (-1)**(n - k)*_stirling1(n, k)
+        return (-1)**(n - k)*_eval_stirling1(n, k)
 
     if kind == 1:
-        return _stirling1(n, k)
+        return _eval_stirling1(n, k)
     elif kind == 2:
-        return _stirling2(n, k)
+        return _eval_stirling2(n, k)
     else:
         raise ValueError('kind must be 1 or 2, not %s' % k)
 
@@ -1906,9 +1928,12 @@ def _nT(n, k):
 def nT(n, k=None):
     """Return the number of ``k``-sized partitions of ``n`` items.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - ``n`` identical items
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     Note: the convention for ``nT`` is different than that of ``nC`` and

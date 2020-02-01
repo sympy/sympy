@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
-from sympy.core.compatibility import range
 
 _af_new = Permutation._af_new
 
@@ -20,7 +19,6 @@ def AbelianGroup(*cyclic_orders):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([

@@ -10,11 +10,10 @@ from sympy.functions import (
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
-from sympy.core.numbers import GoldenRatio
+from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, nocache_fail
 
 
 x = Symbol('x')
@@ -131,6 +130,7 @@ def test_tribonacci():
     raises(ValueError, lambda: tribonacci(-1, x))
 
 
+@nocache_fail
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
 
@@ -167,6 +167,8 @@ def test_bell():
     # For large numbers, this is too slow
     # For nonintegers, there are significant precision errors
     for i in [0, 2, 3, 7, 13, 42, 55]:
+        # Running without the cache this is either very slow or goes into an
+        # infinite loop.
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
 
     m = Symbol("m")
@@ -436,6 +438,7 @@ def test_genocchi():
     raises(ValueError, lambda: genocchi(-2))
 
 
+@nocache_fail
 def test_partition():
     partition_nums = [1, 1, 2, 3, 5, 7, 11, 15, 22]
     for n, p in enumerate(partition_nums):
@@ -473,7 +476,8 @@ def test_nC_nP_nT():
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
     from sympy.functions.combinatorial.numbers import (
-        nP, nC, nT, stirling, _multiset_histogram, _AOP_product)
+        nP, nC, nT, stirling, _stirling1, _stirling2, _multiset_histogram, _AOP_product)
+
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.numbers import oo
     from random import choice
@@ -595,6 +599,10 @@ def test_nC_nP_nT():
             0, 1, 255, 3025, 7770, 6951, 2646, 462, 36, 1]
     assert stirling(3, 4, kind=1) == stirling(3, 4, kind=1) == 0
     raises(ValueError, lambda: stirling(-2, 2))
+
+    # Assertion that the return type is SymPy Integer.
+    assert isinstance(_stirling1(6, 3), Integer)
+    assert isinstance(_stirling2(6, 3), Integer)
 
     def delta(p):
         if len(p) == 1:

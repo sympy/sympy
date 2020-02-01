@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy import solve_linear_system_LU
-from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -210,8 +209,11 @@ class KanesMethod(object):
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
             if not acc:
-                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                               self._f_nh.diff(dynamicsymbols._t))
+                _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
+                          self._f_nh.diff(dynamicsymbols._t))
+                if self._qdot_u_map is not None:
+                    _f_dnh = msubs(_f_dnh, self._qdot_u_map)
+                self._f_dnh = _f_dnh
                 self._k_dnh = self._k_nh
             else:
                 if self._qdot_u_map is not None:

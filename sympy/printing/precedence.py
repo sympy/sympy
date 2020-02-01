@@ -18,6 +18,7 @@ PRECEDENCE = {
     "Not": 100,
     "Atom": 1000,
     "BitwiseOr": 36,
+    "BitwiseXor": 37,
     "BitwiseAnd": 38
 }
 
@@ -166,9 +167,7 @@ def precedence_traditional(item):
     """
     # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
     # the precedence of Atom for other printers:
-    from sympy import Integral, Sum, Product, Limit, Derivative, Transpose, Adjoint
     from sympy.core.expr import UnevaluatedExpr
-    from sympy.tensor.functions import TensorProduct
 
     if isinstance(item, UnevaluatedExpr):
         return precedence_traditional(item.args[0])

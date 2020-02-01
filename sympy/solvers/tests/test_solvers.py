@@ -7,7 +7,6 @@ from sympy import (
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
     E, cbrt, denom, Add, Piecewise)
 
-from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -19,8 +18,8 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import slow, XFAIL, SKIP, raises
+from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
@@ -173,7 +172,6 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
-
 
 def test_solve_polynomial1():
     assert solve(3*x - 2, x) == [Rational(2, 3)]
@@ -1106,6 +1104,10 @@ def test_unrad1():
     raises(NotImplementedError,
            lambda: unrad(root(x, 3) + root(y, 3) + root(x*y, 5)))
 
+    # Test unrad with an Equality
+    eq = Eq(-x**(S(1)/5) + x**(S(1)/3), -3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5))
+    assert check(unrad(eq),
+        (-s**5 + s**3 - 3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5), [s, s**15 - x]))
 
 @slow
 def test_unrad_slow():
@@ -2113,3 +2115,19 @@ def test_issue_17452():
     assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
                                         sqrt(log(pi) + I*pi)/sqrt(log(7))]
     assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi))]
+
+
+def test_issue_17799():
+    assert solve(-erf(x**(S(1)/3))**pi + I, x) == []
+
+
+def test_issue_17650():
+    x = Symbol('x', real=True)
+    assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+
+
+def test_issue_17949():
+    assert solve(exp(+x+x**2), x) == []
+    assert solve(exp(-x+x**2), x) == []
+    assert solve(exp(+x-x**2), x) == []
+    assert solve(exp(-x-x**2), x) == []

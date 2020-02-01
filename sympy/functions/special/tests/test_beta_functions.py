@@ -1,7 +1,7 @@
-from sympy import (Symbol, gamma, expand_func, beta, digamma, diff, conjugate)
+from sympy import (Symbol, gamma, expand_func, beta, diff, conjugate)
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_beta():

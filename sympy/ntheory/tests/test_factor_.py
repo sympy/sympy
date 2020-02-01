@@ -1,20 +1,20 @@
-from sympy import (Mul, S, Pow, Symbol, summation, Dict,
-    factorial as fac)
+from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
-from sympy.core.compatibility import long, range
+from sympy.core.compatibility import long
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
     primerange, pollard_rho, perfect_power, multiplicity,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
-from sympy.ntheory.factor_ import (smoothness, smoothness_p,
+from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
-    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable)
+    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
+    mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
+    is_deficient, is_amicable, dra, drm)
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.utilities.iterables import capture
 
@@ -161,6 +161,11 @@ def test_factorint():
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
 
+    #issue 17676
+    assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
+    assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}
+    assert factorint(2347**2 * 7039**1 * 7043**1) == {2347: 2, 7039: 1, 7043: 1}
+
     assert factorint(0, multiple=True) == [0]
     assert factorint(1, multiple=True) == []
     assert factorint(-1, multiple=True) == [-1]
@@ -290,6 +295,24 @@ def test_divisors_and_divisor_count():
     assert divisor_count(2*3*5, 7) == 0
 
 
+def test_proper_divisors_and_proper_divisor_count():
+    assert proper_divisors(-1) == []
+    assert proper_divisors(0) == []
+    assert proper_divisors(1) == []
+    assert proper_divisors(2) == [1]
+    assert proper_divisors(3) == [1]
+    assert proper_divisors(17) == [1]
+    assert proper_divisors(10) == [1, 2, 5]
+    assert proper_divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50]
+    assert proper_divisors(1000000007) == [1]
+
+    assert proper_divisor_count(0) == 0
+    assert proper_divisor_count(-1) == 0
+    assert proper_divisor_count(1) == 0
+    assert proper_divisor_count(36) == 8
+    assert proper_divisor_count(2*3*5) == 7
+
+
 def test_udivisors_and_udivisor_count():
     assert udivisors(-1) == [1]
     assert udivisors(0) == []
@@ -416,6 +439,17 @@ def test_divisors():
 def test_divisor_count():
     assert divisor_count(0) == 0
     assert divisor_count(6) == 4
+
+
+def test_proper_divisors():
+    assert proper_divisors(-1) == []
+    assert proper_divisors(28) == [1, 2, 4, 7, 14]
+    assert [x for x in proper_divisors(3*5*7, True)] == [1, 3, 5, 15, 7, 21, 35]
+
+
+def test_proper_divisor_count():
+    assert proper_divisor_count(6) == 3
+    assert proper_divisor_count(108) == 11
 
 
 def test_antidivisors():
@@ -619,3 +653,19 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+
+def test_dra():
+    assert dra(19, 12) == 8
+    assert dra(2718, 10) == 9
+    assert dra(0, 22) == 0
+    assert dra(23456789, 10) == 8
+    raises(ValueError, lambda: dra(24, -2))
+    raises(ValueError, lambda: dra(24.2, 5))
+
+def test_drm():
+    assert drm(19, 12) == 7
+    assert drm(2718, 10) == 2
+    assert drm(0, 15) == 0
+    assert drm(234161, 10) == 6
+    raises(ValueError, lambda: drm(24, -2))
+    raises(ValueError, lambda: drm(11.6, 9))

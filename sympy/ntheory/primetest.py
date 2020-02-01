@@ -5,7 +5,7 @@ Primality testing
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range, as_int
+from sympy.core.compatibility import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 

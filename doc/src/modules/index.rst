@@ -16,6 +16,7 @@ access any SymPy module, or use the list below:
 .. toctree::
    :maxdepth: 2
 
+   abc.rst
    algebras.rst
    assumptions/index.rst
    calculus/index.rst
@@ -28,18 +29,20 @@ access any SymPy module, or use the list below:
    diffgeom.rst
    solvers/diophantine.rst
    discrete.rst
+   evalf.rst
    functions/index.rst
    geometry/index.rst
    holonomic/index.rst
    simplify/hyperexpand.rst
    solvers/inequalities.rst
    integrals/integrals.rst
+   integrals/g-functions.rst
+   interactive.rst
    liealgebras/index.rst
    logic.rst
    matrices/index.rst
    ntheory.rst
    numeric-computation.rst
-   evalf.rst
    solvers/ode.rst
    parsing.rst
    solvers/pde.rst
@@ -47,6 +50,7 @@ access any SymPy module, or use the list below:
    plotting.rst
    polys/index.rst
    printing.rst
+   rewriting.rst
    series/index.rst
    sets.rst
    simplify/simplify.rst
@@ -54,7 +58,7 @@ access any SymPy module, or use the list below:
    solvers/solveset.rst
    stats.rst
    tensor/index.rst
-   rewriting.rst
+   testing/index.rst
    utilities/index.rst
    vector/index.rst
 
