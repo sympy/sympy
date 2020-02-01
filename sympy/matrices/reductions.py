@@ -321,7 +321,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     (Matrix([
     [1, 0],
     [0, 1]]), (0, 1))
-    
+
     Notes
     =====
 
