@@ -418,14 +418,14 @@ class Integral(AddWithLimits):
         if self.is_zero:
             return S.Zero
 
+        # hacks to handle integrals of
+        # summations
         if isinstance(self.function, Sum):
-            for variable in self.variables:
-                if variable in self.function.limits[0]:
-                    break
-                else:
-                    _i = self
-                    _sum = self.function
-                    return _sum.func(_i.func(_sum.function, *_i.limits).doit(), *_sum.limits).doit()
+            if any(v in self.function.limits[0] for v in self.variables):
+                raise ValueError('Limit of the sum cannot be an integration variable.')
+            _i = self
+            _sum = self.function
+            return _sum.func(_i.func(_sum.function, *_i.limits).doit(), *_sum.limits).doit()
 
         # now compute and check the function
         function = self.function
