@@ -3,6 +3,42 @@ from __future__ import division, print_function
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 from .common import ShapeError, NonSquareMatrixError
+from .utilities import _iszero
+
+
+def _diagonal_solve(M, rhs):
+    """Solves ``Ax = B`` efficiently, where A is a diagonal Matrix,
+    with non-zero diagonal entries.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import Matrix, eye
+    >>> A = eye(2)*2
+    >>> B = Matrix([[1, 2], [3, 4]])
+    >>> A.diagonal_solve(B) == B/2
+    True
+
+    See Also
+    ========
+
+    sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+    sympy.matrices.dense.DenseMatrix.upper_triangular_solve
+    gauss_jordan_solve
+    cholesky_solve
+    LDLsolve
+    LUsolve
+    QRsolve
+    pinv_solve
+    """
+
+    if not M.is_diagonal():
+        raise TypeError("Matrix should be diagonal")
+    if rhs.rows != M.rows:
+        raise TypeError("Size mis-match")
+
+    return M._new(
+        rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / M[i, i])
 
 
 def _lower_triangular_solve(M, rhs, dotprodsimp=None):
@@ -301,9 +337,83 @@ def _LDLsolve(M, rhs, dotprodsimp=None):
                                     'Try M.gauss_jordan_solve(rhs)')
 
     Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-    Z = D._diagonal_solve(Y)
+    Z = D.diagonal_solve(Y)
 
     if hermitian:
         return (L.H).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
     else:
         return (L.T).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
+
+
+def _LUsolve(M, rhs, iszerofunc=_iszero, dotprodsimp=None):
+    """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = M``.
+
+    This is for symbolic matrices, for real or complex ones use
+    mpmath.lu_solve or mpmath.qr_solve.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+
+    See Also
+    ========
+
+    sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+    sympy.matrices.dense.DenseMatrix.upper_triangular_solve
+    gauss_jordan_solve
+    cholesky_solve
+    diagonal_solve
+    LDLsolve
+    QRsolve
+    pinv_solve
+    LUdecomposition
+    """
+
+    if rhs.rows != M.rows:
+        raise ShapeError(
+            "``M`` and ``rhs`` must have the same number of rows.")
+
+    m = M.rows
+    n = M.cols
+
+    if m < n:
+        raise NotImplementedError("Underdetermined systems not supported.")
+
+    try:
+        A, perm = M.LUdecomposition_Simple(
+            iszerofunc=_iszero, rankcheck=True, dotprodsimp=dotprodsimp)
+    except ValueError:
+        raise NotImplementedError("Underdetermined systems not supported.")
+
+    dps = _dotprodsimp if dotprodsimp else lambda e: e
+    b   = rhs.permute_rows(perm).as_mutable()
+
+    # forward substitution, all diag entries are scaled to 1
+    for i in range(m):
+        for j in range(min(i, n)):
+            scale = A[i, j]
+            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+
+    # consistency check for overdetermined systems
+    if m > n:
+        for i in range(n, m):
+            for j in range(b.cols):
+                if not iszerofunc(b[i, j]):
+                    raise ValueError("The system is inconsistent.")
+
+        b = b[0:n, :]   # truncate zero rows if consistent
+
+    # backward substitution
+    for i in range(n - 1, -1, -1):
+        for j in range(i + 1, n):
+            scale = A[i, j]
+            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+
+        scale = A[i, i]
+        b.row_op(i, lambda x, _: dps(x / scale))
+
+    return rhs.__class__(b)
