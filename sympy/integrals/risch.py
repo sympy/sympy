@@ -908,7 +908,7 @@ def get_case(d, t):
     Returns one of {'exp', 'tan', 'base', 'primitive', 'other_linear',
     'other_nonlinear'}.
     """
-    if not d.has(t):
+    if not d.expr.has(t):
         if d.is_one:
             return 'base'
         return 'primitive'
