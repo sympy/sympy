@@ -5,8 +5,8 @@ from sympy import (
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
     AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
-from sympy.abc import a, x, y, z
+from sympy.testing.pytest import XFAIL
+from sympy.abc import a, x, y, z, t
 
 
 def test_subs():
@@ -463,6 +463,10 @@ def test_add():
     ans = (-x*(x) - y*(-x)).expand()
     assert e.subs(-y + 1, x) == ans
 
+    #Test issue 18747
+    assert (exp(x) + cos(x)).subs(x, oo) == oo
+    assert Add(*[AccumBounds(-1, 1), oo]) == oo
+    assert Add(*[oo, AccumBounds(-1, 1)]) == oo
 
 def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
@@ -831,3 +835,18 @@ def test_issue_6976():
     assert (x**4 + x**3 + x**2 + x + sqrt(x)).subs(x**2, y) == \
         y**Rational(1, 4) + y**Rational(3, 2) + sqrt(y) + y**2 + y
     assert x.subs(x**3, y) == y**Rational(1, 3)
+
+
+def test_issue_11746():
+    assert (1/x).subs(x**2, 1) == 1/x
+    assert (1/(x**3)).subs(x**2, 1) == x**(-3)
+    assert (1/(x**4)).subs(x**2, 1) == 1
+    assert (1/(x**3)).subs(x**4, 1) == x**(-3)
+    assert (1/(y**5)).subs(x**5, 1) == y**(-5)
+
+def test_issue_17823():
+    from sympy.physics.mechanics import dynamicsymbols
+    q1, q2 = dynamicsymbols('q1, q2')
+    expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
+    reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
+    assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2    
