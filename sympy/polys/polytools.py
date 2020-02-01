@@ -6826,7 +6826,8 @@ class GroebnerBasis(Basic):
 
     @property
     def args(self):
-        return (Tuple(*self._basis), Tuple(*self._options.gens))
+        basis = (p.as_expr() for p in self._basis)
+        return (Tuple(*basis), Tuple(*self._options.gens))
 
     @property
     def exprs(self):
