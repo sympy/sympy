@@ -20,6 +20,7 @@ __all__ = [
     'TimeDepKet',
     'OrthogonalKet',
     'OrthogonalBra',
+    'OrthogonalState',
     'Wavefunction'
 ]
 
