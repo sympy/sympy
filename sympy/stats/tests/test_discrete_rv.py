@@ -1,17 +1,18 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, erf, beta,
+                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
                    floor)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
-                         where, moment_generating_function, skewness, cdf)
+                         where, moment_generating_function, skewness, cdf,
+                         kurtosis)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
-                                   YuleSimon, Zeta)
+                                   Poisson, Geometric, Hermite, Logarithmic,
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, raises
+from sympy.testing.pytest import slow, nocache_fail, raises
 
 x = Symbol('x')
 
@@ -41,6 +42,30 @@ def test_GeometricDistribution():
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
 
+def test_Hermite():
+    a1 = Symbol("a1", positive=True)
+    a2 = Symbol("a2", negative=True)
+    raises(ValueError, lambda: Hermite("H", a1, a2))
+
+    a1 = Symbol("a1", negative=True)
+    a2 = Symbol("a2", positive=True)
+    raises(ValueError, lambda: Hermite("H", a1, a2))
+
+    a1 = Symbol("a1", positive=True)
+    x = Symbol("x")
+    H = Hermite("H", a1, a2)
+    assert moment_generating_function(H)(x) == exp(a1*(exp(x) - 1)
+                                            + a2*(exp(2*x) - 1))
+    assert characteristic_function(H)(x) == exp(a1*(exp(I*x) - 1)
+                                            + a2*(exp(2*I*x) - 1))
+    assert E(H) == a1 + 2*a2
+
+    H = Hermite("H", a1=5, a2=4)
+    assert density(H)(2) == 33*exp(-9)/2
+    assert E(H) == 13
+    assert variance(H) == 21
+    assert kurtosis(H) == Rational(464,147)
+    assert skewness(H) == 37*sqrt(21)/441
 
 def test_Logarithmic():
     p = S.Half
@@ -51,11 +76,13 @@ def test_Logarithmic():
     assert isinstance(E(x, evaluate=False), Sum)
 
 
+@nocache_fail
 def test_negative_binomial():
     r = 5
     p = S.One / 3
     x = NegativeBinomial('x', r, p)
     assert E(x) == p*r / (1-p)
+    # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
     assert isinstance(E(x, evaluate=False), Sum)

@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from collections import deque
 from random import randint
 
-from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy import Mul, Basic, Number, Pow, Integer
 from sympy.physics.quantum.represent import represent
@@ -25,7 +24,7 @@ __all__ = [
 ]
 
 np = import_module('numpy')
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
@@ -116,7 +115,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         return bool(is_diagonal and has_correct_trace and is_identity)
 
 
-def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
+def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only, eps=None):
     """Checks if a given circuit, in matrix form, is equivalent to
     a scalar value.
 
@@ -129,6 +128,9 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
         Number of qubits in the circuit
     identity_only : bool
         Check for only identity matrices
+    eps : number
+        This argument is ignored. It is just for signature compatibility with
+        is_scalar_sparse_matrix.
 
     Note: Used in situations when is_scalar_sparse_matrix has bugs
     """

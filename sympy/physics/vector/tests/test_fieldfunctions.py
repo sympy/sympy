@@ -4,7 +4,7 @@ from sympy.physics.vector import ReferenceFrame, Vector, Point, \
 from sympy.physics.vector.fieldfunctions import divergence, \
      gradient, curl, is_conservative, is_solenoidal, \
      scalar_potential, scalar_potential_difference
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 R = ReferenceFrame('R')
 q = dynamicsymbols('q')

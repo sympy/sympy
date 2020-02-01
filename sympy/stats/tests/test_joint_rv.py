@@ -8,7 +8,7 @@ from sympy.stats import density
 from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV, MultivariateNormalDistribution
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 x, y, z, a, b = symbols('x y z a b')
 

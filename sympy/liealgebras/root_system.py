@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 from .cartan_type import CartanType
 from sympy.core.backend import Basic
-from sympy.core.compatibility import range
 
 class RootSystem(Basic):
     """Represent the root system of a simple Lie algebra
@@ -10,21 +8,21 @@ class RootSystem(Basic):
     system, we first consider the Cartan subalgebra of g, which is the maximal
     abelian subalgebra, and consider the adjoint action of g on this
     subalgebra.  There is a root system associated with this action. Now, a
-    root system over a vector space V is a set of finite vectors Φ (called
+    root system over a vector space V is a set of finite vectors Phi (called
     roots), which satisfy:
 
     1.  The roots span V
-    2.  The only scalar multiples of x in Φ are x and -x
-    3.  For every x in Φ, the set Φ is closed under reflection
+    2.  The only scalar multiples of x in Phi are x and -x
+    3.  For every x in Phi, the set Phi is closed under reflection
         through the hyperplane perpendicular to x.
-    4.  If x and y are roots in Φ, then the projection of y onto
-        the line through x is a half-integral multiple of x.
+    4.  If x and y are roots in Phi, then the projection of y onto
+        the line through x is a half-integral multiple of x.
 
-    Now, there is a subset of Φ, which we will call Δ, such that:
-    1.  Δ is a basis of V
-    2.  Each root x in Φ can be written x = Σ k_y y for y in Δ
+    Now, there is a subset of Phi, which we will call Delta, such that:
+    1.  Delta is a basis of V
+    2.  Each root x in Phi can be written x = sum k_y y for y in Delta
 
-    The elements of Δ are called the simple roots.
+    The elements of Delta are called the simple roots.
     Therefore, we see that the simple roots span the root space of a given
     simple Lie algebra.
 

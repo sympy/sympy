@@ -1,8 +1,7 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum, sqrt, pi, exp
+from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
 from sympy.core.expr import unchanged
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation)
-from sympy.utilities.pytest import raises
 from sympy.stats.rv import probability, expectation
 
 

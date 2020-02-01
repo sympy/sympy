@@ -4,14 +4,13 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
@@ -274,9 +273,8 @@ def test_Permutation_Cycle():
         (Cycle(3, 4)(1, 2)(3, 4),
         '(1 2)(4)'),
     ]:
-        assert str(p) == s
+        assert sstr(p) == s
 
-    Permutation.print_cyclic = False
     for p, s in [
         (Permutation([]),
         'Permutation([])'),
@@ -293,9 +291,8 @@ def test_Permutation_Cycle():
         (Permutation([1, 0, 2, 3, 4, 5], size=10),
         'Permutation([1, 0], size=10)'),
     ]:
-        assert str(p) == s
+        assert sstr(p, perm_cyclic=False) == s
 
-    Permutation.print_cyclic = True
     for p, s in [
         (Permutation([]),
         '()'),
@@ -314,7 +311,7 @@ def test_Permutation_Cycle():
         (Permutation([0, 1, 3, 2, 4, 5], size=10),
         '(9)(2 3)'),
     ]:
-        assert str(p) == s
+        assert sstr(p) == s
 
 
 def test_Pi():
@@ -516,6 +513,10 @@ def test_Float():
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.0'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
+    assert sstr(Float("100"), full_prec=False, min=-2, max=2) == '1.0e+2'
+    assert sstr(Float("100"), full_prec=False, min=-2, max=3) == '100.0'
+    assert sstr(Float("0.1"), full_prec=False, min=-2, max=3) == '0.1'
+    assert sstr(Float("0.099"), min=-2, max=3) == '9.90000000000000e-2'
 
 
 def test_Relational():
@@ -811,6 +812,30 @@ def test_MatrixSymbol_printing():
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
+
+
+def test_MatrixExpressions():
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+
+    assert str(X) == "X"
+
+    Y = X[1:2:3, 4:5:6]
+
+    assert str(Y) == "X[1:3, 4:6]"
+
+    Z = X[1:10:2]
+
+    assert str(Z) == "X[1:10:2, :n]"
+
+    # Apply function elementwise (`ElementwiseApplyFunc`):
+
+    expr = (X.T*X).applyfunc(sin)
+    assert str(expr) == 'Lambda(_d, sin(_d)).(X.T*X)'
+
+    lamda = Lambda(x, 1/x)
+    expr = (n*X).applyfunc(lamda)
+    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
 
 
 def test_Subs_printing():

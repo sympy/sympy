@@ -10,9 +10,9 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import reduce, range
+from .compatibility import reduce
 from .expr import Expr
-from .evaluate import global_distribute
+from .parameters import global_parameters
 
 
 
@@ -90,7 +90,7 @@ def _unevaluated_Mul(*args):
 
 class Mul(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Mul = True
 
@@ -202,7 +202,7 @@ class Mul(Expr, AssocOp):
                     if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul
                         rv = [cls(a*r, b, evaluate=False)], [], None
-                    elif global_distribute[0] and b.is_commutative:
+                    elif global_parameters.distribute and b.is_commutative:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
                         _addsort(bargs)
@@ -291,9 +291,6 @@ class Mul(Expr, AssocOp):
                 if not coeff:
                     # 0 * zoo = NaN
                     return [S.NaN], [], None
-                if coeff is S.ComplexInfinity:
-                    # zoo * zoo = zoo
-                    return [S.ComplexInfinity], [], None
                 coeff = S.ComplexInfinity
                 continue
 
@@ -626,7 +623,7 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
+        if (global_parameters.distribute and not nc_part and len(c_part) == 2 and
                 c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
@@ -1318,7 +1315,9 @@ class Mul(Expr, AssocOp):
         z = self.is_zero
         if z:
             return False
-        elif z is False:
+        if self.is_finite is False:
+            return False
+        elif z is False and self.is_finite is True:
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
@@ -1375,7 +1374,8 @@ class Mul(Expr, AssocOp):
                 return
             if a is None:
                 return
-        return False
+        if all(x.is_real for x in self.args):
+            return False
 
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it

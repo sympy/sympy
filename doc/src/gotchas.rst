@@ -568,6 +568,28 @@ of :obj:`~.asin`, :obj:`~.acos` and so on instead of the usual ``arcsin``
 and ``arccos``.  Use the methods described in :ref:`Symbols <symbols>`
 above to see the names of all SymPy functions.
 
+Sqrt is not a Function
+----------------------
+
+There is no ``sqrt`` function in the same way that there is an
+exponential function (``exp``). ``sqrt(x)`` is used to represent
+``Pow(x, S(1)/2)`` so if you want to know if an expression has any
+square roots in it, ``expr.has(sqrt)`` will not work. You must look
+for ``Pow`` with an exponent of one half (or negative one half if it
+is in a denominator, e.g.
+
+    >>> (y + sqrt(x)).find(Wild('w')**S.Half)
+    {sqrt(x)}
+    >>> (y + 1/sqrt(x)).find(Wild('w')**-S.Half)
+    {1/sqrt(x)}
+
+If you are interested in any power of the ``sqrt`` then the
+following pattern would be appropriate
+
+    >>> sq = lambda s: s.is_Pow and s.exp.is_Rational and s.exp.q == 2
+    >>> (y + sqrt(x)**3).find(sq)
+    {x**(3/2)}
+
 Special Symbols
 ===============
 

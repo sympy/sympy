@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Any, Dict, Tuple
+
 from itertools import product
 import re
 from sympy import sympify
@@ -122,13 +124,13 @@ class MathematicaParser(object):
                 '''
 
     # will contain transformed CORRESPONDENCES dictionary
-    TRANSLATIONS = {}
+    TRANSLATIONS = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
 
     # cache for a raw users' translation dictionary
-    cache_original = {}
+    cache_original = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
 
     # cache for a compiled users' translation dictionary
-    cache_compiled = {}
+    cache_compiled = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
 
     @classmethod
     def _initialize_class(cls):
@@ -386,7 +388,7 @@ class MathematicaParser(object):
                 raise ValueError(err)
 
         if '{' in s:
-            err = "Currently list is not supported.".format(f=s)
+            err = "Currently list is not supported."
             raise ValueError(err)
 
     def parse(self, s):

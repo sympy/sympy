@@ -1,6 +1,6 @@
 from sympy import ratsimpmodprime, ratsimp, Rational, sqrt, pi, log, erf, GF
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y, z, t, a, b, c, d, e
 
 
 def test_ratsimp():

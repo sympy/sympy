@@ -1,7 +1,8 @@
-from __future__ import (absolute_import, division, print_function)
 """
 C++ code printer
 """
+from __future__ import (absolute_import, division, print_function)
+
 from itertools import chain
 from sympy.codegen.ast import Type, none
 from .ccode import C89CodePrinter, C99CodePrinter

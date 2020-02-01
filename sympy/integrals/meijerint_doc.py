@@ -3,10 +3,12 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict, List, Tuple, Type
+
 from sympy.integrals.meijerint import _create_lookup_table
 from sympy import latex, Eq, Add, Symbol
 
-t = {}
+t = {}  # type: Dict[Tuple[Type, ...], List[Any]]
 _create_lookup_table(t)
 
 doc = ""

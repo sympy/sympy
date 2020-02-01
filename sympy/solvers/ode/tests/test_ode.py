@@ -2,15 +2,20 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper)
-from sympy.solvers.ode import (_undetermined_coefficients_match,
-    checkodesol, classify_ode, classify_sysode, constant_renumber,
-    constantsimp, homogeneous_order, infinitesimals, checkinfsol,
-    checksysodesol, solve_ics, dsolve, get_numbered_constants)
+from sympy.solvers.ode import (
+    checkodesol, classify_ode,
+    homogeneous_order, infinitesimals, checkinfsol,
+    dsolve)
+
+from sympy.solvers.ode.ode import (_linear_coeff_match,
+    _ode_factorable_match, _remove_redundant_solutions,
+    _undetermined_coefficients_match, checksysodesol, classify_sysode,
+    constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
 from sympy.functions import airyai, airybi, besselj, bessely
 
 from sympy.solvers.deutils import ode_order
-from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
+from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
 from sympy.utilities.misc import filldedent
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -2329,19 +2334,9 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     sol_simp = dsolve(eq, f(x), hint=our_hint, simplify=True)
     sol_nsimp = dsolve(eq, f(x), hint=our_hint, simplify=False)
     assert sol_simp != sol_nsimp
-    # /----------
-    # eq.subs(*sol_simp.args) doesn't simplify to zero without help
-    (t, zero) = checkodesol(eq, sol_simp, order=5, solve_for_func=False)
-    # if this fails because zero.is_zero, replace this block with
-    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
-    # \-----------
-    (t, zero) = checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)
-    # if this fails because zero.is_zero, replace this block with
-    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert zero == 0
-    # \-----------
-    assert t
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
+
 
 def test_Liouville_ODE():
     hint = 'Liouville'
@@ -2728,7 +2723,6 @@ def test_homogeneous_function():
 
 
 def test_linear_coeff_match():
-    from sympy.solvers.ode import _linear_coeff_match
     n, d = z*(2*x + 3*f(x) + 5), z*(7*x + 9*f(x) + 11)
     rat = n/d
     eq1 = sin(rat) + cos(rat.expand())
@@ -3373,7 +3367,7 @@ def test_sysode_linear_neq_order1():
 
 @slow
 def test_nth_order_reducible():
-    from sympy.solvers.ode import _nth_order_reducible_match
+    from sympy.solvers.ode.ode import _nth_order_reducible_match
 
     eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2), 0)
     sol = Eq(f(x),
@@ -3545,7 +3539,6 @@ def test_nth_algebraic_redundant_solutions():
     assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
     assert set(solns) == set(dsolve(eqn, f(x)))
 
-    from sympy.solvers.ode import _remove_redundant_solutions
     solns = [Eq(f(x), exp(x)),
              Eq(f(x), C1*exp(C2*x))]
     solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)
@@ -3653,7 +3646,6 @@ def test_factorable():
     # Unable to get coverage on this without explicit testing because _desolve
     # already handles Pow before we get there but that should be disabled in
     # future so that factorable gets the raw ODE.
-    from sympy.solvers.ode import _ode_factorable_match
     eq = f(x).diff(x)-1
     assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
 
@@ -3768,3 +3760,92 @@ def test_2nd_2F1_hypergeometric():
           C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702
+
+
+def test_issue_15889():
+    eq = exp(f(x).diff(x))-f(x)**2
+    sol = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
+    assert str(sol.as_dummy()) == str(dsolve(eq).as_dummy())
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**3
+    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+    eq = f(x).diff(x)**2 - f(x)
+    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x)**2 - f(x)**2
+    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    assert sol == dsolve(eq)
+    assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+    eq = f(x).diff(x)**2 - f(x)**3
+    sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
+    assert sol == dsolve(eq, hint='lie_group')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_5096():
+    eq = f(x).diff(x, x) + f(x) - x*sin(x - 2)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**2*cos(x - 2)/4 + x*sin(x - 2)/4)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) + f(x) - x**4*sin(x-1)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**5*cos(x - 1)/10 + x**4*sin(x - 1)/4 + x**3*cos(x - 1)/2 - 3*x**2*sin(x - 1)/4 - 3*x*cos(x - 1)/4)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) - f(x) - exp(x - 1)
+    sol = Eq(f(x), C1*exp(-x) + C2*exp(x) + x*exp(x - 1)/2)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2)+f(x)-(sin(x-2)+1)
+    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x*cos(x - 2)/2 + 1)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = 2*x**2*f(x).diff(x, 2) + f(x) + sqrt(2*x)*sin(log(2*x)/2)
+    sol = Eq(f(x), sqrt(x)*(C1*sin(log(x)/2) + C2*cos(log(x)/2) + sqrt(2)*log(x)*cos(log(2*x)/2)/2))
+    assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2)
+    sol = Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)
+    assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_15996():
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
+    sol = Eq(f(x), C1 + x**2 + (C2 - x**2/8 + x*(C3 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x))*sin(x) + (C4 + I*x**2/8 + x*(C5 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x))*cos(x) - I*exp(I*x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x)
+    sol = Eq(f(x), C1 + (C2 + C3*x - x**2/8 + 5*exp(2*I*x)/16)*sin(x) + (C4 + C5*x + I*x**2/8 + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_18408():
+    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x)
+    sol = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + x*sinh(x)/2)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) - 49*f(x) - sinh(3*x)
+    sol = Eq(f(x), C1*exp(-7*x) + C2*exp(7*x) - sinh(3*x)/40)
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x) - exp(x)
+    sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
+    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert checkodesol(eq, sol) == (True, 0)

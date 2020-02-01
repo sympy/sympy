@@ -19,7 +19,7 @@ from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
-numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Beam(object):
     """
@@ -443,10 +443,10 @@ class Beam(object):
             # NOTE : A Taylor series can be used to define the summation of
             # singularity functions that subtract from the load past the end
             # point such that it evaluates to zero past 'end'.
-            f = value * x**order
+            f = value*x**order
             for i in range(0, order + 1):
                 self._load -= (f.diff(x, i).subs(x, end - start) *
-                               SingularityFunction(x, end, i) / factorial(i))
+                               SingularityFunction(x, end, i)/factorial(i))
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -519,10 +519,10 @@ class Beam(object):
             # NOTE : A Taylor series can be used to define the summation of
             # singularity functions that subtract from the load past the end
             # point such that it evaluates to zero past 'end'.
-            f = value * x**order
+            f = value*x**order
             for i in range(0, order + 1):
                 self._load += (f.diff(x, i).subs(x, end - start) *
-                               SingularityFunction(x, end, i) / factorial(i))
+                               SingularityFunction(x, end, i)/factorial(i))
 
     @property
     def load(self):
@@ -1643,7 +1643,7 @@ class Beam(object):
                         f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
                         for i in range(0, order + 1):
                             scaled_load -= (f2.diff(x, i).subs(x, end - start)*
-                                           SingularityFunction(x, end, i) / factorial(i))
+                                           SingularityFunction(x, end, i)/factorial(i))
 
         # `fill` will be assigned only when higher order loads are present
         if higher_order:
