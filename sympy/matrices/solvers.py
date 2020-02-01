@@ -274,7 +274,7 @@ def _LDLsolve(M, rhs, dotprodsimp=None):
     See Also
     ========
 
-    LDLdecomposition
+    sympy.matrices.dense.DenseMatrix.LDLdecomposition
     sympy.matrices.dense.DenseMatrix.lower_triangular_solve
     sympy.matrices.dense.DenseMatrix.upper_triangular_solve
     gauss_jordan_solve

@@ -2194,7 +2194,7 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         sympy.matrices.dense.DenseMatrix.cholesky
-        LDLdecomposition
+        sympy.matrices.dense.DenseMatrix.LDLdecomposition
         QRdecomposition
         LUdecomposition_Simple
         LUdecompositionFF
@@ -3177,7 +3177,7 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         sympy.matrices.dense.DenseMatrix.cholesky
-        LDLdecomposition
+        sympy.matrices.dense.DenseMatrix.LDLdecomposition
         LUdecomposition
         QRsolve
         """
