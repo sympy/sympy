@@ -355,7 +355,7 @@ class BetaDistribution(SingleContinuousDistribution):
         if not size:
             return random.betavariate(self.alpha, self.beta)
         else:
-            return [random.betavariate(self.alpha, self.beta) for i in range(size)]
+            return [random.betavariate(self.alpha, self.beta)]*size
 
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
@@ -1166,7 +1166,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         if not size:
             return random.expovariate(self.rate)
         else:
-            return [random.expovariate(self.rate) for i in range(size)]
+            return [random.expovariate(self.rate)]*size
 
     def _cdf(self, x):
         return Piecewise(
@@ -1601,7 +1601,7 @@ class GammaDistribution(SingleContinuousDistribution):
         if not size:
             return random.gammavariate(self.k, self.theta)
         else:
-            return [random.gammavariate(self.k, self.theta) for i in range(size)]
+            return [random.gammavariate(self.k, self.theta)]*size
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
@@ -2388,7 +2388,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
         if not size:
             return random.lognormvariate(self.mean, self.std)
         else:
-            return [random.lognormvariate(self.mean, self.std) for i in range(size)]
+            return [random.lognormvariate(self.mean, self.std)]*size
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2648,7 +2648,7 @@ class NormalDistribution(SingleContinuousDistribution):
         if not size:
             return random.normalvariate(self.mean, self.std)
         else:
-            return [random.normalvariate(self.mean, self.std) for i in range(size)]
+            return [random.normalvariate(self.mean, self.std)]*size
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2895,7 +2895,7 @@ class ParetoDistribution(SingleContinuousDistribution):
         if not size:
             return random.paretovariate(self.alpha)
         else:
-            return [random.paretovariate(self.alpha) for i in range(size)]
+            return [random.paretovariate(self.alpha)]*size
 
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha
@@ -3751,7 +3751,7 @@ class UniformDistribution(SingleContinuousDistribution):
         if not size:
             return random.uniform(self.left, self.right)
         else:
-            return [random.uniform(self.left, self.right) for i in range(size)]
+            return [random.uniform(self.left, self.right)]*size
 
 
 def Uniform(name, left, right):
@@ -4009,7 +4009,7 @@ class WeibullDistribution(SingleContinuousDistribution):
         if not size:
             return random.weibullvariate(self.alpha, self.beta)
         else:
-            return [random.weibullvariate(self.alpha, self.beta) for i in range(size)]
+            return [random.weibullvariate(self.alpha, self.beta)]*size
 
 def Weibull(name, alpha, beta):
     r"""
