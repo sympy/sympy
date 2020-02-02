@@ -142,3 +142,151 @@ def invariant_factors(m, domain = None):
     else:
         result = invs + (m[0,0],)
     return tuple(result)
+
+
+
+def _nonzero(m):
+    """
+    returns a list of containing (i, j) representing the indices of
+    non-zero elements in m.
+    Help function for hermite_norlal_form
+    """
+
+    idx = []
+    for i in range(m.shape[0]):
+        for j in range(m.shape[1]):
+            if m[i, j] != 0:
+                idx.append((i, j))
+    return idx
+
+def _nonzero_negative(m):
+    """
+    returns 0 if the first nonzero column j of A contains more than one nonzero
+    entry, or contains only one nonzero entry and which is positive and  returns 1
+    if the first nonzero column j of A contains only one nonzero entry, which
+    is negative.
+    """
+    columns = list(zip(*_nonzero(m)))[1]
+    nonzero_col = m[:, min(columns)]
+    nums = [i for i in nonzero_col if i !=0]
+    return len(nums) == 1 and nums[0] < 0
+
+
+def hermite_normal_form(m, domain = None):
+    """
+    Returns the hermite_normal_form of integers matices.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.solvers import RawMatrix as Matrix
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.matrices.normalforms import hermite_normal_form
+    >>> m = Matrix([[2, 3, 6, 2], [5, 6, 1, 6], [8, 3, 1, 1]])
+    >>> setattr(m, "ring", ZZ)
+    >>> print(hermite_normal_form(m))
+    (Matrix([[1, 0, 50, -11], [0, 3, 28, -2], [0, 0, 61, -13]]),
+    Matrix([[ 9, -5, 1], [ 5, -2, 0], [11, -6, 1]]))
+
+    """
+
+    from sympy import eye, ones
+
+    if domain != 'ZZ':
+        raise ValueError("Hermite normal for is defined only for integer domain")
+    row = m.shape[0]
+    col = m.shape[1]
+
+    A = m
+    B = eye(row)
+    L =zeros(row, row)
+    D = ones(row + 1, 1)
+
+    if _nonzero_negative(m):
+        B[row - 1, row - 1] = -1
+        A[row - 1, :] *= -1
+    k = 1
+    while(k < row):
+        col1, col2 = _reduce_matrix(A, B, L, k, k - 1, D)
+        u = (int(D[k - 1]) * int(D[k + 1]) +
+                  int(L[k, k - 1]) * int(L[k, k - 1]))
+        v = int(D[k]) * int(D[k])
+        if col1 <= min(col2, col - 1) or (col1 == col and col2 == col and u < v):
+            _swap_rows(k, A, B, L, D)
+            if k > 1:
+                k = k - 1
+        else:
+            for i in reversed(range(k - 1)):
+                _reduce_matrix(A, B, L, k, i, D)
+            k = k + 1
+    return A[::-1, :], B[::-1, :]
+
+
+
+def lnearint(a, b):
+    if b < 0:
+        a = -a
+        b = -b
+    y = a // b
+    x = b * y
+    z = a - x
+    z = 2 * z
+    if z > b:
+        y = y + 1
+    return y
+
+
+def _reduce_matrix(A, B, L, k, i, D):
+    """
+    Helper function usd by hermite_normal_form function
+    """
+
+    non_zero_elems = list(zip(*_nonzero(A[i, :])))
+
+    if len(non_zero_elems):
+        col1 = non_zero_elems[1][0]
+        if A[i, col1] < 0:
+            L[i, :] = -L[i, :]
+            L[:, i] = -L[:, i]
+            A[i, :] *= -1
+            B[i, :] *= -1
+    else:
+        col1 = A.shape[1]
+    non_zero_elems = list(zip(*_nonzero(A[k, :])))
+    if len(non_zero_elems):
+        col2 = non_zero_elems[1][0]
+    else:
+        col2 = A.shape[1]
+    if col1 < A.shape[1]:
+        q = A[k, col1] // A[i, col1]
+    else:
+        if 2 * abs(L[k, i]) > D[i + 1]:
+            q = lnearint(L[k, i], D[i + 1])
+        else:
+            return col1, col2
+    A[k, :] -= q * A[i, :]
+    B[k, :] -= q * B[i, :]
+    L[k, i] -= q * D[i + 1]
+    L[k, :i] -= q * L[i, :i]
+    return col1, col2
+
+
+def _swap_rows(k, A, B, L, D):
+    """
+    Helper function usd by hermite_normal_form function
+    """
+
+    # To avoid the interpretation of -1 as the last index of the matrix create
+    # a reverse stop that ends past the negative of the length of the matrix
+    reverse_stop = k - 2 if k > 1 else -(A.shape[0] + 1)
+    # Swap rows of the matrices
+    A[(k - 1):(k + 1), :] = A[k:reverse_stop:-1, :]
+    B[(k - 1):(k + 1), :] = B[k:reverse_stop:-1, :]
+    L[(k - 1):(k + 1), :(k - 1)] = L[k:reverse_stop:-1, :(k - 1)]
+    t = (L[(k + 1):, k - 1] * D[k + 1] / D[k] -
+         L[(k + 1):, k] * L[k, k - 1] / D[k])
+    L[(k + 1):, k - 1] = (L[(k + 1):, k - 1] * L[k, k - 1] +
+                          L[(k + 1):, k] * D[k - 1]) / D[k]
+    L[(k + 1):, k] = t
+    t = int(D[k - 1]) * int(D[k + 1]) + int(L[k, k - 1]) * int(L[k, k - 1])
+    D[k] = t / D[k]
