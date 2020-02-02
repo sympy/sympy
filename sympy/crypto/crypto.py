@@ -32,8 +32,6 @@ from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.testing.randtest import _randrange, _randint
 
-import numpy as np
-
 
 class NonInvertibleCipherWarning(RuntimeWarning):
     """A warning raised if the cipher is not invertible."""
@@ -3345,7 +3343,12 @@ def create_matrix(key):
         if i not in temp and i != 'j':
             temp += i
 
-    matrix = np.array(list(temp)).reshape(5,5)
+    matrix = [[0]*5 for i in range(5)]
+
+    for i in range(0, len(temp)):
+        row = int(i / 5)
+        col = i % 5
+        matrix[row][col] = temp[i]
 
     return matrix
 
@@ -3374,8 +3377,21 @@ def encipher_playfair(key, plaintext):
     ciphertext = []
 
     for i in text:
-        fcoords = np.where(key_matrix == i[0])
-        scoords = np.where(key_matrix == i[1])
+        for j in range(0, 5):
+            try:
+                fcoords = ( j, key_matrix[j].index(i[0]) )
+                if fcoords[0] != -1:
+                    break
+            except ValueError:
+                continue
+
+        for j in range(0, 5):
+            try:
+                scoords = ( j, key_matrix[j].index(i[1]) )
+                if scoords[0] != -1:
+                    break
+            except ValueError:
+                continue
 
         if fcoords[0] == scoords[0]:
             flet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1]+1)) %5]
@@ -3402,8 +3418,21 @@ def decipher_playfair(key, ciphertext):
     plaintext = []
 
     for i in text:
-        fcoords = np.where(key_matrix == i[0])
-        scoords = np.where(key_matrix == i[1])
+        for j in range(0, 5):
+            try:
+                fcoords = ( j, key_matrix[j].index(i[0]) )
+                if fcoords[0] != -1:
+                    break
+            except ValueError:
+                continue
+
+        for j in range(0, 5):
+            try:
+                scoords = ( j, key_matrix[j].index(i[1]) )
+                if scoords[0] != -1:
+                    break
+            except ValueError:
+                continue
 
         if fcoords[0] == scoords[0]:
             flet = key_matrix[ int(scoords[0]) ][ int((scoords[1] - 1)) %5]
