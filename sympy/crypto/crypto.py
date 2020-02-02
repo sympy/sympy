@@ -3326,7 +3326,7 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
-    
+
 def create_matrix(key):
 	#helper function for enciphering and deciphering playfair cipher
 	
