@@ -105,7 +105,10 @@ def test_dsolve_ics():
 
 
 @XFAIL
+@slow
 def test_nonlinear_3eq_order1_type1():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     a, b, c = symbols('a b c')
 
     eqs = [
