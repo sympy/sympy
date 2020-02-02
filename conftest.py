@@ -33,13 +33,13 @@ if os.path.exists(durations_path):
     veryslow_group, slow_group = [_mk_group(group_dict) for group_dict in json.loads(open(durations_path, 'rt').read())]
 else:
     # warnings in conftest has issues: https://github.com/pytest-dev/pytest/issues/2891
-    warnings.warn("conftest.py:22: Could not find %s, --quickcheck and --veryquickcheck will have no effect.\n" % durations_path)
+    warnings.warn(f"conftest.py:22: Could not find {durations_path}, --quickcheck and --veryquickcheck will have no effect.\n")
     veryslow_group, slow_group = [], []
 
 if os.path.exists(blacklist_path):
     blacklist_group = _mk_group(json.loads(open(blacklist_path, 'rt').read()))
 else:
-    warnings.warn("conftest.py:28: Could not find %s, no tests will be skipped due to blacklisting\n" % blacklist_path)
+    warnings.warn(f"conftest.py:28: Could not find {blacklist_path}, no tests will be skipped due to blacklisting\n" )
     blacklist_group = []
 
 
@@ -68,5 +68,5 @@ def pytest_runtest_setup(item):
             return
 
         if item.nodeid in blacklist_group:
-            pytest.skip("blacklisted test, see %s" % blacklist_path)
+            pytest.skip(f"blacklisted test, see {blacklist_path}" )
             return
