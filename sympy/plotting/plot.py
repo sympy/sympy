@@ -1033,6 +1033,9 @@ class MatplotlibBackend(BaseBackend):
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
+        aspect = self.parent.aspect_ratio
+        if aspect != 'auto':
+            aspect = float(aspect[1]) / aspect[0]
 
         if isinstance(self.parent, Plot):
             nrows, ncolumns = 1, 1
@@ -1054,10 +1057,10 @@ class MatplotlibBackend(BaseBackend):
                 # projection='3d'
                 mpl_toolkits = import_module('mpl_toolkits', # noqa
                                      import_kwargs={'fromlist': ['mplot3d']})
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d', aspect=aspect))
 
             elif not any(are_3D):
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, aspect=aspect))
                 self.ax[i].spines['left'].set_position('zero')
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
