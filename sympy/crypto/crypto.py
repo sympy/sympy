@@ -2710,23 +2710,23 @@ def decipher_elgamal(msg, key):
 
 ##########Columnar Transposition Cipher################
 
-"""
-Columnar Transposition Cipher
-This cipher involves writing the plaintext out in rows
-and then reading the ciphertext off in columns one by one.
-Examples
-    ========
+    r"""
+    Columnar Transposition Cipher
+    This cipher involves writing the plaintext out in rows
+    and then reading the ciphertext off in columns one by one.
+    """
+    
+def encipher_ctc(message, key):
+	r"""
+    
+    Usage
     >>> from sympy.crypto.crypto import encipher_ctc
     >>> key = "HI"
-    >>> encipher_ctc("HelloIlovecrypto", key)    
+    >>> encipher_ctc("HelloIlovecrypto", key)   
     
-    >>> from sympy.crypto.crypto import decipher_ctc
-    >>> key = "HI"
-    >>> decipher_ctc("HlolvcytelIoerpo", key)
-"""
-
-def encipher_ctc(message, key):
-	c = ""
+    """
+    
+    c = ""
 
 	k_index = 0
 
@@ -2753,6 +2753,13 @@ def encipher_ctc(message, key):
 	return c
 
 def decipher_ctc(c, key):
+    r"""
+    Usage
+    
+    >>> from sympy.crypto.crypto import decipher_ctc
+    >>> key = "HI"
+    >>> decipher_ctc("HlolvcytelIoerpo", key)    
+    """
 
 	message = ""
 
