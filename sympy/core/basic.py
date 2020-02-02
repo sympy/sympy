@@ -504,11 +504,11 @@ class Basic(metaclass=ManagedProperties):
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
         result = set()
-        for expr in preorder_traversal(self):
-            if not (types or expr.args):
-                result.add(expr)
-            elif isinstance(expr, types):
-                result.add(expr)
+        nodes = preorder_traversal(self)
+        if types:
+            result = {node for node in nodes if isinstance(node, types)}
+        else:
+            result = {node for node in nodes if not node.args}
         return result
 
     @property
