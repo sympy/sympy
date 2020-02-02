@@ -18,10 +18,9 @@ from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
-from sympy.simplify.simplify import (
-    simplify as _simplify, dotprodsimp as _dotprodsimp)
+from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 from .common import (
@@ -44,6 +43,15 @@ from .eigen import (
     _is_positive_definite, _is_positive_semidefinite,
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
     _jordan_form, _left_eigenvects, _singular_values)
+
+from .decompositions import (
+    _rank_decomposition, _cholesky, _LDLdecomposition,
+    _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
+    _QRdecomposition)
+
+from .solvers import (
+    _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
+    _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -786,17 +794,6 @@ class MatrixBase(MatrixDeprecated,
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
 
-    def __getattr__(self, attr):
-        if attr in ('diff', 'integrate', 'limit'):
-            def doit(*args):
-                item_doit = lambda item: getattr(item, attr)(*args)
-                return self.applyfunc(item_doit)
-
-            return doit
-        else:
-            raise AttributeError(
-                "%s has no attribute %s." % (self.__class__.__name__, attr))
-
     def __len__(self):
         """Return the number of elements of ``self``.
 
@@ -812,14 +809,6 @@ class MatrixBase(MatrixDeprecated,
                 mml += self[i, j].__mathml__()
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
-
-
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve, without the error
-        checks, to be used privately.
-        """
-        return self._new(
-            rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
     def _matrix_pow_by_jordan_blocks(self, num, dotprodsimp=None):
         from sympy.matrices import diag, MutableMatrix
@@ -1212,123 +1201,6 @@ class MatrixBase(MatrixDeprecated,
         """Return self + b """
         return self + b
 
-    def cholesky_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B`` using Cholesky decomposition,
-        for a general square non-singular matrix.
-        For a non-square matrix with rows > cols,
-        the least squares solution is returned.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        hermitian = True
-        if self.is_symmetric():
-            hermitian = False
-            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.is_hermitian:
-            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-            rhs = self.H * rhs
-        else:
-            raise NotImplementedError('Under-determined System. '
-                                      'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        if hermitian:
-            return (L.H)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-        else:
-            return (L.T)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-
-    def cholesky(self, hermitian=True, dotprodsimp=None):
-        """Returns the Cholesky-type decomposition L of a matrix A
-        such that L * L.H == A if hermitian flag is True,
-        or L * L.T == A if hermitian is False.
-
-        A must be a Hermitian positive-definite matrix if hermitian is True,
-        or a symmetric matrix if it is False.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> A.cholesky()
-        Matrix([
-        [ 5, 0, 0],
-        [ 3, 3, 0],
-        [-1, 1, 3]])
-        >>> A.cholesky() * A.cholesky().T
-        Matrix([
-        [25, 15, -5],
-        [15, 18,  0],
-        [-5,  0, 11]])
-
-        The matrix can have complex entries:
-
-        >>> from sympy import I
-        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
-        >>> A.cholesky()
-        Matrix([
-        [ 3, 0],
-        [-I, 2]])
-        >>> A.cholesky() * A.cholesky().H
-        Matrix([
-        [   9, 3*I],
-        [-3*I,   5]])
-
-        Non-hermitian Cholesky-type decomposition may be useful when the
-        matrix is not positive-definite.
-
-        >>> A = Matrix([[1, 2], [2, 1]])
-        >>> L = A.cholesky(hermitian=False)
-        >>> L
-        Matrix([
-        [1,         0],
-        [2, sqrt(3)*I]])
-        >>> L*L.T == A
-        True
-
-        See Also
-        ========
-
-        LDLdecomposition
-        LUdecomposition
-        QRdecomposition
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
-            raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
-        return self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-
     def condition_number(self, dotprodsimp=None):
         """Returns the condition number of a matrix.
 
@@ -1452,37 +1324,6 @@ class MatrixBase(MatrixDeprecated,
             # for a message since MatrixBase will raise the AttributeError
             raise AttributeError
         return self.H * mgamma(0)
-
-    def diagonal_solve(self, rhs):
-        """Solves ``Ax = B`` efficiently, where A is a diagonal Matrix,
-        with non-zero diagonal entries.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = eye(2)*2
-        >>> B = Matrix([[1, 2], [3, 4]])
-        >>> A.diagonal_solve(B) == B/2
-        True
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        if not self.is_diagonal():
-            raise TypeError("Matrix should be diagonal")
-        if rhs.rows != self.rows:
-            raise TypeError("Size mis-match")
-        return self._diagonal_solve(rhs)
 
     def dot(self, b, hermitian=None, conjugate_convention=None):
         """Return the dot or inner product of two vectors of equal length.
@@ -1832,167 +1673,6 @@ class MatrixBase(MatrixDeprecated,
 
         return ret
 
-    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
-        """
-        Solves ``Ax = B`` using Gauss Jordan elimination.
-
-        There may be zero, one, or infinite solutions.  If one solution
-        exists, it will be returned. If infinite solutions exist, it will
-        be returned parametrically. If no solutions exist, It will throw
-        ValueError.
-
-        Parameters
-        ==========
-
-        B : Matrix
-            The right hand side of the equation to be solved for.  Must have
-            the same number of rows as matrix A.
-
-        freevar : List
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of arbitrary
-            values of free variables. Then the index of the free variables
-            in the solutions (column Matrix) will be returned by freevar, if
-            the flag `freevar` is set to `True`.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Returns
-        =======
-
-        x : Matrix
-            The matrix that will satisfy ``Ax = B``.  Will have as many rows as
-            matrix A has columns, and as many columns as matrix B.
-
-        params : Matrix
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of arbitrary
-            parameters. These arbitrary parameters are returned as params
-            Matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
-        >>> B = Matrix([7, 12, 4])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [-2*tau0 - 3*tau1 + 2],
-        [                 tau0],
-        [           2*tau1 + 5],
-        [                 tau1]])
-        >>> params
-        Matrix([
-        [tau0],
-        [tau1]])
-        >>> taus_zeroes = { tau:0 for tau in params }
-        >>> sol_unique = sol.xreplace(taus_zeroes)
-        >>> sol_unique
-         Matrix([
-        [2],
-        [0],
-        [5],
-        [0]])
-
-
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
-        >>> B = Matrix([3, 6, 9])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [-1],
-        [ 2],
-        [ 0]])
-        >>> params
-        Matrix(0, 1, [])
-
-        >>> A = Matrix([[2, -7], [-1, 4]])
-        >>> B = Matrix([[-21, 3], [12, -2]])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [0, -2],
-        [3, -1]])
-        >>> params
-        Matrix(0, 2, [])
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
-
-        """
-        from sympy.matrices import Matrix, zeros
-
-        cls = self.__class__
-
-        aug = self.hstack(self.copy(), B.copy())
-        B_cols = B.cols
-        row, col = aug[:, :-B_cols].shape
-
-        # solve by reduced row echelon form
-        A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
-        A, v = A[:, :-B_cols], A[:, -B_cols:]
-        pivots = list(filter(lambda p: p < col, pivots))
-        rank = len(pivots)
-
-        # Bring to block form
-        permutation = Matrix(range(col)).T
-
-        for i, c in enumerate(pivots):
-            permutation.col_swap(i, c)
-
-
-        # check for existence of solutions
-        # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, :].is_zero_matrix:
-            raise ValueError("Linear system has no solution")
-
-        # Get index of free symbols (free parameters)
-        free_var_index = permutation[
-                         len(pivots):]  # non-pivots columns are free variables
-
-        # Free parameters
-        # what are current unnumbered free symbol names?
-        name = _uniquely_named_symbol('tau', aug,
-            compare=lambda i: str(i).rstrip('1234567890')).name
-        gen = numbered_symbols(name)
-        tau = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
-            col - rank, B_cols)
-
-        # Full parametric solution
-        V = A[:rank, [c for c in range(A.cols) if c not in pivots]]
-        vt = v[:rank, :]
-        free_sol = tau.vstack(vt - V * tau, tau)
-
-        # Undo permutation
-        sol = zeros(col, B_cols)
-        for k in range(col):
-            sol[permutation[k], :] = free_sol[k,:]
-
-        sol, tau = cls(sol), cls(tau)
-        if freevar:
-            return sol, tau, free_var_index
-        else:
-            return sol, tau
-
     def inv_mod(self, m):
         r"""
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
@@ -2288,735 +1968,6 @@ class MatrixBase(MatrixDeprecated,
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
 
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.H == A if hermitian flag is True, or
-        L * D * L.T == A if hermitian is False.
-        This method eliminates the use of square root.
-        Further this ensures that all the diagonal entries of L are 1.
-        A must be a Hermitian positive-definite matrix if hermitian is True,
-        or a symmetric matrix otherwise.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1,   0, 0],
-        [ 3/5,   1, 0],
-        [-1/5, 1/3, 1]])
-        >>> D
-        Matrix([
-        [25, 0, 0],
-        [ 0, 9, 0],
-        [ 0, 0, 9]])
-        >>> L * D * L.T * A.inv() == eye(A.rows)
-        True
-
-        The matrix can have complex entries:
-
-        >>> from sympy import I
-        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1, 0],
-        [-I/3, 1]])
-        >>> D
-        Matrix([
-        [9, 0],
-        [0, 4]])
-        >>> L*D*L.H == A
-        True
-
-        See Also
-        ========
-
-        cholesky
-        LUdecomposition
-        QRdecomposition
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
-            raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
-        return self._LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-
-    def LDLsolve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B`` using LDL decomposition,
-        for a general square and non-singular matrix.
-
-        For a non-square matrix with rows > cols,
-        the least squares solution is returned.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = eye(2)*2
-        >>> B = Matrix([[1, 2], [3, 4]])
-        >>> A.LDLsolve(B) == B/2
-        True
-
-        See Also
-        ========
-
-        LDLdecomposition
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        hermitian = True
-        if self.is_symmetric():
-            hermitian = False
-            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.is_hermitian:
-            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.rows >= self.cols:
-            L, D = self.H.multiply(self, dotprodsimp=dotprodsimp) \
-                    .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-            rhs = self.H.multiply(rhs, dotprodsimp=dotprodsimp)
-        else:
-            raise NotImplementedError('Under-determined System. '
-                                      'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        Z = D._diagonal_solve(Y)
-        if hermitian:
-            return (L.H)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
-        else:
-            return (L.T)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
-
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B``, where A is a lower triangular matrix.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if rhs.rows != self.rows:
-            raise ShapeError("Matrices size mismatch.")
-        if not self.is_lower:
-            raise ValueError("Matrix must be lower triangular.")
-        return self._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-
-    def LUdecomposition(self,
-                        iszerofunc=_iszero,
-                        simpfunc=None,
-                        rankcheck=False):
-        """Returns (L, U, perm) where L is a lower triangular matrix with unit
-        diagonal, U is an upper triangular matrix, and perm is a list of row
-        swap index pairs. If A is the original matrix, then
-        A = (L*U).permuteBkwd(perm), and the row permutation matrix P such
-        that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
-
-        See documentation for LUCombined for details about the keyword argument
-        rankcheck, iszerofunc, and simpfunc.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> a = Matrix([[4, 3], [6, 3]])
-        >>> L, U, _ = a.LUdecomposition()
-        >>> L
-        Matrix([
-        [  1, 0],
-        [3/2, 1]])
-        >>> U
-        Matrix([
-        [4,    3],
-        [0, -3/2]])
-
-        See Also
-        ========
-
-        cholesky
-        LDLdecomposition
-        QRdecomposition
-        LUdecomposition_Simple
-        LUdecompositionFF
-        LUsolve
-        """
-
-        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
-                                                  simpfunc=simpfunc,
-                                                  rankcheck=rankcheck)
-
-        # L is lower triangular ``self.rows x self.rows``
-        # U is upper triangular ``self.rows x self.cols``
-        # L has unit diagonal. For each column in combined, the subcolumn
-        # below the diagonal of combined is shared by L.
-        # If L has more columns than combined, then the remaining subcolumns
-        # below the diagonal of L are zero.
-        # The upper triangular portion of L and combined are equal.
-        def entry_L(i, j):
-            if i < j:
-                # Super diagonal entry
-                return self.zero
-            elif i == j:
-                return self.one
-            elif j < combined.cols:
-                return combined[i, j]
-            # Subdiagonal entry of L with no corresponding
-            # entry in combined
-            return self.zero
-
-        def entry_U(i, j):
-            return self.zero if i > j else combined[i, j]
-
-        L = self._new(combined.rows, combined.rows, entry_L)
-        U = self._new(combined.rows, combined.cols, entry_U)
-
-        return L, U, p
-
-
-    def LUdecomposition_Simple(
-        self, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
-        dotprodsimp=None):
-        r"""Compute the PLU decomposition of the matrix.
-
-        Parameters
-        ==========
-
-        rankcheck : bool, optional
-            Determines if this function should detect the rank
-            deficiency of the matrixis and should raise a
-            ``ValueError``.
-
-        iszerofunc : function, optional
-            A function which determines if a given expression is zero.
-
-            The function should be a callable that takes a single
-            sympy expression and returns a 3-valued boolean value
-            ``True``, ``False``, or ``None``.
-
-            It is internally used by the pivot searching algorithm.
-            See the notes section for a more information about the
-            pivot searching algorithm.
-
-        simpfunc : function or None, optional
-            A function that simplifies the input.
-
-            If this is specified as a function, this function should be
-            a callable that takes a single sympy expression and returns
-            an another sympy expression that is algebraically
-            equivalent.
-
-            If ``None``, it indicates that the pivot search algorithm
-            should not attempt to simplify any candidate pivots.
-
-            It is internally used by the pivot searching algorithm.
-            See the notes section for a more information about the
-            pivot searching algorithm.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification
-            is used during matrix multiplications to control expression
-            blowup and thus speed up calculation.
-
-        Returns
-        =======
-
-        (lu, row_swaps) : (Matrix, list)
-            If the original matrix is a $m, n$ matrix:
-
-            *lu* is a $m, n$ matrix, which contains result of the
-            decomposition in a compresed form. See the notes section
-            to see how the matrix is compressed.
-
-            *row_swaps* is a $m$-element list where each element is a
-            pair of row exchange indices.
-
-            ``A = (L*U).permute_backward(perm)``, and the row
-            permutation matrix $P$ from the formula $P A = L U$ can be
-            computed by ``P=eye(A.row).permute_forward(perm)``.
-
-        Raises
-        ======
-
-        ValueError
-            Raised if ``rankcheck=True`` and the matrix is found to
-            be rank deficient during the computation.
-
-        Notes
-        =====
-
-        About the PLU decomposition:
-
-        PLU decomposition is a generalization of a LU decomposition
-        which can be extended for rank-deficient matrices.
-
-        It can further be generalized for non-square matrices, and this
-        is the notation that SymPy is using.
-
-        PLU decomposition is a decomposition of a $m, n$ matrix $A$ in
-        the form of $P A = L U$ where
-
-        * $L$ is a $m, m$ lower triangular matrix with unit diagonal
-          entries.
-        * $U$ is a $m, n$ upper triangular matrix.
-        * $P$ is a $m, m$ permutation matrix.
-
-        So, for a square matrix, the decomposition would look like:
-
-        .. math::
-            L = \begin{bmatrix}
-            1 & 0 & 0 & \cdots & 0 \\
-            L_{1, 0} & 1 & 0 & \cdots & 0 \\
-            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1
-            \end{bmatrix}
-
-        .. math::
-            U = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            0 & 0 & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            0 & 0 & 0 & \cdots & U_{n-1, n-1}
-            \end{bmatrix}
-
-        And for a matrix with more rows than the columns,
-        the decomposition would look like:
-
-        .. math::
-            L = \begin{bmatrix}
-            1 & 0 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
-            L_{1, 0} & 1 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
-            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 & 0 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \ddots
-            & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1 & 0
-            & \cdots & 0 \\
-            L_{n, 0} & L_{n, 1} & L_{n, 2} & \cdots & L_{n, n-1} & 1
-            & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots & \vdots
-            & \ddots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & L_{m-1, n-1}
-            & 0 & \cdots & 1 \\
-            \end{bmatrix}
-
-        .. math::
-            U = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            0 & 0 & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            0 & 0 & 0 & \cdots & U_{n-1, n-1} \\
-            0 & 0 & 0 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            0 & 0 & 0 & \cdots & 0
-            \end{bmatrix}
-
-        Finally, for a matrix with more columns than the rows, the
-        decomposition would look like:
-
-        .. math::
-            L = \begin{bmatrix}
-            1 & 0 & 0 & \cdots & 0 \\
-            L_{1, 0} & 1 & 0 & \cdots & 0 \\
-            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & 1
-            \end{bmatrix}
-
-        .. math::
-            U = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, m-1}
-            & \cdots & U_{0, n-1} \\
-            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, m-1}
-            & \cdots & U_{1, n-1} \\
-            0 & 0 & U_{2, 2} & \cdots & U_{2, m-1}
-            & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots
-            & \cdots & \vdots \\
-            0 & 0 & 0 & \cdots & U_{m-1, m-1}
-            & \cdots & U_{m-1, n-1} \\
-            \end{bmatrix}
-
-        About the compressed LU storage:
-
-        The results of the decomposition are often stored in compressed
-        forms rather than returning $L$ and $U$ matrices individually.
-
-        It may be less intiuitive, but it is commonly used for a lot of
-        numeric libraries because of the efficiency.
-
-        The storage matrix is defined as following for this specific
-        method:
-
-        * The subdiagonal elements of $L$ are stored in the subdiagonal
-          portion of $LU$, that is $LU_{i, j} = L_{i, j}$ whenever
-          $i > j$.
-        * The elements on the diagonal of $L$ are all 1, and are not
-          explicitly stored.
-        * $U$ is stored in the upper triangular portion of $LU$, that is
-          $LU_{i, j} = U_{i, j}$ whenever $i <= j$.
-        * For a case of $m > n$, the right side of the $L$ matrix is
-          trivial to store.
-        * For a case of $m < n$, the below side of the $U$ matrix is
-          trivial to store.
-
-        So, for a square matrix, the compressed output matrix would be:
-
-        .. math::
-            LU = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & U_{n-1, n-1}
-            \end{bmatrix}
-
-        For a matrix with more rows than the columns, the compressed
-        output matrix would be:
-
-        .. math::
-            LU = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots
-            & U_{n-1, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots
-            & L_{m-1, n-1} \\
-            \end{bmatrix}
-
-        For a matrix with more columns than the rows, the compressed
-        output matrix would be:
-
-        .. math::
-            LU = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, m-1}
-            & \cdots & U_{0, n-1} \\
-            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, m-1}
-            & \cdots & U_{1, n-1} \\
-            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, m-1}
-            & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots
-            & \cdots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & U_{m-1, m-1}
-            & \cdots & U_{m-1, n-1} \\
-            \end{bmatrix}
-
-        About the pivot searching algorithm:
-
-        When a matrix contains symbolic entries, the pivot search algorithm
-        differs from the case where every entry can be categorized as zero or
-        nonzero.
-        The algorithm searches column by column through the submatrix whose
-        top left entry coincides with the pivot position.
-        If it exists, the pivot is the first entry in the current search
-        column that iszerofunc guarantees is nonzero.
-        If no such candidate exists, then each candidate pivot is simplified
-        if simpfunc is not None.
-        The search is repeated, with the difference that a candidate may be
-        the pivot if ``iszerofunc()`` cannot guarantee that it is nonzero.
-        In the second search the pivot is the first candidate that
-        iszerofunc can guarantee is nonzero.
-        If no such candidate exists, then the pivot is the first candidate
-        for which iszerofunc returns None.
-        If no such candidate exists, then the search is repeated in the next
-        column to the right.
-        The pivot search algorithm differs from the one in ``rref()``, which
-        relies on ``_find_reasonable_pivot()``.
-        Future versions of ``LUdecomposition_simple()`` may use
-        ``_find_reasonable_pivot()``.
-
-        See Also
-        ========
-
-        LUdecomposition
-        LUdecompositionFF
-        LUsolve
-        """
-
-        if rankcheck:
-            # https://github.com/sympy/sympy/issues/9796
-            pass
-
-        if self.rows == 0 or self.cols == 0:
-            # Define LU decomposition of a matrix with no entries as a matrix
-            # of the same dimensions with all zero entries.
-            return self.zeros(self.rows, self.cols), []
-
-        dps = _dotprodsimp if dotprodsimp else lambda e: e
-        lu = self.as_mutable()
-        row_swaps = []
-
-        pivot_col = 0
-        for pivot_row in range(0, lu.rows - 1):
-            # Search for pivot. Prefer entry that iszeropivot determines
-            # is nonzero, over entry that iszeropivot cannot guarantee
-            # is  zero.
-            # XXX ``_find_reasonable_pivot`` uses slow zero testing. Blocked by bug #10279
-            # Future versions of LUdecomposition_simple can pass iszerofunc and simpfunc
-            # to _find_reasonable_pivot().
-            # In pass 3 of _find_reasonable_pivot(), the predicate in ``if x.equals(S.Zero):``
-            # calls sympy.simplify(), and not the simplification function passed in via
-            # the keyword argument simpfunc.
-
-            iszeropivot = True
-            while pivot_col != self.cols and iszeropivot:
-                sub_col = (lu[r, pivot_col] for r in range(pivot_row, self.rows))
-                pivot_row_offset, pivot_value, is_assumed_non_zero, ind_simplified_pairs =\
-                    _find_reasonable_pivot_naive(sub_col, iszerofunc, simpfunc)
-                iszeropivot = pivot_value is None
-                if iszeropivot:
-                    # All candidate pivots in this column are zero.
-                    # Proceed to next column.
-                    pivot_col += 1
-
-            if rankcheck and pivot_col != pivot_row:
-                # All entries including and below the pivot position are
-                # zero, which indicates that the rank of the matrix is
-                # strictly less than min(num rows, num cols)
-                # Mimic behavior of previous implementation, by throwing a
-                # ValueError.
-                raise ValueError("Rank of matrix is strictly less than"
-                                 " number of rows or columns."
-                                 " Pass keyword argument"
-                                 " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
-
-            candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset
-
-            if candidate_pivot_row is None and iszeropivot:
-                # If candidate_pivot_row is None and iszeropivot is True
-                # after pivot search has completed, then the submatrix
-                # below and to the right of (pivot_row, pivot_col) is
-                # all zeros, indicating that Gaussian elimination is
-                # complete.
-                return lu, row_swaps
-
-            # Update entries simplified during pivot search.
-            for offset, val in ind_simplified_pairs:
-                lu[pivot_row + offset, pivot_col] = val
-
-            if pivot_row != candidate_pivot_row:
-                # Row swap book keeping:
-                # Record which rows were swapped.
-                # Update stored portion of L factor by multiplying L on the
-                # left and right with the current permutation.
-                # Swap rows of U.
-                row_swaps.append([pivot_row, candidate_pivot_row])
-
-                # Update L.
-                lu[pivot_row, 0:pivot_row], lu[candidate_pivot_row, 0:pivot_row] = \
-                    lu[candidate_pivot_row, 0:pivot_row], lu[pivot_row, 0:pivot_row]
-
-                # Swap pivot row of U with candidate pivot row.
-                lu[pivot_row, pivot_col:lu.cols], lu[candidate_pivot_row, pivot_col:lu.cols] = \
-                    lu[candidate_pivot_row, pivot_col:lu.cols], lu[pivot_row, pivot_col:lu.cols]
-
-            # Introduce zeros below the pivot by adding a multiple of the
-            # pivot row to a row under it, and store the result in the
-            # row under it.
-            # Only entries in the target row whose index is greater than
-            # start_col may be nonzero.
-            start_col = pivot_col + 1
-            for row in range(pivot_row + 1, lu.rows):
-                # Store factors of L in the subcolumn below
-                # (pivot_row, pivot_row).
-                lu[row, pivot_row] = \
-                    dps(lu[row, pivot_col]/lu[pivot_row, pivot_col])
-
-                # Form the linear combination of the pivot row and the current
-                # row below the pivot row that zeros the entries below the pivot.
-                # Employing slicing instead of a loop here raises
-                # NotImplementedError: Cannot add Zero to MutableSparseMatrix
-                # in sympy/matrices/tests/test_sparse.py.
-                # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
-                for c in range(start_col, lu.cols):
-                    lu[row, c] = dps(lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c])
-
-            if pivot_row != pivot_col:
-                # matrix rank < min(num rows, num cols),
-                # so factors of L are not stored directly below the pivot.
-                # These entries are zero by construction, so don't bother
-                # computing them.
-                for row in range(pivot_row + 1, lu.rows):
-                    lu[row, pivot_col] = self.zero
-
-            pivot_col += 1
-            if pivot_col == lu.cols:
-                # All candidate pivots are zero implies that Gaussian
-                # elimination is complete.
-                return lu, row_swaps
-
-        if rankcheck:
-            if iszerofunc(
-            lu[Min(lu.rows, lu.cols) - 1, Min(lu.rows, lu.cols) - 1]):
-                raise ValueError("Rank of matrix is strictly less than"
-                                 " number of rows or columns."
-                                 " Pass keyword argument"
-                                 " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
-
-        return lu, row_swaps
-
-    def LUdecompositionFF(self):
-        """Compute a fraction-free LU decomposition.
-
-        Returns 4 matrices P, L, D, U such that PA = L D**-1 U.
-        If the elements of the matrix belong to some integral domain I, then all
-        elements of L, D and U are guaranteed to belong to I.
-
-        **Reference**
-            - W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
-              for LU and QR factors". Frontiers in Computer Science in China,
-              Vol 2, no. 1, pp. 67-80, 2008.
-
-        See Also
-        ========
-
-        LUdecomposition
-        LUdecomposition_Simple
-        LUsolve
-        """
-        from sympy.matrices import SparseMatrix
-        zeros = SparseMatrix.zeros
-        eye = SparseMatrix.eye
-
-        n, m = self.rows, self.cols
-        U, L, P = self.as_mutable(), eye(n), eye(n)
-        DD = zeros(n, n)
-        oldpivot = 1
-
-        for k in range(n - 1):
-            if U[k, k] == 0:
-                for kpivot in range(k + 1, n):
-                    if U[kpivot, k]:
-                        break
-                else:
-                    raise ValueError("Matrix is not full rank")
-                U[k, k:], U[kpivot, k:] = U[kpivot, k:], U[k, k:]
-                L[k, :k], L[kpivot, :k] = L[kpivot, :k], L[k, :k]
-                P[k, :], P[kpivot, :] = P[kpivot, :], P[k, :]
-            L[k, k] = Ukk = U[k, k]
-            DD[k, k] = oldpivot * Ukk
-            for i in range(k + 1, n):
-                L[i, k] = Uik = U[i, k]
-                for j in range(k + 1, m):
-                    U[i, j] = (Ukk * U[i, j] - U[k, j] * Uik) / oldpivot
-                U[i, k] = 0
-            oldpivot = Ukk
-        DD[n - 1, n - 1] = oldpivot
-        return P, L, DD, U
-
-    def LUsolve(self, rhs, iszerofunc=_iszero, dotprodsimp=None):
-        """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = self``.
-
-        This is for symbolic matrices, for real or complex ones use
-        mpmath.lu_solve or mpmath.qr_solve.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        QRsolve
-        pinv_solve
-        LUdecomposition
-        """
-        if rhs.rows != self.rows:
-            raise ShapeError(
-                "``self`` and ``rhs`` must have the same number of rows.")
-
-        m = self.rows
-        n = self.cols
-        if m < n:
-            raise NotImplementedError("Underdetermined systems not supported.")
-
-        try:
-            A, perm = self.LUdecomposition_Simple(
-                iszerofunc=_iszero, rankcheck=True, dotprodsimp=dotprodsimp)
-        except ValueError:
-            raise NotImplementedError("Underdetermined systems not supported.")
-
-        dps = _dotprodsimp if dotprodsimp else lambda e: e
-        b = rhs.permute_rows(perm).as_mutable()
-        # forward substitution, all diag entries are scaled to 1
-        for i in range(m):
-            for j in range(min(i, n)):
-                scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
-        # consistency check for overdetermined systems
-        if m > n:
-            for i in range(n, m):
-                for j in range(b.cols):
-                    if not iszerofunc(b[i, j]):
-                        raise ValueError("The system is inconsistent.")
-            b = b[0:n, :]   # truncate zero rows if consistent
-        # backward substitution
-        for i in range(n - 1, -1, -1):
-            for j in range(i + 1, n):
-                scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
-            scale = A[i, i]
-            b.row_op(i, lambda x, _: dps(x / scale))
-        return rhs.__class__(b)
-
     def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
 
@@ -3207,8 +2158,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        lower_triangular_solve
-        upper_triangular_solve
+        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
+        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
@@ -3415,238 +2366,6 @@ class MatrixBase(MatrixDeprecated,
         Matrix([[sqrt(3)/2, 0]])
         """
         return v * (self.dot(v) / v.dot(v))
-
-    def QRdecomposition(self):
-        """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
-
-        Examples
-        ========
-
-        This is the example from wikipedia:
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        Matrix([
-        [ 6/7, -69/175, -58/175],
-        [ 3/7, 158/175,   6/175],
-        [-2/7,    6/35,  -33/35]])
-        >>> R
-        Matrix([
-        [14,  21, -14],
-        [ 0, 175, -70],
-        [ 0,   0,  35]])
-        >>> A == Q*R
-        True
-
-        QR factorization of an identity matrix:
-
-        >>> A = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-        >>> R
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-
-        cholesky
-        LDLdecomposition
-        LUdecomposition
-        QRsolve
-        """
-        cls = self.__class__
-        mat = self.as_mutable()
-
-        n = mat.rows
-        m = mat.cols
-        ranked = list()
-
-        # Pad with additional rows to make wide matrices square
-        # nOrig keeps track of original size so zeros can be trimmed from Q
-        if n < m:
-            nOrig = n
-            n = m
-            mat = mat.col_join(mat.zeros(n - nOrig, m))
-        else:
-            nOrig = n
-
-        Q, R = mat.zeros(n, m), mat.zeros(m)
-        for j in range(m):  # for each column vector
-            tmp = mat[:, j]  # take original v
-            for i in range(j):
-                # subtract the project of mat on new vector
-                R[i, j] = Q[:, i].dot(mat[:, j], hermitian=True)
-                tmp -= Q[:, i] * R[i, j]
-                tmp.expand()
-            # normalize it
-            R[j, j] = tmp.norm()
-            if not R[j, j].is_zero:
-                ranked.append(j)
-                Q[:, j] = tmp / R[j, j]
-
-
-        if len(ranked) != 0:
-            return (
-            cls(Q.extract(range(nOrig), ranked)),
-            cls(R.extract(ranked, range(R.cols)))
-            )
-        else:
-            # Trivial case handling for zero-rank matrix
-            # Force Q as matrix containing standard basis vectors
-            for i in range(Min(nOrig, m)):
-                Q[i, i] = 1
-            return (
-            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
-            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
-            )
-
-    def QRsolve(self, b):
-        """Solve the linear system ``Ax = b``.
-
-        ``self`` is the matrix ``A``, the method argument is the vector
-        ``b``.  The method returns the solution vector ``x``.  If ``b`` is a
-        matrix, the system is solved for each column of ``b`` and the
-        return value is a matrix of the same shape as ``b``.
-
-        This method is slower (approximately by a factor of 2) but
-        more stable for floating-point arithmetic than the LUsolve method.
-        However, LUsolve usually uses an exact arithmetic, so you don't need
-        to use QRsolve.
-
-        This is mainly for educational purposes and symbolic matrices, for real
-        (or complex) matrices use mpmath.qr_solve.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        pinv_solve
-        QRdecomposition
-        """
-
-        Q, R = self.as_mutable().QRdecomposition()
-        y = Q.T * b
-
-        # back substitution to solve R*x = y:
-        # We build up the result "backwards" in the vector 'x' and reverse it
-        # only in the end.
-        x = []
-        n = R.rows
-        for j in range(n - 1, -1, -1):
-            tmp = y[j, :]
-            for k in range(j + 1, n):
-                tmp -= R[j, k] * x[n - 1 - k]
-            x.append(tmp / R[j, j])
-        return self._new([row._mat for row in reversed(x)])
-
-    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
-        r"""Returns a pair of matrices (`C`, `F`) with matching rank
-        such that `A = C F`.
-
-        Parameters
-        ==========
-
-        iszerofunc : Function, optional
-            A function used for detecting whether an element can
-            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
-
-        simplify : Bool or Function, optional
-            A function used to simplify elements when looking for a
-            pivot. By default SymPy's ``simplify`` is used.
-
-        Returns
-        =======
-
-        (C, F) : Matrices
-            `C` and `F` are full-rank matrices with rank as same as `A`,
-            whose product gives `A`.
-
-            See Notes for additional mathematical details.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([
-        ...     [1, 3, 1, 4],
-        ...     [2, 7, 3, 9],
-        ...     [1, 5, 3, 1],
-        ...     [1, 2, 0, 8]
-        ... ])
-        >>> C, F = A.rank_decomposition()
-        >>> C
-        Matrix([
-        [1, 3, 4],
-        [2, 7, 9],
-        [1, 5, 1],
-        [1, 2, 8]])
-        >>> F
-        Matrix([
-        [1, 0, -2, 0],
-        [0, 1,  1, 0],
-        [0, 0,  0, 1]])
-        >>> C * F == A
-        True
-
-        Notes
-        =====
-
-        Obtaining `F`, an RREF of `A`, is equivalent to creating a
-        product
-
-        .. math::
-            E_n E_{n-1} ... E_1 A = F
-
-        where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
-        permutation matrices equivalent to each row-reduction step.
-
-        The inverse of the same product of elimination matrices gives
-        `C`:
-
-        .. math::
-            C = (E_n E_{n-1} ... E_1)^{-1}
-
-        It is not necessary, however, to actually compute the inverse:
-        the columns of `C` are those from the original matrix with the
-        same column indices as the indices of the pivot columns of `F`.
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Rank_factorization
-
-        .. [2] Piziak, R.; Odell, P. L. (1 June 1999).
-            "Full Rank Factorization of Matrices".
-            Mathematics Magazine. 72 (3): 193. doi:10.2307/2690882
-
-        See Also
-        ========
-
-        rref
-        """
-        (F, pivot_cols) = self.rref(
-            simplify=simplify, iszerofunc=iszerofunc, pivots=True)
-        rank = len(pivot_cols)
-
-        C = self.extract(range(self.rows), pivot_cols)
-        F = F[:rank, :]
-
-        return (C, F)
 
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
@@ -3888,29 +2607,6 @@ class MatrixBase(MatrixDeprecated,
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B``, where A is an upper triangular matrix.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if rhs.rows != self.rows:
-            raise TypeError("Matrix size mismatch.")
-        if not self.is_upper:
-            raise TypeError("Matrix is not upper triangular.")
-        return self._upper_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-
     def vech(self, diagonal=True, check_symmetry=True):
         """Return the unique elements of a symmetric Matrix as a one column matrix
         by stacking the elements in the lower triangle.
@@ -3965,6 +2661,76 @@ class MatrixBase(MatrixDeprecated,
                     v[count] = self[i, j]
                     count += 1
         return v
+
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
+        return _rank_decomposition(self, iszerofunc=iszerofunc,
+                simplify=simplify)
+
+    def cholesky(self, hermitian=True, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def LUdecomposition(self, iszerofunc=_iszero, simpfunc=None,
+            rankcheck=False, dotprodsimp=None):
+        return _LUdecomposition(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
+                rankcheck=rankcheck, dotprodsimp=dotprodsimp)
+
+    def LUdecomposition_Simple(self, iszerofunc=_iszero, simpfunc=None,
+            rankcheck=False, dotprodsimp=None):
+        return _LUdecomposition_Simple(self, iszerofunc=iszerofunc,
+                simpfunc=simpfunc, rankcheck=rankcheck, dotprodsimp=dotprodsimp)
+
+    def LUdecompositionFF(self):
+        return _LUdecompositionFF(self)
+
+    def QRdecomposition(self, dotprodsimp=None):
+        return _QRdecomposition(self, dotprodsimp=dotprodsimp)
+
+    def diagonal_solve(self, rhs):
+        return _diagonal_solve(self, rhs)
+
+    def lower_triangular_solve(self, rhs, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def upper_triangular_solve(self, rhs, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def cholesky_solve(self, rhs, dotprodsimp=None):
+        return _cholesky_solve(self, rhs, dotprodsimp=dotprodsimp)
+
+    def LDLsolve(self, rhs, dotprodsimp=None):
+        return _LDLsolve(self, rhs, dotprodsimp=dotprodsimp)
+
+    def LUsolve(self, rhs, iszerofunc=_iszero, dotprodsimp=None):
+        return _LUsolve(self, rhs, iszerofunc=iszerofunc,
+                dotprodsimp=dotprodsimp)
+
+    def QRsolve(self, b, dotprodsimp=None):
+        return _QRsolve(self, b, dotprodsimp=dotprodsimp)
+
+    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
+        return _gauss_jordan_solve(self, B, freevar=freevar,
+                dotprodsimp=dotprodsimp)
+
+    rank_decomposition.__doc__     = _rank_decomposition.__doc__
+    cholesky.__doc__               = _cholesky.__doc__
+    LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
+    LUdecomposition.__doc__        = _LUdecomposition.__doc__
+    LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
+    LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
+    QRdecomposition.__doc__        = _QRdecomposition.__doc__
+
+    diagonal_solve.__doc__         = _diagonal_solve.__doc__
+    lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
+    cholesky_solve.__doc__         = _cholesky_solve.__doc__
+    LDLsolve.__doc__               = _LDLsolve.__doc__
+    LUsolve.__doc__                = _LUsolve.__doc__
+    QRsolve.__doc__                = _QRsolve.__doc__
+    gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
+
 
 @deprecated(
     issue=15109,
