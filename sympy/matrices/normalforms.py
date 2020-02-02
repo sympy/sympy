@@ -291,5 +291,5 @@ def _swap_rows(k, A, B, L, D):
     L[(k + 1):, k - 1] = (L[(k + 1):, k - 1] * L[k, k - 1] +
                           L[(k + 1):, k] * D[k - 1]) / D[k]
     L[(k + 1):, k] = t
-    t = int(D[k - 1]) * int(D[k + 1]) + int(L[k, k - 1]) * int(L[k, k - 1])
+    t = D[k - 1] * D[k + 1] + L[k, k - 1] * L[k, k - 1]
     D[k] = t / D[k]
