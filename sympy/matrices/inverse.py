@@ -325,13 +325,7 @@ def _inv_CH(M, iszerofunc=_iszero, dotprodsimp=None):
     if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-    I = M.eye(M.rows)
-
-    if not M.is_symmetric() and not M.is_hermitian:
-        I = M.T
-        M = I.multiply(M, dotprodsimp=dotprodsimp)
-
-    return M.cholesky_solve(I, dotprodsimp=dotprodsimp)
+    return M.cholesky_solve(M.eye(M.rows), dotprodsimp=dotprodsimp)
 
 def _inv_LDL(M, iszerofunc=_iszero, dotprodsimp=None):
     """Calculates the inverse using LDL decomposition.
@@ -362,13 +356,7 @@ def _inv_LDL(M, iszerofunc=_iszero, dotprodsimp=None):
     if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-    I = M.eye(M.rows)
-
-    if not M.is_symmetric() and not M.is_hermitian:
-        I = M.T
-        M = I.multiply(M, dotprodsimp=dotprodsimp)
-
-    return M.LDLsolve(I, dotprodsimp=dotprodsimp)
+    return M.LDLsolve(M.eye(M.rows), dotprodsimp=dotprodsimp)
 
 def _inv_QR(M, iszerofunc=_iszero, dotprodsimp=None):
     """Calculates the inverse using QR decomposition.
