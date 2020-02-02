@@ -172,7 +172,7 @@ def _nonzero_negative(m):
     return len(nums) == 1 and nums[0] < 0
 
 
-def hermite_normal_form(m, domain = None):
+def hermite_normal_form(m):
     """
     Returns the hermite_normal_form of integers matices.
 
@@ -180,27 +180,25 @@ def hermite_normal_form(m, domain = None):
     ========
 
     >>> from sympy.polys.solvers import RawMatrix as Matrix
-    >>> from sympy.polys.domains import ZZ
     >>> from sympy.matrices.normalforms import hermite_normal_form
     >>> m = Matrix([[2, 3, 6, 2], [5, 6, 1, 6], [8, 3, 1, 1]])
-    >>> setattr(m, "ring", ZZ)
     >>> print(hermite_normal_form(m))
     (Matrix([[1, 0, 50, -11], [0, 3, 28, -2], [0, 0, 61, -13]]),
     Matrix([[ 9, -5, 1], [ 5, -2, 0], [11, -6, 1]]))
 
     """
 
-    from sympy import eye, ones
+    from sympy import eye, ones, Matrix
 
-    if domain != 'ZZ':
-        raise ValueError("Hermite normal for is defined only for integer domain")
     row = m.shape[0]
     col = m.shape[1]
 
     A = m
     B = eye(row)
-    L =zeros(row, row)
+    L = zeros(row, row)
     D = ones(row + 1, 1)
+    if row == 1:
+        return m, Matrix([-1]) if _nonzero_negative(m) else eye(1)
 
     if _nonzero_negative(m):
         B[row - 1, row - 1] = -1

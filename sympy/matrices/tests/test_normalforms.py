@@ -24,7 +24,6 @@ def test_smith_normal():
 
 def test_hermite_normal():
     m = Matrix([[3, 3, 1, 4], [0, 1, 0, 0], [0, 0, 19, 16], [0, 0, 0, 3]])
-    setattr(m, 'ring', ZZ)
     H, U = hermite_normal_form(m)
     assert H == Matrix([[3, 0, 1, 1], [0, 1, 0, 0], [0, 0, 19, 1], [0, 0, 0, 3]])
     assert U == Matrix([[1, -3, 0, -1], [0, 1, 0, 0], [0, 0, 1, -5], [0, 0, 0, 1]])
