@@ -2718,9 +2718,7 @@ Examples
     ========
     >>> from sympy.crypto.crypto import encipher_ctc
     >>> key = "HI"
-    >>> encipher_ctc("HelloIlovecrypto", key)
-    
-    
+    >>> encipher_ctc("HelloIlovecrypto", key)    
     
     >>> from sympy.crypto.crypto import decipher_ctc
     >>> key = "HI"
@@ -2729,7 +2727,7 @@ Examples
 
 def encipher_ctc(message, key):
 
-	c = ""
+    c = ""
 
 	k_index = 0
 
