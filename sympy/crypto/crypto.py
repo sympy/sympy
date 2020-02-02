@@ -2726,34 +2726,31 @@ Examples
 """
 
 def encipher_ctc(message, key):
+	c = ""
 
-    c = ""
+	k_index = 0
 
-    k_index = 0
-    
-    message_len = len(message)
-    message_list = list(message)
-    key_list = sorted(list(key))
+	message_len = len(message)
+	message_list = list(message)
+	key_list = sorted(list(key))
 
-    col = len(key)
-    row = int(mt.ceil(message_len/col))
+	col = len(key)
+	row = int(mt.ceil(message_len/col))
 
-    null_m = int(row*col - message_len)
-    
-    message_list.extend(' ' * null_m) 
+	null_m = int(row*col - message_len)
+	message_list.extend(' ' * null_m) 
 
 
-    matrix = [message_list[i: i + col] for i in range(0, len(message_list), col)] 
+	matrix = [message_list[i: i + col] for i in range(0, len(message_list), col)] 
 
-    for _ in range(col):
-        current_ind = key.index(key_list[k_index])
+	for _ in range(col):
+		current_ind = key.index(key_list[k_index])
 
-        c += ''.join([row[current_ind] for row in matrix])
+		c += ''.join([row[current_ind] for row in matrix])
 
-	    k_index += 1
+		k_index += 1
 
-    return c
-
+	return c
 
 def decipher_ctc(c, key):
 
