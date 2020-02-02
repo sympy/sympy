@@ -38,6 +38,8 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
+Installation methods for Windows, MacOS and Linux are available <a href="https://docs.sympy.org/latest/documentation-style-guide.html#installation">HERE.</a>
+
 The recommended installation method is through Anaconda,
 https://www.anaconda.com/download/
 
