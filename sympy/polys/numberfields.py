@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, Rational, AlgebraicNumber,
+    S, Rational, AlgebraicNumber, GoldenRatio,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
 from sympy.core.compatibility import reduce
@@ -517,6 +517,8 @@ def _minpoly_compose(ex, x, dom):
     if ex is I:
         _, factors = factor_list(x**2 + 1, x, domain=dom)
         return x**2 + 1 if len(factors) == 1 else x - I
+    if ex is GoldenRatio:
+        return x**2 - x - 1
     if hasattr(dom, 'symbols') and ex in dom.symbols:
         return x - ex
 
