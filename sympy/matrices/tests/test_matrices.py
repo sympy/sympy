@@ -21,7 +21,6 @@ from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
-
 from sympy.abc import a, b, c, d, x, y, z, t
 
 # don't re-order this list
@@ -4191,3 +4190,10 @@ def test_issue_8207():
     e = diff(d, a[0, 0])
     assert d == b[0, 0]
     assert e == 0
+
+def test_upper():
+    assert (Matrix.lower(ones(4), -1) == Matrix([[0, 0, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0]]))
+
+def test_lower():
+    assert (Matrix.
+    upper(ones(4,2)) == Matrix([[1, 1], [0, 1], [0, 0], [0, 0]]))
