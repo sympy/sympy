@@ -2729,9 +2729,9 @@ def encipher_ctc(message, key):
 
     c = ""
 
-	k_index = 0
-
-	message_len = len(message)
+    k_index = 0
+    
+    message_len = len(message)
 	message_list = list(message)
 	key_list = sorted(list(key))
 
