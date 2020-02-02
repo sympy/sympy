@@ -192,7 +192,7 @@ from collections import defaultdict
 
 from sympy.core.add import Add
 from sympy.core.basic import S
-from sympy.core.compatibility import ordered, range
+from sympy.core.compatibility import ordered
 from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.function import expand_mul

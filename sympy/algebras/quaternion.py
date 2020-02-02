@@ -4,7 +4,7 @@
 from __future__ import print_function
 
 from sympy import S, Rational
-from sympy import re, im, conjugate
+from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
 from sympy import integrate
@@ -143,7 +143,7 @@ class Quaternion(Expr):
         >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
         >>> q = trigsimp(Quaternion.from_rotation_matrix(M))
         >>> q
-        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))/2*k
+        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))*sign(sin(x))/2*k
         """
 
         absQ = M.det()**Rational(1, 3)
@@ -153,25 +153,11 @@ class Quaternion(Expr):
         c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
         d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
 
-        try:
-            b = Quaternion.__copysign(b, M[2, 1] - M[1, 2])
-            c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
-            d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
-
-        except Exception:
-            pass
+        b = b * sign(M[2, 1] - M[1, 2])
+        c = c * sign(M[0, 2] - M[2, 0])
+        d = d * sign(M[1, 0] - M[0, 1])
 
         return Quaternion(a, b, c, d)
-
-    @staticmethod
-    def __copysign(x, y):
-
-        # Takes the sign from the second term and sets the sign of the first
-        # without altering the magnitude.
-
-        if y == 0:
-            return 0
-        return x if x*y > 0 else -x
 
     def __add__(self, other):
         return self.add(other)

@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -185,7 +184,7 @@ class Product(ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)

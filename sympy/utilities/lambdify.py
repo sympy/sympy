@@ -5,16 +5,15 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import inspect
 import keyword
-import re
 import textwrap
 import linecache
 
-from types import FunctionType
-
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins, PY3)
+    NotIterable, builtins)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -22,13 +21,13 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}
-MPMATH_DEFAULT = {}
-NUMPY_DEFAULT = {"I": 1j}
-SCIPY_DEFAULT = {"I": 1j}
-TENSORFLOW_DEFAULT = {}
-SYMPY_DEFAULT = {}
-NUMEXPR_DEFAULT = {}
+MATH_DEFAULT = {}  # type: Dict[str, Any]
+MPMATH_DEFAULT = {}  # type: Dict[str, Any]
+NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
+SYMPY_DEFAULT = {}  # type: Dict[str, Any]
+NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -81,12 +80,12 @@ MPMATH_TRANSLATIONS = {
     "FallingFactorial": "ff",
 }
 
-NUMPY_TRANSLATIONS = {}
-SCIPY_TRANSLATIONS = {}
+NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
+SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
-TENSORFLOW_TRANSLATIONS = {}
+TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
-NUMEXPR_TRANSLATIONS = {}
+NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
 
 # Available modules:
 MODULES = {
@@ -114,7 +113,7 @@ def _import(module, reload=False):
     other modules.
     """
     # Required despite static analysis claiming it is not used
-    from sympy.external import import_module
+    from sympy.external import import_module # noqa:F401
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -655,7 +654,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       the generated function relies on the input being a numpy array:
 
       >>> from sympy import Piecewise
-      >>> from sympy.utilities.pytest import ignore_warnings
+      >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
 
       >>> with ignore_warnings(RuntimeWarning):
@@ -697,7 +696,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             else:
                 modules = ["numpy"]
         else:
-            modules = ["scipy", "numpy"]
+            modules = ["numpy", "scipy"]
 
     # Get the needed namespaces.
     namespaces = []
@@ -705,7 +704,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
-    if isinstance(modules, (dict, string_types)) or not hasattr(modules, '__iter__'):
+    if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
         # consistency check
@@ -837,7 +836,7 @@ def _get_namespace(m):
     """
     This is used by _lambdify to parse its arguments.
     """
-    if isinstance(m, string_types):
+    if isinstance(m, str):
         _import(m)
         return MODULES[m][0]
     elif isinstance(m, dict):
@@ -885,7 +884,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
-        if isinstance(args, string_types):
+        if isinstance(args, str):
             return args
         elif isinstance(args, DeferredVector):
             return str(args)
@@ -902,19 +901,13 @@ def lambdastr(args, expr, printer=None, dummify=None):
                 return str(args)
 
     def sub_expr(expr, dummies_dict):
-        try:
-            expr = sympify(expr).xreplace(dummies_dict)
-        except Exception:
-            if isinstance(expr, DeferredVector):
-                pass
-            elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
-                expr = dict(zip(k, v))
-            elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
-            elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+        expr = sympify(expr)
+        # dict/tuple are sympified to Basic
+        if isinstance(expr, Basic):
+            expr = expr.xreplace(dummies_dict)
+        # list is not sympified to Basic
+        elif isinstance(expr, list):
+            expr = [sub_expr(a, dummies_dict) for a in expr]
         return expr
 
     # Transform args
@@ -953,14 +946,14 @@ def lambdastr(args, expr, printer=None, dummify=None):
     if dummify:
         args = sub_args(args, dummies_dict)
     else:
-        if isinstance(args, string_types):
+        if isinstance(args, str):
             pass
         elif iterable(args, exclude=DeferredVector):
             args = ",".join(str(a) for a in args)
 
     # Transform expr
     if dummify:
-        if isinstance(expr, string_types):
+        if isinstance(expr, str):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
@@ -1030,18 +1023,10 @@ class _EvaluatorPrinter(object):
 
         return '\n'.join(funclines) + '\n'
 
-    if PY3:
-        @classmethod
-        def _is_safe_ident(cls, ident):
-            return isinstance(ident, string_types) and ident.isidentifier() \
-                    and not keyword.iskeyword(ident)
-    else:
-        _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
-
-        @classmethod
-        def _is_safe_ident(cls, ident):
-            return isinstance(ident, string_types) and cls._safe_ident_re.match(ident) \
-                and not (keyword.iskeyword(ident) or ident == 'None')
+    @classmethod
+    def _is_safe_ident(cls, ident):
+        return isinstance(ident, str) and ident.isidentifier() \
+                and not keyword.iskeyword(ident)
 
     def _preprocess(self, args, expr):
         """Preprocess args, expr to replace arguments that do not map
@@ -1265,7 +1250,7 @@ def implemented_function(symfunc, implementation):
     if isinstance(symfunc, UndefinedFunction):
         kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
-    if isinstance(symfunc, string_types):
+    if isinstance(symfunc, str):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
         symfunc = UndefinedFunction(

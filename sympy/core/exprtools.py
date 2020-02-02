@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS, range
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -287,7 +287,7 @@ def decompose_power_rat(expr):
 class Factors(object):
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 
-    __slots__ = ['factors', 'gens']
+    __slots__ = ('factors', 'gens')
 
     def __init__(self, factors=None):  # Factors
         """Initialize Factors from dict or expr.
@@ -358,8 +358,8 @@ class Factors(object):
             for f in list(factors.keys()):
                 if isinstance(f, Rational) and not isinstance(f, Integer):
                     p, q = Integer(f.p), Integer(f.q)
-                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
-                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors[p] = (factors[p] if p in factors else S.Zero) + factors[f]
+                    factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
                 factors[I] = S.One*i
@@ -448,14 +448,12 @@ class Factors(object):
         args = []
         for factor, exp in self.factors.items():
             if exp != 1:
-                b, e = factor.as_base_exp()
-                if isinstance(exp, int):
-                    e = _keep_coeff(Integer(exp), e)
-                elif isinstance(exp, Rational):
+                if isinstance(exp, Integer):
+                    b, e = factor.as_base_exp()
                     e = _keep_coeff(exp, e)
+                    args.append(b**e)
                 else:
-                    e *= exp
-                args.append(b**e)
+                    args.append(factor**exp)
             else:
                 args.append(factor)
         return Mul(*args)
@@ -817,7 +815,7 @@ class Factors(object):
 class Term(object):
     """Efficient representation of ``coeff*(numer/denom)``. """
 
-    __slots__ = ['coeff', 'numer', 'denom']
+    __slots__ = ('coeff', 'numer', 'denom')
 
     def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:

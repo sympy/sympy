@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import divisors
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, range)
+    default_sort_key)
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
@@ -36,7 +36,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.simplify import (simplify, collect, powsimp, posify,
+from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
@@ -58,7 +58,6 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
-import itertools
 import warnings
 
 
@@ -161,6 +160,9 @@ def denoms(eq, *symbols):
     pot = preorder_traversal(eq)
     dens = set()
     for p in pot:
+        # lhs and rhs will be traversed after anyway
+        if isinstance(p, Relational):
+            continue
         den = denom(p)
         if den is S.One:
             continue
@@ -998,30 +1000,6 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if fi.is_Relational:
-            if flags.get('dict', False):
-                solution = reduce_inequalities(f, symbols=symbols)
-                if isinstance(solution, Equality):
-                    return [{solution.lhs: solution.rhs}]
-                solution = list(solution.args)
-                for sol in solution:
-                    # Behavior for types like StrictLessThan is not defined
-                    if not isinstance(sol, (Or, Equality)):
-                        warnings.warn(filldedent('''
-                            Warning: Ignoring dict=True due to
-                            incompatible type of %s.''' % sol))
-                        return reduce_inequalities(f, symbols=symbols)
-                intermediate = [sol for sol in solution
-                                if isinstance(sol, Equality)]
-                solution[:] = [sol.args for sol in solution
-                               if sol not in intermediate]
-                solutions = [intermediate + list(sol)
-                             for sol in itertools.product(*solution)]
-                for i in range(len(solutions)):
-                    ele = {}
-                    for sol in solutions[i]:
-                        ele[sol.lhs] = sol.rhs
-                    solutions[i] = ele
-                return [] if solutions == [{}] else solutions
             return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
@@ -2907,6 +2885,8 @@ def _tsolve(eq, sym, **flags):
     if flags.pop('force', True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
+        if rhs == S.ComplexInfinity:
+            return []
         for u, s in reps.items():
             if s == sym:
                 break
@@ -3461,7 +3441,12 @@ def unrad(eq, *syms, **flags):
 
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
-    eq, d = eq.as_numer_denom()
+
+    if isinstance(eq, Relational):
+        eq, d = eq, 1
+    else:
+        eq, d = eq.as_numer_denom()
+
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
         return

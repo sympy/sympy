@@ -2,22 +2,23 @@ from __future__ import division, print_function
 
 import random
 
-from sympy.core import SympifyError
+from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, range, reduce
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+    a2idx, classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
-from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
+
+from .decompositions import _cholesky, _LDLdecomposition
+from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
 def _iszero(x):
@@ -38,7 +39,7 @@ def _compare_sequence(a, b):
 
 class DenseMatrix(MatrixBase):
 
-    is_MatrixExpr = False
+    is_MatrixExpr = False  # type: bool
 
     _op_priority = 10.01
     _class_priority = 4
@@ -106,15 +107,13 @@ class DenseMatrix(MatrixBase):
                     return MatrixElement(self, i, j)
 
                 if isinstance(i, slice):
-                    # XXX remove list() when PY2 support is dropped
-                    i = list(range(self.rows))[i]
+                    i = range(self.rows)[i]
                 elif is_sequence(i):
                     pass
                 else:
                     i = [i]
                 if isinstance(j, slice):
-                    # XXX remove list() when PY2 support is dropped
-                    j = list(range(self.cols))[j]
+                    j = range(self.cols)[j]
                 elif is_sequence(j):
                     pass
                 else:
@@ -128,35 +127,6 @@ class DenseMatrix(MatrixBase):
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
-
-    def _cholesky(self, hermitian=True):
-        """Helper function of cholesky.
-        Without the error checks.
-        To be used privately.
-        Implements the Cholesky-Banachiewicz algorithm.
-        Returns L such that L*L.H == self if hermitian flag is True,
-        or L*L.T == self if hermitian is False.
-        """
-        L = zeros(self.rows, self.rows)
-        if hermitian:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = (1 / L[j, j])*expand_mul(self[i, j] -
-                        sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
-                Lii2 = expand_mul(self[i, i] -
-                    sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
-                if Lii2.is_positive is False:
-                    raise NonPositiveDefiniteMatrixError(
-                        "Matrix must be positive-definite")
-                L[i, i] = sqrt(Lii2)
-        else:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = (1 / L[j, j])*(self[i, j] -
-                        sum(L[i, k]*L[j, k] for k in range(j)))
-                L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i)))
-        return self._new(L)
 
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
@@ -172,39 +142,30 @@ class DenseMatrix(MatrixBase):
                          list(mat[i] for i in indices), copy=False)
 
     def _eval_matrix_mul(self, other):
-        from sympy import Add
-        # cache attributes for faster access
-        self_cols = self.cols
-        other_rows, other_cols = other.rows, other.cols
-        other_len = other_rows * other_cols
-        new_mat_rows = self.rows
-        new_mat_cols = other.cols
-
-        # preallocate the array
-        new_mat = [self.zero]*new_mat_rows*new_mat_cols
+        other_len = other.rows*other.cols
+        new_len = self.rows*other.cols
+        new_mat = [self.zero]*new_len
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
         if self.cols != 0 and other.rows != 0:
-            # cache self._mat and other._mat for performance
+            self_cols = self.cols
             mat = self._mat
             other_mat = other._mat
-            for i in range(len(new_mat)):
-                row, col = i // new_mat_cols, i % new_mat_cols
+            for i in range(new_len):
+                row, col = i // other.cols, i % other.cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
-                col_indices = range(col, other_len, other_cols)
-                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                col_indices = range(col, other_len, other.cols)
+                vec = [mat[a]*other_mat[b] for a, b in zip(row_indices, col_indices)]
                 try:
                     new_mat[i] = Add(*vec)
                 except (TypeError, SympifyError):
-                    # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                    # Some matrices don't work with `sum` or `Add`
                     # They don't work with `sum` because `sum` tries to add `0`
-                    # initially, and for a matrix, that is a mix of a scalar and
-                    # a matrix, which raises a TypeError. Fall back to a
-                    # block-matrix-safe way to multiply if the `sum` fails.
-                    vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
-                    new_mat[i] = reduce(lambda a,b: a + b, vec)
-        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
+                    # Fall back to a safe way to multiply if the `Add` fails.
+                    new_mat[i] = reduce(lambda a, b: a + b, vec)
+
+        return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
@@ -253,20 +214,22 @@ class DenseMatrix(MatrixBase):
 
         method = kwargs.get('method', 'GE')
         iszerofunc = kwargs.get('iszerofunc', _iszero)
+        dotprodsimp = kwargs.get('dotprodsimp', None)
         if kwargs.get('try_block_diag', False):
             blocks = self.get_diag_blocks()
             r = []
             for block in blocks:
-                r.append(block.inv(method=method, iszerofunc=iszerofunc))
+                r.append(block.inv(method=method, iszerofunc=iszerofunc,
+                        dotprodsimp=dotprodsimp))
             return diag(*r)
 
         M = self.as_mutable()
         if method == "GE":
-            rv = M.inverse_GE(iszerofunc=iszerofunc)
+            rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         elif method == "LU":
-            rv = M.inverse_LU(iszerofunc=iszerofunc)
+            rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         elif method == "ADJ":
-            rv = M.inverse_ADJ(iszerofunc=iszerofunc)
+            rv = M.inverse_ADJ(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         else:
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
@@ -285,60 +248,6 @@ class DenseMatrix(MatrixBase):
         mat = list(self._mat)
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
-
-    def _LDLdecomposition(self, hermitian=True):
-        """Helper function of LDLdecomposition.
-        Without the error checks.
-        To be used privately.
-        Returns L and D such that L*D*L.H == self if hermitian flag is True,
-        or L*D*L.T == self if hermitian is False.
-        """
-        # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
-        D = zeros(self.rows, self.rows)
-        L = eye(self.rows)
-        if hermitian:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = (1 / D[j, j])*expand_mul(self[i, j] - sum(
-                        L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
-                D[i, i] = expand_mul(self[i, i] -
-                    sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
-                if D[i, i].is_positive is False:
-                    raise NonPositiveDefiniteMatrixError(
-                        "Matrix must be positive-definite")
-        else:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
-                        L[i, k]*L[j, k]*D[k, k] for k in range(j)))
-                D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
-        return self._new(L), self._new(D)
-
-    def _lower_triangular_solve(self, rhs):
-        """Helper function of function lower_triangular_solve.
-        Without the error checks.
-        To be used privately.
-        """
-        X = zeros(self.rows, rhs.cols)
-        for j in range(rhs.cols):
-            for i in range(self.rows):
-                if self[i, i] == 0:
-                    raise TypeError("Matrix must be non-singular.")
-                X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
-                                           for k in range(i))) / self[i, i]
-        return self._new(X)
-
-    def _upper_triangular_solve(self, rhs):
-        """Helper function of function upper_triangular_solve.
-        Without the error checks, to be used privately. """
-        X = zeros(self.rows, rhs.cols)
-        for j in range(rhs.cols):
-            for i in reversed(range(self.rows)):
-                if self[i, i] == 0:
-                    raise ValueError("Matrix must be non-singular.")
-                X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
-                                           for k in range(i + 1, self.rows))) / self[i, i]
-        return self._new(X)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
@@ -409,6 +318,23 @@ class DenseMatrix(MatrixBase):
                 elif ans is not True and rv is True:
                     rv = ans
         return rv
+
+    def cholesky(self, hermitian=True, dotprodsimp=None):
+        return _cholesky(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
+        return _LDLdecomposition(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+
+    def lower_triangular_solve(self, rhs, dotprodsimp=None):
+        return _lower_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+
+    def upper_triangular_solve(self, rhs, dotprodsimp=None):
+        return _upper_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+
+    cholesky.__doc__               = _cholesky.__doc__
+    LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
+    lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
 
 
 def _force_mutable(x):
@@ -792,7 +718,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         self._mat[i0: i0 + self.cols] = [f(x, y) for x, y in zip(ri, rk)]
 
-    # Utility functions
+    is_zero = False
+
 
 MutableMatrix = Matrix = MutableDenseMatrix
 

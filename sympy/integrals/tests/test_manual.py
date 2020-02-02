@@ -8,7 +8,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')

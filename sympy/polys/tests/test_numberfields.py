@@ -1,10 +1,9 @@
 """Tests for computational algebraic number field theory. """
 
 from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
-    pi, cos, sin, exp)
+    pi, cos, sin, exp, GoldenRatio, TribonacciConstant, cbrt)
 
-from sympy.utilities.pytest import raises, slow
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
 
 from sympy.polys.numberfields import (
     minimal_polynomial,
@@ -150,6 +149,14 @@ def test_minimal_polynomial():
     assert minimal_polynomial(I, x, domain=QQ) == x**2 + 1
     assert minimal_polynomial(I, x, domain='QQ(y)') == x**2 + 1
 
+    #issue 11553
+    assert minimal_polynomial(GoldenRatio, x) == x**2 - x - 1
+    assert minimal_polynomial(TribonacciConstant + 3, x) == x**3 - 10*x**2 + 32*x - 34
+    assert minimal_polynomial(GoldenRatio, x, domain=QQ.algebraic_field(sqrt(5))) == \
+            2*x - sqrt(5) - 1
+    assert minimal_polynomial(TribonacciConstant, x, domain=QQ.algebraic_field(cbrt(19 - 3*sqrt(33)))) == \
+    48*x - 19*(19 - 3*sqrt(33))**Rational(2, 3) - 3*sqrt(33)*(19 - 3*sqrt(33))**Rational(2, 3) \
+    - 16*(19 - 3*sqrt(33))**Rational(1, 3) - 16
 
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + Rational(1, 10)**30)

@@ -7,7 +7,7 @@ from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_exp_values():

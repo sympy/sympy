@@ -2,7 +2,7 @@ import itertools
 
 from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
 from sympy.core.compatibility import default_sort_key
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
@@ -324,7 +324,7 @@ class Covariance(Expr):
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
-        if kwargs.pop('evaluate', global_evaluate[0]):
+        if kwargs.pop('evaluate', global_parameters.evaluate):
             arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
 
         if condition is None:

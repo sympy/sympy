@@ -1,7 +1,6 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta, Rational, symbols,
                    simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
                    cancel, exp, I, Piecewise, Sum, Dummy)
-from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
@@ -12,7 +11,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.utilities.pytest import raises, skip
+from sympy.testing.pytest import raises, skip
 
 
 def BayesTest(A, B):

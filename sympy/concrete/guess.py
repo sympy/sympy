@@ -4,7 +4,6 @@ from __future__ import print_function, division
 from sympy.utilities import public
 
 from sympy.core import Function, Symbol
-from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy import (sympify, floor, lcm, denom, Integer, Rational,
                    exp, integrate, symbols, Product, product)

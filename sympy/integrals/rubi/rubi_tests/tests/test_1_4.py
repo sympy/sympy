@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import EllipticE, EllipticF, EllipticPi, hypergeom, rubi_test, AppellF1
 from sympy import pi as Pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols, Integral
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 A, B, C, D, a, b, c, d, e, f, g, h, i, m, n, p, x, u = symbols('A B C D a b c d e f g h i m n p x u')
 

@@ -5,9 +5,8 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
 
-from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -19,8 +18,8 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import slow, XFAIL, SKIP, raises
+from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
@@ -173,17 +172,6 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
-
-
-def test_solve_dict():
-    assert solve(Eq(2*x,1), dict=True) == [{x: S(1)/2}]
-    assert solve([Eq(x**2-1, 0), Gt(x, 0)], (x,), dict=True) == [{x: 1}]
-    assert solve([Eq(x**3-6*x**2+11*x-6, 0), Eq(y**2, 1), Eq(z, 1)],
-            (x, y, z,), dict=True) == [{x: 1, y: -1, z: 1}, {x: 1, y: 1, z: 1},
-                                       {x: 2, y: -1, z: 1}, {x: 2, y: 1, z: 1},
-                                       {x: 3, y: -1, z: 1}, {x: 3, y: 1, z: 1}]
-    assert solve(Gt(x, 0), (x,), dict=True) == And(Lt(0, x), Lt(x, oo))
-
 
 def test_solve_polynomial1():
     assert solve(3*x - 2, x) == [Rational(2, 3)]
@@ -1116,6 +1104,10 @@ def test_unrad1():
     raises(NotImplementedError,
            lambda: unrad(root(x, 3) + root(y, 3) + root(x*y, 5)))
 
+    # Test unrad with an Equality
+    eq = Eq(-x**(S(1)/5) + x**(S(1)/3), -3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5))
+    assert check(unrad(eq),
+        (-s**5 + s**3 - 3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5), [s, s**15 - x]))
 
 @slow
 def test_unrad_slow():
@@ -2132,3 +2124,18 @@ def test_issue_17799():
 def test_issue_17650():
     x = Symbol('x', real=True)
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+
+
+def test_issue_17949():
+    assert solve(exp(+x+x**2), x) == []
+    assert solve(exp(-x+x**2), x) == []
+    assert solve(exp(+x-x**2), x) == []
+    assert solve(exp(-x-x**2), x) == []
+
+
+def test_issue_11553():
+    eq1 = x + y + 1
+    eq2 = x + GoldenRatio
+    assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
+    eq3 = x + 2 + TribonacciConstant
+    assert solve([eq1, eq3], x, y) == {x: -2 - TribonacciConstant, y: 1 + TribonacciConstant}

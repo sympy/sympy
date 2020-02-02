@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import range
 
 """
 Algorithms and classes to support enumerative combinatorics.
@@ -424,14 +423,17 @@ class MultisetPartitionTraverser():
         self.p1 = 0
 
     def db_trace(self, msg):
-        """Useful for usderstanding/debugging the algorithms.  Not
+        """Useful for understanding/debugging the algorithms.  Not
         generally activated in end-user code."""
         if self.debug:
-            letters = 'abcdefghijklmnopqrstuvwxyz'
-            state = [self.f, self.lpart, self.pstack]
-            print("DBG:", msg,
-                  ["".join(part) for part in list_visitor(state, letters)],
-                  animation_visitor(state))
+            # XXX: animation_visitor is undefined... Clearly this does not
+            # work and was not tested. Previous code in comments below.
+            raise RuntimeError
+            #letters = 'abcdefghijklmnopqrstuvwxyz'
+            #state = [self.f, self.lpart, self.pstack]
+            #print("DBG:", msg,
+            #      ["".join(part) for part in list_visitor(state, letters)],
+            #      animation_visitor(state))
 
     #
     # Helper methods for enumeration

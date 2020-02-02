@@ -7,9 +7,9 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
-from sympy.core.compatibility import long, range
+from sympy.core.compatibility import long
 from sympy.core.expr import unchanged
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
 
 
@@ -356,8 +356,7 @@ def test_evalf_relational():
     # one that doesn't
     assert unchanged(Eq, (3 - I)**2/2 + I, 0)
     assert Eq((3 - I)**2/2 + I, 0).n() is S.false
-    # note: these don't always evaluate to Boolean
-    assert nfloat(Eq((3 - I)**2 + I, 0)) == Eq((3.0 - I)**2 + I, 0)
+    assert nfloat(Eq((3 - I)**2 + I, 0)) == S.false
 
 
 def test_issue_5486():

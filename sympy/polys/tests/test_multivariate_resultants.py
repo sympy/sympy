@@ -1,6 +1,6 @@
 """Tests for Dixon's and Macaulay's classes. """
 
-from sympy import Matrix
+from sympy import Matrix, factor
 from sympy.core import symbols
 from sympy.tensor.indexed import IndexedBase
 
@@ -54,6 +54,20 @@ def test_get_max_degrees():
 
     assert dixon.get_max_degrees(dixon_polynomial) == [1, 2]
 
+def test_get_dixon_matrix():
+    """Test Dixon's resultant for a numerical example."""
+
+    x, y = symbols('x, y')
+
+    p = x + y
+    q = x ** 2 + y ** 3
+    h = x ** 2 + y
+
+    dixon = DixonResultant([p, q, h], [x, y])
+    polynomial = dixon.get_dixon_polynomial()
+
+    assert dixon.get_dixon_matrix(polynomial).det() == 0
+
 def test_get_dixon_matrix_example_two():
     """Test Dixon's matrix for example from [Palancz08]_."""
     x, y, z = symbols('x, y, z')
@@ -69,19 +83,137 @@ def test_get_dixon_matrix_example_two():
     expr = 1 - 8 * x ** 2 + 24 * x ** 4 - 32 * x ** 6 + 16 * x ** 8
     assert (matrix.det() - expr).expand() == 0
 
-def test_get_dixon_matrix():
-    """Test Dixon's resultant for a numerical example."""
+def test_KSY_precondition():
+    """Tests precondition for KSY Resultant."""
+    A, B, C = symbols('A, B, C')
 
-    x, y = symbols('x, y')
+    m1 = Matrix([[1, 2, 3],
+                 [4, 5, 12],
+                 [6, 7, 18]])
 
-    p = x + y
-    q = x ** 2 + y ** 3
-    h = x ** 2 + y
+    m2 = Matrix([[0, C**2],
+                 [-2 * C, -C ** 2]])
+
+    m3 = Matrix([[1, 0],
+                 [0, 1]])
+
+    m4 = Matrix([[A**2, 0, 1],
+                 [A, 1, 1 / A]])
+
+    m5 = Matrix([[5, 1],
+                 [2, B],
+                 [0, 1],
+                 [0, 0]])
+
+    assert dixon.KSY_precondition(m1) == False
+    assert dixon.KSY_precondition(m2) == True
+    assert dixon.KSY_precondition(m3) == True
+    assert dixon.KSY_precondition(m4) == False
+    assert dixon.KSY_precondition(m5) == True
+
+def test_delete_zero_rows_and_columns():
+    """Tests method for deleting rows and columns containing only zeros."""
+    A, B, C = symbols('A, B, C')
+
+    m1 = Matrix([[0, 0],
+                 [0, 0],
+                 [1, 2]])
+
+    m2 = Matrix([[0, 1, 2],
+                 [0, 3, 4],
+                 [0, 5, 6]])
+
+    m3 = Matrix([[0, 0, 0, 0],
+                 [0, 1, 2, 0],
+                 [0, 3, 4, 0],
+                 [0, 0, 0, 0]])
+
+    m4 = Matrix([[1, 0, 2],
+                 [0, 0, 0],
+                 [3, 0, 4]])
+
+    m5 = Matrix([[0, 0, 0, 1],
+                 [0, 0, 0, 2],
+                 [0, 0, 0, 3],
+                 [0, 0, 0, 4]])
+
+    m6 = Matrix([[0, 0, A],
+                 [B, 0, 0],
+                 [0, 0, C]])
+
+    assert dixon.delete_zero_rows_and_columns(m1) == Matrix([[1, 2]])
+
+    assert dixon.delete_zero_rows_and_columns(m2) == Matrix([[1, 2],
+                                                             [3, 4],
+                                                             [5, 6]])
+
+    assert dixon.delete_zero_rows_and_columns(m3) == Matrix([[1, 2],
+                                                             [3, 4]])
+
+    assert dixon.delete_zero_rows_and_columns(m4) == Matrix([[1, 2],
+                                                             [3, 4]])
+
+    assert dixon.delete_zero_rows_and_columns(m5) == Matrix([[1],
+                                                             [2],
+                                                             [3],
+                                                             [4]])
+
+    assert dixon.delete_zero_rows_and_columns(m6) == Matrix([[0, A],
+                                                             [B, 0],
+                                                             [0, C]])
+
+def test_product_leading_entries():
+    """Tests product of leading entries method."""
+    A, B = symbols('A, B')
+
+    m1 = Matrix([[1, 2, 3],
+                 [0, 4, 5],
+                 [0, 0, 6]])
+
+    m2 = Matrix([[0, 0, 1],
+                 [2, 0, 3]])
+
+    m3 = Matrix([[0, 0, 0],
+                 [1, 2, 3],
+                 [0, 0, 0]])
+
+    m4 = Matrix([[0, 0, A],
+                 [1, 2, 3],
+                 [B, 0, 0]])
+
+    assert dixon.product_leading_entries(m1) == 24
+    assert dixon.product_leading_entries(m2) == 2
+    assert dixon.product_leading_entries(m3) == 1
+    assert dixon.product_leading_entries(m4) == A * B
+
+def test_get_KSY_Dixon_resultant_example_one():
+    """Tests the KSY Dixon resultant for example one"""
+    x, y, z = symbols('x, y, z')
+
+    p = x * y * z
+    q = x**2 - z**2
+    h = x + y + z
+    dixon = DixonResultant([p, q, h], [x, y])
+    dixon_poly = dixon.get_dixon_polynomial()
+    dixon_matrix = dixon.get_dixon_matrix(dixon_poly)
+    D = dixon.get_KSY_Dixon_resultant(dixon_matrix)
+
+    assert D == -z**3
+
+def test_get_KSY_Dixon_resultant_example_two():
+    """Tests the KSY Dixon resultant for example two"""
+    x, y, A = symbols('x, y, A')
+
+    p = x * y + x * A + x - A**2 - A + y**2 + y
+    q = x**2 + x * A - x + x * y + y * A - y
+    h = x**2 + x * y + 2 * x - x * A - y * A - 2 * A
 
     dixon = DixonResultant([p, q, h], [x, y])
-    polynomial = dixon.get_dixon_polynomial()
+    dixon_poly = dixon.get_dixon_polynomial()
+    dixon_matrix = dixon.get_dixon_matrix(dixon_poly)
+    D = factor(dixon.get_KSY_Dixon_resultant(dixon_matrix))
 
-    assert dixon.get_dixon_matrix(polynomial).det() == 0
+    assert D == -8*A*(A - 1)*(A + 2)*(2*A - 1)**2
 
 def test_macaulay_resultant_init():
     """Test init method of MacaulayResultant."""

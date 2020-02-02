@@ -1,13 +1,12 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, symbols, oo, I, Rational
-from sympy.core.compatibility import PY3
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
     no_cancel_equal, cancel_primitive, cancel_exp, rischDE)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 from sympy.abc import x, t, z, n
 
 t0, t1, t2, k = symbols('t:3 k')
@@ -92,8 +91,6 @@ def test_special_denom():
     Poly(t, t), DE, case='unrecognized_case'))
 
 
-# @XFAIL
-# Probably only fails in Python 2.7
 def test_bound_degree_fail():
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
@@ -101,10 +98,6 @@ def test_bound_degree_fail():
     assert bound_degree(Poly(t**2, t), Poly(-(1/x**2*t**2 + 1/x), t),
         Poly((2*x - 1)*t**4 + (t0 + x)/x*t**3 - (t0 + 4*x**2)/2*x*t**2 + x*t,
         t), DE) == 3
-
-
-if not PY3:
-    test_bound_degree_fail = XFAIL(test_bound_degree_fail)
 
 
 def test_bound_degree():
