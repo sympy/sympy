@@ -3405,19 +3405,19 @@ def decipher_playfair(key, ciphertext):
         fcoords = np.where(key_matrix == i[0])
         scoords = np.where(key_matrix == i[1])
 
-            if fcoords[0] == scoords[0]:
-                flet = key_matrix[ int(scoords[0]) ][ int((scoords[1] - 1)) %5]
-                slet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1] - 1)) %5]
+        if fcoords[0] == scoords[0]:
+            flet = key_matrix[ int(scoords[0]) ][ int((scoords[1] - 1)) %5]
+            slet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1] - 1)) %5]
 
 
-            elif fcoords[1] == scoords[1]:
-                flet = key_matrix[ int((fcoords[0] - 1)) %5][ int(fcoords[1]) ]
-                slet = key_matrix[ int((scoords[0] - 1)) %5][ int(scoords[1]) ]
+        elif fcoords[1] == scoords[1]:
+            flet = key_matrix[ int((fcoords[0] - 1)) %5][ int(fcoords[1]) ]
+            slet = key_matrix[ int((scoords[0] - 1)) %5][ int(scoords[1]) ]
 
 
-            else:
-                flet = key_matrix[ int(fcoords[0]) ][ int(scoords[1]) ]
-                slet = key_matrix[ int(scoords[0]) ][ int(fcoords[1]) ]
+        else:
+            flet = key_matrix[ int(fcoords[0]) ][ int(scoords[1]) ]
+            slet = key_matrix[ int(scoords[0]) ][ int(fcoords[1]) ]
 
         plaintext.append(flet+slet)
 
