@@ -32,6 +32,8 @@ from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.testing.randtest import _randrange, _randint
 
+import math as mt
+
 
 class NonInvertibleCipherWarning(RuntimeWarning):
     """A warning raised if the cipher is not invertible."""
@@ -880,7 +882,8 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
 
 def decipher_hill(msg, key, symbols=None):
     """
-    Deciphering is the same as enciphering but using the inverse of the
+    Deciphering is the same as enciphering but using the invecontinuous-integration/travis-ci/pr — The Travis CI build failed
+rse of the
     key matrix.
 
     Examples
@@ -2797,6 +2800,97 @@ def decipher_elgamal(msg, key):
     c1, c2 = msg
     u = igcdex(c1**d, p)[0]
     return u * c2 % p
+
+##########Columnar Transposition Cipher################
+
+"""
+Columnar Transposition Cipher
+This cipher involves writing the plaintext out in rows
+and then reading the ciphertext off in columns one by one.
+Examples
+    ========
+    >>> from sympy.crypto.crypto import encipher_ctc
+    >>> key = "HI"
+    >>> encipher_ctc("HelloIlovecrypto", key)
+    
+    
+    
+    >>> from sympy.crypto.crypto import decipher_ctc
+    >>> key = "HI"
+    >>> decipher_ctc("HlolvcytelIoerpo", key)
+"""
+
+def encipher_ctc(message, key):
+
+	c = ""
+
+	k_index = 0
+
+	message_len = len(message)
+	message_list = list(message)
+	key_list = sorted(list(key))
+
+	col = len(key)
+	row = int(mt.ceil(message_len/col))
+
+	null_m = int(row*col - message_len)
+	message_list.extend(' ' * null_m) 
+
+
+	matrix = [message_list[i: i + col] for i in range(0, len(message_list), col)] 
+
+	for _ in range(col):
+		current_ind = key.index(key_list[k_index])
+
+		c += ''.join([row[current_ind] for row in matrix])
+
+		k_index += 1
+
+	return c
+
+
+def decipher_ctc(c, key):
+
+	message = ""
+
+	k_index = 0
+
+	message_index = 0
+	message_len = len(c)
+	message_list = list(c)
+
+	col = len(key)
+
+	row = int(mt.ceil(message_len / col))
+
+	key_list = sorted(list(key))
+
+	decrypt_cip = []
+	for _ in range(row):
+		decrypt_cip += [[None] * col]
+
+	for _ in range(col):
+		current_ind = key.index(key_list[k_index])
+
+		for x in range(row):
+			decrypt_cip[x][current_ind] = message_list[message_index]
+			message_index += 1
+
+		k_index += 1
+
+	try:
+		message = ''.join(sum(decrypt_cip, []))
+	except TypeError:
+		raise TypeError("There cannot be any repeating letters in the key")
+
+	n = message.count(' ')
+
+	if n > 0:
+		return message[: -n]
+
+	return message
+
+
 
 
 ################ Diffie-Hellman Key Exchange  #########################
