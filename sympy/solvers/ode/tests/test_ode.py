@@ -385,7 +385,6 @@ def test_linear_3eq_order1_type3():
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
-@slow
 @XFAIL
 def test_nonlinear_3eq_order1_type4():
     eqs = [
@@ -402,6 +401,8 @@ def test_nonlinear_3eq_order1_type4():
 @slow
 @XFAIL
 def test_nonlinear_3eq_order1_type3():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eqs = [
         Eq(f(x).diff(x), (2*f(x)**2 - 3        )),
         Eq(g(x).diff(x), (4         - 2*h(x)   )),
@@ -413,7 +414,6 @@ def test_nonlinear_3eq_order1_type3():
     assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
 
 
-@slow
 @XFAIL
 def test_nonlinear_3eq_order1_type5():
     eqs = [
