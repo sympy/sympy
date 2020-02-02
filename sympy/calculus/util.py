@@ -1597,3 +1597,141 @@ class AccumulationBounds(AtomicExpr):
 
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
+
+def argmax(f, symbol = None, domain = S.Reals):
+    """
+    Returns the set of arguments of maxima, i.e., values of `symbol`
+    for which the `f` attains the maximum value in the given domain.
+    Note: This function uses derivatives to calculate the points where the
+    maximum value is achieved, and thus, would not include points where the
+    function is not differentiable.
+    Parameters
+    ==========
+    f: expr
+        The concerned expression
+    symbol: Symbol
+        Variable for which the arguments to be determined.
+    domain: Set
+        The domain over which the arguments are to be determined
+    Examples
+    ========
+    >>> from sympy import Symbol, sin, Interval, S, exp, pi
+    >>> from sympy.calculus.util import argmax
+    >>> x = Symbol('x')
+    >>> argmax(sin(x), x, Interval(-2*pi, pi))
+    FiniteSet(-3*pi/2, pi/2)
+    >>> argmax(-x**2 + 5*x - 6)
+    FiniteSet(5/2)
+    >>> argmax(exp(x), x, S.Reals)
+    EmptySet
+    """
+    f = _sympify(f)
+    if symbol is None:
+        if len(f.free_symbols) > 1:
+            raise ValueError(filldedent('''
+                Variable for which argmax is to be determined needs to be
+                specified.'''))
+        else:
+            symbol = list(f.free_symbols)[0]
+
+    if symbol not in f.free_symbols:
+        raise ValueError(filldedent('''
+            argmax of %s cannot be calculated with respect to %s'''%
+            (f, symbol)))
+
+    return _argMaxMin(f, symbol , domain, max = True)
+
+def argmin(f, symbol = None, domain = S.Reals):
+    """
+    Returns the set of arguments of minima, i.e., values of `symbol`
+    for which the `f` attains the minimum value in the given domain.
+    Note: This function uses derivatives to calculate the points where the
+    minimum value is achieved, and thus, would not include points where the
+    function is not differentiable.
+    Parameters
+    ==========
+    f: expr
+        The concerned expression
+    symbol: Symbol
+        Variable for which the arguments to be determined.
+    domain: Set
+        The domain over which the arguments are to be determined
+    Examples
+    ========
+    >>> from sympy import Symbol, sin, Interval, S, exp, pi
+    >>> from sympy.calculus.util import argmin
+    >>> x = Symbol('x')
+    >>> argmin(sin(x), x, Interval(-2*pi, pi))
+    FiniteSet(-pi/2)
+    >>> argmin((x - 1)**2, x, S.Reals)
+    FiniteSet(1)
+    >>> argmin(exp(x), x, S.Reals)
+    EmptySet
+    """
+    f = _sympify(f)
+    if symbol is None:
+        if len(f.free_symbols) > 1:
+            raise ValueError(filldedent('''
+                Variable for which argmin is to be determined needs to be
+                specified.'''))
+        else:
+            symbol = list(f.free_symbols)[0]
+    if symbol not in f.free_symbols:
+        raise ValueError(filldedent('''
+            argmax of %s cannot be calculated with respect to %s'''%
+            (f, symbol)))
+
+    return _argMaxMin(f, symbol , domain, max = False)
+
+def _argMaxMin(f, symbol, domain, max):
+    """
+    Helper function for calculuating argmin/argmax
+    """
+    from sympy.core.function import diff
+    from sympy.solvers.solveset import solveset
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    solns = S.EmptySet
+
+    first_deriv = f.diff(symbol)
+    if first_deriv.is_positive:
+        soln1 = FiniteSet(domain.sup)
+        soln2 = FiniteSet(domain.inf)
+        if max:
+            return FiniteSet(list(soln1)[0]) if soln1.is_subset(domain) else S.EmptySet
+        else:
+            return FiniteSet(list(soln2)[0]) if soln2.is_subset(domain) else S.EmptySet
+    elif first_deriv.is_negative:
+        soln1 = FiniteSet(domain.sup)
+        soln2 = FiniteSet(domain.inf)
+        if max:
+            return list(soln2)[0] if soln2.is_subset(domain) else S.EmptySet
+        else:
+            return list(soln1)[0] if soln1.is_subset(domain) else S.EmptySet
+
+    try:
+        frange = function_range(f, symbol, domain)
+        if max:
+            extremum = frange.sup
+        else:
+            extremum = frange.inf
+    except:
+        raise NotImplementedError(filldedent('''
+            Methods for finding the argument of maxima of %s have not been
+            implemented yet.'''%(f)))
+    # If the supremum or the infimum of the function is not in its range,
+    # then an empty set is returned.
+    if not FiniteSet(extremum).is_subset(frange):
+        return EmptySet()
+
+    critical_points = Union(
+        solveset(first_deriv, symbol = symbol,domain = domain), domain.boundary)
+
+    try:
+        solns = solveset(f - extremum, symbol, domain = critical_points)
+    except:
+        for pt in critical_points:
+            if f.subs(symbol, pt) == extremum and not pt.is_infinite:
+                solns += FiniteSet(pt)
+
+    return solns
