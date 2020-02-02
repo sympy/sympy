@@ -1033,7 +1033,7 @@ class MatplotlibBackend(BaseBackend):
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
-        aspect = self.parent.aspect_ratio
+        aspect = getattr(self.parent, 'aspect_ratio', 'auto')
         if aspect != 'auto':
             aspect = float(aspect[1]) / aspect[0]
 
