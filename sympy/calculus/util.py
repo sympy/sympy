@@ -1715,7 +1715,7 @@ def _argMaxMin(f, symbol, domain, max):
             extremum = frange.sup
         else:
             extremum = frange.inf
-    except:
+    except NotImplementedError:
         raise NotImplementedError(filldedent('''
             Methods for finding the argument of maxima of %s have not been
             implemented yet.'''%(f)))
@@ -1729,7 +1729,7 @@ def _argMaxMin(f, symbol, domain, max):
 
     try:
         solns = solveset(f - extremum, symbol, domain = critical_points)
-    except:
+    except (NotImplementedError, ValueError):
         for pt in critical_points:
             if f.subs(symbol, pt) == extremum and not pt.is_infinite:
                 solns += FiniteSet(pt)
