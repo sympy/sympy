@@ -503,7 +503,6 @@ class Basic(metaclass=ManagedProperties):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
-        result = set()
         nodes = preorder_traversal(self)
         if types:
             result = {node for node in nodes if isinstance(node, types)}
