@@ -327,7 +327,7 @@ def _inv_CH(M, iszerofunc=_iszero, dotprodsimp=None):
 
     I = M.eye(M.rows)
 
-    if not M.is_symmetric():
+    if not M.is_symmetric() and not M.is_hermitian:
         I = M.T
         M = I.multiply(M, dotprodsimp=dotprodsimp)
 
@@ -364,7 +364,7 @@ def _inv_LDL(M, iszerofunc=_iszero, dotprodsimp=None):
 
     I = M.eye(M.rows)
 
-    if not M.is_symmetric():
+    if not M.is_symmetric() and not M.is_hermitian:
         I = M.T
         M = I.multiply(M, dotprodsimp=dotprodsimp)
 
