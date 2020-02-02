@@ -20,7 +20,7 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 from .common import (
@@ -45,10 +45,13 @@ from .eigen import (
     _jordan_form, _left_eigenvects, _singular_values)
 
 from .decompositions import (
-    _rank_decomposition, _LUdecomposition, _LUdecomposition_Simple,
-    _LUdecompositionFF)
+    _rank_decomposition, _cholesky, _LDLdecomposition,
+    _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
+    _QRdecomposition)
 
-from .solvers import _diagonal_solve, _cholesky_solve, _LDLsolve, _LUsolve
+from .solvers import (
+    _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
+    _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -1670,167 +1673,6 @@ class MatrixBase(MatrixDeprecated,
 
         return ret
 
-    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
-        """
-        Solves ``Ax = B`` using Gauss Jordan elimination.
-
-        There may be zero, one, or infinite solutions.  If one solution
-        exists, it will be returned. If infinite solutions exist, it will
-        be returned parametrically. If no solutions exist, It will throw
-        ValueError.
-
-        Parameters
-        ==========
-
-        B : Matrix
-            The right hand side of the equation to be solved for.  Must have
-            the same number of rows as matrix A.
-
-        freevar : List
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of arbitrary
-            values of free variables. Then the index of the free variables
-            in the solutions (column Matrix) will be returned by freevar, if
-            the flag `freevar` is set to `True`.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Returns
-        =======
-
-        x : Matrix
-            The matrix that will satisfy ``Ax = B``.  Will have as many rows as
-            matrix A has columns, and as many columns as matrix B.
-
-        params : Matrix
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of arbitrary
-            parameters. These arbitrary parameters are returned as params
-            Matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
-        >>> B = Matrix([7, 12, 4])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [-2*tau0 - 3*tau1 + 2],
-        [                 tau0],
-        [           2*tau1 + 5],
-        [                 tau1]])
-        >>> params
-        Matrix([
-        [tau0],
-        [tau1]])
-        >>> taus_zeroes = { tau:0 for tau in params }
-        >>> sol_unique = sol.xreplace(taus_zeroes)
-        >>> sol_unique
-         Matrix([
-        [2],
-        [0],
-        [5],
-        [0]])
-
-
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
-        >>> B = Matrix([3, 6, 9])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [-1],
-        [ 2],
-        [ 0]])
-        >>> params
-        Matrix(0, 1, [])
-
-        >>> A = Matrix([[2, -7], [-1, 4]])
-        >>> B = Matrix([[-21, 3], [12, -2]])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [0, -2],
-        [3, -1]])
-        >>> params
-        Matrix(0, 2, [])
-
-        See Also
-        ========
-
-        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
-        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
-
-        """
-        from sympy.matrices import Matrix, zeros
-
-        cls = self.__class__
-
-        aug = self.hstack(self.copy(), B.copy())
-        B_cols = B.cols
-        row, col = aug[:, :-B_cols].shape
-
-        # solve by reduced row echelon form
-        A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
-        A, v = A[:, :-B_cols], A[:, -B_cols:]
-        pivots = list(filter(lambda p: p < col, pivots))
-        rank = len(pivots)
-
-        # Bring to block form
-        permutation = Matrix(range(col)).T
-
-        for i, c in enumerate(pivots):
-            permutation.col_swap(i, c)
-
-
-        # check for existence of solutions
-        # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, :].is_zero_matrix:
-            raise ValueError("Linear system has no solution")
-
-        # Get index of free symbols (free parameters)
-        free_var_index = permutation[
-                         len(pivots):]  # non-pivots columns are free variables
-
-        # Free parameters
-        # what are current unnumbered free symbol names?
-        name = _uniquely_named_symbol('tau', aug,
-            compare=lambda i: str(i).rstrip('1234567890')).name
-        gen = numbered_symbols(name)
-        tau = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
-            col - rank, B_cols)
-
-        # Full parametric solution
-        V = A[:rank, [c for c in range(A.cols) if c not in pivots]]
-        vt = v[:rank, :]
-        free_sol = tau.vstack(vt - V * tau, tau)
-
-        # Undo permutation
-        sol = zeros(col, B_cols)
-        for k in range(col):
-            sol[permutation[k], :] = free_sol[k,:]
-
-        sol, tau = cls(sol), cls(tau)
-        if freevar:
-            return sol, tau, free_var_index
-        else:
-            return sol, tau
-
     def inv_mod(self, m):
         r"""
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
@@ -2525,144 +2367,6 @@ class MatrixBase(MatrixDeprecated,
         """
         return v * (self.dot(v) / v.dot(v))
 
-    def QRdecomposition(self):
-        """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
-
-        Examples
-        ========
-
-        This is the example from wikipedia:
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        Matrix([
-        [ 6/7, -69/175, -58/175],
-        [ 3/7, 158/175,   6/175],
-        [-2/7,    6/35,  -33/35]])
-        >>> R
-        Matrix([
-        [14,  21, -14],
-        [ 0, 175, -70],
-        [ 0,   0,  35]])
-        >>> A == Q*R
-        True
-
-        QR factorization of an identity matrix:
-
-        >>> A = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-        >>> R
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-
-        sympy.matrices.dense.DenseMatrix.cholesky
-        sympy.matrices.dense.DenseMatrix.LDLdecomposition
-        LUdecomposition
-        QRsolve
-        """
-        cls = self.__class__
-        mat = self.as_mutable()
-
-        n = mat.rows
-        m = mat.cols
-        ranked = list()
-
-        # Pad with additional rows to make wide matrices square
-        # nOrig keeps track of original size so zeros can be trimmed from Q
-        if n < m:
-            nOrig = n
-            n = m
-            mat = mat.col_join(mat.zeros(n - nOrig, m))
-        else:
-            nOrig = n
-
-        Q, R = mat.zeros(n, m), mat.zeros(m)
-        for j in range(m):  # for each column vector
-            tmp = mat[:, j]  # take original v
-            for i in range(j):
-                # subtract the project of mat on new vector
-                R[i, j] = Q[:, i].dot(mat[:, j], hermitian=True)
-                tmp -= Q[:, i] * R[i, j]
-                tmp.expand()
-            # normalize it
-            R[j, j] = tmp.norm()
-            if not R[j, j].is_zero:
-                ranked.append(j)
-                Q[:, j] = tmp / R[j, j]
-
-
-        if len(ranked) != 0:
-            return (
-            cls(Q.extract(range(nOrig), ranked)),
-            cls(R.extract(ranked, range(R.cols)))
-            )
-        else:
-            # Trivial case handling for zero-rank matrix
-            # Force Q as matrix containing standard basis vectors
-            for i in range(Min(nOrig, m)):
-                Q[i, i] = 1
-            return (
-            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
-            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
-            )
-
-    def QRsolve(self, b):
-        """Solve the linear system ``Ax = b``.
-
-        ``self`` is the matrix ``A``, the method argument is the vector
-        ``b``.  The method returns the solution vector ``x``.  If ``b`` is a
-        matrix, the system is solved for each column of ``b`` and the
-        return value is a matrix of the same shape as ``b``.
-
-        This method is slower (approximately by a factor of 2) but
-        more stable for floating-point arithmetic than the LUsolve method.
-        However, LUsolve usually uses an exact arithmetic, so you don't need
-        to use QRsolve.
-
-        This is mainly for educational purposes and symbolic matrices, for real
-        (or complex) matrices use mpmath.qr_solve.
-
-        See Also
-        ========
-
-        sympy.matrices.dense.DenseMatrix.lower_triangular_solve
-        sympy.matrices.dense.DenseMatrix.upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        pinv_solve
-        QRdecomposition
-        """
-
-        Q, R = self.as_mutable().QRdecomposition()
-        y = Q.T * b
-
-        # back substitution to solve R*x = y:
-        # We build up the result "backwards" in the vector 'x' and reverse it
-        # only in the end.
-        x = []
-        n = R.rows
-        for j in range(n - 1, -1, -1):
-            tmp = y[j, :]
-            for k in range(j + 1, n):
-                tmp -= R[j, k] * x[n - 1 - k]
-            x.append(tmp / R[j, j])
-        return self._new([row._mat for row in reversed(x)])
-
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
 
@@ -2962,10 +2666,16 @@ class MatrixBase(MatrixDeprecated,
         return _rank_decomposition(self, iszerofunc=iszerofunc,
                 simplify=simplify)
 
+    def cholesky(self, hermitian=True, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
     def LUdecomposition(self, iszerofunc=_iszero, simpfunc=None,
-            rankcheck=False):
+            rankcheck=False, dotprodsimp=None):
         return _LUdecomposition(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                rankcheck=rankcheck)
+                rankcheck=rankcheck, dotprodsimp=dotprodsimp)
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero, simpfunc=None,
             rankcheck=False, dotprodsimp=None):
@@ -2975,8 +2685,17 @@ class MatrixBase(MatrixDeprecated,
     def LUdecompositionFF(self):
         return _LUdecompositionFF(self)
 
+    def QRdecomposition(self, dotprodsimp=None):
+        return _QRdecomposition(self, dotprodsimp=dotprodsimp)
+
     def diagonal_solve(self, rhs):
         return _diagonal_solve(self, rhs)
+
+    def lower_triangular_solve(self, rhs, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def upper_triangular_solve(self, rhs, dotprodsimp=None):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
 
     def cholesky_solve(self, rhs, dotprodsimp=None):
         return _cholesky_solve(self, rhs, dotprodsimp=dotprodsimp)
@@ -2988,14 +2707,29 @@ class MatrixBase(MatrixDeprecated,
         return _LUsolve(self, rhs, iszerofunc=iszerofunc,
                 dotprodsimp=dotprodsimp)
 
+    def QRsolve(self, b, dotprodsimp=None):
+        return _QRsolve(self, b, dotprodsimp=dotprodsimp)
+
+    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
+        return _gauss_jordan_solve(self, B, freevar=freevar,
+                dotprodsimp=dotprodsimp)
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
+    cholesky.__doc__               = _cholesky.__doc__
+    LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
     LUdecomposition.__doc__        = _LUdecomposition.__doc__
     LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
     LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
+    QRdecomposition.__doc__        = _QRdecomposition.__doc__
+
     diagonal_solve.__doc__         = _diagonal_solve.__doc__
+    lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
     cholesky_solve.__doc__         = _cholesky_solve.__doc__
     LDLsolve.__doc__               = _LDLsolve.__doc__
     LUsolve.__doc__                = _LUsolve.__doc__
+    QRsolve.__doc__                = _QRsolve.__doc__
+    gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
 
 
 @deprecated(

@@ -594,7 +594,8 @@ def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
     return M._new(L), M._new(D)
 
 
-def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
+def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
+        dotprodsimp=None):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
@@ -603,6 +604,45 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
 
     See documentation for LUCombined for details about the keyword argument
     rankcheck, iszerofunc, and simpfunc.
+
+    Parameters
+    ==========
+
+    rankcheck : bool, optional
+        Determines if this function should detect the rank
+        deficiency of the matrixis and should raise a
+        ``ValueError``.
+
+    iszerofunc : function, optional
+        A function which determines if a given expression is zero.
+
+        The function should be a callable that takes a single
+        sympy expression and returns a 3-valued boolean value
+        ``True``, ``False``, or ``None``.
+
+        It is internally used by the pivot searching algorithm.
+        See the notes section for a more information about the
+        pivot searching algorithm.
+
+    simpfunc : function or None, optional
+        A function that simplifies the input.
+
+        If this is specified as a function, this function should be
+        a callable that takes a single sympy expression and returns
+        an another sympy expression that is algebraically
+        equivalent.
+
+        If ``None``, it indicates that the pivot search algorithm
+        should not attempt to simplify any candidate pivots.
+
+        It is internally used by the pivot searching algorithm.
+        See the notes section for a more information about the
+        pivot searching algorithm.
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification
+        is used during matrix multiplications to control expression
+        blowup and thus speed up calculation.
 
     Examples
     ========
@@ -631,7 +671,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     """
 
     combined, p = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
-        simpfunc=simpfunc, rankcheck=rankcheck)
+        simpfunc=simpfunc, rankcheck=rankcheck, dotprodsimp=dotprodsimp)
 
     # L is lower triangular ``M.rows x M.rows``
     # U is upper triangular ``M.rows x M.cols``
@@ -1067,6 +1107,13 @@ def _LUdecompositionFF(M):
     LUdecomposition
     LUdecomposition_Simple
     LUsolve
+
+    References
+    ==========
+
+    .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+        for LU and QR factors". Frontiers in Computer Science in China,
+        Vol 2, no. 1, pp. 67-80, 2008.
     """
 
     from sympy.matrices import SparseMatrix
@@ -1106,3 +1153,109 @@ def _LUdecompositionFF(M):
     DD[n - 1, n - 1] = oldpivot
 
     return P, L, DD, U
+
+
+def _QRdecomposition(M, dotprodsimp=None):
+    """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
+
+    Parameters
+    ==========
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
+
+    Examples
+    ========
+
+    This is the example from wikipedia:
+
+    >>> from sympy import Matrix
+    >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
+    >>> Q, R = A.QRdecomposition()
+    >>> Q
+    Matrix([
+    [ 6/7, -69/175, -58/175],
+    [ 3/7, 158/175,   6/175],
+    [-2/7,    6/35,  -33/35]])
+    >>> R
+    Matrix([
+    [14,  21, -14],
+    [ 0, 175, -70],
+    [ 0,   0,  35]])
+    >>> A == Q*R
+    True
+
+    QR factorization of an identity matrix:
+
+    >>> A = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> Q, R = A.QRdecomposition()
+    >>> Q
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> R
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+    See Also
+    ========
+
+    sympy.matrices.dense.DenseMatrix.cholesky
+    sympy.matrices.dense.DenseMatrix.LDLdecomposition
+    LUdecomposition
+    QRsolve
+    """
+
+    dps    = _dotprodsimp if dotprodsimp else expand_mul
+    cls    = M.__class__
+    mat    = M.as_mutable()
+    n      = mat.rows
+    m      = mat.cols
+    ranked = list()
+
+    # Pad with additional rows to make wide matrices square
+    # nOrig keeps track of original size so zeros can be trimmed from Q
+    if n < m:
+        nOrig = n
+        n     = m
+        mat   = mat.col_join(mat.zeros(n - nOrig, m))
+    else:
+        nOrig = n
+
+    Q, R = mat.zeros(n, m), mat.zeros(m)
+
+    for j in range(m):  # for each column vector
+        tmp = mat[:, j]  # take original v
+
+        for i in range(j):
+            # subtract the project of mat on new vector
+            R[i, j]  = dps(Q[:, i].dot(mat[:, j], hermitian=True))
+            tmp     -= Q[:, i] * R[i, j]
+
+        tmp = dps(tmp)
+
+        # normalize it
+        R[j, j] = tmp.norm()
+
+        if not R[j, j].is_zero:
+            ranked.append(j)
+            Q[:, j] = tmp / R[j, j]
+
+
+    if len(ranked) != 0:
+        return (cls(Q.extract(range(nOrig), ranked)),
+                cls(R.extract(ranked, range(R.cols))))
+
+    else:
+        # Trivial case handling for zero-rank matrix
+        # Force Q as matrix containing standard basis vectors
+        for i in range(Min(nOrig, m)):
+            Q[i, i] = 1
+
+        return (cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
+                cls(R.extract(range(Min(nOrig, m)), range(R.cols))))
