@@ -211,9 +211,9 @@ def hermite_normal_form(m):
     k = 1
     while(k < row):
         col1, col2 = _reduce_matrix(A, B, L, k, k - 1, D)
-        u = (int(D[k - 1]) * int(D[k + 1]) +
-                  int(L[k, k - 1]) * int(L[k, k - 1]))
-        v = int(D[k]) * int(D[k])
+        u = (D[k - 1] * D[k + 1] +
+             L[k, k - 1] * L[k, k - 1])
+        v = D[k] * D[k]
         if col1 <= min(col2, col - 1) or (col1 == col and col2 == col and u < v):
             _swap_rows(k, A, B, L, D)
             if k > 1:
