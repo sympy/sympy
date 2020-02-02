@@ -2725,7 +2725,6 @@ def encipher_ctc(message, key):
     >>> encipher_ctc("HelloIlovecrypto", key)   
     
     """
-
     c = ""
 
     k_index = 0
