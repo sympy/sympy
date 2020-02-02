@@ -32,6 +32,8 @@ from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.testing.randtest import _randrange, _randint
 
+import numpy as np
+
 
 class NonInvertibleCipherWarning(RuntimeWarning):
     """A warning raised if the cipher is not invertible."""
@@ -3324,3 +3326,109 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
+    
+def create_matrix(key):
+	#helper function for enciphering and deciphering playfair cipher
+	
+	alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+	temp = ''
+	
+	key = key.lower()
+	
+	for i in range(0, len(key)):
+		if key[i] not in temp:
+			temp += key[i]
+	
+	temp.replace(" ","")
+	
+	for i in alphabet:
+		if i not in temp and i != 'j':
+			temp += i
+	
+	matrix = np.array(list(temp)).reshape(5,5)
+
+	return matrix
+
+
+def group_letters(text):
+	#helper function for enciphering and deciphering playfair cipher
+
+	text = text.lower()
+
+	if len(text)%2 != 0:
+		text += 'z'
+		
+	groups = []
+	
+	for i in range(0, int(len(text)/2)):
+		groups.append(text[2*i] + text[2*i + 1])
+	
+	return groups
+
+
+def encipher_playfair(key, plaintext):
+	#encrypt text
+
+	key_matrix = create_matrix(key)
+	text = group_letters(plaintext)
+
+	ciphertext = []
+	
+	for i in text:
+		fcoords = np.where(key_matrix == i[0])
+		scoords = np.where(key_matrix == i[1])
+		
+		print(int(fcoords[0]))
+		print(scoords)
+		
+		if fcoords[0] == scoords[0]:
+			flet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1]+1)) %5]
+			slet = key_matrix[ int(scoords[0]) ][ int((scoords[1]+1)) %5]
+
+
+		elif fcoords[1] == scoords[1]:
+			flet = key_matrix[ int((fcoords[0] + 1)) %5][ int(fcoords[1]) ]
+			slet = key_matrix[ int((scoords[0] + 1)) %5][ int(scoords[1]) ]
+			
+			
+		else:
+			flet = key_matrix[ int(fcoords[0]) ][ int(scoords[1]) ]
+			slet = key_matrix[ int(scoords[0]) ][ int(fcoords[1]) ]
+			
+		ciphertext.append(flet+slet)
+		
+	return ''.join(ciphertext)
+	
+def decipher_playfair(key, ciphertext):
+	#decrypt text
+
+	key_matrix = create_matrix(key)
+	text = group_letters(ciphertext)
+	
+	plaintext = []
+	
+	for i in text:
+		fcoords = np.where(key_matrix == i[0])
+		scoords = np.where(key_matrix == i[1])
+		
+		print(int(fcoords[0]))
+		print(scoords)
+		
+		if fcoords[0] == scoords[0]:
+			flet = key_matrix[ int(scoords[0]) ][ int((scoords[1] - 1)) %5]
+			slet = key_matrix[ int(fcoords[0]) ][ int((fcoords[1] - 1)) %5]
+
+
+		elif fcoords[1] == scoords[1]:
+			flet = key_matrix[ int((fcoords[0] - 1)) %5][ int(fcoords[1]) ]
+			slet = key_matrix[ int((scoords[0] - 1)) %5][ int(scoords[1]) ]
+			
+			
+		else:
+			flet = key_matrix[ int(fcoords[0]) ][ int(scoords[1]) ]
+			slet = key_matrix[ int(scoords[0]) ][ int(fcoords[1]) ]
+			
+		plaintext.append(flet+slet)
+		
+	return ''.join(plaintext)
+
