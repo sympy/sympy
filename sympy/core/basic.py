@@ -889,7 +889,7 @@ class Basic(metaclass=ManagedProperties):
 
         """
         from sympy.core.containers import Dict
-        from sympy.utilities import default_sort_key
+        from sympy.utilities.iterables import sift
         from sympy import Dummy, Symbol
 
         unordered = False
@@ -929,23 +929,10 @@ class Basic(metaclass=ManagedProperties):
 
         if unordered:
             sequence = dict(sequence)
-            if not all(k.is_Atom for k in sequence):
-                d = {}
-                for o, n in sequence.items():
-                    try:
-                        ops = o.count_ops(), len(o.args)
-                    except TypeError:
-                        ops = (0, 0)
-                    d.setdefault(ops, []).append((o, n))
-                newseq = []
-                for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(
-                        sorted([v[0] for v in d[k]], key=default_sort_key))
-                sequence = [(k, sequence[k]) for k in newseq]
-                del newseq, d
-            else:
-                sequence = sorted([(k, v) for (k, v) in sequence.items()],
-                                  key=default_sort_key)
+            atoms, nonatoms = sift(list(sequence),
+                lambda x: x.is_Atom, binary=True)
+            sequence = [(k, sequence[k]) for k in
+                list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
