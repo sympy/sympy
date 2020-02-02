@@ -518,7 +518,8 @@ def _minpoly_compose(ex, x, dom):
         _, factors = factor_list(x**2 + 1, x, domain=dom)
         return x**2 + 1 if len(factors) == 1 else x - I
     if ex is GoldenRatio:
-        return x**2 - x - 1
+        _, factors = factor_list(x**2 - x - 1, x, domain=dom)
+        return x**2 - x - 1 if len(factors) == 1 else x - GoldenRatio
     if hasattr(dom, 'symbols') and ex in dom.symbols:
         return x - ex
 
