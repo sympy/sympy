@@ -1116,6 +1116,9 @@ def test_inverse():
     assert A.inv() == eye(4)
     assert A.inv(method="LU") == eye(4)
     assert A.inv(method="ADJ") == eye(4)
+    assert A.inv(method="CH") == eye(4)
+    assert A.inv(method="LDL") == eye(4)
+    assert A.inv(method="QR") == eye(4)
     A = Matrix([[2, 3, 5],
                 [3, 6, 2],
                 [8, 3, 6]])
@@ -1123,18 +1126,21 @@ def test_inverse():
     assert A*Ainv == eye(3)
     assert A.inv(method="LU") == Ainv
     assert A.inv(method="ADJ") == Ainv
+    assert A.inv(method="CH") == Ainv
+    assert A.inv(method="LDL") == Ainv
+    assert A.inv(method="QR") == Ainv
 
     # test that immutability is not a problem
     cls = ImmutableMatrix
     m = cls([[48, 49, 31],
              [ 9, 71, 94],
              [59, 28, 65]])
-    assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU'.split())
+    assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU CH LDL QR'.split())
     cls = ImmutableSparseMatrix
     m = cls([[48, 49, 31],
              [ 9, 71, 94],
              [59, 28, 65]])
-    assert all(type(m.inv(s)) is cls for s in 'CH LDL'.split())
+    assert all(type(m.inv(s)) is cls for s in 'GE ADJ LU CH LDL QR'.split())
 
 
 def test_matrix_inverse_mod():

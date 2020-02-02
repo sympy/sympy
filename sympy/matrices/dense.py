@@ -172,69 +172,10 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
-        """Return the matrix inverse using the method indicated (default
-        is Gauss elimination).
-
-        kwargs
-        ======
-
-        method : ('GE', 'LU', or 'ADJ')
-        iszerofunc
-        try_block_diag
-
-        Notes
-        =====
-
-        According to the ``method`` keyword, it calls the appropriate method:
-
-          GE .... inverse_GE(); default
-          LU .... inverse_LU()
-          ADJ ... inverse_ADJ()
-
-        According to the ``try_block_diag`` keyword, it will try to form block
-        diagonal matrices using the method get_diag_blocks(), invert these
-        individually, and then reconstruct the full inverse matrix.
-
-        Note, the GE and LU methods may require the matrix to be simplified
-        before it is inverted in order to properly detect zeros during
-        pivoting. In difficult cases a custom zero detection function can
-        be provided by setting the ``iszerosfunc`` argument to a function that
-        should return True if its argument is zero. The ADJ routine computes
-        the determinant and uses that to detect singular matrices in addition
-        to testing for zeros on the diagonal.
-
-        See Also
-        ========
-
-        inverse_LU
-        inverse_GE
-        inverse_ADJ
-        """
-        from sympy.matrices import diag
-
-        method = kwargs.get('method', 'GE')
-        iszerofunc = kwargs.get('iszerofunc', _iszero)
-        dotprodsimp = kwargs.get('dotprodsimp', None)
-        if kwargs.get('try_block_diag', False):
-            blocks = self.get_diag_blocks()
-            r = []
-            for block in blocks:
-                r.append(block.inv(method=method, iszerofunc=iszerofunc,
-                        dotprodsimp=dotprodsimp))
-            return diag(*r)
-
-        M = self.as_mutable()
-        if method == "GE":
-            rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "LU":
-            rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "ADJ":
-            rv = M.inverse_ADJ(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        else:
-            # make sure to add an invertibility check (as in inverse_LU)
-            # if a new method is added.
-            raise ValueError("Inversion method unrecognized")
-        return self._new(rv)
+        return self.inv(method=kwargs.get('method', 'GE'),
+                        iszerofunc=kwargs.get('iszerofunc', _iszero),
+                        dotprodsimp=kwargs.get('dotprodsimp', None),
+                        try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
