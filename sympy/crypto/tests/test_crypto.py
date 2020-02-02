@@ -21,7 +21,7 @@ from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
 from sympy.testing.pytest import raises, warns
-
+import math as mt
 from random import randrange
 
 def test_encipher_railfence():
@@ -395,7 +395,12 @@ def test_decipher_kid_rsa():
     assert decipher_kid_rsa(3, (8, 3)) == 1
     assert decipher_kid_rsa(2, (7, 4)) == 1
 
-
+def test_encipher_ctc():
+    assert encipher_ctc("HelloIlovecrypto", "HI") == "HlolvcytelIoerpo"
+    
+def test_decipher_ctc():
+    assert decipher_ctc("HlolvcytelIoerpo", "HI") == "HelloIlovecrypto"
+    
 def test_encode_morse():
     assert encode_morse('ABC') == '.-|-...|-.-.'
     assert encode_morse('SMS ') == '...|--|...||'
