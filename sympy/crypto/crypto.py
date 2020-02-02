@@ -2725,6 +2725,7 @@ def encipher_ctc(message, key):
     >>> encipher_ctc("HelloIlovecrypto", key)   
     
     """
+
     c = ""
 
     k_index = 0
@@ -2743,11 +2744,11 @@ def encipher_ctc(message, key):
     matrix = [message_list[i: i + col] for i in range(0, len(message_list), col)] 
 
     for _ in range(col):
-		current_ind = key.index(key_list[k_index])
+        current_ind = key.index(key_list[k_index])
 
         c += ''.join([row[current_ind] for row in matrix])
-        
-		k_index += 1
+
+        k_index += 1
 
     return c
 
@@ -2760,44 +2761,44 @@ def decipher_ctc(c, key):
     >>> decipher_ctc("HlolvcytelIoerpo", key)    
     """
 
-	message = ""
+    message = ""
 
-	k_index = 0
+    k_index = 0
 
-	message_index = 0
-	message_len = len(c)
-	message_list = list(c)
+    message_index = 0
+    message_len = len(c)
+    message_list = list(c)
 
-	col = len(key)
+    col = len(key)
 
-	row = int(mt.ceil(message_len / col))
+    row = int(mt.ceil(message_len / col))
 
-	key_list = sorted(list(key))
+    key_list = sorted(list(key))
 
-	decrypt_cip = []
-	for _ in range(row):
-		decrypt_cip += [[None] * col]
+    decrypt_cip = []
+    for _ in range(row):
+        decrypt_cip += [[None] * col]
 
-	for _ in range(col):
-		current_ind = key.index(key_list[k_index])
+    for _ in range(col):
+        current_ind = key.index(key_list[k_index])
 
-		for x in range(row):
-			decrypt_cip[x][current_ind] = message_list[message_index]
-			message_index += 1
+        for x in range(row):
+            decrypt_cip[x][current_ind] = message_list[message_index]
+            message_index += 1
 
-		k_index += 1
+        k_index += 1
 
-	try:
-		message = ''.join(sum(decrypt_cip, []))
-	except TypeError:
-		raise TypeError("There cannot be any repeating letters in the key")
+    try:
+        message = ''.join(sum(decrypt_cip, []))
+    except TypeError:
+        raise TypeError("There cannot be any repeating letters in the key")
+    
+    n = message.count(' ')
 
-	n = message.count(' ')
+    if n > 0:
+        return message[: -n]
 
-	if n > 0:
-		return message[: -n]
-
-	return message
+    return message
 
 
 
