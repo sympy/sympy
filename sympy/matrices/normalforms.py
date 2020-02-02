@@ -183,8 +183,13 @@ def hermite_normal_form(m):
     >>> from sympy.matrices.normalforms import hermite_normal_form
     >>> m = Matrix([[2, 3, 6, 2], [5, 6, 1, 6], [8, 3, 1, 1]])
     >>> print(hermite_normal_form(m))
-    (Matrix([[1, 0, 50, -11], [0, 3, 28, -2], [0, 0, 61, -13]]),
-    Matrix([[ 9, -5, 1], [ 5, -2, 0], [11, -6, 1]]))
+    (Matrix([
+    [1, 0, 50, -11],
+    [0, 3, 28,  -2],
+    [0, 0, 61, -13]]), Matrix([
+    [ 9, -5, 1],
+    [ 5, -2, 0],
+    [11, -6, 1]]))
 
     """
 
