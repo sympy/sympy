@@ -2717,7 +2717,8 @@ def decipher_elgamal(msg, key):
     """
     
 def encipher_ctc(message, key):
-	r"""
+	
+    r"""
     
     Usage
     >>> from sympy.crypto.crypto import encipher_ctc
@@ -2725,6 +2726,7 @@ def encipher_ctc(message, key):
     >>> encipher_ctc("HelloIlovecrypto", key)   
     
     """
+    
     c = ""
 
     k_index = 0
