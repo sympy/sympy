@@ -263,21 +263,25 @@ def _cholesky_solve(M, rhs, dotprodsimp=None):
     pinv_solve
     """
 
+    if M.rows < M.cols:
+        raise NotImplementedError(
+            'Under-determined System. Try M.gauss_jordan_solve(rhs)')
+
     hermitian = True
+    reform    = False
 
     if M.is_symmetric():
         hermitian = False
-        L = M.cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-    elif M.is_hermitian:
-        L = M.cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-    elif M.rows >= M.cols:
-        L = M.H.multiply(M, dotprodsimp=dotprodsimp).cholesky(
-                hermitian=hermitian, dotprodsimp=dotprodsimp)
-        rhs = M.H.multiply(rhs, dotprodsimp=dotprodsimp)
-    else:
-        raise NotImplementedError('Under-determined System. '
-                                    'Try M.gauss_jordan_solve(rhs)')
+    elif not M.is_hermitian:
+        reform = True
 
+    if reform or M.is_positive_definite is False:
+        H         = M.H
+        M         = H.multiply(M, dotprodsimp=dotprodsimp)
+        rhs       = H.multiply(rhs, dotprodsimp=dotprodsimp)
+        hermitian = not M.is_symmetric()
+
+    L = M.cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
     Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
 
     if hermitian:
@@ -324,23 +328,27 @@ def _LDLsolve(M, rhs, dotprodsimp=None):
     pinv_solve
     """
 
+    if M.rows < M.cols:
+        raise NotImplementedError(
+            'Under-determined System. Try M.gauss_jordan_solve(rhs)')
+
     hermitian = True
+    reform    = False
 
     if M.is_symmetric():
         hermitian = False
-        L, D = M.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-    elif M.is_hermitian:
-        L, D = M.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-    elif M.rows >= M.cols:
-        L, D = M.H.multiply(M, dotprodsimp=dotprodsimp) \
-                .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        rhs = M.H.multiply(rhs, dotprodsimp=dotprodsimp)
-    else:
-        raise NotImplementedError('Under-determined System. '
-                                    'Try M.gauss_jordan_solve(rhs)')
+    elif not M.is_hermitian:
+        reform = True
 
-    Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-    Z = D.diagonal_solve(Y)
+    if reform or M.is_positive_definite is False:
+        H         = M.H
+        M         = H.multiply(M, dotprodsimp=dotprodsimp)
+        rhs       = H.multiply(rhs, dotprodsimp=dotprodsimp)
+        hermitian = not M.is_symmetric()
+
+    L, D = M.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
+    Y    = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+    Z    = D.diagonal_solve(Y)
 
     if hermitian:
         return (L.H).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
