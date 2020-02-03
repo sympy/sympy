@@ -1605,23 +1605,30 @@ def argmax(f, symbol = None, domain = S.Reals):
     Note: This function uses derivatives to calculate the points where the
     maximum value is achieved, and thus, would not include points where the
     function is not differentiable.
+
     Parameters
     ==========
+
     f: expr
         The concerned expression
     symbol: Symbol
         Variable for which the arguments to be determined.
     domain: Set
         The domain over which the arguments are to be determined
+
     Examples
     ========
+
     >>> from sympy import Symbol, sin, Interval, S, exp, pi
     >>> from sympy.calculus.util import argmax
+
     >>> x = Symbol('x')
     >>> argmax(sin(x), x, Interval(-2*pi, pi))
     FiniteSet(-3*pi/2, pi/2)
+
     >>> argmax(-x**2 + 5*x - 6)
     FiniteSet(5/2)
+
     >>> argmax(exp(x), x, S.Reals)
     EmptySet
     """
@@ -1648,23 +1655,30 @@ def argmin(f, symbol = None, domain = S.Reals):
     Note: This function uses derivatives to calculate the points where the
     minimum value is achieved, and thus, would not include points where the
     function is not differentiable.
+
     Parameters
     ==========
+
     f: expr
         The concerned expression
     symbol: Symbol
         Variable for which the arguments to be determined.
     domain: Set
         The domain over which the arguments are to be determined
+
     Examples
     ========
+
     >>> from sympy import Symbol, sin, Interval, S, exp, pi
     >>> from sympy.calculus.util import argmin
+
     >>> x = Symbol('x')
     >>> argmin(sin(x), x, Interval(-2*pi, pi))
     FiniteSet(-pi/2)
+
     >>> argmin((x - 1)**2, x, S.Reals)
     FiniteSet(1)
+
     >>> argmin(exp(x), x, S.Reals)
     EmptySet
     """
