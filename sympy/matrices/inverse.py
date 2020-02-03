@@ -194,6 +194,25 @@ def _inv_mod(M, m):
     return K_inv
 
 
+def _verify_invertible(M, iszerofunc=_iszero, dotprodsimp=None):
+    """Initial check to see if a matrix is invertible. Raises or returns
+    determinant for use in _inv_ADJ."""
+
+    if not M.is_square:
+        raise NonSquareMatrixError("A Matrix must be square to invert.")
+
+    d    = M.det(method='berkowitz', dotprodsimp=dotprodsimp)
+    zero = d.equals(0)
+
+    if zero is None: # if equals() can't decide, will rref be able to?
+        ok   = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
+        zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
+
+    if zero:
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+
+    return d
+
 def _inv_ADJ(M, iszerofunc=_iszero, dotprodsimp=None):
     """Calculates the inverse using the adjugate matrix and a determinant.
 
@@ -215,18 +234,7 @@ def _inv_ADJ(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    if not M.is_square:
-        raise NonSquareMatrixError("A Matrix must be square to invert.")
-
-    d    = M.det(method='berkowitz', dotprodsimp=dotprodsimp)
-    zero = d.equals(0)
-
-    if zero is None: # if equals() can't decide, will rref be able to?
-        ok   = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-        zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
-
-    if zero:
-        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+    d = _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
     return M.adjugate(dotprodsimp=dotprodsimp) / d
 
@@ -285,13 +293,7 @@ def _inv_LU(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    if not M.is_square:
-        raise NonSquareMatrixError()
-
-    ok = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-
-    if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
-        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
     return M.LUsolve(M.eye(M.rows), iszerofunc=_iszero,
             dotprodsimp=dotprodsimp)
@@ -317,13 +319,7 @@ def _inv_CH(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    if not M.is_square:
-        raise NonSquareMatrixError()
-
-    ok = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-
-    if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
-        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
     return M.cholesky_solve(M.eye(M.rows), dotprodsimp=dotprodsimp)
 
@@ -348,13 +344,7 @@ def _inv_LDL(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_CH
     """
 
-    if not M.is_square:
-        raise NonSquareMatrixError()
-
-    ok = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-
-    if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
-        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
     return M.LDLsolve(M.eye(M.rows), dotprodsimp=dotprodsimp)
 
@@ -379,13 +369,7 @@ def _inv_QR(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    if not M.is_square:
-        raise NonSquareMatrixError()
-
-    ok = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-
-    if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
-        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
 
     return M.QRsolve(M.eye(M.rows), dotprodsimp=dotprodsimp)
 
