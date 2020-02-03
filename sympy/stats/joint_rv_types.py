@@ -39,8 +39,6 @@ def JointRV(symbol, pdf, _set=None):
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
 
-    Returns a RandomSymbol.
-
     Examples
     ========
 
@@ -54,6 +52,11 @@ def JointRV(symbol, pdf, _set=None):
     >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
+
+    Returns
+    =======
+
+    A random symbol
     """
     #TODO: Add support for sets provided by the user
     symbol = sympify(symbol)
@@ -251,11 +254,24 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    syms: list/tuple/set of two symbols for identifying each component
+    syms: A symbol/str for identifying the random variable.
     mu: A real number, as the mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
     lamda: a positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.stats.joint_rv_types import NormalGamma
+    >>> from sympy.stats import density
+    >>> from sympy import symbols
+
+    >>> X = NormalGamma('x', 0, 1, 2, 3)
+    >>> y, z = symbols('y z')
+
+    >>> density(X)(y, z)
+    9*sqrt(2)*z**(3/2)*exp(-3*z)*exp(-y**2*z/2)/(2*sqrt(pi))
 
     Returns
     =======
