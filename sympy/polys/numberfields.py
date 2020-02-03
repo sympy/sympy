@@ -4,8 +4,9 @@ from __future__ import print_function, division
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi, sqrt, cbrt
+    Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
+from sympy.functions import sqrt, cbrt
 from sympy.core.compatibility import reduce
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
