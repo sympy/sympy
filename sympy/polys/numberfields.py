@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi, sqrt
+    Add, Mul, sympify, Dummy, expand_mul, I, pi, sqrt, cbrt
 )
 from sympy.core.compatibility import reduce
 from sympy.core.exprtools import Factors
@@ -530,7 +530,7 @@ def _minpoly_compose(ex, x, dom):
         if len(factors) == 1:
             return x**3 - x**2 - x - 1
         else:
-            fac = 1/3 + 4/(9*(sqrt(33)/9 + 19/27)**(1/3)) + (sqrt(33)/9 + 19/27)**(1/3)
+            fac = (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
             return _choose_factor(factors, x, fac, dom=dom)
 
     if hasattr(dom, 'symbols') and ex in dom.symbols:
