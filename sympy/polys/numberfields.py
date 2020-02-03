@@ -3,8 +3,8 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, Rational, AlgebraicNumber, GoldenRatio,TribonacciConstant,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi
+    S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
+    Add, Mul, sympify, Dummy, expand_mul, I, pi, sqrt
 )
 from sympy.core.compatibility import reduce
 from sympy.core.exprtools import Factors
