@@ -159,9 +159,9 @@ class MatrixReductions(MatrixDeterminant):
                 dotprodsimp=dotprodsimp)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True, dotprodsimp=None):
+            normalize_last=True):
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
-            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+            pivots=pivots, normalize_last=normalize_last)
 
     echelon_form.__doc__ = _echelon_form.__doc__
     is_echelon.__doc__   = _is_echelon.__doc__
@@ -338,9 +338,8 @@ class MatrixSubspaces(MatrixReductions):
     def columnspace(self, simplify=False, dotprodsimp=None):
         return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
 
-    def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
-        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
+        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc)
 
     def rowspace(self, simplify=False, dotprodsimp=None):
         return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
@@ -1749,16 +1748,11 @@ class MatrixBase(MatrixDeprecated,
 
         return self.adjugate(dotprodsimp=dotprodsimp) / d
 
-    def inverse_GE(self, iszerofunc=_iszero, dotprodsimp=None):
+    def inverse_GE(self, iszerofunc=_iszero):
         """Calculates the inverse using Gaussian elimination.
 
         Parameters
         ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         See Also
         ========
@@ -1772,7 +1766,7 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)[0]
+        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
@@ -1799,7 +1793,7 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
+        ok = self.rref(simplify=True)[0]
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
@@ -2508,7 +2502,7 @@ class MatrixBase(MatrixDeprecated,
 
         if method == 'GJ':
             try:
-                soln, param = self.gauss_jordan_solve(rhs, dotprodsimp=dotprodsimp)
+                soln, param = self.gauss_jordan_solve(rhs)
                 if param:
                     raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
                     "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
@@ -2710,9 +2704,8 @@ class MatrixBase(MatrixDeprecated,
     def QRsolve(self, b, dotprodsimp=None):
         return _QRsolve(self, b, dotprodsimp=dotprodsimp)
 
-    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
-        return _gauss_jordan_solve(self, B, freevar=freevar,
-                dotprodsimp=dotprodsimp)
+    def gauss_jordan_solve(self, B, freevar=False):
+        return _gauss_jordan_solve(self, B, freevar=freevar)
 
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__

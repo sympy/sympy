@@ -363,7 +363,7 @@ def test_issue_17247_expression_blowup_8():
 
 def test_issue_17247_expression_blowup_9():
     M = Matrix(8, 8, [x+i for i in range (64)])
-    assert M.rref(dotprodsimp=True) == (Matrix([
+    assert M.rref() == (Matrix([
         [1, 0, -1, -2, -3, -4, -5, -6],
         [0, 1,  2,  3,  4,  5,  6,  7],
         [0, 0,  0,  0,  0,  0,  0,  0],
@@ -429,7 +429,7 @@ def test_issue_17247_expression_blowup_16():
 
 def test_issue_17247_expression_blowup_17():
     M = Matrix(8, 8, [x+i for i in range (64)])
-    assert M.nullspace(dotprodsimp=True) == [
+    assert M.nullspace() == [
         Matrix([[1],[-2],[1],[0],[0],[0],[0],[0]]),
         Matrix([[2],[-3],[0],[1],[0],[0],[0],[0]]),
         Matrix([[3],[-4],[0],[0],[1],[0],[0],[0]]),
@@ -574,7 +574,7 @@ def test_issue_17247_expression_blowup_29():
         [-149/64 + 49*I/32, -177/128 - 1369*I/128,                   0, -2063/256 + 541*I/128],
         [                0,         9/4 + 55*I/16, 2473/256 + 137*I/64,                     0],
         [                0,                     0,                   0, -177/128 - 1369*I/128]]'''))
-    assert M.gauss_jordan_solve(ones(4, 1), dotprodsimp=True) == (Matrix(S('''[
+    assert M.gauss_jordan_solve(ones(4, 1)) == (Matrix(S('''[
         [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
         [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
         [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
@@ -1518,12 +1518,12 @@ def test_eigen():
     M = Matrix([[Rational(1, 4), 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
         (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - Rational(3, 8)], [1]])]),
-        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[Rational(-3, 8) + sqrt(73)/8], [1]])])]
-    assert M.eigenvects(simplify=False) ==[
-        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)],
-                                          [                     1]])]),
-        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - Rational(3, 8))],
-                                          [                     1]])])]
+        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[Rational(-3, 8) + sqrt(73)/8], [1]])])
+    ]
+    assert M.eigenvects(simplify=False) == [
+        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
+        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])
+    ]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
     evals = { Rational(5, 4) - sqrt(385)/20: 1, sqrt(385)/20 + Rational(5, 4): 1, S.Zero: 1}
@@ -2372,7 +2372,7 @@ def test_jordan_form_issue_15858():
     assert simplify(P) == Matrix([
         [-I, -I/2, I, I/2],
         [-1 + I, 0, -1 - I, 0],
-        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
+        [0, -S(1)/2 - I/2, 0, -S(1)/2 + I/2],
         [0, 1, 0, 1]])
     assert J == Matrix([
         [-I, 1, 0, 0],

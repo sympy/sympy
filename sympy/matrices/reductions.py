@@ -263,8 +263,8 @@ def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
     return len(pivots)
 
 
-def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
-        normalize_last=True, dotprodsimp=None):
+def _rref(M, iszerofunc=_iszero, simplify=True, pivots=True,
+        normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
 
     Parameters
@@ -322,8 +322,12 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     if you depend on the form row reduction algorithm leaves entries
     of the matrix, set ``noramlize_last=False``
     """
-
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+    if isinstance(simplify, FunctionType):
+        simpfunc = simplify
+        dotprodsimp = False
+    else:
+        simpfunc = _simplify
+        dotprodsimp = True
 
     mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
             normalize_last, normalize=True, zero_above=True,

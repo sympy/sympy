@@ -225,7 +225,7 @@ class DenseMatrix(MatrixBase):
 
         M = self.as_mutable()
         if method == "GE":
-            rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+            rv = M.inverse_GE(iszerofunc=iszerofunc)
         elif method == "LU":
             rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
         elif method == "ADJ":

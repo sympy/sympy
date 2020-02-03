@@ -48,16 +48,11 @@ def _columnspace(M, simplify=False, dotprodsimp=None):
     return [M.col(i) for i in pivots]
 
 
-def _nullspace(M, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
+def _nullspace(M, simplify=False, iszerofunc=_iszero):
     """Returns list of vectors (Matrix objects) that span nullspace of ``M``
 
     Parameters
     ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -82,8 +77,7 @@ def _nullspace(M, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
     rowspace
     """
 
-    reduced, pivots = M.rref(iszerofunc=iszerofunc, simplify=simplify,
-            dotprodsimp=dotprodsimp)
+    reduced, pivots = M.rref(iszerofunc=iszerofunc, simplify=simplify)
 
     free_vars = [i for i in range(M.cols) if i not in pivots]
     basis     = []

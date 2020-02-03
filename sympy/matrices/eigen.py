@@ -243,13 +243,13 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
         """Get a basis for the eigenspace for a particular eigenvalue"""
 
         m   = M - M.eye(M.rows) * eigenval
-        ret = m.nullspace(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        ret = m.nullspace(iszerofunc=iszerofunc)
 
         # the nullspace for a real eigenvalue should be
         # non-trivial.  If we didn't find an eigenvector, try once
         # more a little harder
         if len(ret) == 0 and simplify:
-            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)
+            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
         if len(ret) == 0:
             raise NotImplementedError(
                     "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
@@ -844,8 +844,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
         if not calc_transform:
             return restore_floats(jordan_mat)
 
-        jordan_basis = [eig_mat(eig, 1).nullspace(dotprodsimp=dotprodsimp)[0]
-                for eig in blocks]
+        jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
         basis_mat    = mat.hstack(*jordan_basis)
 
         return restore_floats(basis_mat, jordan_mat)
@@ -902,8 +901,8 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
             if block_eig != eig:
                 continue
 
-            null_big   = (eig_mat(eig, size)).nullspace(dotprodsimp=dotprodsimp)
-            null_small = (eig_mat(eig, size - 1)).nullspace(dotprodsimp=dotprodsimp)
+            null_big   = (eig_mat(eig, size)).nullspace()
+            null_small = (eig_mat(eig, size - 1)).nullspace()
 
             # we want to pick something that is in the big basis
             # and not the small, but also something that is independent

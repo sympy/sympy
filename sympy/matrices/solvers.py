@@ -483,7 +483,7 @@ def _QRsolve(M, b, dotprodsimp=None):
     return M._new([row._mat for row in reversed(x)])
 
 
-def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
+def _gauss_jordan_solve(M, B, freevar=False):
     """
     Solves ``Ax = B`` using Gauss Jordan elimination.
 
@@ -505,11 +505,6 @@ def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
         values of free variables. Then the index of the free variables
         in the solutions (column Matrix) will be returned by freevar, if
         the flag `freevar` is set to `True`.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Returns
     =======
@@ -599,7 +594,7 @@ def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
     row, col = aug[:, :-B_cols].shape
 
     # solve by reduced row echelon form
-    A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
+    A, pivots = aug.rref(simplify=True)
     A, v      = A[:, :-B_cols], A[:, -B_cols:]
     pivots    = list(filter(lambda p: p < col, pivots))
     rank      = len(pivots)
