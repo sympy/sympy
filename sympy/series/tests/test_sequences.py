@@ -2,7 +2,7 @@ from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
                    fibonacci, tribonacci, sin, cos, exp, Rational)
 from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')

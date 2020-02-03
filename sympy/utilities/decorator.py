@@ -7,8 +7,8 @@ import types
 import inspect
 
 from sympy.core.decorators import wraps
-from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
-from sympy.utilities.runtests import DependencyError, SymPyDocTests, PyTestReporter
+from sympy.core.compatibility import get_function_globals, get_function_name, iterable
+from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -210,7 +210,7 @@ def public(obj):
     if isinstance(obj, types.FunctionType):
         ns = get_function_globals(obj)
         name = get_function_name(obj)
-    elif isinstance(obj, (type(type), class_types)):
+    elif isinstance(obj, (type(type), type)):
         ns = sys.modules[obj.__module__].__dict__
         name = obj.__name__
     else:

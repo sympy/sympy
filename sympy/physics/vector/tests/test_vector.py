@@ -1,7 +1,7 @@
 from sympy import symbols, pi, sin, cos, ImmutableMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 Vector.simp = True

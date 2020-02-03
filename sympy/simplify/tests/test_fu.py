@@ -6,8 +6,7 @@ from sympy.simplify.fu import (
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
     TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
-from sympy.utilities.randtest import verify_numerically
-from sympy.core.compatibility import range
+from sympy.testing.randtest import verify_numerically
 from sympy.abc import a, b, c, x, y, z
 
 
@@ -187,8 +186,8 @@ def test_TR10i():
     h = sin(y)
     r = cos(y)
     for si in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-        for a in ((c*r, s*h), (c*h, s*r)): # explicit 2-args
-            args = zip(si, a)
+        for argsi in ((c*r, s*h), (c*h, s*r)): # explicit 2-args
+            args = zip(si, argsi)
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR10i(ex)
             assert not (ex - t.expand(trig=True) or t.is_Add)
@@ -198,8 +197,8 @@ def test_TR10i():
     h = sin(pi/6)
     r = cos(pi/6)
     for si in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-        for a in ((c*r, s*h), (c*h, s*r)): # induced
-            args = zip(si, a)
+        for argsi in ((c*r, s*h), (c*h, s*r)): # induced
+            args = zip(si, argsi)
             ex = Add(*[Mul(*ai) for ai in args])
             t = TR10i(ex)
             assert not (ex - t.expand(trig=True) or t.is_Add)
@@ -275,6 +274,9 @@ def test_fu():
 
     expr = Mul(*[cos(2**i) for i in range(10)])
     assert fu(expr) == sin(1024)/(1024*sin(1))
+
+    # issue #18059:
+    assert fu(cos(x) + sqrt(sin(x)**2)) == cos(x) + sqrt(sin(x)**2)
 
 
 def test_objective():

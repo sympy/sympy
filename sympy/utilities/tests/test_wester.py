@@ -27,7 +27,8 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
+from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
+    raises, nocache_fail)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -48,7 +49,6 @@ from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
-from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
 from sympy.series.formal import fps
 from sympy.series.fourier import fourier_series
@@ -935,13 +935,14 @@ def test_M14():
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
+@nocache_fail
 def test_M15():
-    if PY3:
-        n = Dummy('n')
-        assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                               ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
-                                               Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
-                                               ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+    n = Dummy('n')
+    # This test fails when running with the cache off:
+    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+                                           ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
+                                           Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
+                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
 
 
 @XFAIL
@@ -1333,7 +1334,6 @@ def test_P3():
     A222 = -A[(3, 0), (2, 1)]
     A22 = BlockMatrix([[A221, A222]]).T
     rows = [[-A11, A12], [A21, A22]]
-    from sympy.utilities.pytest import raises
     raises(ValueError, lambda: BlockMatrix(rows))
     B = Matrix(rows)
     assert B == Matrix([

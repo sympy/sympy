@@ -27,13 +27,14 @@ The main references for this are:
 """
 from __future__ import print_function, division
 
+from typing import Dict, Tuple
+
 from sympy.core import oo, S, pi, Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
-from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
@@ -546,7 +547,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-_dummies = {}
+_dummies = {}  # type: Dict[Tuple[str, str], Dummy]
 
 
 def _dummy(name, token, expr, **kwargs):

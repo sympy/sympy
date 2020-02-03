@@ -11,7 +11,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         SparseMatrix, Transpose, Adjoint)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
                                                 GenericZeroMatrix, GenericIdentity, OneMatrix)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)

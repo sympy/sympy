@@ -2,7 +2,7 @@ from sympy import I, Matrix, symbols, conjugate, Expr, Integer
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 
 def test_scalars():
@@ -52,7 +52,7 @@ def test_numpy_dagger():
     assert (Dagger(a) == adag).all()
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_scipy_sparse_dagger():

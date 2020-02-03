@@ -14,9 +14,8 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, slow
-from sympy.utilities.randtest import verify_numerically
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
+from sympy.testing.randtest import verify_numerically
 import mpmath
 
 

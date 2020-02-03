@@ -23,10 +23,7 @@ import re
 import pydoc
 import sphinx
 import inspect
-try:
-    from collections.abc import Callable
-except ImportError: # Python 2
-    from collections import Callable
+from collections.abc import Callable
 
 if sphinx.__version__ < '1.0.1':
     raise RuntimeError("Sphinx 1.0.1 or newer is required")

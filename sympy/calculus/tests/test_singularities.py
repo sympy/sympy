@@ -8,7 +8,7 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y
 
 

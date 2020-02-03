@@ -13,7 +13,7 @@ class DFT(MatrixExpr):
         obj = super(DFT, cls).__new__(cls, n)
         return obj
 
-    n = property(lambda self: self.args[0])
+    n = property(lambda self: self.args[0])  # type: ignore
     shape = property(lambda self: (self.n, self.n))
 
     def _entry(self, i, j, **kwargs):
