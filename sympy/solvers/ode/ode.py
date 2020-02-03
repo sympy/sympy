@@ -1879,14 +1879,14 @@ def classify_sysode(eq, funcs=None, **kwargs):
         return list(map(sympify, eq if iterable(eq) else [eq]))
 
     eq, funcs = (_sympify(w) for w in [eq, funcs])
+    if len(eq) == 0:
+        raise ValueError("classify_sysode() works for systems of ODEs. "
+        "For scalar ODEs, classify_ode should be used")
     for i, fi in enumerate(eq):
         if isinstance(fi, Equality):
             eq[i] = fi.lhs - fi.rhs
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
-    if i==0:
-        raise ValueError("classify_sysode() works for systems of ODEs. "
-        "For scalar ODEs, classify_ode should be used")
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     # find all the functions if not given
@@ -7631,8 +7631,11 @@ def _linear_2eq_order1_type4(x, y, t, r, eq):
         G = Integral(r['b'], t)
         sol1 = F*(C1*cos(G) + C2*sin(G))
         sol2 = F*(-C1*sin(G) + C2*cos(G))
+    # FIXME: the case below doesn't seem correct, is only XFAIL tested and doesn't
+    # match the description in the docstring above. It can be triggered with:
+    # dsolve([Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), x*f(x) - g(x))])
     elif r['d'] == -r['a']:
-        F = exp(Integral(r['c'], t))
+        F = exp(Integral(r['b'], t))
         G = Integral(r['d'], t)
         sol1 = F*(-C1*sin(G) + C2*cos(G))
         sol2 = F*(C1*cos(G) + C2*sin(G))
@@ -7664,6 +7667,8 @@ def _linear_2eq_order1_type5(x, y, t, r, eq):
         sol = dsolve(eq)
         sol1 = exp(Integral(r['a'], t))*sol[0].rhs.subs(T, Integral(r['b'], t))
         sol2 = exp(Integral(r['a'], t))*sol[1].rhs.subs(T, Integral(r['b'], t))
+    # The case below isn't tested and doesn't match the description in the
+    # docstring above. Perhaps this should be removed...
     if not cancel(r['a']/r['d']).has(t):
         p = cancel(r['a']/r['d'])
         q = cancel((r['b']-r['c'])/r['d'])
@@ -7712,6 +7717,7 @@ def _linear_2eq_order1_type6(x, y, t, r, eq):
                     p = 2
                     s = j
                     break
+
     if p == 1:
         equ = diff(x(t),t) - r['a']*x(t) - r['b']*(s*x(t) + C1*exp(-s*Integral(r['b'] - r['d']/s, t)))
         hint1 = classify_ode(equ)[1]
@@ -8378,6 +8384,8 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
     constant-coefficient second-order linear homogeneous differential equations.
 
     """
+    # FIXME: This function is equivalent to type6 (and broken). Should be removed...
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', cls=Function)
     assert False
     p = Wild('p', exclude=[t, t**2])
@@ -9148,6 +9156,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     """
     C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
+    fu, fv, fw = symbols('u, v, w', cls=Function)
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
     s = Wild('s', exclude=[x(t), y(t), z(t), t])
@@ -9166,15 +9175,15 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     z_xy = (C1-a*u-b*v)/c
     y_zx = (C1-a*u-c*w)/b
     x_yz = (C1-b*v-c*w)/a
-    y_x = dsolve(diff(v(u),u) - ((a*F3-c*F1)/(c*F2-b*F3)).subs(w,z_xy).subs(v,v(u))).rhs
-    z_x = dsolve(diff(w(u),u) - ((b*F1-a*F2)/(c*F2-b*F3)).subs(v,y_zx).subs(w,w(u))).rhs
-    z_y = dsolve(diff(w(v),v) - ((b*F1-a*F2)/(a*F3-c*F1)).subs(u,x_yz).subs(w,w(v))).rhs
-    x_y = dsolve(diff(u(v),v) - ((c*F2-b*F3)/(a*F3-c*F1)).subs(w,z_xy).subs(u,u(v))).rhs
-    y_z = dsolve(diff(v(w),w) - ((a*F3-c*F1)/(b*F1-a*F2)).subs(u,x_yz).subs(v,v(w))).rhs
-    x_z = dsolve(diff(u(w),w) - ((c*F2-b*F3)/(b*F1-a*F2)).subs(v,y_zx).subs(u,u(w))).rhs
-    sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
-    sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
-    sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    y_x = dsolve(diff(fv(u),u) - ((a*F3-c*F1)/(c*F2-b*F3)).subs(w,z_xy).subs(v,fv(u))).rhs
+    z_x = dsolve(diff(fw(u),u) - ((b*F1-a*F2)/(c*F2-b*F3)).subs(v,y_zx).subs(w,fw(u))).rhs
+    z_y = dsolve(diff(fw(v),v) - ((b*F1-a*F2)/(a*F3-c*F1)).subs(u,x_yz).subs(w,fw(v))).rhs
+    x_y = dsolve(diff(fu(v),v) - ((c*F2-b*F3)/(a*F3-c*F1)).subs(w,z_xy).subs(u,fu(v))).rhs
+    y_z = dsolve(diff(fv(w),w) - ((a*F3-c*F1)/(b*F1-a*F2)).subs(u,x_yz).subs(v,fv(w))).rhs
+    x_z = dsolve(diff(fu(w),w) - ((c*F2-b*F3)/(b*F1-a*F2)).subs(v,y_zx).subs(u,fu(w))).rhs
+    sol1 = dsolve(diff(fu(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,fu(t))).rhs
+    sol2 = dsolve(diff(fv(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,fv(t))).rhs
+    sol3 = dsolve(diff(fw(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,fw(t))).rhs
     return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
@@ -9257,11 +9266,12 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     """
     C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
+    fu, fv, fw = symbols('u, v, w', cls=Function)
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
     s = Wild('s', exclude=[x(t), y(t), z(t), t])
     F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
-    r1 = eq[0].match(diff(x(t), t) - x(t)*(F2 - F3))
+    r1 = eq[0].match(diff(x(t), t) - x(t)*F2 + x(t)*F3)
     r = collect_const(r1[F2]).match(s*F2)
     r.update(collect_const(r1[F3]).match(q*F3))
     if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
@@ -9275,13 +9285,13 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     x_yz = (C1*v**-b*w**-c)**-a
     y_zx = (C1*w**-c*u**-a)**-b
     z_xy = (C1*u**-a*v**-b)**-c
-    y_x = dsolve(diff(v(u), u) - ((v*(a*F3 - c*F1))/(u*(c*F2 - b*F3))).subs(w, z_xy).subs(v, v(u))).rhs
-    z_x = dsolve(diff(w(u), u) - ((w*(b*F1 - a*F2))/(u*(c*F2 - b*F3))).subs(v, y_zx).subs(w, w(u))).rhs
-    z_y = dsolve(diff(w(v), v) - ((w*(b*F1 - a*F2))/(v*(a*F3 - c*F1))).subs(u, x_yz).subs(w, w(v))).rhs
-    x_y = dsolve(diff(u(v), v) - ((u*(c*F2 - b*F3))/(v*(a*F3 - c*F1))).subs(w, z_xy).subs(u, u(v))).rhs
-    y_z = dsolve(diff(v(w), w) - ((v*(a*F3 - c*F1))/(w*(b*F1 - a*F2))).subs(u, x_yz).subs(v, v(w))).rhs
-    x_z = dsolve(diff(u(w), w) - ((u*(c*F2 - b*F3))/(w*(b*F1 - a*F2))).subs(v, y_zx).subs(u, u(w))).rhs
-    sol1 = dsolve(diff(u(t), t) - (u*(c*F2 - b*F3)).subs(v, y_x).subs(w, z_x).subs(u, u(t))).rhs
-    sol2 = dsolve(diff(v(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, v(t))).rhs
-    sol3 = dsolve(diff(w(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, w(t))).rhs
+    y_x = dsolve(diff(fv(u), u) - ((v*(a*F3 - c*F1))/(u*(c*F2 - b*F3))).subs(w, z_xy).subs(v, fv(u))).rhs
+    z_x = dsolve(diff(fw(u), u) - ((w*(b*F1 - a*F2))/(u*(c*F2 - b*F3))).subs(v, y_zx).subs(w, fw(u))).rhs
+    z_y = dsolve(diff(fw(v), v) - ((w*(b*F1 - a*F2))/(v*(a*F3 - c*F1))).subs(u, x_yz).subs(w, fw(v))).rhs
+    x_y = dsolve(diff(fu(v), v) - ((u*(c*F2 - b*F3))/(v*(a*F3 - c*F1))).subs(w, z_xy).subs(u, fu(v))).rhs
+    y_z = dsolve(diff(fv(w), w) - ((v*(a*F3 - c*F1))/(w*(b*F1 - a*F2))).subs(u, x_yz).subs(v, fv(w))).rhs
+    x_z = dsolve(diff(fu(w), w) - ((u*(c*F2 - b*F3))/(w*(b*F1 - a*F2))).subs(v, y_zx).subs(u, fu(w))).rhs
+    sol1 = dsolve(diff(fu(t), t) - (u*(c*F2 - b*F3)).subs(v, y_x).subs(w, z_x).subs(u, fu(t))).rhs
+    sol2 = dsolve(diff(fv(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))).rhs
+    sol3 = dsolve(diff(fw(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))).rhs
     return [sol1, sol2, sol3]
