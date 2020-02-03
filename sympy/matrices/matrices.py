@@ -54,8 +54,8 @@ from .solvers import (
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve)
 
 
-class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify)
+def DeferredVector(*args, **kwargs):
+    """A vector whose components are deferred.
 
     Examples
     ========
@@ -64,25 +64,22 @@ class DeferredVector(Symbol, NotIterable):
     >>> X = DeferredVector( 'X' )
     >>> X
     X
-    >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr)
-    >>> func( [1, 2, 3] )
+
+    Using DeferredVector with lambdify:
+
+    >>> expr = X[0] + 2, X[2] + 3
+    >>> func = lambdify(X, expr)
+    >>> func([1, 2, 3])
     (3, 6)
     """
-
-    def __getitem__(self, i):
-        if i == -0:
-            i = 0
-        if i < 0:
-            raise IndexError('DeferredVector index out of range')
-        component_name = '%s[%d]' % (self.name, i)
-        return Symbol(component_name)
-
-    def __str__(self):
-        return sstr(self)
-
-    def __repr__(self):
-        return "DeferredVector('%s')" % self.name
+    from sympy.tensor.indexed import IndexedBase
+    SymPyDeprecationWarning(
+        feature="DeferredVector",
+        useinstead="IndexedBase",
+        issue=99999,
+        deprecated_since_version="1.6"
+    ).warn()
+    return IndexedBase(*args, **kwargs)
 
 
 class MatrixDeterminant(MatrixCommon):
@@ -993,8 +990,7 @@ class MatrixBase(MatrixDeprecated,
                         "SymPy supports just 1D and 2D matrices")
 
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
-            elif is_sequence(args[0]) \
-                    and not isinstance(args[0], DeferredVector):
+            elif is_sequence(args[0]):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
                     evaluate or

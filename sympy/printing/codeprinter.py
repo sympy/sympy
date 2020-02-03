@@ -521,7 +521,6 @@ class CodePrinter(StrPrinter):
     _print_ImmutableDenseMatrix = _print_not_supported
     _print_MutableDenseMatrix = _print_not_supported
     _print_MatrixBase = _print_not_supported
-    _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
     _print_NegativeInfinity = _print_not_supported
     _print_Order = _print_not_supported
