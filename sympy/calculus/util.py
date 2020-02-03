@@ -1687,9 +1687,7 @@ def _argMaxMin(f, symbol, domain, max):
     """
     Helper function for calculuating argmin/argmax
     """
-    from sympy.core.function import diff
     from sympy.solvers.solveset import solveset
-    from sympy.functions.elementary.piecewise import Piecewise
 
     solns = S.EmptySet
 
