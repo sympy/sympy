@@ -4,14 +4,13 @@ from typing import Any
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import (
-    Callable, NotIterable, as_int, is_sequence)
+from sympy.core.compatibility import Callable, as_int, is_sequence
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.numbers import mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
+from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
