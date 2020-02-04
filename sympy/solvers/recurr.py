@@ -813,10 +813,10 @@ def rsolve(f, y, init=None):
                     i = int(k.args[0])
                 else:
                     raise ValueError("Integer or term expected, got '%s'" % k)
-            try:
+
+            eq = solution.limit(n, i) - v
+            if eq.has(S.NaN):
                 eq = solution.limit(n, i) - v
-            except NotImplementedError:
-                eq = solution.subs(n, i) - v
             equations.append(eq)
 
         result = solve(equations, *symbols)
