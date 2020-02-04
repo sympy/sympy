@@ -15,6 +15,8 @@ from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 
+from .utilities import _iszero
+
 from .decompositions import (
     _liupc, _row_structure_symbolic_cholesky, _cholesky_sparse,
     _LDLdecomposition_sparse)
@@ -274,57 +276,11 @@ class SparseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _eval_inverse(self, method='LDL', dotprodsimp=None):
-        """Return the matrix inverse using Cholesky or LDL (default)
-        decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
-        respectively.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy import SparseMatrix, Matrix
-        >>> A = SparseMatrix([
-        ... [ 2, -1,  0],
-        ... [-1,  2, -1],
-        ... [ 0,  0,  2]])
-        >>> A.inv('CH')
-        Matrix([
-        [2/3, 1/3, 1/6],
-        [1/3, 2/3, 1/3],
-        [  0,   0, 1/2]])
-        >>> A.inv(method='LDL') # use of 'method=' is optional
-        Matrix([
-        [2/3, 1/3, 1/6],
-        [1/3, 2/3, 1/3],
-        [  0,   0, 1/2]])
-        >>> A * _
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-        """
-        M = self.as_mutable()
-        I = M.eye(M.rows)
-        if not self.is_symmetric():
-            I = M.T
-            M = I.multiply(M, dotprodsimp=dotprodsimp)
-
-        if method == "LDL":
-            rv = M.LDLsolve(I, dotprodsimp=dotprodsimp)
-        elif method == "CH":
-            rv = M.cholesky_solve(I, dotprodsimp=dotprodsimp)
-        else:
-            raise NotImplementedError(
-                'Method may be "CH" or "LDL", not %s.' % method)
-        return self._new(rv)
+    def _eval_inverse(self, **kwargs):
+        return self.inv(method=kwargs.get('method', 'LDL'),
+                        iszerofunc=kwargs.get('iszerofunc', _iszero),
+                        dotprodsimp=kwargs.get('dotprodsimp', None),
+                        try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_Abs(self):
         return self.applyfunc(lambda x: Abs(x))

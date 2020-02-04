@@ -11,7 +11,7 @@ from .utilities import _iszero
 from .determinant import _find_reasonable_pivot_naive
 
 
-def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
+def _rank_decomposition(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
     r"""Returns a pair of matrices (`C`, `F`) with matching rank
     such that `A = C F`.
 
@@ -25,6 +25,11 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     simplify : Bool or Function, optional
         A function used to simplify elements when looking for a
         pivot. By default SymPy's ``simplify`` is used.
+
+    dotprodsimp : bool, optional
+        Specifies whether intermediate term algebraic simplification is used
+        during matrix multiplications to control expression blowup and thus
+        speed up calculation.
 
     Returns
     =======
@@ -97,14 +102,14 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     rref
     """
 
-    (F, pivot_cols) = M.rref(
-        simplify=simplify, iszerofunc=iszerofunc, pivots=True)
+    F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,
+            pivots=True, dotprodsimp=dotprodsimp)
     rank = len(pivot_cols)
 
     C = M.extract(range(M.rows), pivot_cols)
     F = F[:rank, :]
 
-    return (C, F)
+    return C, F
 
 
 def _liupc(M):
