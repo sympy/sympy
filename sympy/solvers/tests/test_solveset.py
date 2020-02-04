@@ -178,14 +178,6 @@ def test_issue_11536():
     assert solveset(0**x - 1, x, S.Reals) == FiniteSet(0)
 
 
-def test_issue_17882():
-    equation = solveset(-8*x**2/(9*(x**2 - 1)**(4/3)) + 4/(3*(x**2 - 1)**(1/3)), x, S.Complexes)
-    equation = str(equation)
-    solution = ConditionSet(x, Eq(-8*x**2*(x**2 - 1)**(-1.33333333333333)/9 + 4*(x**2 - 1)**(-0.333333333333333)/3, 0), S.Complexes)
-    solution = str(solution)
-    assert equation == solution
-
-
 def test_issue_17479():
     import sympy as sb
     from sympy.solvers.solveset import nonlinsolve
