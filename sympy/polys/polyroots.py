@@ -242,7 +242,7 @@ def roots_quartic(f):
     r"""
     Returns a list of roots of a quartic polynomial.
 
-    There are many references for solving quartic expressions available [1-5].
+    There are many references for solving quartic expressions available [1-6].
     This reviewer has found that many of them require one to select from among
     2 or more possible sets of solutions and that some solutions work when one
     is searching for real roots but don't work when searching for complex roots
@@ -279,11 +279,10 @@ def roots_quartic(f):
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. https://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
-    3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
-    4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
-    5. http://www.albmath.org/files/Math_5713.pdf
-    6. http://www.statemaster.com/encyclopedia/Quartic-equation
-    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
+    3. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    4. http://www.albmath.org/files/Math_5713.pdf
+    5. http://www.statemaster.com/encyclopedia/Quartic-equation
+    6. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 
@@ -318,7 +317,7 @@ def roots_quartic(f):
             y = [S.Zero] + roots([1, 0, e, f], multiple=True)
             return [tmp - aon4 for tmp in y]
         else:
-            # Descartes-Euler method, see [7]
+            # Descartes-Euler method, see [6]
             sols = _roots_quartic_euler(e, f, g, aon4)
             if sols:
                 return sols
@@ -355,9 +354,15 @@ def roots_quartic(f):
             if fuzzy_not(p.is_zero):
                 return _ans(y2)
 
+            _y1, _y2 = [sqrt(tmp) for tmp in
+                      roots([1, e, g], multiple=True)]
+
             # sort it out once they know the values of the coefficients
-            return [Piecewise((a1, Eq(p, 0)), (a2, True))
-                for a1, a2 in zip(_ans(y1), _ans(y2))]
+            return [Piecewise(
+                (a1, Eq(p, 0)),
+                (a3 - aon4, Eq(f, 0)), (a2, True))
+                for a1, a2, a3 in zip(
+                _ans(y1), _ans(y2), [-_y1, -_y2, _y1, _y2])]
 
 
 def roots_binomial(f):
