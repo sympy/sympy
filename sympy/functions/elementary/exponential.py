@@ -884,7 +884,7 @@ class log(Function):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import cancel, Order
+        from sympy import cancel, Order, logcombine
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -905,6 +905,8 @@ class log(Function):
             s = self.args[0].nseries(x, n=n, logx=logx)
         a, b = s.leadterm(x)
         p = cancel(s/(a*x**b) - 1)
+        if p.has(exp):
+            p = logcombine(p)
         g = None
         l = []
         for i in range(n + 2):
