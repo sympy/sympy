@@ -213,10 +213,10 @@ def test_power():
     from sympy.abc import a, b, n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
     assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
-    assert Matrix([[a, 1, 0], [0, a, 1], [0, 0, a]])**n == Matrix([
-        [a**n, a**(n-1)*n, a**(n-2)*(n-1)*n/2],
-        [0, a**n, a**(n-1)*n],
-        [0, 0, a**n]])
+    assert Matrix([
+        [a**n, a**(n - 1)*n, (a**n*n**2 - a**n*n)/(2*a**2)],
+        [   0,         a**n,                  a**(n - 1)*n],
+        [   0,            0,                          a**n]])
     assert Matrix([[a, 1, 0], [0, a, 0], [0, 0, b]])**n == Matrix([
         [a**n, a**(n-1)*n, 0],
         [0, a**n, 0],

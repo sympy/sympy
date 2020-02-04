@@ -1370,8 +1370,8 @@ def test_P7():
         z*Matrix([[1, 3, 5],
                   [2, 4, 6]]) + Matrix([[7, -9, 11],
                                         [-8, 10, -12]]))
-    assert M == Matrix([[x*(z + 7) + y*(2*z - 8), x*(3*z - 9) + y*(4*z + 10),
-                         x*(5*z + 11) + y*(6*z - 12)]])
+    assert M == Matrix([[x*z + 7*x + 2*y*z - 8*y, 3*x*z - 9*x + 4*y*z + 10*y,
+        5*x*z + 11*x + 6*y*z - 12*y]])
 
 
 def test_P8():

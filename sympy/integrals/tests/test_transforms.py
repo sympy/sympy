@@ -12,7 +12,7 @@ from sympy import (
     cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, expand)
 from sympy.testing.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -742,8 +742,8 @@ def test_cosine_transform():
     assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(
         t)), t, w) == a*exp(-a**2/(2*w))/(2*w**Rational(3, 2))
 
-    assert cosine_transform(1/(a + t), t, w) == sqrt(2)*(
-        (-2*Si(a*w) + pi)*sin(a*w)/2 - cos(a*w)*Ci(a*w))/sqrt(pi)
+    assert cosine_transform(1/(a + t), t, w).expand() == expand(sqrt(2)*(
+        (-2*Si(a*w) + pi)*sin(a*w)/2 - cos(a*w)*Ci(a*w))/sqrt(pi))
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S.Half, 0), ()), (
         (S.Half, 0, 0), (S.Half,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 

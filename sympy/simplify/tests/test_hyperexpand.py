@@ -9,7 +9,8 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
+from sympy import (hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr,
+    simplify)
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -420,11 +421,17 @@ def test_meijerg_lookup():
     assert can_do_meijer([a], [], [b + 2, a], [])
     assert can_do_meijer([a], [], [b - 2, a], [])
 
-    assert hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z)) == \
-        -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
-                                   - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
-        hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == \
-        hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z))
+    # assert hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z)) == \
+    #     -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+    #                                - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
+    #     hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == \
+    #     hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z))
+    t = hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z))
+    assert simplify(t - (
+        -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2) -
+        2*sin(2*sqrt(z))*Ci(2*sqrt(z))))) == 0
+    assert t - hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == 0
+    assert t - hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z)) == 0
     assert can_do_meijer([a - 1], [], [a + 2, a - Rational(3, 2), a + 1], [])
 
 
