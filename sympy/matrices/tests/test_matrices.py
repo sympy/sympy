@@ -1525,11 +1525,9 @@ def test_eigen():
     assert M.eigenvects(simplify=True) == [
         (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - Rational(3, 8)], [1]])]),
         (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[Rational(-3, 8) + sqrt(73)/8], [1]])])]
-    assert M.eigenvects(simplify=False) ==[
-        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)],
-                                          [                     1]])]),
-        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - Rational(3, 8))],
-                                          [                     1]])])]
+    assert M.eigenvects(simplify=False) == [
+        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(-Rational(3, 8) + sqrt(73)/8)], [1]])]),
+        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
     evals = { Rational(5, 4) - sqrt(385)/20: 1, sqrt(385)/20 + Rational(5, 4): 1, S.Zero: 1}
@@ -2375,11 +2373,11 @@ def test_jordan_form_issue_15858():
         [0, 0, -1, -1],
         [0, 0, 2, 1]])
     (P, J) = A.jordan_form()
-    assert simplify(P) == Matrix([
-        [-I, -I/2, I, I/2],
-        [-1 + I, 0, -1 - I, 0],
-        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
-        [0, 1, 0, 1]])
+    assert P.expand() == Matrix([
+        [    -I,          -I/2,      I,           I/2],
+        [-1 + I,             0, -1 - I,             0],
+        [     0, -S(1)/2 - I/2,      0, -S(1)/2 + I/2],
+        [     0,             1,      0,             1]])
     assert J == Matrix([
         [-I, 1, 0, 0],
         [0, -I, 0, 0],

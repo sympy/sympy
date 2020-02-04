@@ -63,9 +63,9 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
         """Does the row op row[i] = a*row[i] - b*row[j]"""
         q = (j - i)*cols
         for p in range(i*cols, (i + 1)*cols):
-            mat[p] = dps(a*mat[p] - b*mat[p + q])
+            mat[p] = isimp(a*mat[p] - b*mat[p + q])
 
-    dps = _dotprodsimp if dotprodsimp else lambda e: e
+    isimp = _dotprodsimp # intermediate simplification, can be one of (_dotprodsimp, expand_mul, lambda x: x)
     piv_row, piv_col = 0, 0
     pivot_cols = []
     swaps = []
@@ -97,7 +97,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
             i, j = piv_row, piv_col
             mat[i*cols + j] = one
             for p in range(i*cols + j + 1, (i + 1)*cols):
-                mat[p] = dps(mat[p] / pivot_val)
+                mat[p] = isimp(mat[p] / pivot_val)
             # after normalizing, the pivot value is 1
             pivot_val = one
 
@@ -123,7 +123,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
             pivot_val = mat[piv_i*cols + piv_j]
             mat[piv_i*cols + piv_j] = one
             for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                mat[p] = dps(mat[p] / pivot_val)
+                mat[p] = isimp(mat[p] / pivot_val)
 
     return mat, tuple(pivot_cols), tuple(swaps)
 

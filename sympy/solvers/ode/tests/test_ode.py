@@ -1,7 +1,7 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper)
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, simplify)
 from sympy.solvers.ode import (
     checkodesol, classify_ode,
     homogeneous_order, infinitesimals, checkinfsol,
@@ -3361,7 +3361,11 @@ def test_sysode_linear_neq_order1():
                Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
                Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))]
 
-    assert dsolve(eq, simplify=False) == sols_eq
+    # assert dsolve(eq, simplify=False) == sols_eq
+    dsolved = dsolve(eq, simplify=False)
+    assert all(ds.args[0] == seq.args[0] for ds, seq in zip (dsolved, sols_eq))
+    assert all(simplify(ds.args[1] - seq.args[1]) == 0 for ds, seq in
+            zip (dsolved, sols_eq))
     assert checksysodesol(eq, sols_eq) == (True, [0, 0, 0, 0])
 
 
