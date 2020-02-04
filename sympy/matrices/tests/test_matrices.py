@@ -3161,17 +3161,13 @@ def test_rotation_matrices():
 
 
 def test_DeferredVector():
-    assert str(DeferredVector("vector")[4]) == "vector[4]"
-    assert sympify(DeferredVector("d")) == DeferredVector("d")
-    raises(IndexError, lambda: DeferredVector("d")[-1])
-    assert str(DeferredVector("d")) == "d"
-    assert repr(DeferredVector("test")) == "DeferredVector('test')"
-
-def test_DeferredVector_not_iterable():
-    assert not iterable(DeferredVector('X'))
-
-def test_DeferredVector_Matrix():
-    raises(TypeError, lambda: Matrix(DeferredVector("V")))
+    with warns_deprecated_sympy():
+        assert str(DeferredVector("vector")[4]) == "vector[4]"
+        assert sympify(DeferredVector("d")) == DeferredVector("d")
+        assert str(DeferredVector("d")) == "d"
+        assert repr(DeferredVector("test")) == "test"
+        assert not iterable(DeferredVector('X'))
+        raises(TypeError, lambda: Matrix(DeferredVector("V")))
 
 def test_GramSchmidt():
     R = Rational

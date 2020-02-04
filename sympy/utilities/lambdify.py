@@ -868,7 +868,6 @@ def lambdastr(args, expr, printer=None, dummify=None):
     'lambda _0,_1: (lambda x,y,z: (x + y))(_0,_1[0],_1[1])'
     """
     # Transforming everything to strings.
-    from sympy.matrices import DeferredVector
     from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative, Basic
 
     if printer is not None:
@@ -886,8 +885,6 @@ def lambdastr(args, expr, printer=None, dummify=None):
     def sub_args(args, dummies_dict):
         if isinstance(args, str):
             return args
-        elif isinstance(args, DeferredVector):
-            return str(args)
         elif iterable(args):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
@@ -912,7 +909,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
 
     # Transform args
     def isiter(l):
-        return iterable(l, exclude=(str, DeferredVector, NotIterable))
+        return iterable(l, exclude=(str, NotIterable))
 
     def flat_indexes(iterable):
         n = 0
@@ -948,7 +945,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     else:
         if isinstance(args, str):
             pass
-        elif iterable(args, exclude=DeferredVector):
+        elif iterable(args):
             args = ",".join(str(a) for a in args)
 
     # Transform expr
@@ -1035,7 +1032,6 @@ class _EvaluatorPrinter(object):
         Returns string form of args, and updated expr.
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
-        from sympy.matrices import DeferredVector
         from sympy.core.symbol import _uniquely_named_symbol
         from sympy.core.expr import Expr
 
@@ -1049,8 +1045,6 @@ class _EvaluatorPrinter(object):
         for arg, i in reversed(list(ordered(zip(args, range(len(args)))))):
             if iterable(arg):
                 s, expr = self._preprocess(arg, expr)
-            elif isinstance(arg, DeferredVector):
-                s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
                 s = self._argrepr(arg)
                 if dummify or not self._is_safe_ident(s):
@@ -1069,7 +1063,6 @@ class _EvaluatorPrinter(object):
         return argstrs, expr
 
     def _subexpr(self, expr, dummies_dict):
-        from sympy.matrices import DeferredVector
         from sympy import sympify
 
         expr = sympify(expr)
@@ -1077,9 +1070,7 @@ class _EvaluatorPrinter(object):
         if xreplace is not None:
             expr = xreplace(dummies_dict)
         else:
-            if isinstance(expr, DeferredVector):
-                pass
-            elif isinstance(expr, dict):
+            if isinstance(expr, dict):
                 k = [self._subexpr(sympify(a), dummies_dict) for a in expr.keys()]
                 v = [self._subexpr(sympify(a), dummies_dict) for a in expr.values()]
                 expr = dict(zip(k, v))

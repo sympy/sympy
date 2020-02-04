@@ -2784,11 +2784,6 @@ def test_sympy__logic__boolalg__Xnor():
     assert _test_args(Xnor(x, y, 2))
 
 
-def test_sympy__matrices__matrices__DeferredVector():
-    from sympy.matrices.matrices import DeferredVector
-    assert _test_args(DeferredVector("X"))
-
-
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__matexpr__MatrixBase():
     pass
