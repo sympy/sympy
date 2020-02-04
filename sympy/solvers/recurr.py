@@ -814,7 +814,7 @@ def rsolve(f, y, init=None):
                 else:
                     raise ValueError("Integer or term expected, got '%s'" % k)
 
-            eq = solution.limit(n, i) - v
+            eq = solution.subs(n, i) - v
             if eq.has(S.NaN):
                 eq = solution.limit(n, i) - v
             equations.append(eq)
