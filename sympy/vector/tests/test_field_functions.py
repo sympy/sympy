@@ -246,9 +246,8 @@ def test_scalar_potential_difference():
             x*y*z - 6)
     potential_diff_P = (2*P.z*(P.x*sin(q) + P.y*cos(q))*
                         (P.x*cos(q) - P.y*sin(q))**2)
-    assert (scalar_potential_difference(grad_field, P, P.origin,
-                                        genericpointP).simplify() ==
-            potential_diff_P.simplify())
+    assert simplify(scalar_potential_difference(grad_field, P, P.origin,
+                                        genericpointP) - potential_diff_P) == 0
 
 
 def test_differential_operators_curvilinear_system():
