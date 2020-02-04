@@ -128,12 +128,8 @@ def test_zeta():
 
 @slow
 def test_sample_discrete():
-    X, Y, Z = Geometric('X', S.Half), Poisson('Y', 4), Poisson('Z', 1000)
-    W = Poisson('W', Rational(1, 100))
+    X = Geometric('X', S.Half)
     assert sample(X) in X.pspace.domain.set
-    assert sample(Y) in Y.pspace.domain.set
-    assert sample(Z) in Z.pspace.domain.set
-    assert sample(W) in W.pspace.domain.set
 
 
 def test_discrete_probability():
