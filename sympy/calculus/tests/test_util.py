@@ -3,7 +3,7 @@ from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    expint, Rational)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
-                                 stationary_points, minimum, maximum, argmax, argmin)
+                                 stationary_points, minimum, maximum, argmax_real, argmin_real)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
@@ -535,38 +535,38 @@ def test_issue_16469():
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
 
 
-def test_argmax():
+def test_argmax_real():
     from sympy.sets.fancysets import ImageSet
     from sympy.core.function import Lambda
 
     x = Symbol('x')
     y = Symbol('y', real = True)
 
-    raises (ValueError, lambda : argmax(y, x, S.Reals))
-    raises (ValueError, lambda: argmax(x*y, domain = S.Reals))
-    assert argmax(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == S.EmptySet
-    assert argmax(x**2, domain = Interval(-oo, 4)) == S.EmptySet
-    assert argmax(-(log(x)), x, Interval(0.02, 10)) == FiniteSet(0.02)
-    assert argmax(sin(x), x, S.Reals) == \
+    raises (ValueError, lambda : argmax_real(y, x, S.Reals))
+    raises (ValueError, lambda: argmax_real(x*y, domain = S.Reals))
+    assert argmax_real(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == S.EmptySet
+    assert argmax_real(x**2, domain = Interval(-oo, 4)) == S.EmptySet
+    assert argmax_real(-(log(x)), x, Interval(0.02, 10)) == FiniteSet(0.02)
+    assert argmax_real(sin(x), x, S.Reals) == \
         ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
-    assert argmax(x**2, x, Interval(-3, 3)) == FiniteSet(-3, 3)
-    assert argmax(exp(y), y, Interval(-oo, 10)) == FiniteSet(10)
-    assert argmax(exp(y), y, S.Reals) == S.EmptySet
+    assert argmax_real(x**2, x, Interval(-3, 3)) == FiniteSet(-3, 3)
+    assert argmax_real(exp(y), y, Interval(-oo, 10)) == FiniteSet(10)
+    assert argmax_real(exp(y), y, S.Reals) == S.EmptySet
 
 
-def test_argmin():
+def test_argmin_real():
     from sympy.sets.fancysets import ImageSet
     from sympy.core.function import Lambda
 
     x = Symbol('x')
     y = Symbol('y', real = True)
 
-    raises (ValueError, lambda: argmin(y, x, S.Reals))
-    assert argmin(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == FiniteSet(-3)
-    assert argmin(x**2 - 2*x + 1, domain = S.Reals) == FiniteSet(1)
-    assert argmax(sin(x), x, S.Reals) == \
+    raises (ValueError, lambda: argmin_real(y, x, S.Reals))
+    assert argmin_real(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == FiniteSet(-3)
+    assert argmin_real(x**2 - 2*x + 1, domain = S.Reals) == FiniteSet(1)
+    assert argmax_real(sin(x), x, S.Reals) == \
         ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
-    assert argmin(log(x), x, Interval(1, 10)) == FiniteSet(1)
-    assert argmin(exp(y), y, Interval(-10, 10)) == FiniteSet(-10)
-    assert argmin(-x**2 + 4, x, Interval(-2, 2)) == FiniteSet(-2, 2)
-    assert argmin(exp(y)) == S.EmptySet
+    assert argmin_real(log(x), x, Interval(1, 10)) == FiniteSet(1)
+    assert argmin_real(exp(y), y, Interval(-10, 10)) == FiniteSet(-10)
+    assert argmin_real(-x**2 + 4, x, Interval(-2, 2)) == FiniteSet(-2, 2)
+    assert argmin_real(exp(y)) == S.EmptySet

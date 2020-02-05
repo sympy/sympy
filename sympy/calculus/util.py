@@ -1598,13 +1598,14 @@ class AccumulationBounds(AtomicExpr):
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
 
-def argmax(f, symbol = None, domain = S.Reals):
+def argmax_real(f, symbol = None, domain = S.Reals):
     """
     Returns the set of arguments of maxima, i.e., values of `symbol`
     for which the `f` attains the maximum value in the given domain.
     Note: This function uses derivatives to calculate the points where the
     maximum value is achieved, and thus, would not include points where the
-    function is not differentiable.
+    function is not differentiable. Also, the domain should be a subset of
+    S.Reals
 
     Parameters
     ==========
@@ -1620,16 +1621,16 @@ def argmax(f, symbol = None, domain = S.Reals):
     ========
 
     >>> from sympy import Symbol, sin, Interval, S, exp, pi
-    >>> from sympy.calculus.util import argmax
+    >>> from sympy.calculus.util import argmax_real
 
     >>> x = Symbol('x')
-    >>> argmax(sin(x), x, Interval(-2*pi, pi))
+    >>> argmax_real(sin(x), x, Interval(-2*pi, pi))
     FiniteSet(-3*pi/2, pi/2)
 
-    >>> argmax(-x**2 + 5*x - 6)
+    >>> argmax_real(-x**2 + 5*x - 6)
     FiniteSet(5/2)
 
-    >>> argmax(exp(x), x, S.Reals)
+    >>> argmax_real(exp(x), x, S.Reals)
     EmptySet
     """
     f = _sympify(f)
@@ -1648,13 +1649,14 @@ def argmax(f, symbol = None, domain = S.Reals):
 
     return _argMaxMin(f, symbol , domain, max = True)
 
-def argmin(f, symbol = None, domain = S.Reals):
+def argmin_real(f, symbol = None, domain = S.Reals):
     """
     Returns the set of arguments of minima, i.e., values of `symbol`
     for which the `f` attains the minimum value in the given domain.
     Note: This function uses derivatives to calculate the points where the
     minimum value is achieved, and thus, would not include points where the
-    function is not differentiable.
+    function is not differentiable. Also, the domain should be a subset of
+    S.Reals
 
     Parameters
     ==========
@@ -1670,16 +1672,16 @@ def argmin(f, symbol = None, domain = S.Reals):
     ========
 
     >>> from sympy import Symbol, sin, Interval, S, exp, pi
-    >>> from sympy.calculus.util import argmin
+    >>> from sympy.calculus.util import argmin_real
 
     >>> x = Symbol('x')
-    >>> argmin(sin(x), x, Interval(-2*pi, pi))
+    >>> argmin_real(sin(x), x, Interval(-2*pi, pi))
     FiniteSet(-pi/2)
 
-    >>> argmin((x - 1)**2, x, S.Reals)
+    >>> argmin_real((x - 1)**2, x, S.Reals)
     FiniteSet(1)
 
-    >>> argmin(exp(x), x, S.Reals)
+    >>> argmin_real(exp(x), x, S.Reals)
     EmptySet
     """
     f = _sympify(f)
