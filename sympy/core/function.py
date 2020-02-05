@@ -716,15 +716,17 @@ class Function(Application, Expr):
             return e1.nseries(x, n=n, logx=logx)
         arg = self.args[0]
         l = []
-        i = 0
         g = None
-        while len(l) <= n:
+        # try to predict a number of terms needed
+        nterms = n + 2
+        cf = Order(arg.as_leading_term(x), x).getn()
+        if cf != 0:
+            nterms = (n + cf - 1) // cf
+        for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
-            if g:
-                l.append(g)
-            i += 1
-        return Add(*l) + Order(g,x)
+            l.append(g)
+        return Add(*l) + Order(x**n, x)
 
     def fdiff(self, argindex=1):
         """
