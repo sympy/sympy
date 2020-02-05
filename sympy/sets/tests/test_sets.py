@@ -210,7 +210,6 @@ def test_union():
     assert FiniteSet(1, 2, 3) & S.EmptySet == S.EmptySet
     assert FiniteSet(1, 2, 3) | S.EmptySet == FiniteSet(1, 2, 3)
 
-
     x = Symbol("x")
     y = Symbol("y")
     z = Symbol("z")
