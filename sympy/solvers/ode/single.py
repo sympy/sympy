@@ -348,7 +348,7 @@ class FirstLinear(SingleODESolver):
 
     - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-    Dover 1963, pp. 92
+      Dover 1963, pp. 92
 
     # indirect doctest
 
@@ -473,7 +473,7 @@ class AlmostLinear(FirstLinear):
     ==========
 
     - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-    of the ACM, Volume 14, Number 8, August 1971, pp. 558
+      of the ACM, Volume 14, Number 8, August 1971, pp. 558
     """
     hint = "almost_linear"
     has_integral = True
@@ -585,8 +585,9 @@ class Bernoulli(SingleODESolver):
     ==========
 
     - https://en.wikipedia.org/wiki/Bernoulli_differential_equation
+
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-    Dover 1963, pp. 95
+      Dover 1963, pp. 95
 
     # indirect doctest
 
