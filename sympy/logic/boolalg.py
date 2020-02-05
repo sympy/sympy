@@ -875,7 +875,9 @@ class Or(LatticeOp, BooleanFunction):
             kwargs['measure'], S.true)
 
     def to_anf(self, deep=True):
-        args = chain.from_iterable(combinations(self.args, j) for j in range(1, len(self.args) + 1))  # powerset
+        args = range(1, len(self.args) + 1)
+        args = (combinations(self.args, j) for j in args)
+        args = chain.from_iterable(args)  # powerset
         args = (And(*arg) for arg in args)
         args = map(lambda x: to_anf(x, deep=deep) if deep else x, args)
         return Xor(*list(args), remove_true=False)
@@ -1622,23 +1624,26 @@ def _distribute(info):
 
 
 def to_anf(expr, deep=True):
-    """
+    r"""
     Converts expr to Algebraic Normal Form (ANF).
 
     ANF is a canonical normal form, which means that two
     equivalent formulas will convert to the same ANF.
 
     A logical expression is in ANF if it has the form
-    ((A & B & ...) ^ (B & C ...) ^ B ^ True ^ ...),
+
+    .. math:: 1 \oplus a \oplus b \oplus ab \oplus abc
+
     i.e. it can be:
         - purely true,
         - purely false,
         - conjunction of variables,
         - exclusive disjunction.
+
     The exclusive disjunction can only contain true, variables
     or conjunction of variables. No negations are permitted.
 
-    If ``deep`` is false, arguments of the boolean
+    If ``deep`` is ``False``, arguments of the boolean
     expression are considered variables, i.e. only the
     top-level expression is converted to ANF.
 
@@ -1754,11 +1759,13 @@ def to_dnf(expr, simplify=False):
 
 
 def is_anf(expr):
-    """
+    r"""
     Checks if expr is in Algebraic Normal Form (ANF).
 
     A logical expression is in ANF if it has the form
-    ((A & B & ...) ^ (B & C ...) ^ B ^ True ^ ...),
+
+    .. math:: 1 \oplus a \oplus b \oplus ab \oplus abc
+
     i.e. it is purely true, purely false, conjunction of
     variables or exclusive disjunction. The exclusive
     disjunction can only contain true, variables or
@@ -2533,7 +2540,8 @@ def ANFform(variables, truthvalues):
     n_values = len(truthvalues)
 
     if n_values != 2 ** n_vars:
-        raise ValueError("The number of truth values must be equal to 2^%d, got %d" % (n_vars, n_values))
+        raise ValueError("The number of truth values must be equal to 2^%d, "
+                         "got %d" % (n_vars, n_values))
 
     variables = [sympify(v) for v in variables]
 
@@ -2544,8 +2552,8 @@ def ANFform(variables, truthvalues):
         if coeffs[i] == 1:
             terms.append(t)
 
-    return Xor(*[_convert_to_varsANF(x, variables) for x in terms],\
-            remove_true=False)
+    return Xor(*[_convert_to_varsANF(x, variables) for x in terms],
+               remove_true=False)
 
 
 def anf_coeffs(truthvalues):
@@ -2559,7 +2567,7 @@ def anf_coeffs(truthvalues):
     each monomial is fully specified by the presence or absence of
     each variable.
 
-    We can enumarate all the monomials. For example, boolean
+    We can enumerate all the monomials. For example, boolean
     function with four variables (a, b, c, d) can contain
     up to 2^4 = 16 monomials. The 13-th monomial is the
     product a & b & d, because 13 in binary is 1, 1, 0, 1.
