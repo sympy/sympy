@@ -2313,7 +2313,7 @@ class MatrixArithmetic(MatrixRequired):
             speed up calculation.
         """
 
-        isimpbool = _get_intermediate_simp_bool(True, dotprodsimp)
+        isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.

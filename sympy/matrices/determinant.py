@@ -242,8 +242,8 @@ def _berkowitz_toeplitz_matrix(M, dotprodsimp=None):
     # compute -R * A**n * C.
     diags = [C]
     for i in range(M.rows - 2):
-        diags.append(A.multiply(diags[i], dotprodsimp=dotprodsimp))
-    diags = [(-R).multiply(d, dotprodsimp=dotprodsimp)[0, 0] for d in diags]
+        diags.append(A.multiply(diags[i], dotprodsimp=True))
+    diags = [(-R).multiply(d, dotprodsimp=True)[0, 0] for d in diags]
     diags = [M.one, -a] + diags
 
     def entry(i,j):
@@ -308,7 +308,7 @@ def _berkowitz_vector(M, dotprodsimp=None):
     submat, toeplitz = _berkowitz_toeplitz_matrix(M, dotprodsimp=dotprodsimp)
 
     return toeplitz.multiply(_berkowitz_vector(submat, dotprodsimp=dotprodsimp),
-            dotprodsimp=dotprodsimp)
+            dotprodsimp=True)
 
 
 def _adjugate(M, method="berkowitz", dotprodsimp=None):
