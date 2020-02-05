@@ -2794,13 +2794,12 @@ def Normal(name, mean, std):
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z), use_unicode=False)
-              2          2
-             y    y*z   z
-           - -- + --- - -- + z - 1
-      ___    3     3    3
+           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
+           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
+      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
     \/ 3 *e
-    ------------------------------
-                 6*pi
+    --------------------------------------------------
+                           6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))

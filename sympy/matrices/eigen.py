@@ -754,7 +754,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
 
         if (val, pow - 1) in mat_cache:
             mat_cache[(val, pow)] = mat_cache[(val, pow - 1)].multiply(
-                    mat_cache[(val, 1)], dotprodsimp=dotprodsimp)
+                    mat_cache[(val, 1)], dotprodsimp=True)
         else:
             mat_cache[(val, pow)] = (mat - val*M.eye(M.rows)).pow(pow,
                     dotprodsimp=dotprodsimp)
@@ -910,7 +910,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
             # of any other generalized eigenvectors from a different
             # generalized eigenspace sharing the same eigenvalue.
             vec      = pick_vec(null_small + eig_basis, null_big)
-            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=dotprodsimp)
+            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=True)
                     for i in range(size)]
 
             eig_basis.extend(new_vecs)

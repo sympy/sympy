@@ -1550,7 +1550,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P.multiply(eJ, dotprodsimp=dotprodsimp).multiply(P.inv(), dotprodsimp=dotprodsimp)
+        ret = P.multiply(eJ, dotprodsimp=True).multiply(P.inv(), dotprodsimp=True)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
