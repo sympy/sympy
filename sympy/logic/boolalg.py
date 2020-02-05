@@ -1592,7 +1592,7 @@ def distribute_xor_over_and(expr):
     >>> from sympy.logic.boolalg import distribute_xor_over_and, And, Xor, Not
     >>> from sympy.abc import A, B, C
     >>> distribute_xor_over_and(And(Xor(Not(A), B), C))
-    Xor(B & C, C & ~A)
+    (B & C) ^ (C & ~A)
     """
     return _distribute((expr, Xor, And))
 
@@ -1648,11 +1648,11 @@ def to_anf(expr, deep=True):
     >>> from sympy.logic.boolalg import to_anf
     >>> from sympy.abc import A, B, C
     >>> to_anf(Not(A))
-    Xor(A, True)
+    A ^ True
     >>> to_anf(And(Or(A, B), Not(C)))
-    Xor(A, B, A & B, A & C, B & C, A & B & C)
+    A ^ B ^ (A & B) ^ (A & C) ^ (B & C) ^ (A & B & C)
     >>> to_anf(Implies(Not(A), Equivalent(B, C)), deep=False)
-    Xor(True, ~A, ~A & (Equivalent(B, C)))
+    True ^ ~A ^ (~A & (Equivalent(B, C)))
 
     """
     expr = sympify(expr)
@@ -2518,9 +2518,9 @@ def ANFform(variables, truthvalues):
     >>> from sympy.logic.boolalg import ANFform
     >>> from sympy.abc import x, y
     >>> ANFform([x], [1, 0])
-    Xor(x, True)
+    x ^ True
     >>> ANFform([x, y], [0, 1, 1, 1])
-    Xor(x, y, x & y)
+    x ^ y ^ (x & y)
 
     References
     ==========
@@ -2578,7 +2578,7 @@ def anf_coeffs(truthvalues):
     >>> polynomial = Xor(*[monomial(k, [a, b, c])
     ...         for k, coeff in enumerate(coeffs) if coeff==1])
     >>> polynomial
-    Xor(b, c, a & b)
+    b ^ c ^ (a & b)
 
     """
 
