@@ -3556,17 +3556,14 @@ def test_pinv():
     # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
     # so this is tested numerically at a fixed random point
 
-    # This test hangs due to intermediate simplification now being part of
-    # matrix operations, it didn't work symbolically to begin with though.
-
-    # from sympy.core.numbers import comp
-    # q = A1.pinv(method="ED")
-    # w = A1.inv()
-    # reps = {a: -73633, b: 11362, c: 55486, d: 62570}
-    # assert all(
-    #     comp(i.n(), j.n())
-    #     for i, j in zip(q.subs(reps), w.subs(reps))
-    #     )
+    from sympy.core.numbers import comp
+    q = A1.pinv(method="ED")
+    w = A1.inv()
+    reps = {a: -73633, b: 11362, c: 55486, d: 62570}
+    assert all(
+        comp(i.n(), j.n())
+        for i, j in zip(q.subs(reps), w.subs(reps))
+        )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).

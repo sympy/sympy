@@ -421,17 +421,11 @@ def test_meijerg_lookup():
     assert can_do_meijer([a], [], [b + 2, a], [])
     assert can_do_meijer([a], [], [b - 2, a], [])
 
-    # assert hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z)) == \
-    #     -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
-    #                                - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
-    #     hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == \
-    #     hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z))
-    t = hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z))
-    assert simplify(t - (
-        -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2) -
-        2*sin(2*sqrt(z))*Ci(2*sqrt(z))))) == 0
-    assert t - hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == 0
-    assert t - hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z)) == 0
+    assert hyperexpand(meijerg([a], [], [a, a, a - S.Half], [], z)) == \
+        -sqrt(pi)*z**(a - S.Half)*(2*cos(2*sqrt(z))*(Si(2*sqrt(z)) - pi/2)
+                                   - 2*sin(2*sqrt(z))*Ci(2*sqrt(z))) == \
+        hyperexpand(meijerg([a], [], [a, a - S.Half, a], [], z)) == \
+        hyperexpand(meijerg([a], [], [a - S.Half, a, a], [], z))
     assert can_do_meijer([a - 1], [], [a + 2, a - Rational(3, 2), a + 1], [])
 
 
