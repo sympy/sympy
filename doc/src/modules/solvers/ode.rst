@@ -88,7 +88,7 @@ factorable
 
 1st_linear
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_1st_linear
+.. autoclass:: sympy.solvers.ode.single.FirstLinear
 
 2nd_linear_airy
 ^^^^^^^^^^^^^^^
@@ -100,7 +100,7 @@ factorable
 
 Bernoulli
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_Bernoulli
+.. autoclass:: sympy.solvers.ode.single.Bernoulli
 
 Liouville
 ^^^^^^^^^
@@ -136,7 +136,7 @@ separable
 
 almost_linear
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_almost_linear
+.. autoclass:: sympy.solvers.ode.single.AlmostLinear
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
