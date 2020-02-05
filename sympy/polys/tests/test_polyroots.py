@@ -2,7 +2,7 @@
 
 from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
     powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos, root, conjugate, simplify, solveset, FiniteSet)
+    acos, root, conjugate)
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -682,10 +682,3 @@ def test_nroots2():
 
 def test_roots_composite():
     assert len(roots(Poly(y**3 + y**2*sqrt(x) + y + x, y, composite=True))) == 3
-
-
-def test_issue_17563():
-    assert simplify(solveset(a*x**4 + b*x**3 + c*x**2 + d*x + e, x
-        ).subs({a:Rational(1/2), b:0, c:1, d:0, e:-1})
-        ) == FiniteSet(sqrt(-1 + sqrt(3)), -sqrt(-1 + sqrt(3)),
-        sqrt(-sqrt(3) - 1), -sqrt(-sqrt(3) - 1))
