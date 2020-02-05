@@ -2130,6 +2130,7 @@ def test_issue_17882():
     eq = -8*x**2/(9*(x**2 - 1)**(S(4)/3)) + 4/(3*(x**2 - 1)**(S(1)/3))
     assert unrad(eq) == (4*x**2 - 12, [])
 
+
 def test_issue_17949():
     assert solve(exp(+x+x**2), x) == []
     assert solve(exp(-x+x**2), x) == []
