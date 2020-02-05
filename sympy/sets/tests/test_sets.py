@@ -207,6 +207,11 @@ def test_union():
     assert FiniteSet(1, 2, 3) & FiniteSet(2, 3, 4) == FiniteSet(2, 3)
     assert FiniteSet(1, 2, 3) | FiniteSet(2, 3, 4) == FiniteSet(1, 2, 3, 4)
 
+    assert FiniteSet(1, 2, 3) & FiniteSet(2, 3, 4) | FiniteSet(3, 4, 5) == FiniteSet(2, 3, 4, 5)
+    assert FiniteSet(1, 2, 3) & S.EmptySet == S.EmptySet
+    assert FiniteSet(1, 2, 3) | S.EmptySet == FiniteSet(1, 2, 3)
+
+
     x = Symbol("x")
     y = Symbol("y")
     z = Symbol("z")
