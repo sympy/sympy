@@ -4,7 +4,6 @@ import copy
 
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero

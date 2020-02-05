@@ -2,7 +2,6 @@ from __future__ import division, print_function
 
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.iterables import numbered_symbols
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
