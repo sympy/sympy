@@ -10,7 +10,9 @@ from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
 
 from .common import MatrixError, NonSquareMatrixError
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import (
+    _get_intermediate_simp, _get_intermediate_simp_bool,
+    _iszero, _is_zero_after_expand_mul)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
@@ -423,9 +425,6 @@ def _charpoly(M, x='lambda', simplify=_simplify, dotprodsimp=None):
     if not M.is_square:
         raise NonSquareMatrixError()
 
-    if dotprodsimp:
-        simplify = lambda e: e
-
     berk_vector = _berkowitz_vector(M, dotprodsimp=dotprodsimp)
     x = _uniquely_named_symbol(x, berk_vector)
 
@@ -607,7 +606,7 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
             return M[0,0]
         elif n == 2:
             m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
-            return _dotprodsimp(m) if dotprodsimp else m
+            return _get_intermediate_simp(_dotprodsimp)(m)
         elif n == 3:
             m =  (M[0, 0] * M[1, 1] * M[2, 2]
                 + M[0, 1] * M[1, 2] * M[2, 0]
@@ -615,7 +614,7 @@ def _det(M, method="bareiss", iszerofunc=None, dotprodsimp=None):
                 - M[0, 2] * M[1, 1] * M[2, 0]
                 - M[0, 0] * M[1, 2] * M[2, 1]
                 - M[0, 1] * M[1, 0] * M[2, 2])
-            return _dotprodsimp(m) if dotprodsimp else m
+            return _get_intermediate_simp(_dotprodsimp)(m)
 
     if method == "bareiss":
         return M._eval_det_bareiss(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
@@ -679,7 +678,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul, dotprodsimp=None):
 
         def entry(i, j):
             ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-            if dotprodsimp:
+            if _get_intermediate_simp_bool(True):
                 return _dotprodsimp(ret)
             elif not ret.is_Atom:
                 return cancel(ret)

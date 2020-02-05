@@ -6,7 +6,7 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.iterables import numbered_symbols
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
-from .utilities import _iszero
+from .utilities import _get_intermediate_simp, _iszero
 
 
 def _diagonal_solve(M, rhs):
@@ -77,7 +77,7 @@ def _lower_triangular_solve(M, rhs, dotprodsimp=None):
     if not M.is_lower:
         raise ValueError("Matrix must be lower triangular.")
 
-    dps = _dotprodsimp if dotprodsimp else lambda x: x
+    dps = _get_intermediate_simp()
     X   = MutableDenseMatrix.zeros(M.rows, rhs.cols)
 
     for j in range(rhs.cols):
@@ -121,7 +121,7 @@ def _lower_triangular_solve_sparse(M, rhs, dotprodsimp=None):
     if not M.is_lower:
         raise ValueError("Matrix must be lower triangular.")
 
-    dps  = _dotprodsimp if dotprodsimp else lambda x: x
+    dps  = _get_intermediate_simp()
     rows = [[] for i in range(M.rows)]
 
     for i, j, v in M.row_list():
@@ -173,7 +173,7 @@ def _upper_triangular_solve(M, rhs, dotprodsimp=None):
     if not M.is_upper:
         raise TypeError("Matrix is not upper triangular.")
 
-    dps = _dotprodsimp if dotprodsimp else lambda x: x
+    dps = _get_intermediate_simp()
     X   = MutableDenseMatrix.zeros(M.rows, rhs.cols)
 
     for j in range(rhs.cols):
@@ -217,7 +217,7 @@ def _upper_triangular_solve_sparse(M, rhs, dotprodsimp=None):
     if not M.is_upper:
         raise TypeError("Matrix is not upper triangular.")
 
-    dps  = _dotprodsimp if dotprodsimp else lambda x: x
+    dps  = _get_intermediate_simp()
     rows = [[] for i in range(M.rows)]
 
     for i, j, v in M.row_list():
@@ -400,7 +400,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero, dotprodsimp=None):
     except ValueError:
         raise NotImplementedError("Underdetermined systems not supported.")
 
-    dps = _dotprodsimp if dotprodsimp else lambda e: e
+    dps = _get_intermediate_simp()
     b   = rhs.permute_rows(perm).as_mutable()
 
     # forward substitution, all diag entries are scaled to 1
@@ -468,7 +468,7 @@ def _QRsolve(M, b, dotprodsimp=None):
     QRdecomposition
     """
 
-    dps  = _dotprodsimp if dotprodsimp else expand_mul
+    dps  = _get_intermediate_simp(expand_mul, expand_mul)
     Q, R = M.QRdecomposition(dotprodsimp=dotprodsimp)
     y    = Q.T * b
 

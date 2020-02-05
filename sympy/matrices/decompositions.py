@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
-from .utilities import _iszero
+from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot_naive
 
 
@@ -273,7 +273,7 @@ def _cholesky(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _dotprodsimp if dotprodsimp else expand_mul
+    dps = _get_intermediate_simp(expand_mul, expand_mul)
     L   = MutableDenseMatrix.zeros(M.rows, M.rows)
 
     if hermitian:
@@ -365,7 +365,7 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Crowstruc = M.row_structure_symbolic_cholesky()
     C         = MutableDenseMatrix.zeros(M.rows)
 
@@ -484,7 +484,7 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _dotprodsimp if dotprodsimp else expand_mul
+    dps = _get_intermediate_simp(expand_mul, expand_mul)
     D   = MutableDenseMatrix.zeros(M.rows, M.rows)
     L   = MutableDenseMatrix.eye(M.rows)
 
@@ -550,7 +550,7 @@ def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Lrowstruc = M.row_structure_symbolic_cholesky()
     L         = MutableDenseMatrix.eye(M.rows)
     D         = MutableDenseMatrix.zeros(M.rows, M.cols)
@@ -978,7 +978,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []
 
-    dps       = _dotprodsimp if dotprodsimp else lambda e: e
+    dps       = _get_intermediate_simp()
     lu        = M.as_mutable()
     row_swaps = []
 
@@ -1216,7 +1216,7 @@ def _QRdecomposition(M, dotprodsimp=None):
     QRsolve
     """
 
-    dps    = _dotprodsimp if dotprodsimp else expand_mul
+    dps    = _get_intermediate_simp(expand_mul, expand_mul)
     cls    = M.__class__
     mat    = M.as_mutable()
     n      = mat.rows

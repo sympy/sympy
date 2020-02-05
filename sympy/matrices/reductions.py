@@ -5,7 +5,7 @@ from types import FunctionType
 from sympy.simplify.simplify import (
     simplify as _simplify, dotprodsimp as _dotprodsimp)
 
-from .utilities import _iszero
+from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot
 
 
@@ -65,7 +65,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
         for p in range(i*cols, (i + 1)*cols):
             mat[p] = isimp(a*mat[p] - b*mat[p + q])
 
-    isimp = _dotprodsimp # intermediate simplification, can be one of (_dotprodsimp, expand_mul, lambda x: x)
+    isimp = _get_intermediate_simp(_dotprodsimp)
     piv_row, piv_col = 0, 0
     pivot_cols = []
     swaps = []

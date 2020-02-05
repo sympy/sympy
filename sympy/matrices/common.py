@@ -27,6 +27,8 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
+from .utilities import _get_intermediate_simp_bool
+
 
 class MatrixError(Exception):
     pass
@@ -2202,7 +2204,7 @@ class MatrixArithmetic(MatrixRequired):
             a = b = self._eval_pow_by_recursion_dotprodsimp(num // 2,
                     prevsimp=prevsimp)
 
-        m     = a.multiply(b, dotprodsimp=True)
+        m     = a.multiply(b, dotprodsimp=False)
         lenm  = len(m)
         elems = [None]*lenm
 
@@ -2299,7 +2301,7 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.multiply(other)
 
-    def multiply(self, other, dotprodsimp=True):
+    def multiply(self, other, dotprodsimp=None):
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -2311,6 +2313,7 @@ class MatrixArithmetic(MatrixRequired):
             speed up calculation.
         """
 
+        isimpbool = _get_intermediate_simp_bool(True, dotprodsimp)
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2322,7 +2325,7 @@ class MatrixArithmetic(MatrixRequired):
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
-            if dotprodsimp:
+            if isimpbool:
                 return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
             return m
 
@@ -2424,10 +2427,10 @@ class MatrixArithmetic(MatrixRequired):
                     if jordan:
                         raise
 
-            return a._eval_pow_by_recursion_dotprodsimp(exp)
-            # To disable dotprodsimp default on power then comment out the above
-            # line and comment in the line below.
-            # return a._eval_pow_by_recursion(exp)
+            if _get_intermediate_simp_bool(True):
+                return a._eval_pow_by_recursion_dotprodsimp(exp)
+            else:
+                return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
