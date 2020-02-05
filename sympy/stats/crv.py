@@ -18,6 +18,7 @@ from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
+from sympy.core.sympify import _sympify
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
@@ -349,6 +350,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
+        expr = _sympify(expr)
         expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
@@ -518,6 +520,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         if self.value not in rvs:
             return expr
 
+        expr = _sympify(expr)
         expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         x = self.value.symbol
