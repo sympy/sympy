@@ -212,16 +212,27 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ==========
 
     args : List[Symbol]
-        A variable or a list of variables in the expression.
+        A variable or a list of variables whose nesting represents the
+        nesting of the arguments that will be passed to the function.
 
-        Variable lists may be nested.
-        Variables can be Symbols, undefined functions, or matrix symbols.
-        The order and nesting of the variables corresponds to the order and
-        nesting of the parameters passed to the lambdified function.
-
-        For instance:
+        Variables can be symbols, undefined functions, or matrix symbols.
 
         >>> from sympy.abc import x, y, z
+
+        >>> f = lambdify(x, x + 1)  # expect 1 arg
+        >>> f(1)
+        2
+
+        >>> f = lambdify([x, y], x + y)  # expect 2 args
+        >>> f(1, 1)
+        2
+
+        >>> # expect 1 arg of length 3
+        >>> f = lambdify([[a, b, c]], Eq(c**2 ,a**2 + b**2))
+        >>> f([3, 4, 5])
+        True
+
+        >>> # expect 2 args: scalar and tuple of length 2
         >>> f = lambdify([x, (y, z)], x + y + z)
         >>> f(1, (2, 3))
         6
