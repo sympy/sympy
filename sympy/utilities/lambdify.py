@@ -461,10 +461,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     How it works
     ============
 
-    .. note::
-        This section is technical and may not be relevant for most of
-        the conventional usage.
-
     When using this function, it helps a great deal to have an idea of what it
     is doing. At its core, lambdify is nothing more than a namespace
     translation, on top of a special printer that makes some corner cases work
