@@ -18,7 +18,6 @@ for:
 """
 
 from sympy import Derivative, S
-
 from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable
 from sympy.core.decorators import deprecated
