@@ -107,8 +107,8 @@ def test_coordinate_vars():
                             variables=True)) == \
            B.x*B.i + B.y*B.j + B.z*B.k
     N = B.orient_new_axis('N', -q, B.k)
-    sc = {k: simplify(v) for k, v in N.scalar_map(A).items()}
-    assert sc == {N.x: A.x, N.z: A.z, N.y: A.y}
+    assert N.scalar_map(A) == \
+           {N.x: A.x, N.z: A.z, N.y: A.y}
     C = A.orient_new_axis('C', q, A.i + A.j + A.k)
     mapping = A.scalar_map(C)
     assert mapping[A.x].equals(C.x*(2*cos(q) + 1)/3 +

@@ -233,7 +233,7 @@ def test_aux():
     frstar2.simplify()
 
     assert (fr - fr2).expand() == Matrix([0, 0, 0, 0, 0])
-    assert simplify(frstar - frstar2) == Matrix([0, 0, 0, 0, 0])
+    assert (frstar - frstar2).expand() == Matrix([0, 0, 0, 0, 0])
 
 
 def test_parallel_axis():

@@ -154,7 +154,9 @@ def test_vector_simplify():
     N = ReferenceFrame('N')
 
     test1 = (1 / x + 1 / y) * N.x
-    assert (test1 & N.x) == 1/y + 1/x
+    assert (test1 & N.x) != (x + y) / (x * y)
+    test1 = test1.simplify()
+    assert (test1 & N.x) == (x + y) / (x * y)
 
     test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * N.x
     test2 = test2.simplify()
