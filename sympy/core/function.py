@@ -1386,7 +1386,7 @@ class Derivative(Expr):
         if isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             expr = expr.expr
-            return self.func(expr, *variable_count, **kwargs)
+            return cls.__new__(expr, *variable_count, **kwargs)
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
