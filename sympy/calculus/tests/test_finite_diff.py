@@ -5,7 +5,7 @@ from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
     as_finite_diff
 )
-from sympy.testing.pytest import raises, warns_deprecated_sympy, ignore_warnings
+from sympy.testing.pytest import warns_deprecated_sympy, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
