@@ -259,7 +259,7 @@ class NormalGammaDistribution(JointDistribution):
         from sympy.stats.crv_types import GammaDistribution
         return Lambda(sym, GammaDistribution(self.alpha, self.beta)(sym[0]))
 
-def NormalGamma(syms, mu, lamda, alpha, beta):
+def NormalGamma(sym, mu, lamda, alpha, beta):
     """
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
@@ -267,7 +267,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    syms: A symbol/str for identifying the random variable.
+    sym: A symbol/str for identifying the random variable.
     mu: A real number, as the mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
@@ -291,7 +291,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
 
     A random symbol
     """
-    return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+    return multivariate_rv(NormalGammaDistribution, sym, mu, lamda, alpha, beta)
 
 #-------------------------------------------------------------------------------
 # Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
