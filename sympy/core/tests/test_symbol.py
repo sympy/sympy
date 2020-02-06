@@ -1,9 +1,8 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Tuple,
-)
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
 from sympy.core.symbol import _uniquely_named_symbol, _symbol
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
 

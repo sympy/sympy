@@ -2,10 +2,9 @@ from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
     cos, sin, Mul, Pow, O)
 from sympy.simplify.radsimp import expand_numer
 from sympy.core.function import expand, expand_multinomial, expand_power_base
-from sympy.core.compatibility import range
 
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import raises
+from sympy.testing.randtest import verify_numerically
 
 from sympy.abc import x, y, z
 

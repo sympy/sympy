@@ -72,7 +72,8 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
-        if not hasattr(other, "scale_factor"):
+        from sympy.physics.units import Quantity
+        if not isinstance(other, (Quantity, Prefix)):
             return super(Prefix, self).__mul__(other)
 
         fact = self.scale_factor * other.scale_factor
@@ -133,6 +134,7 @@ def prefix_unit(unit, prefixes):
     """
 
     from sympy.physics.units.quantities import Quantity
+    from sympy.physics.units import UnitSystem
 
     prefixed_units = []
 
@@ -141,8 +143,8 @@ def prefix_unit(unit, prefixes):
                 "%s%s" % (prefix.name, unit.name),
                 abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
            )
-        quantity.set_dimension(unit.dimension)
-        quantity.set_scale_factor(unit.scale_factor*prefix)
+        UnitSystem._quantity_dimensional_equivalence_map_global[quantity] = unit
+        UnitSystem._quantity_scale_factors_global[quantity] = (prefix.scale_factor, unit)
         prefixed_units.append(quantity)
 
     return prefixed_units

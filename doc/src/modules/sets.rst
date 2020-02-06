@@ -2,6 +2,9 @@
 Sets
 ====
 
+Basic Sets
+----------
+
 .. automodule:: sympy.sets.sets
 
 Set
@@ -24,8 +27,20 @@ FiniteSet
 .. autoclass:: FiniteSet
    :members:
 
+ConditionSet
+^^^^^^^^^^^^
+.. module:: sympy.sets.conditionset
+    :noindex:
+
+.. autoclass:: ConditionSet
+    :members:
+
 Compound Sets
 -------------
+
+.. module:: sympy.sets.sets
+    :noindex:
+
 Union
 ^^^^^
 .. autoclass:: Union
@@ -44,6 +59,11 @@ ProductSet
 Complement
 ^^^^^^^^^^
 .. autoclass:: Complement
+   :members:
+
+SymmetricDifference
+^^^^^^^^^^^^^^^^^^^
+.. autoclass:: SymmetricDifference
    :members:
 
 Singleton Sets
@@ -78,6 +98,17 @@ Integers
 .. autoclass:: Integers
    :members:
 
+
+Reals
+^^^^^
+.. autoclass:: Reals
+   :members:
+
+Complexes
+^^^^^^^^^
+.. autoclass:: Complexes
+   :members:
+
 ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
@@ -93,7 +124,23 @@ ComplexRegion
 .. autoclass:: ComplexRegion
    :members:
 
+.. autoclass:: CartesianComplexRegion
+   :members:
+
+.. autoclass:: PolarComplexRegion
+   :members:
+
 .. autofunction:: normalize_theta_set
+
+Power sets
+----------
+
+.. automodule:: sympy.sets.powerset
+
+PowerSet
+^^^^^^^^
+.. autoclass:: PowerSet
+   :members:
 
 Iteration over sets
 ^^^^^^^^^^^^^^^^^^^
@@ -118,3 +165,13 @@ We keep in mind that sympy set comprehension like ``FiniteSet(*s)`` from
 a existing sympy sets could be a common usage.
 And this approach would make ``FiniteSet(*s)`` to be consistent with any
 symbolic set processing methods like ``FiniteSet(*simplify(s))``.
+
+Condition Sets
+--------------
+
+.. automodule:: sympy.sets.conditionset
+
+ConditionSet
+^^^^^^^^^^^^
+
+.. autofunction:: ConditionSet

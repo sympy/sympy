@@ -62,7 +62,7 @@ def test_exponent_vector():
         collector = PcGroup.collector
 
         pcgs = PcGroup.pcgs
-        free_group = collector.free_group
+        # free_group = collector.free_group
 
         for gen in G.generators:
             exp = collector.exponent_vector(gen)

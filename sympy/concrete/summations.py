@@ -6,7 +6,6 @@ from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
-from sympy.core.compatibility import range
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
@@ -143,7 +142,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     ========
 
     summation
-    Product, product
+    Product, sympy.concrete.products.product
 
     References
     ==========
@@ -155,7 +154,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
@@ -414,7 +413,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-        Product.is_convergent()
+        sympy.concrete.products.Product.is_convergent()
         """
         from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
@@ -802,7 +801,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index, reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -870,7 +870,7 @@ def summation(f, *symbols, **kwargs):
     ========
 
     Sum
-    Product, product
+    Product, sympy.concrete.products.product
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)

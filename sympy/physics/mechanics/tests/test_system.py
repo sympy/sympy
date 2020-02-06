@@ -2,7 +2,7 @@ from sympy.core.backend import symbols, Matrix, atan, zeros
 from sympy import simplify
 from sympy.physics.mechanics import (dynamicsymbols, Particle, Point,
                                      ReferenceFrame, SymbolicSystem)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 # This class is going to be tested using a simple pendulum set up in x and y
 # coordinates
@@ -38,7 +38,7 @@ kin_explicit_rhs = Matrix([u, v])
 comb_explicit_rhs = comb_implicit_mat.LUsolve(comb_implicit_rhs)
 
 # Set up a body and load to pass into the system
-theta = atan(x / y)
+theta = atan(x/y)
 N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [theta, N.z])
 O = Point('O')

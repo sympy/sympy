@@ -50,7 +50,6 @@ from __future__ import print_function, division
 from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
                    Function, sin, cos, exp, I, factorial, binomial,
                    Add, ImmutableMatrix)
-from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -203,7 +202,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         _Factlist[int(j_1 + j_2 + j_3 + 1)]
 
     ressqrt = sqrt(argsqrt)
-    if ressqrt.is_complex:
+    if ressqrt.is_complex or ressqrt.is_infinite:
         ressqrt = ressqrt.as_real_imag()[0]
 
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)

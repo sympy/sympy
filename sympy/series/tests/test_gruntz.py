@@ -3,7 +3,7 @@ from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.testing.pytest import XFAIL, skip, slow
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.

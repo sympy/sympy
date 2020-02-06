@@ -3,16 +3,16 @@ from itertools import product
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   Abs, I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
+                   I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
                    Rational)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
-from sympy.utilities.randtest import (random_complex_number as randcplx,
+from sympy.testing.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import z, n, k, x
 
@@ -221,6 +221,13 @@ def myn(n, z):
 
 def test_jn():
     z = symbols("z")
+    assert jn(0, 0) == 1
+    assert jn(1, 0) == 0
+    assert jn(-1, 0) == S.ComplexInfinity
+    assert jn(z, 0) == jn(z, 0, evaluate=False)
+    assert jn(0, oo) == 0
+    assert jn(0, -oo) == 0
+
     assert mjn(0, z) == sin(z)/z
     assert mjn(1, z) == sin(z)/z**2 - cos(z)/z
     assert mjn(2, z) == (3/z**3 - 1/z)*sin(z) - (3/z**2) * cos(z)
@@ -261,8 +268,8 @@ def test_sympify_yn():
 
 
 def eq(a, b, tol=1e-6):
-    for x, y in zip(a, b):
-        if not (abs(x - y) < tol):
+    for u, v in zip(a, b):
+        if not (abs(u - v) < tol):
             return False
     return True
 
@@ -414,9 +421,8 @@ def test_airy_base():
     assert airyai(x).is_extended_real
 
     assert airyai(x+I*y).as_real_imag() == (
-        airyai(x - I*x*Abs(y)/Abs(x))/2 + airyai(x + I*x*Abs(y)/Abs(x))/2,
-        I*x*(airyai(x - I*x*Abs(y)/Abs(x)) -
-             airyai(x + I*x*Abs(y)/Abs(x)))*Abs(y)/(2*y*Abs(x)))
+            airyai(x - I*y)/2 + airyai(x + I*y)/2,
+            I*(airyai(x - I*y) - airyai(x + I*y))/2)
 
 
 def test_airyai():

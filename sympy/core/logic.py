@@ -8,7 +8,11 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range, string_types
+from typing import Dict, Type, Union
+
+
+# Type of a fuzzy bool
+FuzzyBool = Union[bool, None]
 
 
 def _torf(args):
@@ -186,7 +190,14 @@ def fuzzy_or(args):
     None
 
     """
-    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
+    rv = False
+    for ai in args:
+        ai = fuzzy_bool(ai)
+        if ai is True:
+            return True
+        if rv is False:  # this will stop updating if a None is ever trapped
+            rv = ai
+    return rv
 
 
 def fuzzy_xor(args):
@@ -213,7 +224,7 @@ def fuzzy_nand(args):
 class Logic(object):
     """Logical expression"""
     # {} 'op' -> LogicClass
-    op_2class = {}
+    op_2class = {}  # type: Dict[str, Type[Logic]]
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -392,7 +403,7 @@ class Or(AndOr_Base):
 class Not(Logic):
 
     def __new__(cls, arg):
-        if isinstance(arg, string_types):
+        if isinstance(arg, str):
             return Logic.__new__(cls, arg)
 
         elif isinstance(arg, bool):

@@ -3,7 +3,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     LambertW, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
     besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')

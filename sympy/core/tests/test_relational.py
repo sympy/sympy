@@ -1,8 +1,7 @@
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, floor, ceiling, trigsimp)
-from sympy.core.compatibility import range
+    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -15,7 +14,7 @@ x, y, z, t = symbols('x,y,z,t')
 
 
 def rel_check(a, b):
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
     for do in range(len(set([type(a), type(b)]))):
         if S.NaN in (a, b):
@@ -132,6 +131,17 @@ def test_Eq():
     assert Eq((), 1) is S.false
 
 
+def test_as_poly():
+    from sympy.polys.polytools import Poly
+    # Only Eq should have an as_poly method:
+    assert Eq(x, 1).as_poly() == Poly(x - 1, x, domain='ZZ')
+    raises(AttributeError, lambda: Ne(x, 1).as_poly())
+    raises(AttributeError, lambda: Ge(x, 1).as_poly())
+    raises(AttributeError, lambda: Gt(x, 1).as_poly())
+    raises(AttributeError, lambda: Le(x, 1).as_poly())
+    raises(AttributeError, lambda: Lt(x, 1).as_poly())
+
+
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
     # not create Relational objects.
@@ -159,6 +169,50 @@ def test_rel_Infinity():
     assert (-oo <= oo) is S.true
     assert (-oo <= -oo) is S.true
     assert (-oo <= 1) is S.true
+
+
+def test_infinite_symbol_inequalities():
+    x = Symbol('x', extended_positive=True, infinite=True)
+    y = Symbol('y', extended_positive=True, infinite=True)
+    z = Symbol('z', extended_negative=True, infinite=True)
+    w = Symbol('w', extended_negative=True, infinite=True)
+
+    inf_set = (x, y, oo)
+    ninf_set = (z, w, -oo)
+
+    for inf1 in inf_set:
+        assert (inf1 < 1) is S.false
+        assert (inf1 > 1) is S.true
+        assert (inf1 <= 1) is S.false
+        assert (inf1 >= 1) is S.true
+
+        for inf2 in inf_set:
+            assert (inf1 < inf2) is S.false
+            assert (inf1 > inf2) is S.false
+            assert (inf1 <= inf2) is S.true
+            assert (inf1 >= inf2) is S.true
+
+        for ninf1 in ninf_set:
+            assert (inf1 < ninf1) is S.false
+            assert (inf1 > ninf1) is S.true
+            assert (inf1 <= ninf1) is S.false
+            assert (inf1 >= ninf1) is S.true
+            assert (ninf1 < inf1) is S.true
+            assert (ninf1 > inf1) is S.false
+            assert (ninf1 <= inf1) is S.true
+            assert (ninf1 >= inf1) is S.false
+
+    for ninf1 in ninf_set:
+        assert (ninf1 < 1) is S.true
+        assert (ninf1 > 1) is S.false
+        assert (ninf1 <= 1) is S.true
+        assert (ninf1 >= 1) is S.false
+
+        for ninf2 in ninf_set:
+            assert (ninf1 < ninf2) is S.false
+            assert (ninf1 > ninf2) is S.false
+            assert (ninf1 <= ninf2) is S.true
+            assert (ninf1 >= ninf2) is S.true
 
 
 def test_bool():
@@ -318,6 +372,19 @@ def test_new_relational():
     assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
     assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
     assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
+
+
+def test_relational_arithmetic():
+    for cls in [Eq, Ne, Le, Lt, Ge, Gt]:
+        rel = cls(x, y)
+        raises(TypeError, lambda: 0+rel)
+        raises(TypeError, lambda: 1*rel)
+        raises(TypeError, lambda: 1**rel)
+        raises(TypeError, lambda: rel**1)
+        raises(TypeError, lambda: Add(0, rel))
+        raises(TypeError, lambda: Mul(1, rel))
+        raises(TypeError, lambda: Pow(1, rel))
+        raises(TypeError, lambda: Pow(rel, 1))
 
 
 def test_relational_bool_output():
@@ -780,13 +847,19 @@ def test_issue_10304():
     assert simplify(Eq(e, 0)) is S.false
 
 
+def test_issue_18412():
+    d = (Rational(1, 6) + z / 4 / y)
+    assert Eq(x, pi * y**3 * d).replace(y**3, z) == Eq(x, pi * z * d)
+
+
 def test_issue_10401():
     x = symbols('x')
     fin = symbols('inf', finite=True)
     inf = symbols('inf', infinite=True)
     inf2 = symbols('inf2', infinite=True)
     infx = symbols('infx', infinite=True, extended_real=True)
-    infx2 = symbols('infx2', infinite=True, extended_real=True)
+    # Used in the commented tests below:
+    #infx2 = symbols('infx2', infinite=True, extended_real=True)
     infnx = symbols('inf~x', infinite=True, extended_real=False)
     infnx2 = symbols('inf~x2', infinite=True, extended_real=False)
     infp = symbols('infp', infinite=True, extended_positive=True)
@@ -888,6 +961,13 @@ def test_issues_13081_12583_12534():
     # this should be the same if we reverse the relational
     assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))] == []
 
+def test_issue_18188():
+    from sympy.sets.conditionset import ConditionSet
+    result1 = Eq(x*cos(x) - 3*sin(x), 0)
+    assert result1.as_set() == ConditionSet(x, Eq(x*cos(x) - 3*sin(x), 0), Reals)
+
+    result2 = Eq(x**2 + sqrt(x*2) + sin(x), 0)
+    assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
     ans = set([x])

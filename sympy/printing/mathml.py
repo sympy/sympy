@@ -4,8 +4,10 @@ A MathML printer.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy import sympify, S, Mul
-from sympy.core.compatibility import range, string_types, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy.core.function import _coeff_isneg
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
@@ -37,7 +39,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -185,6 +187,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'LessThan': 'leq',
             'StrictGreaterThan': 'gt',
             'StrictLessThan': 'lt',
+            'Union': 'union',
+            'Intersection': 'intersect',
         }
 
         for cls in e.__class__.__mro__:
@@ -545,6 +549,28 @@ class MathMLContentPrinter(MathMLPrinterBase):
     _print_Not = _print_AssocOp
     _print_Xor = _print_AssocOp
 
+    def _print_FiniteSet(self, e):
+        x = self.dom.createElement('set')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    def _print_Complement(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('setdiff'))
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    def _print_ProductSet(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('cartesianproduct'))
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    # XXX Symmetric difference is not supported for MathML content printers.
+
 
 class MathMLPresentationPrinter(MathMLPrinterBase):
     """Prints an expression to the Presentation MathML markup language.
@@ -615,7 +641,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 return '&#xB7;'
             elif self._settings["mul_symbol"] == 'ldot':
                 return '&#x2024;'
-            elif not isinstance(self._settings["mul_symbol"], string_types):
+            elif not isinstance(self._settings["mul_symbol"], str):
                 raise TypeError
             else:
                 return self._settings["mul_symbol"]
@@ -1431,7 +1457,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.setAttribute('close', '}')
         brac.setAttribute('open', '{')
 
-        if s.start.is_infinite:
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
         elif s.stop.is_infinite:
             it = iter(s)

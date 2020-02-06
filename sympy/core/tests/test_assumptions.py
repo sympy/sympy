@@ -1,10 +1,9 @@
-from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
+from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi, oo
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
-from sympy.core.compatibility import range
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_symbol_unset():
@@ -164,7 +163,7 @@ def test_neg_infinity():
 
 def test_zoo():
     zoo = S.ComplexInfinity
-    assert zoo.is_complex
+    assert zoo.is_complex is False
     assert zoo.is_real is False
     assert zoo.is_prime is False
 
@@ -799,12 +798,12 @@ def test_Add_is_algebraic():
 
 def test_Mul_is_algebraic():
     a = Symbol('a', algebraic=True)
-    b = Symbol('a', algebraic=True)
+    b = Symbol('b', algebraic=True)
     na = Symbol('na', algebraic=False)
     an = Symbol('an', algebraic=True, nonzero=True)
     nb = Symbol('nb', algebraic=False)
     x = Symbol('x')
-    assert (a*b).is_algebraic
+    assert (a*b).is_algebraic is True
     assert (na*nb).is_algebraic is None
     assert (a*na).is_algebraic is None
     assert (an*na).is_algebraic is False
@@ -819,15 +818,18 @@ def test_Pow_is_algebraic():
     assert Pow(0, e, evaluate=False).is_algebraic
 
     a = Symbol('a', algebraic=True)
+    azf = Symbol('azf', algebraic=True, zero=False)
     na = Symbol('na', algebraic=False)
     ia = Symbol('ia', algebraic=True, irrational=True)
     ib = Symbol('ib', algebraic=True, irrational=True)
     r = Symbol('r', rational=True)
     x = Symbol('x')
-    assert (a**r).is_algebraic
+    assert (a**2).is_algebraic is True
+    assert (a**r).is_algebraic is None
+    assert (azf**r).is_algebraic is True
     assert (a**x).is_algebraic is None
     assert (na**r).is_algebraic is None
-    assert (ia**r).is_algebraic
+    assert (ia**r).is_algebraic is True
     assert (ia**ib).is_algebraic is False
 
     assert (a**e).is_algebraic is None
@@ -849,7 +851,6 @@ def test_Pow_is_algebraic():
 
 
 def test_Mul_is_prime_composite():
-    from sympy import Mul
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x*y).is_prime is None
@@ -887,7 +888,6 @@ def test_Pow_is_pos_neg():
     assert (x**y).is_negative is False
 
 def test_Pow_is_prime_composite():
-    from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
     assert (x**y).is_prime is None
@@ -1169,10 +1169,18 @@ def test_issue_16313():
     assert (-x).is_positive is False
 
 def test_issue_16579():
-    # complex -> finite | infinite
-    # with work on PR 16603 it may be changed in future to complex -> finite
-    x = Symbol('x', complex=True, finite=False)
-    y = Symbol('x', real=True, infinite=False)
+    # extended_real -> finite | infinite
+    x = Symbol('x', extended_real=True, infinite=False)
+    y = Symbol('y', extended_real=True, finite=False)
+    assert x.is_finite is True
+    assert y.is_infinite is True
 
-    assert x.is_infinite
-    assert y.is_finite
+    # With PR 16978, complex now implies finite
+    c = Symbol('c', complex=True)
+    assert c.is_finite is True
+    raises(InconsistentAssumptions, lambda: Dummy(complex=True, finite=False))
+
+def test_issue_17556():
+    z = I*oo
+    assert z.is_imaginary is False
+    assert z.is_finite is False

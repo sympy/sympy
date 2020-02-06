@@ -15,10 +15,11 @@ sympy.stats.rv_interface
 
 from __future__ import print_function, division
 
+from typing import Tuple as tTuple
+
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function)
-from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -141,10 +142,10 @@ class PSpace(Basic):
     sympy.stats.frv.FinitePSpace
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-    is_real = None
+    is_Finite = None  # type: bool
+    is_Continuous = None  # type: bool
+    is_Discrete = None  # type: bool
+    is_real = None  # type: bool
 
     @property
     def domain(self):
@@ -184,7 +185,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             s = Symbol(s)
         if not isinstance(s, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -655,7 +656,15 @@ def given(expr, condition=None, **kwargs):
             if temp == True:
                 return True
             if temp != False:
-                sums += expr.subs(rv, res)
+                # XXX: This seems nonsensical but preserves existing behaviour
+                # after the change that Relational is no longer a subclass of
+                # Expr. Here expr is sometimes Relational and sometimes Expr
+                # but we are trying to add them with +=. This needs to be
+                # fixed somehow.
+                if sums == 0 and isinstance(expr, Relational):
+                    sums = expr.subs(rv, res)
+                else:
+                    sums += expr.subs(rv, res)
         if sums == 0:
             return False
         return sums
@@ -1112,9 +1121,13 @@ def quantile(expr, evaluate=True, **kwargs):
 
 def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses lambdify for computation. This is fast but does not always work.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition:
         ps = pspace(Tuple(expr, condition))
@@ -1128,14 +1141,11 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
-    try:
-        d = ps.sample()  # a dictionary that maps RVs to values
-        args = [d[rv] for rv in rvs]
-        fn(*args)
-        if condition:
-            given_fn(*args)
-    except Exception:
-        raise TypeError("Expr/condition too complex for lambdify")
+    d = ps.sample()  # a dictionary that maps RVs to values
+    args = [d[rv] for rv in rvs]
+    fn(*args)
+    if condition:
+        given_fn(*args)
 
     def return_generator():
         count = 0
@@ -1158,9 +1168,13 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
 def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses subs for computation. This is slow but almost always works.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition is not None:
         ps = pspace(Tuple(expr, condition))
@@ -1362,7 +1376,7 @@ def rv_subs(expr, symbols=None):
     return expr.subs(swapdict)
 
 class NamedArgsMixin(object):
-    _argnames = ()
+    _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):
         try:
@@ -1432,7 +1446,7 @@ def _value_check(condition, message):
 
 def _symbol_converter(sym):
     """
-    Casts the parameter to Symbol if it is of string_types
+    Casts the parameter to Symbol if it is 'str'
     otherwise no operation is performed on it.
 
     Parameters
@@ -1451,7 +1465,7 @@ def _symbol_converter(sym):
     ======
 
     TypeError
-        If the parameter is not an instance of both string_types and
+        If the parameter is not an instance of both str and
         Symbol.
 
     Examples
@@ -1470,7 +1484,7 @@ def _symbol_converter(sym):
     >>> isinstance(r, Symbol)
     True
     """
-    if isinstance(sym, string_types):
+    if isinstance(sym, str):
             sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))

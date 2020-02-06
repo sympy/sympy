@@ -15,9 +15,8 @@ from sympy import (
     solve, legendre_poly, Integral
 )
 
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 from sympy.core.expr import unchanged
-from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
 
@@ -263,7 +262,7 @@ def test_CRootOf_evalf():
     r[0]._reset()
     for ri in r:
         i = ri._get_interval()
-        n = ri.n(2)
+        ri.n(2)
         assert i != ri._get_interval()
         ri._reset()
         assert i == ri._get_interval()
@@ -307,9 +306,9 @@ def test_CRootOf_all_roots():
 def test_CRootOf_eval_rational():
     p = legendre_poly(4, x, polys=True)
     roots = [r.eval_rational(n=18) for r in p.real_roots()]
-    for r in roots:
-        assert isinstance(r, Rational)
-    roots = [str(r.n(17)) for r in roots]
+    for root in roots:
+        assert isinstance(root, Rational)
+    roots = [str(root.n(17)) for root in roots]
     assert roots == [
             "-0.86113631159405258",
             "-0.33998104358485626",

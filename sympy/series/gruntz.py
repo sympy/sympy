@@ -124,9 +124,6 @@ from sympy.core.compatibility import reduce
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
-from sympy import cacheit
-
-from sympy.core.compatibility import reduce
 
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis

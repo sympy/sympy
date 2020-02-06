@@ -1,14 +1,12 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, refine,
-        floor
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
 )
-from sympy.core.compatibility import long, range
-from sympy.core.evaluate import distribute
+from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.randtest import verify_numerically
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -1036,6 +1034,10 @@ def test_Pow_is_real():
 
     assert sqrt(-I).is_real is False  # issue 7843
 
+    i = Symbol('i', integer=True)
+    assert (1/(i-1)).is_real is None
+    assert (1/(i-1)).is_extended_real is None
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1047,6 +1049,7 @@ def test_Pow_is_finite():
     xr = Symbol('xr', real=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
+    i = Symbol('i', integer=True)
 
     assert (xe**2).is_finite is None  # xe could be oo
     assert (xr**2).is_finite is True
@@ -1082,6 +1085,7 @@ def test_Pow_is_finite():
 
     assert (1/S.Pi).is_finite is True
 
+    assert (1/(i-1)).is_finite is None
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -1243,8 +1247,10 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (I**i).is_nonnegative is True
     assert (exp(I)**i).is_nonnegative is True
 
-    assert ((-k)**n).is_nonnegative is True
-    assert ((-k)**m).is_nonpositive is True
+    assert ((-l)**n).is_nonnegative is True
+    assert ((-l)**m).is_nonpositive is True
+    assert ((-k)**n).is_nonnegative is None
+    assert ((-k)**m).is_nonpositive is None
 
 
 def test_Mul_is_imaginary_real():
@@ -1295,7 +1301,7 @@ def test_Mul_is_imaginary_real():
     assert (r*i1*i2).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False, complex=True, finite=True)  # e.g. I or 1 + I
+    nr = Symbol('nr', real=False, complex=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i1*nr).is_real is None
@@ -1367,6 +1373,15 @@ def test_Add_is_irrational():
 
     assert (i + 1).is_irrational is True
     assert (i + 1).is_rational is False
+
+
+def test_Mul_is_irrational():
+    expr = Mul(1, 2, 3, evaluate=False)
+    assert expr.is_irrational is False
+    expr = Mul(1, I, I, evaluate=False)
+    assert expr.is_irrational is not False
+    expr = Mul(sqrt(2), I, I, evaluate=False)
+    assert expr.is_irrational is not True
 
 
 @XFAIL
@@ -1884,9 +1899,9 @@ def test_float_int_round():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
-        long(112345678901234567890)
+        int(112345678901234567890)
     assert int(Float('1.123456789012345678901234567890e25', '')) == \
-        long(11234567890123456789012345)
+        int(11234567890123456789012345)
     # decimal forces float so it's not an exact integer ending in 000000
     assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000192
@@ -1947,38 +1962,38 @@ def test_mul_coeff():
 
 
 def test_mul_zero_detection():
-    nz = Dummy(real=True, zero=False, finite=True)
-    r = Dummy(real=True)
-    c = Dummy(real=False, complex=True, finite=True)
-    c2 = Dummy(real=False, complex=True, finite=True)
-    i = Dummy(imaginary=True, finite=True)
+    nz = Dummy(real=True, zero=False)
+    r = Dummy(extended_real=True)
+    c = Dummy(real=False, complex=True)
+    c2 = Dummy(real=False, complex=True)
+    i = Dummy(imaginary=True)
     e = nz*r*c
     assert e.is_imaginary is None
-    assert e.is_real is None
+    assert e.is_extended_real is None
     e = nz*c
     assert e.is_imaginary is None
-    assert e.is_real is False
+    assert e.is_extended_real is False
     e = nz*i*c
     assert e.is_imaginary is False
-    assert e.is_real is None
+    assert e.is_extended_real is None
     # check for more than one complex; it is important to use
     # uniquely named Symbols to ensure that two factors appear
     # e.g. if the symbols have the same name they just become
     # a single factor, a power.
     e = nz*i*c*c2
     assert e.is_imaginary is None
-    assert e.is_real is None
+    assert e.is_extended_real is None
 
-    # _eval_is_real and _eval_is_zero both employ trapping of the
+    # _eval_is_extended_real and _eval_is_zero both employ trapping of the
     # zero value so args should be tested in both directions and
     # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
 
     # real is unknown
     def test(z, b, e):
         if z.is_zero and b.is_finite:
-            assert e.is_real and e.is_zero
+            assert e.is_extended_real and e.is_zero
         else:
-            assert e.is_real is None
+            assert e.is_extended_real is None
             if b.is_finite:
                 if z.is_zero:
                     assert e.is_zero
@@ -2023,11 +2038,11 @@ def test_Mul_with_zero_infinite():
     inf = Dummy(finite=False)
 
     e = Mul(zer, inf, evaluate=False)
-    assert e.is_positive is None
+    assert e.is_extended_positive is None
     assert e.is_hermitian is None
 
     e = Mul(inf, zer, evaluate=False)
-    assert e.is_positive is None
+    assert e.is_extended_positive is None
     assert e.is_hermitian is None
 
 def test_Mul_does_not_cancel_infinities():
@@ -2097,3 +2112,7 @@ def test__neg__():
     with distribute(False):
         eq = -(x + y)
         assert eq.is_Mul and eq.args == (-1, x + y)
+
+
+def test_issue_18507():
+    assert Mul(zoo, zoo, 0) is nan

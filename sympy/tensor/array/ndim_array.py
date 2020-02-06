@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Any
+
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
@@ -263,7 +265,6 @@ class NDimArray(object):
     def _eval_derivative_array(self, arg):
         from sympy import derive_by_array
         from sympy import Tuple
-        from sympy import SparseNDimArray
         from sympy.matrices.common import MatrixCommon
 
         if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
@@ -336,7 +337,7 @@ class NDimArray(object):
         s = latex(self, mode='plain')
         return "$\\displaystyle %s$" % s
 
-    _repr_latex_orig = _repr_latex_
+    _repr_latex_orig = _repr_latex_  # type: Any
 
     def tolist(self):
         """

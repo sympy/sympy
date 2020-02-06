@@ -1,7 +1,7 @@
 import random
 
 from sympy import Integer, Matrix, Rational, sqrt, symbols, S
-from sympy.core.compatibility import range, long
+from sympy.core.compatibility import long
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
@@ -11,7 +11,7 @@ from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.shor import Qubit
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
 

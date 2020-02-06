@@ -8,8 +8,7 @@ from itertools import combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (ordered, range, with_metaclass,
-    as_int)
+from sympy.core.compatibility import ordered, as_int
 from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
@@ -57,7 +56,7 @@ def as_Boolean(e):
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
-    __slots__ = []
+    __slots__ = ()
 
     def __and__(self, other):
         """Overloading for & operator"""
@@ -131,7 +130,7 @@ class Boolean(Basic):
         >>> from sympy import Symbol, Eq, Or, And
         >>> x = Symbol('x', real=True)
         >>> Eq(x, 0).as_set()
-        {0}
+        FiniteSet(0)
         >>> (x > 0).as_set()
         Interval.open(0, oo)
         >>> And(-2 < x, x < 2).as_set()
@@ -222,7 +221,7 @@ class BooleanAtom(Boolean):
     # \\\
 
 
-class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
+class BooleanTrue(BooleanAtom, metaclass=Singleton):
     """
     SymPy version of True, a singleton that can be accessed via S.true.
 
@@ -341,7 +340,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
         return S.UniversalSet
 
 
-class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
+class BooleanFalse(BooleanAtom, metaclass=Singleton):
     """
     SymPy version of False, a singleton that can be accessed via S.false.
 
@@ -405,7 +404,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import false
         >>> false.as_set()
-        EmptySet()
+        EmptySet
         """
         return S.EmptySet
 
@@ -1003,7 +1002,7 @@ class Xor(BooleanFunction):
     >>> Xor(True, False, True, False)
     False
     >>> x ^ y
-    Xor(x, y)
+    x ^ y
 
     Notes
     =====
@@ -1065,7 +1064,9 @@ class Xor(BooleanFunction):
             obj._argset = frozenset(argset)
             return obj
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe it can be computed in __new__?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))
@@ -1334,7 +1335,9 @@ class Equivalent(BooleanFunction):
         obj._argset = _args
         return obj
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe it can be computed in __new__?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))

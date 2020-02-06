@@ -6,7 +6,7 @@ from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 from sympy.core.basic import preorder_traversal
-from sympy.core.compatibility import iterable, range, ordered
+from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff
@@ -98,7 +98,7 @@ class Poly(Expr):
 
     """
 
-    __slots__ = ['rep', 'gens']
+    __slots__ = ('rep', 'gens')
 
     is_commutative = True
     is_Poly = True
@@ -4037,6 +4037,8 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __mul__(f, g):
+        if not isinstance(g, Expr):
+            return NotImplemented
         if not g.is_Poly:
             try:
                 g = f.__class__(g, *f.gens)
@@ -4436,7 +4438,8 @@ def degree(f, gen=0):
 
     See also
     ========
-    total_degree
+
+    sympy.polys.polytools.Poly.total_degree
     degree_list
     """
 
@@ -4989,7 +4992,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the ``mod_inverse`` function:
+    use the :obj:`~.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -4998,7 +5001,9 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
+
     sympy.core.numbers.mod_inverse
+
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -5492,6 +5497,12 @@ def terms_gcd(f, *gens, **args):
     from sympy.core.relational import Equality
 
     orig = sympify(f)
+
+    if isinstance(f, Equality):
+        return Equality(*(terms_gcd(s, *gens, **args) for s in [f.lhs, f.rhs]))
+    elif isinstance(f, Relational):
+        raise TypeError("Inequalities can not be used with terms_gcd. Found: %s" %(f,))
+
     if not isinstance(f, Expr) or f.is_Atom:
         return orig
 
@@ -5500,9 +5511,6 @@ def terms_gcd(f, *gens, **args):
         args.pop('deep')
         args['expand'] = False
         return terms_gcd(new, *gens, **args)
-
-    if isinstance(f, Equality):
-        return f
 
     clear = args.pop('clear', True)
     options.allowed_flags(args, ['polys'])
@@ -6266,7 +6274,7 @@ def factor(f, *gens, **args):
 
     In symbolic mode, :func:`factor` will traverse the expression tree and
     factor its components without any prior expansion, unless an instance
-    of :class:`Add` is encountered (in this case formal factorization is
+    of :class:`~.Add` is encountered (in this case formal factorization is
     used). This way :func:`factor` can handle large or symbolic exponents.
 
     By default, the factorization is computed over the rationals. To factor
@@ -6585,7 +6593,7 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel, sqrt, Symbol
+    >>> from sympy import cancel, sqrt, Symbol, together
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
 
@@ -6593,6 +6601,14 @@ def cancel(f, *gens, **args):
     (2*x + 2)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
+
+    Note: due to automatic distribution of Rationals, a sum divided by an integer
+    will appear as a sum. To recover a rational form use `together` on the result:
+
+    >>> cancel(x/2 + 1)
+    x/2 + 1
+    >>> together(_)
+    (x + 2)/2
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
@@ -6617,7 +6633,7 @@ def cancel(f, *gens, **args):
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
         if not isinstance(f, (tuple, Tuple)):
-            return f
+            return f.expand()
         else:
             return S.One, p, q
     except PolynomialError as msg:
@@ -6726,7 +6742,7 @@ def groebner(F, *gens, **args):
     ``grevlex``. If no order is specified, it defaults to ``lex``.
 
     For more information on Groebner bases, see the references and the docstring
-    of `solve_poly_system()`.
+    of :func:`~.solve_poly_system`.
 
     Examples
     ========
@@ -6749,9 +6765,9 @@ def groebner(F, *gens, **args):
                   domain='ZZ', order='grevlex')
 
     By default, an improved implementation of the Buchberger algorithm is
-    used. Optionally, an implementation of the F5B algorithm can be used.
-    The algorithm can be set using ``method`` flag or with the :func:`setup`
-    function from :mod:`sympy.polys.polyconfig`:
+    used. Optionally, an implementation of the F5B algorithm can be used. The
+    algorithm can be set using the ``method`` flag or with the
+    :func:`sympy.polys.polyconfig.setup` function.
 
     >>> F = [x**2 - x - 1, (2*x - 1) * y - (x**10 - (1 - x)**10)]
 

@@ -12,9 +12,9 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve
+from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
-    is_sequence, range, string_types, ordered)
+    is_sequence, ordered)
 from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 
@@ -27,7 +27,7 @@ def find(x, equation):
     """
 
     free = equation.free_symbols
-    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
+    xs = [i for i in free if (i.name if isinstance(x, str) else i) == x]
     if not xs:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
@@ -285,7 +285,7 @@ def closest_points(*args):
 
     """
     from collections import deque
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
     from sympy.functions.elementary.miscellaneous import sqrt
 
     p = [Point2D(i) for i in set(args)]
@@ -303,6 +303,8 @@ def closest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
@@ -474,7 +476,7 @@ def farthest_points(*args):
     {(Point2D(0, 0), Point2D(3, 4))}
 
     """
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -509,6 +511,8 @@ def farthest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = []
     diam = 0
