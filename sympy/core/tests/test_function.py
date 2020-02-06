@@ -5,16 +5,16 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic, Dict, oo, zoo, nan, Pow)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.sympify import sympify
+from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -159,6 +159,40 @@ def test_nargs():
     assert Function('f', nargs=None).nargs == S.Naturals0
     raises(ValueError, lambda: Function('f', nargs=()))
 
+def test_nargs_inheritance():
+    class f1(Function):
+        nargs = 2
+    class f2(f1):
+        pass
+    class f3(f2):
+        pass
+    class f4(f3):
+        nargs = 1,2
+    class f5(f4):
+        pass
+    class f6(f5):
+        pass
+    class f7(f6):
+        nargs=None
+    class f8(f7):
+        pass
+    class f9(f8):
+        pass
+    class f10(f9):
+        nargs = 1
+    class f11(f10):
+        pass
+    assert f1.nargs == FiniteSet(2)
+    assert f2.nargs == FiniteSet(2)
+    assert f3.nargs == FiniteSet(2)
+    assert f4.nargs == FiniteSet(1, 2)
+    assert f5.nargs == FiniteSet(1, 2)
+    assert f6.nargs == FiniteSet(1, 2)
+    assert f7.nargs == S.Naturals0
+    assert f8.nargs == S.Naturals0
+    assert f9.nargs == S.Naturals0
+    assert f10.nargs == FiniteSet(1)
+    assert f11.nargs == FiniteSet(1)
 
 def test_arity():
     f = lambda x, y: 1
@@ -477,14 +511,16 @@ def test_function_non_commutative():
 
 def test_function_complex():
     x = Symbol('x', complex=True)
+    xzf = Symbol('x', complex=True, zero=False)
     assert f(x).is_commutative is True
     assert sin(x).is_commutative is True
     assert exp(x).is_commutative is True
     assert log(x).is_commutative is True
-    assert f(x).is_complex is True
+    assert f(x).is_complex is None
     assert sin(x).is_complex is True
     assert exp(x).is_complex is True
-    assert log(x).is_complex is True
+    assert log(x).is_complex is None
+    assert log(xzf).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -633,8 +669,8 @@ def test_diff_wrt():
     assert diff(f(g(x), h(y)), x) == \
         Derivative(g(x), x)*Derivative(f(g(x), h(y)), g(x))
     assert diff(f(g(x), h(x)), x) == (
-        Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
-        Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x))
     assert f(
         sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), x, sin(x))
 
@@ -869,15 +905,15 @@ def test_nfloat():
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
     # issue 10933
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
-    for t in (dict, Dict):
-        d = t({S.Half: S.Half})
+    for ti in (dict, Dict):
+        d = ti({S.Half: S.Half})
         n = nfloat(d, dkeys=True)
-        assert isinstance(n, t)
+        assert isinstance(n, ti)
         assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
     d = [S.Half]
     n = nfloat(d)
@@ -889,6 +925,18 @@ def test_nfloat():
     assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
     # pass along kwargs
     assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
+
+    # Issue 17706
+    A = MutableMatrix([[1, 2], [3, 4]])
+    B = MutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
+    A = ImmutableMatrix([[1, 2], [3, 4]])
+    B = ImmutableMatrix(
+        [[Float('1.0', precision=53), Float('2.0', precision=53)],
+        [Float('3.0', precision=53), Float('4.0', precision=53)]])
+    assert _aresame(nfloat(A), B)
 
 
 def test_issue_7068():
@@ -1302,3 +1350,8 @@ def test_Derivative_free_symbols():
     f = Function('f')
     n = Symbol('n', integer=True, positive=True)
     assert diff(f(x), (x, n)).free_symbols == {n, x}
+
+
+def test_issue_10503():
+    f = exp(x**3)*cos(x**6)
+    assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)

@@ -64,7 +64,7 @@ from itertools import product
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
-from sympy.core.compatibility import default_sort_key, range, reduce
+from sympy.core.compatibility import default_sort_key, reduce
 from sympy.core.mod import Mod
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
@@ -77,7 +77,7 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
 from sympy.polys import poly, Poly
 from sympy.series import residue
-from sympy.simplify import simplify
+from sympy.simplify import simplify  # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 

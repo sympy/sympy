@@ -13,11 +13,10 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
 from sympy.core import Basic
-from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
-from sympy.utilities.randtest import _randrange
+from sympy.testing.randtest import _randrange
 from itertools import islice
 
 rmul = Permutation.rmul_with_af
@@ -36,7 +35,6 @@ class PermutationGroup(Basic):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.permutations import Cycle
     >>> from sympy.combinatorics.polyhedron import Polyhedron
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
@@ -183,7 +181,7 @@ class PermutationGroup(Basic):
         return self._generators[i]
 
     def __contains__(self, i):
-        """Return ``True`` if `i` is contained in PermutationGroup.
+        """Return ``True`` if *i* is contained in PermutationGroup.
 
         Examples
         ========
@@ -246,13 +244,14 @@ class PermutationGroup(Basic):
         return super(PermutationGroup, self).__hash__()
 
     def __mul__(self, other):
-        """Return the direct product of two permutation groups as a permutation
+        """
+        Return the direct product of two permutation groups as a permutation
         group.
 
         This implementation realizes the direct product by shifting the index
-        set for the generators of the second group: so if we have `G` acting
-        on `n1` points and `H` acting on `n2` points, `G*H` acts on `n1 + n2`
-        points.
+        set for the generators of the second group: so if we have ``G`` acting
+        on ``n1`` points and ``H`` acting on ``n2`` points, ``G*H`` acts on
+        ``n1 + n2`` points.
 
         Examples
         ========
@@ -830,7 +829,7 @@ class PermutationGroup(Basic):
 
     def _coset_representative(self, g, H):
         """Return the representative of Hg from the transversal that
-        would be computed by `self.coset_transversal(H)`.
+        would be computed by ``self.coset_transversal(H)``.
 
         """
         if H.order() == 1:
@@ -1113,7 +1112,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation, PermutationGroup
-        >>> Permutation.print_cyclic = True
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
@@ -1149,7 +1147,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        util._strip
+        sympy.combinatorics.util._strip
 
         """
         if isinstance(g, (Cycle, Permutation)):
@@ -1238,7 +1236,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
@@ -1306,7 +1303,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a])
@@ -1422,7 +1418,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2, 4, 3])
         >>> b = Permutation([0, 1, 3, 2, 4])
@@ -1470,7 +1465,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics import PermutationGroup
         >>> from sympy.combinatorics.polyhedron import tetrahedron
 
@@ -1517,7 +1511,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1578,7 +1571,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1648,7 +1640,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1674,7 +1665,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
 
         >>> a = Permutation(1, 2)
@@ -1707,7 +1697,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        coset_factor, has, in
+        coset_factor, sympy.core.basic.Basic.has, __contains__
 
         """
         if not isinstance(g, Permutation):
@@ -1749,7 +1739,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -2054,7 +2043,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 2, 0])
         >>> b = Permutation([1, 0, 2])
@@ -2579,6 +2567,92 @@ class PermutationGroup(Basic):
         new_reps = {}
         return [new_reps.setdefault(r, i) for i, r in enumerate(parents)]
 
+    def conjugacy_class(self, x):
+        r"""Return the conjugacy class of an element in the group.
+
+        The conjugacy class of an element ``g`` in a group ``G`` is the set of
+        elements ``x`` in ``G`` that are conjugate with ``g``, i.e. for which
+
+            ``g = xax^{-1}``
+
+        for some ``a`` in ``G``.
+
+        Note that conjugacy is an equivalence relation, and therefore that
+        conjugacy classes are partitions of ``G``. For a list of all the
+        conjugacy classes of the group, use the conjugacy_classes() method.
+
+        In a permutation group, each conjugacy class corresponds to a particular
+        `cycle structure': for example, in ``S_3``, the conjugacy classes are:
+
+            * the identity class, ``{()}``
+            * all transpositions, ``{(1 2), (1 3), (2 3)}``
+            * all 3-cycles, ``{(1 2 3), (1 3 2)}``
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S3 = SymmetricGroup(3)
+        >>> S3.conjugacy_class(Permutation(0, 1, 2))
+        {(0 1 2), (0 2 1)}
+
+        Notes
+        =====
+
+        This procedure computes the conjugacy class directly by finding the
+        orbit of the element under conjugation in G. This algorithm is only
+        feasible for permutation groups of relatively small order, but is like
+        the orbit() function itself in that respect.
+        """
+        # Ref: "Computing the conjugacy classes of finite groups"; Butler, G.
+        # Groups '93 Galway/St Andrews; edited by Campbell, C. M.
+        new_class = set([x])
+        last_iteration = new_class
+
+        while len(last_iteration) > 0:
+            this_iteration = set()
+
+            for y in last_iteration:
+                for s in self.generators:
+                    conjugated = s * y * (~s)
+                    if conjugated not in new_class:
+                        this_iteration.add(conjugated)
+
+            new_class.update(last_iteration)
+            last_iteration = this_iteration
+
+        return new_class
+
+
+    def conjugacy_classes(self):
+        r"""Return the conjugacy classes of the group.
+
+        As described in the documentation for the .conjugacy_class() function,
+        conjugacy is an equivalence relation on a group G which partitions the
+        set of elements. This method returns a list of all these conjugacy
+        classes of G.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import SymmetricGroup
+        >>> SymmetricGroup(3).conjugacy_classes()
+        [{(2)}, {(0 1 2), (0 2 1)}, {(0 2), (1 2), (2)(0 1)}]
+
+        """
+        identity = _af_new(list(range(self.degree)))
+        known_elements = set([identity])
+        classes = [known_elements.copy()]
+
+        for x in self.generate():
+            if x not in known_elements:
+                new_class = self.conjugacy_class(x)
+                classes.append(new_class)
+                known_elements.update(new_class)
+
+        return classes
+
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
 
@@ -2724,7 +2798,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
@@ -2767,7 +2840,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
@@ -2991,9 +3063,21 @@ class PermutationGroup(Basic):
 
         return self._eval_is_alt_sym_naive(only_alt=True)
 
+    @classmethod
+    def _distinct_primes_lemma(cls, primes):
+        """Subroutine to test if there is only one cyclic group for the
+        order."""
+        primes = sorted(primes)
+        l = len(primes)
+        for i in range(l):
+            for j in range(i+1, l):
+                if primes[j] % primes[i] == 1:
+                    return None
+        return True
+
     @property
     def is_cyclic(self):
-        """
+        r"""
         Return ``True`` if the group is Cyclic.
 
         Examples
@@ -3007,25 +3091,77 @@ class PermutationGroup(Basic):
         >>> G.is_cyclic
         False
 
+        Notes
+        =====
+
+        If the order of a group $n$ can be factored into the distinct
+        primes $p_1, p_2, ... , p_s$ and if
+
+        .. math::
+            \forall i, j \in \{1, 2, \ldots, s \}:
+            p_i \not \equiv 1 \pmod {p_j}
+
+        holds true, there is only one group of the order $n$ which
+        is a cyclic group. [1]_ This is a generalization of the lemma
+        that the group of order $15, 35, ...$ are cyclic.
+
+        And also, these additional lemmas can be used to test if a
+        group is cyclic if the order of the group is already found.
+
+        - If the group is abelian and the order of the group is
+          square-free, the group is cyclic.
+        - If the order of the group is less than $6$ and is not $4$, the
+          group is cyclic.
+        - If the order of the group is prime, the group is cyclic.
+
+        References
+        ==========
+
+        .. [1] 1978: John S. Rose: A Course on Group Theory,
+            Introduction to Finite Group Theory: 1.4
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
-        self._is_cyclic = True
 
         if len(self.generators) == 1:
+            self._is_cyclic = True
+            self._is_abelian = True
             return True
-        if not self._is_abelian:
+
+        if self._is_abelian is False:
             self._is_cyclic = False
             return False
-        for p in primefactors(self.order()):
+
+        order = self.order()
+
+        if order < 6:
+            self._is_abelian == True
+            if order != 4:
+                self._is_cyclic == True
+                return True
+
+        factors = factorint(order)
+        if all(v == 1 for v in factors.values()):
+            if self._is_abelian:
+                self._is_cyclic = True
+                return True
+
+            primes = list(factors.keys())
+            if PermutationGroup._distinct_primes_lemma(primes) is True:
+                self._is_cyclic = True
+                self._is_abelian = True
+                return True
+
+        for p in factors:
             pgens = []
             for g in self.generators:
                 pgens.append(g**p)
             if self.index(self.subgroup(pgens)) != p:
                 self._is_cyclic = False
                 return False
-            else:
-                continue
+
+        self._is_cyclic = True
+        self._is_abelian = True
         return True
 
     def pointwise_stabilizer(self, points, incremental=True):
@@ -3096,7 +3232,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
         >>> G = PermutationGroup([a, b])
@@ -3631,7 +3766,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
@@ -4042,13 +4176,13 @@ class PermutationGroup(Basic):
         the interval [0..n-1] into p equal parts, each of length p^(i-1):
         [0..p^(i-1)-1], [p^(i-1)..2*p^(i-1)-1]...[(p-1)*p^(i-1)..p^i-1].
         Find a p-Sylow subgroup of Sym(p^(i-1)) (treated as a subgroup
-        of `self`) acting on each of the parts. Call the subgroups
+        of ``self``) acting on each of the parts. Call the subgroups
         P_1, P_2...P_p. The generators for the subgroups P_2...P_p
         can be obtained from those of P_1 by applying a "shifting"
         permutation to them, that is, a permutation mapping [0..p^(i-1)-1]
         to the second part (the other parts are obtained by using the shift
         multiple times). The union of this permutation and the generators
-        of P_1 is a p-Sylow subgroup of `self`.
+        of P_1 is a p-Sylow subgroup of ``self``.
 
         For n not equal to a power of p, partition
         [0..n-1] in accordance with how n would be written in base p.
@@ -4333,15 +4467,15 @@ class PermutationGroup(Basic):
 
     def _verify(H, K, phi, z, alpha):
         '''
-        Return a list of relators `rels` in generators `gens_h` that
-        are mapped to `H.generators` by `phi` so that given a finite
-        presentation <gens_k | rels_k> of `K` on a subset of `gens_h`
-        <gens_h | rels_k + rels> is a finite presentation of `H`.
+        Return a list of relators ``rels`` in generators ``gens`_h` that
+        are mapped to ``H.generators`` by ``phi`` so that given a finite
+        presentation <gens_k | rels_k> of ``K`` on a subset of ``gens_h``
+        <gens_h | rels_k + rels> is a finite presentation of ``H``.
 
-        `H` should be generated by the union of `K.generators` and `z`
-        (a single generator), and `H.stabilizer(alpha) == K`; `phi` is a
+        ``H`` should be generated by the union of ``K.generators`` and ``z``
+        (a single generator), and ``H.stabilizer(alpha) == K``; ``phi`` is a
         canonical injection from a free group into a permutation group
-        containing `H`.
+        containing ``H``.
 
         The algorithm is described in [1], Chapter 6.
 
@@ -4854,7 +4988,6 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.perm_groups import _orbit_transversal
     >>> G = DihedralGroup(6)
@@ -4907,7 +5040,6 @@ def _stabilizer(degree, generators, alpha):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.perm_groups import _stabilizer
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> G = DihedralGroup(6)

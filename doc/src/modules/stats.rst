@@ -56,6 +56,7 @@ Continuous Types
 .. autofunction:: Nakagami
 .. autofunction:: Normal
 .. autofunction:: Pareto
+.. autofunction:: PowerFunction
 .. autofunction:: QuadraticU
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
@@ -104,6 +105,11 @@ Interface
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
+.. autofunction:: sympy.stats.rv.sample_iter_lambdify
+.. autofunction:: sympy.stats.rv.sample_iter_subs
+.. autofunction:: sympy.stats.rv.sampling_density
+.. autofunction:: sympy.stats.rv.sampling_P
+.. autofunction:: sympy.stats.rv.sampling_E
 
 Mechanics
 ^^^^^^^^^

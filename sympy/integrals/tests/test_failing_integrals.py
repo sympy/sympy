@@ -1,11 +1,11 @@
 # A collection of failing integrals from the issues.
 
 from sympy import (
-    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
+    integrate, I, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
     tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational
 )
 
-from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
 from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
 

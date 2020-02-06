@@ -2,7 +2,7 @@ from sympy import (
     adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
     symbols, transpose, Piecewise, Ne
 )
-from sympy.core.compatibility import range, long
+from sympy.core.compatibility import long
 from sympy.physics.secondquant import evaluate_deltas, F
 
 x, y = symbols('x y')

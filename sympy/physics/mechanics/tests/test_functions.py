@@ -1,6 +1,6 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros, S
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
-                                     RigidBody, Vector)
+                                     RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
@@ -9,7 +9,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
 
 from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')

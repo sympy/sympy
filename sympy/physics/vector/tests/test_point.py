@@ -1,5 +1,5 @@
 from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_point_v1pt_theorys():

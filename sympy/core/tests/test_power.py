@@ -1,6 +1,6 @@
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, E, symbols, oo, zoo, Rational)
+    Basic, I, nan, pi, symbols, oo, zoo, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -9,7 +9,6 @@ from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
-from sympy.utilities.pytest import XFAIL
 
 
 def test_rational():
@@ -433,7 +432,7 @@ def test_better_sqrt():
     assert sqrt(1/(3 - I)) == sqrt(10)*sqrt(3 + I)/10
     # symbolic
     i = symbols('i', imaginary=True)
-    assert sqrt(3/i) == Mul(sqrt(3), sqrt(-i)/abs(i), evaluate=False)
+    assert sqrt(3/i) == Mul(sqrt(3), 1/sqrt(i), evaluate=False)
     # multiples of 1/2; don't make this too automatic
     assert sqrt((3 + 4*I))**3 == (2 + I)**3
     assert Pow(3 + 4*I, Rational(3, 2)) == 2 + 11*I
@@ -467,11 +466,36 @@ def test_issue_2993():
     assert str((-2.3*x - 2)**0.3) == '1.28386201800527*(-x - 0.869565217391304)**0.3'
     assert str((-2.3*x + 2)**0.3) == '1.28386201800527*(0.869565217391304 - x)**0.3'
     assert str((2.3*x + 2)**0.3) == '1.28386201800527*(x + 0.869565217391304)**0.3'
-    assert str((2.3*x - 4)**Rational(1, 3)) == '1.5874010519682*(0.575*x - 1)**(1/3)'
+    assert str((2.3*x - 4)**Rational(1, 3)) == '2**(2/3)*(0.575*x - 1)**(1/3)'
     eq = (2.3*x + 4)
-    assert eq**2 == 16.0*(0.575*x + 1)**2
+    assert eq**2 == 16*(0.575*x + 1)**2
     assert (1/eq).args == (eq, -1)  # don't change trivial power
-
+    # issue 17735
+    q=.5*exp(x) - .5*exp(-x) + 0.1
+    assert int((q**2).subs(x, 1)) == 1
+    # issue 17756
+    y = Symbol('y')
+    assert len(sqrt(x/(x + y)**2 + Float('0.008', 30)).subs(y, pi.n(25)).atoms(Float)) == 2
+    # issue 17756
+    a, b, c, d, e, f, g = symbols('a:g')
+    expr = sqrt(1 + a*(c**4 + g*d - 2*g*e - f*(-g + d))**2/
+        (c**3*b**2*(d - 3*e + 2*f)**2))/2
+    r = [
+    (a, N('0.0170992456333788667034850458615', 30)),
+    (b, N('0.0966594956075474769169134801223', 30)),
+    (c, N('0.390911862903463913632151616184', 30)),
+    (d, N('0.152812084558656566271750185933', 30)),
+    (e, N('0.137562344465103337106561623432', 30)),
+    (f, N('0.174259178881496659302933610355', 30)),
+    (g, N('0.220745448491223779615401870086', 30))]
+    tru = expr.n(30, subs=dict(r))
+    seq = expr.subs(r)
+    # although `tru` is the right way to evaluate
+    # expr with numerical values, `seq` will have
+    # significant loss of precision if extraction of
+    # the largest coefficient of a power's base's terms
+    # is done improperly
+    assert seq == tru
 
 def test_issue_17450():
     assert (erf(cosh(1)**7)**I).is_real is None
@@ -479,3 +503,7 @@ def test_issue_17450():
     assert (Pow(exp(1+sqrt(2)), ((1-sqrt(2))*I*pi), evaluate=False)).is_real is None
     assert ((-10)**(10*I*pi/3)).is_real is False
     assert ((-5)**(4*I*pi)).is_real is False
+
+
+def test_issue_18190():
+    assert sqrt(1 / tan(1 + I)) == 1 / sqrt(tan(1 + I))

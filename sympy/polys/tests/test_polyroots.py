@@ -14,9 +14,8 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, slow
-from sympy.utilities.randtest import verify_numerically
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
+from sympy.testing.randtest import verify_numerically
 import mpmath
 
 
@@ -477,6 +476,10 @@ def test_roots0():
 
     assert roots(x**4 - 1, x, filter='Z', multiple=True) == [-S.One, S.One]
     assert roots(x**4 - 1, x, filter='I', multiple=True) == [I, -I]
+
+    ar, br = symbols('a, b', real=True)
+    p = x**2*(ar-br)**2 + 2*x*(br-ar) + 1
+    assert roots(p, x, filter='R') == {1/(ar - br): 2}
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []

@@ -9,9 +9,11 @@ the separate 'factorials' module.
 
 from __future__ import print_function, division
 
+from typing import Callable, Dict
+
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
@@ -813,7 +815,7 @@ class harmonic(Function):
 
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
-    _functions = {}
+    _functions = {}  # type: Dict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -1448,9 +1450,12 @@ def _multiset_histogram(n):
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all permutations of length 0
@@ -1619,9 +1624,12 @@ def _AOP_product(n):
 def nC(n, k=None, replacement=False):
     """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all combinations of length 0
@@ -1920,9 +1928,12 @@ def _nT(n, k):
 def nT(n, k=None):
     """Return the number of ``k``-sized partitions of ``n`` items.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - ``n`` identical items
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     Note: the convention for ``nT`` is different than that of ``nC`` and

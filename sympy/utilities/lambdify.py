@@ -5,14 +5,15 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import inspect
 import keyword
-import re
 import textwrap
 import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, string_types, range, builtins, PY3)
+    NotIterable, builtins)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -20,13 +21,13 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}
-MPMATH_DEFAULT = {}
-NUMPY_DEFAULT = {"I": 1j}
-SCIPY_DEFAULT = {"I": 1j}
-TENSORFLOW_DEFAULT = {}
-SYMPY_DEFAULT = {}
-NUMEXPR_DEFAULT = {}
+MATH_DEFAULT = {}  # type: Dict[str, Any]
+MPMATH_DEFAULT = {}  # type: Dict[str, Any]
+NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
+TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
+SYMPY_DEFAULT = {}  # type: Dict[str, Any]
+NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -79,20 +80,12 @@ MPMATH_TRANSLATIONS = {
     "FallingFactorial": "ff",
 }
 
-NUMPY_TRANSLATIONS = {}
-SCIPY_TRANSLATIONS = {}
+NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]
+SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
-TENSORFLOW_TRANSLATIONS = {
-    "Abs": "abs",
-    "ceiling": "ceil",
-    "im": "imag",
-    "ln": "log",
-    "Mod": "mod",
-    "conjugate": "conj",
-    "re": "real",
-}
+TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
-NUMEXPR_TRANSLATIONS = {}
+NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
 
 # Available modules:
 MODULES = {
@@ -100,7 +93,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("from tensorflow import *",)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -120,7 +113,7 @@ def _import(module, reload=False):
     other modules.
     """
     # Required despite static analysis claiming it is not used
-    from sympy.external import import_module
+    from sympy.external import import_module # noqa:F401
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -588,21 +581,45 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Usage with Tensorflow:
 
     >>> import tensorflow as tf
-    >>> from sympy import Max, sin
+    >>> from sympy import Max, sin, lambdify
+    >>> from sympy.abc import x
+
     >>> f = Max(x, sin(x))
     >>> func = lambdify(x, f, 'tensorflow')
+
+    After tensorflow v2, eager execution is enabled by default.
+    If you want to get the compatible result across tensorflow v1 and v2
+    as same as this tutorial, run this line.
+
+    >>> tf.compat.v1.enable_eager_execution()
+
+    If you have eager execution enabled, you can get the result out
+    immediately as you can use numpy.
+
+    If you pass tensorflow objects, you may get an ``EagerTensor``
+    object instead of value.
+
     >>> result = func(tf.constant(1.0))
-    >>> print(result) # a tf.Tensor representing the result of the calculation
-    Tensor("Maximum:0", shape=(), dtype=float32)
-    >>> sess = tf.Session()
-    >>> sess.run(result) # compute result
+    >>> print(result)
+    tf.Tensor(1.0, shape=(), dtype=float32)
+    >>> print(result.__class__)
+    <class 'tensorflow.python.framework.ops.EagerTensor'>
+
+    You can use ``.numpy()`` to get the numpy value of the tensor.
+
+    >>> result.numpy()
     1.0
-    >>> var = tf.Variable(1.0)
-    >>> sess.run(tf.global_variables_initializer())
-    >>> sess.run(func(var)) # also works for tf.Variable and tf.Placeholder
-    1.0
-    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]]) # works with any shape tensor
-    >>> sess.run(func(tensor))
+
+    >>> var = tf.Variable(2.0)
+    >>> result = func(var) # also works for tf.Variable and tf.Placeholder
+    >>> result.numpy()
+    2.0
+
+    And it works with any shape array.
+
+    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+    >>> result = func(tensor)
+    >>> result.numpy()
     [[1. 2.]
      [3. 4.]]
 
@@ -637,7 +654,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       the generated function relies on the input being a numpy array:
 
       >>> from sympy import Piecewise
-      >>> from sympy.utilities.pytest import ignore_warnings
+      >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
 
       >>> with ignore_warnings(RuntimeWarning):
@@ -679,7 +696,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             else:
                 modules = ["numpy"]
         else:
-            modules = ["scipy", "numpy"]
+            modules = ["numpy", "scipy"]
 
     # Get the needed namespaces.
     namespaces = []
@@ -687,7 +704,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
-    if isinstance(modules, (dict, string_types)) or not hasattr(modules, '__iter__'):
+    if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
         # consistency check
@@ -763,9 +780,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
             if k not in namespace:
-                imp_mod_lines.append("from %s import %s" % (mod, k))
-    for ln in imp_mod_lines:
-        exec_(ln, {}, namespace)
+                ln = "from %s import %s" % (mod, k)
+                try:
+                    exec_(ln, {}, namespace)
+                except ImportError:
+                    # Tensorflow 2.0 has issues with importing a specific
+                    # function from its submodule.
+                    # https://github.com/tensorflow/tensorflow/issues/33022
+                    ln = "%s = %s.%s" % (k, mod, k)
+                    exec_(ln, {}, namespace)
+                imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
@@ -812,7 +836,7 @@ def _get_namespace(m):
     """
     This is used by _lambdify to parse its arguments.
     """
-    if isinstance(m, string_types):
+    if isinstance(m, str):
         _import(m)
         return MODULES[m][0]
     elif isinstance(m, dict):
@@ -860,7 +884,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
-        if isinstance(args, string_types):
+        if isinstance(args, str):
             return args
         elif isinstance(args, DeferredVector):
             return str(args)
@@ -877,19 +901,13 @@ def lambdastr(args, expr, printer=None, dummify=None):
                 return str(args)
 
     def sub_expr(expr, dummies_dict):
-        try:
-            expr = sympify(expr).xreplace(dummies_dict)
-        except Exception:
-            if isinstance(expr, DeferredVector):
-                pass
-            elif isinstance(expr, dict):
-                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
-                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
-                expr = dict(zip(k, v))
-            elif isinstance(expr, tuple):
-                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
-            elif isinstance(expr, list):
-                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+        expr = sympify(expr)
+        # dict/tuple are sympified to Basic
+        if isinstance(expr, Basic):
+            expr = expr.xreplace(dummies_dict)
+        # list is not sympified to Basic
+        elif isinstance(expr, list):
+            expr = [sub_expr(a, dummies_dict) for a in expr]
         return expr
 
     # Transform args
@@ -928,14 +946,14 @@ def lambdastr(args, expr, printer=None, dummify=None):
     if dummify:
         args = sub_args(args, dummies_dict)
     else:
-        if isinstance(args, string_types):
+        if isinstance(args, str):
             pass
         elif iterable(args, exclude=DeferredVector):
             args = ",".join(str(a) for a in args)
 
     # Transform expr
     if dummify:
-        if isinstance(expr, string_types):
+        if isinstance(expr, str):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
@@ -960,11 +978,11 @@ class _EvaluatorPrinter(object):
 
             self._exprrepr = printer.doprint
 
-            if hasattr(printer, '_print_Symbol'):
-                symbolrepr = printer._print_Symbol
+            #if hasattr(printer, '_print_Symbol'):
+            #    symbolrepr = printer._print_Symbol
 
-            if hasattr(printer, '_print_Dummy'):
-                dummyrepr = printer._print_Dummy
+            #if hasattr(printer, '_print_Dummy'):
+            #    dummyrepr = printer._print_Dummy
 
         # Used to print the generated function arguments in a standard way
         self._argrepr = LambdaPrinter().doprint
@@ -1005,18 +1023,10 @@ class _EvaluatorPrinter(object):
 
         return '\n'.join(funclines) + '\n'
 
-    if PY3:
-        @classmethod
-        def _is_safe_ident(cls, ident):
-            return isinstance(ident, string_types) and ident.isidentifier() \
-                    and not keyword.iskeyword(ident)
-    else:
-        _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
-
-        @classmethod
-        def _is_safe_ident(cls, ident):
-            return isinstance(ident, string_types) and cls._safe_ident_re.match(ident) \
-                and not (keyword.iskeyword(ident) or ident == 'None')
+    @classmethod
+    def _is_safe_ident(cls, ident):
+        return isinstance(ident, str) and ident.isidentifier() \
+                and not keyword.iskeyword(ident)
 
     def _preprocess(self, args, expr):
         """Preprocess args, expr to replace arguments that do not map
@@ -1240,7 +1250,7 @@ def implemented_function(symfunc, implementation):
     if isinstance(symfunc, UndefinedFunction):
         kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
-    if isinstance(symfunc, string_types):
+    if isinstance(symfunc, str):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
         symfunc = UndefinedFunction(

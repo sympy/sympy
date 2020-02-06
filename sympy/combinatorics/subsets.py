@@ -4,7 +4,6 @@ from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
 from sympy.core import Basic
-from sympy.core.compatibility import range
 
 
 class Subset(Basic):
@@ -606,6 +605,6 @@ def ksubsets(superset, k):
     See Also
     ========
 
-    class:Subset
+    Subset
     """
     return combinations(superset, k)

@@ -6,7 +6,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.testing.pytest import XFAIL, raises, slow
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
@@ -147,7 +147,9 @@ def test_ff_eval_apply():
     for i in range(100):
         x = -500 + 500 * random.random()
         k = -500 + 500 * random.random()
-        assert (abs(mpmath_ff(x, k) - ff(x, k)) < 10**(-15))
+        a = mpmath_ff(x, k)
+        b = ff(x, k)
+        assert (abs(a - b) < abs(a) * 10**(-15))
 
 
 def test_rf_ff_eval_hiprec():
@@ -232,6 +234,8 @@ def test_factorial_Mod():
     assert Mod(factorial(q - 1800, evaluate=False), q) == 905504050
     assert Mod(factorial(153, evaluate=False), r) == Mod(factorial(153), r)
     assert Mod(factorial(255, evaluate=False), s) == Mod(factorial(255), s)
+    assert Mod(factorial(4, evaluate=False), 3) == S.Zero
+    assert Mod(factorial(5, evaluate=False), 6) == S.Zero
 
 
 def test_factorial_diff():
@@ -497,6 +501,8 @@ def test_binomial_Mod_slow():
     assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
     assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
     assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
+    assert Mod(binomial(23, -38, evaluate=False), q) is S.Zero
+    assert Mod(binomial(23, 38, evaluate=False), q) is S.Zero
 
     # binomial factorize
     assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)
@@ -550,6 +556,7 @@ def test_subfactorial():
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) is oo
     assert subfactorial(nan) is nan
+    assert subfactorial(23) == 9510425471055777937262
     assert unchanged(subfactorial, 2.2)
 
     x = Symbol('x')

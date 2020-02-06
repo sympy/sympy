@@ -284,7 +284,6 @@ class sign(Function):
     Abs, conjugate
     """
 
-    is_finite = True
     is_complex = True
 
     def doit(self, **hints):
@@ -1209,10 +1208,3 @@ def unpolarify(eq, subs={}, exponents_only=False):
     # Finally, replacing Exp(0) by 1 is always correct.
     # So is polar_lift(0) -> 0.
     return res.subs({exp_polar(0): 1, polar_lift(0): 0})
-
-
-
-# /cyclic/
-from sympy.core import basic as _
-_.abs_ = Abs
-del _

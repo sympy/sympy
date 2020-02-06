@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function, division
 
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int
 from sympy.core.function import Function
+from sympy.utilities.iterables import cartes
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
@@ -395,7 +394,7 @@ def _sqrt_mod_prime_power(a, p, k):
     if k == 1:
         if p == 2:
             return [ZZ(a)]
-        if not is_quad_residue(a, p):
+        if not (a % p < 2 or pow(a, (p - 1) // 2, p) == 1):
             return None
 
         if p % 4 == 3:
@@ -629,17 +628,18 @@ def is_nthpow_residue(a, n, m):
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
 
     """
+    a = a % m
     a, n, m = as_int(a), as_int(n), as_int(m)
     if m <= 0:
         raise ValueError('m must be > 0')
     if n < 0:
         raise ValueError('n must be >= 0')
-    if a < 0:
-        raise ValueError('a must be >= 0')
     if n == 0:
         if m == 1:
             return False
         return a == 1
+    if a == 0:
+        return True
     if n == 1:
         return True
     if n == 2:
@@ -651,7 +651,7 @@ def _is_nthpow_residue_bign(a, n, m):
     """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
     # assert n > 2
     # assert a > 0 and m > 0
-    if primitive_root(m) is None:
+    if primitive_root(m) is None or igcd(a, m) != 1:
         # assert m >= 8
         for prime, power in factorint(m).items():
             if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
@@ -743,6 +743,73 @@ def _nthroot_mod1(s, q, p, all_roots):
     return min(res)
 
 
+
+def _help(m, prime_modulo_method, diff_method, expr_val):
+    """
+    Helper function for _nthroot_mod_composite and polynomial_congruence.
+
+    Parameters
+    ==========
+
+    m : positive integer
+    prime_modulo_method : function to calculate the root of the congruence
+    equation for the prime divisors of m
+    diff_method : function to calculate derivative of expression at any
+    given point
+    expr_val : function to calculate value of the expression at any
+    given point
+    """
+    from sympy.ntheory.modular import crt
+    f = factorint(m)
+    dd = {}
+    for p, e in f.items():
+        tot_roots = set()
+        if e == 1:
+            tot_roots.update(prime_modulo_method(p))
+        else:
+            for root in prime_modulo_method(p):
+                diff = diff_method(root, p)
+                if diff != 0:
+                    ppow = p
+                    m_inv = mod_inverse(diff, p)
+                    for j in range(1, e):
+                        ppow *= p
+                        root = (root - expr_val(root, ppow) * m_inv) % ppow
+                    tot_roots.add(root)
+                else:
+                    new_base = p
+                    roots_in_base = {root}
+                    while new_base < pow(p, e):
+                        new_base *= p
+                        new_roots = set()
+                        for k in roots_in_base:
+                            if expr_val(k, new_base)!= 0:
+                                continue
+                            while k not in new_roots:
+                                new_roots.add(k)
+                                k = (k + (new_base // p)) % new_base
+                        roots_in_base = new_roots
+                    tot_roots = tot_roots | roots_in_base
+        if tot_roots == set():
+            return []
+        dd[pow(p, e)] = tot_roots
+    a = []
+    m = []
+    for x, y in dd.items():
+        m.append(x)
+        a.append(list(y))
+    return sorted(set(crt(m, list(i))[0] for i in cartes(*a)))
+
+def _nthroot_mod_composite(a, n, m):
+    """
+    Find the solutions to ``x**n = a mod m`` when m is not prime.
+    """
+    return _help(m,
+        lambda p: nthroot_mod(a, n, p, True),
+        lambda root, p: (pow(root, n - 1, p) * (n % p)) % p,
+        lambda root, p: (pow(root, n, p) - a) % p)
+
+
 def nthroot_mod(a, n, p, all_roots=False):
     """
     Find the solutions to ``x**n = a mod p``
@@ -767,15 +834,18 @@ def nthroot_mod(a, n, p, all_roots=False):
     23
     """
     from sympy.core.numbers import igcdex
+    a = a % p
     a, n, p = as_int(a), as_int(n), as_int(p)
+
     if n == 2:
         return sqrt_mod(a, p, all_roots)
     # see Hackman "Elementary Number Theory" (2009), page 76
+    if not isprime(p):
+        return _nthroot_mod_composite(a, n, p)
+    if a % p == 0:
+        return [0]
     if not is_nthpow_residue(a, n, p):
-        return None
-    if primitive_root(p) is None:
-        raise NotImplementedError("Not Implemented for m without primitive root")
-
+        return [] if all_roots else None
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
     # The roots of ``x**n - a = 0 (mod p)`` are roots of
@@ -866,7 +936,7 @@ def legendre_symbol(a, p):
     a = a % p
     if not a:
         return 0
-    if is_quad_residue(a, p):
+    if pow(a, (p - 1) // 2, p) == 1:
         return 1
     return -1
 
@@ -961,7 +1031,7 @@ def jacobi_symbol(m, n):
 
 class mobius(Function):
     """
-    Möbius function maps natural number to {-1, 0, 1}
+    Mobius function maps natural number to {-1, 0, 1}
 
     It is defined as follows:
         1) `1` if `n = 1`.
@@ -972,7 +1042,7 @@ class mobius(Function):
     It is an important multiplicative function in number theory
     and combinatorics.  It has applications in mathematical series,
     algebraic number theory and also physics (Fermion operator has very
-    concrete realization with Möbius Function model).
+    concrete realization with Mobius Function model).
 
     Parameters
     ==========
@@ -1300,3 +1370,173 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_pollard_rho(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
+
+
+
+def quadratic_congruence(a, b, c, p):
+    """
+    Find the solutions to ``a x**2 + b x + c = 0 mod p
+    a : integer
+    b : integer
+    c : integer
+    p : positive integer
+    """
+    from sympy.polys.galoistools import linear_congruence
+    a = as_int(a)
+    b = as_int(b)
+    c = as_int(c)
+    p = as_int(p)
+    a = a % p
+    b = b % p
+    c = c % p
+
+    if a == 0:
+        return linear_congruence(b, -c, p)
+    if p == 2:
+        roots = []
+        if c % 2 == 0:
+            roots.append(0)
+        if (a + b + c) % 2 == 0:
+            roots.append(1)
+        return roots
+    if isprime(p):
+        inv_a = mod_inverse(a, p)
+        b *= inv_a
+        c *= inv_a
+        if b % 2 == 1:
+            b = b + p
+        d = ((b * b) // 4 - c) % p
+        y = sqrt_mod(d, p, all_roots=True)
+        res = set()
+        for i in y:
+            res.add((i - b // 2) % p)
+        return sorted(res)
+    y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+    res = set()
+    for i in y:
+        root = linear_congruence(2 * a, i - b, 4 * a * p)
+        for j in root:
+            res.add(j % p)
+    return sorted(res)
+
+
+def _polynomial_congruence_prime(coefficients, p):
+    """A helper function used by polynomial_congruence.
+    It returns the root of a polynomial modulo prime number
+    by naive search from [0, p).
+
+    Parameters
+    ==========
+
+    coefficients : list of integers
+    p : prime number
+    """
+
+    roots = []
+    rank = len(coefficients)
+    for i in range(0, p):
+        f_val = 0
+        for coeff in range(0,rank - 1):
+            f_val = (f_val + pow(i, int(rank - coeff - 1), p) * coefficients[coeff]) % p
+        f_val = f_val + coefficients[-1]
+        if f_val % p == 0:
+            roots.append(i)
+    return roots
+
+
+def _diff_poly(root, coefficients, p):
+    """A helper function used by polynomial_congruence.
+    It returns the derivative of the polynomial evaluated at the
+    root (mod p).
+
+    Parameters
+    ==========
+
+    coefficients : list of integers
+    p : prime number
+    root : integer
+    """
+
+    diff = 0
+    rank = len(coefficients)
+    for coeff in range(0, rank - 1):
+        if not coefficients[coeff]:
+            continue
+        diff = (diff + pow(root, rank - coeff - 2, p)*(rank - coeff - 1)*
+            coefficients[coeff]) % p
+    return diff % p
+
+
+def _val_poly(root, coefficients, p):
+    """A helper function used by polynomial_congruence.
+    It returns value of the polynomial at root (mod p).
+
+    Parameters
+    ==========
+
+    coefficients : list of integers
+    p : prime number
+    root : integer
+    """
+    rank = len(coefficients)
+    f_val = 0
+    for coeff in range(0, rank - 1):
+        f_val = (f_val + pow(root, rank - coeff - 1, p)*
+            coefficients[coeff]) % p
+    f_val = f_val + coefficients[-1]
+    return f_val % p
+
+
+def _valid_expr(expr):
+    """
+    return coefficients of expr if it is a univariate polynomial
+    with integer coefficients else raise a ValueError.
+    """
+
+    from sympy import Poly
+    from sympy.polys.domains import ZZ
+    if not expr.is_polynomial():
+        raise ValueError("The expression should be a polynomial")
+    polynomial = Poly(expr)
+    if not  polynomial.is_univariate:
+        raise ValueError("The expression should be univariate")
+    if not polynomial.domain == ZZ:
+        raise ValueError("The expression should should have integer coefficients")
+    return polynomial.all_coeffs()
+
+
+def polynomial_congruence(expr, m):
+    """
+    Find the solutions to a polynomial congruence equation modulo m.
+
+    Parameters
+    ==========
+
+    coefficients : Coefficients of the Polynomial
+    m : positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import polynomial_congruence
+    >>> from sympy import Poly
+    >>> from sympy.abc import x
+    >>> expr = x**6 - 2*x**5 -35
+    >>> polynomial_congruence(expr, 6125)
+    [3257]
+    """
+    coefficients = _valid_expr(expr)
+    coefficients = [num % m for num in coefficients]
+    rank = len(coefficients)
+    if rank == 3:
+        return quadratic_congruence(*coefficients, m)
+    if rank == 2:
+        return quadratic_congruence(0, *coefficients, m)
+    if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
+        return nthroot_mod(-coefficients[-1], rank - 1, m, True)
+    if isprime(m):
+        return _polynomial_congruence_prime(coefficients, m)
+    return _help(m,
+        lambda p: _polynomial_congruence_prime(coefficients, p),
+        lambda root, p: _diff_poly(root, coefficients, p),
+        lambda root, p: _val_poly(root, coefficients, p))

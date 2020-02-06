@@ -1,6 +1,6 @@
 from sympy.matrices.sparsetools import _doktocsr, _csrtodok, banded
 from sympy import eye, ones, zeros, Matrix, SparseMatrix
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_doktocsr():

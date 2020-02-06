@@ -5,8 +5,16 @@ set -e
 # Echo each command
 set -x
 
+if [[ "${TEST_FLAKE8}" == "true" ]]; then
+    flake8 sympy;
+fi
+
 if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
+fi
+
+if [[ "${TEST_PY2_IMPORT}" == "true" ]]; then
+    python bin/test_py2_import.py
 fi
 
 if [[ "${TEST_SPHINX}" == "true" ]]; then
@@ -102,10 +110,29 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow and numexpr is tested here
 
-# TODO: Generate these tests automatically
-if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+# Test tensorflow 1 support (which is a separate conda environment)
+if [[ "${TEST_TENSORFLOW_1}" == "true" ]]; then
+    cat << EOF | python
+print('Testing optional dependencies')
+
+import sympy
+test_list = [
+    "tensorflow",
+]
+
+doctest_list = [
+    "tensorflow",
+]
+
+if not (sympy.test(*test_list) and sympy.doctest(*doctest_list)):
+    raise Exception('Tests failed')
+EOF
+
+    # lambdify with tensorflow and numexpr is tested here
+
+    # TODO: Generate these tests automatically
+elif [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
 print('Testing optional dependencies')
 
@@ -113,10 +140,9 @@ import sympy
 test_list = [
     # numpy
     '*numpy*',
-    'sympy/core/tests/test_numbers.py',
+    'sympy/core/',
     'sympy/matrices/',
     'sympy/physics/quantum/',
-    'sympy/core/tests/test_sympify.py',
     'sympy/utilities/tests/test_lambdify.py',
 
     # scipy

@@ -6,32 +6,34 @@ from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, resultant, ZZ
-from sympy.core.compatibility import range
 
 def ratint(f, x, **flags):
-    """Performs indefinite integration of rational functions.
+    """
+    Performs indefinite integration of rational functions.
 
-       Given a field :math:`K` and a rational function :math:`f = p/q`,
-       where :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
-       returns a function :math:`g` such that :math:`f = g'`.
+    Given a field :math:`K` and a rational function :math:`f = p/q`,
+    where :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
+    returns a function :math:`g` such that :math:`f = g'`.
 
-       >>> from sympy.integrals.rationaltools import ratint
-       >>> from sympy.abc import x
+    >>> from sympy.integrals.rationaltools import ratint
+    >>> from sympy.abc import x
 
-       >>> ratint(36/(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2), x)
-       (12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
+    >>> ratint(36/(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2), x)
+    (12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
 
-       References
-       ==========
+    References
+    ==========
 
-       .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
-          Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
+    .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
+       Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
-       See Also
-       ========
+    See Also
+    ========
 
-       sympy.integrals.integrals.Integral.doit
-       ratint_logpart, ratint_ratpart
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.rationaltools.ratint_logpart
+    sympy.integrals.rationaltools.ratint_ratpart
+
     """
     if type(f) is not tuple:
         p, q = f.as_numer_denom()
@@ -176,7 +178,8 @@ def ratint_logpart(f, g, x, t=None):
     Given a field K and polynomials f and g in K[x], such that f and g
     are coprime, deg(f) < deg(g) and g is square-free, returns a list
     of tuples (s_i, q_i) of polynomials, for i = 1..n, such that s_i
-    in K[t, x] and q_i in K[t], and:
+    in K[t, x] and q_i in K[t], and::
+
                            ___    ___
                  d  f   d  \  `   \  `
                  -- - = --  )      )   a log(s_i(a, x))
@@ -186,17 +189,17 @@ def ratint_logpart(f, g, x, t=None):
     Examples
     ========
 
-        >>> from sympy.integrals.rationaltools import ratint_logpart
-        >>> from sympy.abc import x
-        >>> from sympy import Poly
-        >>> ratint_logpart(Poly(1, x, domain='ZZ'),
-        ... Poly(x**2 + x + 1, x, domain='ZZ'), x)
-        [(Poly(x + 3*_t/2 + 1/2, x, domain='QQ[_t]'),
-        ...Poly(3*_t**2 + 1, _t, domain='ZZ'))]
-        >>> ratint_logpart(Poly(12, x, domain='ZZ'),
-        ... Poly(x**2 - x - 2, x, domain='ZZ'), x)
-        [(Poly(x - 3*_t/8 - 1/2, x, domain='QQ[_t]'),
-        ...Poly(-_t**2 + 16, _t, domain='ZZ'))]
+    >>> from sympy.integrals.rationaltools import ratint_logpart
+    >>> from sympy.abc import x
+    >>> from sympy import Poly
+    >>> ratint_logpart(Poly(1, x, domain='ZZ'),
+    ... Poly(x**2 + x + 1, x, domain='ZZ'), x)
+    [(Poly(x + 3*_t/2 + 1/2, x, domain='QQ[_t]'),
+    ...Poly(3*_t**2 + 1, _t, domain='ZZ'))]
+    >>> ratint_logpart(Poly(12, x, domain='ZZ'),
+    ... Poly(x**2 - x - 2, x, domain='ZZ'), x)
+    [(Poly(x - 3*_t/8 - 1/2, x, domain='QQ[_t]'),
+    ...Poly(-_t**2 + 16, _t, domain='ZZ'))]
 
     See Also
     ========

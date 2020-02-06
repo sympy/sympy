@@ -4,9 +4,10 @@ A Printer for generating readable representation of most sympy classes.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
-from sympy.core.compatibility import string_types
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -22,9 +23,12 @@ class StrPrinter(Printer):
         "full_prec": "auto",
         "sympy_integers": False,
         "abbrev": False,
-    }
+        "perm_cyclic": True,
+        "min": None,
+        "max": None,
+    }  # type: Dict[str, Any]
 
-    _relationals = dict()
+    _relationals = dict()  # type: Dict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -36,7 +40,7 @@ class StrPrinter(Printer):
         return sep.join([self.parenthesize(item, level) for item in args])
 
     def emptyPrinter(self, expr):
-        if isinstance(expr, string_types):
+        if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
             return repr(expr)
@@ -81,6 +85,9 @@ class StrPrinter(Printer):
 
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
+
+    def _print_Xor(self, expr):
+        return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
@@ -146,14 +153,6 @@ class StrPrinter(Printer):
     def _print_ExprCondPair(self, expr):
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
-    def _print_FiniteSet(self, s):
-        s = sorted(s, key=default_sort_key)
-        if len(s) > 10:
-            printset = s[:3] + ['...'] + s[-3:]
-        else:
-            printset = s
-        return '{' + ', '.join(self._print(el) for el in printset) + '}'
-
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
@@ -209,12 +208,11 @@ class StrPrinter(Printer):
         return "%s**(-1)" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     def _print_Lambda(self, obj):
-        args, expr = obj.args
-        if len(args) == 1:
-            return "Lambda(%s, %s)" % (self._print(args.args[0]), self._print(expr))
-        else:
-            arg_string = ", ".join(self._print(arg) for arg in args)
-            return "Lambda((%s), %s)" % (arg_string, self._print(expr))
+        expr = obj.expr
+        sig = obj.signature
+        if len(sig) == 1 and sig[0].is_symbol:
+            sig = sig[0]
+        return "Lambda(%s, %s)" % (self._print(sig), self._print(expr))
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)
@@ -233,14 +231,31 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+
+    def _print_MutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_SparseMatrix(self, expr):
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr))
+
+    def _print_ImmutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_Matrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_DenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_MutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
@@ -332,7 +347,7 @@ class StrPrinter(Printer):
         )
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return "{0}({1}...)".format(
+        return "{0}.({1})".format(
             expr.function,
             self._print(expr.expr),
         )
@@ -360,7 +375,20 @@ class StrPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        if Permutation.print_cyclic:
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
             if not expr.size:
                 return '()'
             # before taking Cycle notation, see if the last element is
@@ -615,6 +643,12 @@ class StrPrinter(Printer):
     def _print_Complexes(self, expr):
         return 'Complexes'
 
+    def _print_EmptySet(self, expr):
+        return 'EmptySet'
+
+    def _print_EmptySequence(self, expr):
+        return 'EmptySequence'
+
     def _print_int(self, expr):
         return str(expr)
 
@@ -659,7 +693,9 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
@@ -728,10 +764,6 @@ class StrPrinter(Printer):
         if not s:
             return "frozenset()"
         return "frozenset(%s)" % self._print_set(s)
-
-    def _print_SparseMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr))
 
     def _print_Sum(self, expr):
         def _xab_tostr(xab):

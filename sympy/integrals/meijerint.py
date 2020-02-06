@@ -27,13 +27,14 @@ The main references for this are:
 """
 from __future__ import print_function, division
 
+from typing import Dict, Tuple
+
 from sympy.core import oo, S, pi, Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
-from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
@@ -446,11 +447,11 @@ def _split_mul(f, x):
 
 def _mul_args(f):
     """
-    Return a list ``L`` such that Mul(*L) == f.
+    Return a list ``L`` such that ``Mul(*L) == f``.
 
-    If f is not a Mul or Pow, L=[f].
-    If f=g**n for an integer n, L=[g]*n.
-    If f is a Mul, L comes from applying _mul_args to all factors of f.
+    If ``f`` is not a ``Mul`` or ``Pow``, ``L=[f]``.
+    If ``f=g**n`` for an integer ``n``, ``L=[g]*n``.
+    If ``f`` is a ``Mul``, ``L`` comes from applying ``_mul_args`` to all factors of ``f``.
     """
     args = Mul.make_args(f)
     gs = []
@@ -546,7 +547,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-_dummies = {}
+_dummies = {}  # type: Dict[Tuple[str, str], Dummy]
 
 
 def _dummy(name, token, expr, **kwargs):
@@ -729,12 +730,12 @@ def _check_antecedents_1(g, x, helper=False):
     r"""
     Return a condition under which the mellin transform of g exists.
     Any power of x has already been absorbed into the G function,
-    so this is just int_0^\infty g dx.
+    so this is just $\int_0^\infty g\, dx$.
 
     See [L, section 5.6.1]. (Note that s=1.)
 
     If ``helper`` is True, only check if the MT exists at infinity, i.e. if
-    int_1^\infty g dx exists.
+    $\int_1^\infty g\, dx$ exists.
     """
     # NOTE if you update these conditions, please update the documentation as well
     from sympy import Eq, Not, ceiling, Ne, re, unbranched_argument as arg
@@ -843,7 +844,7 @@ def _check_antecedents_1(g, x, helper=False):
 
 def _int0oo_1(g, x):
     r"""
-    Evaluate int_0^\infty g dx using G functions,
+    Evaluate $\int_0^\infty g\, dx$ using G functions,
     assuming the necessary conditions are fulfilled.
 
     >>> from sympy.abc import a, b, c, d, x, y
@@ -2029,8 +2030,9 @@ def _meijerint_definite_4(f, x, only_double=False):
 def meijerint_inversion(f, x, t):
     r"""
     Compute the inverse laplace transform
-    :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
+    $\int_{c+i\infty}^{c-i\infty} f(x) e^{tx}\, dx$,
     for real c larger than the real part of all singularities of f.
+
     Note that ``t`` is always assumed real and positive.
 
     Return None if the integral does not exist or could not be evaluated.
@@ -2043,7 +2045,7 @@ def meijerint_inversion(f, x, t):
     >>> meijerint_inversion(1/x, x, t)
     Heaviside(t)
     """
-    from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
+    from sympy import exp, expand, log, Add, Mul, Heaviside
     f_ = f
     t_ = t
     t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc

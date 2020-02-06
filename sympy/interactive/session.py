@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
-from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -93,6 +92,7 @@ def int_to_Integer(s):
     http://docs.python.org/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
+
     Examples
     ========
 

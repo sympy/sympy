@@ -11,7 +11,7 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol
+from sympy.core import Symbol
 from sympy.core.evalf import N
 from sympy.core.numbers import I, Rational
 from sympy.functions import sqrt

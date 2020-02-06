@@ -16,16 +16,19 @@ class beta(Function):
     .. math::
         \mathrm{B}(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1} \mathrm{d}t.
 
-    Beta function or Euler's first integral is closely associated with gamma function.
-    The Beta function often used in probability theory and mathematical statistics.
-    It satisfies properties like:
+    Explanation
+    ===========
+
+    The Beta function or Euler's first integral is closely associated
+    with the gamma function. The Beta function is often used in probability
+    theory and mathematical statistics. It satisfies properties like:
 
     .. math::
         \mathrm{B}(a,1) = \frac{1}{a} \\
         \mathrm{B}(a,b) = \mathrm{B}(b,a)  \\
         \mathrm{B}(a,b) = \frac{\Gamma(a) \Gamma(b)}{\Gamma(a+b)}
 
-    Therefore for integral values of a and b:
+    Therefore for integral values of $a$ and $b$:
 
     .. math::
         \mathrm{B} = \frac{(a-1)! (b-1)!}{(a+b-1)!}
@@ -43,7 +46,7 @@ class beta(Function):
     >>> conjugate(beta(x, y))
     beta(conjugate(x), conjugate(y))
 
-    Differentiation with respect to both x and y is supported:
+    Differentiation with respect to both $x$ and $y$ is supported:
 
     >>> from sympy import beta
     >>> from sympy import diff
@@ -68,13 +71,13 @@ class beta(Function):
     See Also
     ========
 
-    sympy.functions.special.gamma_functions.gamma: Gamma function.
-    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
-    sympy.functions.special.gamma_functions.lowergamma: Lower incomplete gamma function.
-    sympy.functions.special.gamma_functions.polygamma: Polygamma function.
-    sympy.functions.special.gamma_functions.loggamma: Log Gamma function.
-    sympy.functions.special.gamma_functions.digamma: Digamma function.
-    sympy.functions.special.gamma_functions.trigamma: Trigamma function.
+    gamma: Gamma function.
+    uppergamma: Upper incomplete gamma function.
+    lowergamma: Lower incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
 
     References
     ==========
@@ -82,6 +85,7 @@ class beta(Function):
     .. [1] https://en.wikipedia.org/wiki/Beta_function
     .. [2] http://mathworld.wolfram.com/BetaFunction.html
     .. [3] http://dlmf.nist.gov/5.12
+
     """
     nargs = 2
     unbranched = True
