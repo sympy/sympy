@@ -721,7 +721,7 @@ class Function(Application, Expr):
         nterms = n + 2
         cf = Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
-            nterms = (n + cf - 1) // cf
+            nterms = (n/cf).ceiling()
         for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
