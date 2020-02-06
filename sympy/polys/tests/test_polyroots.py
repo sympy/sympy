@@ -73,6 +73,13 @@ def test_roots_quadratic():
         roots = roots_quadratic(f)
         assert roots == _nsort(roots)
 
+
+def test_issue_7724():
+    eq = Poly(x**4*I + x**2 + I, x)
+    roots_d = roots(eq)
+    assert len(roots_d) == 4
+
+
 def test_issue_8438():
     p = Poly([1, y, -2, -3], x).as_expr()
     roots = roots_cubic(Poly(p, x), x)
