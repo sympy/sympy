@@ -21,19 +21,19 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 _DOTPRODSIMP_MODE = None # True, False or None
 
 def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
-        onfunc=_dotprodsimp, override=None):
+        onfunc=_dotprodsimp, dotprodsimp=None):
     """Support function for controlling intermediate simplification. Returns a
     simplification function according to the global setting of dotprodsimp
     operation.
 
-    ``deffunc``  - Function to be used by default.
-    ``offfunc``  - Function to be used if dotprodsimp has been turned off.
-    ``onfunc``   - Function to be used if dotprodsimp has been turned on.
-    ``override`` - True or False to override global setting, None uses the
-                   global setting (default).
+    ``deffunc``     - Function to be used by default.
+    ``offfunc``     - Function to be used if dotprodsimp has been turned off.
+    ``onfunc``      - Function to be used if dotprodsimp has been turned on.
+    ``dotprodsimp`` - True, False or None. Will be overriden by global
+                      _DOTPRODSIMP_MODE if that is not None.
     """
 
-    mode = _DOTPRODSIMP_MODE if override is None else override
+    mode = dotprodsimp if _DOTPRODSIMP_MODE is None else _DOTPRODSIMP_MODE
 
     if mode is None:
         return deffunc
