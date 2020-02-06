@@ -59,26 +59,17 @@ class SingleODEProblem:
     func = None  # type: AppliedUndef
     sym = None  # type: Symbol
     _order = None
-    exp_eq = None
+    _eq_expanded = None
+    _eq_preprocessed = None
 
     def __init__(self, eq, func, sym, prep=True):
-        self.eq_preprocessed = eq
+        if isinstance(eq, Equality):
+            eq = eq.lhs - eq.rhs
+
+        self.eq = eq
         self.func = func
         self.sym = sym
-
-        if prep:
-            process_eq, process_func = _preprocess(eq, func)
-            self.eq = process_eq
-            if func is None:
-                self.func = process_func
-
-            if isinstance(self.eq, Equality):
-                if self.eq.rhs != 0:
-                    self.eq = self.eq.lhs - self.eq.rhs
-                self.eq = self.eq.lhs
-
-        else:
-            self.eq = eq
+        self.prep = True
 
     @property
     def order(self):
@@ -87,10 +78,25 @@ class SingleODEProblem:
         return self._order
 
     @property
-    def expanded_eq(self):
-        if self.exp_eq is None:
-            self.exp_eq = expand(self.eq)
-        return self.exp_eq
+    def eq_preprocessed(self):
+        if self._eq_preprocessed is None:
+            self._eq_preprocessed = self._get_eq_preprocessed()
+        return self._eq_preprocessed
+
+    @property
+    def eq_expanded(self):
+        if self._eq_expanded is None:
+            self._eq_expanded = expand(self.eq_preprocessed)
+        return self._eq_expanded
+
+    def _get_eq_preprocessed(self):
+        if self.prep:
+            process_eq, process_func = _preprocess(self.eq, self.func)
+            if process_func != self.func:
+                raise ValueError
+        else:
+            process_eq = self.eq
+        return process_eq
 
     # TODO: Add methods that can be used by many ODE solvers:
     # order
@@ -357,7 +363,7 @@ class FirstLinear(SingleODESolver):
     has_integral = True
 
     def _matches(self):
-        eq = self.ode_problem.expanded_eq
+        eq = self.ode_problem.eq_expanded
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
         order = self.ode_problem.order
@@ -480,7 +486,7 @@ class AlmostLinear(FirstLinear):
 
     def _matches(self):
         ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
-        eq = self.ode_problem.expanded_eq
+        eq = self.ode_problem.eq_expanded
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
         order = self.ode_problem.order
@@ -596,7 +602,7 @@ class Bernoulli(SingleODESolver):
     has_integral = True
 
     def _matches(self):
-        eq = self.ode_problem.expanded_eq
+        eq = self.ode_problem.eq_expanded
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
         order = self.ode_problem.order
