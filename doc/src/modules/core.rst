@@ -2,6 +2,8 @@
 Core
 ====
 
+.. module:: sympy
+
 sympify
 -------
 .. module:: sympy.core.sympify

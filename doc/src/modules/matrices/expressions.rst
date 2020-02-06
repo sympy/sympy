@@ -1,71 +1,54 @@
-Matrix Expressions
-==================
+Matrix Expressions References
+=============================
 
-.. module:: sympy.matrices.expressions
+Matrix Expression Classes
+-------------------------
 
-The Matrix expression module allows users to write down statements like
+.. currentmodule:: sympy.matrices.expressions
 
-    >>> from sympy import MatrixSymbol, Matrix
-    >>> X = MatrixSymbol('X', 3, 3)
-    >>> Y = MatrixSymbol('Y', 3, 3)
-    >>> (X.T*X).I*Y
-    X**(-1)*X.T**(-1)*Y
+.. autosummary::
+    :toctree: _generated/
+    :template: matrix_template.rst
 
-    >>> Matrix(X)
-    Matrix([
-    [X[0, 0], X[0, 1], X[0, 2]],
-    [X[1, 0], X[1, 1], X[1, 2]],
-    [X[2, 0], X[2, 1], X[2, 2]]])
+    MatrixExpr
+    MatrixSymbol
 
-    >>> (X*Y)[1, 2]
-    X[1, 0]*Y[0, 2] + X[1, 1]*Y[1, 2] + X[1, 2]*Y[2, 2]
+    MatrixElement
+    MatrixSlice
 
-where ``X`` and ``Y`` are :class:`MatrixSymbol`'s rather than scalar symbols.
+    Identity
+    ZeroMatrix
+    OneMatrix
 
-Matrix Expressions Core Reference
----------------------------------
-.. autoclass:: MatrixExpr
-   :members:
-.. autoclass:: MatrixSymbol
-   :members:
-.. autoclass:: MatAdd
-   :members:
-.. autoclass:: MatMul
-   :members:
-.. autoclass:: MatPow
-   :members:
-.. autoclass:: HadamardProduct
-   :members:
-.. autoclass:: HadamardPower
-   :members:
-.. autoclass:: Inverse
-   :members:
-.. autoclass:: Transpose
-   :members:
-.. autoclass:: Trace
-   :members:
-.. autoclass:: FunctionMatrix
-   :members:
-.. autoclass:: PermutationMatrix
-   :members:
-.. autoclass:: MatrixPermute
-   :members:
-.. autoclass:: Identity
-   :members:
-.. autoclass:: ZeroMatrix
-   :members:
+    MatAdd
+    MatMul
+    MatPow
+    DotProduct
+    HadamardProduct
+    HadamardPower
 
-Block Matrices
---------------
+    Inverse
+    Transpose
+    Adjoint
 
-Block matrices allow you to construct larger matrices out of smaller
-sub-blocks. They can work with :class:`MatrixExpr` or
-:obj:`~.ImmutableMatrix` objects.
+    Trace
+    Determinant
 
-.. module:: sympy.matrices.expressions.blockmatrix
+    FunctionMatrix
+    ElementwiseApplyFunction
 
-.. autoclass:: BlockMatrix
-   :members:
-.. autoclass:: BlockDiagMatrix
-   :members:
-.. autofunction:: block_collapse
+    PermutationMatrix
+    MatrixPermute
+
+    BlockMatrix
+    BlockDiagMatrix
+
+Matrix Expression Functions
+---------------------------
+
+.. currentmodule:: sympy.matrices.expressions.blockmatrix
+
+.. autosummary::
+    :toctree: _generated/
+
+    block_collapse

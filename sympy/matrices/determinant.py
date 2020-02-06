@@ -319,7 +319,7 @@ def _adjugate(M, method="berkowitz"):
     ========
 
     cofactor_matrix
-    sympy.matrices.common.MatrixCommon.transpose
+    .common.MatrixOperations.transpose
     """
 
     return M.cofactor_matrix(method=method).transpose()

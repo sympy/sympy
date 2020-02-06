@@ -1313,8 +1313,8 @@ class MatrixBase(MatrixDeprecated,
         See Also
         ========
 
-        sympy.matrices.common.MatrixCommon.conjugate: By-element conjugation
-        sympy.matrices.common.MatrixCommon.H: Hermite conjugation
+        .common.MatrixOperations.conjugate: By-element conjugation
+        .common.MatrixOperations.H: Hermite conjugation
         """
         from sympy.physics.matrices import mgamma
         if self.rows != 4:

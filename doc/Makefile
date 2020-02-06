@@ -11,6 +11,7 @@ PAPER        =
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
+RSTSTUBFILES := $(shell find . -name "_generated")
 
 ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
 ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
@@ -43,6 +44,7 @@ clean:
 	-rm -rf _build
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
+	-rm -rf $(RSTSTUBFILES)
 
 html: SPHINXOPTS += -W --keep-going
 html: _build/logo/sympy-notailtext-favicon.ico

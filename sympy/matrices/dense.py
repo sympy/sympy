@@ -992,10 +992,10 @@ def diag(*values, **kwargs):
 
     See Also
     ========
-    .common.MatrixCommon.eye
-    .common.MatrixCommon.diagonal - to extract a diagonal
-    .common.MatrixCommon.diag
-    .expressions.blockmatrix.BlockMatrix
+    .common.MatrixSpecial.eye
+    .common.MatrixSpecial.diag
+    .common.MatrixShaping.diagonal - to extract a diagonal
+    .expressions.BlockMatrix
     """
     # Extract any setting so we don't duplicate keywords sent
     # as named parameters:
@@ -1158,7 +1158,7 @@ def matrix_multiply_elementwise(A, B):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.__mul__
+    HadamardProduct
     """
     return A.multiply_elementwise(B)
 

@@ -1,6 +1,7 @@
-from sympy.matrices.expressions import MatrixExpr
-from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
+from sympy import Dummy, Lambda, Function, FunctionClass
 from sympy.core.sympify import sympify, _sympify
+from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
 class ElementwiseApplyFunction(MatrixExpr):

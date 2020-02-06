@@ -542,7 +542,8 @@ class MatrixShaping(MatrixRequired):
 
         See Also
         ========
-        diag - to create a diagonal matrix
+
+        MatrixSpecial.diag - to create a diagonal matrix
         """
         rv = []
         k = as_int(k)
@@ -827,7 +828,7 @@ class MatrixSpecial(MatrixRequired):
         See Also
         ========
         eye
-        diagonal - to extract a diagonal
+        MatrixShaping.diagonal - to extract a diagonal
         .dense.diag
         .expressions.blockmatrix.BlockMatrix
         .sparsetools.banded - to create multi-diagonal matrices

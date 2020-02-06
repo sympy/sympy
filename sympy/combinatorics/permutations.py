@@ -2258,7 +2258,8 @@ class Permutation(Atom):
         See Also
         ========
 
-        identity, cardinality, length, rank, size
+        .perm_groups.PermutationGroup.identity
+        cardinality, length, rank, size
         """
 
         return reduce(lcm, [len(cycle) for cycle in self.cyclic_form], 1)

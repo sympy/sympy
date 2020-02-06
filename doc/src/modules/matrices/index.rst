@@ -11,10 +11,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   tutorial.rst
    matrices.rst
-   common.rst
-   dense.rst
-   sparse.rst
-   sparsetools.rst
-   immutablematrices.rst
    expressions.rst
