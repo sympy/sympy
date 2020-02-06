@@ -1944,9 +1944,9 @@ class MatrixOperations(MatrixRequired):
             isinstance(perm[0], Iterable):
             if direction == 'forward':
                 perm = list(reversed(perm))
-            perm = Permutation(perm, size=max_index)
+            perm = Permutation(perm, size=max_index+1)
         else:
-            perm = Permutation(perm, size=max_index)
+            perm = Permutation(perm, size=max_index+1)
 
         if orientation == 'rows':
             return self._eval_permute_rows(perm)
