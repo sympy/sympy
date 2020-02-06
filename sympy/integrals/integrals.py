@@ -419,8 +419,13 @@ class Integral(AddWithLimits):
             return S.Zero
 
         # hacks to handle integrals of
-        # summations
+        # nested summations
         if isinstance(self.function, Sum):
+            if any(not (l.is_integer and l.is_finite) for l in self.function.limits[0][1:]):
+                raise ValueError(filldedent('''
+                    The limits of the sum which is
+                    integrated must be integer and
+                    finite.'''))
             if any(v in self.function.limits[0] for v in self.variables):
                 raise ValueError('Limit of the sum cannot be an integration variable.')
             _i = self
