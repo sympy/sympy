@@ -9,7 +9,7 @@ from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
-from sympy.core.expr import unchanged 
+from sympy.core.expr import unchanged
 
 
 def test_rational():
