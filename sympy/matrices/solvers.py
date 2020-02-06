@@ -43,16 +43,8 @@ def _diagonal_solve(M, rhs):
         rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / M[i, i])
 
 
-def _lower_triangular_solve(M, rhs, dotprodsimp=None):
+def _lower_triangular_solve(M, rhs):
     """Solves ``Ax = B``, where A is a lower triangular matrix.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -89,16 +81,8 @@ def _lower_triangular_solve(M, rhs, dotprodsimp=None):
 
     return M._new(X)
 
-def _lower_triangular_solve_sparse(M, rhs, dotprodsimp=None):
+def _lower_triangular_solve_sparse(M, rhs):
     """Solves ``Ax = B``, where A is a lower triangular matrix.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -139,16 +123,8 @@ def _lower_triangular_solve_sparse(M, rhs, dotprodsimp=None):
     return M._new(X)
 
 
-def _upper_triangular_solve(M, rhs, dotprodsimp=None):
+def _upper_triangular_solve(M, rhs):
     """Solves ``Ax = B``, where A is an upper triangular matrix.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -185,16 +161,8 @@ def _upper_triangular_solve(M, rhs, dotprodsimp=None):
 
     return M._new(X)
 
-def _upper_triangular_solve_sparse(M, rhs, dotprodsimp=None):
+def _upper_triangular_solve_sparse(M, rhs):
     """Solves ``Ax = B``, where A is an upper triangular matrix.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -235,19 +203,11 @@ def _upper_triangular_solve_sparse(M, rhs, dotprodsimp=None):
     return M._new(X)
 
 
-def _cholesky_solve(M, rhs, dotprodsimp=None):
+def _cholesky_solve(M, rhs):
     """Solves ``Ax = B`` using Cholesky decomposition,
     for a general square non-singular matrix.
     For a non-square matrix with rows > cols,
     the least squares solution is returned.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -276,33 +236,25 @@ def _cholesky_solve(M, rhs, dotprodsimp=None):
 
     if reform or M.is_positive_definite is False:
         H         = M.H
-        M         = H.multiply(M, dotprodsimp=dotprodsimp)
-        rhs       = H.multiply(rhs, dotprodsimp=dotprodsimp)
+        M         = H.multiply(M)
+        rhs       = H.multiply(rhs)
         hermitian = not M.is_symmetric()
 
-    L = M.cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-    Y = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+    L = M.cholesky(hermitian=hermitian)
+    Y = L.lower_triangular_solve(rhs)
 
     if hermitian:
-        return (L.H).upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
+        return (L.H).upper_triangular_solve(Y)
     else:
-        return (L.T).upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
+        return (L.T).upper_triangular_solve(Y)
 
 
-def _LDLsolve(M, rhs, dotprodsimp=None):
+def _LDLsolve(M, rhs):
     """Solves ``Ax = B`` using LDL decomposition,
     for a general square and non-singular matrix.
 
     For a non-square matrix with rows > cols,
     the least squares solution is returned.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -341,33 +293,25 @@ def _LDLsolve(M, rhs, dotprodsimp=None):
 
     if reform or M.is_positive_definite is False:
         H         = M.H
-        M         = H.multiply(M, dotprodsimp=dotprodsimp)
-        rhs       = H.multiply(rhs, dotprodsimp=dotprodsimp)
+        M         = H.multiply(M)
+        rhs       = H.multiply(rhs)
         hermitian = not M.is_symmetric()
 
-    L, D = M.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-    Y    = L.lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
+    L, D = M.LDLdecomposition(hermitian=hermitian)
+    Y    = L.lower_triangular_solve(rhs)
     Z    = D.diagonal_solve(Y)
 
     if hermitian:
-        return (L.H).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
+        return (L.H).upper_triangular_solve(Z)
     else:
-        return (L.T).upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
+        return (L.T).upper_triangular_solve(Z)
 
 
-def _LUsolve(M, rhs, iszerofunc=_iszero, dotprodsimp=None):
+def _LUsolve(M, rhs, iszerofunc=_iszero):
     """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = M``.
 
     This is for symbolic matrices, for real or complex ones use
     mpmath.lu_solve or mpmath.qr_solve.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -395,7 +339,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero, dotprodsimp=None):
 
     try:
         A, perm = M.LUdecomposition_Simple(
-            iszerofunc=_iszero, rankcheck=True, dotprodsimp=dotprodsimp)
+            iszerofunc=_iszero, rankcheck=True)
     except ValueError:
         raise NotImplementedError("Underdetermined systems not supported.")
 
@@ -429,7 +373,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero, dotprodsimp=None):
     return rhs.__class__(b)
 
 
-def _QRsolve(M, b, dotprodsimp=None):
+def _QRsolve(M, b):
     """Solve the linear system ``Ax = b``.
 
     ``M`` is the matrix ``A``, the method argument is the vector
@@ -444,14 +388,6 @@ def _QRsolve(M, b, dotprodsimp=None):
 
     This is mainly for educational purposes and symbolic matrices, for real
     (or complex) matrices use mpmath.qr_solve.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -468,7 +404,7 @@ def _QRsolve(M, b, dotprodsimp=None):
     """
 
     dps  = _get_intermediate_simp(expand_mul, expand_mul)
-    Q, R = M.QRdecomposition(dotprodsimp=dotprodsimp)
+    Q, R = M.QRdecomposition()
     y    = Q.T * b
 
     # back substitution to solve R*x = y:
@@ -490,7 +426,7 @@ def _QRsolve(M, b, dotprodsimp=None):
     return M._new([row._mat for row in reversed(x)])
 
 
-def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
+def _gauss_jordan_solve(M, B, freevar=False):
     """
     Solves ``Ax = B`` using Gauss Jordan elimination.
 
@@ -512,11 +448,6 @@ def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
         values of free variables. Then the index of the free variables
         in the solutions (column Matrix) will be returned by freevar, if
         the flag `freevar` is set to `True`.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Returns
     =======
@@ -606,7 +537,7 @@ def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
     row, col = aug[:, :-B_cols].shape
 
     # solve by reduced row echelon form
-    A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
+    A, pivots = aug.rref(simplify=True)
     A, v      = A[:, :-B_cols], A[:, -B_cols:]
     pivots    = list(filter(lambda p: p < col, pivots))
     rank      = len(pivots)
@@ -653,7 +584,7 @@ def _gauss_jordan_solve(M, B, freevar=False, dotprodsimp=None):
         return sol, tau
 
 
-def _pinv_solve(M, B, arbitrary_matrix=None, dotprodsimp=None):
+def _pinv_solve(M, B, arbitrary_matrix=None):
     """Solve ``Ax = B`` using the Moore-Penrose pseudoinverse.
 
     There may be zero, one, or infinite solutions.  If one solution
@@ -734,19 +665,18 @@ def _pinv_solve(M, B, arbitrary_matrix=None, dotprodsimp=None):
     from sympy.matrices import eye
 
     A      = M
-    A_pinv = M.pinv(dotprodsimp=dotprodsimp)
+    A_pinv = M.pinv()
 
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
         w                = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
         arbitrary_matrix = M.__class__(cols, rows, w).T
 
-    return A_pinv.multiply(B, dotprodsimp=dotprodsimp) + (eye(A.cols) -
-            A_pinv.multiply(A, dotprodsimp=dotprodsimp)).multiply(
-            arbitrary_matrix, dotprodsimp=dotprodsimp)
+    return A_pinv.multiply(B) + (eye(A.cols) -
+            A_pinv.multiply(A)).multiply(arbitrary_matrix)
 
 
-def _solve(M, rhs, method='GJ', dotprodsimp=None):
+def _solve(M, rhs, method='GJ'):
     """Solves linear equation where the unique solution exists.
 
     Parameters
@@ -776,11 +706,6 @@ def _solve(M, rhs, method='GJ', dotprodsimp=None):
         To use a different method and to compute the solution via the
         inverse, use a method defined in the .inv() docstring.
 
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-
     Returns
     =======
 
@@ -800,7 +725,7 @@ def _solve(M, rhs, method='GJ', dotprodsimp=None):
 
     if method == 'GJ' or method == 'GE':
         try:
-            soln, param = M.gauss_jordan_solve(rhs, dotprodsimp=dotprodsimp)
+            soln, param = M.gauss_jordan_solve(rhs)
 
             if param:
                 raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
@@ -812,18 +737,17 @@ def _solve(M, rhs, method='GJ', dotprodsimp=None):
         return soln
 
     elif method == 'LU':
-        return M.LUsolve(rhs, dotprodsimp=dotprodsimp)
+        return M.LUsolve(rhs)
     elif method == 'CH':
-        return M.cholesky_solve(rhs, dotprodsimp=dotprodsimp)
+        return M.cholesky_solve(rhs)
     elif method == 'QR':
-        return M.QRsolve(rhs, dotprodsimp=dotprodsimp)
+        return M.QRsolve(rhs)
     elif method == 'LDL':
-        return M.LDLsolve(rhs, dotprodsimp=dotprodsimp)
+        return M.LDLsolve(rhs)
     elif method == 'PINV':
-        return M.pinv_solve(rhs, dotprodsimp=dotprodsimp)
+        return M.pinv_solve(rhs)
     else:
-        return M.inv(method=method, dotprodsimp=dotprodsimp) \
-                .multiply(rhs, dotprodsimp=dotprodsimp)
+        return M.inv(method=method).multiply(rhs)
 
 
 def _solve_least_squares(M, rhs, method='CH'):

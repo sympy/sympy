@@ -1,5 +1,7 @@
 from __future__ import division, print_function
 
+import os
+
 from sympy.core.function import expand_mul
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
@@ -18,7 +20,9 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 # everywhere and setting to `True` will turn it on everywhere in matrices where
 # it can be applied.
 
-_DOTPRODSIMP_MODE = None # True, False or None
+# True, False or None
+_DOTPRODSIMP_MODE = False if os.environ.get('SYMPY_DOTPRODSIMP', '').lower() in \
+        ('false', 'off', '0') else None
 
 def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
         onfunc=_dotprodsimp, dotprodsimp=None):

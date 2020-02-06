@@ -6,7 +6,7 @@ from .common import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
 from .utilities import _iszero
 
 
-def _pinv_full_rank(M, dotprodsimp=None):
+def _pinv_full_rank(M):
     """Subroutine for full row or column rank matrices.
 
     For full row rank matrices, inverse of ``A * A.H`` Exists.
@@ -20,14 +20,11 @@ def _pinv_full_rank(M, dotprodsimp=None):
         return M.H
 
     if M.rows >= M.cols:
-        return M.H.multiply(M, dotprodsimp=dotprodsimp) \
-                .inv(dotprodsimp=dotprodsimp) \
-                .multiply(M.H, dotprodsimp=dotprodsimp)
+        return M.H.multiply(M).inv().multiply(M.H)
     else:
-        return M.H.multiply(M.multiply(M.H, dotprodsimp=dotprodsimp)
-                .inv(dotprodsimp=dotprodsimp), dotprodsimp=dotprodsimp)
+        return M.H.multiply(M.multiply(M.H).inv())
 
-def _pinv_rank_decomposition(M, dotprodsimp=None):
+def _pinv_rank_decomposition(M):
     """Subroutine for rank decomposition
 
     With rank decompositions, `A` can be decomposed into two full-
@@ -38,14 +35,14 @@ def _pinv_rank_decomposition(M, dotprodsimp=None):
     if M.is_zero_matrix:
         return M.H
 
-    B, C = M.rank_decomposition(dotprodsimp=dotprodsimp)
+    B, C = M.rank_decomposition()
 
-    Bp = _pinv_full_rank(B, dotprodsimp=dotprodsimp)
-    Cp = _pinv_full_rank(C, dotprodsimp=dotprodsimp)
+    Bp = _pinv_full_rank(B)
+    Cp = _pinv_full_rank(C)
 
-    return Cp.multiply(Bp, dotprodsimp=dotprodsimp)
+    return Cp.multiply(Bp)
 
-def _pinv_diagonalization(M, dotprodsimp=None):
+def _pinv_diagonalization(M):
     """Subroutine using diagonalization
 
     This routine can sometimes fail if SymPy's eigenvalue
@@ -60,29 +57,24 @@ def _pinv_diagonalization(M, dotprodsimp=None):
 
     try:
         if M.rows >= M.cols:
-            P, D   = AH.multiply(A, dotprodsimp=dotprodsimp).diagonalize(
-                        normalize=True, dotprodsimp=dotprodsimp)
+            P, D   = AH.multiply(A).diagonalize(normalize=True)
             D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
 
-            return P.multiply(D_pinv, dotprodsimp=dotprodsimp) \
-                    .multiply(P.H, dotprodsimp=dotprodsimp) \
-                    .multiply(AH, dotprodsimp=dotprodsimp)
+            return P.multiply(D_pinv).multiply(P.H).multiply(AH)
 
         else:
-            P, D   = A.multiply(AH, dotprodsimp=dotprodsimp).diagonalize(
-                        normalize=True, dotprodsimp=dotprodsimp)
+            P, D   = A.multiply(AH).diagonalize(
+                        normalize=True)
             D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
 
-            return AH.multiply(P, dotprodsimp=dotprodsimp) \
-                    .multiply(D_pinv, dotprodsimp=dotprodsimp) \
-                    .multiply(P.H, dotprodsimp=dotprodsimp)
+            return AH.multiply(P).multiply(D_pinv).multiply(P.H)
 
     except MatrixError:
         raise NotImplementedError(
             'pinv for rank-deficient matrices where '
             'diagonalization of A.H*A fails is not supported yet.')
 
-def _pinv(M, method='RD', dotprodsimp=None):
+def _pinv(M, method='RD'):
     """Calculate the Moore-Penrose pseudoinverse of the matrix.
 
     The Moore-Penrose pseudoinverse exists and is unique for any matrix.
@@ -140,9 +132,9 @@ def _pinv(M, method='RD', dotprodsimp=None):
         return M.H
 
     if method == 'RD':
-        return _pinv_rank_decomposition(M, dotprodsimp=dotprodsimp)
+        return _pinv_rank_decomposition(M)
     elif method == 'ED':
-        return _pinv_diagonalization(M, dotprodsimp=dotprodsimp)
+        return _pinv_diagonalization(M)
     else:
         raise ValueError('invalid pinv method %s' % repr(method))
 
@@ -194,18 +186,18 @@ def _inv_mod(M, m):
     return K_inv
 
 
-def _verify_invertible(M, iszerofunc=_iszero, dotprodsimp=None):
+def _verify_invertible(M, iszerofunc=_iszero):
     """Initial check to see if a matrix is invertible. Raises or returns
     determinant for use in _inv_ADJ."""
 
     if not M.is_square:
         raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-    d    = M.det(method='berkowitz', dotprodsimp=dotprodsimp)
+    d    = M.det(method='berkowitz')
     zero = d.equals(0)
 
     if zero is None: # if equals() can't decide, will rref be able to?
-        ok   = M.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
+        ok   = M.rref(simplify=True)[0]
         zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
 
     if zero:
@@ -213,16 +205,8 @@ def _verify_invertible(M, iszerofunc=_iszero, dotprodsimp=None):
 
     return d
 
-def _inv_ADJ(M, iszerofunc=_iszero, dotprodsimp=None):
+def _inv_ADJ(M, iszerofunc=_iszero):
     """Calculates the inverse using the adjugate matrix and a determinant.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -234,20 +218,12 @@ def _inv_ADJ(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    d = _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    d = _verify_invertible(M, iszerofunc=iszerofunc)
 
-    return M.adjugate(dotprodsimp=dotprodsimp) / d
+    return M.adjugate() / d
 
-def _inv_GE(M, iszerofunc=_iszero, dotprodsimp=None):
+def _inv_GE(M, iszerofunc=_iszero):
     """Calculates the inverse using Gaussian elimination.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -265,24 +241,16 @@ def _inv_GE(M, iszerofunc=_iszero, dotprodsimp=None):
         raise NonSquareMatrixError("A Matrix must be square to invert.")
 
     big = Matrix.hstack(M.as_mutable(), Matrix.eye(M.rows))
-    red = big.rref(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)[0]
+    red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
 
     if any(iszerofunc(red[j, j]) for j in range(red.rows)):
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     return M._new(red[:, big.rows:])
 
-def _inv_LU(M, iszerofunc=_iszero, dotprodsimp=None):
+def _inv_LU(M, iszerofunc=_iszero):
     """Calculates the inverse using LU decomposition.
 
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-
     See Also
     ========
 
@@ -293,22 +261,13 @@ def _inv_LU(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    _verify_invertible(M, iszerofunc=iszerofunc)
 
-    return M.LUsolve(M.eye(M.rows), iszerofunc=_iszero,
-            dotprodsimp=dotprodsimp)
+    return M.LUsolve(M.eye(M.rows), iszerofunc=_iszero)
 
-def _inv_CH(M, iszerofunc=_iszero, dotprodsimp=None):
+def _inv_CH(M, iszerofunc=_iszero):
     """Calculates the inverse using cholesky decomposition.
 
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-
     See Also
     ========
 
@@ -319,21 +278,13 @@ def _inv_CH(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    _verify_invertible(M, iszerofunc=iszerofunc)
 
-    return M.cholesky_solve(M.eye(M.rows), dotprodsimp=dotprodsimp)
+    return M.cholesky_solve(M.eye(M.rows))
 
-def _inv_LDL(M, iszerofunc=_iszero, dotprodsimp=None):
+def _inv_LDL(M, iszerofunc=_iszero):
     """Calculates the inverse using LDL decomposition.
 
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
-
     See Also
     ========
 
@@ -344,20 +295,12 @@ def _inv_LDL(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_CH
     """
 
-    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    _verify_invertible(M, iszerofunc=iszerofunc)
 
-    return M.LDLsolve(M.eye(M.rows), dotprodsimp=dotprodsimp)
+    return M.LDLsolve(M.eye(M.rows))
 
-def _inv_QR(M, iszerofunc=_iszero, dotprodsimp=None):
+def _inv_QR(M, iszerofunc=_iszero):
     """Calculates the inverse using QR decomposition.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     See Also
     ========
@@ -369,12 +312,11 @@ def _inv_QR(M, iszerofunc=_iszero, dotprodsimp=None):
     inverse_LDL
     """
 
-    _verify_invertible(M, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    _verify_invertible(M, iszerofunc=iszerofunc)
 
-    return M.QRsolve(M.eye(M.rows), dotprodsimp=dotprodsimp)
+    return M.QRsolve(M.eye(M.rows))
 
-def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False,
-        dotprodsimp=None):
+def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
     """
     Return the inverse of a matrix using the method indicated. Default for
     dense matrices is is Gauss elimination, default for sparse matrices is LDL.
@@ -391,11 +333,6 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False,
         If True then will try to form block diagonal matrices using the
         method get_diag_blocks(), invert these individually, and then
         reconstruct the full inverse matrix.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -475,23 +412,22 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False,
         r      = []
 
         for block in blocks:
-            r.append(block.inv(method=method, iszerofunc=iszerofunc,
-                    dotprodsimp=dotprodsimp))
+            r.append(block.inv(method=method, iszerofunc=iszerofunc))
 
         return diag(*r)
 
     if method == "GE":
-        rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        rv = M.inverse_GE(iszerofunc=iszerofunc)
     elif method == "LU":
-        rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        rv = M.inverse_LU(iszerofunc=iszerofunc)
     elif method == "ADJ":
-        rv = M.inverse_ADJ(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        rv = M.inverse_ADJ(iszerofunc=iszerofunc)
     elif method == "CH":
-        rv = M.inverse_CH(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        rv = M.inverse_CH(iszerofunc=iszerofunc)
     elif method == "LDL":
-        rv = M.inverse_LDL(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        rv = M.inverse_LDL(iszerofunc=iszerofunc)
     elif method == "QR":
-        rv = M.inverse_QR(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        rv = M.inverse_QR(iszerofunc=iszerofunc)
     else:
         raise ValueError("Inversion method unrecognized")
 

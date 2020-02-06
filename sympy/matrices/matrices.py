@@ -93,39 +93,35 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""
 
-    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul,
-            dotprodsimp=None):
-        return _det_bareiss(self, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
+        return _det_bareiss(self, iszerofunc=iszerofunc)
 
-    def _eval_det_berkowitz(self, dotprodsimp=None):
-        return _det_berkowitz(self, dotprodsimp=dotprodsimp)
+    def _eval_det_berkowitz(self):
+        return _det_berkowitz(self)
 
-    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
-        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                dotprodsimp=dotprodsimp)
+    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
+        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
     def _eval_determinant(self): # for expressions.determinant.Determinant
         return _det(self)
 
-    def adjugate(self, method="berkowitz", dotprodsimp=None):
-        return _adjugate(self, method=method, dotprodsimp=dotprodsimp)
+    def adjugate(self, method="berkowitz"):
+        return _adjugate(self, method=method)
 
-    def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
-        return _charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+    def charpoly(self, x='lambda', simplify=_simplify):
+        return _charpoly(self, x=x, simplify=simplify)
 
-    def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
-        return _cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+    def cofactor(self, i, j, method="berkowitz"):
+        return _cofactor(self, i, j, method=method)
 
-    def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
-        return _cofactor_matrix(self, method=method, dotprodsimp=dotprodsimp)
+    def cofactor_matrix(self, method="berkowitz"):
+        return _cofactor_matrix(self, method=method)
 
-    def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
-        return _det(self, method=method, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def det(self, method="bareiss", iszerofunc=None):
+        return _det(self, method=method, iszerofunc=iszerofunc)
 
-    def minor(self, i, j, method="berkowitz", dotprodsimp=None):
-        return _minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+    def minor(self, i, j, method="berkowitz"):
+        return _minor(self, i, j, method=method)
 
     def minor_submatrix(self, i, j):
         return _minor_submatrix(self, i, j)
@@ -149,23 +145,21 @@ class MatrixReductions(MatrixDeterminant):
     """Provides basic matrix row/column operations. Should not be instantiated
     directly. See ``reductions.py`` for some of their implementations."""
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
-            dotprodsimp=None):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
-                with_pivots=with_pivots, dotprodsimp=dotprodsimp)
+                with_pivots=with_pivots)
 
     @property
     def is_echelon(self):
         return _is_echelon(self)
 
-    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
-        return _rank(self, iszerofunc=iszerofunc, simplify=simplify,
-                dotprodsimp=dotprodsimp)
+    def rank(self, iszerofunc=_iszero, simplify=False):
+        return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True, dotprodsimp=None):
+            normalize_last=True):
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
-            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+            pivots=pivots, normalize_last=normalize_last)
 
     echelon_form.__doc__ = _echelon_form.__doc__
     is_echelon.__doc__   = _is_echelon.__doc__
@@ -339,15 +333,14 @@ class MatrixSubspaces(MatrixReductions):
     Should not be instantiated directly. See ``subspaces.py`` for their
     implementations."""
 
-    def columnspace(self, simplify=False, dotprodsimp=None):
-        return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+    def columnspace(self, simplify=False):
+        return _columnspace(self, simplify=simplify)
 
-    def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
-        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
+        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc)
 
-    def rowspace(self, simplify=False, dotprodsimp=None):
-        return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+    def rowspace(self, simplify=False):
+        return _rowspace(self, simplify=simplify)
 
     # This is a classmethod but is converted to such later in order to allow
     # assignment of __doc__ since that does not work for already wrapped
@@ -368,27 +361,22 @@ class MatrixEigen(MatrixSubspaces):
     Should not be instantiated directly. See ``eigen.py`` for their
     implementations."""
 
-    def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
-        return _eval_is_positive_definite(self, method=method,
-                dotprodsimp=dotprodsimp)
+    def _eval_is_positive_definite(self, method="eigen"):
+        return _eval_is_positive_definite(self, method=method)
 
-    def eigenvals(self, error_when_incomplete=True, dotprodsimp=None, **flags):
-        return _eigenvals(self, error_when_incomplete=error_when_incomplete,
-                dotprodsimp=dotprodsimp, **flags)
+    def eigenvals(self, error_when_incomplete=True, **flags):
+        return _eigenvals(self, error_when_incomplete=error_when_incomplete, **flags)
 
-    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero,
-            dotprodsimp=None, **flags):
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
         return _eigenvects(self, error_when_incomplete=error_when_incomplete,
-                iszerofunc=iszerofunc, dotprodsimp=dotprodsimp, **flags)
+                iszerofunc=iszerofunc, **flags)
 
-    def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
-        return _is_diagonalizable(self, reals_only=reals_only,
-                dotprodsimp=dotprodsimp, **kwargs)
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        return _is_diagonalizable(self, reals_only=reals_only, **kwargs)
 
-    def diagonalize(self, reals_only=False, sort=False, normalize=False,
-            dotprodsimp=None):
+    def diagonalize(self, reals_only=False, sort=False, normalize=False):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
-                normalize=normalize, dotprodsimp=dotprodsimp)
+                normalize=normalize)
 
     @property
     def is_positive_definite(self):
@@ -410,15 +398,14 @@ class MatrixEigen(MatrixSubspaces):
     def is_indefinite(self):
         return _is_indefinite(self)
 
-    def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
-        return _jordan_form(self, calc_transform=calc_transform,
-                dotprodsimp=dotprodsimp, **kwargs)
+    def jordan_form(self, calc_transform=True, **kwargs):
+        return _jordan_form(self, calc_transform=calc_transform, **kwargs)
 
     def left_eigenvects(self, **flags):
         return _left_eigenvects(self, **flags)
 
-    def singular_values(self, dotprodsimp=None):
-        return _singular_values(self, dotprodsimp=dotprodsimp)
+    def singular_values(self):
+        return _singular_values(self)
 
     _eval_is_positive_definite.__doc__ = _eval_is_positive_definite.__doc__
     eigenvals.__doc__                  = _eigenvals.__doc__
@@ -814,7 +801,7 @@ class MatrixBase(MatrixDeprecated,
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def _matrix_pow_by_jordan_blocks(self, num, dotprodsimp=None):
+    def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
@@ -839,14 +826,14 @@ class MatrixBase(MatrixDeprecated,
                 for j in range(1, N-i):
                     jc[j,i+j] = jc [j-1,i+j-1]
 
-        P, J = self.jordan_form(dotprodsimp=dotprodsimp)
+        P, J = self.jordan_form()
         jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp)
-                .multiply(P.inv(dotprodsimp=dotprodsimp), dotprodsimp=dotprodsimp))
+        return self._new(P.multiply(diag(*jordan_cells))
+                .multiply(P.inv()))
 
     def __repr__(self):
         return sstr(self)
@@ -1205,18 +1192,10 @@ class MatrixBase(MatrixDeprecated,
         """Return self + b """
         return self + b
 
-    def condition_number(self, dotprodsimp=None):
+    def condition_number(self):
         """Returns the condition number of a matrix.
 
         This is the maximum singular value divided by the minimum singular value
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         Examples
         ========
@@ -1234,7 +1213,7 @@ class MatrixBase(MatrixDeprecated,
 
         if not self:
             return self.zero
-        singularvalues = self.singular_values(dotprodsimp=dotprodsimp)
+        singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
     def copy(self):
@@ -1512,7 +1491,7 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def exp(self, dotprodsimp=None):
+    def exp(self):
         """Return the exponential of a square matrix
 
         Examples
@@ -1526,14 +1505,6 @@ class MatrixBase(MatrixDeprecated,
         Matrix([
         [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
         [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
@@ -1677,19 +1648,11 @@ class MatrixBase(MatrixDeprecated,
 
         return ret
 
-    def is_nilpotent(self, dotprodsimp=None):
+    def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
 
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         Examples
         ========
@@ -1709,7 +1672,7 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = _uniquely_named_symbol('x', self)
-        p = self.charpoly(x, dotprodsimp=dotprodsimp)
+        p = self.charpoly(x)
         if p.args[0] == x ** self.rows:
             return True
         return False
@@ -2089,97 +2052,92 @@ class MatrixBase(MatrixDeprecated,
                     count += 1
         return v
 
-    def rank_decomposition(self, iszerofunc=_iszero, simplify=False,
-            dotprodsimp=None):
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         return _rank_decomposition(self, iszerofunc=iszerofunc,
-                simplify=simplify, dotprodsimp=dotprodsimp)
+                simplify=simplify)
 
-    def cholesky(self, hermitian=True, dotprodsimp=None):
+    def cholesky(self, hermitian=True):
         raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
 
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
+    def LDLdecomposition(self, hermitian=True):
         raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
 
     def LUdecomposition(self, iszerofunc=_iszero, simpfunc=None,
-            rankcheck=False, dotprodsimp=None):
+            rankcheck=False):
         return _LUdecomposition(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                rankcheck=rankcheck, dotprodsimp=dotprodsimp)
+                rankcheck=rankcheck)
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero, simpfunc=None,
-            rankcheck=False, dotprodsimp=None):
+            rankcheck=False):
         return _LUdecomposition_Simple(self, iszerofunc=iszerofunc,
-                simpfunc=simpfunc, rankcheck=rankcheck, dotprodsimp=dotprodsimp)
+                simpfunc=simpfunc, rankcheck=rankcheck)
 
     def LUdecompositionFF(self):
         return _LUdecompositionFF(self)
 
-    def QRdecomposition(self, dotprodsimp=None):
-        return _QRdecomposition(self, dotprodsimp=dotprodsimp)
+    def QRdecomposition(self):
+        return _QRdecomposition(self)
 
     def diagonal_solve(self, rhs):
         return _diagonal_solve(self, rhs)
 
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
+    def lower_triangular_solve(self, rhs):
         raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
+    def upper_triangular_solve(self, rhs):
         raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
 
-    def cholesky_solve(self, rhs, dotprodsimp=None):
-        return _cholesky_solve(self, rhs, dotprodsimp=dotprodsimp)
+    def cholesky_solve(self, rhs):
+        return _cholesky_solve(self, rhs)
 
-    def LDLsolve(self, rhs, dotprodsimp=None):
-        return _LDLsolve(self, rhs, dotprodsimp=dotprodsimp)
+    def LDLsolve(self, rhs):
+        return _LDLsolve(self, rhs)
 
-    def LUsolve(self, rhs, iszerofunc=_iszero, dotprodsimp=None):
-        return _LUsolve(self, rhs, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def LUsolve(self, rhs, iszerofunc=_iszero):
+        return _LUsolve(self, rhs, iszerofunc=iszerofunc)
 
-    def QRsolve(self, b, dotprodsimp=None):
-        return _QRsolve(self, b, dotprodsimp=dotprodsimp)
+    def QRsolve(self, b):
+        return _QRsolve(self, b)
 
-    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
-        return _gauss_jordan_solve(self, B, freevar=freevar,
-                dotprodsimp=dotprodsimp)
+    def gauss_jordan_solve(self, B, freevar=False):
+        return _gauss_jordan_solve(self, B, freevar=freevar)
 
-    def pinv_solve(self, B, arbitrary_matrix=None, dotprodsimp=None):
-        return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix,
-                dotprodsimp=dotprodsimp)
+    def pinv_solve(self, B, arbitrary_matrix=None):
+        return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
-    def solve(self, rhs, method='GJ', dotprodsimp=None):
-        return _solve(self, rhs, method=method, dotprodsimp=dotprodsimp)
+    def solve(self, rhs, method='GJ'):
+        return _solve(self, rhs, method=method)
 
     def solve_least_squares(self, rhs, method='CH'):
         return _solve_least_squares(self, rhs, method=method)
 
-    def pinv(self, method='RD', dotprodsimp=None):
-        return _pinv(self, method=method, dotprodsimp=dotprodsimp)
+    def pinv(self, method='RD'):
+        return _pinv(self, method=method)
 
     def inv_mod(self, m):
         return _inv_mod(self, m)
 
-    def inverse_ADJ(self, iszerofunc=_iszero, dotprodsimp=None):
-        return _inv_ADJ(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    def inverse_ADJ(self, iszerofunc=_iszero):
+        return _inv_ADJ(self, iszerofunc=iszerofunc)
 
-    def inverse_GE(self, iszerofunc=_iszero, dotprodsimp=None):
-        return _inv_GE(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    def inverse_GE(self, iszerofunc=_iszero):
+        return _inv_GE(self, iszerofunc=iszerofunc)
 
-    def inverse_LU(self, iszerofunc=_iszero, dotprodsimp=None):
-        return _inv_LU(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    def inverse_LU(self, iszerofunc=_iszero):
+        return _inv_LU(self, iszerofunc=iszerofunc)
 
-    def inverse_CH(self, iszerofunc=_iszero, dotprodsimp=None):
-        return _inv_CH(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    def inverse_CH(self, iszerofunc=_iszero):
+        return _inv_CH(self, iszerofunc=iszerofunc)
 
-    def inverse_LDL(self, iszerofunc=_iszero, dotprodsimp=None):
-        return _inv_LDL(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    def inverse_LDL(self, iszerofunc=_iszero):
+        return _inv_LDL(self, iszerofunc=iszerofunc)
 
-    def inverse_QR(self, iszerofunc=_iszero, dotprodsimp=None):
-        return _inv_QR(self, iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+    def inverse_QR(self, iszerofunc=_iszero):
+        return _inv_QR(self, iszerofunc=iszerofunc)
 
-    def inv(self, method=None, iszerofunc=_iszero, try_block_diag=False,
-            dotprodsimp=None):
+    def inv(self, method=None, iszerofunc=_iszero, try_block_diag=False):
         return _inv(self, method=method, iszerofunc=iszerofunc,
-                try_block_diag=try_block_diag, dotprodsimp=dotprodsimp)
+                try_block_diag=try_block_diag)
 
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__

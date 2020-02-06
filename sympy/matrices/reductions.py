@@ -10,8 +10,7 @@ from .determinant import _find_reasonable_pivot
 
 
 def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
-                normalize_last=True, normalize=True, zero_above=True,
-                dotprodsimp=None):
+                normalize_last=True, normalize=True, zero_above=True):
     """Row reduce a flat list representation of a matrix and return a tuple
     (rref_matrix, pivot_cols, swaps) where ``rref_matrix`` is a flat list,
     ``pivot_cols`` are the pivot columns and ``swaps`` are any row swaps that
@@ -45,11 +44,6 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
 
     zero_above : whether entries above the pivot should be zeroed.
         If ``zero_above=False``, an echelon matrix will be returned.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
     """
 
     def get_col(i):
@@ -130,11 +124,11 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _row_reduce(M, iszerofunc, simpfunc, normalize_last=True,
-                normalize=True, zero_above=True, dotprodsimp=None):
+                normalize=True, zero_above=True):
 
     mat, pivot_cols, swaps = _row_reduce_list(list(M), M.rows, M.cols, M.one,
             iszerofunc, simpfunc, normalize_last=normalize_last,
-            normalize=normalize, zero_above=zero_above, dotprodsimp=dotprodsimp)
+            normalize=normalize, zero_above=zero_above)
 
     return M._new(M.rows, M.cols, mat), pivot_cols, swaps
 
@@ -155,19 +149,10 @@ def _is_echelon(M, iszerofunc=_iszero):
     return zeros_below and _is_echelon(M[1:, 1:], iszerofunc)
 
 
-def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
-        dotprodsimp=None):
+def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False):
     """Returns a matrix row-equivalent to ``M`` that is in echelon form. Note
     that echelon form of a matrix is *not* unique, however, properties like the
     row space and the null space are preserved.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -183,8 +168,7 @@ def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
 
     mat, pivots, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last=True, normalize=False, zero_above=False,
-            dotprodsimp=dotprodsimp)
+            normalize_last=True, normalize=False, zero_above=False)
 
     if with_pivots:
         return mat, pivots
@@ -193,7 +177,7 @@ def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False,
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
+def _rank(M, iszerofunc=_iszero, simplify=False):
     """Returns the rank of a matrix.
 
     Examples
@@ -249,7 +233,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
         if not False in zeros and not None in zeros:
             return 0
 
-        d = M.det(dotprodsimp=dotprodsimp)
+        d = M.det()
 
         if iszerofunc(d) and False in zeros:
             return 1
@@ -258,13 +242,13 @@ def _rank(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
 
     mat, _       = _permute_complexity_right(M, iszerofunc=iszerofunc)
     _, pivots, _ = _row_reduce(mat, iszerofunc, simpfunc, normalize_last=True,
-            normalize=False, zero_above=False, dotprodsimp=dotprodsimp)
+            normalize=False, zero_above=False)
 
     return len(pivots)
 
 
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
-        normalize_last=True, dotprodsimp=None):
+        normalize_last=True):
     """Return reduced row-echelon form of matrix and indices of pivot vars.
 
     Parameters
@@ -290,11 +274,6 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         If ``False``, the naive row reduction procedure is used where
         each pivot is normalized to be `1` before row operations are
         used to zero above and below the pivot.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -326,8 +305,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
 
     mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last, normalize=True, zero_above=True,
-            dotprodsimp=dotprodsimp)
+            normalize_last, normalize=True, zero_above=True)
 
     if pivots:
         mat = (mat, pivot_cols)

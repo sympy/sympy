@@ -2377,16 +2377,11 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
-    def pow(self, exp, dotprodsimp=None, jordan=None):
+    def pow(self, exp, jordan=None):
         """Return self**exp a scalar or symbol.
 
         Parameters
         ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         jordan : bool, optional
             If left as None then Jordan form exponentiation will be used under
@@ -2422,7 +2417,7 @@ class MatrixArithmetic(MatrixRequired):
             elif jordan_pow is not None and (jordan or \
                     (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
-                    return jordan_pow(exp, dotprodsimp=dotprodsimp)
+                    return jordan_pow(exp)
                 except MatrixError:
                     if jordan:
                         raise
@@ -2434,7 +2429,7 @@ class MatrixArithmetic(MatrixRequired):
 
         if jordan_pow:
             try:
-                return jordan_pow(exp, dotprodsimp=dotprodsimp)
+                return jordan_pow(exp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
