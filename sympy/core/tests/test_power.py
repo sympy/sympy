@@ -9,6 +9,7 @@ from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
+from sympy.core.expr import unchanged
 
 
 def test_rational():
@@ -512,3 +513,8 @@ def test_issue_18190():
 def test_issue_14815():
     x = Symbol('x')
     assert sqrt(x).is_negative is False
+
+
+def test_issue_18509():
+    assert unchanged(Mul, oo, 1/pi**oo)
+    assert (1/pi**oo).is_extended_positive == False

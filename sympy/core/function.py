@@ -692,6 +692,9 @@ class Function(Application, Expr):
             if e == e1:
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
+                if len(e.args) == 1:
+                    # issue 14411
+                    e = e.func(e.args[0].cancel())
                 term = e.subs(x, S.Zero)
                 if term.is_finite is False or term is S.NaN:
                     raise PoleError("Cannot expand %s around 0" % (self))
@@ -721,7 +724,7 @@ class Function(Application, Expr):
         nterms = n + 2
         cf = Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
-            nterms = int(nterms / cf)
+            nterms = (n/cf).ceiling()
         for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
