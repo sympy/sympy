@@ -76,8 +76,11 @@ def test_roots_quadratic():
 
 def test_issue_7724():
     eq = Poly(x**4*I + x**2 + I, x)
-    roots_d = roots(eq)
-    assert len(roots_d) == 4
+    assert roots(eq) == {
+        sqrt(I/2 + sqrt(5)*I/2): 1,
+        sqrt(-sqrt(5)*I/2 + I/2): 1,
+        -sqrt(I/2 + sqrt(5)*I/2): 1,
+        -sqrt(-sqrt(5)*I/2 + I/2): 1}
 
 
 def test_issue_8438():
