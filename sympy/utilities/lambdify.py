@@ -218,6 +218,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         Variables can be symbols, undefined functions, or matrix symbols.
 
+        >>> from sympy import Eq
         >>> from sympy.abc import x, y, z
 
         The list of variables should match the structure of how the
