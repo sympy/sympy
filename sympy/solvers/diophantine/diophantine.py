@@ -112,14 +112,14 @@ class DiophantineSolutionSet(set):
             self.parameters = parameters
 
     def _pad_solution(self, solution):
-        assert len(solution) <= len(self.parameters)
-
         result = list(solution)
         while len(result) < len(self.parameters):
             result.append(self.parameters[len(result)])
         return tuple(result)
 
     def add_solution(self, *solution):
+        if len(solution) > len(self.parameters):
+            raise ValueError("Solution has too many values")
         self.add(self._pad_solution(solution))
 
     def update(self, *s):
@@ -132,7 +132,8 @@ class DiophantineSolutionSet(set):
             yield dict(zip(self.symbols, solution))
 
     def substitute_parameters(self, *values):
-        assert len(values) <= len(self.parameters)
+        if len(values) > len(self.parameters):
+            raise ValueError("Substitution has too many values")
 
         result = DiophantineSolutionSet(self.symbols, self.parameters)
         subs_dict = dict(zip(self.parameters, values))
