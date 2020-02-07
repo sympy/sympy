@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
+from sympy.core.containers import Tuple
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
@@ -75,12 +76,12 @@ class DiophantineSolutionSet(set):
         >>> s1 = DiophantineSolutionSet([x, y], [t, u])
         >>> s1
         set()
-        >>> s1.add_solution(2, 3)
-        >>> s1.add_solution(-1, u)
+        >>> s1.add(2, 3)
+        >>> s1.add(-1, u)
         >>> s1
         {(-1, u), (2, 3)}
         >>> s2 = DiophantineSolutionSet([x, y], [t, u])
-        >>> s2.add_solution(3, 4)
+        >>> s2.add(3, 4)
         >>> s1.update(s2)
         >>> s1
         {(-1, u), (2, 3), (3, 4)}
@@ -93,7 +94,7 @@ class DiophantineSolutionSet(set):
     Substituting values:
 
         >>> s3 = DiophantineSolutionSet([x, y], [t, u])
-        >>> s3.add_solution(t**2, t + u)
+        >>> s3.add(t**2, t + u)
         >>> s3
         {(t**2, t + u)}
         >>> s3.substitute_parameters(2, 3)
@@ -111,18 +112,13 @@ class DiophantineSolutionSet(set):
         else:
             self.parameters = parameters
 
-    def add_solution(self, *solution):
+    def add(self, *solution):
         if len(solution) != len(self.symbols):
             raise ValueError("Solution is of incorrect length")
-        self.add(solution)
-
-    def update(self, *s):
-        for sol_group in s:
-            for sol in sol_group:
-                self.add_solution(*sol)
+        super(DiophantineSolutionSet, self).add(Tuple(*solution))
 
     def dict_iterator(self):
-        for solution in sorted(self):
+        for solution in sorted(self, key=lambda s: tuple(s)):
             yield dict(zip(self.symbols, solution))
 
     def substitute_parameters(self, *values):
@@ -132,7 +128,7 @@ class DiophantineSolutionSet(set):
         result = DiophantineSolutionSet(self.symbols, self.parameters)
         subs_dict = dict(zip(self.parameters, values))
         for solution in self:
-            result.add_solution(*[s.subs(subs_dict) for s in solution])
+            result.add(*solution.subs(subs_dict))
         return result
 
 
@@ -757,7 +753,7 @@ def _diop_linear(var, coeff, param):
     if len(var) == 1:
         q, r = divmod(c, coeff[var[0]])
         if not r:
-            result.add_solution(q)
+            result.add(q)
             return result
         else:
             return result
@@ -907,7 +903,7 @@ def _diop_linear(var, coeff, param):
         # just keep the additive constant (i.e. replace t with 0)
         solutions = [i.as_coeff_Add()[0] for i in solutions]
 
-    result.update([solutions])
+    result.add(*solutions)
     return result
 
 
@@ -1084,10 +1080,10 @@ def _diop_quadratic(var, coeff, t):
         if D*E - B*F == 0:
             q, r = divmod(E, B)
             if not r:
-                result.add_solution(-q, t)
+                result.add(-q, t)
             q, r = divmod(D, B)
             if not r:
-                result.add_solution(t, -q)
+                result.add(t, -q)
         else:
             div = divisors(D*E - B*F)
             div = div + [-term for term in div]
@@ -1098,7 +1094,7 @@ def _diop_quadratic(var, coeff, t):
                     if not r:
                         y0, r = divmod(q - D, B)
                         if not r:
-                            result.add_solution(x0, y0)
+                            result.add(x0, y0)
 
     # (2) Parabolic case: B**2 - 4*A*C = 0
     # There are two subcases to be considered in this case.
@@ -1110,7 +1106,7 @@ def _diop_quadratic(var, coeff, t):
         if A == 0:
             s = _diop_quadratic([y, x], coeff, t)
             for soln in s:
-                result.add_solution(soln[1], soln[0])
+                result.add(soln[1], soln[0])
 
         else:
             g = sign(A)*igcd(A, C)
@@ -1127,7 +1123,7 @@ def _diop_quadratic(var, coeff, t):
                 roots = solveset_real(eq, z).intersect(S.Integers)
                 for root in roots:
                     ans = diop_solve(sqa*x + e*sqc*y - root)
-                    result.add_solution(ans[0], ans[1])
+                    result.add(ans[0], ans[1])
 
             elif _is_int(c):
                 solve_x = lambda u: -e*sqc*g*_c*t**2 - (E + 2*e*sqc*g*u)*t\
@@ -1140,7 +1136,7 @@ def _diop_quadratic(var, coeff, t):
                     # Check if the coefficients of y and x obtained are integers or not
                     if (divisible(sqa*g*z0**2 + D*z0 + sqa*F, _c) and
                             divisible(e*sqc*g*z0**2 + E*z0 + e*sqc*F, _c)):
-                        result.add_solution(solve_x(z0), solve_y(z0))
+                        result.add(solve_x(z0), solve_y(z0))
 
     # (3) Method used when B**2 - 4*A*C is a square, is described in p. 6 of the below paper
     # by John P. Robertson.
@@ -1164,15 +1160,15 @@ def _diop_quadratic(var, coeff, t):
                 if isinstance(s0, Symbol) or isinstance(t0, Symbol):
                     if check_param(x_0, y_0, 4*A*r, t) != (None, None):
                         ans = check_param(x_0, y_0, 4*A*r, t)
-                        result.add_solution(ans[0], ans[1])
+                        result.add(ans[0], ans[1])
                 elif x_0.is_Integer and y_0.is_Integer:
                     if is_solution_quad(var, coeff, x_0, y_0):
-                        result.add_solution(x_0, y_0)
+                        result.add(x_0, y_0)
 
         else:
             s = _diop_quadratic(var[::-1], coeff, t)  # Interchange x and y
             while s:
-                result.add_solution(*s.pop()[::-1]) # and solution <--------+
+                result.add(*s.pop()[::-1]) # and solution <--------+
 
 
     # (4) B**2 - 4*A*C > 0 and B**2 - 4*A*C not a square or B**2 - 4*A*C < 0
@@ -1189,7 +1185,7 @@ def _diop_quadratic(var, coeff, t):
                     for y in [-y0, y0]:
                         s = P*Matrix([x, y]) + Q
                         try:
-                            result.add_solution(*[as_int(_) for _ in s])
+                            result.add(*[as_int(_) for _ in s])
                         except ValueError:
                             pass
         else:
@@ -1210,7 +1206,7 @@ def _diop_quadratic(var, coeff, t):
                     x_n = _mexpand(S(_a + _b)/2)
                     y_n = _mexpand(S(_a - _b)/(2*sqrt(D)))
                     s = P*Matrix([x_n, y_n]) + Q
-                    result.add_solution(*s)
+                    result.add(*s)
 
             else:
                 L = ilcm(*[_.q for _ in P[:4] + Q[:2]])
@@ -1233,7 +1229,7 @@ def _diop_quadratic(var, coeff, t):
                             Xt = S(_a + _b)/2
                             Yt = S(_a - _b)/(2*sqrt(D))
                             s = P*Matrix([Xt, Yt]) + Q
-                            result.add_solution(*s)
+                            result.add(*s)
 
                         X, Y = X*T + D*U*Y, X*U + Y*T
 
@@ -2139,14 +2135,14 @@ def _diop_ternary_quadratic(_var, coeff):
                     s = r
                     min_sum = m
 
-            result.add_solution(*_remove_gcd(s[0], -coeff[x*z], s[1]))
+            result.add(*_remove_gcd(s[0], -coeff[x*z], s[1]))
             return result
 
         else:
             var[0], var[1] = _var[1], _var[0]
             y_0, x_0, z_0 = unpack_sol(_diop_ternary_quadratic(var, coeff))
             if x_0 is not None:
-                result.add_solution(x_0, y_0, z_0)
+                result.add(x_0, y_0, z_0)
             return result
 
     if coeff[x**2] == 0:
@@ -2214,7 +2210,7 @@ def _diop_ternary_quadratic(_var, coeff):
     if x_0 is None:
         return result
 
-    result.add_solution(*_remove_gcd(x_0, y_0, z_0))
+    result.add(*_remove_gcd(x_0, y_0, z_0))
     return result
 
 
@@ -2523,7 +2519,7 @@ def _diop_ternary_quadratic_normal(var, coeff):
     y_0 = abs(y_0*sq_lcm//sqf_of_b)
     z_0 = abs(z_0*sq_lcm//sqf_of_c)
 
-    result.add_solution(*_remove_gcd(x_0, y_0, z_0))
+    result.add(*_remove_gcd(x_0, y_0, z_0))
     return result
 
 
@@ -2935,7 +2931,7 @@ def _diop_general_pythagorean(var, coeff, t):
         sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2]))
 
     result = DiophantineSolutionSet(var)
-    result.add_solution(*sol)
+    result.add(*sol)
     return result
 
 
@@ -2996,9 +2992,9 @@ def _diop_general_sum_of_squares(var, k, limit=1):
     took = 0
     for t in sum_of_squares(k, n, zeros=True):
         if negs:
-            result.add_solution(*[sign[i]*j for i, j in enumerate(t)])
+            result.add(*[sign[i]*j for i, j in enumerate(t)])
         else:
-            result.add_solution(*t)
+            result.add(*t)
         took += 1
         if took == limit:
             break
@@ -3056,9 +3052,9 @@ def _diop_general_sum_of_even_powers(var, p, n, limit=1):
     took = 0
     for t in power_representation(n, p, k):
         if negs:
-            result.add_solution(*[sign[i]*j for i, j in enumerate(t)])
+            result.add(*[sign[i]*j for i, j in enumerate(t)])
         else:
-            result.add_solution(*t)
+            result.add(*t)
         took += 1
         if took == limit:
             break
