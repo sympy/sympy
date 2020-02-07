@@ -6,18 +6,19 @@ from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+    a2idx, classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
-from sympy.simplify.simplify import simplify as _simplify, dotprodsimp as _dotprodsimp
+from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
+
+from .decompositions import _cholesky, _LDLdecomposition
+from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
 
 def _iszero(x):
@@ -127,36 +128,6 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky(self, hermitian=True, dotprodsimp=None):
-        """Helper function of cholesky.
-        Without the error checks.
-        To be used privately.
-        Implements the Cholesky-Banachiewicz algorithm.
-        Returns L such that L*L.H == self if hermitian flag is True,
-        or L*L.T == self if hermitian is False.
-        """
-        dps = _dotprodsimp if dotprodsimp else expand_mul
-        L = zeros(self.rows, self.rows)
-        if hermitian:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / L[j, j])*(self[i, j] -
-                        sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
-                Lii2 = dps(self[i, i] -
-                    sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
-                if Lii2.is_positive is False:
-                    raise NonPositiveDefiniteMatrixError(
-                        "Matrix must be positive-definite")
-                L[i, i] = sqrt(Lii2)
-        else:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / L[j, j])*(self[i, j] -
-                        sum(L[i, k]*L[j, k] for k in range(j))))
-                L[i, i] = sqrt(dps(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i))))
-        return self._new(L)
-
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
@@ -201,69 +172,9 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
-        """Return the matrix inverse using the method indicated (default
-        is Gauss elimination).
-
-        kwargs
-        ======
-
-        method : ('GE', 'LU', or 'ADJ')
-        iszerofunc
-        try_block_diag
-
-        Notes
-        =====
-
-        According to the ``method`` keyword, it calls the appropriate method:
-
-          GE .... inverse_GE(); default
-          LU .... inverse_LU()
-          ADJ ... inverse_ADJ()
-
-        According to the ``try_block_diag`` keyword, it will try to form block
-        diagonal matrices using the method get_diag_blocks(), invert these
-        individually, and then reconstruct the full inverse matrix.
-
-        Note, the GE and LU methods may require the matrix to be simplified
-        before it is inverted in order to properly detect zeros during
-        pivoting. In difficult cases a custom zero detection function can
-        be provided by setting the ``iszerosfunc`` argument to a function that
-        should return True if its argument is zero. The ADJ routine computes
-        the determinant and uses that to detect singular matrices in addition
-        to testing for zeros on the diagonal.
-
-        See Also
-        ========
-
-        inverse_LU
-        inverse_GE
-        inverse_ADJ
-        """
-        from sympy.matrices import diag
-
-        method = kwargs.get('method', 'GE')
-        iszerofunc = kwargs.get('iszerofunc', _iszero)
-        dotprodsimp = kwargs.get('dotprodsimp', None)
-        if kwargs.get('try_block_diag', False):
-            blocks = self.get_diag_blocks()
-            r = []
-            for block in blocks:
-                r.append(block.inv(method=method, iszerofunc=iszerofunc,
-                        dotprodsimp=dotprodsimp))
-            return diag(*r)
-
-        M = self.as_mutable()
-        if method == "GE":
-            rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "LU":
-            rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "ADJ":
-            rv = M.inverse_ADJ(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        else:
-            # make sure to add an invertibility check (as in inverse_LU)
-            # if a new method is added.
-            raise ValueError("Inversion method unrecognized")
-        return self._new(rv)
+        return self.inv(method=kwargs.get('method', 'GE'),
+                        iszerofunc=kwargs.get('iszerofunc', _iszero),
+                        try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
@@ -277,63 +188,6 @@ class DenseMatrix(MatrixBase):
         mat = list(self._mat)
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
-
-    def _LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        """Helper function of LDLdecomposition.
-        Without the error checks.
-        To be used privately.
-        Returns L and D such that L*D*L.H == self if hermitian flag is True,
-        or L*D*L.T == self if hermitian is False.
-        """
-        # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
-        dps = _dotprodsimp if dotprodsimp else expand_mul
-        D = zeros(self.rows, self.rows)
-        L = eye(self.rows)
-        if hermitian:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / D[j, j])*(self[i, j] - sum(
-                        L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j))))
-                D[i, i] = dps(self[i, i] -
-                    sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
-                if D[i, i].is_positive is False:
-                    raise NonPositiveDefiniteMatrixError(
-                        "Matrix must be positive-definite")
-        else:
-            for i in range(self.rows):
-                for j in range(i):
-                    L[i, j] = dps((1 / D[j, j])*(self[i, j] - sum(
-                        L[i, k]*L[j, k]*D[k, k] for k in range(j))))
-                D[i, i] = dps(self[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
-        return self._new(L), self._new(D)
-
-    def _lower_triangular_solve(self, rhs, dotprodsimp=None):
-        """Helper function of function lower_triangular_solve.
-        Without the error checks.
-        To be used privately.
-        """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        X = zeros(self.rows, rhs.cols)
-        for j in range(rhs.cols):
-            for i in range(self.rows):
-                if self[i, i] == 0:
-                    raise TypeError("Matrix must be non-singular.")
-                X[i, j] = dps((rhs[i, j] - sum(self[i, k]*X[k, j]
-                                           for k in range(i))) / self[i, i])
-        return self._new(X)
-
-    def _upper_triangular_solve(self, rhs, dotprodsimp=None):
-        """Helper function of function upper_triangular_solve.
-        Without the error checks, to be used privately. """
-        dps = _dotprodsimp if dotprodsimp else lambda x: x
-        X = zeros(self.rows, rhs.cols)
-        for j in range(rhs.cols):
-            for i in reversed(range(self.rows)):
-                if self[i, i] == 0:
-                    raise ValueError("Matrix must be non-singular.")
-                X[i, j] = dps((rhs[i, j] - sum(self[i, k]*X[k, j]
-                                           for k in range(i + 1, self.rows))) / self[i, i])
-        return self._new(X)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
@@ -404,6 +258,23 @@ class DenseMatrix(MatrixBase):
                 elif ans is not True and rv is True:
                     rv = ans
         return rv
+
+    def cholesky(self, hermitian=True):
+        return _cholesky(self, hermitian=hermitian)
+
+    def LDLdecomposition(self, hermitian=True):
+        return _LDLdecomposition(self, hermitian=hermitian)
+
+    def lower_triangular_solve(self, rhs):
+        return _lower_triangular_solve(self, rhs)
+
+    def upper_triangular_solve(self, rhs):
+        return _upper_triangular_solve(self, rhs)
+
+    cholesky.__doc__               = _cholesky.__doc__
+    LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
+    lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
 
 
 def _force_mutable(x):

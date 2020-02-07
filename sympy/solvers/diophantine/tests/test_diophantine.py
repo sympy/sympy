@@ -37,14 +37,16 @@ def test_input_format():
     raises(TypeError, lambda: diophantine(sin(x)))
     raises(TypeError, lambda: diophantine(x/pi - 3))
 
+
 def test_nosols():
     # diophantine should sympify eq so that these are equivalent
     assert diophantine(3) == set()
     assert diophantine(S(3)) == set()
 
+
 def test_univariate():
-    assert diop_solve((x - 1)*(x - 2)**2) == set([(1,), (2,)])
-    assert diop_solve((x - 1)*(x - 2)) == set([(1,), (2,)])
+    assert diop_solve((x - 1)*(x - 2)**2) == {(1,), (2,)}
+    assert diop_solve((x - 1)*(x - 2)) == {(1,), (2,)}
 
 
 def test_classify_diop():
@@ -103,30 +105,27 @@ def test_linear():
 def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
-        set([(-133, -11), (5, -57)])
+           {(-133, -11), (5, -57)}
     assert diop_solve(6*x*y + 2*x + 3*y + 1) == set([])
-    assert diop_solve(-13*x*y + 2*x - 4*y - 54) == set([(27, 0)])
-    assert diop_solve(-27*x*y - 30*x - 12*y - 54) == set([(-14, -1)])
-    assert diop_solve(2*x*y + 5*x + 56*y + 7) == set([(-161, -3),\
-        (-47,-6), (-35, -12), (-29, -69),\
-        (-27, 64), (-21, 7),(-9, 1),\
-        (105, -2)])
+    assert diop_solve(-13*x*y + 2*x - 4*y - 54) == {(27, 0)}
+    assert diop_solve(-27*x*y - 30*x - 12*y - 54) == {(-14, -1)}
+    assert diop_solve(2*x*y + 5*x + 56*y + 7) == {(-161, -3), (-47, -6), (-35, -12),
+                                                  (-29, -69), (-27, 64), (-21, 7),
+                                                  (-9, 1), (105, -2)}
     assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
-    assert diop_solve(x*y + x + y + 1) == set([(-1, t), (t, -1)])
+    assert diop_solve(x*y + x + y + 1) == {(-1, t), (t, -1)}
     assert diophantine(48*x*y)
 
 
 def test_quadratic_elliptical_case():
     # Elliptical case: B**2 - 4AC < 0
-    # Two test cases highlighted require lot of memory due to quadratic_congruence() method.
-    # This above method should be replaced by Pernici's square_mod() method when his PR gets merged.
 
-    #assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-11, -1)])
+    assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == {(-11, -1)}
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
-    assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-1, -1)])
-    #assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == set([(-15, 6)])
+    assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == {(-1, -1)}
+    assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == {(-15, 6)}
     assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == \
-        set([(-1, -1), (-1, 2), (1, -2), (1, 1)])
+           {(-1, -1), (-1, 2), (1, -2), (1, 1)}
 
 
 def test_quadratic_parabolic_case():
@@ -244,9 +243,9 @@ def test_DN():
     assert equivalent(-3, 1, 393, 109, 13, -4) == True
 
     assert diop_DN(13, 27) == [(220, 61), (40, 11), (768, 213), (12, 3)]
-    assert set(diop_DN(157, 12)) == \
-    set([(13, 1), (10663, 851), (579160, 46222), \
-        (483790960,38610722), (26277068347, 2097138361), (21950079635497, 1751807067011)])
+    assert set(diop_DN(157, 12)) == {(13, 1), (10663, 851), (579160, 46222),
+                                     (483790960, 38610722), (26277068347, 2097138361),
+                                     (21950079635497, 1751807067011)}
     assert diop_DN(13, 25) == [(3245, 900)]
     assert diop_DN(192, 18) == []
     assert diop_DN(23, 13) == [(-6, 1), (6, 1)]
@@ -499,9 +498,9 @@ def test_diophantine():
     # 18196
     eq = x**4 + y**4 - 97
     assert diophantine(eq, permute=True) == diophantine(-eq, permute=True)
-    assert diophantine(3*x*pi - 2*y*pi) == set([(2*t_0, 3*t_0)])
+    assert diophantine(3*x*pi - 2*y*pi) == {(2*t_0, 3*t_0)}
     eq = x**2 + y**2 + z**2 - 14
-    base_sol = set([(1, 2, 3)])
+    base_sol = {(1, 2, 3)}
     assert diophantine(eq) == base_sol
     complete_soln = set(signed_permutations(base_sol.pop()))
     assert diophantine(eq, permute=True) == complete_soln
@@ -512,59 +511,58 @@ def test_diophantine():
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
         (9, 7, 51)
-    assert diophantine(eq) == set([(
+    assert diophantine(eq) == {(
         891*p**2 + 9*q**2, -693*p**2 - 102*p*q + 7*q**2,
-        5049*p**2 - 1386*p*q - 51*q**2)])
+        5049*p**2 - 1386*p*q - 51*q**2)}
     eq = 2*x**2 + 2*y**2 - z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
         (1, 1, 2)
-    assert diophantine(eq) == set([(
+    assert diophantine(eq) == {(
         2*p**2 - q**2, -2*p**2 + 4*p*q - q**2,
-        4*p**2 - 4*p*q + 2*q**2)])
+        4*p**2 - 4*p*q + 2*q**2)}
     eq = 411*x**2+57*y**2-221*z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
         (2021, 2645, 3066)
     assert diophantine(eq) == \
-        set([(115197*p**2 - 446641*q**2, -150765*p**2 + 1355172*p*q -
-        584545*q**2, 174762*p**2 - 301530*p*q + 677586*q**2)])
+           {(115197*p**2 - 446641*q**2, -150765*p**2 + 1355172*p*q -
+             584545*q**2, 174762*p**2 - 301530*p*q + 677586*q**2)}
     eq = 573*x**2+267*y**2-984*z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
         (49, 233, 127)
     assert diophantine(eq) == \
-        set([(4361*p**2 - 16072*q**2, -20737*p**2 + 83312*p*q - 76424*q**2,
-        11303*p**2 - 41474*p*q + 41656*q**2)])
+           {(4361*p**2 - 16072*q**2, -20737*p**2 + 83312*p*q - 76424*q**2,
+             11303*p**2 - 41474*p*q + 41656*q**2)}
     # this produces factors during reconstruction
     eq = x**2 + 3*y**2 - 12*z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
         (0, 2, 1)
     assert diophantine(eq) == \
-        set([(24*p*q, 2*p**2 - 24*q**2, p**2 + 12*q**2)])
+           {(24*p*q, 2*p**2 - 24*q**2, p**2 + 12*q**2)}
     # solvers have not been written for every type
     raises(NotImplementedError, lambda: diophantine(x*y**2 + 1))
 
     # rational expressions
     assert diophantine(1/x) == set()
-    assert diophantine(1/x + 1/y - S.Half)
-    set([(6, 3), (-2, 1), (4, 4), (1, -2), (3, 6)])
+    assert diophantine(1/x + 1/y - S.Half) == {(6, 3), (-2, 1), (4, 4), (1, -2), (3, 6)}
     assert diophantine(x**2 + y**2 +3*x- 5, permute=True) == \
-        set([(-1, 1), (-4, -1), (1, -1), (1, 1), (-4, 1), (-1, -1), (4, 1), (4, -1)])
+           {(-1, 1), (-4, -1), (1, -1), (1, 1), (-4, 1), (-1, -1), (4, 1), (4, -1)}
 
 
     #test issue 18186
     assert diophantine(y**4 + x**4 - 2**4 - 3**4, syms=(x, y), permute=True) == \
-        set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
+           {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
     assert diophantine(y**4 + x**4 - 2**4 - 3**4, syms=(y, x), permute=True) == \
-        set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
+           {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
 
     # issue 18122
     assert check_solutions(x**2-y)
     assert check_solutions(y**2-x)
-    assert diophantine((x**2-y), t) == set([(t, t**2)])
-    assert diophantine((y**2-x), t) == set([(t**2, -t)])
+    assert diophantine((x**2-y), t) == {(t, t**2)}
+    assert diophantine((y**2-x), t) == {(t**2, -t)}
 
 
 
@@ -587,26 +585,23 @@ def test_diop_general_sum_of_squares_quick():
     assert _diop_general_sum_of_squares((x, y, z), -2) == set()
     eq = x**2 + y**2 + z**2 - (1 + 4 + 9)
     assert diop_general_sum_of_squares(eq) == \
-        set([(1, 2, 3)])
+           {(1, 2, 3)}
     eq = u**2 + v**2 + x**2 + y**2 + z**2 - 1313
     assert len(diop_general_sum_of_squares(eq, 3)) == 3
     # issue 11016
     var = symbols(':5') + (symbols('6', negative=True),)
     eq = Add(*[i**2 for i in var]) - 112
 
-    base_soln = set(
-        [(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4, 5, -7),
-            (0, 1, 1, 1, 3, -10), (0, 0, 4, 4, 4, -8), (1, 2, 3, 3, 5, -8),
-            (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6), (1, 1, 3, 4, 6, -7),
-            (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1, 1, 2, 3, 4, -9),
-            (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6), (1, 3, 4, 5, 5, -6),
-            (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6, -7), (0, 2, 3, 5, 5, -7),
-            (0, 1, 5, 5, 5, -6)])
+    base_soln = {(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4, 5, -7), (0, 1, 1, 1, 3, -10),
+                 (0, 0, 4, 4, 4, -8), (1, 2, 3, 3, 5, -8), (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6),
+                 (1, 1, 3, 4, 6, -7), (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1, 1, 2, 3, 4, -9),
+                 (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6), (1, 3, 4, 5, 5, -6), (0, 2, 2, 2, 6, -8),
+                 (0, 3, 3, 3, 6, -7), (0, 2, 3, 5, 5, -7), (0, 1, 5, 5, 5, -6)}
     assert diophantine(eq) == base_soln
     assert len(diophantine(eq, permute=True)) == 196800
 
     # handle negated squares with signsimp
-    assert diophantine(12 - x**2 - y**2 - z**2) == set([(2, 2, 2)])
+    assert diophantine(12 - x**2 - y**2 - z**2) == {(2, 2, 2)}
     # diophantine handles simplification, so classify_diop should
     # not have to look for additional patterns that are removed
     # by diophantine
@@ -715,12 +710,12 @@ def test_assumptions():
     #Test case taken from the below so question regarding assumptions in diophantine module
     #https://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
     m, n = symbols('m n', integer=True, positive=True)
-    diof = diophantine(n ** 2 + m * n - 500)
-    assert diof == set([(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)])
+    diof = diophantine(n**2 + m*n - 500)
+    assert diof == {(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)}
 
     a, b = symbols('a b', integer=True, positive=False)
     diof = diophantine(a*b + 2*a + 3*b - 6)
-    assert diof == set([(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)])
+    assert diof == {(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)}
 
 
 def check_solutions(eq):
@@ -748,10 +743,10 @@ def check_solutions(eq):
 
 def test_diopcoverage():
     eq = (2*x + y + 1)**2
-    assert diop_solve(eq) == set([(t_0, -2*t_0 - 1)])
+    assert diop_solve(eq) == {(t_0, -2*t_0 - 1)}
     eq = 2*x**2 + 6*x*y + 12*x + 4*y**2 + 18*y + 18
-    assert diop_solve(eq) == set([(t_0, -t_0 - 3), (2*t_0 - 3, -t_0)])
-    assert diop_quadratic(x + y**2 - 3) == set([(-t**2 + 3, -t)])
+    assert diop_solve(eq) == {(t_0, -t_0 - 3), (2*t_0 - 3, -t_0)}
+    assert diop_quadratic(x + y**2 - 3) == {(-t**2 + 3, -t)}
 
     assert diop_linear(x + y - 3) == (t_0, 3 - t_0)
 
@@ -761,8 +756,8 @@ def test_diopcoverage():
     assert base_solution_linear(4, 8, 12, t=None) == tuple(_.subs(t, 0) for _ in ans)
 
     assert cornacchia(1, 1, 20) is None
-    assert cornacchia(1, 1, 5) == set([(2, 1)])
-    assert cornacchia(1, 2, 17) == set([(3, 2)])
+    assert cornacchia(1, 1, 5) == {(2, 1)}
+    assert cornacchia(1, 2, 17) == {(3, 2)}
 
     raises(ValueError, lambda: reconstruct(4, 20, 1))
 
@@ -783,14 +778,14 @@ def test_diopcoverage():
     assert _odd(0) == (not _even(0)) == False
     assert _remove_gcd(2, 4, 6) == (1, 2, 3)
     raises(TypeError, lambda: _remove_gcd((2, 4, 6)))
-    assert sqf_normal(2 * 3**2 * 5, 2 * 5 * 11, 2 * 7**2 * 11)  == \
+    assert sqf_normal(2*3**2*5, 2*5*11, 2*7**2*11)  == \
         (11, 1, 5)
 
     # it's ok if these pass some day when the solvers are implemented
     raises(NotImplementedError, lambda: diophantine(x**2 + y**2 + x*y + 2*y*z - 12))
     raises(NotImplementedError, lambda: diophantine(x**3 + y**2))
     assert diop_quadratic(x**2 + y**2 - 1**2 - 3**4) == \
-        set([(-9, -1), (-9, 1), (-1, -9), (-1, 9), (1, -9), (1, 9), (9, -1), (9, 1)])
+           {(-9, -1), (-9, 1), (-1, -9), (-1, 9), (1, -9), (1, 9), (9, -1), (9, 1)}
 
 
 def test_holzer():
@@ -821,34 +816,31 @@ def test_fail_holzer():
 
 def test_issue_9539():
     assert diophantine(6*w + 9*y + 20*x - z) == \
-        set([(t_0, t_1, t_1 + t_2, 6*t_0 + 29*t_1 + 9*t_2)])
+           {(t_0, t_1, t_1 + t_2, 6*t_0 + 29*t_1 + 9*t_2)}
 
 
 def test_issue_8943():
     assert diophantine(
         (3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x))) == \
-        set([(0, 0, 0)])
+           {(0, 0, 0)}
 
 
 def test_diop_sum_of_even_powers():
     eq = x**4 + y**4 + z**4 - 2673
-    assert diop_solve(eq) == set([(3, 6, 6), (2, 4, 7)])
-    assert diop_general_sum_of_even_powers(eq, 2) == set(
-        [(3, 6, 6), (2, 4, 7)])
+    assert diop_solve(eq) == {(3, 6, 6), (2, 4, 7)}
+    assert diop_general_sum_of_even_powers(eq, 2) == {(3, 6, 6), (2, 4, 7)}
     raises(NotImplementedError, lambda: diop_general_sum_of_even_powers(-eq, 2))
     neg = symbols('neg', negative=True)
     eq = x**4 + y**4 + neg**4 - 2673
-    assert diop_general_sum_of_even_powers(eq) == set([(-3, 6, 6)])
+    assert diop_general_sum_of_even_powers(eq) == {(-3, 6, 6)}
     assert diophantine(x**4 + y**4 + 2) == set()
     assert diop_general_sum_of_even_powers(x**4 + y**4 - 2, limit=0) == set()
 
 
 def test_sum_of_squares_powers():
-    tru = set([
-    (0, 0, 1, 1, 11), (0, 0, 5, 7, 7), (0, 1, 3, 7, 8), (0, 1, 4, 5, 9),
-    (0, 3, 4, 7, 7), (0, 3, 5, 5, 8), (1, 1, 2, 6, 9), (1, 1, 6, 6, 7),
-    (1, 2, 3, 3, 10), (1, 3, 4, 4, 9), (1, 5, 5, 6, 6), (2, 2, 3, 5, 9),
-    (2, 3, 5, 6, 7), (3, 3, 4, 5, 8)])
+    tru = {(0, 0, 1, 1, 11), (0, 0, 5, 7, 7), (0, 1, 3, 7, 8), (0, 1, 4, 5, 9), (0, 3, 4, 7, 7), (0, 3, 5, 5, 8),
+           (1, 1, 2, 6, 9), (1, 1, 6, 6, 7), (1, 2, 3, 3, 10), (1, 3, 4, 4, 9), (1, 5, 5, 6, 6), (2, 2, 3, 5, 9),
+           (2, 3, 5, 6, 7), (3, 3, 4, 5, 8)}
     eq = u**2 + v**2 + x**2 + y**2 + z**2 - 123
     ans = diop_general_sum_of_squares(eq, oo)  # allow oo to be used
     assert len(ans) == 14
@@ -912,7 +904,7 @@ def test__can_do_sum_of_squares():
 def test_diophantine_permute_sign():
     from sympy.abc import a, b, c, d, e
     eq = a**4 + b**4 - (2**4 + 3**4)
-    base_sol = set([(2, 3)])
+    base_sol = {(2, 3)}
     assert diophantine(eq) == base_sol
     complete_soln = set(signed_permutations(base_sol.pop()))
     assert diophantine(eq, permute=True) == complete_soln
@@ -920,20 +912,20 @@ def test_diophantine_permute_sign():
     eq = a**2 + b**2 + c**2 + d**2 + e**2 - 234
     assert len(diophantine(eq)) == 35
     assert len(diophantine(eq, permute=True)) == 62000
-    soln = set([(-1, -1), (-1, 2), (1, -2), (1, 1)])
+    soln = {(-1, -1), (-1, 2), (1, -2), (1, 1)}
     assert diophantine(10*x**2 + 12*x*y + 12*y**2 - 34, permute=True) == soln
 
 
 @XFAIL
 def test_not_implemented():
     eq = x**2 + y**4 - 1**2 - 3**4
-    assert diophantine(eq, syms=[x, y]) == set([(9, 1), (1, 3)])
+    assert diophantine(eq, syms=[x, y]) == {(9, 1), (1, 3)}
 
 
 def test_issue_9538():
     eq = x - 3*y + 2
-    assert diophantine(eq, syms=[y,x]) == set([(t_0, 3*t_0 - 2)])
-    raises(TypeError, lambda: diophantine(eq, syms=set([y,x])))
+    assert diophantine(eq, syms=[y,x]) == {(t_0, 3*t_0 - 2)}
+    raises(TypeError, lambda: diophantine(eq, syms={y, x}))
 
 
 def test_ternary_quadratic():

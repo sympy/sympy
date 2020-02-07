@@ -27,6 +27,8 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
+from .utilities import _get_intermediate_simp_bool
+
 
 class MatrixError(Exception):
     pass
@@ -2188,25 +2190,21 @@ class MatrixArithmetic(MatrixRequired):
 
         return a.multiply(b)
 
-    def _eval_pow_by_recursion_mulsimp(self, num, dotprodsimp=None, prevsimp=None):
-        if dotprodsimp and prevsimp is None:
+    def _eval_pow_by_recursion_dotprodsimp(self, num, prevsimp=None):
+        if prevsimp is None:
             prevsimp = [True]*len(self)
 
         if num == 1:
             return self
 
         if num % 2 == 1:
-            a, b = self, self._eval_pow_by_recursion_mulsimp(num - 1,
-                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+            a, b = self, self._eval_pow_by_recursion_dotprodsimp(num - 1,
+                    prevsimp=prevsimp)
         else:
-            a = b = self._eval_pow_by_recursion_mulsimp(num // 2,
-                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+            a = b = self._eval_pow_by_recursion_dotprodsimp(num // 2,
+                    prevsimp=prevsimp)
 
-        m = a.multiply(b, dotprodsimp=False)
-
-        if not dotprodsimp:
-            return m
-
+        m     = a.multiply(b, dotprodsimp=False)
         lenm  = len(m)
         elems = [None]*lenm
 
@@ -2315,6 +2313,7 @@ class MatrixArithmetic(MatrixRequired):
             speed up calculation.
         """
 
+        isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2326,8 +2325,8 @@ class MatrixArithmetic(MatrixRequired):
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
-            if dotprodsimp:
-                return m.applyfunc(_dotprodsimp)
+            if isimpbool:
+                return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
             return m
 
         # Matrix-like objects can be passed to CommonMatrix routines directly.
@@ -2378,16 +2377,11 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
-    def pow(self, exp, dotprodsimp=None, jordan=None):
+    def pow(self, exp, jordan=None):
         """Return self**exp a scalar or symbol.
 
         Parameters
         ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         jordan : bool, optional
             If left as None then Jordan form exponentiation will be used under
@@ -2423,19 +2417,19 @@ class MatrixArithmetic(MatrixRequired):
             elif jordan_pow is not None and (jordan or \
                     (jordan is not False and a.rows == 2 and exp > 100000)):
                 try:
-                    return jordan_pow(exp, dotprodsimp=dotprodsimp)
+                    return jordan_pow(exp)
                 except MatrixError:
                     if jordan:
                         raise
 
-            if dotprodsimp is not None:
-                return a._eval_pow_by_recursion_mulsimp(exp, dotprodsimp=dotprodsimp)
+            if _get_intermediate_simp_bool(True):
+                return a._eval_pow_by_recursion_dotprodsimp(exp)
             else:
                 return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp, dotprodsimp=dotprodsimp)
+                return jordan_pow(exp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.

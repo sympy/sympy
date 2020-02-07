@@ -3506,7 +3506,10 @@ def unrad(eq, *syms, **flags):
     # check for trivial case
     # - already a polynomial in integer powers
     if all(_Q(g) == 1 for g in gens):
-        return
+        if (len(gens) == len(poly.gens) and d!=1):
+            return eq, []
+        else:
+            return
     # - an exponent has a symbol of interest (don't handle)
     if any(g.as_base_exp()[1].has(*syms) for g in gens):
         return

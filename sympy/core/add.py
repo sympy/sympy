@@ -878,7 +878,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms
+        from sympy import expand_mul, Order
 
         old = self
 
@@ -888,26 +888,36 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
-        if not expr:
-            # simple leading term analysis gave us 0 but we have to send
+        leading_terms = [t.as_leading_term(x) for t in expr.args]
+
+        min, new_expr = Order(0), 0
+
+        try:
+            for term in leading_terms:
+                order = Order(term, x)
+                if not min or order not in min:
+                    min = order
+                    new_expr = term
+                elif order == min:
+                    new_expr += term
+
+        except TypeError:
+            return expr
+
+        new_expr=new_expr.together()
+        if new_expr.is_Add:
+            new_expr = new_expr.simplify()
+
+        if not new_expr:
+            # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
-        elif expr is S.NaN:
+
+        elif new_expr is S.NaN:
             return old.func._from_args(infinite)
-        elif not expr.is_Add:
-            return expr
+
         else:
-            plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
-            rv = factor_terms(plain, fraction=False)
-            rv_simplify = rv.simplify()
-            # if it simplifies to an x-free expression, return that;
-            # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_simplify.free_symbols:
-                if rv_simplify.is_zero and plain.is_zero is not True:
-                    return (expr - plain)._eval_as_leading_term(x)
-                return rv_simplify
-            return rv
+            return new_expr
 
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args])

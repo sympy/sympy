@@ -586,3 +586,14 @@ def test_issue_11461():
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
     assert len(p[0].get_segments()) >= 30
+
+def test_issue_11764():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    x = Symbol('x')
+    p = plot_parametric(cos(x), sin(x), (x, 0, 2 * pi), aspect_ratio=(1,1), show=False)
+    p.aspect_ratio == (1, 1)
+    # Random number of segments, probably more than 100, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    assert len(p[0].get_segments()) >= 30

@@ -506,7 +506,7 @@ class Pow(Expr):
             if self.base.is_extended_nonnegative:
                 return True
         elif self.base.is_positive:
-            if self.exp.is_extended_real:
+            if self.exp.is_real:
                 return True
         elif self.base.is_extended_negative:
             if self.exp.is_even:
@@ -1456,11 +1456,13 @@ class Pow(Expr):
 
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
+                rest = rest.simplify() #test_issue_6364
 
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
 
                 k, l = rest.leadterm(x)
+
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:

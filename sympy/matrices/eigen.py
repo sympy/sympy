@@ -20,7 +20,7 @@ from .utilities import _iszero
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
+def _eigenvals(M, error_when_incomplete=True, **flags):
     r"""Return eigenvalues using the Berkowitz agorithm to compute
     the characteristic polynomial.
 
@@ -31,11 +31,6 @@ def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
         If it is set to ``True``, it will raise an error if not all
         eigenvalues are computed. This is caused by ``roots`` not returning
         a full list of eigenvalues.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     simplify : bool or function, optional
         If it is set to ``True``, it attempts to return the most
@@ -130,10 +125,9 @@ def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
         flags.pop('simplify', None)  # pop unsupported flag
 
         if isinstance(simplify, FunctionType):
-            eigs = roots(M.charpoly(x=Dummy('x'), simplify=simplify,
-                    dotprodsimp=dotprodsimp), **flags)
+            eigs = roots(M.charpoly(x=Dummy('x'), simplify=simplify), **flags)
         else:
-            eigs = roots(M.charpoly(x=Dummy('x'), dotprodsimp=dotprodsimp), **flags)
+            eigs = roots(M.charpoly(x=Dummy('x')), **flags)
 
     # make sure the algebraic multiplicity sums to the
     # size of the matrix
@@ -157,8 +151,7 @@ def _eigenvals(M, error_when_incomplete=True, dotprodsimp=None, **flags):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
-        dotprodsimp=None, **flags):
+def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     """Return list of triples (eigenval, multiplicity, eigenspace).
 
     Parameters
@@ -178,11 +171,6 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
         is formatted as a function which accepts a single symbolic argument
         and returns ``True`` if it is tested as zero and ``False`` if it
         is tested as non-zero, and ``None`` if it is undecidable.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     simplify : bool or function, optional
         If ``True``, ``as_content_primitive()`` will be used to tidy up
@@ -243,13 +231,13 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
         """Get a basis for the eigenspace for a particular eigenvalue"""
 
         m   = M - M.eye(M.rows) * eigenval
-        ret = m.nullspace(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
+        ret = m.nullspace(iszerofunc=iszerofunc)
 
         # the nullspace for a real eigenvalue should be
         # non-trivial.  If we didn't find an eigenvector, try once
         # more a little harder
         if len(ret) == 0 and simplify:
-            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)
+            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
         if len(ret) == 0:
             raise NotImplementedError(
                     "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
@@ -272,8 +260,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
     eigenvals = M.eigenvals(rational=False,
-            error_when_incomplete=error_when_incomplete,
-            dotprodsimp=dotprodsimp, **flags)
+            error_when_incomplete=error_when_incomplete, **flags)
 
     ret = [(val, mult, eigenspace(val)) for val, mult in
                 sorted(eigenvals.items(), key=default_sort_key)]
@@ -295,7 +282,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero,
     return ret
 
 
-def _is_diagonalizable_with_eigen(M, reals_only=False, dotprodsimp=None):
+def _is_diagonalizable_with_eigen(M, reals_only=False):
     """See _is_diagonalizable. This function returns the bool along with the
     eigenvectors to avoid calculating them again in functions like
     ``diagonalize``."""
@@ -303,7 +290,7 @@ def _is_diagonalizable_with_eigen(M, reals_only=False, dotprodsimp=None):
     if not M.is_square:
         return False, []
 
-    eigenvecs = M.eigenvects(simplify=True, dotprodsimp=dotprodsimp)
+    eigenvecs = M.eigenvects(simplify=True)
 
     for val, mult, basis in eigenvecs:
         if reals_only and not val.is_real: # if we have a complex eigenvalue
@@ -314,7 +301,7 @@ def _is_diagonalizable_with_eigen(M, reals_only=False, dotprodsimp=None):
 
     return True, eigenvecs
 
-def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
+def _is_diagonalizable(M, reals_only=False, **kwargs):
     """Returns ``True`` if a matrix is diagonalizable.
 
     Parameters
@@ -322,15 +309,11 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
 
     reals_only : bool, optional
         If ``True``, it tests whether the matrix can be diagonalized
-        without complex numbers. (Orthogonally diagonalizable)
+        to contain only real numbers on the diagonal.
 
-        If ``False``, it tests whether the matrix can be unitarily
-        diagonalizable.
 
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification
-        is used during matrix multiplications to control expression
-        blowup and thus speed up calculation.
+        If ``False``, it tests whether the matrix can be diagonalized
+        at all, even with numbers that may not be real.
 
     Examples
     ========
@@ -348,8 +331,7 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
     >>> M.is_diagonalizable()
     False
 
-    Example of a unitarily diagonalizable, but not orthogonally
-    diagonalizable:
+    Example of a matrix that is diagonalized in terms of non-real entries:
 
     >>> M = Matrix([[0, 1], [-1, 0]])
     >>> M.is_diagonalizable(reals_only=False)
@@ -384,16 +366,13 @@ def _is_diagonalizable(M, reals_only=False, dotprodsimp=None, **kwargs):
     if all(e.is_real for e in M) and M.is_symmetric():
         return True
 
-    if all(e.is_complex for e in M) and M.is_hermitian \
-            and not reals_only:
+    if all(e.is_complex for e in M) and M.is_hermitian:
         return True
 
-    return _is_diagonalizable_with_eigen(M, reals_only=reals_only,
-            dotprodsimp=dotprodsimp)[0]
+    return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
 
 
-def _diagonalize(M, reals_only=False, sort=False, normalize=False,
-        dotprodsimp=None):
+def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     """
     Return (P, D), where D is diagonal and
 
@@ -410,11 +389,6 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False,
     sort : bool. Sort the eigenvalues along the diagonal. (Default: False)
 
     normalize : bool. If True, normalize the columns of P. (Default: False)
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -454,7 +428,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False,
         raise NonSquareMatrixError()
 
     is_diagonalizable, eigenvecs = _is_diagonalizable_with_eigen(M,
-                reals_only=reals_only, dotprodsimp=dotprodsimp)
+                reals_only=reals_only)
 
     if not is_diagonalizable:
         raise MatrixError("Matrix is not diagonalizable")
@@ -474,17 +448,12 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False,
     return M.hstack(*p_cols), M.diag(*diag)
 
 
-def _eval_is_positive_definite(M, method="eigen", dotprodsimp=None):
+def _eval_is_positive_definite(M, method="eigen"):
     """Algorithm dump for computing positive-definiteness of a
     matrix.
 
     Parameters
     ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     method : str, optional
         Specifies the method for computing positive-definiteness of
@@ -502,7 +471,7 @@ def _eval_is_positive_definite(M, method="eigen", dotprodsimp=None):
 
     if M.is_hermitian:
         if method == 'eigen':
-            eigen = M.eigenvals(dotprodsimp=dotprodsimp)
+            eigen = M.eigenvals()
             args  = [x.is_positive for x in eigen.keys()]
 
             return fuzzy_and(args)
@@ -529,8 +498,7 @@ def _eval_is_positive_definite(M, method="eigen", dotprodsimp=None):
     elif M.is_square:
         M_H = (M + M.H) / 2
 
-        return M_H._eval_is_positive_definite(method=method,
-                dotprodsimp=dotprodsimp)
+        return M_H._eval_is_positive_definite(method=method)
 
 def _is_positive_definite(M):
     return M._eval_is_positive_definite()
@@ -670,7 +638,7 @@ _is_negative_semidefinite.__doc__ = _doc_positive_definite
 _is_indefinite.__doc__            = _doc_positive_definite
 
 
-def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
+def _jordan_form(M, calc_transform=True, **kwargs):
     """Return ``(P, J)`` where `J` is a Jordan block
     matrix and `P` is a matrix such that
 
@@ -681,11 +649,6 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
 
     calc_transform : bool
         If ``False``, then only `J` is returned.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     chop : bool
         All matrices are converted to exact types when computing
@@ -754,10 +717,9 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
 
         if (val, pow - 1) in mat_cache:
             mat_cache[(val, pow)] = mat_cache[(val, pow - 1)].multiply(
-                    mat_cache[(val, 1)], dotprodsimp=dotprodsimp)
+                    mat_cache[(val, 1)], dotprodsimp=True)
         else:
-            mat_cache[(val, pow)] = (mat - val*M.eye(M.rows)).pow(pow,
-                    dotprodsimp=dotprodsimp)
+            mat_cache[(val, pow)] = (mat - val*M.eye(M.rows)).pow(pow)
 
         return mat_cache[(val, pow)]
 
@@ -770,7 +732,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
         # so use the rank-nullity theorem
         cols    = M.cols
         ret     = [0]
-        nullity = cols - eig_mat(val, 1).rank(dotprodsimp=dotprodsimp)
+        nullity = cols - eig_mat(val, 1).rank()
         i       = 2
 
         while nullity != ret[-1]:
@@ -779,7 +741,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
             if nullity == algebraic_multiplicity:
                 break
 
-            nullity  = cols - eig_mat(val, i).rank(dotprodsimp=dotprodsimp)
+            nullity  = cols - eig_mat(val, i).rank()
             i       += 1
 
             # Due to issues like #7146 and #15872, SymPy sometimes
@@ -817,7 +779,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
 
         for v in big_basis:
             _, pivots = M.hstack(*(small_basis + [v])).echelon_form(
-                    with_pivots=True, dotprodsimp=dotprodsimp)
+                    with_pivots=True)
 
             if pivots[-1] == len(small_basis):
                 return v
@@ -827,7 +789,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
     # first calculate the jordan block structure
-    eigs = mat.eigenvals(dotprodsimp=dotprodsimp)
+    eigs = mat.eigenvals()
 
     # make sure that we found all the roots by counting
     # the algebraic multiplicity
@@ -844,7 +806,7 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
         if not calc_transform:
             return restore_floats(jordan_mat)
 
-        jordan_basis = [eig_mat(eig, 1).nullspace(dotprodsimp=dotprodsimp)[0]
+        jordan_basis = [eig_mat(eig, 1).nullspace()[0]
                 for eig in blocks]
         basis_mat    = mat.hstack(*jordan_basis)
 
@@ -902,15 +864,15 @@ def _jordan_form(M, calc_transform=True, dotprodsimp=None, **kwargs):
             if block_eig != eig:
                 continue
 
-            null_big   = (eig_mat(eig, size)).nullspace(dotprodsimp=dotprodsimp)
-            null_small = (eig_mat(eig, size - 1)).nullspace(dotprodsimp=dotprodsimp)
+            null_big   = (eig_mat(eig, size)).nullspace()
+            null_small = (eig_mat(eig, size - 1)).nullspace()
 
             # we want to pick something that is in the big basis
             # and not the small, but also something that is independent
             # of any other generalized eigenvectors from a different
             # generalized eigenspace sharing the same eigenvalue.
             vec      = pick_vec(null_small + eig_basis, null_big)
-            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=dotprodsimp)
+            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=True)
                     for i in range(size)]
 
             eig_basis.extend(new_vecs)
@@ -956,7 +918,7 @@ def _left_eigenvects(M, **flags):
     return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
 
 
-def _singular_values(M, dotprodsimp=None):
+def _singular_values(M):
     """Compute the singular values of a Matrix
 
     Examples
@@ -975,11 +937,9 @@ def _singular_values(M, dotprodsimp=None):
     """
 
     if M.rows >= M.cols:
-        valmultpairs = M.H.multiply(M, dotprodsimp=dotprodsimp) \
-                .eigenvals(dotprodsimp=dotprodsimp)
+        valmultpairs = M.H.multiply(M).eigenvals()
     else:
-        valmultpairs = M.multiply(M.H, dotprodsimp=dotprodsimp) \
-                .eigenvals(dotprodsimp=dotprodsimp)
+        valmultpairs = M.multiply(M.H).eigenvals()
 
     # Expands result from eigenvals into a simple list
     vals = []

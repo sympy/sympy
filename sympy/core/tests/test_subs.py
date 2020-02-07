@@ -6,8 +6,7 @@ from sympy import (
     AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
-from sympy.abc import a, x, y, z
-
+from sympy.abc import a, x, y, z, t
 
 def test_subs():
     n3 = Rational(3)
@@ -843,3 +842,11 @@ def test_issue_11746():
     assert (1/(x**4)).subs(x**2, 1) == 1
     assert (1/(x**3)).subs(x**4, 1) == x**(-3)
     assert (1/(y**5)).subs(x**5, 1) == y**(-5)
+
+
+def test_issue_17823():
+    from sympy.physics.mechanics import dynamicsymbols
+    q1, q2 = dynamicsymbols('q1, q2')
+    expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
+    reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
+    assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2
