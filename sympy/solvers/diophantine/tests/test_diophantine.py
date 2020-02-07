@@ -961,14 +961,14 @@ def test_diophantine_solution_set():
     assert set(s1) == set()
     assert s1.symbols == []
     assert s1.parameters == ()
-    raises(ValueError, lambda: s1.add_solution(x))
+    raises(ValueError, lambda: s1.add(x))
     assert list(s1.dict_iterator()) == []
 
     s2 = DiophantineSolutionSet([x, y], [t, u])
     assert s2.symbols == [x, y]
     assert s2.parameters == [t, u]
-    raises(ValueError, lambda: s2.add_solution(1))
-    s2.add_solution(3, 4)
+    raises(ValueError, lambda: s2.add(1))
+    s2.add(3, 4)
     assert set(s2) == {(3, 4)}
     s2.update([(3, 4), (-1, u)])
     assert set(s2) == {(3, 4), (-1, u)}
@@ -976,11 +976,14 @@ def test_diophantine_solution_set():
 
     s3 = DiophantineSolutionSet([x, y, z], [t, u])
     assert len(s3.parameters) == 2
-    s3.add_solution(t**2 + u, t - u)
-    assert set(s3) == {(t**2 + u, t - u)}
-    assert s3.substitute_parameters(2) == {(u + 4, 2 - u)}
-    assert s3.substitute_parameters(7, 8) == {(57, -1)}
+    s3.add(t**2 + u, t - u, 1)
+    assert set(s3) == {(t**2 + u, t - u, 1)}
+    assert s3.substitute_parameters(2) == {(u + 4, 2 - u, 1)}
+    assert s3.substitute_parameters(7, 8) == {(57, -1, 1)}
     raises(ValueError, lambda: s3.substitute_parameters(1, 2, 3))
+    raises(ValueError, lambda: s3.add())
+    raises(ValueError, lambda: s3.add(1, 2, 3, 4))
+    raises(ValueError, lambda: s3.add(1, 2))
 
     s4 = DiophantineSolutionSet([x])
     assert len(s4.parameters) == 1
