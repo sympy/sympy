@@ -953,6 +953,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
 
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+
     # Some methods want the unprocessed equation
     eq_orig = eq
 
@@ -966,12 +969,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     xi = kwargs.get('xi')
     eta = kwargs.get('eta')
     terms = kwargs.get('n')
-
-    if isinstance(eq, Equality):
-        if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, dict=dict, ics=ics, xi=xi,
-                n=terms, eta=eta, prep=False)
-        eq = eq.lhs
 
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)

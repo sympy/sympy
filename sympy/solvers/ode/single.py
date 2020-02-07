@@ -58,14 +58,15 @@ class SingleODEProblem:
     eq = None  # type: Expr
     func = None  # type: AppliedUndef
     sym = None  # type: Symbol
-    _order = None
-    _eq_expanded = None
-    _eq_preprocessed = None
+    _order = None  # type: int
+    _eq_expanded = None  # type: Expr
+    _eq_preprocessed = None  # type: Expr
 
     def __init__(self, eq, func, sym, prep=True):
-        if isinstance(eq, Equality):
-            eq = eq.lhs - eq.rhs
-
+        assert isinstance(eq, Expr)
+        assert isinstance(func, AppliedUndef)
+        assert isinstance(sym, Symbol)
+        assert isinstance(prep, bool)
         self.eq = eq
         self.func = func
         self.sym = sym
