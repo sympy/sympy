@@ -492,7 +492,8 @@ class Pow(Expr):
         ext_neg = Pow._eval_is_extended_negative(self)
         if ext_neg is True:
             return self.is_finite
-        return ext_neg
+        # return False for sqrt(x) instead of None
+        return False if (ext_neg is None and self.exp is S(1)/2) else ext_neg
 
     def _eval_is_positive(self):
         ext_pos = Pow._eval_is_extended_positive(self)

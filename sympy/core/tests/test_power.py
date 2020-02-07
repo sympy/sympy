@@ -507,3 +507,8 @@ def test_issue_17450():
 
 def test_issue_18190():
     assert sqrt(1 / tan(1 + I)) == 1 / sqrt(tan(1 + I))
+
+
+def test_issue_14815():
+    x = Symbol('x')
+    assert sqrt(x).is_negative is False
