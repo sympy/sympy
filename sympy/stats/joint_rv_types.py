@@ -54,7 +54,7 @@ def JointRV(symbol, pdf, _set=None):
     exp(-2)/(2*pi)
 
     Returns
-    ========
+    =======
 
     A RandomSymbol.
 
