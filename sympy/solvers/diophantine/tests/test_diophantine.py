@@ -967,12 +967,12 @@ def test_diophantine_solution_set():
     s2 = DiophantineSolutionSet([x, y], [t, u])
     assert s2.symbols == [x, y]
     assert s2.parameters == [t, u]
-    s2.add_solution(1)
+    raises(ValueError, lambda: s2.add_solution(1))
     s2.add_solution(3, 4)
-    assert set(s2) == {(1, u), (3, 4)}
-    s2.update([(3, 4), (-1,)])
-    assert set(s2) == {(1, u), (3, 4), (-1, u)}
-    assert list(s2.dict_iterator()) == [{x: -1, y: u}, {x: 1, y: u}, {x: 3, y: 4}]
+    assert set(s2) == {(3, 4)}
+    s2.update([(3, 4), (-1, u)])
+    assert set(s2) == {(3, 4), (-1, u)}
+    assert list(s2.dict_iterator()) == [{x: -1, y: u}, {x: 3, y: 4}]
 
     s3 = DiophantineSolutionSet([x, y, z], [t, u])
     assert len(s3.parameters) == 2
