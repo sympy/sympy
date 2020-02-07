@@ -76,7 +76,7 @@ class DiophantineSolutionSet(set):
         >>> s1
         set()
         >>> s1.add_solution(2, 3)
-        >>> s1.add_solution(-1)
+        >>> s1.add_solution(-1, u)
         >>> s1
         {(-1, u), (2, 3)}
         >>> s2 = DiophantineSolutionSet([x, y], [t, u])
@@ -111,16 +111,10 @@ class DiophantineSolutionSet(set):
         else:
             self.parameters = parameters
 
-    def _pad_solution(self, solution):
-        result = list(solution)
-        while len(result) < len(self.parameters):
-            result.append(self.parameters[len(result)])
-        return tuple(result)
-
     def add_solution(self, *solution):
-        if len(solution) > len(self.parameters):
-            raise ValueError("Solution has too many values")
-        self.add(self._pad_solution(solution))
+        if len(solution) != len(self.parameters):
+            raise ValueError("Solution is of incorrect length")
+        self.add(solution)
 
     def update(self, *s):
         for sol_group in s:
