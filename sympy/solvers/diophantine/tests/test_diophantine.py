@@ -15,7 +15,7 @@ from sympy.solvers.diophantine.diophantine import (diop_DN,
     classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
     check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
     _diop_ternary_quadratic_normal, _diop_general_sum_of_squares, _nint_or_floor,
-    _odd, _even, _remove_gcd, _can_do_sum_of_squares)
+    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL
@@ -954,3 +954,33 @@ def test_ternary_quadratic():
         124*x**2 - 30*y**2 - 7729*z**2) == (
         -1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q -
         695610*q**2, -60*p**2 + 5400*p*q + 15458*q**2)
+
+
+def test_diophantine_solution_set():
+    s1 = DiophantineSolutionSet([])
+    assert set(s1) == set()
+    assert s1.symbols == []
+    assert s1.parameters == ()
+    raises(ValueError, lambda: s1.add_solution(x))
+    assert list(s1.dict_iterator()) == []
+
+    s2 = DiophantineSolutionSet([x, y], [t, u])
+    assert s2.symbols == [x, y]
+    assert s2.parameters == [t, u]
+    s2.add_solution(1)
+    s2.add_solution(3, 4)
+    assert set(s2) == {(1, u), (3, 4)}
+    s2.update([(3, 4), (-1,)])
+    assert set(s2) == {(1, u), (3, 4), (-1, u)}
+    assert list(s2.dict_iterator()) == [{x: -1, y: u}, {x: 1, y: u}, {x: 3, y: 4}]
+
+    s3 = DiophantineSolutionSet([x, y, z], [t, u])
+    assert len(s3.parameters) == 2
+    s3.add_solution(t**2 + u, t - u)
+    assert set(s3) == {(t**2 + u, t - u)}
+    assert s3.substitute_parameters(2) == {(u + 4, 2 - u)}
+    assert s3.substitute_parameters(7, 8) == {(57, -1)}
+    raises(ValueError, lambda: s3.substitute_parameters(1, 2, 3))
+
+    s4 = DiophantineSolutionSet([x])
+    assert len(s4.parameters) == 1
