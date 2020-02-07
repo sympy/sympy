@@ -2139,3 +2139,7 @@ def test_issue_11553():
     assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
     eq3 = x + 2 + TribonacciConstant
     assert solve([eq1, eq3], x, y) == {x: -2 - TribonacciConstant, y: 1 + TribonacciConstant}
+
+def test_issue_18226():
+    eq = Eq((2*sqrt(x)/(x + 1)**2 - 1/(sqrt(x)*(x + 1)) - 1/(4*x**(3/2)))/(x + 1), 0)
+    solve(eq, x) == [-0.154700538379252, -0.154700538379252, 2.15470053837925, 2.15470053837925]
