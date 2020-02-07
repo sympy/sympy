@@ -19,9 +19,22 @@ from sympy.functions import exp
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
 
+
 class ODEMatchError(NotImplementedError):
     """Raised if a SingleODESolver is asked to solve an ODE it does not match"""
     pass
+
+
+def cached_property(func):
+    '''Decorator to cache property method'''
+    attrname = '_' + func.__name__
+    def propfunc(self):
+        val = getattr(self, attrname, None)
+        if val is None:
+            val = func(self)
+            setattr(self, attrname, val)
+        return val
+    return property(propfunc)
 
 
 class SingleODEProblem:
@@ -72,23 +85,17 @@ class SingleODEProblem:
         self.sym = sym
         self.prep = True
 
-    @property
+    @cached_property
     def order(self):
-        if self._order is None:
-            self._order = ode_order(self.eq, self.func)
-        return self._order
+        return ode_order(self.eq, self.func)
 
-    @property
+    @cached_property
     def eq_preprocessed(self):
-        if self._eq_preprocessed is None:
-            self._eq_preprocessed = self._get_eq_preprocessed()
-        return self._eq_preprocessed
+        return self._get_eq_preprocessed()
 
-    @property
+    @cached_property
     def eq_expanded(self):
-        if self._eq_expanded is None:
-            self._eq_expanded = expand(self.eq_preprocessed)
-        return self._eq_expanded
+        return expand(self.eq_preprocessed)
 
     def _get_eq_preprocessed(self):
         if self.prep:
