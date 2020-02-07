@@ -4,14 +4,13 @@ import copy
 
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
-from .utilities import _iszero
+from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot_naive
 
 
-def _rank_decomposition(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
+def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     r"""Returns a pair of matrices (`C`, `F`) with matching rank
     such that `A = C F`.
 
@@ -25,11 +24,6 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None)
     simplify : Bool or Function, optional
         A function used to simplify elements when looking for a
         pivot. By default SymPy's ``simplify`` is used.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Returns
     =======
@@ -103,7 +97,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False, dotprodsimp=None)
     """
 
     F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,
-            pivots=True, dotprodsimp=dotprodsimp)
+            pivots=True)
     rank = len(pivot_cols)
 
     C = M.extract(range(M.rows), pivot_cols)
@@ -199,21 +193,13 @@ def _row_structure_symbolic_cholesky(M):
     return Lrow
 
 
-def _cholesky(M, hermitian=True, dotprodsimp=None):
+def _cholesky(M, hermitian=True):
     """Returns the Cholesky-type decomposition L of a matrix A
     such that L * L.H == A if hermitian flag is True,
     or L * L.T == A if hermitian is False.
 
     A must be a Hermitian positive-definite matrix if hermitian is True,
     or a symmetric matrix if it is False.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -273,7 +259,7 @@ def _cholesky(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _dotprodsimp if dotprodsimp else expand_mul
+    dps = _get_intermediate_simp(expand_mul, expand_mul)
     L   = MutableDenseMatrix.zeros(M.rows, M.rows)
 
     if hermitian:
@@ -302,7 +288,7 @@ def _cholesky(M, hermitian=True, dotprodsimp=None):
 
     return M._new(L)
 
-def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
+def _cholesky_sparse(M, hermitian=True):
     """
     Returns the Cholesky decomposition L of a matrix A
     such that L * L.T = A
@@ -365,7 +351,7 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Crowstruc = M.row_structure_symbolic_cholesky()
     C         = MutableDenseMatrix.zeros(M.rows)
 
@@ -415,7 +401,7 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     return M._new(C)
 
 
-def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
+def _LDLdecomposition(M, hermitian=True):
     """Returns the LDL Decomposition (L, D) of matrix A,
     such that L * D * L.H == A if hermitian flag is True, or
     L * D * L.T == A if hermitian is False.
@@ -423,14 +409,6 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
     Further this ensures that all the diagonal entries of L are 1.
     A must be a Hermitian positive-definite matrix if hermitian is True,
     or a symmetric matrix otherwise.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -484,7 +462,7 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _dotprodsimp if dotprodsimp else expand_mul
+    dps = _get_intermediate_simp(expand_mul, expand_mul)
     D   = MutableDenseMatrix.zeros(M.rows, M.rows)
     L   = MutableDenseMatrix.eye(M.rows)
 
@@ -511,7 +489,7 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
 
     return M._new(L), M._new(D)
 
-def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
+def _LDLdecomposition_sparse(M, hermitian=True):
     """
     Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
     ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
@@ -550,7 +528,7 @@ def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Lrowstruc = M.row_structure_symbolic_cholesky()
     L         = MutableDenseMatrix.eye(M.rows)
     D         = MutableDenseMatrix.zeros(M.rows, M.cols)
@@ -599,8 +577,7 @@ def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
     return M._new(L), M._new(D)
 
 
-def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
-        dotprodsimp=None):
+def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
@@ -644,11 +621,6 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
         See the notes section for a more information about the
         pivot searching algorithm.
 
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification
-        is used during matrix multiplications to control expression
-        blowup and thus speed up calculation.
-
     Examples
     ========
 
@@ -676,7 +648,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
     """
 
     combined, p = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
-        simpfunc=simpfunc, rankcheck=rankcheck, dotprodsimp=dotprodsimp)
+        simpfunc=simpfunc, rankcheck=rankcheck)
 
     # L is lower triangular ``M.rows x M.rows``
     # U is upper triangular ``M.rows x M.cols``
@@ -707,7 +679,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
     return L, U, p
 
 def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
-        rankcheck=False, dotprodsimp=None):
+        rankcheck=False):
     r"""Compute the PLU decomposition of the matrix.
 
     Parameters
@@ -743,11 +715,6 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         It is internally used by the pivot searching algorithm.
         See the notes section for a more information about the
         pivot searching algorithm.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification
-        is used during matrix multiplications to control expression
-        blowup and thus speed up calculation.
 
     Returns
     =======
@@ -978,7 +945,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []
 
-    dps       = _dotprodsimp if dotprodsimp else lambda e: e
+    dps       = _get_intermediate_simp()
     lu        = M.as_mutable()
     row_swaps = []
 
@@ -1160,16 +1127,8 @@ def _LUdecompositionFF(M):
     return P, L, DD, U
 
 
-def _QRdecomposition(M, dotprodsimp=None):
+def _QRdecomposition(M):
     """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -1216,7 +1175,7 @@ def _QRdecomposition(M, dotprodsimp=None):
     QRsolve
     """
 
-    dps    = _dotprodsimp if dotprodsimp else expand_mul
+    dps    = _get_intermediate_simp(expand_mul, expand_mul)
     cls    = M.__class__
     mat    = M.as_mutable()
     n      = mat.rows

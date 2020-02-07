@@ -5,16 +5,8 @@ from sympy.core.compatibility import reduce
 from .utilities import _iszero
 
 
-def _columnspace(M, simplify=False, dotprodsimp=None):
+def _columnspace(M, simplify=False):
     """Returns a list of vectors (Matrix objects) that span columnspace of ``M``
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -42,22 +34,13 @@ def _columnspace(M, simplify=False, dotprodsimp=None):
     rowspace
     """
 
-    reduced, pivots = M.echelon_form(simplify=simplify, with_pivots=True,
-            dotprodsimp=dotprodsimp)
+    reduced, pivots = M.echelon_form(simplify=simplify, with_pivots=True)
 
     return [M.col(i) for i in pivots]
 
 
-def _nullspace(M, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
+def _nullspace(M, simplify=False, iszerofunc=_iszero):
     """Returns list of vectors (Matrix objects) that span nullspace of ``M``
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -82,8 +65,7 @@ def _nullspace(M, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
     rowspace
     """
 
-    reduced, pivots = M.rref(iszerofunc=iszerofunc, simplify=simplify,
-            dotprodsimp=dotprodsimp)
+    reduced, pivots = M.rref(iszerofunc=iszerofunc, simplify=simplify)
 
     free_vars = [i for i in range(M.cols) if i not in pivots]
     basis     = []
@@ -102,16 +84,8 @@ def _nullspace(M, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
     return [M._new(M.cols, 1, b) for b in basis]
 
 
-def _rowspace(M, simplify=False, dotprodsimp=None):
+def _rowspace(M, simplify=False):
     """Returns a list of vectors that span the row space of ``M``.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -127,8 +101,7 @@ def _rowspace(M, simplify=False, dotprodsimp=None):
     [Matrix([[1, 3, 0]]), Matrix([[0, 0, 6]])]
     """
 
-    reduced, pivots = M.echelon_form(simplify=simplify, with_pivots=True,
-            dotprodsimp=dotprodsimp)
+    reduced, pivots = M.echelon_form(simplify=simplify, with_pivots=True)
 
     return [reduced.row(i) for i in range(len(pivots))]
 

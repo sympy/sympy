@@ -174,7 +174,6 @@ class DenseMatrix(MatrixBase):
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
-                        dotprodsimp=kwargs.get('dotprodsimp', None),
                         try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
@@ -260,17 +259,17 @@ class DenseMatrix(MatrixBase):
                     rv = ans
         return rv
 
-    def cholesky(self, hermitian=True, dotprodsimp=None):
-        return _cholesky(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+    def cholesky(self, hermitian=True):
+        return _cholesky(self, hermitian=hermitian)
 
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        return _LDLdecomposition(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+    def LDLdecomposition(self, hermitian=True):
+        return _LDLdecomposition(self, hermitian=hermitian)
 
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
-        return _lower_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+    def lower_triangular_solve(self, rhs):
+        return _lower_triangular_solve(self, rhs)
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
-        return _upper_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+    def upper_triangular_solve(self, rhs):
+        return _upper_triangular_solve(self, rhs)
 
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__

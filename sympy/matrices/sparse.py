@@ -279,7 +279,6 @@ class SparseMatrix(MatrixBase):
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'LDL'),
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
-                        dotprodsimp=kwargs.get('dotprodsimp', None),
                         try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_Abs(self):
@@ -634,7 +633,7 @@ class SparseMatrix(MatrixBase):
         t = self.T
         return (t*self).inv(method=method)*t*rhs
 
-    def solve(self, rhs, method='LDL', dotprodsimp=None):
+    def solve(self, rhs, method='LDL'):
         """Return solution to self*soln = rhs using given inversion method.
 
         For a list of possible inversion methods, see the .inv() docstring.
@@ -646,8 +645,7 @@ class SparseMatrix(MatrixBase):
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            return self.inv(method=method, dotprodsimp=dotprodsimp) \
-                    .multiply(rhs, dotprodsimp=dotprodsimp)
+            return self.inv(method=method).multiply(rhs)
 
     RL = property(row_list, None, None, "Alternate faster representation")
     CL = property(col_list, None, None, "Alternate faster representation")
@@ -658,17 +656,17 @@ class SparseMatrix(MatrixBase):
     def row_structure_symbolic_cholesky(self):
         return _row_structure_symbolic_cholesky(self)
 
-    def cholesky(self, hermitian=True, dotprodsimp=None):
-        return _cholesky_sparse(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+    def cholesky(self, hermitian=True):
+        return _cholesky_sparse(self, hermitian=hermitian)
 
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        return _LDLdecomposition_sparse(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+    def LDLdecomposition(self, hermitian=True):
+        return _LDLdecomposition_sparse(self, hermitian=hermitian)
 
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
-        return _lower_triangular_solve_sparse(self, rhs, dotprodsimp=dotprodsimp)
+    def lower_triangular_solve(self, rhs):
+        return _lower_triangular_solve_sparse(self, rhs)
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
-        return _upper_triangular_solve_sparse(self, rhs, dotprodsimp=dotprodsimp)
+    def upper_triangular_solve(self, rhs):
+        return _upper_triangular_solve_sparse(self, rhs)
 
     liupc.__doc__                           = _liupc.__doc__
     row_structure_symbolic_cholesky.__doc__ = _row_structure_symbolic_cholesky.__doc__
