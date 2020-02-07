@@ -4167,6 +4167,9 @@ class Poly(Expr):
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
+    def __init__(self, rep, *gens, **args):
+        self.gens = (Symbol('x'),)
+
     def _hashable_content(self):
         """Allow SymPy to hash Poly instances. """
         return (self.rep,)
