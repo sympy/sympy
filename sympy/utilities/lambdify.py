@@ -169,7 +169,8 @@ _lambdify_generated_counter = 1
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
-    """Creates a fast numeric evaluation function from a sympy expression.
+    """Convert a SymPy expression into a function that allows for fast
+    numeric evaluation.
 
     .. warning::
        This function uses ``exec``, and thus shouldn't be used on
@@ -219,20 +220,40 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         >>> from sympy.abc import x, y, z
 
-        >>> f = lambdify(x, x + 1)  # expect 1 arg
+        The list of variables should match the structure of how the
+        arguments will be passed to the function. Simply enclose the
+        parameters as they will be passed in a list.
+
+        To call a function like ``f(x)`` then ``[x]``
+        should be the first argument to ``lambdify``; for this
+        case a single ``x`` can also be used:
+
+        >>> f = lambdify(x, x + 1)
+        >>> f(1)
+        2
+        >>> f = lambdify([x], x + 1)
         >>> f(1)
         2
 
-        >>> f = lambdify([x, y], x + y)  # expect 2 args
+        To call a function like ``f(x, y)`` then ``[x, y]`` will
+        be the first argument of the ``lambdify``:
+
+        >>> f = lambdify([x, y], x + y)
         >>> f(1, 1)
         2
 
-        >>> # expect 1 arg of length 3
-        >>> f = lambdify([[a, b, c]], Eq(c**2 ,a**2 + b**2))
-        >>> f([3, 4, 5])
+        To call a function with a single 3-element tuple like
+        ``f((x, y, z))`` then ``[(x, y, z)]`` will be the first
+        argument of the ``lambdify``:
+
+        >>> f = lambdify([(x, y, z)], Eq(z**2, x**2 + y**2))
+        >>> f((3, 4, 5))
         True
 
-        >>> # expect 2 args: scalar and tuple of length 2
+        If two args will be passed and the first is a scalar but
+        the second is a tuple with two arguments then the items
+        in the list should match that structure:
+
         >>> f = lambdify([x, (y, z)], x + y + z)
         >>> f(1, (2, 3))
         6
@@ -255,7 +276,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         [[1]
         [2]]
 
-        Note that the argument order here, variables then expression, is used
+        Note that the argument order here (variables then expression) is used
         to emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
         (roughly) like ``lambda x: expr``
         (see :ref:`lambdify-how-it-works` below).
