@@ -112,7 +112,7 @@ class DiophantineSolutionSet(set):
             self.parameters = parameters
 
     def add_solution(self, *solution):
-        if len(solution) != len(self.parameters):
+        if len(solution) != len(self.symbols):
             raise ValueError("Solution is of incorrect length")
         self.add(solution)
 
