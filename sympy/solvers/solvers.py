@@ -39,6 +39,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
+from sympy.functions.elementary.integers import floor
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
@@ -1699,7 +1700,7 @@ def _solve(f, *symbols, **flags):
                 else:
                     soln = list(soln.keys())
 
-                if soln is not None:
+                if soln is not None and not type(gens[0]) == floor:
                     u = poly.gen
                     if u != symbol:
                         try:
@@ -1725,6 +1726,12 @@ def _solve(f, *symbols, **flags):
 
     # fallback if above fails
     # -----------------------
+
+    if result is False:
+        result=solve_floor(f,symbol)
+        if result is not False:
+            check=False
+
     if result is False:
         # try unrad
         if flags.pop('_unrad', True):
@@ -1784,6 +1791,45 @@ def _solve(f, *symbols, **flags):
                   checksol(f_num, {symbol: r}, **flags) is not False]
     return result
 
+def solve_floor(f, symbol):
+    import math
+    f=sympify(f)
+    result=False
+    if type(f) == floor:
+        lower_limit=solve(f.args[0],symbol)[0]
+        upper_limit=solve(f.args[0]-1,symbol)[0]
+        result=[lower_limit,upper_limit]
+    elif f.is_Add:
+        arg=f.args
+        floor_type=False
+        lst=list(arg)
+        i=0
+        cp_f=0
+        for r in arg:
+            if type(r)==floor :
+                floor_type=True
+                lst[i]=r.args[0]
+            elif r.is_Mul:
+                arg_mul=r.args
+                lst_mul=list(arg_mul)
+                c=0
+                cp_arg=1
+                for m in arg_mul:
+                    if type(m)==floor:
+                        floor_type=True
+                        lst_mul[c]=m.args[0]
+                    cp_arg=cp_arg*lst_mul[c]
+                    c=c+1
+                lst[i]=cp_arg
+            cp_f=cp_f+lst[i]
+            i=i+1
+
+        if floor_type is False:
+            return False
+        lower_limit=solve(cp_f,symbol)[0]
+        upper_limit=math.ceil(solve(cp_f-1,symbol)[0])
+        result=[lower_limit,upper_limit]
+    return result
 
 def _solve_system(exprs, symbols, **flags):
     if not exprs:
