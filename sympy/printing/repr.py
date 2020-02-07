@@ -208,6 +208,9 @@ class ReprPrinter(Printer):
     def _print_Rational(self, expr):
         return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
 
+    def _print_DecimalRational(self, expr):
+        return 'DecimalRational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
+
     def _print_PythonRational(self, expr):
         return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
