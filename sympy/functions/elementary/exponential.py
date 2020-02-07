@@ -436,11 +436,19 @@ class exp(ExpBase):
         if arg0 in [-oo, oo]:
             return self
         t = Dummy("t")
-        exp_series = exp(t)._taylor(t, n)
-        o = exp_series.getO()
-        exp_series = exp_series.removeO()
+        nterms = n
+        try:
+            cf = Order(arg.as_leading_term(x), x).getn()
+        except NotImplementedError:
+            cf = 0
+        if cf and cf > 0:
+            nterms = (n/cf).ceiling()
+        exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
-        r += Order(o.expr.subs(t, (arg_series - arg0)), x)
+        if cf and cf > 1:
+            r += Order((arg_series - arg0)**n, x)/x**((cf-1)*n)
+        else:
+            r += Order((arg_series - arg0)**n, x)
         r = r.expand()
         r = powsimp(r, deep=True, combine='exp')
         # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
@@ -450,14 +458,13 @@ class exp(ExpBase):
         return r
 
     def _taylor(self, x, n):
-        from sympy import Order
         l = []
         g = None
         for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
             l.append(g)
-        return Add(*l) + Order(x**n, x)
+        return Add(*l)
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
