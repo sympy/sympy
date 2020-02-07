@@ -83,7 +83,7 @@ class SingleODEProblem:
         self.eq = eq
         self.func = func
         self.sym = sym
-        self.prep = True
+        self.prep = prep
 
     @cached_property
     def order(self):
