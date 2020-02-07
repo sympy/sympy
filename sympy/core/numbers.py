@@ -2063,11 +2063,11 @@ class DecimalRational(Rational):
     Examples
     ========
 
-    >>> from sympy import DecimalRational
-    >>> latex(DecimalRational(1,10))
-    '.1'
+    >>> from sympy import DecimalRational, latex
+    >>> DecimalRational(1,10)
+    0.100000000000000
     >>> latex(DecimalRational('.1'))
-    '.1'
+    '0.1'
 
     """
     is_DecimalRational = True
