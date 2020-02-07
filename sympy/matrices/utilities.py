@@ -20,6 +20,25 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 # everywhere and setting to `True` will turn it on everywhere in matrices where
 # it can be applied.
 
+# There are a few other places in the matrix code where dotprodsimp can probably
+# help, these are places where a call is made to:
+#
+# dps = _get_intermediate_simp()
+#
+# To determine whether dotprodsimp helps in these places testing needs to be
+# done, to turn dotprodsimp on in these places by default replace this call with:
+#
+# from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
+# dps = _get_intermediate_simp(_dotprodsimp)
+#
+# Or possibly:
+#
+# from sympy import expand_mul
+# dps = _get_intermediate_simp(expand_mul, expand_mul)
+#
+# This second form uses lighter simplification by default but may still do
+# better than nothing.
+
 # True, False or None
 _DOTPRODSIMP_MODE = False if os.environ.get('SYMPY_DOTPRODSIMP', '').lower() in \
         ('false', 'off', '0') else None
@@ -37,20 +56,18 @@ def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
                       _DOTPRODSIMP_MODE if that is not None.
     """
 
-    mode = dotprodsimp if _DOTPRODSIMP_MODE is None else _DOTPRODSIMP_MODE
-
-    if mode is None:
-        return deffunc
-    if mode is False:
+    if dotprodsimp is False or _DOTPRODSIMP_MODE is False:
         return offfunc
+    if dotprodsimp is True or _DOTPRODSIMP_MODE is True:
+        return onfunc
 
-    return onfunc # mode is True
+    return deffunc # None, None
 
-def _get_intermediate_simp_bool(default=False, override=None):
+def _get_intermediate_simp_bool(default=False, dotprodsimp=None):
     """Same as ``_get_intermediate_simp`` but returns bools instead of functions
     by default."""
 
-    return _get_intermediate_simp(default, False, True, override)
+    return _get_intermediate_simp(default, False, True, dotprodsimp)
 
 
 def _iszero(x):
