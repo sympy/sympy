@@ -299,7 +299,6 @@ class FinitePSpace(PSpace):
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values
-        expr = _sympify(expr)
         expr = rv_subs(expr, rvs)
         probs = [self.prob_of(elem) for elem in self.domain]
         if isinstance(expr, (Logic, Relational)):
