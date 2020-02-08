@@ -111,7 +111,7 @@ from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
 from sympy.core.compatibility import (is_sequence, NotIterable,
                                       Iterable)
-from sympy.core.logic import fuzzy_bool
+from sympy.core.logic import fuzzy_bool, fuzzy_and, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -663,7 +663,7 @@ class Idx(Expr):
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
-            if not (range.is_integer or range is S.Infinity):
+            if fuzzy_and([fuzzy_not(range.is_integer), fuzzy_not(range is S.Infinity)]):
                 raise TypeError("Idx object requires an integer dimension.")
             args = label, Tuple(0, range - 1)
         elif range:
