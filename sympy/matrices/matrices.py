@@ -1491,7 +1491,99 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
+
+    def analytic_func(self, f, x):
+        """
+        Computes f(A) where A is a Square Matrix
+        and f is an analytic function.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix, exp, S, log
+
+        >>> x = Symbol('x')
+        >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])
+        >>> f = log(x)
+        >>> m.analytic_func(f, x)
+        Matrix([
+        [     0, log(2)],
+        [log(2),      0]])
+
+        Parameters
+        ==========
+
+        f : Expr
+            Analytic Function
+        x : Symbol
+            parameter of f
+
+        """
+        from sympy import diff
+
+        if not self.is_square:
+            raise NonSquareMatrixError(
+                "Valid only for square matrices")
+        if not x.is_symbol:
+            raise ValueError("The parameter for f should be a symbol")
+        if x not in f.free_symbols:
+            raise ValueError("x should be a parameter in Function")
+        if x in self.free_symbols:
+            raise ValueError("x should be a parameter in Matrix")
+        eigen = self.eigenvals()
+
+        max_mul = max(eigen.values())
+        derivative = {}
+        dd = f
+        for i in range(max_mul - 1):
+            dd = diff(dd, x)
+            derivative[i + 1] = dd
+        n = self.shape[0]
+        r = self.zeros(n)
+        f_val = self.zeros(n, 1)
+        row = 0
+
+        for i in eigen:
+            mul = eigen[i]
+            f_val[row] = f.subs(x, i)
+            if not f.subs(x, i).free_symbols and not f.subs(x, i).is_complex:
+                raise ValueError("Cannot Evaluate the function is not"
+                                 " analytic at some eigen value")
+            val = 1
+            for a in range(n):
+                r[row, a] = val
+                val *= i
+            if mul > 1:
+                coe = [1 for ii in range(n)]
+                deri = 1
+                while mul > 1:
+                    row = row + 1
+                    mul -= 1
+                    d_i = derivative[deri].subs(x, i)
+                    if not d_i.free_symbols and not d_i.is_complex:
+                        raise ValueError("Cannot Evaluate the function is not"
+                                 " analytic at some eigen value")
+                    f_val[row] = d_i
+                    for a in range(n):
+                        if a - deri + 1 <= 0:
+                            r[row, a] = 0
+                            coe[a] = 0
+                            continue
+                        coe[a] = coe[a]*(a - deri + 1)
+                        r[row, a] = coe[a]*pow(i, a - deri)
+                    deri += 1
+            row += 1
+        c = r.solve(f_val)
+        ans = self.zeros(n)
+        pre = self.eye(n)
+        for i in range(n):
+            ans = ans + c[i]*pre
+            pre *= self
+        return ans
+
+
     def exp(self):
+
         """Return the exponential of a square matrix
 
         Examples
