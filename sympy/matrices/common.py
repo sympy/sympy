@@ -2310,7 +2310,7 @@ class MatrixArithmetic(MatrixRequired):
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
-            speed up calculation.
+            speed up calculation. Default is off.
         """
 
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
@@ -2391,8 +2391,9 @@ class MatrixArithmetic(MatrixRequired):
 
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
+            during naive matrix power to control expression blowup and thus
+            speed up calculation. If the power is calculated using Jordan form
+            then this option has no effect. Default is on.
         """
 
         if self.rows != self.cols:

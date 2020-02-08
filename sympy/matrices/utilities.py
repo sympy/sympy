@@ -38,6 +38,11 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 #
 # This second form uses lighter simplification by default but may still do
 # better than nothing.
+#
+# The other place where dotprodsimp may be added is any place where matrices are
+# multiplied via:
+#
+# A.multiply(B) -> A.multiply(B, dotprodsimp=True)
 
 # True, False or None
 _DOTPRODSIMP_MODE = False if os.environ.get('SYMPY_DOTPRODSIMP', '').lower() in \
