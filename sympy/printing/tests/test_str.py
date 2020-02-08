@@ -8,7 +8,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.geometry import Point, Circle
+from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 
 from sympy.testing.pytest import raises
 
@@ -122,7 +122,15 @@ def test_Function():
 def test_Geometry():
     assert sstr(Point(0, 0)) == 'Point2D(0, 0)'
     assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point2D(0, 0), 3)'
-    # TODO test other Geometry entities
+    assert sstr(Ellipse(Point(1, 2), 3, 4)) == 'Ellipse(Point2D(1, 2), 3, 4)'
+    assert sstr(Triangle(Point(1, 1), Point(7, 8), Point(0, -1))) == \
+        'Triangle(Point2D(1, 1), Point2D(7, 8), Point2D(0, -1))'
+    assert sstr(Polygon(Point(5, 6), Point(-2, -3), Point(0, 0), Point(4, 7))) == \
+        'Polygon(Point2D(5, 6), Point2D(-2, -3), Point2D(0, 0), Point2D(4, 7))'
+    assert sstr(Triangle(Point(0, 0), Point(1, 0), Point(0, 1)), sympy_integers=True) == \
+        'Triangle(Point2D(S(0), S(0)), Point2D(S(1), S(0)), Point2D(S(0), S(1)))'
+    assert sstr(Ellipse(Point(1, 2), 3, 4), sympy_integers=True) == \
+        'Ellipse(Point2D(S(1), S(2)), S(3), S(4))'
 
 
 def test_GoldenRatio():
