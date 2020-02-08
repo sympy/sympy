@@ -4,6 +4,8 @@ A Printer for generating readable representation of most sympy classes.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
 from .printer import Printer
@@ -21,9 +23,12 @@ class StrPrinter(Printer):
         "full_prec": "auto",
         "sympy_integers": False,
         "abbrev": False,
-    }
+        "perm_cyclic": True,
+        "min": None,
+        "max": None,
+    }  # type: Dict[str, Any]
 
-    _relationals = dict()
+    _relationals = dict()  # type: Dict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -38,10 +43,7 @@ class StrPrinter(Printer):
         if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
-            if hasattr(expr, "args"):
-                return repr(expr)
-            else:
-                raise
+            return repr(expr)
         else:
             return str(expr)
 
@@ -83,6 +85,9 @@ class StrPrinter(Printer):
 
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
+
+    def _print_Xor(self, expr):
+        return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
@@ -148,20 +153,8 @@ class StrPrinter(Printer):
     def _print_ExprCondPair(self, expr):
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
-    def _print_FiniteSet(self, s):
-        s = sorted(s, key=default_sort_key)
-        if len(s) > 10:
-            printset = s[:3] + ['...'] + s[-3:]
-        else:
-            printset = s
-        return '{' + ', '.join(self._print(el) for el in printset) + '}'
-
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
-
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
-        return str(expr)
 
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
@@ -211,12 +204,11 @@ class StrPrinter(Printer):
         return "%s**(-1)" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     def _print_Lambda(self, obj):
-        args, expr = obj.args
-        if len(args) == 1:
-            return "Lambda(%s, %s)" % (self._print(args.args[0]), self._print(expr))
-        else:
-            arg_string = ", ".join(self._print(arg) for arg in args)
-            return "Lambda((%s), %s)" % (arg_string, self._print(expr))
+        expr = obj.expr
+        sig = obj.signature
+        if len(sig) == 1 and sig[0].is_symbol:
+            sig = sig[0]
+        return "Lambda(%s, %s)" % (self._print(sig), self._print(expr))
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)
@@ -235,15 +227,31 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
-    _print_SparseMatrix = \
-        _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+
+    def _print_MutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_SparseMatrix(self, expr):
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr))
+
+    def _print_ImmutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_Matrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_DenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_MutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
@@ -315,7 +323,7 @@ class StrPrinter(Printer):
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
-        if len(b) == 0:
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]
@@ -334,9 +342,11 @@ class StrPrinter(Printer):
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
         )
 
-    def _print_HadamardProduct(self, expr):
-        return '.*'.join([self.parenthesize(arg, precedence(expr))
-            for arg in expr.args])
+    def _print_ElementwiseApplyFunction(self, expr):
+        return "{0}.({1})".format(
+            expr.function,
+            self._print(expr.expr),
+        )
 
     def _print_NaN(self, expr):
         return 'nan'
@@ -344,11 +354,8 @@ class StrPrinter(Printer):
     def _print_NegativeInfinity(self, expr):
         return '-oo'
 
-    def _print_Normal(self, expr):
-        return "Normal(%s, %s)" % (self._print(expr.mu), self._print(expr.sigma))
-
     def _print_Order(self, expr):
-        if all(p is S.Zero for p in expr.point) or not len(expr.variables):
+        if not expr.variables or all(p is S.Zero for p in expr.point):
             if len(expr.variables) <= 1:
                 return 'O(%s)' % self._print(expr.expr)
             else:
@@ -364,7 +371,20 @@ class StrPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        if Permutation.print_cyclic:
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
             if not expr.size:
                 return '()'
             # before taking Cycle notation, see if the last element is
@@ -417,11 +437,6 @@ class StrPrinter(Printer):
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
-
-    def _print_PDF(self, expr):
-        return 'PDF(%s, (%s, %s, %s))' % \
-            (self._print(expr.pdf.args[1]), self._print(expr.pdf.args[0]),
-            self._print(expr.domain[0]), self._print(expr.domain[1]))
 
     def _print_Pi(self, expr):
         return 'pi'
@@ -516,8 +531,8 @@ class StrPrinter(Printer):
 
         return format % (' '.join(terms), ', '.join(gens))
 
-    def _print_ProductSet(self, p):
-        return ' x '.join(self._print(set) for set in p.sets)
+    def _print_UniversalSet(self, p):
+        return 'UniversalSet'
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
@@ -526,6 +541,44 @@ class StrPrinter(Printer):
             return self._print(expr.as_expr())
 
     def _print_Pow(self, expr, rational=False):
+        """Printing helper function for ``Pow``
+
+        Parameters
+        ==========
+
+        rational : bool, optional
+            If ``True``, it will not attempt printing ``sqrt(x)`` or
+            ``x**S.Half`` as ``sqrt``, and will use ``x**(1/2)``
+            instead.
+
+            See examples for additional details
+
+        Examples
+        ========
+
+        >>> from sympy.functions import sqrt
+        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy.abc import x
+
+        How ``rational`` keyword works with ``sqrt``:
+
+        >>> printer = StrPrinter()
+        >>> printer._print_Pow(sqrt(x), rational=True)
+        'x**(1/2)'
+        >>> printer._print_Pow(sqrt(x), rational=False)
+        'sqrt(x)'
+        >>> printer._print_Pow(1/sqrt(x), rational=True)
+        'x**(-1/2)'
+        >>> printer._print_Pow(1/sqrt(x), rational=False)
+        '1/sqrt(x)'
+
+        Notes
+        =====
+
+        ``sqrt(x)`` is canonicalized as ``Pow(x, S.Half)`` in SymPy,
+        so there is no need of defining a separate printer for ``sqrt``.
+        Instead, it should be handled here as well.
+        """
         PREC = precedence(expr)
 
         if expr.exp is S.Half and not rational:
@@ -577,8 +630,20 @@ class StrPrinter(Printer):
     def _print_Naturals0(self, expr):
         return 'Naturals0'
 
+    def _print_Rationals(self, expr):
+        return 'Rationals'
+
     def _print_Reals(self, expr):
         return 'Reals'
+
+    def _print_Complexes(self, expr):
+        return 'Complexes'
+
+    def _print_EmptySet(self, expr):
+        return 'EmptySet'
+
+    def _print_EmptySequence(self, expr):
+        return 'EmptySequence'
 
     def _print_int(self, expr):
         return str(expr)
@@ -624,7 +689,9 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
@@ -681,9 +748,6 @@ class StrPrinter(Printer):
 
         return "%s(%s)" % (cls, ", ".join(args))
 
-    def _print_Sample(self, expr):
-        return "Sample([%s])" % self.stringify(expr, ", ", 0)
-
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
 
@@ -696,10 +760,6 @@ class StrPrinter(Printer):
         if not s:
             return "frozenset()"
         return "frozenset(%s)" % self._print_set(s)
-
-    def _print_SparseMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr))
 
     def _print_Sum(self, expr):
         def _xab_tostr(xab):
@@ -721,6 +781,9 @@ class StrPrinter(Printer):
     def _print_ZeroMatrix(self, expr):
         return "0"
 
+    def _print_OneMatrix(self, expr):
+        return "1"
+
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name
 
@@ -741,12 +804,6 @@ class StrPrinter(Printer):
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)" % (self._print(expr.a), self._print(expr.b))
-
-    def _print_Union(self, expr):
-        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
-
-    def _print_Complement(self, expr):
-        return r' \ '.join(self._print(set_) for set_ in expr.args)
 
     def _print_Quantity(self, expr):
         if self._settings.get("abbrev", False):

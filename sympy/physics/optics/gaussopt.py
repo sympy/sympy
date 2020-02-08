@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """
 Gaussian optics.
 
@@ -44,8 +43,8 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
-    together)
+from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
+    together, MutableDenseMatrix)
 from sympy.utilities.misc import filldedent
 
 ###
@@ -53,7 +52,7 @@ from sympy.utilities.misc import filldedent
 ###
 
 
-class RayTransferMatrix(Matrix):
+class RayTransferMatrix(MutableDenseMatrix):
     """
     Base class for a Ray Transfer Matrix.
 
@@ -375,7 +374,7 @@ class ThinLens(RayTransferMatrix):
 # Representation for geometric ray
 ###
 
-class GeometricRay(Matrix):
+class GeometricRay(MutableDenseMatrix):
     """
     Representation for a geometric ray in the Ray Transfer Matrix formalism.
 
@@ -516,7 +515,7 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    __slots__ = ['z', 'z_r', 'wavelen']
+    __slots__ = ('z', 'z_r', 'wavelen')
 
     def __new__(cls, wavelen, z, **kwargs):
         wavelen, z = map(sympify, (wavelen, z))
@@ -721,8 +720,8 @@ def geometric_conj_ab(a, b):
     a*b/(a + b)
     """
     a, b = map(sympify, (a, b))
-    if abs(a) == oo or abs(b) == oo:
-        return a if abs(b) == oo else b
+    if a.is_infinite or b.is_infinite:
+        return a if b.is_infinite else b
     else:
         return a*b/(a + b)
 
@@ -826,7 +825,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     >>> l, w_i, w_o, f = symbols('l w_i w_o f')
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[0]
-    f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
+    f*(1 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
     f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -

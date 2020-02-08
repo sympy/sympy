@@ -1,11 +1,13 @@
 from __future__ import print_function, division
 
+from typing import Tuple
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered, range
+from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.utilities.iterables import sift
 
 
@@ -23,7 +25,7 @@ class AssocOp(Basic):
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -31,11 +33,18 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
+        # XXX: Maybe only Expr should be allowed here...
+        from sympy.core.relational import Relational
+        if any(isinstance(arg, Relational) for arg in args):
+            raise TypeError("Relational can not be used in %s" % cls.__name__)
+
         evaluate = options.get('evaluate')
         if evaluate is None:
-            evaluate = global_evaluate[0]
+            evaluate = global_parameters.evaluate
         if not evaluate:
-            return cls._from_args(args)
+            obj = cls._from_args(args)
+            obj = cls._exec_constructor_postprocessors(obj)
+            return obj
 
         if len(args) == 0:
             return cls.identity
@@ -53,7 +62,10 @@ class AssocOp(Basic):
 
     @classmethod
     def _from_args(cls, args, is_commutative=None):
-        """Create new instance with already-processed args"""
+        """Create new instance with already-processed args.
+        If the args are not in canonical order, then a non-canonical
+        result will be returned, so use with caution. The order of
+        args may change if the sign of the args is changed."""
         if len(args) == 0:
             return cls.identity
         elif len(args) == 1:
@@ -126,6 +138,8 @@ class AssocOp(Basic):
                 seq.extend(o.args)
             else:
                 new_seq.append(o)
+        new_seq.reverse()
+
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
@@ -294,7 +308,7 @@ class AssocOp(Basic):
         was a number with no functions it would have been evaluated, but
         it wasn't so we must judiciously extract the numbers and reconstruct
         the object. This is *not* simply replacing numbers with evaluated
-        numbers. Nunmbers should be handled in the largest pure-number
+        numbers. Numbers should be handled in the largest pure-number
         expression as possible. So the code below separates ``self`` into
         number and non-number parts and evaluates the number parts and
         walks the args of the non-number part recursively (doing the same
@@ -447,7 +461,9 @@ class LatticeOp(AssocOp):
         else:
             return frozenset([sympify(expr)])
 
-    @property
+    # XXX: This should be cached on the object rather than using cacheit
+    # Maybe _argset can just be sorted in the constructor?
+    @property  # type: ignore
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))

@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
-from sympy.core.compatibility import string_types
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import GoldenRatio
 from sympy.core.symbol import Dummy
@@ -68,18 +67,7 @@ def limit(e, z, z0, dir="+"):
      limit_seq : returns the limit of a sequence.
     """
 
-    if dir == "+-":
-        llim = Limit(e, z, z0, dir="-").doit(deep=False)
-        rlim = Limit(e, z, z0, dir="+").doit(deep=False)
-        if llim == rlim:
-            return rlim
-        else:
-            # TODO: choose a better error?
-            raise ValueError("The limit does not exist since "
-                    "left hand limit = %s and right hand limit = %s"
-                    % (llim, rlim))
-    else:
-        return Limit(e, z, z0, dir).doit(deep=False)
+    return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
@@ -169,7 +157,7 @@ class Limit(Expr):
         elif z0 is S.NegativeInfinity:
             dir = "+"
 
-        if isinstance(dir, string_types):
+        if isinstance(dir, str):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or "
@@ -205,7 +193,6 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy.series.limitseq import limit_seq
         from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
@@ -229,7 +216,7 @@ class Limit(Expr):
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
-        if z0.is_positive:
+        if z0.is_extended_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
         if e.is_Mul:
@@ -247,20 +234,35 @@ class Limit(Expr):
                         inve = e.subs(z, -1/u)
                     else:
                         inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
+                    try:
+                        r = limit(inve.as_leading_term(u), u, S.Zero, "+")
+                        if isinstance(r, Limit):
+                            return self
+                        else:
+                            return r
+                    except ValueError:
+                        pass
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
+        l = None
+
         try:
-            r = gruntz(e, z, z0, dir)
-            if r is S.NaN:
+            if str(dir) == '+-':
+                r = gruntz(e, z, z0, '+')
+                l = gruntz(e, z, z0, '-')
+                if l != r:
+                    raise ValueError("The limit does not exist since "
+                            "left hand limit = %s and right hand limit = %s"
+                            % (l, r))
+            else:
+                r = gruntz(e, z, z0, dir)
+            if r is S.NaN or l is S.NaN:
                 raise PoleError()
         except (PoleError, ValueError):
+            if l is not None:
+                raise
             r = heuristics(e, z, z0, dir)
             if r is None:
                 return self

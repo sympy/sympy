@@ -2,10 +2,9 @@
 
 from __future__ import print_function, division
 
+from sympy.core import S
+from sympy.matrices.common import ShapeError
 from sympy.matrices.dense import MutableDenseMatrix
-from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.symbol import Symbol, Dummy, symbols
-from sympy import S
 
 
 class NewMatrix(MutableDenseMatrix):
@@ -19,7 +18,6 @@ class NewMatrix(MutableDenseMatrix):
         return a
 
     def row_join(self, rhs):
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return type(self)(rhs)
@@ -33,7 +31,6 @@ class NewMatrix(MutableDenseMatrix):
         return type(self)(newmat)
 
     def col_join(self, bott):
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return type(self)(bott)
@@ -47,7 +44,7 @@ class NewMatrix(MutableDenseMatrix):
         return type(self)(newmat)
 
     def gauss_jordan_solve(self, b, freevar=False):
-        from sympy.matrices import Matrix, zeros
+        from sympy.matrices import Matrix
 
         aug = self.hstack(self.copy(), b.copy())
         row, col = aug[:, :-1].shape
@@ -69,14 +66,14 @@ class NewMatrix(MutableDenseMatrix):
 
         # check for existence of solutions
         # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, 0].is_zero:
+        if not v[rank:, 0].is_zero_matrix:
             raise ValueError("Linear system has no solution")
 
         # Get index of free symbols (free parameters)
         free_var_index = permutation[len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
-        tau = NewMatrix([S(1) for k in range(col - rank)]).reshape(col - rank, 1)
+        tau = NewMatrix([S.One for k in range(col - rank)]).reshape(col - rank, 1)
 
         # Full parametric solution
         V = A[:rank, rank:]

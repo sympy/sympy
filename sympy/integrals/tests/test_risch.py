@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Eq, Ne, Piecewise, factor, expand_log, cancel,
-    expand, diff, pi, atan)
+    Symbol, Lambda, sin, Ne, Piecewise, factor, expand_log, cancel,
+    diff, pi, atan, Rational)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -10,7 +10,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
     recognize_derivative, laurent_series)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
@@ -20,6 +20,8 @@ def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
     Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
         (Poly((-x**2 + 4*x - 3)/5), Poly((x**3 - 7*x**2 + 16*x - 10)/5))
+    assert gcdex_diophantine(Poly(x**3 + 6*x + 7), Poly(x**2 + 3*x + 2), Poly(x + 1)) == \
+        (Poly(1/13, x, domain='QQ'), Poly(-1/13*x + 3/13, x, domain='QQ'))
 
 
 def test_frac_in():
@@ -43,7 +45,7 @@ def test_as_poly_1t():
         Poly(2/(exp(2) + 1)*z, t, z), Poly(2/(exp(2) + 1)*z, z, t)]
     assert as_poly_1t(2/((exp(2) + 1)*t) + t, t, z) in [
         Poly(t + 2/(exp(2) + 1)*z, t, z), Poly(t + 2/(exp(2) + 1)*z, z, t)]
-    assert as_poly_1t(S(0), t, z) == Poly(0, t, z)
+    assert as_poly_1t(S.Zero, t, z) == Poly(0, t, z)
 
 
 def test_derivation():
@@ -51,8 +53,8 @@ def test_derivation():
         (2*x + 7*x**2 + 2*x**3)*t**2 + (1 - 4*x - 4*x**2)*t - 1 + 2*x, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t**2 - 3/(2*x)*t + 1/(2*x), t)]})
     assert derivation(p, DE) == Poly(-20*x**4*t**6 + (2*x**3 + 16*x**4)*t**5 +
-        (21*x**2 + 12*x**3)*t**4 + (7*x/2 - 25*x**2 - 12*x**3)*t**3 +
-        (-5 - 15*x/2 + 7*x**2)*t**2 - (3 - 8*x - 10*x**2 - 4*x**3)/(2*x)*t +
+        (21*x**2 + 12*x**3)*t**4 + (x*Rational(7, 2) - 25*x**2 - 12*x**3)*t**3 +
+        (-5 - x*Rational(15, 2) + 7*x**2)*t**2 - (3 - 8*x - 10*x**2 - 4*x**3)/(2*x)*t +
         (1 - 4*x**2)/(2*x), t)
     assert derivation(Poly(1, t), DE) == Poly(0, t)
     assert derivation(Poly(t, t), DE) == DE.d
@@ -203,10 +205,10 @@ def test_residue_reduce():
     d = Poly(t**3 - x**2*t, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)], 'Tfuncs': [log]})
     assert residue_reduce(a, d, DE, z, invert=False) == \
-        ([(Poly(z**2 - S(1)/4, z), Poly((1 + 3*x*z - 6*z**2 -
+        ([(Poly(z**2 - Rational(1, 4), z), Poly((1 + 3*x*z - 6*z**2 -
         2*x**2 + 4*x**2*z**2)*t - x*z + x**2 + 2*x**2*z**2 - 2*z*x**3, t))], False)
     assert residue_reduce(a, d, DE, z, invert=True) == \
-        ([(Poly(z**2 - S(1)/4, z), Poly(t + 2*x*z, t))], False)
+        ([(Poly(z**2 - Rational(1, 4), z), Poly(t + 2*x*z, t))], False)
     assert residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t,), DE, z, invert=False) == \
         ([(Poly(z**2 - 1, z), Poly(-2*z*t/x - 2/x, t))], True)
     ans = residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t), DE, z, invert=True)
@@ -217,11 +219,11 @@ def test_residue_reduce():
     # TODO: Skip or make faster
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
     Poly(t**2 + 1 + x**2/2, t), DE, z) == \
-        ([(Poly(z + S(1)/2, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t, domain='EX'))], True)
+        ([(Poly(z + S.Half, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t, domain='EX'))], True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
     assert residue_reduce(Poly(-2*x*t + 1 - x**2, t),
     Poly(t**2 + 2*x*t + 1 + x**2, t), DE, z) == \
-        ([(Poly(z**2 + S(1)/4, z), Poly(t + x + 2*z, t))], True)
+        ([(Poly(z**2 + Rational(1, 4), z), Poly(t + x + 2*z, t))], True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert residue_reduce(Poly(t, t), Poly(t + sqrt(2), t), DE, z) == \
         ([(Poly(z - 1, z), Poly(t + sqrt(2), t))], True)
@@ -409,8 +411,8 @@ def test_integrate_nonlinear_no_specials():
 
 
 def test_integer_powers():
-    assert integer_powers([x, x/2, x**2 + 1, 2*x/3]) == [
-            (x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]),
+    assert integer_powers([x, x/2, x**2 + 1, x*Rational(2, 3)]) == [
+            (x/6, [(x, 6), (x/2, 3), (x*Rational(2, 3), 4)]),
             (1 + x**2, [(1 + x**2, 1)])]
 
 

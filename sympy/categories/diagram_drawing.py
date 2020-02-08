@@ -84,15 +84,16 @@ References
 """
 from __future__ import print_function, division
 
-from sympy.core import Dict, Symbol
-from sympy.sets import FiniteSet
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
-from sympy.utilities import default_sort_key
-from itertools import chain
-from sympy.core.compatibility import iterable, range
+from sympy.core import Dict, Symbol
+from sympy.core.compatibility import iterable
 from sympy.printing import latex
+from sympy.sets import FiniteSet
+from sympy.utilities import default_sort_key
 from sympy.utilities.decorator import doctest_depends_on
+
+from itertools import chain
 
 
 __doctest_requires__ = {('preview_diagram',): 'pyglet'}
@@ -544,7 +545,6 @@ class DiagramGrid(object):
             # edge.
 
             A = grid[edge[0]]
-            B = grid[edge[1]]
 
             if skeleton.get(frozenset([A, obj])):
                 return pt1
@@ -1324,8 +1324,8 @@ class DiagramGrid(object):
         >>> diagram = Diagram([f, g])
         >>> grid = DiagramGrid(diagram)
         >>> grid.morphisms
-        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet(),
-        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet()}
+        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet,
+        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet}
 
         """
         return self._morphisms
@@ -1502,7 +1502,7 @@ class ArrowStringDescription(object):
 
 class XypicDiagramDrawer(object):
     r"""
-    Given a :class:`Diagram` and the corresponding
+    Given a :class:`~.Diagram` and the corresponding
     :class:`DiagramGrid`, produces the Xy-pic representation of the
     diagram.
 
@@ -2089,7 +2089,7 @@ class XypicDiagramDrawer(object):
         # Let's now get the name of the morphism.
         morphism_name = ""
         if isinstance(morphism, IdentityMorphism):
-            morphism_name = "id_{%s}" + latex(obj)
+            morphism_name = "id_{%s}" + latex(grid[i, j])
         elif isinstance(morphism, CompositeMorphism):
             component_names = [latex(Symbol(component.name)) for
                                component in morphism.components]
@@ -2580,7 +2580,7 @@ def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
     See Also
     ========
 
-    xypic_diagram_drawer
+    XypicDiagramDrawer
     """
     from sympy.printing import preview
     latex_output = xypic_draw_diagram(diagram, masked, diagram_format,

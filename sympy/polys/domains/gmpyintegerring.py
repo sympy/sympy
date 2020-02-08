@@ -1,4 +1,4 @@
-"""Implementaton of :class:`GMPYIntegerRing` class. """
+"""Implementation of :class:`GMPYIntegerRing` class. """
 
 from __future__ import print_function, division
 

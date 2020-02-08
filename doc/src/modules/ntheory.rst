@@ -1,5 +1,6 @@
+=============
 Number Theory
-====================
+=============
 
 .. module:: sympy.ntheory.generate
 
@@ -49,11 +50,17 @@ Ntheory Functions Reference
 
 .. autofunction:: factorint
 
+.. autofunction:: factorrat
+
 .. autofunction:: primefactors
 
 .. autofunction:: divisors
 
+.. autofunction:: proper_divisors
+
 .. autofunction:: divisor_count
+
+.. autofunction:: proper_divisor_count
 
 .. autofunction:: udivisors
 
@@ -85,6 +92,20 @@ Ntheory Functions Reference
 .. autoclass:: primeomega
     :members:
 
+.. autofunction:: mersenne_prime_exponent
+
+.. autofunction:: is_perfect
+
+.. autofunction:: is_mersenne_prime
+
+.. autofunction:: abundance
+
+.. autofunction:: is_abundant
+
+.. autofunction:: is_deficient
+
+.. autofunction:: is_amicable
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue
@@ -113,7 +134,17 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.primetest
 
+.. autofunction:: is_euler_pseudoprime
+
+.. autofunction:: is_square
+
 .. autofunction:: mr
+
+.. autofunction:: is_lucas_prp
+
+.. autofunction:: is_strong_lucas_prp
+
+.. autofunction:: is_extra_strong_lucas_prp
 
 .. autofunction:: isprime
 
@@ -126,6 +157,8 @@ Ntheory Functions Reference
 .. autofunction:: primitive_root
 
 .. autofunction:: sqrt_mod
+
+.. autofunction:: sqrt_mod_iter
 
 .. autofunction:: quadratic_residues
 
@@ -150,3 +183,7 @@ Ntheory Functions Reference
 .. module:: sympy.ntheory.egyptian_fraction
 
 .. autofunction:: egyptian_fraction
+
+.. module:: sympy.ntheory.bbp_pi
+
+.. autofunction:: pi_hex_digits

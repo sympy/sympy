@@ -1,12 +1,16 @@
 from __future__ import print_function, division
 
+from typing import Dict, Type, Union
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
+from .basic import Basic
 from .expr import Expr
 from .evalf import EvalfMixin
 from .sympify import _sympify
-from .evaluate import global_evaluate
+from .parameters import global_parameters
 
 from sympy.logic.boolalg import Boolean, BooleanAtom
 
@@ -17,31 +21,30 @@ __all__ = (
 )
 
 
+
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
 def _canonical(cond):
     # return a condition in which all relationals are canonical
-    try:
-        reps = dict([(r, r.canonical)
-            for r in cond.atoms(Relational)])
-        return cond.xreplace(reps)
-    except AttributeError:
-        return cond
+    reps = {r: r.canonical for r in cond.atoms(Relational)}
+    return cond.xreplace(reps)
+    # XXX: AttributeError was being caught here but it wasn't triggered by any of
+    # the tests so I've removed it...
 
 
-class Relational(Boolean, Expr, EvalfMixin):
+class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
     Subclasses of Relational should generally be instantiated directly, but
-    Relational can be instantiated with a valid `rop` value to dispatch to
+    Relational can be instantiated with a valid ``rop`` value to dispatch to
     the appropriate subclass.
 
     Parameters
     ==========
     rop : str or None
         Indicates what subclass to instantiate.  Valid values can be found
-        in the keys of Relational.ValidRelationalOperator.
+        in the keys of Relational.ValidRelationOperator.
 
     Examples
     ========
@@ -52,7 +55,9 @@ class Relational(Boolean, Expr, EvalfMixin):
     Eq(y, x**2 + x)
 
     """
-    __slots__ = []
+    __slots__ = ()
+
+    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -60,37 +65,42 @@ class Relational(Boolean, Expr, EvalfMixin):
     #   have not yet been defined
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
-        # If called by a subclass, do nothing special and pass on to Expr.
+        # If called by a subclass, do nothing special and pass on to Basic.
         if cls is not Relational:
-            return Expr.__new__(cls, lhs, rhs, **assumptions)
+            return Basic.__new__(cls, lhs, rhs, **assumptions)
+
+        # XXX: Why do this? There should be a separate function to make a
+        # particular subclass of Relational from a string.
+        #
         # If called directly with an operator, look up the subclass
         # corresponding to that operator and delegate to it
-        try:
-            cls = cls.ValidRelationOperator[rop]
-            rv = cls(lhs, rhs, **assumptions)
-            # /// drop when Py2 is no longer supported
+        cls = cls.ValidRelationOperator.get(rop, None)
+        if cls is None:
+            raise ValueError("Invalid relational operator symbol: %r" % rop)
+
+        # XXX: Why should the below be removed when Py2 is not supported?
+        #
+        # /// drop when Py2 is no longer supported
+        if not issubclass(cls, (Eq, Ne)):
             # validate that Booleans are not being used in a relational
             # other than Eq/Ne;
-            if isinstance(rv, (Eq, Ne)):
-                pass
-            elif isinstance(rv, Relational):  # could it be otherwise?
-                from sympy.core.symbol import Symbol
-                from sympy.logic.boolalg import Boolean
-                for a in rv.args:
-                    if isinstance(a, Symbol):
-                        continue
-                    if isinstance(a, Boolean):
-                        from sympy.utilities.misc import filldedent
-                        raise TypeError(filldedent('''
-                            A Boolean argument can only be used in
-                            Eq and Ne; all other relationals expect
-                            real expressions.
-                        '''))
-            # \\\
-            return rv
-        except KeyError:
-            raise ValueError(
-                "Invalid relational operator symbol: %r" % rop)
+            # Note: Symbol is a subclass of Boolean but is considered
+            # acceptable here.
+            from sympy.core.symbol import Symbol
+            from sympy.logic.boolalg import Boolean
+            def unacceptable(side):
+                return isinstance(side, Boolean) and not isinstance(side, Symbol)
+
+            if unacceptable(lhs) or unacceptable(rhs):
+                from sympy.utilities.misc import filldedent
+                raise TypeError(filldedent('''
+                    A Boolean argument can only be used in
+                    Eq and Ne; all other relationals expect
+                    real expressions.
+                '''))
+        # \\\
+
+        return cls(lhs, rhs, **assumptions)
 
     @property
     def lhs(self):
@@ -104,7 +114,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     @property
     def reversed(self):
-        """Return the relationship with sides (and sign) reversed.
+        """Return the relationship with sides reversed.
 
         Examples
         ========
@@ -120,9 +130,68 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> _.reversed
         1 > x
         """
-        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
         a, b = self.args
-        return ops.get(self.func, self.func)(b, a, evaluate=False)
+        return Relational.__new__(ops.get(self.func, self.func), b, a)
+
+    @property
+    def reversedsign(self):
+        """Return the relationship with signs reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.reversedsign
+        Eq(-x, -1)
+        >>> x < 1
+        x < 1
+        >>> _.reversedsign
+        -x > -1
+        """
+        a, b = self.args
+        if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
+            ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
+            return Relational.__new__(ops.get(self.func, self.func), -a, -b)
+        else:
+            return self
+
+    @property
+    def negated(self):
+        """Return the negated relationship.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.negated
+        Ne(x, 1)
+        >>> x < 1
+        x < 1
+        >>> _.negated
+        x >= 1
+
+        Notes
+        =====
+
+        This works more or less identical to ``~``/``Not``. The difference is
+        that ``negated`` returns the relationship even if ``evaluate=False``.
+        Hence, this is useful in code when checking for e.g. negated relations
+        to existing ones as it will not be affected by the `evaluate` flag.
+
+        """
+        ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
+        # If there ever will be new Relational subclasses, the following line
+        # will work until it is properly sorted out
+        # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a,
+        #      b, evaluate=evaluate)))(*self.args, evaluate=False)
+        return Relational.__new__(ops.get(self.func), *self.args)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
@@ -130,8 +199,9 @@ class Relational(Boolean, Expr, EvalfMixin):
     @property
     def canonical(self):
         """Return a canonical form of the relational by putting a
-        Number on the rhs else ordering the args. No other
-        simplification is attempted.
+        Number on the rhs else ordering the args. The relation is also changed
+        so that the left-hand side expression does not start with a ``-``.
+        No other simplification is attempted.
 
         Examples
         ========
@@ -148,13 +218,33 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         args = self.args
         r = self
-        if r.rhs.is_Number:
-            if r.lhs.is_Number and r.lhs > r.rhs:
+        if r.rhs.is_number:
+            if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
-        elif r.lhs.is_Number:
+        elif r.lhs.is_number:
             r = r.reversed
         elif tuple(ordered(args)) != args:
             r = r.reversed
+
+        LHS_CEMS = getattr(r.lhs, 'could_extract_minus_sign', None)
+        RHS_CEMS = getattr(r.rhs, 'could_extract_minus_sign', None)
+
+        if isinstance(r.lhs, BooleanAtom) or isinstance(r.rhs, BooleanAtom):
+            return r
+
+        # Check if first value has negative sign
+        if LHS_CEMS and LHS_CEMS():
+            return r.reversedsign
+        elif not r.rhs.is_number and RHS_CEMS and RHS_CEMS():
+            # Right hand side has a minus, but not lhs.
+            # How does the expression with reversed signs behave?
+            # This is so that expressions of the type
+            # Eq(x, -y) and Eq(-x, y)
+            # have the same canonical representation
+            expr1, _ = ordered([r.lhs, -r.rhs])
+            if expr1 != r.lhs:
+                return r.reversed.reversedsign
+
         return r
 
     def equals(self, other, failing_expression=False):
@@ -169,19 +259,20 @@ class Relational(Boolean, Expr, EvalfMixin):
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
                 if a.func != b.func:
                     return False
-                l, r = [i.equals(j, failing_expression=failing_expression)
-                    for i, j in zip(a.args, b.args)]
-                if l is True:
-                    return r
-                if r is True:
-                    return l
+                left, right = [i.equals(j,
+                                        failing_expression=failing_expression)
+                               for i, j in zip(a.args, b.args)]
+                if left is True:
+                    return right
+                if right is True:
+                    return left
                 lr, rl = [i.equals(j, failing_expression=failing_expression)
-                    for i, j in zip(a.args, b.reversed.args)]
+                          for i, j in zip(a.args, b.reversed.args)]
                 if lr is True:
                     return rl
                 if rl is True:
                     return lr
-                e = (l, r, lr, rl)
+                e = (left, right, lr, rl)
                 if all(i is False for i in e):
                     return False
                 for i in e:
@@ -192,20 +283,21 @@ class Relational(Boolean, Expr, EvalfMixin):
                     b = b.reversed
                 if a.func != b.func:
                     return False
-                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
-                if l is False:
+                left = a.lhs.equals(b.lhs,
+                                    failing_expression=failing_expression)
+                if left is False:
                     return False
-                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
-                if r is False:
+                right = a.rhs.equals(b.rhs,
+                                     failing_expression=failing_expression)
+                if right is False:
                     return False
-                if l is True:
-                    return r
-                return l
+                if left is True:
+                    return right
+                return left
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         r = self
-        r = r.func(*[i.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
-            for i in r.args])
+        r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
@@ -217,12 +309,81 @@ class Relational(Boolean, Expr, EvalfMixin):
                 v = S.Zero
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
+            r = r.canonical
+            # If there is only one symbol in the expression,
+            # try to write it on a simplified form
+            free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
+            if len(free) == 1:
+                try:
+                    from sympy.solvers.solveset import linear_coeffs
+                    x = free.pop()
+                    dif = r.lhs - r.rhs
+                    m, b = linear_coeffs(dif, x)
+                    if m.is_zero is False:
+                        if m.is_negative:
+                            # Dividing with a negative number, so change order of arguments
+                            # canonical will put the symbol back on the lhs later
+                            r = r.func(-b/m, x)
+                        else:
+                            r = r.func(x, -b/m)
+                    else:
+                        r = r.func(b, S.zero)
+                except ValueError:
+                    # maybe not a linear function, try polynomial
+                    from sympy.polys import Poly, poly, PolynomialError, gcd
+                    try:
+                        p = poly(dif, x)
+                        c = p.all_coeffs()
+                        constant = c[-1]
+                        c[-1] = 0
+                        scale = gcd(c)
+                        c = [ctmp/scale for ctmp in c]
+                        r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
+                    except PolynomialError:
+                        pass
+            elif len(free) >= 2:
+                try:
+                    from sympy.solvers.solveset import linear_coeffs
+                    from sympy.polys import gcd
+                    free = list(ordered(free))
+                    dif = r.lhs - r.rhs
+                    m = linear_coeffs(dif, *free)
+                    constant = m[-1]
+                    del m[-1]
+                    scale = gcd(m)
+                    m = [mtmp/scale for mtmp in m]
+                    nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
+                    if scale.is_zero is False:
+                        if constant != 0:
+                            # lhs: expression, rhs: constant
+                            newexpr = Add(*[i*j for i, j in nzm])
+                            r = r.func(newexpr, -constant/scale)
+                        else:
+                            # keep first term on lhs
+                            lhsterm = nzm[0][0]*nzm[0][1]
+                            del nzm[0]
+                            newexpr = Add(*[i*j for i, j in nzm])
+                            r = r.func(lhsterm, -newexpr)
 
+                    else:
+                        r = r.func(constant, S.zero)
+                except ValueError:
+                    pass
+        # Did we get a simplified result?
         r = r.canonical
-        if measure(r) < ratio*measure(self):
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio']*measure(self):
             return r
         else:
             return self
+
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
+
+    def expand(self, **kwargs):
+        args = (arg.expand(**kwargs) for arg in self.args)
+        return self.func(*args)
 
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
@@ -232,15 +393,23 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
+        from sympy.sets.conditionset import ConditionSet
         syms = self.free_symbols
         assert len(syms) == 1
         x = syms.pop()
-        return solve_univariate_inequality(self, x, relational=False)
+        try:
+            xset = solve_univariate_inequality(self, x, relational=False)
+        except NotImplementedError:
+            # solve_univariate_inequality raises NotImplementedError for
+            # unsolvable equations/inequalities.
+            xset = ConditionSet(x, self, S.Reals)
+        return xset
 
     @property
     def binary_symbols(self):
         # override where necessary
         return set()
+
 
 Rel = Relational
 
@@ -300,20 +469,31 @@ class Equality(Relational):
     """
     rel_op = '=='
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=0, **options):
+    def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
-        from sympy.core.logic import fuzzy_bool
+        from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
         from sympy.core.expr import _n2
+        from sympy.functions.elementary.complexes import arg
         from sympy.simplify.simplify import clear_coefficients
+        from sympy.utilities.iterables import sift
+
+        if rhs is None:
+            SymPyDeprecationWarning(
+                feature="Eq(expr) with rhs default to 0",
+                useinstead="Eq(expr, 0)",
+                issue=16587,
+                deprecated_since_version="1.5"
+            ).warn()
+            rhs = 0
 
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
             # If one expression has an _eval_Eq, return its results.
@@ -335,16 +515,43 @@ class Equality(Relational):
                     isinstance(rhs, Boolean)):
                 return S.false  # only Booleans can equal Booleans
 
-            # check finiteness
-            fin = L, R = [i.is_finite for i in (lhs, rhs)]
-            if None not in fin:
-                if L != R:
+            if lhs.is_infinite or rhs.is_infinite:
+                if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
                     return S.false
-                if L is False:
-                    if lhs == -rhs:  # Eq(oo, -oo)
-                        return S.false
-                    return S.true
-            elif None in fin and False in fin:
+                if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
+                    return S.false
+                if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
+                    r = fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+                    return S(r)
+
+                # Try to split real/imaginary parts and equate them
+                I = S.ImaginaryUnit
+
+                def split_real_imag(expr):
+                    real_imag = lambda t: (
+                            'real' if t.is_extended_real else
+                            'imag' if (I*t).is_extended_real else None)
+                    return sift(Add.make_args(expr), real_imag)
+
+                lhs_ri = split_real_imag(lhs)
+                if not lhs_ri[None]:
+                    rhs_ri = split_real_imag(rhs)
+                    if not rhs_ri[None]:
+                        eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                        eq_imag = Eq(I*Add(*lhs_ri['imag']), I*Add(*rhs_ri['imag']))
+                        res = fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
+                        if res is not None:
+                            return S(res)
+
+                # Compare e.g. zoo with 1+I*oo by comparing args
+                arglhs = arg(lhs)
+                argrhs = arg(rhs)
+                # Guard against Eq(nan, nan) -> False
+                if not (arglhs == S.NaN and argrhs == S.NaN):
+                    res = fuzzy_bool(Eq(arglhs, argrhs))
+                    if res is not None:
+                        return S(res)
+
                 return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
@@ -371,15 +578,17 @@ class Equality(Relational):
                     elif n.is_zero is False:
                         rv = d.is_infinite
                         if rv is None:
-                            # if the condition that makes the denominator infinite does not
-                            # make the original expression True then False can be returned
+                            # if the condition that makes the denominator
+                            # infinite does not make the original expression
+                            # True then False can be returned
                             l, r = clear_coefficients(d, S.Infinity)
                             args = [_.subs(l, r) for _ in (lhs, rhs)]
                             if args != [lhs, rhs]:
                                 rv = fuzzy_bool(Eq(*args))
                                 if rv is True:
                                     rv = None
-                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                elif any(a.is_infinite for a in Add.make_args(n)):
+                    # (inf or nan)/x != 0
                     rv = S.false
                 if rv is not None:
                     return _sympify(rv)
@@ -431,11 +640,10 @@ class Equality(Relational):
                 return set([self.rhs])
         return set()
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        e = super(Equality, self)._eval_simplify(
-            ratio, measure, rational, inverse)
+        e = super(Equality, self)._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
         free = self.free_symbols
@@ -448,11 +656,31 @@ class Equality(Relational):
                     enew = e.func(x, -b/m)
                 else:
                     enew = e.func(m*x, -b)
-                if measure(enew) <= ratio*measure(e):
+                measure = kwargs['measure']
+                if measure(enew) <= kwargs['ratio']*measure(e):
                     e = enew
             except ValueError:
                 pass
         return e.canonical
+
+    def integrate(self, *args, **kwargs):
+        """See the integrate function in sympy.integrals"""
+        from sympy.integrals import integrate
+        return integrate(self, *args, **kwargs)
+
+    def as_poly(self, *gens, **kwargs):
+        '''Returns lhs-rhs as a Poly
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x, y
+        >>> Eq(x**2, 1).as_poly(x)
+        Poly(x**2 - 1, x, domain='ZZ')
+        '''
+        return (self.lhs - self.rhs).as_poly(*gens, **kwargs)
+
 
 Eq = Equality
 
@@ -489,18 +717,18 @@ class Unequality(Relational):
     """
     rel_op = '!='
 
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
             is_equal = Equality(lhs, rhs)
             if isinstance(is_equal, BooleanAtom):
-                return ~is_equal
+                return is_equal.negated
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -517,14 +745,14 @@ class Unequality(Relational):
                 return set([self.rhs])
         return set()
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         # simplify as an equality
-        eq = Equality(*self.args)._eval_simplify(
-            ratio, measure, rational, inverse)
+        eq = Equality(*self.args)._eval_simplify(**kwargs)
         if isinstance(eq, Equality):
             # send back Ne with the new args
             return self.func(*eq.args)
-        return ~eq  # result of Ne is ~Eq
+        return eq.negated  # result of Ne is the negated Eq
+
 
 Ne = Unequality
 
@@ -536,13 +764,13 @@ class _Inequality(Relational):
     comparing two real numbers.
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        evaluate = options.pop('evaluate', global_evaluate[0])
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
             # First we invoke the appropriate inequality method of `lhs`
@@ -563,12 +791,11 @@ class _Inequality(Relational):
         # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
 
-
 class _Greater(_Inequality):
     """Not intended for general use
 
-    _Greater is only used so that GreaterThan and StrictGreaterThan may subclass
-    it for the .gts and .lts properties.
+    _Greater is only used so that GreaterThan and StrictGreaterThan may
+    subclass it for the .gts and .lts properties.
 
     """
     __slots__ = ()
@@ -676,8 +903,8 @@ class GreaterThan(_Greater):
     x < 2
 
     Another option is to use the Python inequality operators (>=, >, <=, <)
-    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts, is
-    that one can write a more "mathematical looking" statement rather than
+    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts,
+    is that one can write a more "mathematical looking" statement rather than
     littering the math with oddball function calls.  However there are certain
     (minor) caveats of which to be aware (search for 'gotcha', below).
 
@@ -834,6 +1061,7 @@ class GreaterThan(_Greater):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__ge__(rhs))
 
+
 Ge = GreaterThan
 
 
@@ -847,6 +1075,7 @@ class LessThan(_Less):
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__le__(rhs))
+
 
 Le = LessThan
 
@@ -862,6 +1091,7 @@ class StrictGreaterThan(_Greater):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__gt__(rhs))
 
+
 Gt = StrictGreaterThan
 
 
@@ -876,12 +1106,13 @@ class StrictLessThan(_Less):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__lt__(rhs))
 
+
 Lt = StrictLessThan
 
 
-# A class-specific (not object-specific) data item used for a minor speedup.  It
-# is defined here, rather than directly in the class, because the classes that
-# it references have not been defined until now (e.g. StrictLessThan).
+# A class-specific (not object-specific) data item used for a minor speedup.
+# It is defined here, rather than directly in the class, because the classes
+# that it references have not been defined until now (e.g. StrictLessThan).
 Relational.ValidRelationOperator = {
     None: Equality,
     '==': Equality,

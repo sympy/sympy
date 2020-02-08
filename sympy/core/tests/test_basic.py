@@ -5,21 +5,27 @@ import collections
 import sys
 
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
-    _atomic)
+    _atomic, _aresame)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
 from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
 from sympy.functions.elementary.exponential import exp
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core import I, pi
 
 b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
 b21 = Basic(b2, b1)
+
+
+def test__aresame():
+    assert not _aresame(Basic([]), Basic())
+    assert not _aresame(Basic([]), Basic(()))
+    assert not _aresame(Basic(2), Basic(2.))
 
 
 def test_structure():
@@ -117,9 +123,21 @@ def test_subs():
     # cannot be sympified; sympification is strict if foo is not string
     raises(ValueError, lambda: b21.subs(b1='bad arg'))
 
+    assert Symbol(u"text").subs({u"text": b1}) == b1
+    assert Symbol(u"s").subs({u"s": 1}) == 1
+
+
+def test_subs_with_unicode_symbols():
+    expr = Symbol('var1')
+    replaced = expr.subs('var1', u'x')
+    assert replaced.name == 'x'
+
+    replaced = expr.subs('var1', 'x')
+    assert replaced.name == 'x'
+
 
 def test_atoms():
-    assert b21.atoms() == set()
+    assert b21.atoms() == set([Basic()])
 
 
 def test_free_symbols_empty():

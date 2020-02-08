@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
@@ -286,7 +285,7 @@ class BraBase(StateBase):
 
     @classmethod
     def _operators_to_state(self, ops, **options):
-        state = self.dual_class().operators_to_state(ops, **options)
+        state = self.dual_class()._operators_to_state(ops, **options)
         return state.dual
 
     def _state_to_operators(self, op_classes, **options):
@@ -715,7 +714,7 @@ class Wavefunction(Function):
                 new_args[ct] = arg
             ct += 1
 
-        return super(Function, cls).__new__(cls, *new_args, **options)
+        return super(Wavefunction, cls).__new__(cls, *new_args, **options)
 
     def __call__(self, *args, **options):
         var = self.variables
@@ -869,7 +868,7 @@ class Wavefunction(Function):
 
         return (self.norm == 1.0)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def norm(self):
         """
@@ -928,7 +927,7 @@ class Wavefunction(Function):
         """
         const = self.norm
 
-        if const == oo:
+        if const is oo:
             raise NotImplementedError("The function is not normalizable!")
         else:
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])

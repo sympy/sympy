@@ -2,11 +2,10 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (range, integer_types, with_metaclass,
-                                      is_sequence, iterable, ordered)
+from sympy.core.compatibility import is_sequence, iterable, ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.function import UndefinedFunction
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
@@ -284,7 +283,7 @@ class SeqBase(Basic):
             yield self.coeff(pt)
 
     def __getitem__(self, index):
-        if isinstance(index, integer_types):
+        if isinstance(index, int):
             index = self._ith_point(index)
             return self.coeff(index)
         elif isinstance(index, slice):
@@ -326,14 +325,14 @@ class SeqBase(Basic):
         >>> sequence(x+y*(-2)**(-n), (n, 0, oo)).find_linear_recurrence(30)
         [1/2, 1/2]
         >>> sequence(3*5**n + 12).find_linear_recurrence(20,gfvar=x)
-        ([6, -5], 3*(-21*x + 5)/((x - 1)*(5*x - 1)))
+        ([6, -5], 3*(5 - 21*x)/((x - 1)*(5*x - 1)))
         >>> sequence(lucas(n)).find_linear_recurrence(15,gfvar=x)
         ([1, 1], (x - 2)/(x**2 + x - 1))
         """
         from sympy.matrices import Matrix
         x = [simplify(expand(t)) for t in self[:n]]
         lx = len(x)
-        if d == None:
+        if d is None:
             r = lx//2
         else:
             r = min(d,lx//2)
@@ -356,7 +355,7 @@ class SeqBase(Basic):
                 if m*y == Matrix(x[l2:]):
                     coeffs = flatten(y[::-1])
                     break
-        if gfvar == None:
+        if gfvar is None:
             return coeffs
         else:
             l = len(coeffs)
@@ -371,25 +370,25 @@ class SeqBase(Basic):
                     d -= coeffs[i]*gfvar**(i+1)
                 return coeffs, simplify(factor(n)/factor(d))
 
-class EmptySequence(with_metaclass(Singleton, SeqBase)):
+class EmptySequence(SeqBase, metaclass=Singleton):
     """Represents an empty sequence.
 
-    The empty sequence is available as a
-    singleton as ``S.EmptySequence``.
+    The empty sequence is also available as a singleton as
+    ``S.EmptySequence``.
 
     Examples
     ========
 
-    >>> from sympy import S, SeqPer, oo
+    >>> from sympy import EmptySequence, SeqPer, oo
     >>> from sympy.abc import x
-    >>> S.EmptySequence
-    EmptySequence()
-    >>> SeqPer((1, 2), (x, 0, 10)) + S.EmptySequence
+    >>> EmptySequence
+    EmptySequence
+    >>> SeqPer((1, 2), (x, 0, 10)) + EmptySequence
     SeqPer((1, 2), (x, 0, 10))
-    >>> SeqPer((1, 2)) * S.EmptySequence
-    EmptySequence()
-    >>> S.EmptySequence.coeff_mul(-1)
-    EmptySequence()
+    >>> SeqPer((1, 2)) * EmptySequence
+    EmptySequence
+    >>> EmptySequence.coeff_mul(-1)
+    EmptySequence
     """
 
     @property
@@ -647,9 +646,9 @@ class SeqFormula(SeqExpr):
 
         def _find_x(formula):
             free = formula.free_symbols
-            if len(formula.free_symbols) == 1:
+            if len(free) == 1:
                 return free.pop()
-            elif len(formula.free_symbols) == 0:
+            elif not free:
                 return Dummy('k')
             else:
                 raise ValueError(
@@ -672,7 +671,7 @@ class SeqFormula(SeqExpr):
             raise ValueError('Invalid limits given: %s' % str(limits))
 
         if start is S.NegativeInfinity and stop is S.Infinity:
-                raise ValueError("Both the start and end value"
+                raise ValueError("Both the start and end value "
                                  "cannot be unbounded")
         limits = sympify((x, start, stop))
 
@@ -713,6 +712,8 @@ class SeqFormula(SeqExpr):
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
 
+    def expand(self, *args, **kwargs):
+        return SeqFormula(expand(self.formula, *args, **kwargs), self.args[1])
 
 class RecursiveSeq(SeqBase):
     """A finite degree recursive sequence.
@@ -953,7 +954,7 @@ class SeqExprOp(SeqBase):
         """Sequence is defined on the intersection
         of all the intervals of respective sequences
         """
-        return Intersection(a.interval for a in self.args)
+        return Intersection(*(a.interval for a in self.args))
 
     @property
     def start(self):
@@ -985,12 +986,12 @@ class SeqAdd(SeqExprOp):
     Examples
     ========
 
-    >>> from sympy import S, oo, SeqAdd, SeqPer, SeqFormula
+    >>> from sympy import EmptySequence, oo, SeqAdd, SeqPer, SeqFormula
     >>> from sympy.abc import n
-    >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), S.EmptySequence)
+    >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), EmptySequence)
     SeqPer((1, 2), (n, 0, oo))
     >>> SeqAdd(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
-    EmptySequence()
+    EmptySequence
     >>> SeqAdd(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2, (n, 0, oo)))
     SeqAdd(SeqFormula(n**2, (n, 0, oo)), SeqPer((1, 2), (n, 0, oo)))
     >>> SeqAdd(SeqFormula(n**3), SeqFormula(n**2))
@@ -1003,7 +1004,7 @@ class SeqAdd(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)
@@ -1027,7 +1028,7 @@ class SeqAdd(SeqExprOp):
         if not args:
             return S.EmptySequence
 
-        if Intersection(a.interval for a in args) is S.EmptySet:
+        if Intersection(*(a.interval for a in args)) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -1052,7 +1053,7 @@ class SeqAdd(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):
@@ -1094,12 +1095,12 @@ class SeqMul(SeqExprOp):
     Examples
     ========
 
-    >>> from sympy import S, oo, SeqMul, SeqPer, SeqFormula
+    >>> from sympy import EmptySequence, oo, SeqMul, SeqPer, SeqFormula
     >>> from sympy.abc import n
-    >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), S.EmptySequence)
-    EmptySequence()
+    >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), EmptySequence)
+    EmptySequence
     >>> SeqMul(SeqPer((1, 2), (n, 0, 5)), SeqPer((1, 2), (n, 6, 10)))
-    EmptySequence()
+    EmptySequence
     >>> SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqFormula(n**2))
     SeqMul(SeqFormula(n**2, (n, 0, oo)), SeqPer((1, 2), (n, 0, oo)))
     >>> SeqMul(SeqFormula(n**3), SeqFormula(n**2))
@@ -1112,7 +1113,7 @@ class SeqMul(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)
@@ -1134,7 +1135,7 @@ class SeqMul(SeqExprOp):
         if not args:
             return S.EmptySequence
 
-        if Intersection(a.interval for a in args) is S.EmptySet:
+        if Intersection(*(a.interval for a in args)) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -1159,7 +1160,7 @@ class SeqMul(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):

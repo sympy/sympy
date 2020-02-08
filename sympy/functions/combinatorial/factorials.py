@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
+from typing import List
+
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, range, HAS_GMPY
+from sympy.core.compatibility import reduce, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
@@ -16,12 +18,13 @@ from math import sqrt as _sqrt
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.combsimp import combsimp
         # combinatorial function with non-integer arguments is
         # automatically passed to gammasimp
         expr = combsimp(self)
-        if measure(expr) <= ratio*measure(self):
+        measure = kwargs['measure']
+        if measure(expr) <= kwargs['ratio']*measure(self):
             return expr
         return self
 
@@ -93,7 +96,7 @@ class factorial(CombinatorialFunction):
         35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
 
-    _small_factorials = []
+    _small_factorials = []  # type: List[int]
 
     @classmethod
     def _swing(cls, n):
@@ -143,7 +146,7 @@ class factorial(CombinatorialFunction):
         n = sympify(n)
 
         if n.is_Number:
-            if n is S.Zero:
+            if n.is_zero:
                 return S.One
             elif n is S.Infinity:
                 return S.Infinity
@@ -208,7 +211,7 @@ class factorial(CombinatorialFunction):
             aq = abs(q)
             d = aq - n
             if d.is_nonpositive:
-                return 0
+                return S.Zero
             else:
                 isprime = aq.is_prime
                 if d == 1:
@@ -217,9 +220,9 @@ class factorial(CombinatorialFunction):
                     # its inverse (if n > 4 is a composite number, then
                     # (n-1)! = 0 mod n)
                     if isprime:
-                        return -1 % q
+                        return S(-1 % q)
                     elif isprime is False and (aq - 6).is_nonnegative:
-                        return 0
+                        return S.Zero
                 elif n.is_Integer and q.is_Integer:
                     n, d, aq = map(int, (n, d, aq))
                     if isprime and (d - 1 < n):
@@ -230,7 +233,7 @@ class factorial(CombinatorialFunction):
                     else:
                         fc = self._facmod(n, aq)
 
-                    return Integer(fc % q)
+                    return S(fc % q)
 
     def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
@@ -264,6 +267,25 @@ class factorial(CombinatorialFunction):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
+
+    def _eval_as_leading_term(self, x):
+        from sympy import Order
+        arg = self.args[0]
+        arg_1 = arg.as_leading_term(x)
+        if Order(x, x).contains(arg_1):
+            return S.One
+        if Order(1, x).contains(arg_1):
+            return self.func(arg_1)
+        ####################################################
+        # The correct result here should be 'None'.        #
+        # Indeed arg in not bounded as x tends to 0.       #
+        # Consequently the series expansion does not admit #
+        # the leading term.                                #
+        # For compatibility reasons, the return value here #
+        # is the original function, i.e. factorial(arg),   #
+        # instead of None.                                 #
+        ####################################################
+        return self.func(arg)
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -319,7 +341,11 @@ class subfactorial(CombinatorialFunction):
             return S.One
         elif n == 1:
             return S.Zero
-        return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
+        else:
+            z1, z2 = 1, 0
+            for i in range(2, n + 1):
+                z1, z2 = z2, (i - 1)*(z2 + z1)
+            return z2
 
     @classmethod
     def eval(cls, arg):
@@ -533,7 +559,7 @@ class RisingFactorial(CombinatorialFunction):
         elif x is S.One:
             return factorial(k)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -577,6 +603,10 @@ class RisingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i:
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
+
+        if k.is_integer == False:
+            if x.is_integer and x.is_negative:
+                return S.Zero
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
@@ -668,7 +698,7 @@ class FallingFactorial(CombinatorialFunction):
         elif k.is_integer and x == k:
             return factorial(x)
         elif k.is_Integer:
-            if k is S.Zero:
+            if k.is_zero:
                 return S.One
             else:
                 if k.is_positive:
@@ -903,14 +933,14 @@ class binomial(CombinatorialFunction):
 
             # handle negative integers k or n
             if k < 0:
-                return 0
+                return S.Zero
             if n < 0:
                 n = -n + k - 1
                 res = -1 if k%2 else 1
 
             # non negative integers k and n
             if k > n:
-                return 0
+                return S.Zero
 
             isprime = aq.is_prime
             aq = int(aq)
@@ -969,7 +999,7 @@ class binomial(CombinatorialFunction):
                             res *= pow(prime, exp, aq)
                             res %= aq
 
-            return Integer(res % q)
+            return S(res % q)
 
     def _eval_expand_func(self, **hints):
         """
@@ -986,9 +1016,9 @@ class binomial(CombinatorialFunction):
             k = n - k
 
         if k.is_Integer:
-            if k == S.Zero:
+            if k.is_zero:
                 return S.One
-            elif k < 0:
+            elif k.is_negative:
                 return S.Zero
             else:
                 n, result = self.args[0], 1

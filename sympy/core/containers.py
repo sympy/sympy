@@ -10,8 +10,9 @@ from __future__ import print_function, division
 
 from collections import OrderedDict
 
+from sympy.core import S
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, range, MutableSet
+from sympy.core.compatibility import as_int, MutableSet
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
@@ -143,6 +144,24 @@ class Tuple(Basic):
         else:
             return self.args.index(value, start, stop)
 
+    def _eval_Eq(self, other):
+        from sympy.core.function import AppliedUndef
+        from sympy.core.logic import fuzzy_and, fuzzy_bool
+        from sympy.core.relational import Eq
+
+        if other.is_Symbol or isinstance(other, AppliedUndef):
+            return None
+
+        if not isinstance(other, Tuple) or len(self) != len(other):
+            return S.false
+
+        r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(self, other))
+        if r is True:
+            return S.true
+        elif r is False:
+            return S.false
+
+
 converter[tuple] = lambda tup: Tuple(*tup)
 
 
@@ -230,6 +249,13 @@ class Dict(Basic):
 
     @property
     def args(self):
+        """Returns a tuple of arguments of 'self'.
+
+        See Also
+        ========
+
+        sympy.core.basic.Basic.args
+        """
         return tuple(self.elements)
 
     def items(self):
@@ -268,6 +294,9 @@ class Dict(Basic):
         from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
+
+# this handles dict, defaultdict, OrderedDict
+converter[dict] = lambda d: Dict(*d.items())
 
 class OrderedSet(MutableSet):
     def __init__(self, iterable=None):

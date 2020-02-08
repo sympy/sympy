@@ -1,6 +1,7 @@
+from typing import Set
+
 from sympy.codegen.ast import Assignment
-from sympy.core import S
-from sympy.core.compatibility import string_types, range
+from sympy.core import Basic, S
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
@@ -33,7 +34,7 @@ class GLSLPrinter(CodePrinter):
     Additional settings:
     'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
     """
-    _not_supported = set()
+    _not_supported = set()  # type: Set[Basic]
     printmethod = "_glsl"
     language = "GLSL"
 
@@ -52,7 +53,7 @@ class GLSLPrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'error_on_reserved': False,
-        'reserved_word_suffix': '_'
+        'reserved_word_suffix': '_',
     }
 
     def __init__(self, settings={}):
@@ -79,7 +80,7 @@ class GLSLPrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -132,7 +133,6 @@ class GLSLPrinter(CodePrinter):
             return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
 
     _print_Matrix = \
-        _print_MatrixElement = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
         _print_ImmutableMatrix = \
@@ -281,8 +281,14 @@ class GLSLPrinter(CodePrinter):
     def _print_Rational(self, expr):
         return "%s.0/%s.0" % (expr.p, expr.q)
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+
     def _print_Add(self, expr, order=None):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Add(self, expr, order=order)
 
         terms = expr.as_ordered_terms()
@@ -294,7 +300,7 @@ class GLSLPrinter(CodePrinter):
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
         s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
-        if(len(neg) > 0):
+        if neg:
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
             # then subtract them from the positive terms
@@ -303,7 +309,7 @@ class GLSLPrinter(CodePrinter):
         return s
 
     def _print_Mul(self, expr, **kwargs):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Mul(self, expr, **kwargs)
         terms = expr.as_ordered_factors()
         def mul(a,b):

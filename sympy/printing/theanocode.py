@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range, is_sequence
+from typing import Any, Dict
+
+from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 import sympy
@@ -53,6 +55,8 @@ if theano:
             sympy.Or: tt.or_,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.conjugate: tt.conj,
+            sympy.core.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -68,8 +72,9 @@ class TheanoPrinter(Printer):
 
     Parameters
     ==========
+
     cache : dict
-        Cache dictionary to use (see :attr:`cache`). If None (default) will use
+        Cache dictionary to use. If None (default) will use
         the global cache. To create a printer which does not depend on or alter
         global state pass an empty dictionary. Note: the dictionary is not
         copied on initialization of the printer and will be updated in-place,
@@ -161,9 +166,7 @@ class TheanoPrinter(Printer):
         return self._get_or_create(X, dtype=dtype, broadcastable=(None, None))
 
     def _print_DenseMatrix(self, X, **kwargs):
-        try:
-            tt.stacklists
-        except AttributeError:
+        if not hasattr(tt, 'stacklists'):
             raise NotImplementedError(
                "Matrix translation not yet supported in this version of Theano")
 
@@ -258,7 +261,7 @@ class TheanoPrinter(Printer):
         data type, dimension, and broadcasting behavior of the Theano variables
         corresponding to the free symbols in ``expr``. Each is a mapping from
         Sympy symbols to the value of the corresponding argument to
-        :func:`theano.tensor.Tensor`.
+        ``theano.tensor.Tensor``.
 
         See the corresponding `documentation page`__ for more information on
         broadcasting in Theano.
@@ -274,12 +277,12 @@ class TheanoPrinter(Printer):
         dtypes : dict
             Mapping from Sympy symbols to Theano datatypes to use when creating
             new Theano variables for those symbols. Corresponds to the ``dtype``
-            argument to :func:`theano.tensor.Tensor`. Defaults to ``'floatX'``
+            argument to ``theano.tensor.Tensor``. Defaults to ``'floatX'``
             for symbols not included in the mapping.
 
         broadcastables : dict
             Mapping from Sympy symbols to the value of the ``broadcastable``
-            argument to :func:`theano.tensor.Tensor` to use when creating Theano
+            argument to ``theano.tensor.Tensor`` to use when creating Theano
             variables for those symbols. Defaults to the empty tuple for symbols
             not included in the mapping (resulting in a scalar).
 
@@ -290,11 +293,6 @@ class TheanoPrinter(Printer):
             A variable corresponding to the expression's value in a Theano
             symbolic expression graph.
 
-        See Also
-        ========
-
-        theano.tensor.Tensor
-
         """
         if dtypes is None:
             dtypes = {}
@@ -304,11 +302,12 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}
+global_cache = {}  # type: Dict[Any, Any]
 
 
 def theano_code(expr, cache=None, **kwargs):
-    """ Convert a Sympy expression into a Theano graph variable.
+    """
+    Convert a Sympy expression into a Theano graph variable.
 
     Parameters
     ==========
@@ -317,8 +316,8 @@ def theano_code(expr, cache=None, **kwargs):
         Sympy expression object to convert.
 
     cache : dict
-       Cached Theano variables (see :attr:`.TheanoPrinter.cache`). Defaults to
-       the module-level global cache.
+        Cached Theano variables (see :class:`TheanoPrinter.cache
+        <TheanoPrinter>`). Defaults to the module-level global cache.
 
     dtypes : dict
         Passed to :meth:`.TheanoPrinter.doprint`.
@@ -332,6 +331,7 @@ def theano_code(expr, cache=None, **kwargs):
     theano.gof.graph.Variable
         A variable corresponding to the expression's value in a Theano symbolic
         expression graph.
+
     """
     if not theano:
         raise ImportError("theano is required for theano_code")
@@ -343,7 +343,7 @@ def theano_code(expr, cache=None, **kwargs):
 
 
 def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
-    """
+    r"""
     Get value of ``broadcastables`` argument to :func:`.theano_code` from
     keyword arguments to :func:`.theano_function`.
 
@@ -371,7 +371,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     =======
     dict
         Dictionary mapping elements of ``inputs`` to their "broadcastable"
-        values (tuple of ``bool``s).
+        values (tuple of ``bool``\ s).
     """
     if dim is not None:
         return {s: (False,) * dim for s in inputs}
@@ -383,17 +383,18 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
             for s, d in dims.items()
         }
 
-    if broadcastables != None:
+    if broadcastables is not None:
         return broadcastables
 
     return {}
 
 
 def theano_function(inputs, outputs, scalar=False, **kwargs):
-    """ Create a Theano function from SymPy expressions.
+    """
+    Create a Theano function from SymPy expressions.
 
     The inputs and outputs are converted to Theano variables using
-    :func:`.theano_code` and then passed to :func:`theano.function`.
+    :func:`.theano_code` and then passed to ``theano.function``.
 
     Parameters
     ==========
@@ -411,8 +412,8 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
         Python wrapper function around the Theano function object.
 
     cache : dict
-       Cached Theano variables (see :attr:`.TheanoPrinter.cache`). Defaults to
-       the module-level global cache.
+        Cached Theano variables (see :class:`TheanoPrinter.cache
+        <TheanoPrinter>`). Defaults to the module-level global cache.
 
     dtypes : dict
         Passed to :meth:`.TheanoPrinter.doprint`.
@@ -441,10 +442,10 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
         function will return a list of arrays. See description of the ``squeeze``
         argument above for the behavior when a single output is passed in a list.
         The returned object will either be an instance of
-        :class:`theano.compile.function_module.Function` or a Python wrapper
+        ``theano.compile.function_module.Function`` or a Python wrapper
         function around one. In both cases, the returned value will have a
         ``theano_function`` attribute which points to the return value of
-        :func:`theano.function`.
+        ``theano.function``.
 
     Examples
     ========
@@ -472,8 +473,9 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
 
     See also
     ========
-    theano.function
+
     dim_handling
+
     """
     if not theano:
         raise ImportError("theano is required for theano_function")
@@ -494,6 +496,9 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
                    broadcastables=broadcastables)
     tinputs = list(map(code, inputs))
     toutputs = list(map(code, outputs))
+
+    #fix constant expressions as variables
+    toutputs = [output if isinstance(output, theano.Variable) else tt.as_tensor_variable(output) for output in toutputs]
 
     if len(toutputs) == 1:
         toutputs = toutputs[0]

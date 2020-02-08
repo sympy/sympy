@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
 import shutil
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 from sympy.utilities._compilation.compilation import compile_link_import_strings
 
@@ -47,6 +46,10 @@ def test_compile_link_import_strings():
         skip("numpy not installed.")
     if not cython:
         skip("cython not installed.")
+
+    from sympy.utilities._compilation import has_c
+    if not has_c():
+        skip("No C compiler found.")
 
     compile_kw = dict(std='c99', include_dirs=[numpy.get_include()])
     info = None

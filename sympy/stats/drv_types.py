@@ -1,14 +1,38 @@
+"""
+
+Contains
+========
+Geometric
+Hermite
+Logarithmic
+NegativeBinomial
+Poisson
+Skellam
+YuleSimon
+Zeta
+"""
+
+
 from __future__ import print_function, division
 
-from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor)
+import random
+
+from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
+                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
-import random
 
-__all__ = ['Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'YuleSimon', 'Zeta']
+__all__ = ['Geometric',
+'Hermite',
+'Logarithmic',
+'NegativeBinomial',
+'Poisson',
+'Skellam',
+'YuleSimon',
+'Zeta'
+]
 
 
 def rv(symbol, cls, *args):
@@ -30,7 +54,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(0 < p, p <= 1), "p must be between 0 and 1")
+        _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
@@ -93,6 +117,91 @@ def Geometric(name, p):
 
 
 #-------------------------------------------------------------------------------
+# Hermite distribution ---------------------------------------------------------
+
+
+class HermiteDistribution(SingleDiscreteDistribution):
+    _argnames = ('a1', 'a2')
+    set = S.Naturals0
+
+    @staticmethod
+    def check(a1, a2):
+        _value_check(a1.is_nonnegative, 'Parameter a1 must be >= 0.')
+        _value_check(a2.is_nonnegative, 'Parameter a2 must be >= 0.')
+
+    def pdf(self, k):
+        a1, a2 = self.a1, self.a2
+        term1 = exp(-(a1 + a2))
+        j = Dummy("j", integer=True)
+        num = a1**(k - 2*j) * a2**j
+        den = factorial(k - 2*j) * factorial(j)
+        return term1 * Sum(num/den, (j, 0, k//2)).doit()
+
+    def _moment_generating_function(self, t):
+        a1, a2 = self.a1, self.a2
+        term1 = a1 * (exp(t) - 1)
+        term2 = a2 * (exp(2*t) - 1)
+        return exp(term1 + term2)
+
+    def _characteristic_function(self, t):
+        a1, a2 = self.a1, self.a2
+        term1 = a1 * (exp(I*t) - 1)
+        term2 = a2 * (exp(2*I*t) - 1)
+        return exp(term1 + term2)
+
+def Hermite(name, a1, a2):
+    r"""
+    Create a discrete random variable with a Hermite distribution.
+
+    The density of the Hermite distribution is given by
+
+    .. math::
+        f(x):= e^{-a_1 -a_2}\sum_{j=0}^{\left \lfloor x/2 \right \rfloor}
+                    \frac{a_{1}^{x-2j}a_{2}^{j}}{(x-2j)!j!}
+
+    Parameters
+    ==========
+
+    a1: A Positive number greater than equal to 0.
+    a2: A Positive number greater than equal to 0.
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Hermite, density, E, variance
+    >>> from sympy import Symbol
+
+    >>> a1 = Symbol("a1", positive=True)
+    >>> a2 = Symbol("a2", positive=True)
+    >>> x = Symbol("x")
+
+    >>> H = Hermite("H", a1=5, a2=4)
+
+    >>> density(H)(2)
+    33*exp(-9)/2
+
+    >>> E(H)
+    13
+
+    >>> variance(H)
+    21
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hermite_distribution
+
+    """
+
+    return rv(name, HermiteDistribution, a1, a2)
+
+
+#-------------------------------------------------------------------------------
 # Logarithmic distribution ------------------------------------------------------------
 
 class LogarithmicDistribution(SingleDiscreteDistribution):
@@ -102,7 +211,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(p > 0, p < 1), "p should be between 0 and 1")
+        _value_check((p > 0, p < 1), "p should be between 0 and 1")
 
     def pdf(self, k):
         p = self.p
@@ -180,7 +289,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
     @staticmethod
     def check(r, p):
         _value_check(r > 0, 'r should be positive')
-        _value_check(And(p > 0, p < 1), 'p should be between 0 and 1')
+        _value_check((p > 0, p < 1), 'p should be between 0 and 1')
 
     def pdf(self, k):
         r = self.r
@@ -345,6 +454,94 @@ def Poisson(name, lamda):
 
     """
     return rv(name, PoissonDistribution, lamda)
+
+
+# -----------------------------------------------------------------------------
+# Skellam distribution --------------------------------------------------------
+
+
+class SkellamDistribution(SingleDiscreteDistribution):
+    _argnames = ('mu1', 'mu2')
+    set = S.Integers
+
+    @staticmethod
+    def check(mu1, mu2):
+        _value_check(mu1 >= 0, 'Parameter mu1 must be >= 0')
+        _value_check(mu2 >= 0, 'Parameter mu2 must be >= 0')
+
+    def pdf(self, k):
+        (mu1, mu2) = (self.mu1, self.mu2)
+        term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)
+        term2 = besseli(k, 2 * sqrt(mu1 * mu2))
+        return term1 * term2
+
+    def _cdf(self, x):
+        raise NotImplementedError(
+            "Skellam doesn't have closed form for the CDF.")
+
+    def _characteristic_function(self, t):
+        (mu1, mu2) = (self.mu1, self.mu2)
+        return exp(-(mu1 + mu2) + mu1 * exp(I * t) + mu2 * exp(-I * t))
+
+    def _moment_generating_function(self, t):
+        (mu1, mu2) = (self.mu1, self.mu2)
+        return exp(-(mu1 + mu2) + mu1 * exp(t) + mu2 * exp(-t))
+
+
+def Skellam(name, mu1, mu2):
+    r"""
+    Create a discrete random variable with a Skellam distribution.
+
+    The Skellam is the distribution of the difference N1 - N2
+    of two statistically independent random variables N1 and N2
+    each Poisson-distributed with respective expected values mu1 and mu2.
+
+    The density of the Skellam distribution is given by
+
+    .. math::
+        f(k) := e^{-(\mu_1+\mu_2)}(\frac{\mu_1}{\mu_2})^{k/2}I_k(2\sqrt{\mu_1\mu_2})
+
+    Parameters
+    ==========
+
+    mu1: A non-negative value
+    mu2: A non-negative value
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Skellam, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> z = Symbol("z", integer=True)
+    >>> mu1 = Symbol("mu1", positive=True)
+    >>> mu2 = Symbol("mu2", positive=True)
+    >>> X = Skellam("x", mu1, mu2)
+
+    >>> pprint(density(X)(z), use_unicode=False)
+         z
+         -
+         2
+    /mu1\   -mu1 - mu2        /       _____   _____\
+    |---| *e          *besseli\z, 2*\/ mu1 *\/ mu2 /
+    \mu2/
+    >>> E(X)
+    mu1 - mu2
+    >>> variance(X).expand()
+    mu1 + mu2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Skellam_distribution
+
+    """
+    return rv(name, SkellamDistribution, mu1, mu2)
 
 
 #-------------------------------------------------------------------------------

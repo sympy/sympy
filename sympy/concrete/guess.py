@@ -4,7 +4,6 @@ from __future__ import print_function, division
 from sympy.utilities import public
 
 from sympy.core import Function, Symbol
-from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy import (sympify, floor, lcm, denom, Integer, Rational,
                    exp, integrate, symbols, Product, product)
@@ -239,7 +238,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
-    {'hlgf': 1/(-x + 1), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
+    {'hlgf': 1/(1 - x), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
@@ -252,7 +251,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy import simplify, factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
-    {'egf': 1/(-x + 1)}
+    {'egf': 1/(1 - x)}
 
     >>> ggf([k+1 for k in range(12)], types=['egf'])
     {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
@@ -438,7 +437,7 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
     myprod = product if evaluate else Product
     g = []
     res = []
-    if variables == None:
+    if variables is None:
         symb = symbols('i:'+str(niter))
     else:
         symb = variables

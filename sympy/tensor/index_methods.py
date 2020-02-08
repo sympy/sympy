@@ -318,7 +318,7 @@ def get_contraction_structure(expr):
        dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
-    .. Note:: The presence of expressions among the dictinary keys indicates
+    .. Note:: The presence of expressions among the dictionary keys indicates
        multiple levels of index contractions.  A nested dict displays nested
        contractions and may itself contain dicts from a deeper level.  In
        practical calculations the summation in the deepest nested level must be

@@ -1,12 +1,13 @@
 from sympy.core.backend import Symbol
-from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
-                                     inertia)
-from sympy.physics.vector import Point, Vector
+from sympy.physics.vector import Point, Vector, ReferenceFrame
+from sympy.physics.mechanics import RigidBody, Particle, inertia
 
 __all__ = ['Body']
 
 
-class Body(RigidBody, Particle):
+# XXX: We use type:ignore because the classes RigidBody and Particle have
+# inconsistent parallel axis methods that take different numbers of arguments.
+class Body(RigidBody, Particle):  # type: ignore
     """
     Body is a common representation of either a RigidBody or a Particle SymPy
     object depending on what is passed in during initialization. If a mass is

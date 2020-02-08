@@ -12,12 +12,10 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.iterables import subsets
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
-    MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.testing.pytest import XFAIL, raises
+from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
+        ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import MatrixSymbol
-
-from sympy.core.compatibility import range
 
 
 w, x, y, z = symbols('w,x,y,z')
@@ -284,21 +282,21 @@ def test_issue_4499():
     B = Function('B')
     G = Function('G')
     t = Tuple(*
-        (a, a + S(1)/2, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
+        (a, a + S.Half, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
         b, sqrt(z))*B(b - 1, sqrt(z))*G(b)*G(2*a - b + 1),
         sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b,
         sqrt(z))*G(b)*G(2*a - b + 1), sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b - 1,
         sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
         (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
-        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
+        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S.Half, z/2, -b + 1, -2*a + b,
         -2*a))
     c = cse(t)
     ans = (
         [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
         B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
         x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
-        [(a, a + S(1)/2, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
-        1, 0, S(1)/2, z/2, x1 + 1, b + x6, x6)])
+        [(a, a + S.Half, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
+        1, 0, S.Half, z/2, x1 + 1, b + x6, x6)])
     assert ans == c
 
 
@@ -314,7 +312,6 @@ def test_cse_Indexed():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
     x = IndexedBase('x', shape=(len_y,))
-    Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
 
     expr1 = (y[i+1]-y[i])/(x[i+1]-x[i])
@@ -380,7 +377,7 @@ def test_name_conflict_cust_symbols():
 def test_symbols_exhausted_error():
     l = cos(x+y)+x+y+cos(w+y)+sin(w+y)
     sym = [x, y, z]
-    with raises(ValueError) as excinfo:
+    with raises(ValueError):
         cse(l, symbols=sym)
 
 
@@ -456,7 +453,7 @@ def test_issue_11230():
     ex = [Add(*[choice(s[:7]) for i in range(5)]) for i in range(7)]
     for p in subsets(ex, 3):
         p = list(p)
-        was = R, C = cse(p)
+        R, C = cse(p)
         assert not any(i.is_Add for a in C for i in a.args)
         for ri in reversed(R):
             for i in range(len(C)):
@@ -514,7 +511,6 @@ def test_cse_ignore_issue_15002():
     assert rl == l
 
 def test_cse__performance():
-    import time
     nexprs, nterms = 3, 20
     x = symbols('x:%d' % nterms)
     exprs = [
@@ -539,6 +535,11 @@ def test_issue_13000():
     eq = x/(-4*x**2 + y**2)
     cse_eq = cse(eq)[1][0]
     assert cse_eq == eq
+
+
+def test_issue_18203():
+    eq = CRootOf(x**5 + 11*x - 2, 0) + CRootOf(x**5 + 11*x - 2, 1)
+    assert cse(eq) == ([], [eq])
 
 
 def test_unevaluated_mul():

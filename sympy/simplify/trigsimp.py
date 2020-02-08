@@ -471,10 +471,9 @@ def trigsimp(expr, **opts):
 
     expr = sympify(expr)
 
-    try:
-        return expr._eval_trigsimp(**opts)
-    except AttributeError:
-        pass
+    _eval_trigsimp = getattr(expr, '_eval_trigsimp', None)
+    if _eval_trigsimp is not None:
+        return _eval_trigsimp(**opts)
 
     old = opts.pop('old', False)
     if not old:
@@ -654,7 +653,7 @@ def trigsimp_old(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e, old=True)
-    (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    (1 - sin(x))/cos(x) + cos(x)/(1 - sin(x))
     >>> trigsimp(e, method="groebner", old=True)
     2/cos(x)
 
@@ -1125,7 +1124,7 @@ def _futrig(e, **kwargs):
     if e.is_Mul:
         coeff, e = e.as_independent(TrigonometricFunction)
     else:
-        coeff = S.One
+        coeff = None
 
     Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args), x.is_Add)
     trigs = lambda x: x.has(TrigonometricFunction)
@@ -1168,7 +1167,11 @@ def _futrig(e, **kwargs):
             factor_terms, TR12(x), trigs)],  # expand tan of sum
         )]
     e = greedy(tree, objective=Lops)(e)
-    return coeff*e
+
+    if coeff is not None:
+        e = coeff * e
+
+    return e
 
 
 def _is_Expr(e):

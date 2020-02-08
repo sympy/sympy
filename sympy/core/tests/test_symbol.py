@@ -1,9 +1,8 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Tuple,
-)
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
 from sympy.core.symbol import _uniquely_named_symbol, _symbol
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
 
@@ -169,7 +168,7 @@ def test_Wild_properties():
     integerp = lambda k: k.is_integer
     positivep = lambda k: k.is_positive
     symbolp = lambda k: k.is_Symbol
-    realp = lambda k: k.is_real
+    realp = lambda k: k.is_extended_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
