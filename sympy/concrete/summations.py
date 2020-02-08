@@ -1255,6 +1255,7 @@ def _eval_sum_hyper(f, i, a):
 
 def eval_sum_hyper(f, i_a_b):
     from sympy.logic.boolalg import And
+    
     i, a, b = i_a_b
 
     if (b - a).is_Integer:

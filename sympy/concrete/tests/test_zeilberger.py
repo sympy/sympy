@@ -1,6 +1,6 @@
 from sympy.concrete.zeilberger import zb_recur, zb_sum
 from sympy import factorial, binomial, simplify, symbols, sqrt, pi, gamma
-from sympy import combsimp, summation, RisingFactorial
+from sympy import combsimp, summation, Rational
 
 k, x, i, j, r, y = symbols('k, x, i, j, r, y')
 n = symbols('n', integer = True, positive = True)
@@ -42,8 +42,8 @@ def test_zb_sum():
     R_1 = 0
     R_2 = 2**n
     R_3 = gamma(n + 1)*gamma(x + 1)/gamma(n + x + 1)
-    R_4 = 4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 1))
-    R_5 = 4*2**(2*n - 3)*gamma(n + 1/2)/gamma(n - 1/2)
+    R_4 = 4**n*gamma(n + Rational(1/2))/(sqrt(pi)*gamma(n + 1))
+    R_5 = 4*2**(2*n - 3)*gamma(n + Rational(1/2))/gamma(n - Rational(1/2))
     R_6 = x/(n + x)
 
     assert combsimp(zb_sum(F_1, (k, 0, n), J = 2)[0]) == R_1
