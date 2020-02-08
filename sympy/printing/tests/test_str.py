@@ -129,6 +129,8 @@ def test_Geometry():
         'Polygon(Point2D(5, 6), Point2D(-2, -3), Point2D(0, 0), Point2D(4, 7))'
     assert sstr(Triangle(Point(0, 0), Point(1, 0), Point(0, 1)), sympy_integers=True) == \
         'Triangle(Point2D(S(0), S(0)), Point2D(S(1), S(0)), Point2D(S(0), S(1)))'
+    assert sstr(Ellipse(Point(1, 2), 3, 4), sympy_integers=True) == \
+        'Ellipse(Point2D(S(1), S(2)), S(3), S(4))'
 
 
 def test_GoldenRatio():
