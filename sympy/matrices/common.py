@@ -2310,7 +2310,7 @@ class MatrixArithmetic(MatrixRequired):
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
-            speed up calculation.
+            speed up calculation. Default is off.
         """
 
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
@@ -2377,7 +2377,7 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
-    def pow(self, exp, jordan=None):
+    def pow(self, exp, jordan=None, dotprodsimp=None):
         """Return self**exp a scalar or symbol.
 
         Parameters
@@ -2388,6 +2388,12 @@ class MatrixArithmetic(MatrixRequired):
             certain conditions, True specifies that jordan_pow should always
             be used if possible and False means it should not be used unless
             it is the only way to calculate the power.
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during naive matrix power to control expression blowup and thus
+            speed up calculation. If the power is calculated using Jordan form
+            then this option has no effect. Default is on.
         """
 
         if self.rows != self.cols:
@@ -2422,7 +2428,7 @@ class MatrixArithmetic(MatrixRequired):
                     if jordan:
                         raise
 
-            if _get_intermediate_simp_bool(True):
+            if _get_intermediate_simp_bool(True, dotprodsimp):
                 return a._eval_pow_by_recursion_dotprodsimp(exp)
             else:
                 return a._eval_pow_by_recursion(exp)
