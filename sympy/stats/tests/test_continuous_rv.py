@@ -46,6 +46,8 @@ def test_single_normal():
     assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
     assert E(X, Eq(X, mu)) == mu
 
+    # issue 8248
+    assert X.pspace.compute_expectation(1).doit() == 1
 
 def test_conditional_1d():
     X = Normal('x', 0, 1)
