@@ -352,7 +352,7 @@ def test_Poly__new__():
 
 
 def test_Poly__args():
-    assert Poly(x**2 + 1).args == (x**2 + 1,)
+    assert Poly(x**2 + 1).args == (x**2 + 1, x)
 
 
 def test_Poly__gens():

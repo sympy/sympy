@@ -908,7 +908,7 @@ def get_case(d, t):
     Returns one of {'exp', 'tan', 'base', 'primitive', 'other_linear',
     'other_nonlinear'}.
     """
-    if not d.has(t):
+    if not d.expr.has(t):
         if d.is_one:
             return 'base'
         return 'primitive'
@@ -941,7 +941,7 @@ def splitfactor(p, DE, coefficientD=False, z=None):
     if p.is_zero:
         return (p, One)
 
-    if not p.has(DE.t):
+    if not p.expr.has(DE.t):
         s = p.as_poly(*kinv).gcd(Dp.as_poly(*kinv)).as_poly(DE.t)
         n = p.exquo(s)
         return (n, s)
@@ -1333,11 +1333,11 @@ def integrate_primitive_polynomial(p, DE):
     Zero = Poly(0, DE.t)
     q = Poly(0, DE.t)
 
-    if not p.has(DE.t):
+    if not p.expr.has(DE.t):
         return (Zero, p, True)
 
     while True:
-        if not p.has(DE.t):
+        if not p.expr.has(DE.t):
             return (q, p, True)
 
         Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
@@ -1570,7 +1570,7 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
         DE, z).as_expr() + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
     q1, q2 = polynomial_reduce(p, DE)
 
-    if q2.has(DE.t):
+    if q2.expr.has(DE.t):
         b = False
     else:
         b = True
@@ -1740,7 +1740,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     result = S.Zero
     for case in reversed(DE.cases):
-        if not fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
+        if not fa.expr.has(DE.t) and not fd.expr.has(DE.t) and not case == 'base':
             DE.decrement_level()
             fa, fd = frac_in((fa, fd), DE.t)
             continue
