@@ -2,10 +2,9 @@
 # This is the module for ODE solver classes for single ODEs.
 #
 
-from typing import ClassVar, Dict, List, Optional, Type
+from typing import ClassVar, Dict, Iterable, List, Optional, Type
 
 from sympy.core import Add, S
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
@@ -86,18 +85,18 @@ class SingleODEProblem:
         self.prep = prep
 
     @cached_property
-    def order(self):
+    def order(self) -> int:
         return ode_order(self.eq, self.func)
 
     @cached_property
-    def eq_preprocessed(self):
+    def eq_preprocessed(self) -> Expr:
         return self._get_eq_preprocessed()
 
     @cached_property
-    def eq_expanded(self):
+    def eq_expanded(self) -> Expr:
         return expand(self.eq_preprocessed)
 
-    def _get_eq_preprocessed(self):
+    def _get_eq_preprocessed(self) -> Expr:
         if self.prep:
             process_eq, process_func = _preprocess(self.eq, self.func)
             if process_func != self.func:
@@ -105,6 +104,26 @@ class SingleODEProblem:
         else:
             process_eq = self.eq
         return process_eq
+
+    def get_numbered_constants(self, num=1, start=1, prefix='C') -> List[Symbol]:
+        """
+        Returns a list of constants that do not occur
+        in eq already.
+        """
+        ncs = self.iter_numbered_constants(start, prefix)
+        Cs = [next(ncs) for i in range(num)]
+        return Cs
+
+    def iter_numbered_constants(self, start=1, prefix='C') -> Iterable[Symbol]:
+        """
+        Returns an iterator of constants that do not occur
+        in eq already.
+        """
+        atom_set = self.eq.free_symbols
+        func_set = self.eq.atoms(Function)
+        if func_set:
+            atom_set |= {Symbol(str(f.func)) for f in func_set}
+        return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
     # TODO: Add methods that can be used by many ODE solvers:
     # order
@@ -186,32 +205,6 @@ class SingleODESolver:
     def _get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
-
-    def get_numbered_constants(self, eq, num=1, start=1, prefix='C'):
-        """
-        Returns a list of constants that do not occur
-        in eq already.
-        """
-        ncs = self.iter_numbered_constants(eq, start, prefix)
-        Cs = [next(ncs) for i in range(num)]
-        return (Cs[0] if num == 1 else tuple(Cs))
-
-    def iter_numbered_constants(self, eq, start=1, prefix='C'):
-        """
-        Returns an iterator of constants that do not occur
-        in eq already.
-        """
-
-        if isinstance(eq, (Expr, Eq)):
-            eq = [eq]
-        elif not iterable(eq):
-            raise ValueError("Expected Expr or iterable but got %s" % eq)
-
-        atom_set = set().union(*[i.free_symbols for i in eq])
-        func_set = set().union(*[i.atoms(Function) for i in eq])
-        if func_set:
-            atom_set |= {Symbol(str(f.func)) for f in func_set}
-        return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
 class NthAlgebraic(SingleODESolver):
@@ -419,7 +412,7 @@ class FirstLinear(SingleODESolver):
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
         r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c
-        C1 = self.get_numbered_constants(self.ode_problem.eq, num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
 
         t = exp(Integral(r[r['b']]/r[r['a']], x))
         tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
@@ -651,7 +644,7 @@ class Bernoulli(SingleODESolver):
         x = self.ode_problem.sym
         f = self.ode_problem.func.func
         r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
-        C1 = self.get_numbered_constants(self.ode_problem.eq, num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         t = exp((1 - r[r['n']])*Integral(r[r['b']]/r[r['a']], x))
         tt = (r[r['n']] - 1)*Integral(t*r[r['c']]/r[r['a']], x)
         return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
