@@ -1,5 +1,5 @@
 from sympy.concrete.gosper import gosper_normal
-from sympy.core import Dummy, Function, symbols, nan, sympify
+from sympy.core import Dummy, Function, symbols, sympify
 from sympy.polys import Poly, factor, factor_list, cancel, degree, LC
 from sympy.solvers import linsolve, rsolve
 from sympy.simplify import hypersimp, combsimp, fraction, denom
