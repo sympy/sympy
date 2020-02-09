@@ -817,6 +817,34 @@ def test_determinant():
     assert M.det(method="berkowitz") == 275
     assert M.det(method="lu") == 275
 
+    M = Matrix(( ( 3,  0,  0, 0),
+                 (-2,  1,  0, 0),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
+
+    assert M.det(method="bareiss") == 60
+    assert M.det(method="berkowitz") == 60
+    assert M.det(method="lu") == 60
+
+    M = Matrix(( ( 1,  0,  0,  0),
+                 ( 5,  0,  0,  0),
+                 ( 9, 10, 11, 0),
+                 (13, 14, 15, 16) ))
+
+    assert M.det(method="bareiss") == 0
+    assert M.det(method="berkowitz") == 0
+    assert M.det(method="lu") == 0
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (0, 0, 0, 0, 3) ))
+
+    assert M.det(method="bareiss") == 243
+    assert M.det(method="berkowitz") == 243
+    assert M.det(method="lu") == 243
+
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
                  (2, 1,  1, -1,  3),
@@ -4190,6 +4218,34 @@ def test_legacy_det():
     assert M.det(method="bareis") == -55
     assert M.det(method="det_lu") == -55
     assert M.det(method="BAREISS") == -55
+
+    M = Matrix(( ( 3,  0,  0, 0),
+                 (-2,  1,  0, 0),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
+
+    assert M.det(method="bareiss") == 60
+    assert M.det(method="berkowitz") == 60
+    assert M.det(method="lu") == 60
+
+    M = Matrix(( ( 1,  0,  0,  0),
+                 ( 5,  0,  0,  0),
+                 ( 9, 10, 11, 0),
+                 (13, 14, 15, 16) ))
+
+    assert M.det(method="bareiss") == 0
+    assert M.det(method="berkowitz") == 0
+    assert M.det(method="lu") == 0
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (0, 0, 0, 0, 3) ))
+
+    assert M.det(method="bareiss") == 243
+    assert M.det(method="berkowitz") == 243
+    assert M.det(method="lu") == 243
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),

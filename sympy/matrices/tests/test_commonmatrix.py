@@ -791,7 +791,10 @@ def test_det():
     d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
     e = DeterminantOnlyMatrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
-
+    from sympy.abc import i,j,k,l,m,n
+    f = DeterminantOnlyMatrix(3,3,[i,l,m,0,j,n,0,0,k])
+    g = DeterminantOnlyMatrix(3,3,[i,0,0,l,j,0,m,n,k])
+    h = DeterminantOnlyMatrix(3,3,[x**3,0,0,i,x**-1,0,j,k,x**-2])
     # the method keyword for `det` doesn't kick in until 4x4 matrices,
     # so there is no need to test all methods on smaller ones
 
@@ -802,6 +805,9 @@ def test_det():
     assert e.det() == 4*x - 24
     assert e.det(method='bareiss') == 4*x - 24
     assert e.det(method='berkowitz') == 4*x - 24
+    assert f.det() == i*j*k
+    assert g.det() == i*j*k
+    assert h.det() == 1
     raises(ValueError, lambda: e.det(iszerofunc="test"))
 
 
@@ -866,6 +872,9 @@ def test_cofactor_and_minors():
 
 def test_charpoly():
     x, y = Symbol('x'), Symbol('y')
+    z, t = Symbol('z'), Symbol('t')
+
+    from sympy.abc import a,b,c
 
     m = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
@@ -873,6 +882,15 @@ def test_charpoly():
     assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
     assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)
     raises(NonSquareMatrixError, lambda: Matrix([[1], [2]]).charpoly())
+
+    n = DeterminantOnlyMatrix(4,4,[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    assert n.charpoly() == Poly(x**4, x)
+
+    n = DeterminantOnlyMatrix(4,4,[45,0,0,0,0,23,0,0,0,0,87,0,0,0,0,12])
+    assert n.charpoly() == Poly(x**4 - 167*x**3 + 8811*x**2 - 173457*x + 1080540, x)
+
+    n = DeterminantOnlyMatrix(3,3,[x,0,0,a,y,0,b,c,z])
+    assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)
 
 # ReductionsOnlyMatrix tests
 def test_row_op():
