@@ -207,6 +207,48 @@ class SingleODESolver:
         raise NotImplementedError(msg)
 
 
+class SinglePatternODESolver(SingleODESolver):
+    '''Superclass for ODE solvers based on pattern matching'''
+
+    def wilds(self):
+        prob = self.ode_problem
+        f = prob.func.func
+        x = prob.sym
+        order = prob.order
+        return self._wilds(f, x, order)
+
+    def wilds_match(self):
+        match = self._wilds_match
+        return [match.get(w, S.Zero) for w in self.wilds()]
+
+    def _matches(self):
+        eq = self.ode_problem.eq_expanded
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+        df = f(x).diff(x)
+
+        if order != 1:
+            return False
+
+        eq = expand(eq / eq.coeff(df))
+        eq = eq.collect(f(x))
+
+        pattern = self._equation(f(x), x, 1)
+
+        self._wilds_match = match = eq.match(pattern)
+
+        return match is not None
+
+    def _wilds(self, f, x, order):
+        msg = "Subclasses of SingleODESolver should implement _wilds"
+        raise NotImplementedError(msg)
+
+    def _equation(self, fx, x, order):
+        msg = "Subclasses of SingleODESolver should implement _equation"
+        raise NotImplementedError(msg)
+
+
 class NthAlgebraic(SingleODESolver):
     r"""
     Solves an `n`\th order ordinary differential equation using algebra and
@@ -522,7 +564,7 @@ class AlmostLinear(FirstLinear):
         return False
 
 
-class Bernoulli(SingleODESolver):
+class Bernoulli(SinglePatternODESolver):
     r"""
     Solves Bernoulli differential equations.
 
@@ -543,19 +585,19 @@ class Bernoulli(SingleODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
-                                                                                    1
-                                                                                    -----
-                                                                                    1 - n
-                //               /                            \                     \
-                ||              |                             |                     |
-                ||              |                  /          |             /       |
-                ||              |                 |           |            |        |
-                ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
-                ||              |                 |           |            |        |
-                ||              |                /            |           /         |
-        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
-                ||              |                             |                     |
-                \\              /                            /                     /
+                                                                                           1
+                                                                                         -----
+                                                                                         1 - n
+               //               /                                  \                    \
+               ||              |                                   |                    |
+               ||              |            /           /          |            /       |
+               ||              |           |           |           |           |        |
+               ||              |       -n* | P(x) dx   | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||              |           |           |           |           |        |
+               ||              |          /           /            |          /         |
+        f(x) = ||C1 - (n - 1)* | Q(x)*e             *e           dx|*e                  |
+               ||              |                                   |                    |
+               \\             /                                    /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -602,49 +644,24 @@ class Bernoulli(SingleODESolver):
     hint = "Bernoulli"
     has_integral = True
 
-    def _matches(self):
-        eq = self.ode_problem.eq_expanded
-        f = self.ode_problem.func.func
-        x = self.ode_problem.sym
-        order = self.ode_problem.order
-        df = f(x).diff(x)
+    def _wilds(self, f, x, order):
+        P = Wild('P', exclude=[f(x)])
+        Q = Wild('Q', exclude=[f(x)])
+        n = Wild('n', exclude=[x, f(x), f(x).diff(x)])
+        return P, Q, n
 
-        if order != 1:
-            return False
-
-        a = Wild('a', exclude=[f(x)])
-        b = Wild('b', exclude=[f(x)])
-        c = Wild('c', exclude=[f(x)])
-        n = Wild('n', exclude=[x, f(x), df])
-        c1 = Wild('c1', exclude=[x])
-
-        reduced_eq = None
-        if eq.is_Add:
-            deriv_coef = eq.coeff(f(x).diff(x, order))
-            if deriv_coef not in (1, 0):
-                r = deriv_coef.match(a*f(x)**c1)
-                if r and r[c1]:
-                    den = f(x)**r[c1]
-                    reduced_eq = Add(*[arg/den for arg in eq.args])
-        if not reduced_eq:
-            reduced_eq = eq
-
-        r = collect(
-            reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
-            r['a'] = a
-            r['b'] = b
-            r['c'] = c
-            r['n'] = n
-            self.coeffs = r
-            return True
-        return False
+    def _equation(self, fx, x, order):
+        P, Q, n = self.wilds()
+        return fx.diff(x) + P*fx - Q*fx**n
 
     def _get_general_solution(self, *, simplify: bool = True):
+        P, Q, n = self.wilds_match()
+        fx = self.ode_problem.func
         x = self.ode_problem.sym
-        f = self.ode_problem.func.func
-        r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        t = exp((1 - r[r['n']])*Integral(r[r['b']]/r[r['a']], x))
-        tt = (r[r['n']] - 1)*Integral(t*r[r['c']]/r[r['a']], x)
-        return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
+        gensol = Eq(fx, (
+            (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
+                          * exp(Integral(P, x)), x)
+            ) * exp(-(1 - n)*Integral(P, x)))**(1/(1 - n))
+        )
+        return [gensol]

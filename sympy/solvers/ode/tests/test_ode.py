@@ -76,6 +76,8 @@ def test_dsolve_all_hint():
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral': Eq(f(x), C1),
         'separable_Integral': Eq(Integral(1, (_y, f(x))), C1 + Integral(0, x)),
         'separable': Eq(f(x), C1),
+        'Bernoulli': Eq(f(x), C1),
+        'Bernoulli_Integral': Eq(f(x), C1 + Integral(0, x)),
         'lie_group': Eq(f(x), C1),
         'nth_linear_constant_coeff_homogeneous': Eq(f(x), C1),
         'nth_algebraic_Integral': Eq(f(x), C1),
@@ -918,14 +920,15 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
-        '1st_linear_Integral', 'almost_linear', 'almost_linear_Integral',
-        'best', 'best_hint', 'default', 'lie_group',
+        '1st_linear_Integral', 'Bernoulli', 'Bernoulli_Integral',
+        'almost_linear', 'almost_linear_Integral', 'best', 'best_hint',
+        'default', 'lie_group',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
-        'almost_linear_Integral', 'best', 'best_hint', 'default',
+        'Bernoulli_Integral', 'almost_linear_Integral', 'best', 'best_hint', 'default',
         'nth_linear_euler_eq_homogeneous',
         'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
@@ -993,7 +996,9 @@ def test_classify_ode():
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
         'nth_algebraic',
         'separable',
-        '1st_linear', '1st_homogeneous_coeff_best',
+        '1st_linear',
+        'Bernoulli',
+        '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_power_series', 'lie_group',
@@ -1002,11 +1007,13 @@ def test_classify_ode():
         'nth_algebraic_Integral',
         'separable_Integral',
         '1st_linear_Integral',
+        'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     assert classify_ode(f(x).diff(x)**2, f(x)) == ('nth_algebraic',
          'separable',
          '1st_linear',
+         'Bernoulli',
          '1st_homogeneous_coeff_best',
          '1st_homogeneous_coeff_subs_indep_div_dep',
          '1st_homogeneous_coeff_subs_dep_div_indep',
@@ -1017,6 +1024,7 @@ def test_classify_ode():
          'nth_algebraic_Integral',
          'separable_Integral',
          '1st_linear_Integral',
+         'Bernoulli_Integral',
          '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
          '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     # issue 4749: f(x) should be cleared from highest derivative before classifying
@@ -1092,15 +1100,17 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', '1st_linear', '1st_power_series',
+        ('factorable', 'nth_algebraic', 'separable', '1st_linear',
+         'Bernoulli', '1st_power_series',
          'lie_group', 'nth_linear_euler_eq_homogeneous',
          'nth_algebraic_Integral', 'separable_Integral',
-         '1st_linear_Integral')
+         '1st_linear_Integral', 'Bernoulli_Integral')
 
 
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', '1st_power_series', 'lie_group',
-                'nth_algebraic_Integral', 'separable_Integral')
+        ('factorable', 'nth_algebraic', 'separable', 'Bernoulli',
+         '1st_power_series', 'lie_group', 'nth_algebraic_Integral',
+         'separable_Integral', 'Bernoulli_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
         ('1st_power_series', 'lie_group')
