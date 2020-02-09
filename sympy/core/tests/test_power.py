@@ -511,9 +511,10 @@ def test_issue_18190():
 
 
 def test_issue_14815():
-    x = Symbol('x')
-    assert sqrt(x).is_negative is False
+    x = Symbol('x', real=True)
     assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', real=False)
+    assert sqrt(x).is_extended_negative is None
     assert sqrt(zoo, evaluate=False).is_extended_negative is None
     assert sqrt(nan, evaluate=False).is_extended_negative is None
 
