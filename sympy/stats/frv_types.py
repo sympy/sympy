@@ -92,7 +92,7 @@ def FiniteRV(name, density):
 class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property
     def p(self):
-        return Rational(1, len(self.args))
+        return Rational(1, len(set(self.args)))
 
     @property  # type: ignore
     @cacheit
@@ -104,7 +104,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         return set(self.args)
 
     def pmf(self, x):
-        if x in self.args:
+        if x in set(self.args):
             return self.p
         else:
             return S.Zero
