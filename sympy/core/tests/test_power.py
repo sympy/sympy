@@ -514,6 +514,9 @@ def test_issue_14815():
     x = Symbol('x')
     assert sqrt(x).is_negative is False
     assert sqrt(x).is_extended_negative is False
+    assert sqrt(zoo, evaluate=False).is_extended_negative is None
+    assert sqrt(nan, evaluate=False).is_extended_negative is None
+
 
 def test_issue_18509():
     assert unchanged(Mul, oo, 1/pi**oo)

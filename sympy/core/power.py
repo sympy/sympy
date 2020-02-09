@@ -531,6 +531,8 @@ class Pow(Expr):
 
     def _eval_is_extended_negative(self):
         if self.exp is S(1)/2:
+            if self.base is S.NaN or self.base is S.ComplexInfinity:
+                return None
             return False
         if self.base.is_extended_negative:
             if self.exp.is_odd and self.base.is_finite:
