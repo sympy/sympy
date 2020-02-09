@@ -54,10 +54,12 @@ from mpmath.libmp.libhyper import NoConvergence
 
 
 @public
-class Poly(Expr):
+class Poly(Basic):
     """
     Generic class for representing and operating on polynomial expressions.
-    Subclasses Expr class.
+
+    Poly is a subclass of Basic rather than Expr but instances can be
+    converted to Expr with the ``as_expr`` method.
 
     Examples
     ========
@@ -570,6 +572,10 @@ class Poly(Expr):
 
         raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
 
+    def match(f, *args, **kwargs):
+        """Match expression from Poly. See Basic.match()"""
+        return f.as_expr().match(*args, **kwargs)
+
     def reorder(f, *gens, **args):
         """
         Efficiently apply new order of generators.
@@ -999,6 +1005,32 @@ class Poly(Expr):
                     gens[index] = value
 
         return basic_from_dict(f.rep.to_sympy_dict(), *gens)
+
+    def as_poly(self, *gens, **args):
+        """Converts ``self`` to a polynomial or returns ``None``.
+
+        >>> from sympy import sin
+        >>> from sympy.abc import x, y
+
+        >>> print((x**2 + x*y).as_poly())
+        Poly(x**2 + x*y, x, y, domain='ZZ')
+
+        >>> print((x**2 + x*y).as_poly(x, y))
+        Poly(x**2 + x*y, x, y, domain='ZZ')
+
+        >>> print((x**2 + sin(y)).as_poly(x, y))
+        None
+
+        """
+        try:
+            poly = Poly(self, *gens, **args)
+
+            if not poly.is_Poly:
+                return None
+            else:
+                return poly
+        except PolynomialError:
+            return None
 
     def lift(f):
         """
@@ -4025,7 +4057,7 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __mul__(f, g):
-        if not isinstance(g, Expr):
+        if not isinstance(g, (Expr, Poly)):
             return NotImplemented
         if not g.is_Poly:
             try:
@@ -5775,7 +5807,7 @@ def gff_list(f, *gens, **args):
     >>> gff_list(f)
     [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
 
-    >>> (ff(Poly(x), 1)*ff(Poly(x + 2), 4)).expand() == f
+    >>> (ff(Poly(x), 1)*ff(Poly(x + 2), 4)) == f
     True
 
     >>> f = Poly(x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
@@ -5974,8 +6006,11 @@ def _generic_factor_list(expr, gens, args, method):
 
     expr = sympify(expr)
 
-    if isinstance(expr, Expr) and not expr.is_Relational:
-        numer, denom = together(expr).as_numer_denom()
+    if isinstance(expr, (Expr, Poly)) and not expr.is_Relational:
+        if isinstance(expr, Poly):
+            numer, denom = expr, 1
+        else:
+            numer, denom = together(expr).as_numer_denom()
 
         cp, fp = _symbolic_factor_list(numer, opt, method)
         cq, fq = _symbolic_factor_list(denom, opt, method)
