@@ -427,7 +427,8 @@ def test_issue_18604():
     assert Idx("i", m).name == 'i'
     assert Idx("i", m).lower == 0
     assert Idx("i", m).upper == m - 1
-
+    m = symbols("m", real=False)
+    raises(TypeError, lambda: Idx("i", m))
 
 def test_Subs_with_Indexed():
     A = IndexedBase("A")
