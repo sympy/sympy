@@ -17,8 +17,6 @@ Python 2 and Python 3 compatible imports
 String and Unicode compatible changes:
     * `unicode()` removed in Python 3, import `unicode` for Python 2/3
       compatible function
-    * `unichr()` removed in Python 3, import `unichr` for Python 2/3 compatible
-      function
     * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
     * Use `u_decode()` to decode utf-8 formatted unicode strings
 
@@ -55,7 +53,7 @@ Metaclasses:
 
 __all__ = [
     'PY3', 'long', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
-    'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
+    'unicode', 'u_decode', 'Iterator', 'get_function_code',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
@@ -72,7 +70,6 @@ if PY3:
 
     # String / unicode compatibility
     unicode = str
-    unichr = chr
 
     def u_decode(x):
         return x
@@ -104,7 +101,6 @@ else:
 
     # String / unicode compatibility
     unicode = unicode
-    unichr = unichr
 
     def u_decode(x):
         return x.decode('utf-8')
