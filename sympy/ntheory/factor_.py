@@ -2319,7 +2319,7 @@ def is_perfect(n):
                 -- its escape, so to say, from the complex web of conditions
                 which hem it in on all sides -- would be little short of a
                 miracle." I guess SymPy just found that miracle and it
-                factors like this: %s''' % facs))
+                factors like this: %s''' % factorint(n)))
 
 
 def is_mersenne_prime(n):
