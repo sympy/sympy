@@ -8,7 +8,7 @@ from sympy.solvers.ode import (classify_ode,
 
 from sympy.solvers.ode.subscheck import checkodesol, checksysodesol
 from sympy.solvers.ode.ode import (_linear_coeff_match,
-    _ode_factorable_match, _undetermined_coefficients_match, classify_sysode,
+    _undetermined_coefficients_match, classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
 from sympy.functions import airyai, airybi, besselj, bessely
@@ -1095,7 +1095,8 @@ def test_classify_ode():
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == ('nth_algebraic',
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ('factorable',
+         'nth_algebraic',
          'separable',
          '1st_linear',
          'Bernoulli',
@@ -2720,7 +2721,7 @@ def test_unexpanded_Liouville_ODE():
     # This is the same as eq1 from test_Liouville_ODE() above.
     eq1 = diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
-    sol2 = Eq(f(x), log(x/(C1 + C2*x)))
+    sol2 = Eq(f(x), C1 + log(x) - log(C2 + x))
     sol2s = constant_renumber(sol2)
     assert dsolve(eq2) in (sol2, sol2s)
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
@@ -3858,11 +3859,8 @@ def test_dsolve_remove_redundant_solutions():
 
 
 def test_factorable():
-    # Unable to get coverage on this without explicit testing because _desolve
-    # already handles Pow before we get there but that should be disabled in
-    # future so that factorable gets the raw ODE.
+
     eq = f(x).diff(x)-1
-    assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
 
     eq = f(x) + f(x)*f(x).diff(x)
     sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
@@ -4069,6 +4067,6 @@ def test_issue_18408():
 def test_issue_9446():
     f = Function('f')
     assert dsolve(Eq(f(2 * x), sin(Derivative(f(x)))), f(x)) == \
-    [Eq(f(x), C1 + Integral(asin(f(2*x)), x)), Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x))]
+    [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))]
 
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)

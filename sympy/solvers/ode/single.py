@@ -13,11 +13,13 @@ from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel
 from sympy.simplify import simplify
+from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.functions import exp
-
+from sympy.polys.polytools import factor,factor_list
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
+from .ode import dsolve
 
 
 class ODEMatchError(NotImplementedError):
@@ -651,3 +653,76 @@ class Bernoulli(SinglePatternODESolver):
             ) * exp(-(1 - n)*Integral(P, x)))**(1/(1 - n))
         )
         return [gensol]
+
+
+class Factorable(SingleODESolver):
+    r"""
+        Solves equations having a solvable factor.
+
+        This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
+        will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
+        list of solutions.
+
+        Examples
+        ========
+
+        >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+        >>> from sympy.abc import x
+        >>> f = Function('f')
+        >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
+        >>> pprint(dsolve(eq, f(x)))
+                                        -x
+        [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
+
+
+        """
+    hint = "factorable"
+    has_integral = False
+
+    def _matches(self):
+        eq = self.ode_problem.eq
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order =self.ode_problem.order
+        df = f(x).diff(x)
+        self.eqs = []
+        eq = eq.collect(f(x), func = cancel)
+        eq = fraction(factor(eq))[0]
+        roots = factor_list(eq)[1]
+        if len(roots)>1 or roots[0][1]>1:
+            for base,expo in roots:
+                if base.has(f(x)):
+                    self.eqs.append(base)
+            if len(self.eqs)>0:
+                return True
+        roots = solve(eq, df)
+        if len(roots)>0:
+            self.eqs = [(df - root) for root in roots]
+            if len(self.eqs)==1:
+                if order>1:
+                    return False
+                return fraction(factor(self.eqs[0]))[0]-eq!=0
+            return True
+        return False
+
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        func = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        eqns = self.eqs
+        sols = []
+        for eq in eqns:
+            try:
+                sol = dsolve(eq, func(x))
+            except NotImplementedError:
+                continue
+            else:
+                if isinstance(sol, list):
+                    sols.extend(sol)
+                else:
+                    sols.append(sol)
+
+        if sols == []:
+            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+                + " the factorable group method")
+        return sols

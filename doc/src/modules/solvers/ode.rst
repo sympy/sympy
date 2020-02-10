@@ -68,7 +68,7 @@ sol_simplicity
 
 factorable
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_factorable
+.. autoclass:: sympy.solvers.ode.single.Factorable
 
 1st_exact
 ^^^^^^^^^
