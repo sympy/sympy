@@ -407,7 +407,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
         m = 1
         for i in diagonal_elements:
             m = m * (x - simplify(i))
-        return PurePoly(m,x)
+        return PurePoly(m, x)
 
     berk_vector = _berkowitz_vector(M)
     x = _uniquely_named_symbol(x, berk_vector)
@@ -576,7 +576,7 @@ def _det(M, method="bareiss", iszerofunc=None):
         if M.is_upper or M.is_lower:
             m = 1
             for i in range(n):
-                m = m * M[i,i]
+                m = m * M[i, i]
             return _get_intermediate_simp(_dotprodsimp)(m)
         elif n == 0:
             return M.one
