@@ -131,7 +131,9 @@ def test_zeta():
 def test_sample_discrete():
     X = Geometric('X', S.Half)
     assert sample(X) in X.pspace.domain.set
-
+    samps = sample(X, size=4)
+    for samp in samps:
+        assert samp in X.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))

@@ -819,6 +819,11 @@ def test_lognormal():
     for i in range(3):
         X = LogNormal('x', i, 1)
         assert sample(X) in X.pspace.domain.set
+
+    size = 5
+    samps = sample(X, size=size)
+    for samp in samps:
+        assert samp in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
 
@@ -1205,10 +1210,13 @@ def test_prefab_sampling():
 
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
+    size = 5
     for var in variables:
         for i in range(niter):
             assert sample(var) in var.pspace.domain.set
-
+            samps = sample(var, size=size)
+            for samp in samps:
+                assert samp in var.pspace.domain.set
 
 def test_input_value_assertions():
     a, b = symbols('a b')
