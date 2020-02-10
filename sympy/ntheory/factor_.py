@@ -19,6 +19,7 @@ from sympy.core.power import integer_nthroot, Pow
 from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
+from sympy.utilities.misc import filldedent
 
 
 # Note: This list should be updated whenever new Mersenne primes are found.
@@ -2299,7 +2300,7 @@ def is_perfect(n):
             return False
         if c <= 100:
             return False
-        if a > integer_root(3*n, 3):
+        if a > integer_nthroot(3*n, 3):
             return False
     rv = divisor_sigma(n) - n
     if rv == n:
