@@ -49,12 +49,12 @@ Metaclasses:
 
 __all__ = [
     'PY3', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
-    'unicode', 'u_decode', 'Iterator', 'get_function_code',
+    'unicode', 'u_decode', 'get_function_code', 'gmpy'
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
-    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
+    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY',
 ]
 
 import sys
@@ -68,8 +68,6 @@ if PY3:
 
     def u_decode(x):
         return x
-
-    Iterator = object
 
     # Moved definitions
     get_function_code = operator.attrgetter("__code__")
@@ -98,10 +96,6 @@ else:
 
     def u_decode(x):
         return x.decode('utf-8')
-
-    class Iterator(object):
-        def next(self):
-            return type(self).__next__(self)
 
     # Moved definitions
     get_function_code = operator.attrgetter("func_code")
