@@ -533,6 +533,22 @@ def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) is -oo
 
 
+def test_issue_13382():
+    assert limit(x*(((x + 1)**2 + 1)/(x**2 + 1) - 1), x, oo) == 2
+
+
+def test_issue_13403():
+    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x ,oo) == 1
+
+
+def test_issue_13416():
+    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x ,oo) == 1
+
+
+def test_issue_13462():
+    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
+
+
 def test_issue_14574():
     assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0
 
@@ -595,6 +611,7 @@ def test_issue_12571():
 def test_issue_14590():
     assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)
 
+
 def test_issue_17431():
     assert limit(((n + 1) + 1) / (((n + 1) + 2) * factorial(n + 1)) *
                  (n + 2) * factorial(n) / (n + 1), n, oo) == 0
@@ -606,5 +623,16 @@ def test_issue_17431():
 def test_issue_17671():
     assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
 
+
 def test_issue_18306():
     assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
+
+
+def test_issue_18442():
+    assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == AccumBounds(-oo, oo)
+
+
+def test_issue_18508():
+    assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
+    assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
+    assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)

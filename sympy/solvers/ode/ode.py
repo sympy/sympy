@@ -239,7 +239,7 @@ from itertools import islice
 from sympy.functions import hyper
 
 from sympy.core import Add, S, Mul, Pow, oo, Rational
-from sympy.core.compatibility import ordered, iterable, is_sequence
+from sympy.core.compatibility import ordered, iterable
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import AtomicExpr, Expr
@@ -265,7 +265,7 @@ from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
-    separatevars, simplify, trigsimp, posify, cse, besselsimp)
+    separatevars, simplify, trigsimp, posify, cse)
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const, fraction
 from sympy.solvers import checksol, solve
@@ -273,6 +273,8 @@ from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+
+from .subscheck import sub_func_doit
 
 #: This is a list of hints in the order that they should be preferred by
 #: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
@@ -345,35 +347,6 @@ lie_heuristics = (
     "chi"
     )
 
-
-def sub_func_doit(eq, func, new):
-    r"""
-    When replacing the func with something else, we usually want the
-    derivative evaluated, so this function helps in making that happen.
-
-    Examples
-    ========
-
-    >>> from sympy import Derivative, symbols, Function
-    >>> from sympy.solvers.ode.ode import sub_func_doit
-    >>> x, z = symbols('x, z')
-    >>> y = Function('y')
-
-    >>> sub_func_doit(3*Derivative(y(x), x) - 1, y(x), x)
-    2
-
-    >>> sub_func_doit(x*Derivative(y(x), x) - y(x)**2 + y(x), y(x),
-    ... 1/(x*(z + 1/x)))
-    x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
-    ...- 1/(x**2*(z + 1/x)**2)
-    """
-    reps= {func: new}
-    for d in eq.atoms(Derivative):
-        if d.expr == func:
-            reps[d] = new.diff(*d.variable_count)
-        else:
-            reps[d] = d.xreplace({func: new}).doit(deep=False)
-    return eq.xreplace(reps)
 
 
 def get_numbered_constants(eq, num=1, start=1, prefix='C'):
@@ -1879,14 +1852,14 @@ def classify_sysode(eq, funcs=None, **kwargs):
         return list(map(sympify, eq if iterable(eq) else [eq]))
 
     eq, funcs = (_sympify(w) for w in [eq, funcs])
+    if len(eq) == 0:
+        raise ValueError("classify_sysode() works for systems of ODEs. "
+        "For scalar ODEs, classify_ode should be used")
     for i, fi in enumerate(eq):
         if isinstance(fi, Equality):
             eq[i] = fi.lhs - fi.rhs
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
-    if i==0:
-        raise ValueError("classify_sysode() works for systems of ODEs. "
-        "For scalar ODEs, classify_ode should be used")
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     # find all the functions if not given
@@ -2403,111 +2376,9 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
             return 'type5'
     return None
 
+
 def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
-
-
-def checksysodesol(eqs, sols, func=None):
-    r"""
-    Substitutes corresponding ``sols`` for each functions into each ``eqs`` and
-    checks that the result of substitutions for each equation is ``0``. The
-    equations and solutions passed can be any iterable.
-
-    This only works when each ``sols`` have one function only, like `x(t)` or `y(t)`.
-    For each function, ``sols`` can have a single solution or a list of solutions.
-    In most cases it will not be necessary to explicitly identify the function,
-    but if the function cannot be inferred from the original equation it
-    can be supplied through the ``func`` argument.
-
-    When a sequence of equations is passed, the same sequence is used to return
-    the result for each equation with each function substituted with corresponding
-    solutions.
-
-    It tries the following method to find zero equivalence for each equation:
-
-    Substitute the solutions for functions, like `x(t)` and `y(t)` into the
-    original equations containing those functions.
-    This function returns a tuple.  The first item in the tuple is ``True`` if
-    the substitution results for each equation is ``0``, and ``False`` otherwise.
-    The second item in the tuple is what the substitution results in.  Each element
-    of the ``list`` should always be ``0`` corresponding to each equation if the
-    first item is ``True``. Note that sometimes this function may return ``False``,
-    but with an expression that is identically equal to ``0``, instead of returning
-    ``True``.  This is because :py:meth:`~sympy.simplify.simplify.simplify` cannot
-    reduce the expression to ``0``.  If an expression returned by each function
-    vanishes identically, then ``sols`` really is a solution to ``eqs``.
-
-    If this function seems to hang, it is probably because of a difficult simplification.
-
-    Examples
-    ========
-
-    >>> from sympy import Eq, diff, symbols, sin, cos, exp, sqrt, S, Function
-    >>> from sympy.solvers.ode.ode import checksysodesol
-    >>> C1, C2 = symbols('C1:3')
-    >>> t = symbols('t')
-    >>> x, y = symbols('x, y', cls=Function)
-    >>> eq = (Eq(diff(x(t),t), x(t) + y(t) + 17), Eq(diff(y(t),t), -2*x(t) + y(t) + 12))
-    >>> sol = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - S(5)/3),
-    ... Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - S(46)/3)]
-    >>> checksysodesol(eq, sol)
-    (True, [0, 0])
-    >>> eq = (Eq(diff(x(t),t),x(t)*y(t)**4), Eq(diff(y(t),t),y(t)**3))
-    >>> sol = [Eq(x(t), C1*exp(-1/(4*(C2 + t)))), Eq(y(t), -sqrt(2)*sqrt(-1/(C2 + t))/2),
-    ... Eq(x(t), C1*exp(-1/(4*(C2 + t)))), Eq(y(t), sqrt(2)*sqrt(-1/(C2 + t))/2)]
-    >>> checksysodesol(eq, sol)
-    (True, [0, 0])
-
-    """
-    def _sympify(eq):
-        return list(map(sympify, eq if iterable(eq) else [eq]))
-    eqs = _sympify(eqs)
-    for i in range(len(eqs)):
-        if isinstance(eqs[i], Equality):
-            eqs[i] = eqs[i].lhs - eqs[i].rhs
-    if func is None:
-        funcs = []
-        for eq in eqs:
-            derivs = eq.atoms(Derivative)
-            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            for func_ in  func:
-                funcs.append(func_)
-        funcs = list(set(funcs))
-    if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
-    and len({func.args for func in funcs})!=1:
-        raise ValueError("func must be a function of one variable, not %s" % func)
-    for sol in sols:
-        if len(sol.atoms(AppliedUndef)) != 1:
-            raise ValueError("solutions should have one function only")
-    if len(funcs) != len({sol.lhs for sol in sols}):
-        raise ValueError("number of solutions provided does not match the number of equations")
-    dictsol = dict()
-    for sol in sols:
-        func = list(sol.atoms(AppliedUndef))[0]
-        if sol.rhs == func:
-            sol = sol.reversed
-        solved = sol.lhs == func and not sol.rhs.has(func)
-        if not solved:
-            rhs = solve(sol, func)
-            if not rhs:
-                raise NotImplementedError
-        else:
-            rhs = sol.rhs
-        dictsol[func] = rhs
-    checkeq = []
-    for eq in eqs:
-        for func in funcs:
-            eq = sub_func_doit(eq, func, dictsol[func])
-        ss = simplify(eq)
-        if ss != 0:
-            eq = ss.expand(force=True)
-        else:
-            eq = 0
-        checkeq.append(eq)
-    if len(set(checkeq)) == 1 and list(set(checkeq))[0] == 0:
-        return (True, checkeq)
-    else:
-        return (False, checkeq)
 
 
 @vectorize(0)
@@ -2680,238 +2551,6 @@ def odesimp(ode, eq, func, hint):
     if len(eq) == 1:
         eq = eq[0]
     return eq
-
-def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
-    r"""
-    Substitutes ``sol`` into ``ode`` and checks that the result is ``0``.
-
-    This only works when ``func`` is one function, like `f(x)`.  ``sol`` can
-    be a single solution or a list of solutions.  Each solution may be an
-    :py:class:`~sympy.core.relational.Equality` that the solution satisfies,
-    e.g. ``Eq(f(x), C1), Eq(f(x) + C1, 0)``; or simply an
-    :py:class:`~sympy.core.expr.Expr`, e.g. ``f(x) - C1``. In most cases it
-    will not be necessary to explicitly identify the function, but if the
-    function cannot be inferred from the original equation it can be supplied
-    through the ``func`` argument.
-
-    If a sequence of solutions is passed, the same sort of container will be
-    used to return the result for each solution.
-
-    It tries the following methods, in order, until it finds zero equivalence:
-
-    1. Substitute the solution for `f` in the original equation.  This only
-       works if ``ode`` is solved for `f`.  It will attempt to solve it first
-       unless ``solve_for_func == False``.
-    2. Take `n` derivatives of the solution, where `n` is the order of
-       ``ode``, and check to see if that is equal to the solution.  This only
-       works on exact ODEs.
-    3. Take the 1st, 2nd, ..., `n`\th derivatives of the solution, each time
-       solving for the derivative of `f` of that order (this will always be
-       possible because `f` is a linear operator). Then back substitute each
-       derivative into ``ode`` in reverse order.
-
-    This function returns a tuple.  The first item in the tuple is ``True`` if
-    the substitution results in ``0``, and ``False`` otherwise. The second
-    item in the tuple is what the substitution results in.  It should always
-    be ``0`` if the first item is ``True``. Sometimes this function will
-    return ``False`` even when an expression is identically equal to ``0``.
-    This happens when :py:meth:`~sympy.simplify.simplify.simplify` does not
-    reduce the expression to ``0``.  If an expression returned by this
-    function vanishes identically, then ``sol`` really is a solution to
-    the ``ode``.
-
-    If this function seems to hang, it is probably because of a hard
-    simplification.
-
-    To use this function to test, test the first item of the tuple.
-
-    Examples
-    ========
-
-    >>> from sympy import Eq, Function, checkodesol, symbols
-    >>> x, C1 = symbols('x,C1')
-    >>> f = Function('f')
-    >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
-    (True, 0)
-    >>> assert checkodesol(f(x).diff(x), C1)[0]
-    >>> assert not checkodesol(f(x).diff(x), x)[0]
-    >>> checkodesol(f(x).diff(x, 2), x**2)
-    (False, 2)
-
-    """
-    if not isinstance(ode, Equality):
-        ode = Eq(ode, 0)
-    if func is None:
-        try:
-            _, func = _preprocess(ode.lhs)
-        except ValueError:
-            funcs = [s.atoms(AppliedUndef) for s in (
-                sol if is_sequence(sol, set) else [sol])]
-            funcs = set().union(*funcs)
-            if len(funcs) != 1:
-                raise ValueError(
-                    'must pass func arg to checkodesol for this case.')
-            func = funcs.pop()
-    if not isinstance(func, AppliedUndef) or len(func.args) != 1:
-        raise ValueError(
-            "func must be a function of one variable, not %s" % func)
-    if is_sequence(sol, set):
-        return type(sol)([checkodesol(ode, i, order=order, solve_for_func=solve_for_func) for i in sol])
-
-    if not isinstance(sol, Equality):
-        sol = Eq(func, sol)
-    elif sol.rhs == func:
-        sol = sol.reversed
-
-    if order == 'auto':
-        order = ode_order(ode, func)
-    solved = sol.lhs == func and not sol.rhs.has(func)
-    if solve_for_func and not solved:
-        rhs = solve(sol, func)
-        if rhs:
-            eqs = [Eq(func, t) for t in rhs]
-            if len(rhs) == 1:
-                eqs = eqs[0]
-            return checkodesol(ode, eqs, order=order,
-                solve_for_func=False)
-
-    x = func.args[0]
-
-    # Handle series solutions here
-    if sol.has(Order):
-        assert sol.lhs == func
-        Oterm = sol.rhs.getO()
-        solrhs = sol.rhs.removeO()
-
-        Oexpr = Oterm.expr
-        assert isinstance(Oexpr, Pow)
-        sorder = Oexpr.exp
-        assert Oterm == Order(x**sorder)
-
-        odesubs = (ode.lhs-ode.rhs).subs(func, solrhs).doit().expand()
-
-        neworder = Order(x**(sorder - order))
-        odesubs = odesubs + neworder
-        assert odesubs.getO() == neworder
-        residual = odesubs.removeO()
-
-        return (residual == 0, residual)
-
-    s = True
-    testnum = 0
-    while s:
-        if testnum == 0:
-            # First pass, try substituting a solved solution directly into the
-            # ODE. This has the highest chance of succeeding.
-            ode_diff = ode.lhs - ode.rhs
-
-            if sol.lhs == func:
-                s = sub_func_doit(ode_diff, func, sol.rhs)
-                s = besselsimp(s)
-            else:
-                testnum += 1
-                continue
-            ss = simplify(s.rewrite(exp))
-            if ss:
-                # with the new numer_denom in power.py, if we do a simple
-                # expansion then testnum == 0 verifies all solutions.
-                s = ss.expand(force=True)
-            else:
-                s = 0
-            testnum += 1
-        elif testnum == 1:
-            # Second pass. If we cannot substitute f, try seeing if the nth
-            # derivative is equal, this will only work for odes that are exact,
-            # by definition.
-            s = simplify(
-                trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) -
-                trigsimp(ode.lhs) + trigsimp(ode.rhs))
-            # s2 = simplify(
-            #     diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
-            #     ode.lhs + ode.rhs)
-            testnum += 1
-        elif testnum == 2:
-            # Third pass. Try solving for df/dx and substituting that into the
-            # ODE. Thanks to Chris Smith for suggesting this method.  Many of
-            # the comments below are his, too.
-            # The method:
-            # - Take each of 1..n derivatives of the solution.
-            # - Solve each nth derivative for d^(n)f/dx^(n)
-            #   (the differential of that order)
-            # - Back substitute into the ODE in decreasing order
-            #   (i.e., n, n-1, ...)
-            # - Check the result for zero equivalence
-            if sol.lhs == func and not sol.rhs.has(func):
-                diffsols = {0: sol.rhs}
-            elif sol.rhs == func and not sol.lhs.has(func):
-                diffsols = {0: sol.lhs}
-            else:
-                diffsols = {}
-            sol = sol.lhs - sol.rhs
-            for i in range(1, order + 1):
-                # Differentiation is a linear operator, so there should always
-                # be 1 solution. Nonetheless, we test just to make sure.
-                # We only need to solve once.  After that, we automatically
-                # have the solution to the differential in the order we want.
-                if i == 1:
-                    ds = sol.diff(x)
-                    try:
-                        sdf = solve(ds, func.diff(x, i))
-                        if not sdf:
-                            raise NotImplementedError
-                    except NotImplementedError:
-                        testnum += 1
-                        break
-                    else:
-                        diffsols[i] = sdf[0]
-                else:
-                    # This is what the solution says df/dx should be.
-                    diffsols[i] = diffsols[i - 1].diff(x)
-
-            # Make sure the above didn't fail.
-            if testnum > 2:
-                continue
-            else:
-                # Substitute it into ODE to check for self consistency.
-                lhs, rhs = ode.lhs, ode.rhs
-                for i in range(order, -1, -1):
-                    if i == 0 and 0 not in diffsols:
-                        # We can only substitute f(x) if the solution was
-                        # solved for f(x).
-                        break
-                    lhs = sub_func_doit(lhs, func.diff(x, i), diffsols[i])
-                    rhs = sub_func_doit(rhs, func.diff(x, i), diffsols[i])
-                    ode_or_bool = Eq(lhs, rhs)
-                    ode_or_bool = simplify(ode_or_bool)
-
-                    if isinstance(ode_or_bool, (bool, BooleanAtom)):
-                        if ode_or_bool:
-                            lhs = rhs = S.Zero
-                    else:
-                        lhs = ode_or_bool.lhs
-                        rhs = ode_or_bool.rhs
-                # No sense in overworking simplify -- just prove that the
-                # numerator goes to zero
-                num = trigsimp((lhs - rhs).as_numer_denom()[0])
-                # since solutions are obtained using force=True we test
-                # using the same level of assumptions
-                ## replace function with dummy so assumptions will work
-                _func = Dummy('func')
-                num = num.subs(func, _func)
-                ## posify the expression
-                num, reps = posify(num)
-                s = simplify(num).xreplace(reps).xreplace({_func: func})
-                testnum += 1
-        else:
-            break
-
-    if not s:
-        return (True, s)
-    elif s is True:  # The code above never was able to change s
-        raise NotImplementedError("Unable to test if " + str(sol) +
-            " is a solution to " + str(ode) + ".")
-    else:
-        return (False, s)
 
 
 def ode_sol_simplicity(sol, func, trysolving=True):
@@ -7631,8 +7270,11 @@ def _linear_2eq_order1_type4(x, y, t, r, eq):
         G = Integral(r['b'], t)
         sol1 = F*(C1*cos(G) + C2*sin(G))
         sol2 = F*(-C1*sin(G) + C2*cos(G))
+    # FIXME: the case below doesn't seem correct, is only XFAIL tested and doesn't
+    # match the description in the docstring above. It can be triggered with:
+    # dsolve([Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), x*f(x) - g(x))])
     elif r['d'] == -r['a']:
-        F = exp(Integral(r['c'], t))
+        F = exp(Integral(r['b'], t))
         G = Integral(r['d'], t)
         sol1 = F*(-C1*sin(G) + C2*cos(G))
         sol2 = F*(C1*cos(G) + C2*sin(G))
@@ -7664,6 +7306,8 @@ def _linear_2eq_order1_type5(x, y, t, r, eq):
         sol = dsolve(eq)
         sol1 = exp(Integral(r['a'], t))*sol[0].rhs.subs(T, Integral(r['b'], t))
         sol2 = exp(Integral(r['a'], t))*sol[1].rhs.subs(T, Integral(r['b'], t))
+    # The case below isn't tested and doesn't match the description in the
+    # docstring above. Perhaps this should be removed...
     if not cancel(r['a']/r['d']).has(t):
         p = cancel(r['a']/r['d'])
         q = cancel((r['b']-r['c'])/r['d'])
@@ -7712,6 +7356,7 @@ def _linear_2eq_order1_type6(x, y, t, r, eq):
                     p = 2
                     s = j
                     break
+
     if p == 1:
         equ = diff(x(t),t) - r['a']*x(t) - r['b']*(s*x(t) + C1*exp(-s*Integral(r['b'] - r['d']/s, t)))
         hint1 = classify_ode(equ)[1]
@@ -8378,6 +8023,8 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
     constant-coefficient second-order linear homogeneous differential equations.
 
     """
+    # FIXME: This function is equivalent to type6 (and broken). Should be removed...
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     u, v = symbols('u, v', cls=Function)
     assert False
     p = Wild('p', exclude=[t, t**2])
@@ -9148,6 +8795,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     """
     C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
+    fu, fv, fw = symbols('u, v, w', cls=Function)
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
     s = Wild('s', exclude=[x(t), y(t), z(t), t])
@@ -9166,15 +8814,15 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     z_xy = (C1-a*u-b*v)/c
     y_zx = (C1-a*u-c*w)/b
     x_yz = (C1-b*v-c*w)/a
-    y_x = dsolve(diff(v(u),u) - ((a*F3-c*F1)/(c*F2-b*F3)).subs(w,z_xy).subs(v,v(u))).rhs
-    z_x = dsolve(diff(w(u),u) - ((b*F1-a*F2)/(c*F2-b*F3)).subs(v,y_zx).subs(w,w(u))).rhs
-    z_y = dsolve(diff(w(v),v) - ((b*F1-a*F2)/(a*F3-c*F1)).subs(u,x_yz).subs(w,w(v))).rhs
-    x_y = dsolve(diff(u(v),v) - ((c*F2-b*F3)/(a*F3-c*F1)).subs(w,z_xy).subs(u,u(v))).rhs
-    y_z = dsolve(diff(v(w),w) - ((a*F3-c*F1)/(b*F1-a*F2)).subs(u,x_yz).subs(v,v(w))).rhs
-    x_z = dsolve(diff(u(w),w) - ((c*F2-b*F3)/(b*F1-a*F2)).subs(v,y_zx).subs(u,u(w))).rhs
-    sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
-    sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
-    sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    y_x = dsolve(diff(fv(u),u) - ((a*F3-c*F1)/(c*F2-b*F3)).subs(w,z_xy).subs(v,fv(u))).rhs
+    z_x = dsolve(diff(fw(u),u) - ((b*F1-a*F2)/(c*F2-b*F3)).subs(v,y_zx).subs(w,fw(u))).rhs
+    z_y = dsolve(diff(fw(v),v) - ((b*F1-a*F2)/(a*F3-c*F1)).subs(u,x_yz).subs(w,fw(v))).rhs
+    x_y = dsolve(diff(fu(v),v) - ((c*F2-b*F3)/(a*F3-c*F1)).subs(w,z_xy).subs(u,fu(v))).rhs
+    y_z = dsolve(diff(fv(w),w) - ((a*F3-c*F1)/(b*F1-a*F2)).subs(u,x_yz).subs(v,fv(w))).rhs
+    x_z = dsolve(diff(fu(w),w) - ((c*F2-b*F3)/(b*F1-a*F2)).subs(v,y_zx).subs(u,fu(w))).rhs
+    sol1 = dsolve(diff(fu(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,fu(t))).rhs
+    sol2 = dsolve(diff(fv(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,fv(t))).rhs
+    sol3 = dsolve(diff(fw(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,fw(t))).rhs
     return [sol1, sol2, sol3]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
@@ -9257,11 +8905,12 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     """
     C1 = get_numbered_constants(eq, num=1)
     u, v, w = symbols('u, v, w')
+    fu, fv, fw = symbols('u, v, w', cls=Function)
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
     s = Wild('s', exclude=[x(t), y(t), z(t), t])
     F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
-    r1 = eq[0].match(diff(x(t), t) - x(t)*(F2 - F3))
+    r1 = eq[0].match(diff(x(t), t) - x(t)*F2 + x(t)*F3)
     r = collect_const(r1[F2]).match(s*F2)
     r.update(collect_const(r1[F3]).match(q*F3))
     if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
@@ -9275,13 +8924,13 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     x_yz = (C1*v**-b*w**-c)**-a
     y_zx = (C1*w**-c*u**-a)**-b
     z_xy = (C1*u**-a*v**-b)**-c
-    y_x = dsolve(diff(v(u), u) - ((v*(a*F3 - c*F1))/(u*(c*F2 - b*F3))).subs(w, z_xy).subs(v, v(u))).rhs
-    z_x = dsolve(diff(w(u), u) - ((w*(b*F1 - a*F2))/(u*(c*F2 - b*F3))).subs(v, y_zx).subs(w, w(u))).rhs
-    z_y = dsolve(diff(w(v), v) - ((w*(b*F1 - a*F2))/(v*(a*F3 - c*F1))).subs(u, x_yz).subs(w, w(v))).rhs
-    x_y = dsolve(diff(u(v), v) - ((u*(c*F2 - b*F3))/(v*(a*F3 - c*F1))).subs(w, z_xy).subs(u, u(v))).rhs
-    y_z = dsolve(diff(v(w), w) - ((v*(a*F3 - c*F1))/(w*(b*F1 - a*F2))).subs(u, x_yz).subs(v, v(w))).rhs
-    x_z = dsolve(diff(u(w), w) - ((u*(c*F2 - b*F3))/(w*(b*F1 - a*F2))).subs(v, y_zx).subs(u, u(w))).rhs
-    sol1 = dsolve(diff(u(t), t) - (u*(c*F2 - b*F3)).subs(v, y_x).subs(w, z_x).subs(u, u(t))).rhs
-    sol2 = dsolve(diff(v(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, v(t))).rhs
-    sol3 = dsolve(diff(w(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, w(t))).rhs
+    y_x = dsolve(diff(fv(u), u) - ((v*(a*F3 - c*F1))/(u*(c*F2 - b*F3))).subs(w, z_xy).subs(v, fv(u))).rhs
+    z_x = dsolve(diff(fw(u), u) - ((w*(b*F1 - a*F2))/(u*(c*F2 - b*F3))).subs(v, y_zx).subs(w, fw(u))).rhs
+    z_y = dsolve(diff(fw(v), v) - ((w*(b*F1 - a*F2))/(v*(a*F3 - c*F1))).subs(u, x_yz).subs(w, fw(v))).rhs
+    x_y = dsolve(diff(fu(v), v) - ((u*(c*F2 - b*F3))/(v*(a*F3 - c*F1))).subs(w, z_xy).subs(u, fu(v))).rhs
+    y_z = dsolve(diff(fv(w), w) - ((v*(a*F3 - c*F1))/(w*(b*F1 - a*F2))).subs(u, x_yz).subs(v, fv(w))).rhs
+    x_z = dsolve(diff(fu(w), w) - ((u*(c*F2 - b*F3))/(w*(b*F1 - a*F2))).subs(v, y_zx).subs(u, fu(w))).rhs
+    sol1 = dsolve(diff(fu(t), t) - (u*(c*F2 - b*F3)).subs(v, y_x).subs(w, z_x).subs(u, fu(t))).rhs
+    sol2 = dsolve(diff(fv(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))).rhs
+    sol3 = dsolve(diff(fw(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))).rhs
     return [sol1, sol2, sol3]

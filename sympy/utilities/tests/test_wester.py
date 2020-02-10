@@ -1407,11 +1407,13 @@ def test_P11():
 
 
 def test_P11_workaround():
-    M = Matrix([[x, y], [1, x*y]]).inv()
+    # This test was changed to inverse method ADJ because it depended on the
+    # specific form of inverse returned from the 'GE' method which has changed.
+    M = Matrix([[x, y], [1, x*y]]).inv('ADJ')
     c = gcd(tuple(M))
     assert MatMul(c, M/c, evaluate=False) == MatMul(c, Matrix([
-        [-x*y,  y],
-        [   1, -x]]), evaluate=False)
+        [x*y, -y],
+        [ -1,  x]]), evaluate=False)
 
 
 def test_P12():
@@ -1603,16 +1605,16 @@ def test_P27():
                                        [0],
                                        [1],
                                        [0]])]),
-                        (1 - I, 1, [Matrix([[          0],
-                                            [-1/(-1 + I)],
-                                            [          0],
-                                            [          0],
-                                            [          1]])]),
-                        (1 + I, 1, [Matrix([[          0],
-                                            [-1/(-1 - I)],
-                                            [          0],
-                                            [          0],
-                                            [          1]])])]
+                        (1 - I, 1, [Matrix([[           0],
+                                            [S(1)/2 + I/2],
+                                            [           0],
+                                            [           0],
+                                            [           1]])]),
+                        (1 + I, 1, [Matrix([[           0],
+                                            [S(1)/2 - I/2],
+                                            [           0],
+                                            [           0],
+                                            [           1]])])]
 
 
 @XFAIL

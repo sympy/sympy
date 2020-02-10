@@ -34,7 +34,8 @@ def test_Poisson():
     assert density(x) == PoissonDistribution(l)
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
-
+    # issue 8248
+    assert x.pspace.compute_expectation(1) == 1
 
 def test_GeometricDistribution():
     p = S.One / 5

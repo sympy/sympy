@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
+                         LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
@@ -46,6 +46,8 @@ def test_single_normal():
     assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
     assert E(X, Eq(X, mu)) == mu
 
+    # issue 8248
+    assert X.pspace.compute_expectation(1).doit() == 1
 
 def test_conditional_1d():
     X = Normal('x', 0, 1)
@@ -847,6 +849,26 @@ def test_maxwell():
     assert variance(X) == -8*a**2/pi + 3*a**2
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
     assert diff(cdf(X)(x), x) == density(X)(x)
+
+def test_Moyal():
+    mu = Symbol('mu',real=False)
+    sigma = Symbol('sigma', real=True, positive=True)
+    raises(ValueError, lambda: Moyal('M',mu, sigma))
+
+    mu = Symbol('mu', real=True)
+    sigma = Symbol('sigma', real=True, negative=True)
+    raises(ValueError, lambda: Moyal('M',mu, sigma))
+
+    sigma = Symbol('sigma', real=True, positive=True)
+    M = Moyal('M', mu, sigma)
+    assert density(M)(z) == sqrt(2)*exp(-exp((mu - z)/sigma)/2
+                        - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+    assert cdf(M)(z).simplify() == 1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+    assert characteristic_function(M)(z) == 2**(-I*sigma*z)*exp(I*mu*z) \
+                        *gamma(-I*sigma*z + Rational(1, 2))/sqrt(pi)
+    assert E(M) == mu + EulerGamma*sigma + sigma*log(2)
+    assert moment_generating_function(M)(z) == 2**(-sigma*z)*exp(mu*z) \
+                        *gamma(-sigma*z + Rational(1, 2))/sqrt(pi)
 
 
 def test_nakagami():

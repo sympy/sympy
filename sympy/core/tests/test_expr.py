@@ -513,14 +513,14 @@ def test_atoms():
 
     assert sin(oo).atoms(oo) == set()
 
-    assert Poly(0, x).atoms() == {S.Zero}
-    assert Poly(1, x).atoms() == {S.One}
+    assert Poly(0, x).atoms() == {S.Zero, x}
+    assert Poly(1, x).atoms() == {S.One, x}
 
     assert Poly(x, x).atoms() == {x}
-    assert Poly(x, x, y).atoms() == {x}
+    assert Poly(x, x, y).atoms() == {x, y}
     assert Poly(x + y, x, y).atoms() == {x, y}
-    assert Poly(x + y, x, y, z).atoms() == {x, y}
-    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y}
+    assert Poly(x + y, x, y, z).atoms() == {x, y, z}
+    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y, z}
 
     assert (I*pi).atoms(NumberSymbol) == {pi}
     assert (I*pi).atoms(NumberSymbol, I) == \

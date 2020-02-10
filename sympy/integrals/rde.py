@@ -122,7 +122,7 @@ def weak_normalizer(a, d, DE, z=None):
         d1.as_poly(DE.t))
     r = Poly(r, z)
 
-    if not r.has(z):
+    if not r.expr.has(z):
         return (Poly(1, DE.t), (a, d))
 
     N = [i for i in r.real_roots() if i in ZZ and i > 0]

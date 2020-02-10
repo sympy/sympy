@@ -192,6 +192,9 @@ def test_bernoulli():
     raises(ValueError, lambda: Bernoulli('B', 1.5))
     raises(ValueError, lambda: Bernoulli('B', -0.5))
 
+    #issue 8248
+    assert X.pspace.compute_expectation(1) == 1
+
 def test_cdf():
     D = Die('D', 6)
     o = S.One

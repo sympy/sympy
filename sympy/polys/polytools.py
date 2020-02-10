@@ -98,7 +98,7 @@ class Poly(Expr):
 
     """
 
-    __slots__ = ('rep', 'gens')
+    __slots__ = ('rep',)
 
     is_commutative = True
     is_Poly = True
@@ -133,12 +133,20 @@ class Poly(Expr):
         elif rep.lev != len(gens) - 1:
             raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
 
-        obj = Basic.__new__(cls)
+        expr = basic_from_dict(rep.to_sympy_dict(), *gens)
 
+        obj = Basic.__new__(cls, expr, *gens)
         obj.rep = rep
-        obj.gens = gens
 
         return obj
+
+    @property
+    def expr(self):
+        return self.args[0]
+
+    @property
+    def gens(self):
+        return self.args[1:]
 
     @classmethod
     def from_dict(cls, rep, *gens, **args):
@@ -235,10 +243,6 @@ class Poly(Expr):
         rep, opt = _dict_from_expr(rep, opt)
         return cls._from_dict(rep, opt)
 
-    def _hashable_content(self):
-        """Allow SymPy to hash Poly instances. """
-        return (self.rep, self.gens)
-
     def __hash__(self):
         return super(Poly, self).__hash__()
 
@@ -302,23 +306,6 @@ class Poly(Expr):
                 symbols |= coeff.free_symbols
 
         return symbols
-
-    @property
-    def args(self):
-        """
-        Don't mess up with the core.
-
-        Examples
-        ========
-
-        >>> from sympy import Poly
-        >>> from sympy.abc import x
-
-        >>> Poly(x**2 + 1, x).args
-        (x**2 + 1,)
-
-        """
-        return (self.as_expr(),)
 
     @property
     def gen(self):
@@ -996,8 +983,9 @@ class Poly(Expr):
 
         """
         if not gens:
-            gens = f.gens
-        elif len(gens) == 1 and isinstance(gens[0], dict):
+            return f.expr
+
+        if len(gens) == 1 and isinstance(gens[0], dict):
             mapping = gens[0]
             gens = list(f.gens)
 
@@ -6593,7 +6581,7 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel, sqrt, Symbol
+    >>> from sympy import cancel, sqrt, Symbol, together
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
 
@@ -6601,6 +6589,14 @@ def cancel(f, *gens, **args):
     (2*x + 2)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
+
+    Note: due to automatic distribution of Rationals, a sum divided by an integer
+    will appear as a sum. To recover a rational form use `together` on the result:
+
+    >>> cancel(x/2 + 1)
+    x/2 + 1
+    >>> together(_)
+    (x + 2)/2
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
@@ -6830,7 +6826,8 @@ class GroebnerBasis(Basic):
 
     @property
     def args(self):
-        return (Tuple(*self._basis), Tuple(*self._options.gens))
+        basis = (p.as_expr() for p in self._basis)
+        return (Tuple(*basis), Tuple(*self._options.gens))
 
     @property
     def exprs(self):

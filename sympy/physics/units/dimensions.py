@@ -387,7 +387,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 raise ValueError("Dimension %s both in base and derived" % dim)
             if dim.name not in dimensional_dependencies:
                 # TODO: should this raise a warning?
-                dimensional_dependencies[dim] = Dict({dim.name: 1})
+                dimensional_dependencies[dim.name] = Dict({dim.name: 1})
 
         base_dims.sort(key=default_sort_key)
         derived_dims.sort(key=default_sort_key)

@@ -16,6 +16,7 @@ from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
+from sympy.core.sympify import _sympify
 import random
 from sympy.external import import_module
 
@@ -339,6 +340,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         if self.value not in rvs:
             return expr
 
+        expr = _sympify(expr)
         expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         x = self.value.symbol
