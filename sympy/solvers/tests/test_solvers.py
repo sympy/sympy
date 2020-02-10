@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, simplify, floor, GoldenRatio,
+    E, cbrt, denom, Add, Piecewise, floor, GoldenRatio,
     TribonacciConstant)
 
 from sympy.core.function import nfloat
@@ -15,6 +15,8 @@ from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, _lambert
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
     det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
     failing_assumptions
+
+from sympy.sets.sets import Interval
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -29,11 +31,11 @@ def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 def test_floor():
-    assert solve(floor(x)) == [0, 1]
-    assert solve(floor(x+1)) == [-1, 0]
-    assert solve(x*floor(x+1)) == [-1, 0]
-    assert solve(floor(floor(x)-5)-15) == [20, 21]
-    assert solve(floor(2*x-3)-5) == [4, 5]
+    assert solve(floor(x)) == [Interval.Ropen(0, 1)]
+    assert solve(floor(x+1)) == [Interval.Ropen(-1, 0)]
+    assert solve(x*floor(x+1)) == [0, Interval.Ropen(-1, 0)]
+    assert solve(floor(2*x-3)-5) == [Interval.Ropen(4, 9/2)]
+
 
 def test_swap_back():
     f, g = map(Function, 'fg')
