@@ -1959,8 +1959,10 @@ class divisor_sigma(Function):
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
-                           else e + 1 for p, e in factorint(n).items()])
+                k = int(k)
+                return Integer(prod(
+                    (p**(k*(e + 1)) - 1)//(p**k - 1) if k != 0
+                    else e + 1 for p, e in factorint(n).items()))
 
 
 def core(n, t=2):
