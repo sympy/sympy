@@ -388,6 +388,11 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     division operations.  Thus the characteristic polynomial over any
     commutative ring without zero divisors can be computed.
 
+    If the determinant det(x*I - M) can be found out easily as
+    in the case of an upper or a lower triangular matrix, then
+    instead of Samuelson-Berkowitz algorithm, eigenvalues are computed
+    and the characteristic polynomial with their help.
+
     See Also
     ========
 
@@ -396,6 +401,13 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     if not M.is_square:
         raise NonSquareMatrixError()
+    if M.is_lower or M.is_upper:
+        diagonal_elements = M.diagonal()
+        x = _uniquely_named_symbol(x, diagonal_elements)
+        m = 1
+        for i in diagonal_elements:
+            m = m * (x - simplify(i))
+        return PurePoly(m, x)
 
     berk_vector = _berkowitz_vector(M)
     x = _uniquely_named_symbol(x, berk_vector)
@@ -486,6 +498,10 @@ def _det(M, method="bareiss", iszerofunc=None):
         specified method is ignored. Otherwise, it defaults to
         ``'bareiss'``.
 
+        Also, if the matrix is an upper or a lower triangular matrix, determinant
+        is computed by simple multiplication of diagonal elements, and the
+        specified method is ignored.
+
         If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
         be used.
 
@@ -557,7 +573,12 @@ def _det(M, method="bareiss", iszerofunc=None):
     n = M.rows
 
     if n == M.cols: # square check is done in individual method functions
-        if n == 0:
+        if M.is_upper or M.is_lower:
+            m = 1
+            for i in range(n):
+                m = m * M[i, i]
+            return _get_intermediate_simp(_dotprodsimp)(m)
+        elif n == 0:
             return M.one
         elif n == 1:
             return M[0,0]
