@@ -498,7 +498,7 @@ def _det(M, method="bareiss", iszerofunc=None):
         specified method is ignored. Otherwise, it defaults to
         ``'bareiss'``.
 
-        Also,if the matrix is an upper or a lower triangular matrix, determinant
+        Also, if the matrix is an upper or a lower triangular matrix, determinant
         is computed by simple multiplication of diagonal elements, and the
         specified method is ignored.
 
