@@ -2275,32 +2275,50 @@ def is_perfect(n):
     else:
         if n < 10**1500:
             return False
-        if n % 105 != 0:
+        if n % 105 == 0:  # not divis by 105
             return False
         if not any(n%m == r for m, r in [(12, 1), (468, 117), (324, 81)]):
             return False
         facs = factorint(n)
-        odd = [i for i in facs if i%2]
-        if len(odd) != 1:
-            return False
-        # there are properties of q and factors that are not
-        # enumerated here
-        # q = odd[0]
-        del odd
-        if sum(facs.values()) < 101:
-            return False
+      # length conditions
         if len(facs) < 10:
             return False
         if 3 not in facs and len(facs) < 12:
             return False
-        c, b, a = sorted(facs)[-3:]
-        if a <= 10**8:
+      # n = q**a*prod(p[i]**(2*e[i]), (i, 1, k)) where a is odd
+        odd = [i for i in facs.items() if i[1]%2]
+        if len(odd) != 1:
             return False
-        if b <= 10**4:
+        q, a = odd[0]
+        if a % 4 != 1 or q % 4 != 1:
             return False
+        if set(facs.values()) == {a, 2}:
+            return False  # all the even exponents cannot be 2
+        del q, a, odd
+      # criteria for small and large values
+        k = len(facs) - 1
+        _sorted = sorted(facs)
+        if 3*_sorted[0] >= 2*k + 8:
+            return False
+        esum = sum(facs.values())
+        if esum < 101 or esum*8 < 21*k - 18:
+            return False
+        c, b, a = _sorted[-3:]
         if c <= 100:
             return False
-        if a > integer_nthroot(3*n, 3):
+        if not (10**20 < b**5 < 2*n):
+            return False
+        if not (10**24 < a**3 < 3*n):
+            return False
+      # criteria for divisors with single prime factor
+        if not any(b**e > 10**62 for b, e in facs.items()):
+            return False
+      # criteria for number of factors with even exponents
+        k2 = 2**(k + 1)
+        if integer_log(n, 2)[0] > k2*(k2 - 1):  # n <= 2**(4**(k+1) - 2**(k+1))
+            return False
+      # criteria based on product of exponents
+        if prod(facs.values()) >= (2*n**Rational(17, 26)):
             return False
     rv = divisor_sigma(n) - n
     if rv == n:
@@ -2317,7 +2335,6 @@ def is_perfect(n):
                 which hem it in on all sides -- would be little short of a
                 miracle." I guess SymPy just found that miracle and it
                 factors like this: %s''' % facs))
-
 
 
 def is_mersenne_prime(n):
