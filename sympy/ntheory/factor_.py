@@ -2293,7 +2293,7 @@ def is_perfect(n):
         if not b:
             return False
     else:
-        if n < 10**1500:
+        if n < 10**2000:  # http://www.lirmm.fr/~ochem/opn/
             return False
         if n % 105 == 0:  # not divis by 105
             return False
