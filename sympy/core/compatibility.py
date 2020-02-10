@@ -48,7 +48,7 @@ Metaclasses:
 """
 
 __all__ = [
-    'PY3', 'long', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
+    'PY3', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
     'unicode', 'u_decode', 'Iterator', 'get_function_code',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
     'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
@@ -61,7 +61,6 @@ import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    long = int
     int_info = sys.int_info
 
     # String / unicode compatibility
@@ -92,7 +91,6 @@ if PY3:
     from inspect import unwrap
     from itertools import accumulate
 else:
-    long = long
     int_info = sys.long_info
 
     # String / unicode compatibility
