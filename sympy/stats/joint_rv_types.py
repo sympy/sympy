@@ -194,7 +194,8 @@ def MultivariateT(syms, mu, sigma, v):
 
     syms: A symbol/str
         For identifying the random variable.
-    mu: A list/matrix representing the location vector
+    mu: A list/matrix
+        Representing the location vector
     sigma: The shape matrix for the distribution
 
     Examples
@@ -270,7 +271,8 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
 
     sym: A symbol/str
         For identifying the random variable.
-    mu: A real number, as the mean of the normal distribution
+    mu: A real number
+        The mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
     lamda: a positive integer
@@ -555,7 +557,8 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
+    syms: list/tuple/set of symbols
+        For identifying each component
     omega: A square matrix
            Every element of square matrix must be absolute value of
            square root of correlation coefficient
