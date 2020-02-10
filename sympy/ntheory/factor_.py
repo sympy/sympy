@@ -29,17 +29,33 @@ MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 6
  216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
  25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
-PERFECT = MERSENNES = None  # compute lazily
+# compute more when needed for i in Mersenne prime exponents
+PERFECT = [6]  # 2**(i-1)*(2**i-1)
+MERSENNES = [3]  # 2**i - 1
+
+
 def _ismersenneprime(n):
     global MERSENNES
-    if MERSENNES is None:
-        MERSENNES = [2**i - 1 for i in MERSENNE_PRIME_EXPONENTS]
+    j = len(MERSENNES)
+    while n > MERSENNES[-1] and j < len(MERSENNE_PRIME_EXPONENTS):
+        # conservatively grow the list
+        MERSENNES.append(2**MERSENNE_PRIME_EXPONENTS[j] - 1)
+        j += 1
     return n in MERSENNES
+
+
 def _isperfect(n):
     global PERFECT
-    if PERFECT is None:
-        PERFECT = [2**(i - 1)*(2**i - 1) for i in MERSENNE_PRIME_EXPONENTS]
+    if n % 2 == 0:
+        j = len(PERFECT)
+        while n > PERFECT[-1] and j < len(MERSENNE_PRIME_EXPONENTS):
+            # conservatively grow the list
+            t = 2**(MERSENNE_PRIME_EXPONENTS[j] - 1)
+            PERFECT.append(t*(2*t - 1))
+            j += 1
     return n in PERFECT
+
+
 small_trailing = [0] * 256
 for j in range(1,8):
     small_trailing[1<<j::1<<(j+1)] = [j] * (1<<(7-j))
@@ -2254,7 +2270,11 @@ def is_perfect(n):
     n = as_int(n)
     if _isperfect(n):
         return True
-    if n <= PERFECT[MERSENNE_PRIME_EXPONENTS.index(43112609)]:
+
+    # all perfect numbers for Mersenne primes with exponents
+    # less than or equal to 43112609 are known
+    iknow = MERSENNE_PRIME_EXPONENTS.index(43112609)
+    if iknow <= len(PERFECT) - 1 and n <= PERFECT[iknow]:
         # there may be gaps between this and larger known values
         # so only conclude in the range for which all values
         # are known
