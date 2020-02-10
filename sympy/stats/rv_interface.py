@@ -385,14 +385,14 @@ def median(X, evaluate=True, **kwargs):
         cdf = pspace(X).compute_cdf(X)
         result = []
         for key, value in cdf.items():
-            if value>= Rational(1,2) and (1 - value) + \
-            pspace(X).probability(Eq(X, key)) >= Rational(1,2):
+            if value>= Rational(1, 2) and (1 - value) + \
+            pspace(X).probability(Eq(X, key)) >= Rational(1, 2):
                 result.append(key)
         return FiniteSet(*result)
     if isinstance(pspace(X), ContinuousPSpace) or isinstance(pspace(X), DiscretePSpace):
         cdf = pspace(X).compute_cdf(X)
         x = Dummy('x')
-        result = solveset(piecewise_fold(cdf(x) - Rational(1,2)), x, pspace(X).set)
+        result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)
         return result
     raise NotImplementedError("The median of %s is not implemeted."%str(pspace(X)))
 
