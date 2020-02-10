@@ -13,7 +13,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import u_decode as u, PY3
+from sympy.core.compatibility import u_decode as u
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -309,15 +309,14 @@ def test_upretty_subs_missing_in_24():
 
 
 def test_missing_in_2X_issue_9047():
-    if PY3:
-        assert upretty( Symbol('F_h') ) == u'Fₕ'
-        assert upretty( Symbol('F_k') ) == u'Fₖ'
-        assert upretty( Symbol('F_l') ) == u'Fₗ'
-        assert upretty( Symbol('F_m') ) == u'Fₘ'
-        assert upretty( Symbol('F_n') ) == u'Fₙ'
-        assert upretty( Symbol('F_p') ) == u'Fₚ'
-        assert upretty( Symbol('F_s') ) == u'Fₛ'
-        assert upretty( Symbol('F_t') ) == u'Fₜ'
+    assert upretty( Symbol('F_h') ) == u'Fₕ'
+    assert upretty( Symbol('F_k') ) == u'Fₖ'
+    assert upretty( Symbol('F_l') ) == u'Fₗ'
+    assert upretty( Symbol('F_m') ) == u'Fₘ'
+    assert upretty( Symbol('F_n') ) == u'Fₙ'
+    assert upretty( Symbol('F_p') ) == u'Fₚ'
+    assert upretty( Symbol('F_s') ) == u'Fₛ'
+    assert upretty( Symbol('F_t') ) == u'Fₜ'
 
 
 def test_upretty_modifiers():
@@ -6544,14 +6543,14 @@ u("""\
     expr = A(i) + 3*B(i)
     ascii_str = \
 """\
- i      i\n\
-A  + 3*B \n\
+   i    i\n\
+3*B  + A \n\
          \
 """
     ucode_str = \
 u("""\
- i      i\n\
-A  + 3⋅B \n\
+   i    i\n\
+3⋅B  + A \n\
          \
 """)
     assert pretty(expr) == ascii_str
@@ -6612,16 +6611,16 @@ A  ⋅───⎜H   ⎟\n\
     expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
     ascii_str = \
 """\
- L_0  d / k           k   \\\n\
-A   *---|B *C    + 3*H    |\n\
+ L_0  d /   k       k     \\\n\
+A   *---|3*H     + B *C   |\n\
        j\\    L_0       L_0/\n\
      dA                    \n\
                            \
 """
     ucode_str = \
 u("""\
- L₀  ∂ ⎛ k          k  ⎞\n\
-A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
+ L₀  ∂ ⎛   k      k    ⎞\n\
+A  ⋅───⎜3⋅H    + B ⋅C  ⎟\n\
       j⎝    L₀       L₀⎠\n\
     ∂A                  \n\
                         \

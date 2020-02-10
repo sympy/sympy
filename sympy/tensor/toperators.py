@@ -1,5 +1,7 @@
+from sympy import Symbol, Number, sympify
 from sympy import MutableDenseNDimArray, S
-from sympy.tensor.tensor import (TensExpr, TensMul, TensorIndex)
+from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul,
+                                 TensorIndex)
 
 
 class PartialDerivative(TensExpr):
@@ -41,8 +43,6 @@ class PartialDerivative(TensExpr):
             variables = expr.variables + variables
             expr = expr.expr
 
-        # TODO: check that all variables have rank 1.
-
         args, indices, free, dum = cls._contract_indices_for_derivative(
             expr, variables)
 
@@ -64,16 +64,23 @@ class PartialDerivative(TensExpr):
     @classmethod
     def _contract_indices_for_derivative(cls, expr, variables):
         variables_opposite_valence = []
+
         for i in variables:
-            i_free_indices = i.get_free_indices()
-            variables_opposite_valence.append(i.xreplace({k: -k for k in i_free_indices}))
+            if isinstance(i, Tensor):
+                i_free_indices = i.get_free_indices()
+                variables_opposite_valence.append(
+                        i.xreplace({k: -k for k in i_free_indices}))
+            elif isinstance(i, Symbol):
+                variables_opposite_valence.append(i)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(
             [expr] + variables_opposite_valence, replace_indices=True)
 
         for i in range(1, len(args)):
-            i_indices = args[i].get_free_indices()
-            args[i] = args[i].xreplace({k: -k for k in i_indices})
+            args_i = args[i]
+            if isinstance(args_i, Tensor):
+                i_indices = args[i].get_free_indices()
+                args[i] = args[i].xreplace({k: -k for k in i_indices})
 
         return args, indices, free, dum
 
@@ -84,7 +91,62 @@ class PartialDerivative(TensExpr):
         obj._indices = indices
         obj._free = free
         obj._dum = dum
+
         return obj
+
+    def _expand_partial_derivative(self):
+        args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
+
+        obj = self.func(*args)
+        obj._indices = indices
+        obj._free = free
+        obj._dum = dum
+
+        result = obj
+
+        if isinstance(obj.expr, TensAdd):
+            # take care of sums of multi PDs
+            result = obj.expr.func(*[
+                    self.func(a, *obj.variables)._expand_partial_derivative()
+                    for a in result.expr.args])
+        elif isinstance(obj.expr, TensMul):
+            # take care of products of multi PDs
+            if len(obj.variables) == 1:
+                # derivative with respect to single variable
+                terms = []
+                mulargs = list(obj.expr.args)
+                for ind in range(len(mulargs)):
+                    if not isinstance(sympify(mulargs[ind]), Number):
+                        # a number coefficient is not considered for
+                        # expansion of PartialDerivative
+                        d = self.func(mulargs[ind], *obj.variables)._expand_partial_derivative()
+                        terms.append(TensMul(*(mulargs[:ind]
+                                               + [d]
+                                               + mulargs[(ind + 1):])))
+                result = TensAdd.fromiter(terms)
+            else:
+                # derivative with respect to multiple variables
+                # decompose:
+                # partial(expr, (u, v))
+                # = partial(partial(expr, u).doit(), v).doit()
+                result = obj.expr  # init with expr
+                for v in obj.variables:
+                    result = self.func(result, v)._expand_partial_derivative()
+                    # then throw PD on it
+
+        return result
+
+    def _perform_derivative(self):
+        result = self.expr
+        for v in self.variables:
+            if isinstance(result, TensExpr):
+                result = result._eval_partial_derivative(v)
+            else:
+                if v._diff_wrt:
+                    result = result._eval_derivative(v)
+                else:
+                    result = S.Zero
+        return result
 
     def get_indices(self):
         return self._indices

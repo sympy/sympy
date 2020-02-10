@@ -1010,6 +1010,7 @@ class Expr(Basic, EvalfMixin):
             return -self
 
     def conjugate(self):
+        """Returns the complex conjugate of 'self'."""
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
@@ -3678,18 +3679,7 @@ class Expr(Basic, EvalfMixin):
         p = as_int(n or 0)
 
         if x.is_Integer:
-            # XXX return Integer(round(int(x), p)) when Py2 is dropped
-            if p >= 0:
-                return x
-            m = 10**-p
-            i, r = divmod(abs(x), m)
-            if i%2 and 2*r == m:
-              i += 1
-            elif 2*r > m:
-                i += 1
-            if x < 0:
-                i *= -1
-            return i*m
+            return Integer(round(int(x), p))
 
         digits_to_decimal = _mag(x)  # _mag(12) = 2, _mag(.012) = -1
         allow = digits_to_decimal + p
@@ -3767,7 +3757,7 @@ class Expr(Basic, EvalfMixin):
         # shift p to the new position
         ip = p - shift
         # let Python handle the int rounding then rescale
-        xr = xi.round(ip) # when Py2 is drop make this round(xi.p, ip)
+        xr = round(xi.p, ip)
         # restore scale
         rv = Rational(xr, Pow(10, shift))
         # return Float or Integer

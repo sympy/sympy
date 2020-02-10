@@ -1,4 +1,4 @@
-from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
+from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi, oo
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
@@ -1179,3 +1179,8 @@ def test_issue_16579():
     c = Symbol('c', complex=True)
     assert c.is_finite is True
     raises(InconsistentAssumptions, lambda: Dummy(complex=True, finite=False))
+
+def test_issue_17556():
+    z = I*oo
+    assert z.is_imaginary is False
+    assert z.is_finite is False

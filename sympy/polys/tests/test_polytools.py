@@ -56,7 +56,7 @@ from sympy import (
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable, PY3
+from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.testing.pytest import raises, XFAIL
 
@@ -352,7 +352,7 @@ def test_Poly__new__():
 
 
 def test_Poly__args():
-    assert Poly(x**2 + 1).args == (x**2 + 1,)
+    assert Poly(x**2 + 1).args == (x**2 + 1, x)
 
 
 def test_Poly__gens():
@@ -3228,17 +3228,11 @@ def test_keep_coeff():
     assert _keep_coeff(x + 1, S(2)) == u
 
 
-# @XFAIL
-# Seems to pass on Python 3.X, but not on Python 2.7
 def test_poly_matching_consistency():
     # Test for this issue:
     # https://github.com/sympy/sympy/issues/5514
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
-
-
-if not PY3:
-    test_poly_matching_consistency = XFAIL(test_poly_matching_consistency)
 
 
 @XFAIL
@@ -3321,3 +3315,7 @@ def test_issue_17988():
     p = poly(x - 1)
     M = Matrix([[poly(x + 1), poly(x + 1)]])
     assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
+
+def test_issue_18205():
+    assert cancel((2 + I)*(3 - I)) == 7 + I
+    assert cancel((2 + I)*(2 - I)) == 5

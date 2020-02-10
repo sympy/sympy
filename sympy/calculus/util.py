@@ -728,6 +728,13 @@ def stationary_points(f, symbol, domain=S.Reals):
         The domain over which the stationary points have to be checked.
         If unspecified, S.Reals will be the default domain.
 
+    Returns
+    =======
+
+    Set
+        A set of stationary points for the function. If there are no
+        stationary point, an EmptySet is returned.
+
     Examples
     ========
 
@@ -773,6 +780,12 @@ def maximum(f, symbol, domain=S.Reals):
         The domain over which the maximum have to be checked.
         If unspecified, then Global maximum is returned.
 
+    Returns
+    =======
+
+    number
+        Maximum value of the function in given domain.
+
     Examples
     ========
 
@@ -816,6 +829,12 @@ def minimum(f, symbol, domain=S.Reals):
     domain : Interval
         The domain over which the minimum have to be checked.
         If unspecified, then Global minimum is returned.
+
+    Returns
+    =======
+
+    number
+        Minimum value of the function in the given domain.
 
     Examples
     ========
@@ -1338,9 +1357,10 @@ class AccumulationBounds(AtomicExpr):
                                 return AccumBounds(0, real_root(self.max, den))
                     return AccumBounds(real_root(self.min, den),
                                        real_root(self.max, den))
-                num_pow = self**num
-                return num_pow**(1 / den)
-            return Pow(self, other, evaluate=False)
+                if den!=1:
+                    num_pow = self**num
+                    return num_pow**(1 / den)
+            return AccumBounds(-oo, oo)
 
         return NotImplemented
 
@@ -1538,6 +1558,19 @@ class AccumulationBounds(AtomicExpr):
         """
         Returns the intersection of 'self' and 'other'.
         Here other can be an instance of FiniteSet or AccumulationBounds.
+
+        Parameters
+        ==========
+
+        other: AccumulationBounds
+             Another AccumulationBounds object with which the intersection
+             has to be computed.
+
+        Returns
+        =======
+
+        AccumulationBounds
+            Intersection of 'self' and 'other'.
 
         Examples
         ========
