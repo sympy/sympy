@@ -192,7 +192,8 @@ def MultivariateT(syms, mu, sigma, v):
     Parameters
     ==========
 
-    syms: A symbol/str for identifying the random variable.
+    syms: A symbol/str
+        For identifying the random variable.
     mu: A list/matrix representing the location vector
     sigma: The shape matrix for the distribution
 
@@ -267,7 +268,8 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    sym: A symbol/str for identifying the random variable.
+    sym: A symbol/str
+        For identifying the random variable.
     mu: A real number, as the mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
