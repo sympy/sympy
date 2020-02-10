@@ -13,8 +13,8 @@ from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
-from sympy.core.mul import Mul
-from sympy.core.numbers import igcd, ilcm, Rational
+from sympy.core.mul import Mul, prod
+from sympy.core.numbers import igcd, ilcm, Rational, Integer
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.singleton import S
 from .primetest import isprime
