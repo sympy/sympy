@@ -435,3 +435,6 @@ def test_issue_15539():
     assert O(1/x**4 + exp(x), (x, -oo)) == O(1/x**4, (x, -oo))
     assert O(1/x**4 + exp(-x), (x, -oo)) == O(exp(-x), (x, -oo))
     assert O(1/x, (x, oo)).subs(x, -x) == O(-1/x, (x, -oo))
+
+def test_issue_18606():
+    assert Order(0) == O(0)

@@ -263,6 +263,12 @@ class Add(Expr, AssocOp):
                 # x + O(x**2) -> x + O(x**2)
                 if t is not None:
                     newseq2.append(t)
+
+            # 2 + O(0) -> 2
+            for o in order_factors:
+                if o.expr.is_zero:
+                    order_factors.remove(o)
+
             newseq = newseq2 + order_factors
             # 1 + O(1) -> O(1)
             for o in order_factors:
