@@ -20,10 +20,6 @@ String and Unicode compatible changes:
     * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
     * Use `u_decode()` to decode utf-8 formatted unicode strings
 
-Integer related changes:
-    * `long()` removed in Python 3, import `long` for Python 2/3 compatible
-      function
-
 Renamed function attributes:
     * Python 2 `.func_code`, Python 3 `.__func__`, access with
       `get_function_code()`
