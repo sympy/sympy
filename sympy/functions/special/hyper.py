@@ -244,7 +244,7 @@ class hyper(TupleParametersBase):
             for b in bq:
                 Rf2 *= RisingFactorial(b, i)
 
-            terms.append(((Rf1 / Rf2) * (x ** i)) / factorial(i))
+            terms.append(((Rf1/Rf2) * (arg**i)) / factorial(i))
 
         return (Add(*terms) + Order(x**n,x))
 
