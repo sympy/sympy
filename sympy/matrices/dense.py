@@ -512,7 +512,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         copyin_list
         """
         rlo, rhi, rst, clo, chi, cst = self.key2bounds(key)
-        print(rlo, rhi, rst, clo, chi, cst)
         shape = value.shape
         dr = []
         dc = []

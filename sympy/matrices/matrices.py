@@ -1788,7 +1788,7 @@ class MatrixBase(MatrixDeprecated,
             if not self.rows:
                 rlo = rhi = 0
             else:
-                rlo, rhi, rst = keys[0].indices(self.rows)
+                rlo, rhi, rst = keys[0].indices(self.rows - 1)
         else:
             rlo = a2idx_(keys[0], self.rows)
             rhi = rlo + 1
@@ -1796,7 +1796,7 @@ class MatrixBase(MatrixDeprecated,
             if not self.cols:
                 clo = chi = 0
             else:
-                clo, chi, cst = keys[1].indices(self.cols)
+                clo, chi, cst = keys[1].indices(self.cols - 1)
         else:
             clo = a2idx_(keys[1], self.cols)
             chi = clo + 1
