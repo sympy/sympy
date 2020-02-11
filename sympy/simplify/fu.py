@@ -1034,6 +1034,8 @@ def _TR11(rv):
     4*sin(x/8)*sin(x/6)*sin(2*x)
     >>> T(sin(x/3)/cos(x/6))
     2*sin(x/6)
+    >>> T(sin(2*x)*cos(x/8)/sin(x/4))
+    sin(2*x)/(2*sin(x/8))
 
     """
     def f(rv):
