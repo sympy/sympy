@@ -225,7 +225,8 @@ class hyper(TupleParametersBase):
         from sympy.functions import factorial, RisingFactorial
         from sympy import Order, Add
 
-        x0 = self.args[2].limit(x, 0)
+        arg = self.args[2]
+        x0 = arg.limit(x, 0)
         ap = self.args[0]
         bq = self.args[1]
 
