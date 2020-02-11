@@ -696,8 +696,8 @@ def test_Poly_pow():
 
     assert Poly(7*x*y, x, y)**3 == Poly(343*x**3*y**3, x, y)
 
-    assert Poly(x*y + 1, x, y)**(-1) == (x*y + 1)**(-1)
-    assert Poly(x*y + 1, x, y)**x == (x*y + 1)**x
+    raises(TypeError, lambda: Poly(x*y + 1, x, y)**(-1))
+    raises(TypeError, lambda: Poly(x*y + 1, x, y)**x)
 
 
 def test_Poly_divmod():

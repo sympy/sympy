@@ -4064,7 +4064,7 @@ class Poly(Basic):
         if n.is_Integer and n >= 0:
             return f.pow(n)
         else:
-            return f.as_expr()**n
+            return NotImplemented
 
     @_sympifyit_Poly
     def __divmod__(f, g):
