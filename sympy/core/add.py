@@ -123,6 +123,8 @@ class Add(Expr, AssocOp):
 
             # O(x)
             if o.is_Order:
+                if o.expr.is_zero:
+                    continue
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
