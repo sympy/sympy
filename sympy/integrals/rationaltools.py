@@ -247,6 +247,7 @@ def ratint_logpart(f, g, x, t=None):
             inv, coeffs = h_lc.invert(q), [S.One]
 
             for coeff in h.coeffs()[1:]:
+                coeff = coeff.as_poly(inv.gens)
                 T = (inv*coeff).rem(q)
                 coeffs.append(T.as_expr())
 

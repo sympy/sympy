@@ -891,7 +891,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
         if basic:
             r += d.as_expr()*pv.diff(v)
         else:
-            r += (d.as_expr()*pv.diff(v)).as_poly(t)
+            r += (d.as_expr()*pv.diff(v).as_expr()).as_poly(t)
 
     if basic:
         r = cancel(r)
