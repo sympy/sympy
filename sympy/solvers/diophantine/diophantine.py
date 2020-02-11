@@ -111,12 +111,12 @@ class DiophantineSolutionSet(set):
 
     def __init__(self, symbols_list, parameters=None):
         super().__init__()
-        self.symbols = symbols_list
+        self.symbols = list(symbols_list)
 
         if parameters is None:
             self.parameters = symbols('%s1:%i' % ('t', len(self.symbols) + 1), integer=True)
         else:
-            self.parameters = parameters
+            self.parameters = list(parameters)
 
         self.kw_parameter_mapping = {str(p): p for p in self.parameters}
 
