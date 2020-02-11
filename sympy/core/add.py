@@ -123,6 +123,8 @@ class Add(Expr, AssocOp):
 
             # O(x)
             if o.is_Order:
+                if o.expr.is_zero:
+                    continue
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
@@ -263,14 +265,6 @@ class Add(Expr, AssocOp):
                 # x + O(x**2) -> x + O(x**2)
                 if t is not None:
                     newseq2.append(t)
-
-            # 2 + O(0) -> 2
-            new_order_factors = []
-            for o in order_factors:
-                if not o.expr.is_zero:
-                    new_order_factors.append(o)
-                order_factors = new_order_factors
-
             newseq = newseq2 + order_factors
             # 1 + O(1) -> O(1)
             for o in order_factors:
