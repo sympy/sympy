@@ -1782,11 +1782,13 @@ class MatrixBase(MatrixDeprecated,
         from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
 
         islice, jslice = [isinstance(k, slice) for k in keys]
+        rst = 1
+        cst = 1
         if islice:
             if not self.rows:
                 rlo = rhi = 0
             else:
-                rlo, rhi = keys[0].indices(self.rows)[:2]
+                rlo, rhi, rst = keys[0].indices(self.rows)
         else:
             rlo = a2idx_(keys[0], self.rows)
             rhi = rlo + 1
@@ -1794,11 +1796,11 @@ class MatrixBase(MatrixDeprecated,
             if not self.cols:
                 clo = chi = 0
             else:
-                clo, chi = keys[1].indices(self.cols)[:2]
+                clo, chi, cst = keys[1].indices(self.cols)
         else:
             clo = a2idx_(keys[1], self.cols)
             chi = clo + 1
-        return rlo, rhi, clo, chi
+        return rlo, rhi, rst, clo, chi, cst
 
     def key2ij(self, key):
         """Converts key into canonical form, converting integers or indexable

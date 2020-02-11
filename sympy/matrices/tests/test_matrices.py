@@ -3269,6 +3269,9 @@ def test_copyin():
     assert s[:, 0] == Matrix([1, 1, 1])
     s[0, 0] = SparseMatrix([1, 1, 1])
     assert s[:, 0] == Matrix([1, 1, 1])
+    s = Matrix([[1, 2, 3, 4], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]])
+    s[1::2, 1::2] = Matrix([[0, 0],[0, 0]])
+    assert s == Matrix([[1, 2, 3, 4], [4, 0, 6, 0], [8, 9, 10, 11], [12, 0, 14, 0]])
 
 
 def test_invertible_check():

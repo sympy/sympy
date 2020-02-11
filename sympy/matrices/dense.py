@@ -511,17 +511,25 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         copyin_list
         """
-        rlo, rhi, clo, chi = self.key2bounds(key)
+        rlo, rhi, rst, clo, chi, cst = self.key2bounds(key)
+        print(rlo, rhi, rst, clo, chi, cst)
         shape = value.shape
-        dr, dc = rhi - rlo, chi - clo
-        if shape != (dr, dc):
+        dr = []
+        dc = []
+        while rhi >= rlo:
+            dr.append(rlo)
+            rlo += rst
+        while chi >= clo:
+            dc.append(clo)
+            clo += cst
+        if shape != (len(dr), len(dc)):
             raise ShapeError(filldedent("The Matrix `value` doesn't have the "
                                         "same dimensions "
                                         "as the in sub-Matrix given by `key`."))
 
         for i in range(value.rows):
             for j in range(value.cols):
-                self[i + rlo, j + clo] = value[i, j]
+                self[dr[i], dc[j]] = value[i, j]
 
     def fill(self, value):
         """Fill the matrix with the scalar value.
