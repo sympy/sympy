@@ -265,9 +265,11 @@ class Add(Expr, AssocOp):
                     newseq2.append(t)
 
             # 2 + O(0) -> 2
+            new_order_factors = []
             for o in order_factors:
-                if o.expr.is_zero:
-                    order_factors.remove(o)
+                if not o.expr.is_zero:
+                    new_order_factors.append(o)
+                order_factors = new_order_factors
 
             newseq = newseq2 + order_factors
             # 1 + O(1) -> O(1)

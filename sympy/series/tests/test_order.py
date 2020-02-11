@@ -1,6 +1,7 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
     Function, Add)
+from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises
 from sympy.abc import w, x, y, z
 
@@ -437,4 +438,4 @@ def test_issue_15539():
     assert O(1/x, (x, oo)).subs(x, -x) == O(-1/x, (x, -oo))
 
 def test_issue_18606():
-    assert Order(0) == O(0)
+    assert unchanged(Order, 0)
