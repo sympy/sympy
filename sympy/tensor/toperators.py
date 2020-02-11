@@ -44,7 +44,7 @@ class PartialDerivative(TensExpr):
             expr = expr.expr
 
         args, indices, free, dum = cls._contract_indices_for_derivative(
-            expr, variables)
+            S(expr), variables)
 
         obj = TensExpr.__new__(cls, *args)
 
@@ -74,7 +74,7 @@ class PartialDerivative(TensExpr):
                 variables_opposite_valence.append(i)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(
-            [S(expr)] + variables_opposite_valence, replace_indices=True)
+            [expr] + variables_opposite_valence, replace_indices=True)
 
         for i in range(1, len(args)):
             args_i = args[i]
