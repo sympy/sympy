@@ -104,7 +104,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         return set(self.args)
 
     def pmf(self, x):
-        if x in set(self.args):
+        if x in self.args:
             return self.p
         else:
             return S.Zero
