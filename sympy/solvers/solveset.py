@@ -30,6 +30,7 @@ from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -785,6 +786,53 @@ def _solve_radical(f, symbol, solveset_solver):
     return solution_set
 
 
+def _solve_floor(f, symbol, solver):
+    """ Helper functions to solve equations with floor """
+    result = set()
+    lower_limit = []
+    upper_limit = []
+    if type(f) == floor:
+        lower_limit = solver(f.args[0], symbol)
+        upper_limit = solver(f.args[0]-1, symbol)
+        result = set()
+    elif f.is_Add:
+        arg = f.args
+        floor_type = False
+        lst = list(arg)
+        i = 0
+        cp_f = 0
+        for r in arg:
+            if type(r) == floor:
+                floor_type = True
+                lst[i] = r.args[0]
+            elif r.is_Mul:
+                arg_mul = r.args
+                lst_mul = list(arg_mul)
+                c = 0
+                cp_arg = 1
+                for m in arg_mul:
+                    if type(m) == floor:
+                        floor_type = True
+                        lst_mul[c] = m.args[0]
+                    cp_arg = cp_arg*lst_mul[c]
+                    c = c+1
+                lst[i] = cp_arg
+            cp_f = cp_f+lst[i]
+            i = i+1
+
+        if floor_type is False:
+            return EmptySet
+        else:
+            result = set()
+
+        lower_limit = solver(cp_f, symbol)
+        upper_limit = solver(cp_f-1, symbol)
+
+    for l, r in zip(lower_limit, upper_limit):
+        result.add(Interval.Ropen(l, r) if l < r else Interval.Lopen(r, l))
+    return Union(*result)
+
+
 def _solve_abs(f, symbol, domain):
     """ Helper function to solve equation involving absolute value function """
     if not domain.is_subset(S.Reals):
@@ -954,6 +1002,13 @@ def _solveset(f, symbol, domain, _check=False):
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
+    elif f.has(floor):
+        if not domain.is_subset(S.Reals):
+            raise ValueError(filldedent('''
+                Floor expressions have meaning
+                only in real plane not in imaginary
+                one.'''))
+        result = _solve_floor(f, symbol, solver)
     elif _is_modular(f, symbol):
         result = _solve_modular(f, symbol, domain)
     else:
@@ -1977,7 +2032,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(f, (Expr, Relational, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
+    if not isinstance(symbol, (Expr, Relational)) and symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % symbol)
 
     if not isinstance(domain, Set):

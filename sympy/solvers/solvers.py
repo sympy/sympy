@@ -1702,7 +1702,7 @@ def _solve(f, *symbols, **flags):
                 else:
                     soln = list(soln.keys())
 
-                if soln is not None and not type(gens[0]) == floor:
+                if soln is not None:
                     u = poly.gen
                     if u != symbol:
                         try:
@@ -1726,13 +1726,6 @@ def _solve(f, *symbols, **flags):
                             flags['simplify'] = flags.get('simplify', False)
                         result = soln
 
-    # fallback if above fails
-    # -----------------------
-
-    if result is False:
-        result = solve_floor(f, symbol)
-        if result is not False:
-            check=False
 
     if result is False:
         # try unrad
@@ -1793,53 +1786,6 @@ def _solve(f, *symbols, **flags):
                   checksol(f_num, {symbol: r}, **flags) is not False]
     return result
 
-
-def solve_floor(f, symbol):
-
-    f = sympify(f)
-    result = False
-    lower_limit = []
-    upper_limit = []
-    if type(f) == floor:
-        lower_limit = solve(f.args[0], symbol)
-        upper_limit = solve(f.args[0]-1, symbol)
-        result = set()
-    elif f.is_Add:
-        arg = f.args
-        floor_type = False
-        lst = list(arg)
-        i = 0
-        cp_f = 0
-        for r in arg:
-            if type(r) == floor:
-                floor_type = True
-                lst[i] = r.args[0]
-            elif r.is_Mul:
-                arg_mul = r.args
-                lst_mul = list(arg_mul)
-                c = 0
-                cp_arg = 1
-                for m in arg_mul:
-                    if type(m) == floor:
-                        floor_type = True
-                        lst_mul[c] = m.args[0]
-                    cp_arg = cp_arg*lst_mul[c]
-                    c = c+1
-                lst[i] = cp_arg
-            cp_f = cp_f+lst[i]
-            i = i+1
-
-        if floor_type is False:
-            return False
-        else:
-            result = set()
-
-        lower_limit = solve(cp_f, symbol)
-        upper_limit = solve(cp_f-1, symbol)
-
-    for l, r in zip(lower_limit, upper_limit):
-        result.add(Interval.Ropen(l, r) if l < r else Interval.Lopen(r, l))
-    return result
 
 def _solve_system(exprs, symbols, **flags):
     if not exprs:
