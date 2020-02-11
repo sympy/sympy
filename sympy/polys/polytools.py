@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from functools import wraps
+
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
@@ -12,7 +14,7 @@ from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -50,6 +52,24 @@ import sympy.polys
 import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 
+
+
+def _sympifyit_Poly(func):
+    @wraps(func)
+    def wrapper(f, g):
+        g = _sympify(g)
+        if isinstance(g, Poly):
+            return func(f, g)
+        elif isinstance(g, Expr):
+            try:
+                g = f.from_expr(g, *f.gens)
+            except PolynomialError:
+                return NotImplemented
+            else:
+                return func(f, g)
+        else:
+            return NotImplemented
+    return wrapper
 
 
 
@@ -4015,66 +4035,28 @@ class Poly(Basic):
     def __neg__(f):
         return f.neg()
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __add__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return f.as_expr() + g
-
         return f.add(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __radd__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return g + f.as_expr()
-
         return g.add(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __sub__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return f.as_expr() - g
-
         return f.sub(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __rsub__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return g - f.as_expr()
-
         return g.sub(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __mul__(f, g):
-        if not isinstance(g, (Expr, Poly)):
-            return NotImplemented
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return f.as_expr()*g
-
         return f.mul(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __rmul__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return g*f.as_expr()
-
         return g.mul(f)
 
     @_sympifyit('n', NotImplemented)
@@ -4084,46 +4066,28 @@ class Poly(Basic):
         else:
             return f.as_expr()**n
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __divmod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return f.div(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __rdivmod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return g.div(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __mod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return f.rem(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __rmod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return g.rem(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __floordiv__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return f.quo(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_sympifyit_Poly
     def __rfloordiv__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return g.quo(f)
 
     @_sympifyit('g', NotImplemented)
