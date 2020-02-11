@@ -98,6 +98,7 @@ def FiniteRV(name, density):
     =======
 
     A RandomSymbol.
+
     """
     return rv(name, FiniteDistributionHandmade, density)
 
