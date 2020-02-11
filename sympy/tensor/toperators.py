@@ -74,7 +74,7 @@ class PartialDerivative(TensExpr):
                 variables_opposite_valence.append(i)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(
-            [expr] + variables_opposite_valence, replace_indices=True)
+            [S(expr)] + variables_opposite_valence, replace_indices=True)
 
         for i in range(1, len(args)):
             args_i = args[i]
@@ -104,7 +104,9 @@ class PartialDerivative(TensExpr):
 
         result = obj
 
-        if isinstance(obj.expr, TensAdd):
+        if not args[0].free_symbols:
+            return S.Zero
+        elif isinstance(obj.expr, TensAdd):
             # take care of sums of multi PDs
             result = obj.expr.func(*[
                     self.func(a, *obj.variables)._expand_partial_derivative()
