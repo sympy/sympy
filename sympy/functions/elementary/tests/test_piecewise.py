@@ -456,6 +456,12 @@ def test_piecewise_simplify():
     assert Piecewise(*args).simplify() == ans
     assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
 
+    # issue 18634
+    d = Symbol("d", integer=True)
+    n = Symbol("n", integer=True)
+    t = Symbol("t", real=True, positive=True)
+    expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
+    assert expr.simplify() == -d + 2*n
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
