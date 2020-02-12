@@ -1049,7 +1049,7 @@ def _TR11(rv):
                     arg_num = fi.args[0]
                     for arg_denom in list(arg_denoms):
                         base = arg_num/arg_denom
-                        if fi.func != arg_denoms[arg_denom]:
+                        if not (fi.func is cos and arg_denoms[arg_denom] is cos) :
                             if base % 2 == 0:
                                 rv = TR11(rv, arg_denom)
                                 arg_denoms.pop(arg_denom)
