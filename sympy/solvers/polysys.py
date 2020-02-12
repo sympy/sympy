@@ -25,8 +25,8 @@ def solve_poly_system(seq, *gens, **args):
 
     seq: a list/tuple/set
         Listing all the equations that are needed to be solved
-    *gens: symbols
-        Symbols of the equations in seq for which we want the
+    *gens: generators
+        generators of the equations in seq for which we want the
         solutions
     **args: Keyword arguments
         Special options for solving the equations
@@ -165,8 +165,8 @@ def solve_generic(polys, opt):
 
     seq: a list/tuple/set
         Listing all the equations that are needed to be solved
-    *gens: symbols
-        Symbols of the equations in seq for which we want the
+    *gens: generators
+        generators of the equations in seq for which we want the
         solutions
     **args: Keyword arguments
         Special options for solving the equations
@@ -310,8 +310,8 @@ def solve_triangulated(polys, *gens, **args):
 
     polys: a list/tuple/set
         Listing all the equations that are needed to be solved
-    *gens: symbols
-        Symbols of the equations in seq for which we want the
+    *gens: generators
+        generators of the equations in polys for which we want the
         solutions
     **args: Keyword arguments
         Special options for solving the equations
