@@ -201,8 +201,7 @@ def MultivariateT(syms, mu, sigma, v):
     Examples
     ========
 
-    >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv_types import MultivariateT
+    >>> from sympy.stats import density, MultivariateT
     >>> from sympy import Symbol
 
     >>> x = Symbol("x")
@@ -280,8 +279,7 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     Examples
     ========
 
-    >>> from sympy.stats.joint_rv_types import NormalGamma
-    >>> from sympy.stats import density
+    >>> from sympy.stats import density, NormalGamma
     >>> from sympy import symbols
 
     >>> X = NormalGamma('x', 0, 1, 2, 3)
