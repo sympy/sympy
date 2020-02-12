@@ -15,13 +15,13 @@ def create(k,l,m,n,c):
     for i in range(m-1,l,-1):
             l4.append(message[i][l])   #creates a list from 7 to 4
             message[i][l]=None
-    if(c==1):
+    if c == 1 :
         return l1+l2+l3+l4  #1 when clockwise spiral starts from top-left corner
-    elif(c==2):
+    elif c == 2 :
         return l2+l3+l4+l1  #2 when spiral starts from top-right corner
-    elif(c==3):
+    elif c== 3 :
         return l3+l4+l2+l1  #3 when spiral starts from bottom right corner
-    elif(c==4):
+    elif c == 4 :
         return l4+l1+l2+l3  #4 when spiral starts from bottom left corner
 '''1 when clockwise spiral starts from top-left corner
    2 when spiral starts from top-right corner
@@ -29,7 +29,7 @@ def create(k,l,m,n,c):
    4 when spiral starts from bottom left corner'''
 
 
-# will pass 1,2,3,4 according to route 
+# will pass 1,2,3,4 according to route
 def encipher_route(message):
 	i = int(0)
 	j = int(0)
