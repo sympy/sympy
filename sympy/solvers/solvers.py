@@ -39,7 +39,6 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
-from sympy.functions.elementary.integers import floor
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
@@ -56,8 +55,6 @@ from mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
-
-from sympy.sets.sets import Interval
 
 from types import GeneratorType
 from collections import defaultdict

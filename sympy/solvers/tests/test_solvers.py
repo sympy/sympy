@@ -15,8 +15,6 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
     det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
     failing_assumptions
 
-from sympy.sets.sets import Interval
-
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
