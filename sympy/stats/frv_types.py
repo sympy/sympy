@@ -93,15 +93,20 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
     @staticmethod
     def check(*args):
-        from sympy.utilities.iterables import multiset
-        from sympy.utilities.misc import filldedent
-        weights = multiset(args)
-        _value_check(len(set(args)) == len(args),
-            filldedent("""
-            Repeated args detected but set expected. For a
-            distribution having different weights for each
-            item use the following:\nFiniteRV(%s, %s)."""
-            % ('X', weights)))
+        # not using _value_check since there is a
+        # suggestion for the user
+        if len(set(args)) != len(args):
+            from sympy.utilities.iterables import multiset
+            from sympy.utilities.misc import filldedent
+            weights = multiset(args)
+            n = Integer(len(args))
+            for k in weights:
+                weights[k] /= n
+            raise ValueError(filldedent("""
+                Repeated args detected but set expected. For a
+                distribution having different weights for each
+                item use the following:\nFiniteRV(%s, %s)."""
+                % ('X', weights)))
 
     @property
     def p(self):
