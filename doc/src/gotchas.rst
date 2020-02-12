@@ -293,9 +293,9 @@ with a different argument: ``Function('f')`` is callable, but
   >>> f
   f(x)
   >>> f(x)
-Traceback (most recent call last):
-...
-TypeError: 'f' object is not callable
+  Traceback (most recent call last):
+  ...
+  TypeError: 'f' object is not callable
 
 .. _symbolic-expressions:
 
