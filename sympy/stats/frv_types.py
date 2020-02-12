@@ -90,9 +90,17 @@ def FiniteRV(name, density):
     return rv(name, FiniteDistributionHandmade, density)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
+
+    @staticmethod
+    def check(*args):
+        _value_check(len(set(args)) == len(args), """Repeated args detected
+        but set expected. If you want a distribution that has different
+        weightings for each item consider using FiniteRV(%s, %s)."""
+        % ('Symbol("rv")', set(args)))
+
     @property
     def p(self):
-        return Rational(1, len(set(self.args)))
+        return Rational(1, len(self.args))
 
     @property  # type: ignore
     @cacheit
