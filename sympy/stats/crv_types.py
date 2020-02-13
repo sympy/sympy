@@ -2149,6 +2149,7 @@ def Levy(name, mu, c):
     Create a continuous random variable with a Levy distribution.
 
     The density of the Levy distribution is given by
+
     .. math::
         f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
 
@@ -2562,7 +2563,7 @@ def Moyal(name, mu, sigma):
     The density of the Moyal distribution is given by
 
     .. math::
-        f(x) := \frac{-/frac{1}{2}\exp\left(-\frac{x-\mu}{\sigma}\right) - \frac{x-\mu}{2\sigma}}
+        f(x) := \frac{\exp-\frac{1}{2}\exp-\frac{x-\mu}{\sigma}-\frac{x-\mu}{2\sigma}}{\sqrt{2\pi}\sigma}
 
     with :math:`x \in \mathbb{R}`.
 

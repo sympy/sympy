@@ -96,6 +96,8 @@ Joint Types
 Stochastic Processes
 --------------------
 .. autofunction:: DiscreteMarkovChain
+.. autofunction:: ContinuousMarkovChain
+.. autofunction:: BernoulliProcess
 
 Interface
 ^^^^^^^^^
