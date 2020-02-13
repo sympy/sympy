@@ -2413,6 +2413,8 @@ class MatrixArithmetic(MatrixRequired):
 
         """
 
+        if method is not None and method not in ['multiply', 'mulsimp', 'jordan', 'cayley']:
+            raise TypeError('No such method')
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2469,8 +2471,6 @@ class MatrixArithmetic(MatrixRequired):
                 return a._eval_pow_by_cayley(exp)
             else:
                 return a._eval_pow_by_recursion(exp)
-        else:
-            raise TypeError('No such method')
 
         if jordan_pow:
             try:
