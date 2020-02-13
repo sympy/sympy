@@ -261,6 +261,8 @@ def _inv_LU(M, iszerofunc=_iszero):
     inverse_LDL
     """
 
+    _verify_invertible(M, iszerofunc=iszerofunc)
+
     return M.LUsolve(M.eye(M.rows), iszerofunc=_iszero)
 
 def _inv_CH(M, iszerofunc=_iszero):
