@@ -21,6 +21,7 @@ from sympy.solvers import solve
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
+from sympy.matrices.common import NonInvertibleMatrixError
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -1113,7 +1114,7 @@ def test_LUsolve():
 
     A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
     b = Matrix.zeros(4, 1)
-    raises(NotImplementedError, lambda: A.LUsolve(b))
+    raises(NonInvertibleMatrixError, lambda: A.LUsolve(b))
 
 
 def test_QRsolve():
@@ -2916,7 +2917,7 @@ def test_LDLsolve():
     A = Matrix([[-5, -3, -4], [-3, -7, 7]])
     x = Matrix([[8], [7], [-2]])
     b = A * x
-    raises(NotImplementedError, lambda: A.LDLsolve(b))
+    raises(NonInvertibleMatrixError, lambda: A.LDLsolve(b))
 
 
 def test_lower_triangular_solve():
