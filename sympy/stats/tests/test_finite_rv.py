@@ -45,6 +45,8 @@ def test_discreteuniform():
 
     assert characteristic_function(X)(t) == exp(I*a*t)/3 + exp(I*b*t)/3 + exp(I*c*t)/3
     assert moment_generating_function(X)(t) == exp(a*t)/3 + exp(b*t)/3 + exp(c*t)/3
+    # issue 18611
+    raises(ValueError, lambda: DiscreteUniform('Z', [a, a, a, b, b, c]))
 
 def test_dice():
     # TODO: Make iid method!
