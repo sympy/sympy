@@ -2434,37 +2434,43 @@ class MatrixArithmetic(MatrixRequired):
             if exp < 0:
                 exp = -exp
                 a = a.inv()
-            # When certain conditions are met,
-            # Jordan block algorithm is faster than
-            # computation by recursion.
-            elif method == 'jordan':
-                try:
-                    return jordan_pow(exp)
-                except MatrixError:
-                    if method == 'jordan':
-                        raise
+        # When certain conditions are met,
+        # Jordan block algorithm is faster than
+        # computation by recursion.
+        if method == 'jordan':
+            try:
+                return jordan_pow(exp)
+            except MatrixError:
+                if method == 'jordan':
+                    raise
 
-            if method == 'cayley':
-                return a._eval_pow_by_cayley(exp)
+        elif method == 'cayley':
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("cayley method is only valid for integer powers")
+            return a._eval_pow_by_cayley(exp)
 
-            elif method == "mulsimp":
+        elif method == "mulsimp":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("mulsimp method is only valid for integer powers")
+            return a._eval_pow_by_recursion_dotprodsimp(exp)
+
+        elif method == "multiply":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("multiply method is only valid for integer powers")
+            return a._eval_pow_by_recursion(exp)
+
+        elif method is None and exp.is_Number and exp % 1 == 0:
+            # Decide heuristically which method to apply
+            if a.rows == 2 and exp > 100000:
+                return jordan_pow(exp)
+            elif _get_intermediate_simp_bool(True, None):
                 return a._eval_pow_by_recursion_dotprodsimp(exp)
-
-            elif method == "multiply":
-                return a._eval_pow_by_recursion(exp)
-
-            elif method is None:
-                # Decide heuristically which method to apply
-                    if a.rows == 2 and exp > 100000:
-                        return jordan_pow(exp)
-                    elif _get_intermediate_simp_bool(True, None):
-                        return a._eval_pow_by_recursion_dotprodsimp(exp)
-                    elif exp > 10000:
-                        return a._eval_pow_by_cayley(exp)
-                    else:
-                        return a._eval_pow_by_recursion(exp)
+            elif exp > 10000:
+                return a._eval_pow_by_cayley(exp)
             else:
-                raise TypeError('No such method')
+                return a._eval_pow_by_recursion(exp)
+        else:
+            raise TypeError('No such method')
 
         if jordan_pow:
             try:
