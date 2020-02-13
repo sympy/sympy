@@ -632,6 +632,7 @@ def test_issue_13924():
     assert isinstance(a, ImmutableDenseNDimArray)
     assert a[0] == 1
 
+
 def test_numpy_sympify_args():
     # Issue 15098. Make sure sympify args work with numpy types (like numpy.str_)
     if not numpy:
@@ -695,3 +696,30 @@ def test_issue_16759():
 def test_issue_17811():
     a = Function('a')
     assert sympify('a(x)*5', evaluate=False) == Mul(a(x), 5, evaluate=False)
+
+
+def test_issue_14706():
+    if not numpy:
+        skip("numpy not installed.")
+
+    from sympy import symbols
+
+    x = symbols('x')
+
+    z1 = numpy.zeros((1,1), dtype=numpy.float)
+    z2 = numpy.zeros((2,2), dtype=numpy.float)
+    z3 = numpy.zeros((), dtype=numpy.float)
+
+    assert numpy.all(x + z1 == numpy.full((1, 1), x))
+    assert numpy.all(x + z2 == numpy.full((2, 2), x))
+    for z in [z3,
+              numpy.int(0),
+              numpy.float(0),
+              numpy.complex(0)]:
+        assert x + z == x
+        assert isinstance(x + z, Symbol)
+
+    assert x + numpy.array(x) == 2 * x
+    assert x + numpy.array([x]) == numpy.array([2*x], dtype=object)
+
+    raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
