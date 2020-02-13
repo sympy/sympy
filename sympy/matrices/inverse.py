@@ -316,7 +316,7 @@ def _inv_QR(M, iszerofunc=_iszero):
 
     return M.QRsolve(M.eye(M.rows))
 
-def _inv_BLOCK(M, iszerofunc=_iszero):
+def _inv_block(M, iszerofunc=_iszero):
     """Calculates the inverse using BLOCKWISE inversion.
 
     See Also
@@ -337,14 +337,14 @@ def _inv_BLOCK(M, iszerofunc=_iszero):
     C = M[i // 2:, :i // 2]
     D = M[i // 2:, i // 2:]
     try:
-        D_inv = _inv_BLOCK(D)
+        D_inv = _inv_block(D)
     except NonInvertibleMatrixError:
         return M.inv(method="LU", iszerofunc=_iszero)
     B_D_i = B*D_inv
     BDC = B_D_i*C
     A_n = A - BDC
     try:
-        A_n = _inv_BLOCK(A_n)
+        A_n = _inv_block(A_n)
     except NonInvertibleMatrixError:
         return M.inv(method="LU", iszerofunc=_iszero)
     B_n = -A_n*B_D_i

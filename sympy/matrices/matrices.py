@@ -55,7 +55,7 @@ from .solvers import (
 
 from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
-    _inv, _inv_BLOCK)
+    _inv, _inv_block)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -2213,7 +2213,7 @@ class MatrixBase(MatrixDeprecated,
         return _inv_ADJ(self, iszerofunc=iszerofunc)
 
     def inverse_BLOCK(self, iszerofunc=_iszero):
-        return _inv_BLOCK(self, iszerofunc=iszerofunc)
+        return _inv_block(self, iszerofunc=iszerofunc)
 
     def inverse_GE(self, iszerofunc=_iszero):
         return _inv_GE(self, iszerofunc=iszerofunc)
@@ -2262,7 +2262,7 @@ class MatrixBase(MatrixDeprecated,
     inverse_CH.__doc__             = _inv_CH.__doc__
     inverse_LDL.__doc__            = _inv_LDL.__doc__
     inverse_QR.__doc__             = _inv_QR.__doc__
-    inverse_BLOCK.__doc__          = _inv_BLOCK.__doc__
+    inverse_BLOCK.__doc__          = _inv_block.__doc__
     inv.__doc__                    = _inv.__doc__
 
 
