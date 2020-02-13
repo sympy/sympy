@@ -105,8 +105,8 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
             raise ValueError(filldedent("""
                 Repeated args detected but set expected. For a
                 distribution having different weights for each
-                item use the following:\nFiniteRV(%s, %s)."""
-                % ('X', weights)))
+                item use the following:""") + (
+                '\nFiniteRV(%s, %s).' % ('X', weights)))
 
     @property
     def p(self):
