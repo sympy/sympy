@@ -261,6 +261,8 @@ def _inv_LU(M, iszerofunc=_iszero):
     inverse_LDL
     """
 
+    if not M.is_square:
+        raise NonSquareMatrixError("A Matrix must be square to invert.")
     if M.free_symbols != set():
         _verify_invertible(M, iszerofunc=iszerofunc)
 
