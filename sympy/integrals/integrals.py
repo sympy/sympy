@@ -423,7 +423,7 @@ class Integral(AddWithLimits):
         if isinstance(self.function, Sum):
             if any(v in self.function.limits[0] for v in self.variables):
                 raise ValueError('Limit of the sum cannot be an integration variable.')
-            if any(not l.is_finite for l in self.function.limits[0][1:]):
+            if any(l.is_infinite for l in self.function.limits[0][1:]):
                 return self
             _i = self
             _sum = self.function
