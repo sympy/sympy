@@ -2917,7 +2917,7 @@ def test_LDLsolve():
     A = Matrix([[-5, -3, -4], [-3, -7, 7]])
     x = Matrix([[8], [7], [-2]])
     b = A * x
-    raises(NonInvertibleMatrixError, lambda: A.LDLsolve(b))
+    raises(NotImplementedError, lambda: A.LDLsolve(b))
 
 
 def test_lower_triangular_solve():
