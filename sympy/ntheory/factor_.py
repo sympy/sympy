@@ -920,10 +920,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     semi-prime factor that cannot be reduced easily:
 
     >>> from sympy.ntheory import isprime
-    >>> from sympy.core.compatibility import long
     >>> a = 1407633717262338957430697921446883
     >>> f = factorint(a, limit=10000)
-    >>> f == {991: 1, long(202916782076162456022877024859): 1, 7: 1}
+    >>> f == {991: 1, int(202916782076162456022877024859): 1, 7: 1}
     True
     >>> isprime(max(f))
     False

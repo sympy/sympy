@@ -8,7 +8,6 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import round
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
