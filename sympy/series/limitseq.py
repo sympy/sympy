@@ -218,29 +218,18 @@ def limit_seq(expr, n=None, trials=5):
     # If there is a negative term raised to a power involving n, or a
     # trigonometric function, then consider even and odd n separately.
     powers = (p.as_base_exp() for p in expr.atoms(Pow))
-    if expr.has(cos, sin):
+    if any(b.is_negative and e.has(n) for b, e in powers) or expr.has(cos, sin):
         L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
         if L1 is not None:
             L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
             if L1 != L2:
-                if L2 == None:
+                if L2 == None and expr.has(cos, sin):
                     L3 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
                     return L3
                 elif L1.is_comparable and L2.is_comparable:
                     return AccumulationBounds(Min(L1, L2), Max(L1, L2))
                 else:
                     return None
-    
-    elif any(b.is_negative and e.has(n) for b, e in powers):
-        L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
-        if L1 is not None:
-            L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
-            if L2 is not None:
-                if L1 != L2:
-                    if L1.is_comparable and L2.is_comparable:
-                        return AccumulationBounds(Min(L1, L2), Max(L1, L2))
-                    else:
-                        return None
     else:
         L1 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
     if L1 is not None:
