@@ -51,7 +51,7 @@ __all__ = [
     'PY3', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
     'unicode', 'u_decode', 'get_function_code', 'gmpy',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
-    'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
+    'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
     'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY',
@@ -80,8 +80,6 @@ if PY3:
     cStringIO = StringIO
 
     exec_ = getattr(builtins, "exec")
-
-    round = round
 
     from collections.abc import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -118,13 +116,6 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-
-    _round = round
-    def round(x, *args):
-        try:
-            return x.__round__(*args)
-        except (AttributeError, TypeError):
-            return _round(x, *args)
 
     from collections import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)

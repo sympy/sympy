@@ -3653,7 +3653,6 @@ class Expr(Basic, EvalfMixin):
         For a consistent behavior, and Python 3 rounding
         rules, import `round` from sympy.core.compatibility.
 
-        >>> from sympy.core.compatibility import round
         >>> isinstance(round(S(123), -2), Number)
         True
         """
