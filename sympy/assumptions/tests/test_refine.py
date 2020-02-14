@@ -231,5 +231,5 @@ def test_matrixelement():
     assert refine(matrixelement(x[0,1]), Q.symmetric(x)) == x[0,1]
     assert refine(matrixelement(x[1,0]), Q.symmetric(x)) == x[0,1]
     assert refine(matrixelement(x[2,1]), Q.symmetric(x)) == x[1,2]
-    assert refine(matrixelement(x[1,2]), Q.symmetric(x)) == x[1,2]
+
     
