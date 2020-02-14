@@ -722,4 +722,13 @@ def test_issue_14706():
     assert x + numpy.array(x) == 2 * x
     assert x + numpy.array([x]) == numpy.array([2*x], dtype=object)
 
+    assert sympify(numpy.array([1])) == ImmutableDenseNDimArray([1], 1)
+    assert sympify(numpy.array([[[1]]])) == ImmutableDenseNDimArray([1], (1, 1, 1))
+    assert sympify(z1) == ImmutableDenseNDimArray([0], (1, 1))
+    assert sympify(z2) == ImmutableDenseNDimArray([0, 0, 0, 0], (2, 2))
+    assert sympify(z3) == ImmutableDenseNDimArray([0], ())
+    assert sympify(z3, strict=True) == 0.0
+
     raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
+    raises(SympifyError, lambda: sympify(z1, strict=True))
+    raises(SympifyError, lambda: sympify(z2, strict=True))
