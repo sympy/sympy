@@ -25,18 +25,18 @@ def solve_poly_system(seq, *gens, **args):
 
     seq: a list/tuple/set
         Listing all the equations that are needed to be solved
-    *gens: generators
+    gens: generators
         generators of the equations in seq for which we want the
         solutions
-    **args: Keyword arguments
+    args: Keyword arguments
         Special options for solving the equations
 
     Returns
     =======
 
-    A List of tuples
-        Solutions for symbols that satisfy the equations listed
-        in seq
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in seq
 
     Examples
     ========
@@ -81,9 +81,9 @@ def solve_biquadratic(f, g, opt):
     Returns
     =======
 
-    A List of tuples
-        Solutions for symbols that satisfy the equations listed
-        in seq
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in seq.
 
     Examples
     ========
@@ -163,20 +163,17 @@ def solve_generic(polys, opt):
     Parameters
     ==========
 
-    seq: a list/tuple/set
-        Listing all the equations that are needed to be solved
-    *gens: generators
-        generators of the equations in seq for which we want the
-        solutions
-    **args: Keyword arguments
-        Special options for solving the equations
+    polys: a list/tuple/set
+        Listing all the polynomial equations that are needed to be solved
+    opt: an Options object
+        For specifying keyword arguments and generators
 
     Returns
     =======
 
-    A List of tuples
-        Solutions for symbols that satisfy the equations listed
-        in seq
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in seq
 
     References
     ==========
@@ -310,18 +307,18 @@ def solve_triangulated(polys, *gens, **args):
 
     polys: a list/tuple/set
         Listing all the equations that are needed to be solved
-    *gens: generators
+    gens: generators
         generators of the equations in polys for which we want the
         solutions
-    **args: Keyword arguments
+    args: Keyword arguments
         Special options for solving the equations
 
     Returns
     =======
 
-    A List of tuples
-        Solutions for symbols that satisfy the equations listed
-        in polys
+    List[Tuple]
+        A List of tuples. Solutions for symbols that satisfy the
+        equations listed in polys
 
     Examples
     ========
