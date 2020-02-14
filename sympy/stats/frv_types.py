@@ -97,7 +97,7 @@ def FiniteRV(name, density):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     """
     return rv(name, FiniteDistributionHandmade, density)
@@ -156,7 +156,7 @@ def DiscreteUniform(name, items):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     References
     ==========
@@ -236,7 +236,7 @@ def Die(name, sides=6):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
     """
 
     return rv(name, DieDistribution, sides)
@@ -291,7 +291,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     References
     ==========
@@ -331,7 +331,7 @@ def Coin(name, p=S.Half):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     See Also
     ========
@@ -429,7 +429,7 @@ def Binomial(name, n, p, succ=1, fail=0):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     References
     ==========
@@ -508,7 +508,7 @@ def BetaBinomial(name, n, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     References
     ==========
@@ -588,7 +588,7 @@ def Hypergeometric(name, N, m, n):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     References
     ==========
@@ -627,7 +627,7 @@ def Rademacher(name):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     See Also
     ========
