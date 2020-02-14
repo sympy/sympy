@@ -512,6 +512,21 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         except NotImplementedError:
             pass
 
+        ### ---------- Raabe's test -------------- ###
+        if lim_ratio == 1:  # ratio test inconclusive
+            test_val = sym*(sequence_term/
+                         sequence_term.subs(sym, sym + 1) - 1)
+            try:
+                lim_val = limit_seq(test_val, sym)
+                if lim_val is not None and lim_val.is_number:
+                    if lim_val > 1:
+                        return S.true
+                    if lim_val < 1:
+                        return S.false
+            except NotImplementedError:
+                pass
+
+
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         try:
