@@ -384,6 +384,7 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
+        from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
 
@@ -416,6 +417,17 @@ class Integral(AddWithLimits):
         # check for the trivial zero
         if self.is_zero:
             return S.Zero
+
+        # hacks to handle integrals of
+        # nested summations
+        if isinstance(self.function, Sum):
+            if any(v in self.function.limits[0] for v in self.variables):
+                raise ValueError('Limit of the sum cannot be an integration variable.')
+            if any(l.is_infinite for l in self.function.limits[0][1:]):
+                return self
+            _i = self
+            _sum = self.function
+            return _sum.func(_i.func(_sum.function, *_i.limits).doit(), *_sum.limits).doit()
 
         # now compute and check the function
         function = self.function

@@ -4,7 +4,7 @@ from sympy import (
     EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
-    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
+    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
 from sympy.core.expr import unchanged
@@ -153,7 +153,6 @@ def test_diff_wrt():
 
 
 def test_basics_multiple():
-
     assert diff_test(Integral(x, (x, 3*x, 5*y), (y, x, 2*x))) == {x}
     assert diff_test(Integral(x, (x, 5*y), (y, x, 2*x))) == {x}
     assert diff_test(Integral(x, (x, 5*y), (y, y, 2*x))) == {x, y}
@@ -378,8 +377,10 @@ def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
     assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3
 
+
 def test_issue_18133():
     assert integrate(exp(x)/(1 + x)**2, x) == NonElementaryIntegral(exp(x)/(x + 1)**2, x)
+
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
@@ -458,7 +459,6 @@ def test_issue_4052():
 
     assert integrate(cos(asin(x)), x) == f
     assert integrate(sin(acos(x)), x) == f
-
 
 
 @slow
@@ -1360,6 +1360,7 @@ def test_issue_8945():
     assert integrate(sin(x)**3/x, (x, 0, oo)) == pi/4
     assert integrate(cos(x)**2/x**2, x) == -Si(2*x) - cos(2*x)/(2*x) - 1/(2*x)
 
+
 @slow
 def test_issue_7130():
     if ON_TRAVIS:
@@ -1368,11 +1369,13 @@ def test_issue_7130():
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
 
+
 def test_issue_10567():
     a, b, c, t = symbols('a b c t')
     vt = Matrix([a*t, b, c])
     assert integrate(vt, t) == Integral(vt, t).doit()
     assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
+
 
 def test_issue_11856():
     t = symbols('t')
@@ -1392,6 +1395,7 @@ def test_issue_4950():
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
 
+
 def test_singularities():
     assert integrate(1/x**2, (x, -oo, oo)) is oo
     assert integrate(1/x**2, (x, -1, 1)) is oo
@@ -1399,6 +1403,7 @@ def test_singularities():
 
     assert integrate(1/x**2, (x, 1, -1)) is -oo
     assert integrate(1/(x - 1)**2, (x, 2, -2)) is -oo
+
 
 def test_issue_12645():
     x, y = symbols('x y', real=True)
@@ -1408,6 +1413,7 @@ def test_issue_12645():
                 == Integral(sin(x**3 + y**2),
                             (x, -sqrt(-y**2 + pi), sqrt(-y**2 + pi)),
                             (y, -sqrt(pi), sqrt(pi))))
+
 
 def test_issue_12677():
     assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
@@ -1590,6 +1596,7 @@ def test_issue_14241():
     assert integrate(n * x ** (n - 1) / (x + 1), x) == \
            n**2*x**n*lerchphi(x*exp_polar(I*pi), 1, n)*gamma(n)/gamma(n + 1)
 
+
 def test_issue_13112():
     assert integrate(sin(t)**2 / (5 - 4*cos(t)), [t, 0, 2*pi]) == pi / 4
 
@@ -1643,15 +1650,35 @@ def test_issue_17671():
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
     assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -2*log(3)/9 - EulerGamma/9
 
+
 def test_issue_2975():
     w = Symbol('w')
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
 
+
+def test_issue_7827():
+    x, n, M = symbols('x n M')
+    N = Symbol('N', integer=True)
+    assert integrate(summation(x*n, (n, 1, N)), x) == x**2*(N**2/4 + N/4)
+    assert integrate(summation(x*sin(n), (n,1,N)), x) == \
+        Sum(x**2*sin(n)/2, (n, 1, N))
+    assert integrate(summation(sin(n*x), (n,1,N)), x) == \
+        Sum(Piecewise((-cos(n*x)/n, Ne(n, 0)), (0, True)), (n, 1, N))
+    assert integrate(integrate(summation(sin(n*x), (n,1,N)), x), x) == \
+        Piecewise((Sum(Piecewise((-sin(n*x)/n**2, Ne(n, 0)), (-x/n, True)),
+        (n, 1, N)), (n > -oo) & (n < oo) & Ne(n, 0)), (0, True))
+    assert integrate(Sum(x, (n, 1, M)), x) == M*x**2/2
+    raises(ValueError, lambda: integrate(Sum(x, (x, y, n)), y))
+    raises(ValueError, lambda: integrate(Sum(x, (x, 1, n)), n))
+    raises(ValueError, lambda: integrate(Sum(x, (x, 1, y)), x))
+
+
 def test_issue_4231():
     f = (1 + 2*x + sqrt(x + log(x))*(1 + 3*x) + x**2)/(x*(x + sqrt(x + log(x)))*sqrt(x + log(x)))
     assert integrate(f, x) == 2*sqrt(x + log(x)) + 2*log(x + sqrt(x + log(x)))
+
 
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
