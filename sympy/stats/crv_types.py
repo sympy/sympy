@@ -129,14 +129,24 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
 
-    -- a symbol
-    -- a probability density function
-    -- set on which the pdf is valid (defaults to entire real line)
+    Parameters
+    ==========
 
-    Returns a RandomSymbol.
+    symbol : Symbol
+        Represents name of the random variable.
+    density : Expression containing symbol
+        Represents probability density function.
+    set : set/Interval
+        Represents the region where the pdf is valid, by default is real line.
+
+    Returns
+    =======
+
+    RandomSymbol
 
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
+
 
     Examples
     ========
@@ -215,7 +225,7 @@ def Arcsin(name, a=0, b=1):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -297,7 +307,7 @@ def Benini(name, alpha, beta, sigma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -382,7 +392,7 @@ def Beta(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -462,7 +472,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -548,7 +558,7 @@ def BetaPrime(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -625,7 +635,7 @@ def Cauchy(name, x0, gamma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -704,7 +714,7 @@ def Chi(name, k):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -774,7 +784,7 @@ def ChiNoncentral(name, k, l):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -850,7 +860,7 @@ def ChiSquared(name, k):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -930,7 +940,7 @@ def Dagum(name, p, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -985,7 +995,7 @@ def Erlang(name, k, l):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1101,7 +1111,7 @@ def ExGaussian(name, mean, std, rate):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1200,7 +1210,7 @@ def Exponential(name, rate):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1304,7 +1314,7 @@ def ExponentialPower(name, mu, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol
+    RandomSymbol
 
     Examples
     ========
@@ -1386,7 +1396,7 @@ def FDistribution(name, d1, d2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1461,7 +1471,7 @@ def FisherZ(name, d1, d2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1545,7 +1555,7 @@ def Frechet(name, a, s=1, m=0):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1628,7 +1638,7 @@ def Gamma(name, k, theta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1740,7 +1750,7 @@ def GammaInverse(name, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1845,7 +1855,7 @@ def Gumbel(name, beta, mu, minimum=False):
     Returns
     =======
 
-    A RandomSymbol
+    RandomSymbol
 
     Examples
     ========
@@ -1917,7 +1927,7 @@ def Gompertz(name, b, eta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1987,7 +1997,7 @@ def Kumaraswamy(name, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2070,7 +2080,7 @@ def Laplace(name, mu, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2149,6 +2159,7 @@ def Levy(name, mu, c):
     Create a continuous random variable with a Levy distribution.
 
     The density of the Levy distribution is given by
+
     .. math::
         f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
 
@@ -2161,7 +2172,7 @@ def Levy(name, mu, c):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2237,7 +2248,7 @@ def Logistic(name, mu, s):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2317,7 +2328,7 @@ def LogLogistic(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2411,7 +2422,7 @@ def LogNormal(name, mean, std):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2495,7 +2506,7 @@ def Maxwell(name, a):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2562,7 +2573,7 @@ def Moyal(name, mu, sigma):
     The density of the Moyal distribution is given by
 
     .. math::
-        f(x) := \frac{-/frac{1}{2}\exp\left(-\frac{x-\mu}{\sigma}\right) - \frac{x-\mu}{2\sigma}}
+        f(x) := \frac{\exp-\frac{1}{2}\exp-\frac{x-\mu}{\sigma}-\frac{x-\mu}{2\sigma}}{\sqrt{2\pi}\sigma}
 
     with :math:`x \in \mathbb{R}`.
 
@@ -2577,7 +2588,7 @@ def Moyal(name, mu, sigma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2648,7 +2659,7 @@ def Nakagami(name, mu, omega):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2748,7 +2759,7 @@ def Normal(name, mean, std):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2888,7 +2899,7 @@ def GaussianInverse(name, mean, shape):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2993,7 +3004,7 @@ def Pareto(name, xm, alpha):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3065,7 +3076,7 @@ def PowerFunction(name, alpha, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3160,7 +3171,7 @@ def QuadraticU(name, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3246,7 +3257,7 @@ def RaisedCosine(name, mu, s):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3328,7 +3339,7 @@ def Rayleigh(name, sigma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3394,7 +3405,7 @@ def Reciprocal(name, a, b):
     Returns
     =======
 
-    A RandomSymbol
+    RandomSymbol
 
     Examples
     ========
@@ -3456,7 +3467,7 @@ def ShiftedGompertz(name, b, eta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3524,7 +3535,7 @@ def StudentT(name, nu):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3620,7 +3631,7 @@ def Trapezoidal(name, a, b, c, d):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3719,7 +3730,7 @@ def Triangular(name, a, b, c):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3834,7 +3845,7 @@ def Uniform(name, left, right):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3927,7 +3938,7 @@ def UniformSum(name, n):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -4012,7 +4023,7 @@ def VonMises(name, mu, k):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -4087,7 +4098,7 @@ def Weibull(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
