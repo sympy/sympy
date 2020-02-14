@@ -341,10 +341,10 @@ def refine_matrixelement(expr, assumptions):
     """
     Examples
     ========
-        >>>refine(X[0, 1], Q.symmetric(X))
-        X[0, 1]
-        >>> refine(X[1, 0], Q.symmetric(X))
-        X[0,1]
+    >>>refine(X[0, 1], Q.symmetric(X))
+    X[0, 1]
+    >>> refine(X[1, 0], Q.symmetric(X))
+    X[0,1]
     """ 
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
