@@ -7,6 +7,7 @@ from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import Q, ask  # type: ignore
 from sympy import MatrixSymbol
+from sympy.matrices.expressions.matexpr import MatrixElement
 
 def refine(expr, assumptions=True):
     """
@@ -349,11 +350,9 @@ def refine_matrixelement(expr, assumptions):
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
         if (expr.args[1] > expr.args[2]):
-            temp = expr.args[1]
-            expr.args[1] = expr.args[2]
-            expr.args[2] = temp
+            return(MatrixElement(expr.args[0],expr.args[2],expr.args[1])) 
+        else:
             return(expr)
-        return(expr)
 
 
 
