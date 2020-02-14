@@ -303,8 +303,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         pdf = self.pdf(x)
         cdf = integrate(pdf, (x, left_bound, x), **kwargs)
-
-        quantile = solveset(cdf - p, x, S.Reals)
+        quantile = solveset(cdf - p, x, self.set)
         return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
 
     def _quantile(self, x):
