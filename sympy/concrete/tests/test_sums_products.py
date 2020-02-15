@@ -995,6 +995,9 @@ def test_is_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
 
+    # Raabe's test --
+    assert Sum(Product((3*m-3),(m,2,n))/Product((3*m+1),(m,2,n)),(n,2,oo)).is_convergent() is S.true
+
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
 

@@ -20,7 +20,7 @@ from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
 from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
-from sympy.simplify.powsimp import powsimp
+from sympy.simplify.powsimp import powsimp, powdenest
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 import itertools
@@ -423,6 +423,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         upper_limit = self.limits[0][2]
         sequence_term = self.function
 
+
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "
                                       "containing series is not handled")
@@ -446,6 +447,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         interval = Interval(lower_limit, upper_limit)
 
+        sequence_term = sequence_term.simplify()
+        sequence_term = powdenest(sequence_term)
+        sequence_term = sequence_term.simplify()
+
         # Piecewise function handle
         if sequence_term.is_Piecewise:
             for func, cond in sequence_term.args:
@@ -457,11 +462,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit_seq(sequence_term, sym)
-            if lim_val is not None and lim_val.is_zero is False:
-                return S.false
+           lim_val = limit_seq(sequence_term, sym)
+           if lim_val is not None and lim_val.is_zero is False:
+               return S.false
         except NotImplementedError:
             pass
+
 
         try:
             lim_val_abs = limit_seq(abs(sequence_term), sym)
@@ -489,7 +495,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 (n_log_test[p] == n_log_test[q] == 1 and n_log_test[r] > 1)):
                     return S.true
             return S.false
-
         ### ------------- Limit comparison test -----------###
         # (1/n) comparison
         try:
@@ -498,6 +503,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.false
         except NotImplementedError:
             pass
+
 
         ### ----------- ratio test ---------------- ###
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
@@ -510,22 +516,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if abs(lim_ratio) < 1:
                     return S.true
         except NotImplementedError:
-            pass
+            lim_ratio = None
 
         ### ---------- Raabe's test -------------- ###
         if lim_ratio == 1:  # ratio test inconclusive
             test_val = sym*(sequence_term/
                          sequence_term.subs(sym, sym + 1) - 1)
+            test_val = test_val.simplify()
             try:
                 lim_val = limit_seq(test_val, sym)
                 if lim_val is not None and lim_val.is_number:
-                    if lim_val > 1:
+                    if (lim_val - 1).is_positive:
                         return S.true
-                    if lim_val < 1:
+                    if (lim_val - 1).is_negative:
                         return S.false
             except NotImplementedError:
                 pass
-
 
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
