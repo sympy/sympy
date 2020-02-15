@@ -702,10 +702,6 @@ def test_issue_14706():
     if not numpy:
         skip("numpy not installed.")
 
-    from sympy import symbols
-
-    x = symbols('x')
-
     z1 = numpy.zeros((1,1), dtype=numpy.float)
     z2 = numpy.zeros((2,2), dtype=numpy.float)
     z3 = numpy.zeros((), dtype=numpy.float)
