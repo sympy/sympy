@@ -262,7 +262,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def moment_generating_function(self, t, **kwargs):
         """ Moment generating function """
-        if len(kwargs) == 0:
+        if not kwargs:
                 mgf = self._moment_generating_function(t)
                 if mgf is not None:
                     return mgf
