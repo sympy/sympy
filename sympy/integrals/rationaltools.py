@@ -224,7 +224,8 @@ def ratint_logpart(f, g, x, t=None):
     def _include_sign(c, sqf):
         if c.is_extended_real and (c < 0) == True:
             h, k = sqf[0]
-            sqf[0] = h*c, k
+            c_poly = c.as_poly(h.gens)
+            sqf[0] = h*c_poly, k
 
     C, res_sqf = res.sqf_list()
     _include_sign(C, res_sqf)

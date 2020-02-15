@@ -1135,8 +1135,10 @@ def laurent_series(a, d, F, n, DE):
         Q = Pa.quo(Pd)
         for i in range(0, j + 1):
             Q = Q.subs(Z[i], V[i])
-        Dha = hd*derivation(ha, DE, basic=True) + ha*derivation(hd, DE, basic=True)
-        Dha += hd*derivation(ha, DE_new, basic=True) + ha*derivation(hd, DE_new, basic=True)
+        Dha = (hd*derivation(ha, DE, basic=True).as_poly(DE.t)
+             + ha*derivation(hd, DE, basic=True).as_poly(DE.t)
+             + hd*derivation(ha, DE_new, basic=True).as_poly(DE.t)
+             + ha*derivation(hd, DE_new, basic=True).as_poly(DE.t))
         Dhd = Poly(j + 1, DE.t)*hd**2
         ha, hd = Dha, Dhd
 
@@ -1282,7 +1284,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
                 inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
 
                 for coeff in h.coeffs()[1:]:
-                    L = reduced(inv*coeff, [s])[1]
+                    L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
                     coeffs.append(L.as_expr())
 
                 h = Poly(dict(list(zip(h.monoms(), coeffs))), DE.t)

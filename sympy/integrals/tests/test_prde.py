@@ -190,7 +190,7 @@ def test_param_poly_rischDE():
     h, A = param_poly_rischDE(a, b, q, 3, DE)
 
     assert A.nullspace() == [Matrix([3, -5, 1, -5, 1, 1])]
-    p = -5*h[0] + h[1] + h[2]  # Poly(1, x)
+    p = -Poly(5, DE.t)*h[0] + h[1] + h[2]  # Poly(1, x)
     assert a*derivation(p, DE) + b*p == Poly(x**2 - 5*x + 3, x, domain='QQ')
 
 
