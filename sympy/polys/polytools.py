@@ -45,6 +45,7 @@ from sympy.polys.polyutils import (
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, sift, public, filldedent
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Required to avoid errors
 import sympy.polys
@@ -64,7 +65,14 @@ def _polifyit(func):
             try:
                 g = f.from_expr(g, *f.gens)
             except PolynomialError:
-                return NotImplemented
+                expr_method = getattr(f.as_expr(), func.__name__)
+                result = expr_method(g)
+                SymPyDeprecationWarning(
+                    feature="Mixing Poly with non-polynomial expressions in binary operations",
+                    issue=18613,
+                    deprecated_since_version="1.6",
+                    useinstead="the as_expr or as_poly method to convert types").warn()
+                return result
             else:
                 return func(f, g)
         else:

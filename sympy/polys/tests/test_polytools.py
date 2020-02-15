@@ -58,10 +58,11 @@ from sympy import (
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol, Matrix
+
 
 def _epsilon_eq(a, b):
     for u, v in zip(a, b):
@@ -81,6 +82,16 @@ def _strict_eq(a, b):
             return isinstance(a, Poly) and a.eq(b, strict=True)
     else:
         return False
+
+
+def test_Poly_mixed_operations():
+    p = Poly(x, x)
+    with warns_deprecated_sympy():
+        p * exp(x)
+    with warns_deprecated_sympy():
+        p + exp(x)
+    with warns_deprecated_sympy():
+        p - exp(x)
 
 
 def test_Poly_from_dict():
