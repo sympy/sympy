@@ -5944,7 +5944,7 @@ def _symbolic_factor_list(expr, opt, method):
 
 def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
-    if isinstance(expr, Expr) and not expr.is_Relational:
+    if isinstance(expr, Expr):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
         coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
@@ -5964,7 +5964,7 @@ def _generic_factor_list(expr, gens, args, method):
 
     expr = sympify(expr)
 
-    if isinstance(expr, (Expr, Poly)) and not expr.is_Relational:
+    if isinstance(expr, (Expr, Poly)):
         if isinstance(expr, Poly):
             numer, denom = expr, 1
         else:
