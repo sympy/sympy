@@ -54,7 +54,7 @@ from mpmath.libmp.libhyper import NoConvergence
 
 
 
-def _sympifyit_Poly(func):
+def _polifyit(func):
     @wraps(func)
     def wrapper(f, g):
         g = _sympify(g)
@@ -4035,27 +4035,27 @@ class Poly(Basic):
     def __neg__(f):
         return f.neg()
 
-    @_sympifyit_Poly
+    @_polifyit
     def __add__(f, g):
         return f.add(g)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __radd__(f, g):
         return g.add(f)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __sub__(f, g):
         return f.sub(g)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __rsub__(f, g):
         return g.sub(f)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __mul__(f, g):
         return f.mul(g)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __rmul__(f, g):
         return g.mul(f)
 
@@ -4066,27 +4066,27 @@ class Poly(Basic):
         else:
             return NotImplemented
 
-    @_sympifyit_Poly
+    @_polifyit
     def __divmod__(f, g):
         return f.div(g)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __rdivmod__(f, g):
         return g.div(f)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __mod__(f, g):
         return f.rem(g)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __rmod__(f, g):
         return g.rem(f)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __floordiv__(f, g):
         return f.quo(g)
 
-    @_sympifyit_Poly
+    @_polifyit
     def __rfloordiv__(f, g):
         return g.quo(f)
 
