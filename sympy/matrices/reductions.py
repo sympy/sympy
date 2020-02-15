@@ -293,6 +293,41 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     >>> rref_pivots
     (0, 1)
 
+    If pivots is ``False`` just the row-reduced matrix is returned.
+
+    >>> m.rref(pivots=False)
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> m = Matrix([[0.9, -0.1, -0.2, 0],[-0.8, 0.9, -0.4, 0],[-0.1, -0.8, 0.6, 0]])
+    >>> m.rref()
+    (Matrix([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0]]), (0, 1, 2))
+
+    If different iszerofunc is used such as ``lambda x: abs(x)<6e-15`` then the
+    row-reduced matrix and a tuple of pivot columns returned can be different
+    because while making elements above pivots to zero the iszerofunc will evaluate
+    accordingly and further operations will vary.
+
+    >>> m.rref(iszerofunc=lambda x: abs(x)<6e-15)
+    (Matrix([
+    [1, 0, -0.301369863013699, 0],
+    [0, 1, -0.712328767123288, 0],
+    [0, 0, 0, 0]]), (0, 1))
+
+
+    If simplify is set to ``signsimp`` then the matrix will get simplified
+    according to ``signsimp`` function when looking for pivots that's why the
+    row-reduced matrix returned is different
+
+    >>> m.rref(simplify=signsimp)
+    (Matrix([
+    [1, 0, (-(x + 1)*(x*(x + 5) - (x + 2)*(x + 3)) + (x + 2)*(x*(x + 4) - (x + 1)*(x + 3)))/(x*(x*(x + 4) - (x + 1)*(x + 3)))],
+    [0, 1, (x*(x + 5) - (x + 2)*(x + 3))/(x*(x + 4) - (x + 1)*(x + 3))],
+    [0, 0, 0]]), (0, 1))
+
     Notes
     =====
 
