@@ -449,7 +449,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         sequence_term = sequence_term.simplify()
         sequence_term = powdenest(sequence_term)
-        sequence_term = sequence_term.simplify()
+
 
         # Piecewise function handle
         if sequence_term.is_Piecewise:
