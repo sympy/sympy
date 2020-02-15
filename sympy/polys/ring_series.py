@@ -49,7 +49,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int, range, string_types
+from sympy.core.compatibility import as_int
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
@@ -379,10 +379,10 @@ def rs_subs(p, rules, x, prec):
 
     Parameters
     ----------
-    p : :class:`PolyElement` Input series.
-    rules : :class:`dict` with substitution mappings.
-    x : :class:`PolyElement` in which the series truncation is to be done.
-    prec : :class:`Integer` order of the series after truncation.
+    p : :class:`~.PolyElement` Input series.
+    rules : ``dict`` with substitution mappings.
+    x : :class:`~.PolyElement` in which the series truncation is to be done.
+    prec : :class:`~.Integer` order of the series after truncation.
 
     Examples
     ========
@@ -560,7 +560,7 @@ def rs_series_inversion(p, x, prec):
     return r
 
 def _coefficient_t(p, t):
-    r"""Coefficient of `x\_i**j` in p, where ``t`` = (i, j)"""
+    r"""Coefficient of `x_i**j` in p, where ``t`` = (i, j)"""
     i, j = t
     R = p.ring
     expv1 = [0]*R.ngens
@@ -576,33 +576,40 @@ def rs_series_reversion(p, x, n, y):
     r"""
     Reversion of a series.
 
-    ``p`` is a series with ``O(x**n)`` of the form `p = a*x + f(x)`
-    where `a` is a number different from 0.
+    ``p`` is a series with ``O(x**n)`` of the form $p = ax + f(x)$
+    where $a$ is a number different from 0.
 
-    `f(x) = sum( a\_k*x\_k, k in range(2, n))`
+    $f(x) = \sum_{k=2}^{n-1} a_kx_k$
+
+    Parameters
+    ==========
 
       a_k : Can depend polynomially on other variables, not indicated.
       x : Variable with name x.
       y : Variable with name y.
 
-    Solve `p = y`, that is, given `a*x + f(x) - y = 0`,
-    find the solution x = r(y) up to O(y**n)
+    Returns
+    =======
 
-    Algorithm:
+    Solve $p = y$, that is, given $ax + f(x) - y = 0$,
+    find the solution $x = r(y)$ up to $O(y^n)$.
 
-    If `r\_i` is the solution at order i, then:
-    `a*r\_i + f(r\_i) - y = O(y**(i + 1))`
+    Algorithm
+    =========
 
-    and if r_(i + 1) is the solution at order i + 1, then:
-    `a*r\_(i + 1) + f(r\_(i + 1)) - y = O(y**(i + 2))`
+    If $r_i$ is the solution at order $i$, then:
+    $ar_i + f(r_i) - y = O\left(y^{i + 1}\right)$
 
-    We have, r_(i + 1) = r_i + e, such that,
-    `a*e + f(r\_i) = O(y**(i + 2))`
-    or `e = -f(r\_i)/a`
+    and if $r_{i + 1}$ is the solution at order $i + 1$, then:
+    $ar_{i + 1} + f(r_{i + 1}) - y = O\left(y^{i + 2}\right)$
+
+    We have, $r_{i + 1} = r_i + e$, such that,
+    $ae + f(r_i) = O\left(y^{i + 2}\right)$
+    or $e = -f(r_i)/a$
 
     So we use the recursion relation:
-    `r\_(i + 1) = r\_i - f(r\_i)/a`
-    with the boundary condition: `r\_1 = y`
+    $r_{i + 1} = r_i - f(r_i)/a$
+    with the boundary condition: $r_1 = y$
 
     Examples
     ========
@@ -664,10 +671,14 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     >>> rs_trunc(pc.compose(x, p), x, 4)
     6*x**3 + 11*x**2 + 8*x + 6
 
+    """
+
+    # TODO: Add this when it is documented in Sphinx
+    """
     See Also
     ========
 
-    sympy.polys.ring.compose
+    sympy.polys.rings.PolyRing.compose
 
     """
     R = p.ring
@@ -729,7 +740,7 @@ def rs_diff(p, x):
     Parameters
     ==========
 
-    x : :class:`PolyElement` with respect to which ``p`` is differentiated.
+    x : :class:`~.PolyElement` with respect to which ``p`` is differentiated.
 
     Examples
     ========
@@ -761,7 +772,7 @@ def rs_integrate(p, x):
     Parameters
     ==========
 
-    x : :class:`PolyElement` with respect to which ``p`` is integrated.
+    x : :class:`~.PolyElement` with respect to which ``p`` is integrated.
 
     Examples
     ========
@@ -802,9 +813,9 @@ def rs_fun(p, f, *args):
     Parameters
     ==========
 
-    p : :class:`PolyElement` The multivariate series to be expanded.
+    p : :class:`~.PolyElement` The multivariate series to be expanded.
     f : `ring\_series` function to be applied on `p`.
-    args[-2] : :class:`PolyElement` with respect to which, the series is to be expanded.
+    args[-2] : :class:`~.PolyElement` with respect to which, the series is to be expanded.
     args[-1] : Required order of the expanded series.
 
     Examples
@@ -831,7 +842,7 @@ def rs_fun(p, f, *args):
     else:
         x1 = _x
         p1 = p
-    if isinstance(f, string_types):
+    if isinstance(f, str):
         q = getattr(x1, f)(*args1)
     else:
         q = f(x1, *args1)
@@ -921,7 +932,7 @@ def rs_nth_root(p, n, x, prec):
         The polynomial to computer the root of.
     n : integer
         The order of the root to be computed.
-    x : :class:`PolyElement`
+    x : :class:`~.PolyElement`
     prec : integer
         Order of the expanded series.
 
@@ -1266,16 +1277,16 @@ def rs_asin(p, x, prec):
 
 def _tan1(p, x, prec):
     r"""
-    Helper function of `rs\_tan`.
+    Helper function of :func:`rs_tan`.
 
     Return the series expansion of tan of a univariate series using Newton's
     method. It takes advantage of the fact that series expansion of atan is
     easier than that of tan.
 
-    Consider `f(x) = y - atan(x)`
+    Consider `f(x) = y - \arctan(x)`
     Let r be a root of f(x) found using Newton's method.
     Then `f(r) = 0`
-    Or `y  = atan(x)` where `x = tan(y)` as required.
+    Or `y = \arctan(x)` where `x = \tan(y)` as required.
     """
     R = p.ring
     p1 = R(0)
@@ -1526,7 +1537,7 @@ def rs_cos(p, x, prec):
 
 def rs_cos_sin(p, x, prec):
     r"""
-    Return the tuple `(rs\_cos(p, x, prec)`, `rs\_sin(p, x, prec))`.
+    Return the tuple ``(rs_cos(p, x, prec)`, `rs_sin(p, x, prec))``.
 
     Is faster than calling rs_cos and rs_sin separately
     """
@@ -1663,7 +1674,7 @@ def rs_cosh(p, x, prec):
 
 def _tanh(p, x, prec):
     r"""
-    Helper function of `rs\_tanh`
+    Helper function of :func:`rs_tanh`
 
     Return the series expansion of tanh of a univariate series using Newton's
     method. It takes advantage of the fact that series expansion of atanh is
@@ -1814,7 +1825,7 @@ def rs_compose_add(p1, p2):
     """
     R = p1.ring
     x = R.gens[0]
-    prec = p1.degree() * p2.degree() + 1
+    prec = p1.degree()*p2.degree() + 1
     np1 = rs_newton(p1, x, prec)
     np1e = rs_hadamard_exp(np1)
     np2 = rs_newton(p2, x, prec)
@@ -1826,7 +1837,7 @@ def rs_compose_add(p1, p2):
     q = rs_exp(q, x, prec)
     q = _invert_monoms(q)
     q = q.primitive()[1]
-    dp = p1.degree() * p2.degree() - q.degree()
+    dp = p1.degree()*p2.degree() - q.degree()
     # `dp` is the multiplicity of the zeroes of the resultant;
     # these zeroes are missed in this computation so they are put here.
     # if p1 and p2 are monic irreducible polynomials,

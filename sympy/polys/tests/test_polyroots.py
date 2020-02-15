@@ -14,9 +14,8 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, slow
-from sympy.utilities.randtest import verify_numerically
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
+from sympy.testing.randtest import verify_numerically
 import mpmath
 
 
@@ -73,6 +72,16 @@ def test_roots_quadratic():
         f = Poly(_a*x**2 + _b*x + _c)
         roots = roots_quadratic(f)
         assert roots == _nsort(roots)
+
+
+def test_issue_7724():
+    eq = Poly(x**4*I + x**2 + I, x)
+    assert roots(eq) == {
+        sqrt(I/2 + sqrt(5)*I/2): 1,
+        sqrt(-sqrt(5)*I/2 + I/2): 1,
+        -sqrt(I/2 + sqrt(5)*I/2): 1,
+        -sqrt(-sqrt(5)*I/2 + I/2): 1}
+
 
 def test_issue_8438():
     p = Poly([1, y, -2, -3], x).as_expr()
@@ -477,6 +486,10 @@ def test_roots0():
 
     assert roots(x**4 - 1, x, filter='Z', multiple=True) == [-S.One, S.One]
     assert roots(x**4 - 1, x, filter='I', multiple=True) == [I, -I]
+
+    ar, br = symbols('a, b', real=True)
+    p = x**2*(ar-br)**2 + 2*x*(br-ar) + 1
+    assert roots(p, x, filter='R') == {1/(ar - br): 2}
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []

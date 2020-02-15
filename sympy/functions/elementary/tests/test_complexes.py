@@ -7,7 +7,7 @@ from sympy import (
     FunctionMatrix, Lambda, Derivative)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -524,10 +524,10 @@ def test_Abs_properties():
     assert Abs(f).is_extended_nonnegative is True
 
     z = Symbol('z', complex=True, zero=False)
-    assert Abs(z).is_real is None
+    assert Abs(z).is_real is True # since complex implies finite
     assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
-    assert Abs(z).is_positive is None
+    assert Abs(z).is_positive is True
     assert Abs(z).is_extended_positive is True
     assert Abs(z).is_zero is False
 

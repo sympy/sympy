@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, range, iterable
+from sympy.core.compatibility import reduce, iterable
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
@@ -45,12 +45,16 @@ class IntegralTransform(Function):
     This class represents unevaluated transforms.
 
     To implement a concrete transform, derive from this class and implement
-    the _compute_transform(f, x, s, **hints) and _as_integral(f, x, s)
-    functions. If the transform cannot be computed, raise IntegralTransformError.
+    the ``_compute_transform(f, x, s, **hints)`` and ``_as_integral(f, x, s)``
+    functions. If the transform cannot be computed, raise :obj:`IntegralTransformError`.
 
-    Also set cls._name.
+    Also set ``cls._name``. For instance,
 
-    Implement self._collapse_extra if your function returns more than just a
+    >>> from sympy.integrals.transforms import LaplaceTransform
+    >>> LaplaceTransform._name
+    'Laplace'
+
+    Implement ``self._collapse_extra`` if your function returns more than just a
     number and possibly a convergence condition.
     """
 
@@ -733,7 +737,10 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             a, b, C, e, fac = _rewrite_gamma(g, s, strip[0], strip[1])
         except IntegralTransformError:
             continue
-        G = meijerg(a, b, C/x**e)
+        try:
+            G = meijerg(a, b, C/x**e)
+        except ValueError:
+            continue
         if as_meijerg:
             h = G
         else:
@@ -1294,11 +1301,14 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
 
 @_noconds_(True)
 def _fourier_transform(f, x, k, a, b, name, simplify=True):
-    """
+    r"""
     Compute a general Fourier-type transform
-        F(k) = a int_-oo^oo exp(b*I*x*k) f(x) dx.
 
-    For suitable choice of a and b, this reduces to the standard Fourier
+    .. math::
+
+        F(k) = a \int_{-\infty}^{\infty} e^{bixk} f(x)\, dx.
+
+    For suitable choice of *a* and *b*, this reduces to the standard Fourier
     and inverse Fourier transforms.
     """
     from sympy import exp, I

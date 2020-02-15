@@ -56,16 +56,16 @@ from sympy import (
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable, PY3
+from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
-from sympy import MatrixSymbol
+from sympy import MatrixSymbol, Matrix
 
 def _epsilon_eq(a, b):
-    for x, y in zip(a, b):
-        if abs(x - y) > 1e-10:
+    for u, v in zip(a, b):
+        if abs(u - v) > 1e-10:
             return False
     return True
 
@@ -352,7 +352,7 @@ def test_Poly__new__():
 
 
 def test_Poly__args():
-    assert Poly(x**2 + 1).args == (x**2 + 1,)
+    assert Poly(x**2 + 1).args == (x**2 + 1, x)
 
 
 def test_Poly__gens():
@@ -2032,8 +2032,10 @@ def test_terms_gcd():
         sin(x*(y + 1))
 
     eq = Eq(2*x, 2*y + 2*z*y)
-    assert terms_gcd(eq) == eq
+    assert terms_gcd(eq) == Eq(2*x, 2*y*(z + 1))
     assert terms_gcd(eq, deep=True) == Eq(2*x, 2*y*(z + 1))
+
+    raises(TypeError, lambda: terms_gcd(x < 2))
 
 
 def test_trunc():
@@ -3226,17 +3228,11 @@ def test_keep_coeff():
     assert _keep_coeff(x + 1, S(2)) == u
 
 
-# @XFAIL
-# Seems to pass on Python 3.X, but not on Python 2.7
 def test_poly_matching_consistency():
     # Test for this issue:
     # https://github.com/sympy/sympy/issues/5514
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
-
-
-if not PY3:
-    test_poly_matching_consistency = XFAIL(test_poly_matching_consistency)
 
 
 @XFAIL
@@ -3313,3 +3309,13 @@ def test_issue_15669():
     expr = (16*x**3/(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**2 -
         2*2**Rational(4, 5)*x*(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**Rational(3, 5) + 10*x)
     assert factor(expr, deep=True) == x*(x**2 + 2)
+
+def test_issue_17988():
+    x = Symbol('x')
+    p = poly(x - 1)
+    M = Matrix([[poly(x + 1), poly(x + 1)]])
+    assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
+
+def test_issue_18205():
+    assert cancel((2 + I)*(3 - I)) == 7 + I
+    assert cancel((2 + I)*(2 - I)) == 5

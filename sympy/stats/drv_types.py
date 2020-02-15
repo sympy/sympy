@@ -3,6 +3,7 @@
 Contains
 ========
 Geometric
+Hermite
 Logarithmic
 NegativeBinomial
 Poisson
@@ -17,13 +18,14 @@ from __future__ import print_function, division
 import random
 
 from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
-                   hyper, binomial, Piecewise, floor, besseli, sqrt)
+                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
 
 __all__ = ['Geometric',
+'Hermite',
 'Logarithmic',
 'NegativeBinomial',
 'Poisson',
@@ -82,7 +84,7 @@ def Geometric(name, p):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -112,6 +114,91 @@ def Geometric(name, p):
 
     """
     return rv(name, GeometricDistribution, p)
+
+
+#-------------------------------------------------------------------------------
+# Hermite distribution ---------------------------------------------------------
+
+
+class HermiteDistribution(SingleDiscreteDistribution):
+    _argnames = ('a1', 'a2')
+    set = S.Naturals0
+
+    @staticmethod
+    def check(a1, a2):
+        _value_check(a1.is_nonnegative, 'Parameter a1 must be >= 0.')
+        _value_check(a2.is_nonnegative, 'Parameter a2 must be >= 0.')
+
+    def pdf(self, k):
+        a1, a2 = self.a1, self.a2
+        term1 = exp(-(a1 + a2))
+        j = Dummy("j", integer=True)
+        num = a1**(k - 2*j) * a2**j
+        den = factorial(k - 2*j) * factorial(j)
+        return term1 * Sum(num/den, (j, 0, k//2)).doit()
+
+    def _moment_generating_function(self, t):
+        a1, a2 = self.a1, self.a2
+        term1 = a1 * (exp(t) - 1)
+        term2 = a2 * (exp(2*t) - 1)
+        return exp(term1 + term2)
+
+    def _characteristic_function(self, t):
+        a1, a2 = self.a1, self.a2
+        term1 = a1 * (exp(I*t) - 1)
+        term2 = a2 * (exp(2*I*t) - 1)
+        return exp(term1 + term2)
+
+def Hermite(name, a1, a2):
+    r"""
+    Create a discrete random variable with a Hermite distribution.
+
+    The density of the Hermite distribution is given by
+
+    .. math::
+        f(x):= e^{-a_1 -a_2}\sum_{j=0}^{\left \lfloor x/2 \right \rfloor}
+                    \frac{a_{1}^{x-2j}a_{2}^{j}}{(x-2j)!j!}
+
+    Parameters
+    ==========
+
+    a1: A Positive number greater than equal to 0.
+    a2: A Positive number greater than equal to 0.
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Hermite, density, E, variance
+    >>> from sympy import Symbol
+
+    >>> a1 = Symbol("a1", positive=True)
+    >>> a2 = Symbol("a2", positive=True)
+    >>> x = Symbol("x")
+
+    >>> H = Hermite("H", a1=5, a2=4)
+
+    >>> density(H)(2)
+    33*exp(-9)/2
+
+    >>> E(H)
+    13
+
+    >>> variance(H)
+    21
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hermite_distribution
+
+    """
+
+    return rv(name, HermiteDistribution, a1, a2)
 
 
 #-------------------------------------------------------------------------------
@@ -160,7 +247,7 @@ def Logarithmic(name, p):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -245,7 +332,7 @@ def NegativeBinomial(name, r, p):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -337,7 +424,7 @@ def Poisson(name, lamda):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -423,7 +510,7 @@ def Skellam(name, mu1, mu2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -505,7 +592,7 @@ def YuleSimon(name, rho):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -579,7 +666,7 @@ def Zeta(name, s):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========

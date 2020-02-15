@@ -3,11 +3,10 @@ from __future__ import print_function, division
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.numbers import oo, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
@@ -20,7 +19,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import cartes
 
 
-class Rationals(with_metaclass(Singleton, Set)):
+class Rationals(Set, metaclass=Singleton):
     """
     Represents the rational numbers. This set is also available as
     the Singleton, S.Rationals.
@@ -40,6 +39,7 @@ class Rationals(with_metaclass(Singleton, Set)):
     _inf = S.NegativeInfinity
     _sup = S.Infinity
     is_empty = False
+    is_finite_set = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -65,10 +65,10 @@ class Rationals(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return self
+        return S.Reals
 
 
-class Naturals(with_metaclass(Singleton, Set)):
+class Naturals(Set, metaclass=Singleton):
     """
     Represents the natural numbers (or counting numbers) which are all
     positive integers starting from 1. This set is also available as
@@ -101,6 +101,7 @@ class Naturals(with_metaclass(Singleton, Set)):
     _inf = S.One
     _sup = S.Infinity
     is_empty = False
+    is_finite_set = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -109,6 +110,12 @@ class Naturals(with_metaclass(Singleton, Set)):
             return True
         elif other.is_integer is False or other.is_positive is False:
             return False
+
+    def _eval_is_subset(self, other):
+        return Range(1, oo).is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return Range(1, oo).is_superset(other)
 
     def __iter__(self):
         i = self._inf
@@ -136,7 +143,6 @@ class Naturals0(Naturals):
     Integers : also includes the negative integers
     """
     _inf = S.Zero
-    is_empty = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -146,8 +152,14 @@ class Naturals0(Naturals):
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
 
+    def _eval_is_subset(self, other):
+        return Range(oo).is_subset(other)
 
-class Integers(with_metaclass(Singleton, Set)):
+    def _eval_is_superset(self, other):
+        return Range(oo).is_superset(other)
+
+
+class Integers(Set, metaclass=Singleton):
     """
     Represents all integers: positive, negative and zero. This set is also
     available as the Singleton, S.Integers.
@@ -180,6 +192,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     is_iterable = True
     is_empty = False
+    is_finite_set = False
 
     def _contains(self, other):
         if not isinstance(other, Expr):
@@ -210,8 +223,14 @@ class Integers(with_metaclass(Singleton, Set)):
         from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), -oo < x, x < oo)
 
+    def _eval_is_subset(self, other):
+        return Range(-oo, oo).is_subset(other)
 
-class Reals(with_metaclass(Singleton, Interval)):
+    def _eval_is_superset(self, other):
+        return Range(-oo, oo).is_superset(other)
+
+
+class Reals(Interval, metaclass=Singleton):
     """
     Represents all real numbers
     from negative infinity to positive infinity,
@@ -278,7 +297,7 @@ class ImageSet(Set):
     False
 
     >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
-    {1, 4, 9}
+    FiniteSet(1, 4, 9)
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
@@ -300,7 +319,7 @@ class ImageSet(Set):
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
     >>> dom = Interval(-1, 1)
     >>> dom.intersect(solutions)
-    {0}
+    FiniteSet(0)
 
     See Also
     ========
@@ -411,7 +430,6 @@ class ImageSet(Set):
         def get_equations(expr, candidate):
             '''Find the equations relating symbols in expr and candidate.'''
             queue = [(expr, candidate)]
-            equations = []
             for e, c in queue:
                 if not isinstance(e, Tuple):
                     yield Eq(e, c)
@@ -534,9 +552,9 @@ class Range(Set):
         >>> Range(3)[:0]
         Range(0, 0, 1)
         >>> Range(3).intersect(Interval(4, oo))
-        EmptySet()
+        EmptySet
         >>> Range(3).intersect(Range(4, oo))
-        EmptySet()
+        EmptySet
 
     Range will accept symbolic arguments but has very limited support
     for doing anything other than displaying the Range:
@@ -565,7 +583,7 @@ class Range(Set):
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if isinstance(args[0], range if PY3 else xrange):
+            if isinstance(args[0], range):
                 raise TypeError(
                     'use sympify(%s) to convert range to Range' % args[0])
 
@@ -660,10 +678,21 @@ class Range(Set):
                 _ = self.size  # validate
             except ValueError:
                 return
-        ref = self.start if self.start.is_finite else self.stop
-        if (ref - other) % self.step:  # off sequence
+        if self.start.is_finite:
+            ref = self.start
+        elif self.stop.is_finite:
+            ref = self.stop
+        else:  # both infinite; step is +/- 1 (enforced by __new__)
+            return S.true
+        if self.size == 1:
+            return Eq(other, self[0])
+        res = (ref - other) % self.step
+        if res == S.Zero:
+            return And(other >= self.inf, other <= self.sup)
+        elif res.is_Integer:  # off sequence
             return S.false
-        return _sympify(other >= self.inf and other <= self.sup)
+        else:  # symbolic/unsimplified residue modulo step
+            return None
 
     def __iter__(self):
         if self.has(Symbol):
@@ -709,6 +738,7 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
+        infinite = "slicing not possible on range with infinite start"
         # if we had to take every other element in the following
         # oo, ..., 6, 4, 2, 0
         # we might get oo, ..., 4, 0 or oo, ..., 6, 2
@@ -731,6 +761,12 @@ class Range(Set):
                     raise ValueError(zerostep)
                 step = i.step or 1
                 ss = step*self.step
+                #---------------------
+                # handle infinite Range
+                #   i.e. Range(-oo, oo) or Range(oo, -oo, -1)
+                # --------------------
+                if self.start.is_infinite and self.stop.is_infinite:
+                    raise ValueError(infinite)
                 #---------------------
                 # handle infinite on right
                 #   e.g. Range(0, oo) or Range(0, -oo, -1)
@@ -875,17 +911,15 @@ class Range(Set):
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
         from sympy.functions.elementary.integers import floor
-        return And(
-            Eq(x, floor(x)),
-            x >= self.inf if self.inf in self else x > self.inf,
-            x <= self.sup if self.sup in self else x < self.sup)
+        if self.size == 1:
+            return Eq(x, self[0])
+        else:
+            return And(
+                Eq(x, floor(x)),
+                x >= self.inf if self.inf in self else x > self.inf,
+                x <= self.sup if self.sup in self else x < self.sup)
 
-
-if PY3:
-    converter[range] = lambda r: Range(r.start, r.stop, r.step)
-else:
-    converter[xrange] = lambda r: Range(*r.__reduce__()[1])
-
+converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
     """
@@ -922,7 +956,7 @@ def normalize_theta_set(theta):
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
     Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
-    {0, pi}
+    FiniteSet(0, pi)
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
@@ -1201,7 +1235,7 @@ class ComplexRegion(Set):
         >>> from sympy import Interval, ComplexRegion
         >>> unit = Interval(0,1)
         >>> ComplexRegion.from_real(unit)
-        CartesianComplexRegion(ProductSet(Interval(0, 1), {0}))
+        CartesianComplexRegion(ProductSet(Interval(0, 1), FiniteSet(0)))
 
         """
         if not sets.is_subset(S.Reals):
@@ -1223,25 +1257,28 @@ class ComplexRegion(Set):
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
-            for element in self.psets:
-                if And(element.args[0]._contains(re),
-                        element.args[1]._contains(im)):
-                    return True
-            return False
+            return fuzzy_or(fuzzy_and([
+                pset.args[0]._contains(re),
+                pset.args[1]._contains(im)])
+                for pset in self.psets)
 
         # self in polar form
         elif self.polar:
+            if other.is_zero:
+                # ignore undefined complex argument
+                return fuzzy_or(pset.args[0]._contains(S.Zero)
+                    for pset in self.psets)
             if isTuple:
                 r, theta = other
-            elif other.is_zero:
-                r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)
-            for element in self.psets:
-                if And(element.args[0]._contains(r),
-                        element.args[1]._contains(theta)):
-                    return True
-            return False
+            if theta.is_real and theta.is_number:
+                # angles in psets are normalized to [0, 2pi)
+                theta %= 2*S.Pi
+                return fuzzy_or(fuzzy_and([
+                    pset.args[0]._contains(r),
+                    pset.args[1]._contains(theta)])
+                    for pset in self.psets)
 
 
 class CartesianComplexRegion(ComplexRegion):
@@ -1355,7 +1392,7 @@ class PolarComplexRegion(ComplexRegion):
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 
 
-class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
+class Complexes(CartesianComplexRegion, metaclass=Singleton):
     """
     The Set of all complex numbers
 
@@ -1375,6 +1412,9 @@ class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
     ComplexRegion
 
     """
+
+    is_empty = False
+    is_finite_set = False
 
     # Override property from superclass since Complexes has no args
     sets = ProductSet(S.Reals, S.Reals)

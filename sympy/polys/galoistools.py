@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS, range
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
 from sympy.ntheory import factorint
 from sympy.polys.polyconfig import query
@@ -635,7 +635,7 @@ def gf_sub_mul(f, g, h, p, K):
 
 def gf_expand(F, p, K):
     """
-    Expand results of :func:`factor` in ``GF(p)[x]``.
+    Expand results of :func:`~.factor` in ``GF(p)[x]``.
 
     Examples
     ========

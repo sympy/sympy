@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
 from sympy.core.decorators import _sympifyit
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
-from .sets import Set, tfn
+from .sets import Set
 
 
 class PowerSet(Set):
@@ -43,14 +43,14 @@ class PowerSet(Set):
     A power set of a finite set:
 
     >>> PowerSet(FiniteSet(1, 2, 3))
-    PowerSet({1, 2, 3})
+    PowerSet(FiniteSet(1, 2, 3))
 
     A power set of an empty set:
 
     >>> PowerSet(S.EmptySet)
-    PowerSet(EmptySet())
+    PowerSet(EmptySet)
     >>> PowerSet(PowerSet(S.EmptySet))
-    PowerSet(PowerSet(EmptySet()))
+    PowerSet(PowerSet(EmptySet))
 
     A power set of an infinite set:
 
@@ -60,7 +60,9 @@ class PowerSet(Set):
     Evaluating the power set of a finite set to its explicit form:
 
     >>> PowerSet(FiniteSet(1, 2, 3)).rewrite(FiniteSet)
-    {EmptySet(), {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}
+    FiniteSet(FiniteSet(1), FiniteSet(1, 2), FiniteSet(1, 3),
+            FiniteSet(1, 2, 3), FiniteSet(2), FiniteSet(2, 3),
+            FiniteSet(3), EmptySet)
 
     References
     ==========
@@ -69,7 +71,10 @@ class PowerSet(Set):
 
     .. [2] https://en.wikipedia.org/wiki/Axiom_of_power_set
     """
-    def __new__(cls, arg, evaluate=global_evaluate[0]):
+    def __new__(cls, arg, evaluate=None):
+        if evaluate is None:
+            evaluate=global_parameters.evaluate
+
         arg = _sympify(arg)
 
         if not isinstance(arg, Set):

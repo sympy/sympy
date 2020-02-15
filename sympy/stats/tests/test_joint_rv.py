@@ -4,11 +4,11 @@ from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplif
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density
+from sympy.stats import density, median
 from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV, MultivariateNormalDistribution
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 x, y, z, a, b = symbols('x y z a b')
 
@@ -33,6 +33,7 @@ def test_Normal():
     sigma = MatrixSymbol('sigma', n, n)
     X = Normal('X', mu, sigma)
     assert density(X) == MultivariateNormalDistribution(mu, sigma)
+    raises (NotImplementedError, lambda: median(m))
     # Below tests should work after issue #17267 is resolved
     # assert E(X) == mu
     # assert variance(X) == sigma
@@ -215,9 +216,9 @@ def test_JointPSpace_marginal_distribution():
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**Rational(5, 2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
+
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
-
 
 def test_JointRV():
     from sympy.stats.joint_rv import JointDistributionHandmade

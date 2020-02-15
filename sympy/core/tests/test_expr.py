@@ -5,21 +5,16 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt, cot)
+                   integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import range, round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
-
-# replace 3 instances with int when PY2 is dropped and
-# delete this line
-_rint = int if PY3 else float
 
 class DummyNumber(object):
     """
@@ -132,9 +127,9 @@ all_objs = basic_objs + [
 
 
 def dotest(s):
-    for x in all_objs:
-        for y in all_objs:
-            s(x, y)
+    for xo in all_objs:
+        for yo in all_objs:
+            s(xo, yo)
     return True
 
 
@@ -148,6 +143,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
+        del x
     assert dotest(j)
 
 
@@ -162,6 +158,188 @@ def test_ibasic():
         x = a
         x /= b
     assert dotest(s)
+
+
+class NonBasic(object):
+    '''This class represents an object that knows how to implement binary
+    operations like +, -, etc with Expr but is not a subclass of Basic itself.
+    The NonExpr subclass below does subclass Basic but not Expr.
+
+    For both NonBasic and NonExpr it should be possible for them to override
+    Expr.__add__ etc because Expr.__add__ should be returning NotImplemented
+    for non Expr classes. Otherwise Expr.__add__ would create meaningless
+    objects like Add(Integer(1), FiniteSet(2)) and it wouldn't be possible for
+    other classes to override these operations when interacting with Expr.
+    '''
+    def __add__(self, other):
+        return SpecialOp('+', self, other)
+
+    def __radd__(self, other):
+        return SpecialOp('+', other, self)
+
+    def __sub__(self, other):
+        return SpecialOp('-', self, other)
+
+    def __rsub__(self, other):
+        return SpecialOp('-', other, self)
+
+    def __mul__(self, other):
+        return SpecialOp('*', self, other)
+
+    def __rmul__(self, other):
+        return SpecialOp('*', other, self)
+
+    def __div__(self, other):
+        return SpecialOp('/', self, other)
+
+    def __rdiv__(self, other):
+        return SpecialOp('/', other, self)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    def __floordiv__(self, other):
+        return SpecialOp('//', self, other)
+
+    def __rfloordiv__(self, other):
+        return SpecialOp('//', other, self)
+
+    def __mod__(self, other):
+        return SpecialOp('%', self, other)
+
+    def __rmod__(self, other):
+        return SpecialOp('%', other, self)
+
+    def __divmod__(self, other):
+        return SpecialOp('divmod', self, other)
+
+    def __rdivmod__(self, other):
+        return SpecialOp('divmod', other, self)
+
+    def __pow__(self, other):
+        return SpecialOp('**', self, other)
+
+    def __rpow__(self, other):
+        return SpecialOp('**', other, self)
+
+    def __lt__(self, other):
+        return SpecialOp('<', self, other)
+
+    def __gt__(self, other):
+        return SpecialOp('>', self, other)
+
+    def __le__(self, other):
+        return SpecialOp('<=', self, other)
+
+    def __ge__(self, other):
+        return SpecialOp('>=', self, other)
+
+
+class NonExpr(Basic, NonBasic):
+    '''Like NonBasic above except this is a subclass of Basic but not Expr'''
+    pass
+
+
+class SpecialOp(Basic):
+    '''Represents the results of operations with NonBasic and NonExpr'''
+    def __new__(cls, op, arg1, arg2):
+        return Basic.__new__(cls, op, arg1, arg2)
+
+
+class NonArithmetic(Basic):
+    '''Represents a Basic subclass that does not support arithmetic operations'''
+    pass
+
+
+def test_cooperative_operations():
+    '''Tests that Expr uses binary operations cooperatively.
+
+    In particular it should be possible for non-Expr classes to override
+    binary operators like +, - etc when used with Expr instances. This should
+    work for non-Expr classes whether they are Basic subclasses or not. Also
+    non-Expr classes that do not define binary operators with Expr should give
+    TypeError.
+    '''
+    # A bunch of instances of Expr subclasses
+    exprs = [
+        Expr(),
+        S.Zero,
+        S.One,
+        S.Infinity,
+        S.NegativeInfinity,
+        S.ComplexInfinity,
+        S.Half,
+        Float(0.5),
+        Integer(2),
+        Symbol('x'),
+        Mul(2, Symbol('x')),
+        Add(2, Symbol('x')),
+        Pow(2, Symbol('x')),
+    ]
+
+    for e in exprs:
+        # Test that these classes can override arithmetic operations in
+        # combination with various Expr types.
+        for ne in [NonBasic(), NonExpr()]:
+
+            results = [
+                (ne + e, ('+', ne, e)),
+                (e + ne, ('+', e, ne)),
+                (ne - e, ('-', ne, e)),
+                (e - ne, ('-', e, ne)),
+                (ne * e, ('*', ne, e)),
+                (e * ne, ('*', e, ne)),
+                (ne / e, ('/', ne, e)),
+                (e / ne, ('/', e, ne)),
+                (ne // e, ('//', ne, e)),
+                (e // ne, ('//', e, ne)),
+                (ne % e, ('%', ne, e)),
+                (e % ne, ('%', e, ne)),
+                (divmod(ne, e), ('divmod', ne, e)),
+                (divmod(e, ne), ('divmod', e, ne)),
+                (ne ** e, ('**', ne, e)),
+                (e ** ne, ('**', e, ne)),
+                (e < ne, ('>', ne, e)),
+                (ne < e, ('<', ne, e)),
+                (e > ne, ('<', ne, e)),
+                (ne > e, ('>', ne, e)),
+                (e <= ne, ('>=', ne, e)),
+                (ne <= e, ('<=', ne, e)),
+                (e >= ne, ('<=', ne, e)),
+                (ne >= e, ('>=', ne, e)),
+            ]
+
+            for res, args in results:
+                assert type(res) is SpecialOp and res.args == args
+
+        # These classes do not support binary operators with Expr. Every
+        # operation should raise in combination with any of the Expr types.
+        for na in [NonArithmetic(), object()]:
+
+            raises(TypeError, lambda : e + na)
+            raises(TypeError, lambda : na + e)
+            raises(TypeError, lambda : e - na)
+            raises(TypeError, lambda : na - e)
+            raises(TypeError, lambda : e * na)
+            raises(TypeError, lambda : na * e)
+            raises(TypeError, lambda : e / na)
+            raises(TypeError, lambda : na / e)
+            raises(TypeError, lambda : e // na)
+            raises(TypeError, lambda : na // e)
+            raises(TypeError, lambda : e % na)
+            raises(TypeError, lambda : na % e)
+            raises(TypeError, lambda : divmod(e, na))
+            raises(TypeError, lambda : divmod(na, e))
+            raises(TypeError, lambda : e ** na)
+            raises(TypeError, lambda : na ** e)
+            raises(TypeError, lambda : e > na)
+            raises(TypeError, lambda : na > e)
+            raises(TypeError, lambda : e < na)
+            raises(TypeError, lambda : na < e)
+            raises(TypeError, lambda : e >= na)
+            raises(TypeError, lambda : na >= e)
+            raises(TypeError, lambda : e <= na)
+            raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
@@ -215,13 +393,14 @@ def test_relational_assumptions():
     assert (m4 >= 0) is S.false
 
 
-def test_relational_noncommutative():
-    from sympy import Lt, Gt, Le, Ge
-    A, B = symbols('A,B', commutative=False)
-    assert (A < B) == Lt(A, B)
-    assert (A <= B) == Le(A, B)
-    assert (A > B) == Gt(A, B)
-    assert (A >= B) == Ge(A, B)
+# See https://github.com/sympy/sympy/issues/17708
+#def test_relational_noncommutative():
+#    from sympy import Lt, Gt, Le, Ge
+#    A, B = symbols('A,B', commutative=False)
+#    assert (A < B) == Lt(A, B)
+#    assert (A <= B) == Le(A, B)
+#    assert (A > B) == Gt(A, B)
+#    assert (A >= B) == Ge(A, B)
 
 
 def test_basic_nostr():
@@ -333,14 +512,14 @@ def test_atoms():
 
     assert sin(oo).atoms(oo) == set()
 
-    assert Poly(0, x).atoms() == {S.Zero}
-    assert Poly(1, x).atoms() == {S.One}
+    assert Poly(0, x).atoms() == {S.Zero, x}
+    assert Poly(1, x).atoms() == {S.One, x}
 
     assert Poly(x, x).atoms() == {x}
-    assert Poly(x, x, y).atoms() == {x}
+    assert Poly(x, x, y).atoms() == {x, y}
     assert Poly(x + y, x, y).atoms() == {x, y}
-    assert Poly(x + y, x, y, z).atoms() == {x, y}
-    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y}
+    assert Poly(x + y, x, y, z).atoms() == {x, y, z}
+    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y, z}
 
     assert (I*pi).atoms(NumberSymbol) == {pi}
     assert (I*pi).atoms(NumberSymbol, I) == \
@@ -932,6 +1111,9 @@ def test_as_poly_as_expr():
 
     assert p.as_poly() == p
 
+    raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
+    raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
+
 
 def test_nonzero():
     assert bool(S.Zero) is False
@@ -1341,7 +1523,7 @@ def test_issue_5226():
 def test_free_symbols():
     # free_symbols should return the free symbols of an object
     assert S.One.free_symbols == set()
-    assert (x).free_symbols == {x}
+    assert x.free_symbols == {x}
     assert Integral(x, (x, 1, y)).free_symbols == {y}
     assert (-Integral(x, (x, 1, y))).free_symbols == {y}
     assert meter.free_symbols == set()
@@ -1577,7 +1759,7 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-    assert Poly(3,x).is_constant() is True
+    assert Poly(3, x).is_constant() is True
 
 
 def test_equals():
@@ -1765,14 +1947,14 @@ def test_round():
     for i in range(2):
         f = float(i)
         # 2 args
-        assert all(type(round(i, p)) is _rint for p in (-1, 0, 1))
+        assert all(type(round(i, p)) is int for p in (-1, 0, 1))
         assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
         assert all(type(round(f, p)) is float for p in (-1, 0, 1))
         assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
         # 1 arg (p is None)
-        assert type(round(i)) is _rint
+        assert type(round(i)) is int
         assert S(i).round().is_Integer
-        assert type(round(f)) is _rint
+        assert type(round(f)) is int
         assert S(f).round().is_Integer
 
 
@@ -1901,3 +2083,24 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+def test_non_string_equality():
+    # Expressions should not compare equal to strings
+    x = symbols('x')
+    one = sympify(1)
+    assert (x == 'x') is False
+    assert (x != 'x') is True
+    assert (one == '1') is False
+    assert (one != '1') is True
+    assert (x + 1 == 'x + 1') is False
+    assert (x + 1 != 'x + 1') is True
+
+    # Make sure == doesn't try to convert the resulting expression to a string
+    # (e.g., by calling sympify() instead of _sympify())
+
+    class BadRepr(object):
+        def __repr__(self):
+            raise RuntimeError
+
+    assert (x == BadRepr()) is False
+    assert (x != BadRepr()) is True

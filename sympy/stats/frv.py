@@ -18,6 +18,7 @@ from sympy import (Basic, Symbol, cacheit, sympify, Mul,
 from sympy.core.containers import Dict
 from sympy.core.logic import Logic
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
@@ -191,7 +192,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def check(*args):
         pass
 
-    @property
+    @property # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:
@@ -388,7 +389,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     def pmf(self, expr):
         return self.distribution.pmf(expr)
 
-    @property
+    @property # type: ignore
     @cacheit
     def _density(self):
         return dict((FiniteSet((self.symbol, val)), prob)
@@ -453,6 +454,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             func = self.pmf(k) * k if cond != True else self.pmf(k) * expr
             return Sum(Piecewise((func, cond), (S.Zero, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
+
+        expr = _sympify(expr)
         expr = rv_subs(expr, rvs)
         return FinitePSpace(self.domain, self.distribution).compute_expectation(expr, rvs, **kwargs)
 
@@ -488,7 +491,7 @@ class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
 
-    @property
+    @property  # type: ignore
     @cacheit
     def _density(self):
         proditer = product(*[iter(space._density.items())
@@ -501,7 +504,7 @@ class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
             d[elem] = d.get(elem, S.Zero) + prob
         return Dict(d)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def density(self):
         return Dict(self._density)

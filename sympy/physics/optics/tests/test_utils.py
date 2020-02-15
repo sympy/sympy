@@ -11,9 +11,7 @@ from sympy.geometry.point import Point3D
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
 
-from sympy.core import S
-
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 ae = lambda a, b, n: comp(a, b, 10**-n)

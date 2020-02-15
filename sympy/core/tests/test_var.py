@@ -1,5 +1,5 @@
 from sympy import Symbol, var, Function, FunctionClass
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_var():
     ns = {"var": var, "raises": raises}
@@ -19,30 +19,8 @@ def test_var():
     assert ns['fg'] == Symbol('fg')
 
 # check return value
-    assert v == ['d', 'e', 'fg']
-
-# make z1 with call-depth = 1
-
-def _make_z1():
-    eval("var('z1')", ns)
-
-# make z2 with call-depth = 2
-
-def __make_z2():
-    eval("var('z2')", ns)
-
-def _make_z2():
-    __make_z2()
-
-# see if var() really injects into global namespace
-    "raises(NameError, lambda: z1)"
-    _make_z1()
-    assert ns["z1"] == Symbol("z1")
-
-    "raises(NameError, lambda: z2)"
-    _make_z2()
-    assert ns["z2"] == Symbol("z2")
-
+    assert v != ['d', 'e', 'fg']
+    assert v == [Symbol('d'), Symbol('e'), Symbol('fg')]
 
 
 def test_var_return():
@@ -53,7 +31,6 @@ def test_var_return():
 
     assert v2 == Symbol('q')
     assert v3 == (Symbol('q'), Symbol('p'))
-
 
 
 def test_var_accepts_comma():
@@ -73,12 +50,12 @@ def test_var_keywords():
 
 
 def test_var_cls():
-    ns = {"var": var, "isinstance": isinstance, "Function": Function, "FunctionClass": FunctionClass}
-    f = eval("var('f', cls=Function)", ns)
+    ns = {"var": var, "Function": Function}
+    eval("var('f', cls=Function)", ns)
 
-    assert "isinstance(f, FunctionClass)"
+    assert isinstance(ns['f'], FunctionClass)
 
-    g, h = eval("var('g,h', cls=Function)", ns)
+    eval("var('g,h', cls=Function)", ns)
 
-    assert "isinstance(g, FunctionClass)"
-    assert "isinstance(h, FunctionClass)"
+    assert isinstance(ns['g'], FunctionClass)
+    assert isinstance(ns['h'], FunctionClass)

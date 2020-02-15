@@ -4,7 +4,7 @@ from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     Derivative, S)
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_simple_1():
@@ -146,7 +146,7 @@ def test_series2x():
     assert (1/(1 + 1/x**2)).nseries(x, 0, 6) == x**2 - x**4 + O(x**6, x)
 
 
-def test_bug2():  # 1/log(0) * log(0) problem
+def test_bug2():  # 1/log(0)*log(0) problem
     w = Symbol("w")
     e = (w**(-1) + w**(
         -log(3)*log(2)**(-1)))**(-1)*(3*w**(-log(3)*log(2)**(-1)) + 2*w**(-1))
@@ -366,12 +366,11 @@ def test_series2():
     w = Symbol("w", real=True)
     x = Symbol("x", real=True)
     e = w**(-2)*(w*exp(1/x - w) - w*exp(1/x))
-    assert e.nseries(w, n=4) == -exp(1/x) + w * exp(1/x) / 2 + O(w**2)
+    assert e.nseries(w, n=4) == -exp(1/x) + w*exp(1/x) / 2 + O(w**2)
 
 
 def test_series3():
     w = Symbol("w", real=True)
-    x = Symbol("x", real=True)
     e = w**(-6)*(w**3*tan(w) - w**3*sin(w))
     assert e.nseries(w, n=8) == Integer(1)/2 + O(w**2)
 
@@ -517,3 +516,7 @@ def test_issue_5925():
     sx = sqrt(x + z).series(z, 0, 1)
     sxy = sqrt(x + y + z).series(z, 0, 1)
     assert sxy.subs({x:1, y:2}) == sx.subs(x, 3)
+
+
+def test_exp_2():
+    assert exp(x**3).nseries(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 + x**12/24 + O(x**14)

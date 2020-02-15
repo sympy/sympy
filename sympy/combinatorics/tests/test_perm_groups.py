@@ -1,15 +1,14 @@
-from sympy.core.compatibility import range
 from sympy.combinatorics.perm_groups import (PermutationGroup,
     _orbit_transversal)
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
 from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.pytest import skip, XFAIL
+from sympy.testing.pytest import skip, XFAIL
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 from sympy.combinatorics.homomorphisms import is_isomorphic
 
 rmul = Permutation.rmul
@@ -996,6 +995,42 @@ def test_cyclic():
     G = AlternatingGroup(4)
     assert not G.is_cyclic
 
+    # Order less than 6
+    G = PermutationGroup(Permutation(0, 1, 2), Permutation(0, 2, 1))
+    assert G.is_cyclic
+    G = PermutationGroup(
+        Permutation(0, 1, 2, 3),
+        Permutation(0, 2)(1, 3)
+    )
+    assert G.is_cyclic
+    G = PermutationGroup(
+        Permutation(3),
+        Permutation(0, 1)(2, 3),
+        Permutation(0, 2)(1, 3),
+        Permutation(0, 3)(1, 2)
+    )
+    assert G.is_cyclic is False
+
+    # Order 15
+    G = PermutationGroup(
+        Permutation(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14),
+        Permutation(0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13)
+    )
+    assert G.is_cyclic
+
+    # Distinct prime orders
+    assert PermutationGroup._distinct_primes_lemma([3, 5]) is True
+    assert PermutationGroup._distinct_primes_lemma([5, 7]) is True
+    assert PermutationGroup._distinct_primes_lemma([2, 3]) is None
+    assert PermutationGroup._distinct_primes_lemma([3, 5, 7]) is None
+    assert PermutationGroup._distinct_primes_lemma([5, 7, 13]) is True
+
+    G = PermutationGroup(
+        Permutation(0, 1, 2, 3),
+        Permutation(0, 2)(1, 3))
+    assert G.is_cyclic
+    assert G._is_abelian
+
 
 def test_abelian_invariants():
     G = AbelianGroup(2, 3, 4)
@@ -1062,3 +1097,22 @@ def test_is_symmetric():
     a = Permutation(0, 1, 2, 3)
     b = Permutation(0, 3)(1, 2)
     assert PermutationGroup(a, b).is_symmetric == False
+
+def test_conjugacy_class():
+    S = SymmetricGroup(4)
+    x = Permutation(1, 2, 3)
+    C = set([Permutation(0, 1, 2, size = 4), Permutation(0, 1, 3),
+             Permutation(0, 2, 1, size = 4), Permutation(0, 2, 3),
+             Permutation(0, 3, 1), Permutation(0, 3, 2),
+             Permutation(1, 2, 3), Permutation(1, 3, 2)])
+    assert S.conjugacy_class(x) == C
+
+def test_conjugacy_classes():
+    S = SymmetricGroup(3)
+    expected = [set([Permutation(size = 3)]),
+         set([Permutation(0, 1, size = 3), Permutation(0, 2), Permutation(1, 2)]),
+         set([Permutation(0, 1, 2), Permutation(0, 2, 1)])]
+    computed = S.conjugacy_classes()
+
+    assert len(expected) == len(computed)
+    assert all(e in computed for e in expected)

@@ -1,11 +1,13 @@
 from __future__ import print_function, division
 
+from typing import Dict, List
+
 from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy, symbols
+from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
@@ -36,6 +38,7 @@ from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
 from sympy.core.compatibility import reduce, ordered
+from sympy.integrals.integrals import integrate
 
 
 def components(f, x):
@@ -82,7 +85,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}
+_symbols_cache = {}  # type: Dict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
@@ -171,6 +174,8 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                         _try_heurisch)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
         generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
+        if expr is None:
+            expr = integrate(f.subs(sub_dict),x)
         pairs.append((expr, cond))
     # If there is one condition, put the generic case first. Otherwise,
     # doing so may lead to longer Piecewise formulas
@@ -349,7 +354,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
-    components
+    sympy.integrals.heurisch.components
     """
     f = sympify(f)
 

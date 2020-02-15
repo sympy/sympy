@@ -14,7 +14,7 @@ Forming logical expressions
 ---------------------------
 
 You can build Boolean expressions with the standard python operators ``&``
-(:class:`And`), ``|`` (:class:`Or`), ``~`` (:class:`Not`)::
+(:class:`~.And`), ``|`` (:class:`~.Or`), ``~`` (:class:`~.Not`)::
 
     >>> from sympy import *
     >>> x, y = symbols('x,y')
@@ -32,7 +32,7 @@ You can also form implications with ``>>`` and ``<<``::
     >>> x << y
     Implies(y, x)
 
-Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
+Like most types in SymPy, Boolean expressions inherit from :class:`~.Basic`::
 
     >>> (y & x).subs({x: True, y: True})
     True

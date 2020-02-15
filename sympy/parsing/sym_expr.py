@@ -3,7 +3,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 lfortran = import_module('lfortran')
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if not lfortran and not cin:
     class SymPyExpression(object):
@@ -16,8 +16,8 @@ else:
     if cin:
         from sympy.parsing.c.c_parser import parse_c
 
-    @doctest_depends_on(modules=['lfortran', 'cin'])
-    class SymPyExpression(object):
+    @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
+    class SymPyExpression(object):  # type: ignore
         """Class to store and handle SymPy expressions
 
         This class will hold SymPy Expressions and handle the API for the
@@ -46,14 +46,17 @@ else:
 
         Example of parsing C code:
 
+        >>> from sympy.parsing.sym_expr import SymPyExpression
         >>> src = '''
         ... int a,b;
         ... float c = 2, d =4;
         ... '''
         >>> a = SymPyExpression(src, 'c')
         >>> a.return_expr()
-        [Declaration(Variable(Symbol('a'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('b'), type=IntBaseType(String('integer')), value=Integer(0))), Declaration(Variable(Symbol('c'), type=IntBaseType(String('integer')), value=Integer(2))), Declaration(Variable(Symbol('d'),     type=IntBaseType(String('integer')), value=Integer(4)))]
-
+        [Declaration(Variable(a, type=integer, value=0)),
+        Declaration(Variable(b, type=integer, value=0)),
+        Declaration(Variable(c, type=real, value=2.0)),
+        Declaration(Variable(d, type=real, value=4.0))]
 
         An example of variable definiton:
 

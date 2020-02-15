@@ -2,12 +2,12 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
     oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, Le)
+    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 
 a, b, c, d, x, y = symbols('a:d, x, y')
@@ -456,6 +456,12 @@ def test_piecewise_simplify():
     assert Piecewise(*args).simplify() == ans
     assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
 
+    # issue 18634
+    d = Symbol("d", integer=True)
+    n = Symbol("n", integer=True)
+    t = Symbol("t", real=True, positive=True)
+    expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
+    assert expr.simplify() == -d + 2*n
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
@@ -1345,3 +1351,12 @@ def test_identical_conds_issue():
     # Result is quite big, so not really important here (and should ideally be
     # simpler). Should not give an exception though.
     density(u1 + u2)
+
+
+def test_issue_7370():
+    f = Piecewise((1, x <= 2400))
+    v = integrate(f, (x, 0, Float("252.4", 30)))
+    assert str(v) == '252.400000000000000000000000000'
+
+def test_issue_16715():
+    raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())

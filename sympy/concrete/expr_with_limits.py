@@ -17,6 +17,7 @@ from sympy.sets.sets import Interval
 from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def _common_new(cls, function, *symbols, **assumptions):
@@ -25,7 +26,18 @@ def _common_new(cls, function, *symbols, **assumptions):
     both ExprWithLimits and AddWithLimits."""
     function = sympify(function)
 
-    if hasattr(function, 'func') and isinstance(function, Equality):
+    if isinstance(function, Equality):
+        # This transforms e.g. Integral(Eq(x, y)) to Eq(Integral(x), Integral(y))
+        # but that is only valid for definite integrals.
+        limits, orientation = _process_limits(*symbols)
+        if not (limits and all(len(limit) == 3 for limit in limits)):
+            SymPyDeprecationWarning(
+                feature='Integral(Eq(x, y))',
+                useinstead='Eq(Integral(x, z), Integral(y, z))',
+                issue=18053,
+                deprecated_since_version=1.6,
+            ).warn()
+
         lhs = function.lhs
         rhs = function.rhs
         return Equality(cls(lhs, *symbols, **assumptions), \
@@ -149,7 +161,7 @@ def _process_limits(*symbols):
 
 
 class ExprWithLimits(Expr):
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)
@@ -223,7 +235,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits]
 
@@ -244,7 +256,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits if len(l) != 1]
 
@@ -454,7 +466,7 @@ class ExprWithLimits(Expr):
         See Also
         ========
 
-        ExprWithIntLimits.has_empty_sequence
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.has_empty_sequence
 
         """
         ret_None = False

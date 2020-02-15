@@ -5,7 +5,6 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
                                  BooleanFunction, BooleanAtom)
@@ -14,13 +13,6 @@ from sympy.utilities.decorator import memoize_property
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
-# Deprecated predicates should be added to this list
-deprecated_predicates = [
-    'bounded',
-    'infinity',
-    'infinitesimal'
-]
-
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
 # This is because assumption handlers are registered on those objects.
@@ -28,7 +20,8 @@ deprecated_predicates = [
 
 class AssumptionKeys(object):
     """
-    This class contains all the supported keys by ``ask``.
+    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+
     """
 
     @memoize_property
@@ -354,13 +347,6 @@ class AssumptionKeys(object):
         """
         return Predicate('finite')
 
-    @memoize_property
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
-    def bounded(self):
-        """
-        See documentation of ``Q.finite``.
-        """
-        return Predicate('finite')
 
     @memoize_property
     def infinite(self):
@@ -374,21 +360,6 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('infinite')
 
-    @memoize_property
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
-    def infinity(self):
-        """
-        See documentation of ``Q.infinite``.
-        """
-        return Predicate('infinite')
-
-    @memoize_property
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
-    def infinitesimal(self):
-        """
-        See documentation of ``Q.zero``.
-        """
-        return Predicate('zero')
 
     @memoize_property
     def positive(self):
@@ -1294,31 +1265,21 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
     if local_facts.clauses:
-        local_facts_ = CNF.CNF_to_cnf(local_facts)
 
-        # See if there's a straight-forward conclusion we can make for the inference
-        if local_facts_.is_Atom:
-            if key in known_facts_dict[local_facts_]:
-                return True
-            if Not(key) in known_facts_dict[local_facts_]:
+        if len(local_facts.clauses) == 1:
+            cl, = local_facts.clauses
+            f, = cl if len(cl)==1 else [None]
+            if f and f.is_Not and f.arg in known_facts_dict.get(key, []):
                 return False
-        elif (isinstance(local_facts_, And) and
-              all(k in known_facts_dict for k in local_facts_.args)):
-            for assum in local_facts_.args:
-                if assum.is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return True
-                    if Not(key) in known_facts_dict[assum]:
-                        return False
-                elif isinstance(assum, Not) and assum.args[0].is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return False
-                    if Not(key) in known_facts_dict[assum]:
-                        return True
-        elif (isinstance(key, Predicate) and
-              isinstance(local_facts_, Not) and local_facts_.args[0].is_Atom):
-            if local_facts_.args[0] in known_facts_dict[key]:
-                return False
+
+        for clause in local_facts.clauses:
+            if len(clause) == 1:
+                f, = clause
+                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if fdict and key in fdict:
+                    return True
+                if fdict and Not(key) in known_facts_dict[f.arg]:
+                    return False
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
@@ -1501,8 +1462,7 @@ def get_known_facts_keys():
     return [
         getattr(Q, attr)
         for attr in Q.__class__.__dict__
-        if not (attr.startswith('__') or
-                attr in deprecated_predicates)]
+        if not attr.startswith('__')]
 
 @cacheit
 def get_known_facts():
@@ -1561,4 +1521,4 @@ def get_known_facts():
     )
 
 from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_known_facts_cnf, get_all_known_facts)
+    get_known_facts_dict, get_all_known_facts)

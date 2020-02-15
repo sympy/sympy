@@ -1,11 +1,12 @@
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
-    GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
+from sympy import (IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum,
+        Order, LessThan, StrictGreaterThan, GreaterThan, StrictLessThan,
+        Range, Subs, Function, KroneckerDelta, Derivative)
 
 
 def test_Idx_construction():
@@ -420,6 +421,14 @@ def test_issue_12780():
     i = Idx("i", (0, n))
     raises(TypeError, lambda: i.subs(n, 1.5))
 
+
+def test_issue_18604():
+    m = symbols("m")
+    assert Idx("i", m).name == 'i'
+    assert Idx("i", m).lower == 0
+    assert Idx("i", m).upper == m - 1
+    m = symbols("m", real=False)
+    raises(TypeError, lambda: Idx("i", m))
 
 def test_Subs_with_Indexed():
     A = IndexedBase("A")

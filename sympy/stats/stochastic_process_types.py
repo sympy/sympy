@@ -2,17 +2,20 @@ from __future__ import print_function, division
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
-                   Lambda, Mul, Dummy, IndexedBase,
+                   Lambda, Mul, Dummy, IndexedBase, Add,
                    linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
-                   Ge)
+                   Ge, Piecewise, Symbol)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
-                            _symbol_converter)
+                            _symbol_converter, _value_check, pspace, given,
+                           dependent)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
+from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
+from sympy.core.sympify import _sympify
 
 __all__ = [
     'StochasticProcess',
@@ -21,7 +24,8 @@ __all__ = [
     'TransitionMatrixOf',
     'StochasticStateSpaceOf',
     'GeneratorMatrixOf',
-    'ContinuousMarkovChain'
+    'ContinuousMarkovChain',
+    'BernoulliProcess'
 ]
 
 def _set_converter(itr):
@@ -49,6 +53,28 @@ def _set_converter(itr):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
 
+def _sym_sympify(arg):
+    """
+    Converts an arbitrary expression to a type that can be used inside SymPy.
+    As generally strings are unwise to use in the expressions,
+    it returns the Symbol of argument if the string type argument is passed.
+
+    Parameters
+    =========
+
+    arg: The parameter to be converted to be used in Sympy.
+
+    Returns
+    =======
+
+    The converted parameter.
+
+    """
+    if isinstance(arg, str):
+        return Symbol(arg)
+    else:
+        return _sympify(arg)
+
 def _matrix_checks(matrix):
     if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
         raise TypeError("Transition probabilities either should "
@@ -67,7 +93,7 @@ class StochasticProcess(Basic):
     Parameters
     ==========
 
-    sym: Symbol or string_types
+    sym: Symbol or str
     state_space: Set
         The state space of the stochastic process, by default S.Reals.
         For discrete sets it is zero indexed.
@@ -146,10 +172,9 @@ class StochasticProcess(Basic):
 
         if args[0].pspace.distribution == None: # checks if there is any distribution available
             return JointDistribution(*args)
-        # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
-        # is completed
-        pdf = Lambda(*[arg.name for arg in args],
-                expr=Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
+
+        pdf = Lambda(tuple(args),
+                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
@@ -171,7 +196,8 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        pspace_obj = StochasticPSpace(self.symbol, self)
+        distribution = getattr(self, 'distribution', None)
+        pspace_obj = StochasticPSpace(self.symbol, self, distribution)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
 class ContinuousTimeStochasticProcess(StochasticProcess):
@@ -537,7 +563,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Parameters
     ==========
 
-    sym: Symbol/string_types
+    sym: Symbol/str
     state_space: Set
         Optional, by default, S.Reals
     trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
@@ -553,7 +579,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> YS = DiscreteMarkovChain("Y")
     >>> Y.state_space
-    {0, 1, 2}
+    FiniteSet(0, 1, 2)
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -699,7 +725,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     Parameters
     ==========
 
-    sym: Symbol/string_types
+    sym: Symbol/str
     state_space: Set
         Optional, by default, S.Reals
     gen_mat: Matrix/ImmutableMatrix/MatrixSymbol
@@ -759,3 +785,214 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         eqs.append(sum(wi) - 1)
         soln = list(linsolve(eqs, wi))[0]
         return ImmutableMatrix([[sol for sol in soln]])
+
+
+class BernoulliProcess(DiscreteTimeStochasticProcess):
+    """
+    The Bernoulli process consists of repeated
+    independent Bernoulli process trials with the same parameter `p`.
+    It's assumed that the probability `p` applies to every
+    trial and that the outcomes of each trial
+    are independent of all the rest. Therefore Bernoulli Processs
+    is Discrete State and Discrete Time Stochastic Process.
+
+    Parameters
+    ==========
+
+    sym: Symbol/str
+    success: Integer/str
+            The event which is considered to be success, by default is 1.
+    failure: Integer/str
+            The event which is considered to be failure, by default is 0.
+    p: Real Number between 0 and 1
+            Represents the probability of getting success.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BernoulliProcess, P, E
+    >>> from sympy import Eq, Gt, Lt
+    >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
+    >>> B.state_space
+    FiniteSet(0, 1)
+    >>> (B.p).round(2)
+    0.70
+    >>> B.success
+    1
+    >>> B.failure
+    0
+    >>> X = B[1] + B[2] + B[3]
+    >>> P(Eq(X, 0)).round(2)
+    0.03
+    >>> P(Eq(X, 2)).round(2)
+    0.44
+    >>> P(Eq(X, 4)).round(2)
+    0
+    >>> P(Gt(X, 1)).round(2)
+    0.78
+    >>> P(Eq(B[1], 0) & Eq(B[2], 1) & Eq(B[3], 0) & Eq(B[4], 1)).round(2)
+    0.04
+    >>> B.joint_distribution(B[1], B[2])
+    JointDistributionHandmade(Lambda((B[1], B[2]), Piecewise((0.7, Eq(B[1], 1)),
+    (0.3, Eq(B[1], 0)), (0, True))*Piecewise((0.7, Eq(B[2], 1)), (0.3, Eq(B[2], 0)),
+    (0, True))))
+    >>> E(2*B[1] + B[2]).round(2)
+    2.10
+    >>> P(B[1] < 1).round(2)
+    0.30
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bernoulli_process
+    .. [2] https://mathcs.clarku.edu/~djoyce/ma217/bernoulli.pdf
+
+    """
+
+    index_set = S.Naturals0
+
+    def __new__(cls, sym, p, success=1, failure=0):
+        _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
+        sym = _symbol_converter(sym)
+        p = _sympify(p)
+        success = _sym_sympify(success)
+        failure = _sym_sympify(failure)
+        return Basic.__new__(cls, sym, p, success, failure)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def p(self):
+        return self.args[1]
+
+    @property
+    def success(self):
+        return self.args[2]
+
+    @property
+    def failure(self):
+        return self.args[3]
+
+    @property
+    def state_space(self):
+        return _set_converter([self.success, self.failure])
+
+    @property
+    def distribution(self):
+        return BernoulliDistribution(self.p)
+
+    def _rvindexed_subs(self, expr, condition=None):
+        """
+        Substitutes the RandomIndexedSymbol with the RandomSymbol with
+        same name, distribution and probability as RandomIndexedSymbol.
+
+        """
+
+        rvs_expr = random_symbols(expr)
+        if len(rvs_expr) != 0:
+            swapdict_expr = {}
+            for rv in rvs_expr:
+                if isinstance(rv, RandomIndexedSymbol):
+                    newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
+                                      succ=self.success, fail=self.failure)
+                    swapdict_expr[rv] = newrv
+            expr = expr.subs(swapdict_expr)
+        rvs_cond = random_symbols(condition)
+        if len(rvs_cond)!=0:
+            swapdict_cond = {}
+            if condition is not None:
+                for rv in rvs_cond:
+                    if isinstance(rv, RandomIndexedSymbol):
+                        newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
+                                          succ=self.success, fail=self.failure)
+                        swapdict_cond[rv] = newrv
+                condition = condition.subs(swapdict_cond)
+        return expr, condition
+
+    def expectation(self, expr, condition=None, evaluate=True, **kwargs):
+        """
+        Computes expectation.
+
+        Parameters
+        ==========
+
+        expr: RandomIndexedSymbol, Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        condition: Relational, Logic
+            The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Expectation of the RandomIndexedSymbol.
+
+        """
+        new_expr, new_condition = self._rvindexed_subs(expr, condition)
+
+        new_pspace = pspace(new_expr)
+        if new_condition is not None:
+            new_expr = given(new_expr, new_condition)
+        if new_expr.is_Add:  # As E is Linear
+            return Add(*[new_pspace.compute_expectation(
+                        expr=arg, evaluate=evaluate, **kwargs)
+                        for arg in new_expr.args])
+        return new_pspace.compute_expectation(
+                new_expr, evaluate=evaluate, **kwargs)
+
+
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        """
+        Computes probability.
+
+        Parameters
+        ==========
+
+        condition: Relational
+                Condition for which probability has to be computed. Must
+                contain a RandomIndexedSymbol of the process.
+        given_condition: Relational/And
+                The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Probability of the condition.
+
+        """
+        new_condition, new_givencondition = self._rvindexed_subs(condition, given_condition)
+
+        if isinstance(new_givencondition, RandomSymbol):
+            condrv = random_symbols(new_condition)
+            if len(condrv) == 1 and condrv[0] == new_givencondition:
+                return BernoulliDistribution(self.probability(new_condition), 0, 1)
+
+            if any([dependent(rv, new_givencondition) for rv in condrv]):
+                return Probability(new_condition, new_givencondition)
+            else:
+                return self.probability(new_condition)
+
+        if new_givencondition is not None and \
+                not isinstance(new_givencondition, (Relational, Boolean)):
+            raise ValueError("%s is not a relational or combination of relationals"
+                    % (new_givencondition))
+        if new_givencondition == False:
+            return S.Zero
+        if new_condition == True:
+            return S.One
+        if new_condition == False:
+            return S.Zero
+        if not isinstance(new_condition, (Relational, Boolean)):
+            raise ValueError("%s is not a relational or combination of relationals"
+                    % (new_condition))
+        if new_givencondition is not None:  # If there is a condition
+        # Recompute on new conditional expr
+            return self.probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
+        return pspace(new_condition).probability(new_condition, **kwargs)
+
+    def density(self, x):
+        return Piecewise((self.p, Eq(x, self.success)),
+                         (1 - self.p, Eq(x, self.failure)),
+                         (S.Zero, True))

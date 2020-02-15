@@ -13,7 +13,7 @@ from sympy import (
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
     gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
-from sympy.utilities.pytest import XFAIL, slow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
@@ -64,7 +64,7 @@ def test_mellin_transform_fail():
     MT = mellin_transform
 
     bpos = symbols('b', positive=True)
-    bneg = symbols('b', negative=True)
+    # bneg = symbols('b', negative=True)
 
     expr = (sqrt(x + b**2) + b)**a/sqrt(x + b**2)
     # TODO does not work with bneg, argument wrong. Needs changes to matching.
@@ -513,8 +513,9 @@ def test_laplace_transform():
         ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
         + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
-    cond = Ne(1/s, 1) & (
-        0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
+    # What is this testing:
+    Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
+
     assert LT(Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]]), t, s) ==\
         Matrix([
             [(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],

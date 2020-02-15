@@ -15,7 +15,7 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 inf = oo.evalf()
@@ -313,7 +313,7 @@ def test_solve_univariate_inequality():
         x**2 < zero*I, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
-    raises(ValueError, lambda: isolve(x - I < 0, x))
+    raises(TypeError, lambda: isolve(x - I < 0, x))
 
     zero = x**2 + x - x*(x + 1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet
@@ -393,7 +393,9 @@ def test_issue_10047():
     # assert solve(sin(x) < 2) == (x <= oo)
 
     # with PR 16956, (x <= oo) autoevaluates when x is extended_real
+    # which is assumed in the current implementation of inequality solvers
     assert solve(sin(x) < 2) == True
+    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
 def test_issue_10268():

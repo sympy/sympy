@@ -35,7 +35,6 @@ class Density(HermitianOperator):
     'Density'((|0>, 0.5),(|1>, 0.5))
 
     """
-
     @classmethod
     def _eval_args(cls, args):
         # call this to qsympify the args
@@ -43,8 +42,7 @@ class Density(HermitianOperator):
 
         for arg in args:
             # Check if arg is a tuple
-            if not (isinstance(arg, Tuple) and
-                    len(arg) == 2):
+            if not (isinstance(arg, Tuple) and len(arg) == 2):
                 raise ValueError("Each argument should be of form [state,prob]"
                                  " or ( state, prob )")
 
@@ -166,11 +164,10 @@ class Density(HermitianOperator):
             state = state.expand()  # needed to break up (a+b)*c
             if (isinstance(state, Add)):
                 for arg in product(state.args, repeat=2):
-                    terms.append(prob *
-                                 self._generate_outer_prod(arg[0], arg[1]))
+                    terms.append(prob*self._generate_outer_prod(arg[0],
+                                                                arg[1]))
             else:
-                terms.append(prob *
-                             self._generate_outer_prod(state, state))
+                terms.append(prob*self._generate_outer_prod(state, state))
 
         return Add(*terms)
 
@@ -178,21 +175,20 @@ class Density(HermitianOperator):
         c_part1, nc_part1 = arg1.args_cnc()
         c_part2, nc_part2 = arg2.args_cnc()
 
-        if ( len(nc_part1) == 0 or
-             len(nc_part2) == 0 ):
+        if (len(nc_part1) == 0 or len(nc_part2) == 0):
             raise ValueError('Atleast one-pair of'
                              ' Non-commutative instance required'
                              ' for outer product.')
 
         # Muls of Tensor Products should be expanded
         # before this function is called
-        if (isinstance(nc_part1[0], TensorProduct) and
-                len(nc_part1) == 1 and len(nc_part2) == 1):
-            op = tensor_product_simp(nc_part1[0] * Dagger(nc_part2[0]))
+        if (isinstance(nc_part1[0], TensorProduct) and len(nc_part1) == 1
+                and len(nc_part2) == 1):
+            op = tensor_product_simp(nc_part1[0]*Dagger(nc_part2[0]))
         else:
-            op = Mul(*nc_part1) * Dagger(Mul(*nc_part2))
+            op = Mul(*nc_part1)*Dagger(Mul(*nc_part2))
 
-        return Mul(*c_part1)*Mul(*c_part2)*op
+        return Mul(*c_part1)*Mul(*c_part2) * op
 
     def _represent(self, **options):
         return represent(self.doit(), **options)
@@ -201,7 +197,7 @@ class Density(HermitianOperator):
         return printer._print(r'\rho', *args)
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(unichr('\N{GREEK SMALL LETTER RHO}'))
+        return prettyForm('\N{GREEK SMALL LETTER RHO}')
 
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', [])
@@ -285,12 +281,12 @@ def fidelity(state1, state2):
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
     >>> amp = 1/sqrt(2)
-    >>> updown = (amp * up) + (amp * down)
+    >>> updown = (amp*up) + (amp*down)
     >>>
     >>> # represent turns Kets into matrices
-    >>> up_dm = represent(up * Dagger(up))
-    >>> down_dm = represent(down * Dagger(down))
-    >>> updown_dm = represent(updown * Dagger(updown))
+    >>> up_dm = represent(up*Dagger(up))
+    >>> down_dm = represent(down*Dagger(down))
+    >>> updown_dm = represent(updown*Dagger(updown))
     >>>
     >>> fidelity(up_dm, up_dm)
     1
@@ -308,15 +304,14 @@ def fidelity(state1, state2):
     state1 = represent(state1) if isinstance(state1, Density) else state1
     state2 = represent(state2) if isinstance(state2, Density) else state2
 
-    if (not isinstance(state1, Matrix) or
-            not isinstance(state2, Matrix)):
+    if not isinstance(state1, Matrix) or not isinstance(state2, Matrix):
         raise ValueError("state1 and state2 must be of type Density or Matrix "
                          "received type=%s for state1 and type=%s for state2" %
                          (type(state1), type(state2)))
 
-    if ( state1.shape != state2.shape and state1.is_square):
+    if state1.shape != state2.shape and state1.is_square:
         raise ValueError("The dimensions of both args should be equal and the "
                          "matrix obtained should be a square matrix")
 
     sqrt_state1 = state1**S.Half
-    return Tr((sqrt_state1 * state2 * sqrt_state1)**S.Half).doit()
+    return Tr((sqrt_state1*state2*sqrt_state1)**S.Half).doit()

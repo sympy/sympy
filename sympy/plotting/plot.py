@@ -29,13 +29,13 @@ import warnings
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
-from sympy.core.compatibility import range, Callable
+from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
-# the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
+# the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
@@ -1028,11 +1028,14 @@ class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
         self.matplotlib = import_module('matplotlib',
-            __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
+            import_kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
+        aspect = getattr(self.parent, 'aspect_ratio', 'auto')
+        if aspect != 'auto':
+            aspect = float(aspect[1]) / aspect[0]
 
         if isinstance(self.parent, Plot):
             nrows, ncolumns = 1, 1
@@ -1052,12 +1055,12 @@ class MatplotlibBackend(BaseBackend):
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits',
-                                     __import__kwargs={'fromlist': ['mplot3d']})
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
+                mpl_toolkits = import_module('mpl_toolkits', # noqa
+                                     import_kwargs={'fromlist': ['mplot3d']})
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d', aspect=aspect))
 
             elif not any(are_3D):
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, aspect=aspect))
                 self.ax[i].spines['left'].set_position('zero')
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
@@ -1078,7 +1081,7 @@ class MatplotlibBackend(BaseBackend):
             elif s.is_3Dline:
                 # TODO too complicated, I blame matplotlib
                 mpl_toolkits = import_module('mpl_toolkits',
-                    __import__kwargs={'fromlist': ['mplot3d']})
+                    import_kwargs={'fromlist': ['mplot3d']})
                 art3d = mpl_toolkits.mplot3d.art3d
                 collection = art3d.Line3DCollection(s.get_segments())
                 ax.add_collection(collection)
@@ -1140,7 +1143,7 @@ class MatplotlibBackend(BaseBackend):
         # TODO The 3D stuff
         # XXX The order of those is important.
         mpl_toolkits = import_module('mpl_toolkits',
-            __import__kwargs={'fromlist': ['mplot3d']})
+            import_kwargs={'fromlist': ['mplot3d']})
         Axes3D = mpl_toolkits.mplot3d.Axes3D
         if parent.xscale and not isinstance(ax, Axes3D):
             ax.set_xscale(parent.xscale)
@@ -1414,7 +1417,7 @@ def plot(*args, **kwargs):
     the plot by calling the ``save()`` and ``show()`` methods
     respectively.
 
-    Arguments for ``LineOver1DRangeSeries`` class:
+    Arguments for :obj:`LineOver1DRangeSeries` class:
 
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
     specify ``nb_of_points`` if uniform sampling is required.
@@ -1533,7 +1536,7 @@ def plot(*args, **kwargs):
     See Also
     ========
 
-    Plot, LineOver1DRangeSeries.
+    Plot, LineOver1DRangeSeries
 
     """
     args = list(map(sympify, args))

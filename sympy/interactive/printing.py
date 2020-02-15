@@ -8,7 +8,6 @@ from io import BytesIO
 
 from sympy import latex as default_latex
 from sympy import preview
-from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
 
@@ -173,7 +172,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             # to use here, than these explicit imports.
             elif isinstance(o, sympy_latex_types):
                 return True
-            elif isinstance(o, (float, integer_types)) and print_builtin:
+            elif isinstance(o, (float, int)) and print_builtin:
                 return True
             return False
         except RuntimeError:
@@ -259,7 +258,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.tensor.array import NDimArray
 
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
+                frozenset, dict, Vector, Dyadic, NDimArray, int]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -550,13 +549,16 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         _stringify_func = stringify_func
 
         if pretty_print:
-            stringify_func = lambda expr: \
+            stringify_func = lambda expr, **settings: \
                              _stringify_func(expr, order=order,
                                              use_unicode=use_unicode,
                                              wrap_line=wrap_line,
-                                             num_columns=num_columns)
+                                             num_columns=num_columns,
+                                             **settings)
         else:
-            stringify_func = lambda expr: _stringify_func(expr, order=order)
+            stringify_func = \
+                lambda expr, **settings: _stringify_func(
+                    expr, order=order, **settings)
 
     if in_ipython:
         mode_in_settings = settings.pop("mode", None)
