@@ -21,15 +21,17 @@ def test_prde_normal_denom():
     fd = Poly(x, t)
     G = [(Poly(t, t), Poly(1 + t**2, t)), (Poly(1, t), Poly(x + x*t**2, t))]
     assert prde_normal_denom(fa, fd, G, DE) == \
-        (Poly(x, t), (Poly(1, t), Poly(1, t)), [(Poly(x*t, t),
-         Poly(t**2 + 1, t)), (Poly(1, t), Poly(t**2 + 1, t))], Poly(1, t))
+        (Poly(x, t, domain='ZZ(x)'), (Poly(1, t, domain='ZZ(x)'), Poly(1, t,
+            domain='ZZ(x)')), [(Poly(x*t, t, domain='ZZ(x)'),
+         Poly(t**2 + 1, t, domain='ZZ(x)')), (Poly(1, t, domain='ZZ(x)'),
+             Poly(t**2 + 1, t, domain='ZZ(x)'))], Poly(1, t, domain='ZZ(x)'))
     G = [(Poly(t, t), Poly(t**2 + 2*t + 1, t)), (Poly(x*t, t),
         Poly(t**2 + 2*t + 1, t)), (Poly(x*t**2, t), Poly(t**2 + 2*t + 1, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert prde_normal_denom(Poly(x, t), Poly(1, t), G, DE) == \
-        (Poly(t + 1, t), (Poly((-1 + x)*t + x, t), Poly(1, t)), [(Poly(t, t),
-        Poly(1, t)), (Poly(x*t, t), Poly(1, t)), (Poly(x*t**2, t),
-        Poly(1, t))], Poly(t + 1, t))
+        (Poly(t + 1, t), (Poly((-1 + x)*t + x, t), Poly(1, t, domain='ZZ[x]')), [(Poly(t, t),
+        Poly(1, t)), (Poly(x*t, t), Poly(1, t, domain='ZZ[x]')), (Poly(x*t**2, t),
+        Poly(1, t, domain='ZZ[x]'))], Poly(t + 1, t))
 
 
 def test_prde_special_denom():
@@ -49,15 +51,15 @@ def test_prde_special_denom():
     DE.decrement_level()
     G = [(Poly(t, t), Poly(t**2, t)), (Poly(2*t, t), Poly(t, t))]
     assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3 + 2, t), G, DE) == \
-        (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t, t), Poly(t**2, t)),
+        (Poly(5*x*t + 1, t), Poly(0, t, domain='ZZ[x]'), [(Poly(t, t), Poly(t**2, t)),
         (Poly(2*t, t), Poly(t, t))], Poly(1, x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)*2*x, t)]})
     G = [(Poly(t + x, t), Poly(t*x, t)), (Poly(2*t, t), Poly(x**2, x))]
     assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3, t), G, DE) == \
-        (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)),
+        (Poly(5*x*t + 1, t), Poly(0, t, domain='ZZ[x]'), [(Poly(t + x, t), Poly(x*t, t)),
         (Poly(2*t, t, x), Poly(x**2, t, x))], Poly(1, t))
     assert prde_special_denom(Poly(t + 1, t), Poly(t**2, t), Poly(t**3, t), G, DE) == \
-        (Poly(t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
+        (Poly(t + 1, t), Poly(0, t, domain='ZZ[x]'), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
         Poly(x**2, t, x))], Poly(1, t))
 
 
@@ -66,15 +68,17 @@ def test_prde_linear_constraints():
     G = [(Poly(2*x**3 + 3*x + 1, x), Poly(x**2 - 1, x)), (Poly(1, x), Poly(x - 1, x)),
         (Poly(1, x), Poly(x + 1, x))]
     assert prde_linear_constraints(Poly(1, x), Poly(0, x), G, DE) == \
-        ((Poly(2*x, x), Poly(0, x), Poly(0, x)), Matrix([[1, 1, -1], [5, 1, 1]]))
+        ((Poly(2*x, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(0, x, domain='QQ')),
+            Matrix([[1, 1, -1], [5, 1, 1]]))
     G = [(Poly(t, t), Poly(1, t)), (Poly(t**2, t), Poly(1, t)), (Poly(t**3, t), Poly(1, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert prde_linear_constraints(Poly(t + 1, t), Poly(t**2, t), G, DE) == \
-        ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix(0, 3, []))
+        ((Poly(t, t, domain='QQ'), Poly(t**2, t, domain='QQ'), Poly(t**3, t, domain='QQ')),
+            Matrix(0, 3, []))
     G = [(Poly(2*x, t), Poly(t, t)), (Poly(-x, t), Poly(t, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert prde_linear_constraints(Poly(1, t), Poly(0, t), G, DE) == \
-        ((Poly(0, t), Poly(0, t)), Matrix([[2*x, -x]]))
+        ((Poly(0, t, domain='QQ[x]'), Poly(0, t, domain='QQ[x]')), Matrix([[2*x, -x]]))
 
 
 def test_constant_system():
@@ -95,8 +99,9 @@ def test_prde_spde():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     # TODO: when bound_degree() can handle this, test degree bound from that too
     assert prde_spde(Poly(t, t), Poly(-1/x, t), D, n, DE) == \
-        (Poly(t, t), Poly(0, t), [Poly(2*x, t), Poly(-x, t)],
-        [Poly(-x**2, t), Poly(0, t)], n - 1)
+        (Poly(t, t), Poly(0, t, domain='ZZ(x)'),
+        [Poly(2*x, t, domain='ZZ(x)'), Poly(-x, t, domain='ZZ(x)')],
+        [Poly(-x**2, t, domain='ZZ(x)'), Poly(0, t, domain='ZZ(x)')], n - 1)
 
 
 def test_prde_no_cancel():
@@ -162,7 +167,7 @@ def test_prde_cancel_liouvillian():
     # Not taken from book
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t, t)]})
     assert prde_cancel_liouvillian(Poly(0, t, domain='QQ[x]'), [Poly(1, t, domain='QQ(x)')], 0, DE) == \
-            ([Poly(1, t, domain='QQ'), Poly(x, t)], Matrix([[-1, 0, 1]]))
+            ([Poly(1, t, domain='QQ'), Poly(x, t, domain='ZZ(x)')], Matrix([[-1, 0, 1]]))
 
 
 def test_param_poly_rischDE():
@@ -175,7 +180,7 @@ def test_param_poly_rischDE():
     assert A.nullspace() == [Matrix([0, 1, 1, 1])]  # c1, c2, d1, d2
     # Solution of a*Dp + b*p = c1*q1 + c2*q2 = q2 = x**2
     # is d1*h1 + d2*h2 = h1 + h2 = x.
-    assert h[0] + h[1] == Poly(x, x)
+    assert h[0] + h[1] == Poly(x, x, domain='QQ')
     # a*Dp + b*p = q1 = x has no solution.
 
     a = Poly(x**2 - x, x, field=True)
@@ -186,7 +191,7 @@ def test_param_poly_rischDE():
 
     assert A.nullspace() == [Matrix([3, -5, 1, -5, 1, 1])]
     p = -5*h[0] + h[1] + h[2]  # Poly(1, x)
-    assert a*derivation(p, DE) + b*p == Poly(x**2 - 5*x + 3, x)
+    assert a*derivation(p, DE) + b*p == Poly(x**2 - 5*x + 3, x, domain='QQ')
 
 
 def test_param_rischDE():
@@ -220,8 +225,8 @@ def test_limited_integrate_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert limited_integrate_reduce(Poly(x, t), Poly(t**2, t), [(Poly(x, t),
     Poly(t, t))], DE) == \
-        (Poly(t, t), Poly(-1/x, t), Poly(t, t), 1, (Poly(x, t), Poly(1, t)),
-        [(Poly(-x*t, t), Poly(1, t))])
+        (Poly(t, t), Poly(-1/x, t), Poly(t, t), 1, (Poly(x, t), Poly(1, t, domain='ZZ[x]')),
+        [(Poly(-x*t, t), Poly(1, t, domain='ZZ[x]'))])
 
 
 def test_limited_integrate():
@@ -229,10 +234,10 @@ def test_limited_integrate():
     G = [(Poly(x, x), Poly(x + 1, x))]
     assert limited_integrate(Poly(-(1 + x + 5*x**2 - 3*x**3), x),
     Poly(1 - x - x**2 + x**3, x), G, DE) == \
-        ((Poly(x**2 - x + 2, x), Poly(x - 1, x)), [2])
+        ((Poly(x**2 - x + 2, x), Poly(x - 1, x, domain='QQ')), [2])
     G = [(Poly(1, x), Poly(x, x))]
     assert limited_integrate(Poly(5*x**2, x), Poly(3, x), G, DE) == \
-        ((Poly(5*x**3/9, x), Poly(1, x)), [0])
+        ((Poly(5*x**3/9, x), Poly(1, x, domain='QQ')), [0])
 
 
 def test_is_log_deriv_k_t_radical():

@@ -483,11 +483,11 @@ def test_PurePoly_free_symbols():
 
 def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x)) is True
-    assert (Poly(x, x, domain=QQ) == Poly(x, x)) is True
-    assert (Poly(x, x) == Poly(x, x, domain=QQ)) is True
+    assert (Poly(x, x, domain=QQ) == Poly(x, x)) is False
+    assert (Poly(x, x) == Poly(x, x, domain=QQ)) is False
 
-    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) is True
-    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) is True
+    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) is False
+    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) is False
 
     assert (Poly(x*y, x, y) == Poly(x, x)) is False
 
@@ -500,8 +500,8 @@ def test_Poly__eq__():
     f = Poly(x, x, domain=ZZ)
     g = Poly(x, x, domain=QQ)
 
-    assert f.eq(g) is True
-    assert f.ne(g) is False
+    assert f.eq(g) is False
+    assert f.ne(g) is True
 
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
@@ -511,7 +511,7 @@ def test_Poly__eq__():
     f =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='QQ[x,t0]')
     g =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='ZZ(x,t0)')
 
-    assert (f == g) is True
+    assert (f == g) is False
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
@@ -1099,8 +1099,8 @@ def test_Poly_eject():
     assert g.eject(x, y) == Poly(ex, z, t, w, domain='ZZ[x, y]')
     assert g.eject(x, y, z) == Poly(ex, t, w, domain='ZZ[x, y, z]')
     assert g.eject(w) == Poly(ex, x, y, z, t, domain='ZZ[w]')
-    assert g.eject(t, w) == Poly(ex, x, y, z, domain='ZZ[w, t]')
-    assert g.eject(z, t, w) == Poly(ex, x, y, domain='ZZ[w, t, z]')
+    assert g.eject(t, w) == Poly(ex, x, y, z, domain='ZZ[t, w]')
+    assert g.eject(z, t, w) == Poly(ex, x, y, domain='ZZ[z, t, w]')
 
     raises(DomainError, lambda: Poly(x*y, x, y, domain=ZZ[z]).eject(y))
     raises(NotImplementedError, lambda: Poly(x*y, x, y, z).eject(y))
@@ -2177,7 +2177,7 @@ def test_transform():
 
     # Unify ZZ, QQ, and RR
     assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1.0), Poly(x - S.Half)) == \
-        Poly(Rational(9, 4), x) == \
+        Poly(Rational(9, 4), x, domain='RR') == \
         cancel((x - S.Half)**2*(x**2 - 2*x + 1).subs(x, (x + 1.0)/(x - S.Half)))
 
     raises(ValueError, lambda: Poly(x*y).transform(Poly(x + 1), Poly(x - 1)))
@@ -2920,8 +2920,8 @@ def test_cancel():
     f = Poly(x**2 - a**2, x)
     g = Poly(x - a, x)
 
-    F = Poly(x + a, x)
-    G = Poly(1, x)
+    F = Poly(x + a, x, domain='ZZ[a]')
+    G = Poly(1, x, domain='ZZ[a]')
 
     assert cancel((f, g)) == (1, F, G)
 
