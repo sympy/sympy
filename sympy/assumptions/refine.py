@@ -369,5 +369,5 @@ handlers_dict = {
     're': refine_re,
     'im': refine_im,
     'sign': refine_sign,
-    'symmetric matrice': refine_matrixelement
+    'matrixelement': refine_matrixelement
 }  # type: Dict[str, Callable[[Expr, Boolean], Expr]]
