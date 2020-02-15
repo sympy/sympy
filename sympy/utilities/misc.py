@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from collections import Counter
 from typing import List
 
 import sys
@@ -480,3 +481,40 @@ def ordinal(num):
     else:
         suffix = 'th'
     return str(n) + suffix
+
+
+def is_pandigital(n, dset, dfreq='1+'):
+    """
+        Checks whether a given positive integer ``n`` is a pandigital number
+        with respect to the digit base set ``dset`` and the digit frequency
+        string ``dfreq``. To be precise, ``n`` is pandigital with respect to
+        the specified parameters if it has digits in the base set ``dset``
+        such that every digit occurs at least ``dfreq`` times, where ``dfreq``
+        is a string of the form
+        ::
+
+            "<positive integer>"
+
+        or
+        ::
+
+            "<positive integer>+"
+
+        The optional suffix ``+`` indicates that the specified digit frequency
+        should be considered a minimum - without ``+`` the digit frequency is
+        taken to be exact, e.g.
+
+            915286437, {1, 2, 3, 4, 5, 6, 7, 8, 9}     ->   True
+            7346821,   {1, 2, 3, 4, 6, 7, 8}, '1+'     ->   True
+            22441144,  {1, 2, 3, 4}, '2+'              ->   True
+            123456789, {1, 2, 3, 4, 5, 6, 7, 8}        ->   False
+            31290,     {0, 1, 2, 3, 8}                 ->   False
+            1243314,   {1, 2, 3, 4}, '2+'              ->   False
+    """
+    count = Counter(str(n))
+    _dset = set(dset) if not type(dset) == set else dset
+    _dfreq = int(dfreq.split('+')[0])
+    return (
+        set(count.keys()).issubset(_dset) and not any(count[d] != _dfreq for d in count) if '+' not in dfreq else
+        set(count.keys()).issubset(_dset) and not any(count[d] < _dfreq for d in count)
+   )
