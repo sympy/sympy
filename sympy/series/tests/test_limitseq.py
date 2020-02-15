@@ -106,6 +106,7 @@ def test_accum_bounds():
     assert limit_seq(2*(-3)**n/(n + 3**n), n) == AccumulationBounds(-2, 2)
     assert limit_seq(3*n/(n + 1) + 2*(-1)**n, n) == AccumulationBounds(1, 5)
 
+
 def test_limitseq_sum():
     from sympy.abc import x, y, z
     assert limit_seq(Sum(1/x, (x, 1, y)) - log(y), y) == S.EulerGamma
