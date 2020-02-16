@@ -75,14 +75,6 @@ class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
     pass
 
 
-def eye_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
-
-
-def zeros_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
-
-
 class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
 
@@ -773,43 +765,6 @@ def test_sub():
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
     assert n/2 == ArithmeticOnlyMatrix(1, 2, [S.Half, S(2)/2])
-
-
-# DeterminantOnlyMatrix tests
-def test_det():
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
-    raises(NonSquareMatrixError, lambda: a.det())
-
-    z = zeros_Determinant(2)
-    ey = eye_Determinant(2)
-    assert z.det() == 0
-    assert ey.det() == 1
-
-    x = Symbol('x')
-    a = DeterminantOnlyMatrix(0, 0, [])
-    b = DeterminantOnlyMatrix(1, 1, [5])
-    c = DeterminantOnlyMatrix(2, 2, [1, 2, 3, 4])
-    d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
-    e = DeterminantOnlyMatrix(4, 4,
-        [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
-    from sympy.abc import i, j, k, l, m, n
-    f = DeterminantOnlyMatrix(3, 3, [i, l, m, 0, j, n, 0, 0, k])
-    g = DeterminantOnlyMatrix(3, 3, [i, 0, 0, l, j, 0, m, n, k])
-    h = DeterminantOnlyMatrix(3, 3, [x**3, 0, 0, i, x**-1, 0, j, k, x**-2])
-    # the method keyword for `det` doesn't kick in until 4x4 matrices,
-    # so there is no need to test all methods on smaller ones
-
-    assert a.det() == 1
-    assert b.det() == 5
-    assert c.det() == -2
-    assert d.det() == 3
-    assert e.det() == 4*x - 24
-    assert e.det(method='bareiss') == 4*x - 24
-    assert e.det(method='berkowitz') == 4*x - 24
-    assert f.det() == i*j*k
-    assert g.det() == i*j*k
-    assert h.det() == 1
-    raises(ValueError, lambda: e.det(iszerofunc="test"))
 
 
 def test_adjugate():
