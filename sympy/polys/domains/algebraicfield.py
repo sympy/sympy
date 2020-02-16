@@ -26,7 +26,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             raise DomainError("ground domain must be a rational field")
 
         from sympy.polys.numberfields import to_number_field
-        if len(ext) == 1 and type(ext[0]) is tuple:
+        if len(ext) == 1 and isinstance(ext[0], tuple):
             self.orig_ext = ext[0][1:]
         else:
             self.orig_ext = ext
