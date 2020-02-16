@@ -421,7 +421,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = simplify(self.function)
 
 
         if len(sequence_term.free_symbols) > 1:
@@ -492,6 +492,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 (n_log_test[p] == n_log_test[q] == 1 and n_log_test[r] > 1)):
                     return S.true
             return S.false
+
         ### ------------- Limit comparison test -----------###
         # (1/n) comparison
         try:
@@ -500,7 +501,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.false
         except NotImplementedError:
             pass
-
 
         ### ----------- ratio test ---------------- ###
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
@@ -523,12 +523,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             try:
                 lim_val = limit_seq(test_val, sym)
                 if lim_val is not None and lim_val.is_number:
-                    if (lim_val - 1).is_positive:
+                    if lim_val > 1:
                         return S.true
-                    if (lim_val - 1).is_negative:
+                    if lim_val < 1:
                         return S.false
             except NotImplementedError:
                 pass
+
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         try:
@@ -545,7 +546,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
-
 
         ### ------------- integral test -------------- ###
         check_interval = None

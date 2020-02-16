@@ -997,7 +997,7 @@ def test_is_convergent():
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
 
     # Raabe's test --
-    assert Sum(factorial(n - 1)/rf(S(7)/3, n - 1),(n,2,oo)).is_convergent() is S.true
+    assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
@@ -1011,6 +1011,7 @@ def test_is_convergent():
     assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
     assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
     assert Sum(rf(5,n)/rf(7,n),(n,1,oo)).is_convergent() is S.true
+    assert Sum((rf(1, n)*rf(2, n))/(rf(3, n)*factorial(n)),(n,1,oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
