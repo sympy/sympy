@@ -220,16 +220,15 @@ def limit_seq(expr, n=None, trials=5):
     powers = (p.as_base_exp() for p in expr.atoms(Pow))
     if any(b.is_negative and e.has(n) for b, e in powers) or expr.has(cos, sin):
         L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
-        if L1 is not None:
-            L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
-            if L1 != L2:
-                if L2 == None and expr.has(cos, sin):
-                    L3 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
-                    return L3
-                elif L1.is_comparable and L2.is_comparable:
-                    return AccumulationBounds(Min(L1, L2), Max(L1, L2))
-                else:
-                    return None
+        L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
+        if L1 != L2:
+            if (L1 == None or L2 == None) and expr.has(cos, sin):
+                L3 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
+                return L3
+            elif ((L1 != None and L2 != None) and (L1.is_comparable and L2.is_comparable)):
+                return AccumulationBounds(Min(L1, L2), Max(L1, L2))
+            else:
+                return None
     else:
         L1 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
     if L1 is not None:
