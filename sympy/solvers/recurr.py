@@ -136,7 +136,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in range(r + 1):
         for j in range(i, r + 1):
-            polys[i] += coeffs[j]*binomial(j, i)
+            polys[i] += coeffs[j]*(binomial(j, i).as_poly(n))
 
         if not polys[i].is_zero:
             (exp,), coeff = polys[i].LT()
@@ -620,7 +620,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i]*z**i for i in range(r + 1)], 0, n, symbols=True)
+            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, symbols=True)
 
             if C is not None and C is not S.Zero:
                 symbols |= set(s)

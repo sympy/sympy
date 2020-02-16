@@ -27,6 +27,15 @@ def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 
+def test_poly_deprecated():
+    p = Poly(2*x, x)
+    assert p.integrate(x) == Poly(x**2, x, domain='QQ')
+    with warns_deprecated_sympy():
+        integrate(p, x)
+    with warns_deprecated_sympy():
+        Integral(p, (x,))
+
+
 def test_principal_value():
     g = 1 / x
     assert Integral(g, (x, -oo, oo)).principal_value() == 0
@@ -222,8 +231,10 @@ def test_issue_18038():
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
-    qx = integrate(p, x)
-    qy = integrate(p, y)
+    with warns_deprecated_sympy():
+        qx = integrate(p, x)
+    with warns_deprecated_sympy():
+        qy = integrate(p, y)
 
     assert isinstance(qx, Poly) is True
     assert isinstance(qy, Poly) is True
@@ -238,8 +249,10 @@ def test_integrate_poly():
 def test_integrate_poly_defined():
     p = Poly(x + x**2*y + y**3, x, y)
 
-    Qx = integrate(p, (x, 0, 1))
-    Qy = integrate(p, (y, 0, pi))
+    with warns_deprecated_sympy():
+        Qx = integrate(p, (x, 0, 1))
+    with warns_deprecated_sympy():
+        Qy = integrate(p, (y, 0, pi))
 
     assert isinstance(Qx, Poly) is True
     assert isinstance(Qy, Poly) is True

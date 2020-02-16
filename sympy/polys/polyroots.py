@@ -470,7 +470,7 @@ def roots_cyclotomic(f, factor=False):
     for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
-        if f == g:
+        if f.expr == g.expr:
             break
     else:  # pragma: no cover
         raise RuntimeError("failed to find index of a cyclotomic polynomial")
