@@ -7,27 +7,27 @@ from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
-@dispatch(ConditionSet, ConditionSet)
+@dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return None
 
-@dispatch(ConditionSet, Set)
+@dispatch(ConditionSet, Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
 
-@dispatch(Naturals, Integers)
+@dispatch(Naturals, Integers)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Naturals, Naturals)
+@dispatch(Naturals, Naturals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a if a is S.Naturals else b
 
-@dispatch(Interval, Naturals)
+@dispatch(Interval, Naturals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return intersection_sets(b, a)
 
-@dispatch(ComplexRegion, Set)
+@dispatch(ComplexRegion, Set)  # type: ignore # noqa:F811
 def intersection_sets(self, other): # noqa:F811
     if other.is_ComplexRegion:
         # self in rectangular form
@@ -74,11 +74,11 @@ def intersection_sets(self, other): # noqa:F811
             new_interval = Union(*new_interval)
             return Intersection(new_interval, other)
 
-@dispatch(Integers, Reals)
+@dispatch(Integers, Reals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Range, Interval)
+@dispatch(Range, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     from sympy.functions.elementary.integers import floor, ceiling
     if not all(i.is_number for i in b.args[:2]):
@@ -98,13 +98,13 @@ def intersection_sets(a, b): # noqa:F811
         end -= 1
     return intersection_sets(a, Range(start, end + 1))
 
-@dispatch(Range, Naturals)
+@dispatch(Range, Naturals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return intersection_sets(a, Interval(b.inf, S.Infinity))
 
-@dispatch(Range, Range)
+@dispatch(Range, Range)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
-    from sympy.solvers.diophantine import diop_linear
+    from sympy.solvers.diophantine.diophantine import diop_linear
     from sympy.core.numbers import ilcm
     from sympy import sign
 
@@ -215,12 +215,12 @@ def intersection_sets(a, b): # noqa:F811
     return Range(start, stop, step)
 
 
-@dispatch(Range, Integers)
+@dispatch(Range, Integers)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a
 
 
-@dispatch(ImageSet, Set)
+@dispatch(ImageSet, Set)  # type: ignore # noqa:F811
 def intersection_sets(self, other): # noqa:F811
     from sympy.solvers.diophantine import diophantine
 
@@ -368,14 +368,14 @@ def intersection_sets(self, other): # noqa:F811
             return
 
 
-@dispatch(ProductSet, ProductSet)
+@dispatch(ProductSet, ProductSet)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     if len(b.args) != len(a.args):
         return S.EmptySet
     return ProductSet(*(i.intersect(j) for i, j in zip(a.sets, b.sets)))
 
 
-@dispatch(Interval, Interval)
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     # handle (-oo, oo)
     infty = S.NegativeInfinity, S.Infinity
@@ -422,38 +422,38 @@ def intersection_sets(a, b): # noqa:F811
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(type(EmptySet), Set)
+@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return S.EmptySet
 
-@dispatch(UniversalSet, Set)
+@dispatch(UniversalSet, Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return b
 
-@dispatch(FiniteSet, FiniteSet)
+@dispatch(FiniteSet, FiniteSet)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return FiniteSet(*(a._elements & b._elements))
 
-@dispatch(FiniteSet, Set)
+@dispatch(FiniteSet, Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     try:
         return FiniteSet(*[el for el in a if el in b])
     except TypeError:
         return None  # could not evaluate `el in b` due to symbolic ranges.
 
-@dispatch(Set, Set)
+@dispatch(Set, Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return None
 
-@dispatch(Integers, Rationals)
+@dispatch(Integers, Rationals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Naturals, Rationals)
+@dispatch(Naturals, Rationals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a
 
-@dispatch(Rationals, Reals)
+@dispatch(Rationals, Reals)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return a
 
@@ -467,10 +467,10 @@ def _intlike_interval(a, b):
     except ValueError:
         return None
 
-@dispatch(Integers, Interval)
+@dispatch(Integers, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return _intlike_interval(a, b)
 
-@dispatch(Naturals, Interval)
+@dispatch(Naturals, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return _intlike_interval(a, b)

@@ -156,7 +156,7 @@ class Symbol(AtomicExpr, Boolean):
 
     is_comparable = False
 
-    __slots__ = ['name']
+    __slots__ = ('name',)
 
     is_Symbol = True
     is_symbol = True
@@ -189,20 +189,6 @@ class Symbol(AtomicExpr, Boolean):
 
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
-            from collections import defaultdict
-            from sympy.utilities.exceptions import SymPyDeprecationWarning
-            keymap = defaultdict(lambda: None)
-            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
-            if keymap[key]:
-                SymPyDeprecationWarning(
-                    feature="%s assumption" % key,
-                    useinstead="%s" % keymap[key],
-                    issue=8071,
-                    deprecated_since_version="0.7.6").warn()
-                assumptions[keymap[key]] = assumptions[key]
-                assumptions.pop(key)
-                key = keymap[key]
-
             v = assumptions[key]
             if v is None:
                 assumptions.pop(key)
@@ -347,7 +333,7 @@ class Dummy(Symbol):
     _prng = random.Random()
     _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
-    __slots__ = ['dummy_index']
+    __slots__ = ('dummy_index',)
 
     is_Dummy = True
 
@@ -470,7 +456,7 @@ class Wild(Symbol):
     """
     is_Wild = True
 
-    __slots__ = ['exclude', 'properties']
+    __slots__ = ('exclude', 'properties')
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])

@@ -19,7 +19,7 @@ from sympy import lambdify, Add
 from sympy.core.compatibility import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
-numpy = import_module('numpy', __import__kwargs={'fromlist':['arange']})
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Beam(object):
     """
@@ -1734,8 +1734,8 @@ class Beam3D(Beam):
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> b.slope()
-    [0, 0, x*(l*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
-        + q*x**2/6 + x*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
+    [0, 0, x*(l*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
+        + q*x**2/6 + x*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0

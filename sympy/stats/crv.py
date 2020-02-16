@@ -18,6 +18,7 @@ from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
+from sympy.core.sympify import _sympify
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
@@ -170,10 +171,13 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
+    def sample(self, size=()):
         """ A random realization from the distribution """
         icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
+        if not size:
+            return icdf(random.uniform(0, 1))
+        else:
+            return [icdf(random.uniform(0, 1))]*size
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -207,7 +211,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         # CDF is integral of PDF from left bound to z
         pdf = self.pdf(x)
-        cdf = integrate(pdf, (x, left_bound, z), **kwargs)
+        cdf = integrate(pdf.doit(), (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
@@ -302,8 +306,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         pdf = self.pdf(x)
         cdf = integrate(pdf, (x, left_bound, x), **kwargs)
-
-        quantile = solveset(cdf - p, x, S.Reals)
+        quantile = solveset(cdf - p, x, self.set)
         return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
 
     def _quantile(self, x):
@@ -445,12 +448,17 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            dens = density(expr, **kwargs)
+            if not random_symbols(expr):
+                dens = self.density
+                comp = condition.rhs
+            else:
+                dens = density(expr, **kwargs)
+                comp = 0
             if not isinstance(dens, ContinuousDistribution):
                 dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
-            result = space.probability(condition.__class__(space.value, 0))
+            result = space.probability(condition.__class__(space.value, comp))
             return result if not cond_inv else S.One - result
 
     def where(self, condition):
@@ -500,19 +508,20 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample()}
+        return {self.value: self.distribution.sample(size)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
 
+        expr = _sympify(expr)
         expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         x = self.value.symbol

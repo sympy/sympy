@@ -853,29 +853,35 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     def __new__(cls, sym, p, success=1, failure=0):
         _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
-        p = _sympify(p)
         sym = _symbol_converter(sym)
+        p = _sympify(p)
         success = _sym_sympify(success)
         failure = _sym_sympify(failure)
-        state_space = _set_converter([success, failure])
-        return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
-                             success, failure)
+        return Basic.__new__(cls, sym, p, success, failure)
+
+    @property
+    def symbol(self):
+        return self.args[0]
 
     @property
     def p(self):
-        return self.args[3]
-
-    @property
-    def distribution(self):
-        return self.args[2]
+        return self.args[1]
 
     @property
     def success(self):
-        return self.args[4]
+        return self.args[2]
 
     @property
     def failure(self):
-        return self.args[5]
+        return self.args[3]
+
+    @property
+    def state_space(self):
+        return _set_converter([self.success, self.failure])
+
+    @property
+    def distribution(self):
+        return BernoulliDistribution(self.p)
 
     def _rvindexed_subs(self, expr, condition=None):
         """

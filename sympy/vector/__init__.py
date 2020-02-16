@@ -1,10 +1,10 @@
+from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.vector import (Vector, VectorAdd, VectorMul,
                                  BaseVector, VectorZero, Cross, Dot, cross, dot)
 from sympy.vector.dyadic import (Dyadic, DyadicAdd, DyadicMul,
                                  BaseDyadic, DyadicZero)
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.deloperator import Del
-from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.functions import (express, matrix_to_vector,
                                     laplacian, is_conservative,
                                     is_solenoidal, scalar_potential,

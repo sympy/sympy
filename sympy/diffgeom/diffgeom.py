@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Any, Set
+
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
@@ -483,7 +485,7 @@ class BaseScalarField(AtomicExpr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()
+    free_symbols = set()  # type: Set[Any]
 
     def doit(self):
         return self

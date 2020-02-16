@@ -3,11 +3,10 @@ from __future__ import print_function, division
 from functools import reduce
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import with_metaclass
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.numbers import oo, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
@@ -20,7 +19,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import cartes
 
 
-class Rationals(with_metaclass(Singleton, Set)):
+class Rationals(Set, metaclass=Singleton):
     """
     Represents the rational numbers. This set is also available as
     the Singleton, S.Rationals.
@@ -69,7 +68,7 @@ class Rationals(with_metaclass(Singleton, Set)):
         return S.Reals
 
 
-class Naturals(with_metaclass(Singleton, Set)):
+class Naturals(Set, metaclass=Singleton):
     """
     Represents the natural numbers (or counting numbers) which are all
     positive integers starting from 1. This set is also available as
@@ -160,7 +159,7 @@ class Naturals0(Naturals):
         return Range(oo).is_superset(other)
 
 
-class Integers(with_metaclass(Singleton, Set)):
+class Integers(Set, metaclass=Singleton):
     """
     Represents all integers: positive, negative and zero. This set is also
     available as the Singleton, S.Integers.
@@ -231,7 +230,7 @@ class Integers(with_metaclass(Singleton, Set)):
         return Range(-oo, oo).is_superset(other)
 
 
-class Reals(with_metaclass(Singleton, Interval)):
+class Reals(Interval, metaclass=Singleton):
     """
     Represents all real numbers
     from negative infinity to positive infinity,
@@ -1258,25 +1257,28 @@ class ComplexRegion(Set):
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
-            for element in self.psets:
-                if And(element.args[0]._contains(re),
-                        element.args[1]._contains(im)):
-                    return True
-            return False
+            return fuzzy_or(fuzzy_and([
+                pset.args[0]._contains(re),
+                pset.args[1]._contains(im)])
+                for pset in self.psets)
 
         # self in polar form
         elif self.polar:
+            if other.is_zero:
+                # ignore undefined complex argument
+                return fuzzy_or(pset.args[0]._contains(S.Zero)
+                    for pset in self.psets)
             if isTuple:
                 r, theta = other
-            elif other.is_zero:
-                r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)
-            for element in self.psets:
-                if And(element.args[0]._contains(r),
-                        element.args[1]._contains(theta)):
-                    return True
-            return False
+            if theta.is_real and theta.is_number:
+                # angles in psets are normalized to [0, 2pi)
+                theta %= 2*S.Pi
+                return fuzzy_or(fuzzy_and([
+                    pset.args[0]._contains(r),
+                    pset.args[1]._contains(theta)])
+                    for pset in self.psets)
 
 
 class CartesianComplexRegion(ComplexRegion):
@@ -1390,7 +1392,7 @@ class PolarComplexRegion(ComplexRegion):
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 
 
-class Complexes(with_metaclass(Singleton, CartesianComplexRegion)):
+class Complexes(CartesianComplexRegion, metaclass=Singleton):
     """
     The Set of all complex numbers
 

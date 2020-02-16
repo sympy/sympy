@@ -2,7 +2,6 @@ from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
         oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
 )
-from sympy.core.compatibility import long
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
@@ -1459,11 +1458,12 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 
-def test_issue_3514():
+def test_issue_3514_18626():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S.Half*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
     assert sqrt(6)*sqrt(2)/2 == sqrt(3)
+    assert sqrt(8)**Rational(2, 3) == 2
 
 
 def test_make_args():
@@ -1900,9 +1900,9 @@ def test_float_int_round():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
-        long(112345678901234567890)
+        int(112345678901234567890)
     assert int(Float('1.123456789012345678901234567890e25', '')) == \
-        long(11234567890123456789012345)
+        int(11234567890123456789012345)
     # decimal forces float so it's not an exact integer ending in 000000
     assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000192
@@ -2113,3 +2113,7 @@ def test__neg__():
     with distribute(False):
         eq = -(x + y)
         assert eq.is_Mul and eq.args == (-1, x + y)
+
+
+def test_issue_18507():
+    assert Mul(zoo, zoo, 0) is nan

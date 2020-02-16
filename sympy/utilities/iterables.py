@@ -12,7 +12,7 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, PY3
+    as_int, default_sort_key, is_sequence, iterable, ordered
 )
 
 from sympy.utilities.enumerative import (
@@ -2660,10 +2660,7 @@ def roundrobin(*iterables):
     """
     import itertools
 
-    if PY3:
-        nexts = itertools.cycle(iter(it).__next__ for it in iterables)
-    else:
-        nexts = itertools.cycle(iter(it).next for it in iterables)
+    nexts = itertools.cycle(iter(it).__next__ for it in iterables)
 
     pending = len(iterables)
     while pending:

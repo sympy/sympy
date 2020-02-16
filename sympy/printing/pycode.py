@@ -3,8 +3,6 @@ Python code printers
 
 This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
 """
-
-
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
@@ -94,7 +92,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         inline=True,
         fully_qualified_modules=True,
         contract=False,
-        standard='python3'
+        standard='python3',
     )
 
     def __init__(self, settings=None):
@@ -295,6 +293,14 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_ImaginaryUnit(self, expr):
         return '1j'
+
+    def _print_KroneckerDelta(self, expr):
+        a, b = expr.args
+
+        return '(1 if {a} == {b} else 0)'.format(
+            a = self._print(a),
+            b = self._print(b)
+        )
 
     def _print_MatrixBase(self, expr):
         name = expr.__class__.__name__
@@ -657,6 +663,58 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s, %s)" % (self._module_format('numpy.linalg.solve'),
                                self._print(expr.matrix),
                                self._print(expr.vector))
+
+    def _print_ZeroMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.zeros'),
+            self._print(expr.shape))
+
+    def _print_OneMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.ones'),
+            self._print(expr.shape))
+
+    def _print_FunctionMatrix(self, expr):
+        from sympy.core.function import Lambda
+        from sympy.abc import i, j
+        lamda = expr.lamda
+        if not isinstance(lamda, Lambda):
+            lamda = Lambda((i, j), lamda(i, j))
+        return '{}(lambda {}: {}, {})'.format(self._module_format('numpy.fromfunction'),
+            ', '.join(self._print(arg) for arg in lamda.args[0]),
+            self._print(lamda.args[1]), self._print(expr.shape))
+
+    def _print_HadamardProduct(self, expr):
+        func = self._module_format('numpy.multiply')
+        return ''.join('{}({}, '.format(func, self._print(arg)) \
+            for arg in expr.args[:-1]) + "{}{}".format(self._print(expr.args[-1]),
+            ')' * (len(expr.args) - 1))
+
+    def _print_KroneckerProduct(self, expr):
+        func = self._module_format('numpy.kron')
+        return ''.join('{}({}, '.format(func, self._print(arg)) \
+            for arg in expr.args[:-1]) + "{}{}".format(self._print(expr.args[-1]),
+            ')' * (len(expr.args) - 1))
+
+    def _print_Adjoint(self, expr):
+        return '{}({}({}))'.format(
+            self._module_format('numpy.conjugate'),
+            self._module_format('numpy.transpose'),
+            self._print(expr.args[0]))
+
+    def _print_DiagonalOf(self, expr):
+        vect = '{}({})'.format(
+            self._module_format('numpy.diag'),
+            self._print(expr.arg))
+        return '{}({}, (-1, 1))'.format(
+            self._module_format('numpy.reshape'), vect)
+
+    def _print_DiagMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.diagflat'),
+            self._print(expr.args[0]))
+
+    def _print_DiagonalMatrix(self, expr):
+        return '{}({}, {}({}, {}))'.format(self._module_format('numpy.multiply'),
+            self._print(expr.arg), self._module_format('numpy.eye'),
+            self._print(expr.shape[0]), self._print(expr.shape[1]))
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"

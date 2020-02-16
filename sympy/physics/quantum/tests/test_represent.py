@@ -132,7 +132,7 @@ def test_scalar_numpy():
     assert represent(1.0 + I, format='numpy') == 1.0 + 1.0j
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_format_scipy_sparse():

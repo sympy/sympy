@@ -132,7 +132,7 @@ class HadamardProduct(MatrixExpr):
                                 ExprBuilder(_make_matrix, [l2]),
                             ]
                         ),
-                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                    *diagonal],
 
                 )
                 i._first_pointer_parent = subexpr.args[0].args[0].args
@@ -451,7 +451,7 @@ class HadamardPower(MatrixExpr):
                             ExprBuilder(_make_matrix, [l2]),
                         ]
                     ),
-                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                *diagonal],
                 validator=CodegenArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args

@@ -7,7 +7,7 @@ Plane
 """
 from __future__ import division, print_function
 
-from sympy import simplify
+from sympy import simplify  # type:ignore
 from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.symbol import _symbol
 from sympy.core.compatibility import is_sequence
@@ -494,7 +494,7 @@ class Plane(GeometryEntity):
         elif isinstance(l, Plane):
             a = Matrix(l.normal_vector)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero:
+            if a.cross(b).is_zero_matrix:
                 return True
             else:
                 return False
@@ -527,7 +527,7 @@ class Plane(GeometryEntity):
         if isinstance(l, LinearEntity3D):
             a = Matrix(l.direction_ratio)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero:
+            if a.cross(b).is_zero_matrix:
                 return True
             else:
                 return False

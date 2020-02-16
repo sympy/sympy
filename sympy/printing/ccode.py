@@ -13,13 +13,14 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict, Tuple
+
 from functools import wraps
 from itertools import chain
 
 from sympy.core import S
-from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Variable, Declaration,
+    Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
@@ -48,17 +49,7 @@ known_functions_C89 = {
     "ceiling": "ceil",
 }
 
-# move to C99 once CCodePrinter is removed:
-_known_functions_C9X = dict(known_functions_C89, **{
-    "asinh": "asinh",
-    "acosh": "acosh",
-    "atanh": "atanh",
-    "erf": "erf",
-    "gamma": "tgamma",
-})
-known_functions = _known_functions_C9X
-
-known_functions_C99 = dict(_known_functions_C9X, **{
+known_functions_C99 = dict(known_functions_C89, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
     'log10': 'log10',
@@ -70,7 +61,12 @@ known_functions_C99 = dict(_known_functions_C9X, **{
     'loggamma': 'lgamma',
     'erfc': 'erfc',
     'Max': 'fmax',
-    'Min': 'fmin'
+    'Min': 'fmin',
+    "asinh": "asinh",
+    "acosh": "acosh",
+    "atanh": "atanh",
+    "erf": "erf",
+    "gamma": "tgamma",
 })
 
 # These are the core reserved words in the C language. Taken from:
@@ -160,7 +156,7 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }
+    }  # type: Dict[str, Any]
 
     type_aliases = {
         real: float64,
@@ -183,7 +179,7 @@ class C89CodePrinter(CodePrinter):
         uint16: 'int16_t',
         uint32: 'int32_t',
         uint64: 'int64_t',
-    }
+    }  # type: Dict[Type, Any]
 
     type_headers = {
         bool_: {'stdbool.h'},
@@ -196,7 +192,9 @@ class C89CodePrinter(CodePrinter):
         uint32: {'stdint.h'},
         uint64: {'stdint.h'},
     }
-    type_macros = {}  # Macros needed to be defined when using a Type
+
+    # Macros needed to be defined when using a Type
+    type_macros = {}  # type: Dict[Type, Tuple[str, ...]]
 
     type_func_suffixes = {
         float32: 'f',
@@ -217,7 +215,8 @@ class C89CodePrinter(CodePrinter):
     math_macros = None
 
     _ns = ''  # namespace, C++ uses 'std::'
-    _kf = known_functions_C89  # known_functions-dict to copy
+    # known_functions-dict to copy
+    _kf = known_functions_C89  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         settings = settings or {}
@@ -620,39 +619,7 @@ class C89CodePrinter(CodePrinter):
 
     _print_union = _print_struct
 
-
-
-class _C9XCodePrinter(object):
-    # Move these methods to C99CodePrinter when removing CCodePrinter
-    def _get_loop_opening_ending(self, indices):
-        open_lines = []
-        close_lines = []
-        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"  # C99
-        for i in indices:
-            # C arrays start at 0 and end at dimension-1
-            open_lines.append(loopstart % {
-                'var': self._print(i.label),
-                'start': self._print(i.lower),
-                'end': self._print(i.upper + 1)})
-            close_lines.append("}")
-        return open_lines, close_lines
-
-
-@deprecated(
-    last_supported_version='1.0',
-    useinstead="C89CodePrinter or C99CodePrinter, e.g. ccode(..., standard='C99')",
-    issue=12220,
-    deprecated_since_version='1.1')
-class CCodePrinter(_C9XCodePrinter, C89CodePrinter):
-    """
-    Deprecated.
-
-    Alias for C89CodePrinter, for backwards compatibility.
-    """
-    _kf = _known_functions_C9X  # known_functions-dict to copy
-
-
-class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
+class C99CodePrinter(C89CodePrinter):
     standard = 'C99'
     reserved_words = set(reserved_words + reserved_words_c99)
     type_mappings=dict(chain(C89CodePrinter.type_mappings.items(), {
@@ -663,7 +630,9 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         complex64: {'complex.h'},
         complex128: {'complex.h'}
     }.items()))
-    _kf = known_functions_C99  # known_functions-dict to copy
+
+    # known_functions-dict to copy
+    _kf = known_functions_C99  # type: Dict[str, Any]
 
     # functions with versions with 'f' and 'l' suffixes:
     _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'
@@ -730,6 +699,19 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
 
     def _print_Min(self, expr):
         return self._print_math_func(expr, nest=True)
+
+    def _get_loop_opening_ending(self, indices):
+        open_lines = []
+        close_lines = []
+        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"  # C99
+        for i in indices:
+            # C arrays start at 0 and end at dimension-1
+            open_lines.append(loopstart % {
+                'var': self._print(i.label),
+                'start': self._print(i.lower),
+                'end': self._print(i.upper + 1)})
+            close_lines.append("}")
+        return open_lines, close_lines
 
 
 for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'

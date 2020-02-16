@@ -9,6 +9,8 @@ Math object where possible.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.codegen.ast import Assignment
 from sympy.core import S
 from sympy.printing.codeprinter import CodePrinter
@@ -55,8 +57,8 @@ class JavascriptCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
-        'contract': True
-    }
+        'contract': True,
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)

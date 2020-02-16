@@ -9,7 +9,7 @@ from sympy.testing.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
 Cython = import_module('Cython', min_module_version='0.15.1')
-f2py = import_module('numpy.f2py', __import__kwargs={'fromlist': ['f2py']})
+f2py = import_module('numpy.f2py', import_kwargs={'fromlist': ['f2py']})
 
 f2pyworks = False
 if f2py:

@@ -21,13 +21,10 @@ def test_issue_7263():
             673.447451402970) < 1e-12
 
 
-@XFAIL
 def test_factorial_simplify():
-    # There are more tests in test_factorials.py. These are just to
-    # ensure that simplify() calls factorial_simplify correctly
-    from sympy.specfun.factorials import factorial
+    # There are more tests in test_factorials.py.
     x = Symbol('x')
-    assert simplify(factorial(x)/x) == factorial(x - 1)
+    assert simplify(factorial(x)/x) == gamma(x)
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 
@@ -70,8 +67,8 @@ def test_simplify_expr():
 
     f = Symbol('f')
     A = Matrix([[2*k - m*w**2, -k], [-k, k - m*w**2]]).inv()
-    assert simplify((A*Matrix([0, f]))[1]) == \
-        -f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2))
+    assert simplify((A*Matrix([0, f]))[1] -
+            (-f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2)))) == 0
 
     f = -x + y/(z + t) + z*x/(z + t) + z*a/(z + t) + t*x/(z + t)
     assert simplify(f) == (y + a*z)/(z + t)

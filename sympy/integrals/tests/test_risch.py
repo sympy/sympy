@@ -20,6 +20,8 @@ def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
     Poly(x**3 + x**2 - 4*x - 4), Poly(x**2 - 1)) == \
         (Poly((-x**2 + 4*x - 3)/5), Poly((x**3 - 7*x**2 + 16*x - 10)/5))
+    assert gcdex_diophantine(Poly(x**3 + 6*x + 7), Poly(x**2 + 3*x + 2), Poly(x + 1)) == \
+        (Poly(1/13, x, domain='QQ'), Poly(-1/13*x + 3/13, x, domain='QQ'))
 
 
 def test_frac_in():
@@ -76,7 +78,8 @@ def test_splitfactor():
         (2*x + 7*x**2 + 2*x**3)*t**2 + (1 - 4*x - 4*x**2)*t - 1 + 2*x, t, field=True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t**2 - 3/(2*x)*t + 1/(2*x), t)]})
     assert splitfactor(p, DE) == (Poly(4*x**4*t**3 + (-8*x**3 - 4*x**4)*t**2 +
-        (4*x**2 + 8*x**3)*t - 4*x**2, t), Poly(t**2 + 1/x*t + (1 - 2*x)/(4*x**2), t, domain='ZZ(x)'))
+        (4*x**2 + 8*x**3)*t - 4*x**2, t, domain='ZZ(x)'),
+        Poly(t**2 + 1/x*t + (1 - 2*x)/(4*x**2), t, domain='ZZ(x)'))
     assert splitfactor(Poly(x, t), DE) == (Poly(x, t), Poly(1, t))
     r = Poly(-4*x**4*z**2 + 4*x**6*z**2 - z*x**3 - 4*x**5*z**3 + 4*x**3*z**3 + x**4 + z*x**5 - x**6, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
@@ -91,30 +94,34 @@ def test_splitfactor():
 def test_canonical_representation():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
     assert canonical_representation(Poly(x - t, t), Poly(t**2, t), DE) == \
-        (Poly(0, t), (Poly(0, t),
-        Poly(1, t)), (Poly(-t + x, t),
+        (Poly(0, t, domain='ZZ[x]'), (Poly(0, t, domain='QQ[x]'),
+        Poly(1, t, domain='ZZ')), (Poly(-t + x, t, domain='QQ[x]'),
         Poly(t**2, t)))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     assert canonical_representation(Poly(t**5 + t**3 + x**2*t + 1, t),
     Poly((t**2 + 1)**3, t), DE) == \
-        (Poly(0, t), (Poly(t**5 + t**3 + x**2*t + 1, t),
-        Poly(t**6 + 3*t**4 + 3*t**2 + 1, t)), (Poly(0, t), Poly(1, t)))
+        (Poly(0, t, domain='ZZ[x]'), (Poly(t**5 + t**3 + x**2*t + 1, t, domain='QQ[x]'),
+         Poly(t**6 + 3*t**4 + 3*t**2 + 1, t, domain='QQ')),
+        (Poly(0, t, domain='QQ[x]'), Poly(1, t, domain='QQ')))
 
 
 def test_hermite_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
 
     assert hermite_reduce(Poly(x - t, t), Poly(t**2, t), DE) == \
-        ((Poly(-x, t), Poly(t, t)), (Poly(0, t), Poly(1, t)), (Poly(-x, t), Poly(1, t)))
+        ((Poly(-x, t, domain='QQ[x]'), Poly(t, t, domain='QQ[x]')),
+         (Poly(0, t, domain='QQ[x]'), Poly(1, t, domain='QQ[x]')),
+         (Poly(-x, t, domain='QQ[x]'), Poly(1, t, domain='QQ[x]')))
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t**2 - t/x - (1 - nu**2/x**2), t)]})
 
     assert hermite_reduce(
             Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 - (x**2 - nu**2)*t - x**5/4, t),
             Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 + x**4 + x**6/4, t), DE) == \
-        ((Poly(-x**2 - 4, t), Poly(4*t**2 + 2*x**2 + 4, t)),
-         (Poly((-2*nu**2 - x**4)*t - (2*x**3 + 2*x), t), Poly(2*x**2*t**2 + x**4 + 2*x**2, t)),
-         (Poly(x*t + 1, t), Poly(x, t)))
+        ((Poly(-x**2 - 4, t, domain='ZZ(x,nu)'), Poly(4*t**2 + 2*x**2 + 4, t, domain='ZZ(x,nu)')),
+         (Poly((-2*nu**2 - x**4)*t - (2*x**3 + 2*x), t, domain='ZZ(x,nu)'),
+          Poly(2*x**2*t**2 + x**4 + 2*x**2, t, domain='ZZ(x,nu)')),
+         (Poly(x*t + 1, t, domain='ZZ(x,nu)'), Poly(x, t, domain='ZZ(x,nu)')))
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
 
@@ -122,30 +129,33 @@ def test_hermite_reduce():
     d = Poly(x*t**6 - 4*x**2*t**5 + 6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t)
 
     assert hermite_reduce(a, d, DE) == \
-        ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 - 3*x**3*t, t)),
-         (Poly(0, t), Poly(1, t)),
-         (Poly(0, t), Poly(1, t)))
+        ((Poly(3*t**2 + t + 3*x, t, domain='ZZ(x)'),
+          Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 - 3*x**3*t, t, domain='ZZ(x)')),
+         (Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')),
+         (Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')))
 
     assert hermite_reduce(
-            Poly(-t**2 + 2*t + 2, t),
-            Poly(-x*t**2 + 2*x*t - x, t), DE) == \
-        ((Poly(3, t), Poly(t - 1, t)),
-         (Poly(0, t), Poly(1, t)),
-         (Poly(1, t), Poly(x, t)))
+            Poly(-t**2 + 2*t + 2, t, domain='ZZ(x)'),
+            Poly(-x*t**2 + 2*x*t - x, t, domain='ZZ(x)'), DE) == \
+        ((Poly(3, t, domain='ZZ(x)'), Poly(t - 1, t, domain='ZZ(x)')),
+         (Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')),
+         (Poly(1, t, domain='ZZ(x)'), Poly(x, t, domain='ZZ(x)')))
 
     assert hermite_reduce(
-            Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 + (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t),
-            Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), DE) == \
-        ((Poly(x**3*t + x**4 + 1, t), Poly(x**3*t**3 - x, t)),
-         (Poly(0, t), Poly(1, t)),
-         (Poly(-1, t), Poly(x**2, t)))
+            Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 + (-3 - 3*x**4)*t**2 -
+                2*x*t - x - 3*x**2, t, domain='ZZ(x)'),
+            Poly(x**4*t**6 - 2*x**2*t**3 + 1, t, domain='ZZ(x)'), DE) == \
+        ((Poly(x**3*t + x**4 + 1, t, domain='ZZ(x)'), Poly(x**3*t**3 - x, t, domain='ZZ(x)')),
+         (Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')),
+         (Poly(-1, t, domain='ZZ(x)'), Poly(x**2, t, domain='ZZ(x)')))
 
     assert hermite_reduce(
             Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 + (-4*x + 2*x**2)*t + x**2, t),
             Poly(x*t**6 - 4*x**2*t**5 + 6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t), DE) == \
-        ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 - 3*x**3*t, t)),
-         (Poly(0, t), Poly(1, t)),
-         (Poly(0, t), Poly(1, t)))
+        ((Poly(3*t**2 + t + 3*x, t, domain='ZZ(x)'),
+          Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 - 3*x**3*t, t, domain='ZZ(x)')),
+         (Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')),
+         (Poly(0, t, domain='ZZ(x)'), Poly(1, t, domain='ZZ(x)')))
 
 
 def test_polynomial_reduce():
@@ -164,7 +174,7 @@ def test_laurent_series():
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
         (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
-        [Poly(-3*t**3 - 6*t**2, t), Poly(2*t**6 + 6*t**5 - 8*t**3, t)])
+        [Poly(-3*t**3 - 6*t**2, t, domain='QQ'), Poly(2*t**6 + 6*t**5 - 8*t**3, t, domain='QQ')])
 
 
 def test_recognize_derivative():
@@ -203,28 +213,30 @@ def test_residue_reduce():
     d = Poly(t**3 - x**2*t, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)], 'Tfuncs': [log]})
     assert residue_reduce(a, d, DE, z, invert=False) == \
-        ([(Poly(z**2 - Rational(1, 4), z), Poly((1 + 3*x*z - 6*z**2 -
-        2*x**2 + 4*x**2*z**2)*t - x*z + x**2 + 2*x**2*z**2 - 2*z*x**3, t))], False)
+        ([(Poly(z**2 - Rational(1, 4), z, domain='ZZ(x)'),
+          Poly((1 + 3*x*z - 6*z**2 - 2*x**2 + 4*x**2*z**2)*t - x*z + x**2 +
+              2*x**2*z**2 - 2*z*x**3, t, domain='ZZ(z, x)'))], False)
     assert residue_reduce(a, d, DE, z, invert=True) == \
-        ([(Poly(z**2 - Rational(1, 4), z), Poly(t + 2*x*z, t))], False)
+        ([(Poly(z**2 - Rational(1, 4), z, domain='ZZ(x)'), Poly(t + 2*x*z, t))], False)
     assert residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t,), DE, z, invert=False) == \
-        ([(Poly(z**2 - 1, z), Poly(-2*z*t/x - 2/x, t))], True)
+        ([(Poly(z**2 - 1, z, domain='QQ'), Poly(-2*z*t/x - 2/x, t, domain='ZZ(z,x)'))], True)
     ans = residue_reduce(Poly(-2/x, t), Poly(t**2 - 1, t), DE, z, invert=True)
-    assert ans == ([(Poly(z**2 - 1, z), Poly(t + z, t))], True)
+    assert ans == ([(Poly(z**2 - 1, z, domain='QQ'), Poly(t + z, t))], True)
     assert residue_reduce_to_basic(ans[0], DE, z) == -log(-1 + log(x)) + log(1 + log(x))
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t**2 - t/x - (1 - nu**2/x**2), t)]})
     # TODO: Skip or make faster
     assert residue_reduce(Poly((-2*nu**2 - x**4)/(2*x**2)*t - (1 + x**2)/x, t),
     Poly(t**2 + 1 + x**2/2, t), DE, z) == \
-        ([(Poly(z + S.Half, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t, domain='EX'))], True)
+        ([(Poly(z + S.Half, z, domain='QQ'), Poly(t**2 + 1 + x**2/2, t,
+            domain='ZZ(x,nu)'))], True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
     assert residue_reduce(Poly(-2*x*t + 1 - x**2, t),
     Poly(t**2 + 2*x*t + 1 + x**2, t), DE, z) == \
         ([(Poly(z**2 + Rational(1, 4), z), Poly(t + x + 2*z, t))], True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert residue_reduce(Poly(t, t), Poly(t + sqrt(2), t), DE, z) == \
-        ([(Poly(z - 1, z), Poly(t + sqrt(2), t))], True)
+        ([(Poly(z - 1, z, domain='QQ'), Poly(t + sqrt(2), t))], True)
 
 
 def test_integrate_hyperexponential():

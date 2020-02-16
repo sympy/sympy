@@ -1,7 +1,7 @@
 """Tests for computational algebraic number field theory. """
 
 from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
-    pi, cos, sin, exp)
+    pi, cos, sin, exp, GoldenRatio, TribonacciConstant, cbrt)
 
 from sympy.testing.pytest import raises, slow
 
@@ -79,8 +79,8 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2), x) == x**2 - 2
 
     assert minimal_polynomial(sqrt(2), polys=True) == Poly(x**2 - 2)
-    assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2)
-    assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2, domain='QQ')
+    assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2, domain='QQ')
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(3))
@@ -88,8 +88,8 @@ def test_minimal_polynomial():
     assert minimal_polynomial(a, x) == x**2 - 2
     assert minimal_polynomial(b, x) == x**2 - 3
 
-    assert minimal_polynomial(a, x, polys=True) == Poly(x**2 - 2)
-    assert minimal_polynomial(b, x, polys=True) == Poly(x**2 - 3)
+    assert minimal_polynomial(a, x, polys=True) == Poly(x**2 - 2, domain='QQ')
+    assert minimal_polynomial(b, x, polys=True) == Poly(x**2 - 3, domain='QQ')
 
     assert minimal_polynomial(sqrt(a/2 + 17), x) == 2*x**4 - 68*x**2 + 577
     assert minimal_polynomial(sqrt(b/2 + 17), x) == 4*x**4 - 136*x**2 + 1153
@@ -149,6 +149,14 @@ def test_minimal_polynomial():
     assert minimal_polynomial(I, x, domain=QQ) == x**2 + 1
     assert minimal_polynomial(I, x, domain='QQ(y)') == x**2 + 1
 
+    #issue 11553
+    assert minimal_polynomial(GoldenRatio, x) == x**2 - x - 1
+    assert minimal_polynomial(TribonacciConstant + 3, x) == x**3 - 10*x**2 + 32*x - 34
+    assert minimal_polynomial(GoldenRatio, x, domain=QQ.algebraic_field(sqrt(5))) == \
+            2*x - sqrt(5) - 1
+    assert minimal_polynomial(TribonacciConstant, x, domain=QQ.algebraic_field(cbrt(19 - 3*sqrt(33)))) == \
+    48*x - 19*(19 - 3*sqrt(33))**Rational(2, 3) - 3*sqrt(33)*(19 - 3*sqrt(33))**Rational(2, 3) \
+    - 16*(19 - 3*sqrt(33))**Rational(1, 3) - 16
 
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + Rational(1, 10)**30)
@@ -266,9 +274,9 @@ def test_primitive_element():
     assert primitive_element(
         [sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
 
-    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2), [1])
+    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1])
     assert primitive_element([sqrt(
-        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1), [1, 1])
+        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1])
 
     assert primitive_element(
         [sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
@@ -277,9 +285,9 @@ def test_primitive_element():
          Q(1, 2), 0, Q(11, 2), 0]])
 
     assert primitive_element(
-        [sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2), [1], [[1, 0]])
+        [sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1], [[1, 0]])
     assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
-        (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
+        (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
          0], [-Q(1, 2), 0, Q(11, 2), 0]])
 
     assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
@@ -623,8 +631,8 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2), [1, 0])
     b = AlgebraicNumber(sqrt(2), [1, 0], alias=y)
 
-    assert a.as_poly(x) == Poly(x)
-    assert b.as_poly() == Poly(y)
+    assert a.as_poly(x) == Poly(x, domain='QQ')
+    assert b.as_poly() == Poly(y, domain='QQ')
 
     assert a.as_expr() == sqrt(2)
     assert a.as_expr(x) == x
@@ -638,8 +646,8 @@ def test_AlgebraicNumber():
 
     assert p == Poly(2*p.gen + 3)
 
-    assert a.as_poly(x) == Poly(2*x + 3)
-    assert b.as_poly() == Poly(2*y + 3)
+    assert a.as_poly(x) == Poly(2*x + 3, domain='QQ')
+    assert b.as_poly() == Poly(2*y + 3, domain='QQ')
 
     assert a.as_expr() == 2*sqrt(2) + 3
     assert a.as_expr(x) == 2*x + 3
@@ -717,12 +725,12 @@ def test_minpoly_fraction_field():
     assert minimal_polynomial(sqrt(x) / z, y) == z**2*y**2 - x
     assert minimal_polynomial(sqrt(x) / (z + 1), y) == (z**2 + 2*z + 1)*y**2 - x
 
-    assert minimal_polynomial(1/x, y, polys=True) == Poly(-x*y + 1, y)
+    assert minimal_polynomial(1/x, y, polys=True) == Poly(-x*y + 1, y, domain='ZZ(x)')
     assert minimal_polynomial(1 / (x + 1), y, polys=True) == \
-        Poly((x + 1)*y - 1, y)
-    assert minimal_polynomial(sqrt(x), y, polys=True) == Poly(y**2 - x, y)
+        Poly((x + 1)*y - 1, y, domain='ZZ(x)')
+    assert minimal_polynomial(sqrt(x), y, polys=True) == Poly(y**2 - x, y, domain='ZZ(x)')
     assert minimal_polynomial(sqrt(x) / z, y, polys=True) == \
-        Poly(z**2*y**2 - x, y)
+        Poly(z**2*y**2 - x, y, domain='ZZ(x, z)')
 
     # this is (sqrt(1 + x**3)/x).integrate(x).diff(x) - sqrt(1 + x**3)/x
     a = sqrt(x)/sqrt(1 + x**(-3)) - sqrt(x**3 + 1)/x + 1/(x**Rational(5, 2)* \

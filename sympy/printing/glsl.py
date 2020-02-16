@@ -1,5 +1,7 @@
+from typing import Set
+
 from sympy.codegen.ast import Assignment
-from sympy.core import S
+from sympy.core import Basic, S
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
@@ -32,7 +34,7 @@ class GLSLPrinter(CodePrinter):
     Additional settings:
     'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
     """
-    _not_supported = set()
+    _not_supported = set()  # type: Set[Basic]
     printmethod = "_glsl"
     language = "GLSL"
 
@@ -51,7 +53,7 @@ class GLSLPrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'error_on_reserved': False,
-        'reserved_word_suffix': '_'
+        'reserved_word_suffix': '_',
     }
 
     def __init__(self, settings={}):
@@ -131,7 +133,6 @@ class GLSLPrinter(CodePrinter):
             return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
 
     _print_Matrix = \
-        _print_MatrixElement = \
         _print_DenseMatrix = \
         _print_MutableDenseMatrix = \
         _print_ImmutableMatrix = \

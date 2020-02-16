@@ -14,17 +14,17 @@ from sympy.sets import Interval, FiniteSet
 _x, _y = symbols("x y")
 
 
-@dispatch(Basic, Basic)
+@dispatch(Basic, Basic)  # type: ignore # noqa:F811
 def _set_add(x, y): # noqa:F811
     return None
 
 
-@dispatch(Expr, Expr)
+@dispatch(Expr, Expr)  # type: ignore # noqa:F811
 def _set_add(x, y): # noqa:F811
     return x+y
 
 
-@dispatch(Interval, Interval)
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def _set_add(x, y): # noqa:F811
     """
     Additions in interval arithmetic
@@ -34,30 +34,30 @@ def _set_add(x, y): # noqa:F811
                     x.left_open or y.left_open, x.right_open or y.right_open)
 
 
-@dispatch(Interval, Infinity)
+@dispatch(Interval, Infinity)  # type: ignore # noqa:F811
 def _set_add(x, y): # noqa:F811
     if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet({S.Infinity})
 
-@dispatch(Interval, NegativeInfinity)
+@dispatch(Interval, NegativeInfinity)  # type: ignore # noqa:F811
 def _set_add(x, y): # noqa:F811
     if x.end is S.Infinity:
         return Interval(-oo, oo)
     return FiniteSet({S.NegativeInfinity})
 
 
-@dispatch(Basic, Basic)
+@dispatch(Basic, Basic)  # type: ignore
 def _set_sub(x, y): # noqa:F811
     return None
 
 
-@dispatch(Expr, Expr)
+@dispatch(Expr, Expr)  # type: ignore # noqa:F811
 def _set_sub(x, y): # noqa:F811
     return x-y
 
 
-@dispatch(Interval, Interval)
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def _set_sub(x, y): # noqa:F811
     """
     Subtractions in interval arithmetic
@@ -67,13 +67,13 @@ def _set_sub(x, y): # noqa:F811
                     x.left_open or y.right_open, x.right_open or y.left_open)
 
 
-@dispatch(Interval, Infinity)
+@dispatch(Interval, Infinity)  # type: ignore # noqa:F811
 def _set_sub(x, y): # noqa:F811
     if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet(-oo)
 
-@dispatch(Interval, NegativeInfinity)
+@dispatch(Interval, NegativeInfinity)  # type: ignore # noqa:F811
 def _set_sub(x, y): # noqa:F811
     if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
