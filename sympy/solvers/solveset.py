@@ -2991,6 +2991,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
+                eq2 = eq2.rewrite(Add)
                 depen = eq2.as_independent(unsolved_syms)[0]
                 if depen.has(Abs) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
