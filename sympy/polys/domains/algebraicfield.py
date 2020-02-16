@@ -126,3 +126,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def denom(self, a):
         """Returns denominator of ``a``. """
         return self.one
+
+    def from_AlgebraicField(K1, a, K0):
+        """Convert a polynomial to ``dtype``. """
+        a = K0.to_sympy(a)
+        return K1.from_sympy(a)
