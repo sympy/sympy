@@ -20,7 +20,7 @@ from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
 from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
-from sympy.simplify.powsimp import powsimp, powdenest
+from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 import itertools
@@ -421,7 +421,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = simplify(self.function)
 
 
         if len(sequence_term.free_symbols) > 1:
@@ -446,9 +446,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = sym_
 
         interval = Interval(lower_limit, upper_limit)
-
-        sequence_term = sequence_term.simplify()
-        sequence_term = powdenest(sequence_term)
 
 
         # Piecewise function handle
@@ -522,7 +519,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if lim_ratio == 1:  # ratio test inconclusive
             test_val = sym*(sequence_term/
                          sequence_term.subs(sym, sym + 1) - 1)
-            test_val = test_val.simplify()
+            test_val = test_val.gammasimp()
             try:
                 lim_val = limit_seq(test_val, sym)
                 if lim_val is not None and lim_val.is_number:

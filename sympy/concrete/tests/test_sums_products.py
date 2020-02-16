@@ -8,6 +8,7 @@ from sympy import (
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
+from sympy.functions.combinatorial.factorials import rf
 from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.matrices import \
     Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
@@ -1008,6 +1009,9 @@ def test_is_convergent():
     assert Sum(1/n**Rational(6, 5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
     assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(rf(5,n)/rf(7,n),(n,1,oo)).is_convergent() is S.true
+    assert Sum((rf(1, n)*rf(2, n))/(rf(3, n)*factorial(n)),(n,1,oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
