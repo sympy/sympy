@@ -65,13 +65,16 @@ def _polifyit(func):
             try:
                 g = f.from_expr(g, *f.gens)
             except PolynomialError:
+                if g.is_Matrix:
+                    return NotImplemented
                 expr_method = getattr(f.as_expr(), func.__name__)
                 result = expr_method(g)
-                SymPyDeprecationWarning(
-                    feature="Mixing Poly with non-polynomial expressions in binary operations",
-                    issue=18613,
-                    deprecated_since_version="1.6",
-                    useinstead="the as_expr or as_poly method to convert types").warn()
+                if result is not NotImplemented:
+                    SymPyDeprecationWarning(
+                        feature="Mixing Poly with non-polynomial expressions in binary operations",
+                        issue=18613,
+                        deprecated_since_version="1.6",
+                        useinstead="the as_expr or as_poly method to convert types").warn()
                 return result
             else:
                 return func(f, g)

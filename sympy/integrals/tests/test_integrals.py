@@ -232,8 +232,10 @@ def test_issue_18038():
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
-    qx = integrate(p, x)
-    qy = integrate(p, y)
+    with warns_deprecated_sympy():
+        qx = integrate(p, x)
+    with warns_deprecated_sympy():
+        qy = integrate(p, y)
 
     assert isinstance(qx, Poly) is True
     assert isinstance(qy, Poly) is True
@@ -248,8 +250,10 @@ def test_integrate_poly():
 def test_integrate_poly_defined():
     p = Poly(x + x**2*y + y**3, x, y)
 
-    Qx = integrate(p, (x, 0, 1))
-    Qy = integrate(p, (y, 0, pi))
+    with warns_deprecated_sympy():
+        Qx = integrate(p, (x, 0, 1))
+    with warns_deprecated_sympy():
+        Qy = integrate(p, (y, 0, pi))
 
     assert isinstance(Qx, Poly) is True
     assert isinstance(Qy, Poly) is True
