@@ -421,7 +421,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = simplify(self.function)
+        sequence_term = self.function
 
 
         if len(sequence_term.free_symbols) > 1:
@@ -529,7 +529,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         return S.false
             except NotImplementedError:
                 pass
-
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         try:
