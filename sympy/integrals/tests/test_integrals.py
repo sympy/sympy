@@ -16,6 +16,7 @@ from sympy.physics import units
 from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
     warns_deprecated_sympy)
 from sympy.testing.randtest import verify_numerically
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
@@ -25,6 +26,15 @@ f = Function('f')
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
+
+def test_poly_deprecated():
+    p = Poly(2*x, x)
+    assert p.integrate(x) == Poly(x**2, x, domain='QQ')
+    with warns_deprecated_sympy():
+        integrate(p, x)
+    with warns_deprecated_sympy():
+        Integral(p, (x,))
 
 
 def test_principal_value():
