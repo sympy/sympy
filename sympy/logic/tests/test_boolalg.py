@@ -16,7 +16,7 @@ from sympy.logic.boolalg import (
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
-    anf_coeffs, ANFform, minterm, maxterm, monomial)
+    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -1143,19 +1143,19 @@ def test_ANFform():
         Xor(True, And(x, y), remove_true=False)
 
 
-def test_minterm():
+def test_bool_minterm():
     x, y = symbols('x,y')
-    assert minterm(3, [x, y]) == And(x, y)
-    assert minterm([1, 0], [x, y]) == And(Not(y), x)
+    assert bool_minterm(3, [x, y]) == And(x, y)
+    assert bool_minterm([1, 0], [x, y]) == And(Not(y), x)
 
 
-def test_maxterm():
+def test_bool_maxterm():
     x, y = symbols('x,y')
-    assert maxterm(2, [x, y]) == Or(Not(x), y)
-    assert maxterm([0, 1], [x, y]) == Or(Not(y), x)
+    assert bool_maxterm(2, [x, y]) == Or(Not(x), y)
+    assert bool_maxterm([0, 1], [x, y]) == Or(Not(y), x)
 
 
-def test_monomial():
+def test_bool_monomial():
     x, y = symbols('x,y')
-    assert monomial(1, [x, y]) == y
-    assert monomial([1, 1], [x, y]) == And(x, y)
+    assert bool_monomial(1, [x, y]) == y
+    assert bool_monomial([1, 1], [x, y]) == And(x, y)

@@ -2577,14 +2577,16 @@ def anf_coeffs(truthvalues):
 
     Examples
     ========
-    >>> from sympy.logic.boolalg import anf_coeffs, monomial, Xor
+    >>> from sympy.logic.boolalg import anf_coeffs, bool_monomial, Xor
     >>> from sympy.abc import a, b, c
     >>> truthvalues = [0, 1, 1, 0, 0, 1, 0, 1]
     >>> coeffs = anf_coeffs(truthvalues)
     >>> coeffs
     [0, 1, 1, 0, 0, 0, 1, 0]
-    >>> polynomial = Xor(*[monomial(k, [a, b, c])
-    ...         for k, coeff in enumerate(coeffs) if coeff==1])
+    >>> polynomial = Xor(*[
+    ...     bool_monomial(k, [a, b, c])
+    ...     for k, coeff in enumerate(coeffs) if coeff == 1
+    ... ])
     >>> polynomial
     b ^ c ^ (a & b)
 
@@ -2609,7 +2611,7 @@ def anf_coeffs(truthvalues):
     return coeffs[0]
 
 
-def minterm(k, variables):
+def bool_minterm(k, variables):
     """
     Return the k-th minterm.
 
@@ -2625,11 +2627,11 @@ def minterm(k, variables):
 
     Examples
     ========
-    >>> from sympy.logic.boolalg import minterm
+    >>> from sympy.logic.boolalg import bool_minterm
     >>> from sympy.abc import x, y, z
-    >>> minterm([1, 0, 1], [x, y, z])
+    >>> bool_minterm([1, 0, 1], [x, y, z])
     x & z & ~y
-    >>> minterm(6, [x, y, z])
+    >>> bool_minterm(6, [x, y, z])
     x & y & ~z
 
     References
@@ -2644,7 +2646,7 @@ def minterm(k, variables):
     return _convert_to_varsSOP(k, variables)
 
 
-def maxterm(k, variables):
+def bool_maxterm(k, variables):
     """
     Return the k-th maxterm.
 
@@ -2661,11 +2663,11 @@ def maxterm(k, variables):
 
     Examples
     ========
-    >>> from sympy.logic.boolalg import maxterm
+    >>> from sympy.logic.boolalg import bool_maxterm
     >>> from sympy.abc import x, y, z
-    >>> maxterm([1, 0, 1], [x, y, z])
+    >>> bool_maxterm([1, 0, 1], [x, y, z])
     y | ~x | ~z
-    >>> maxterm(6, [x, y, z])
+    >>> bool_maxterm(6, [x, y, z])
     z | ~x | ~y
 
     References
@@ -2680,7 +2682,7 @@ def maxterm(k, variables):
     return _convert_to_varsPOS(k, variables)
 
 
-def monomial(k, variables):
+def bool_monomial(k, variables):
     """
     Return the k-th monomial.
 
@@ -2707,11 +2709,11 @@ def monomial(k, variables):
 
     Examples
     ========
-    >>> from sympy.logic.boolalg import monomial
+    >>> from sympy.logic.boolalg import bool_monomial
     >>> from sympy.abc import x, y, z
-    >>> monomial([1, 0, 1], [x, y, z])
+    >>> bool_monomial([1, 0, 1], [x, y, z])
     x & z
-    >>> monomial(6, [x, y, z])
+    >>> bool_monomial(6, [x, y, z])
     x & y
 
     """
