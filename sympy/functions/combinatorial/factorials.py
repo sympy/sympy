@@ -9,7 +9,7 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
-from sympy.ntheory import sieve
+from sympy.ntheory import sieve, multiplicity, primefactors
 from sympy.polys.polytools import Poly
 
 from math import sqrt as _sqrt
@@ -234,6 +234,52 @@ class factorial(CombinatorialFunction):
                         fc = self._facmod(n, aq)
 
                     return S(fc % q)
+
+    def factmultiplicity(self, p, n):
+
+        """
+        Finds the greatest integer m such that p**m divides factorial of n without calculating the factorial
+
+        >>> from sympy import Symbol, factorial
+        >>> n = Symbol('n', integer=True)
+
+        >>> factorial(n).factmultiplicity(5, 60)
+        14
+        >>> factorial(n).factmultiplicity(5, 25)
+        6
+        >>> factorial(n).factmultiplicity(12, 49)
+        22
+        >>> factorial(n).factmultiplicity(10, 100)
+        24
+
+        """
+
+        m = 0
+
+        if p <= 0:
+            raise ValueError('expecting positive integer got %s' % p )
+
+        if n < 0:
+            raise ValueError('expecting non-negative integer got %s' % n )
+
+        primelist = primefactors(p)
+
+        for prime in primelist:
+            ans = 0
+            y = prime
+            ans1 = n
+
+            while ans1 != 0:
+                ans1 = int(n/y)
+                ans = ans+ans1
+                y = y*prime
+
+            power = int(ans/multiplicity(prime, p))
+
+            if (m > power or prime==primelist[0]):
+                m = power
+
+        return m
 
     def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
