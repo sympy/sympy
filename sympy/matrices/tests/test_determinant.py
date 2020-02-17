@@ -1,7 +1,7 @@
 import random
-
-from sympy import symbols, Symbol
-from sympy.matrices import Matrix, eye
+from sympy.core.numbers import I
+from sympy import symbols, Symbol, Rational, sqrt, Poly
+from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 from sympy.matrices.matrices import MatrixDeterminant
@@ -365,7 +365,6 @@ def test_charpoly():
     assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
     assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)
     raises(NonSquareMatrixError, lambda: Matrix([[1], [2]]).charpoly())
-Determinant
     n = DeterminantOnlyMatrix(4, 4, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     assert n.charpoly() == Poly(x**4, x)
 
