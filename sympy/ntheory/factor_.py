@@ -252,12 +252,16 @@ def multiplicity(p, n):
 
     >>> from sympy.ntheory import multiplicity
     >>> from sympy.core.numbers import Rational as R
+    >>> from sympy import factorial
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
     >>> multiplicity(3, R(1, 9))
     -2
+    >>> multiplicity(5, factorial(60))
+    14
 
     """
+
     try:
         p, n = as_int(p), as_int(n)
     except ValueError:
@@ -311,49 +315,54 @@ def multiplicity(p, n):
     return m
 
 
-def factmultiplicity(p, n):
+def multiplicity_in_factorial(b, n):
     """
-    Finds the greatest integer m such that p**m divides factorial of n without calculating the factorial
+    Finds the greatest integer m such that b**m divides factorial of n without calculating the factorial
 
     Examples
     ========
 
-    >>> from sympy.ntheory import factmultiplicity
+    >>> from sympy.ntheory import multiplicity_in_factorial
 
-    >>> factmultiplicity(5, 60)
+    >>> multiplicity_in_factorial(5, 60)
     14
-    >>> factmultiplicity(5, 25)
+    >>> multiplicity_in_factorial(5, 25)
     6
-    >>> factmultiplicity(12, 49)
+    >>> multiplicity_in_factorial(12, 49)
     22
-    >>> factmultiplicity(10, 100)
+    >>> multiplicity_in_factorial(10, 100)
     24
+    >>> multiplicity_in_factorial(42, 10**10)
+    1666666660
 
     """
 
-    m = 0
+    b = as_int(b)
+    n = as_int(n)
 
-    if p <= 0:
-        raise ValueError('expecting positive integer got %s' % p )
+    if b <= 0:
+        raise ValueError('expecting positive integer got %s' % b )
 
     if n < 0:
         raise ValueError('expecting non-negative integer got %s' % n )
 
-    primelist = primefactors(p)
+    m = 0
 
-    for prime in primelist:
-        ans = 0
-        y = prime
-        ans1 = n
+    primelist = factorint(b)
 
-        while ans1 != 0:
-            ans1 = n//y
-            ans = ans+ans1
-            y = y*prime
+    for p in primelist:
+        multiples_curr_sum = 0
+        curr_factor = p
+        curr_multiple = n
 
-        power = ans//multiplicity(prime, p)
+        while curr_multiple != 0:
+            curr_multiple = n//curr_factor
+            multiples_curr_sum = multiples_curr_sum+curr_multiple
+            curr_factor = curr_factor*p
 
-        if (m > power or prime==primelist[0]):
+        power = multiples_curr_sum//multiplicity(p, b)
+
+        if (m > power or p == list(primelist)[0]):
             m = power
 
     return m
