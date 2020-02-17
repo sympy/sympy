@@ -5,7 +5,8 @@ from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne,
                    real_root)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show, plot_contour, PlotGrid
+from sympy.plotting.plot import (unset_show, plot_contour, PlotGrid, TextBackend,
+                                MatplotlibBackend, DefaultBackend)
 from sympy.utilities import lambdify as lambdify_
 from sympy.testing.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
@@ -596,4 +597,20 @@ def test_issue_11764():
     p.aspect_ratio == (1, 1)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
+    assert len(p[0].get_segments()) >= 30
+
+def test_issue_13516():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    x = Symbol('x')
+    if matplotlib:
+        pm = plot(sin(x), backend="matplotlib", show=False)
+        assert len(pm[0].get_segments()) >= 30
+
+    pt = plot(sin(x), backend="text", show=False)
+    assert len(pt[0].get_segments()) >= 30
+
+    pd = plot(sin(x), backend="default", show=False)
+    assert len(pd[0].get_segments()) >= 30
+
+    p = plot(sin(x), show=False)
     assert len(p[0].get_segments()) >= 30
