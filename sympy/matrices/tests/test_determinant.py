@@ -1,3 +1,16 @@
+import random
+
+from sympy import symbols, Symbol
+from sympy.matrices import Matrix, eye
+from sympy.abc import x, y, z
+from sympy.testing.pytest import raises
+from sympy.core.numbers import I
+from sympy.matrices.matrices import MatrixDeterminant
+from sympy.matrices.common import NonSquareMatrixError, _MinimalMatrix,  _CastableMatrix
+
+class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
+    pass
+
 def test_determinant():
 
     for M in [Matrix(), Matrix([[1]])]:
