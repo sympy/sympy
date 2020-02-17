@@ -654,7 +654,7 @@ def is_gaussian_prime(num):
     .. [1] https://oeis.org/wiki/Gaussian_primes
     """
     from sympy import I
-    num = 0*I
+    num += 0*I
     a, b = num.as_real_imag()
     a = as_int(a)
     b = as_int(b)
