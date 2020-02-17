@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import as_int, is_sequence
+from sympy.core.compatibility import as_int, is_sequence, ordered
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
@@ -109,20 +109,22 @@ class DiophantineSolutionSet(set):
         {(25, u + 5)}
     """
 
-    def __init__(self, symbols_list, parameters=None):
+    def __init__(self, symbols_seq, parameters=None):
         super().__init__()
-        self.symbols = list(symbols_list)
+
+        if not is_sequence(symbols_seq):
+            raise ValueError("Symbols must be given as a sequence.")
+
+        self.symbols = tuple(symbols_seq)
 
         if parameters is None:
             self.parameters = symbols('%s1:%i' % ('t', len(self.symbols) + 1), integer=True)
         else:
-            self.parameters = list(parameters)
-
-        self.kw_parameter_mapping = {str(p): p for p in self.parameters}
+            self.parameters = tuple(parameters)
 
     def add(self, solution):
         if len(solution) != len(self.symbols):
-            raise ValueError("Solution is of incorrect length")
+            raise ValueError("Solution should have a length of %s, not %s" % (len(self.symbols), len(solution)))
         super(DiophantineSolutionSet, self).add(Tuple(*solution))
 
     def update(self, *solutions):
@@ -130,21 +132,17 @@ class DiophantineSolutionSet(set):
             self.add(solution)
 
     def dict_iterator(self):
-        for solution in sorted(self, key=lambda s: tuple(s)):
+        for solution in ordered(self):
             yield dict(zip(self.symbols, solution))
 
     def subs(self, *values, **kw_values):
         if len(values) > len(self.parameters):
-            raise ValueError("Substitution has too many values")
+            raise ValueError("Substitution should have at most %s values, not %s" % (len(self.parameters), len(values)))
 
         result = DiophantineSolutionSet(self.symbols, self.parameters)
 
         subs_dict = dict(zip(self.parameters, values))
-
-        for parameter in kw_values:
-            if parameter not in self.kw_parameter_mapping:
-                raise ValueError("Unknown parameter %s specified in substitution" % parameter)
-            subs_dict[self.kw_parameter_mapping[parameter]] = kw_values[parameter]
+        subs_dict.update(kw_values)
 
         for solution in self:
             result.add(solution.subs(subs_dict))
