@@ -12,7 +12,7 @@ def _sum_free_test(subset):
                 raise AssertionError("This subset is not sum free")
 
 def test_schur_number():
-    n = random.randint(1,1000)
+    n = random.randint(1, 1000)
     result = schur_partition(n)
     t = 0
     numbers = []
