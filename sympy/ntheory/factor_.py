@@ -311,6 +311,54 @@ def multiplicity(p, n):
     return m
 
 
+def factmultiplicity(p, n):
+    """
+    Finds the greatest integer m such that p**m divides factorial of n without calculating the factorial
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import factmultiplicity
+
+    >>> factmultiplicity(5, 60)
+    14
+    >>> factmultiplicity(5, 25)
+    6
+    >>> factmultiplicity(12, 49)
+    22
+    >>> factmultiplicity(10, 100)
+    24
+
+    """
+
+    m = 0
+
+    if p <= 0:
+        raise ValueError('expecting positive integer got %s' % p )
+
+    if n < 0:
+        raise ValueError('expecting non-negative integer got %s' % n )
+
+    primelist = primefactors(p)
+
+    for prime in primelist:
+        ans = 0
+        y = prime
+        ans1 = n
+
+        while ans1 != 0:
+            ans1 = n//y
+            ans = ans+ans1
+            y = y*prime
+
+        power = ans//multiplicity(prime, p)
+
+        if (m > power or prime==primelist[0]):
+            m = power
+
+    return m
+
+
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
