@@ -15,7 +15,6 @@ from sympy.matrices.matrices import (MatrixDeterminant,
     MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
-from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
