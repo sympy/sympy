@@ -231,7 +231,7 @@ class hyper(TupleParametersBase):
         bq = self.args[1]
 
         if x0 != 0:
-            return super()._eval_nseries(self, x, n, logx)
+            return super(hyper, self)._eval_nseries(x, n, logx)
 
         terms = []
 
