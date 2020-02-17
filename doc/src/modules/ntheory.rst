@@ -24,6 +24,8 @@ Ntheory Functions Reference
 
 .. autofunction:: randprime
 
+.. autofunction:: is_gaussian_prime
+
 .. autofunction:: primorial
 
 .. autofunction:: cycle_length
