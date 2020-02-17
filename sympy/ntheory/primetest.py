@@ -646,15 +646,16 @@ def isprime(n):
 
 
 def is_gaussian_prime(num):
-    """Test if num is a Gaussian prime number.
+    r"""Test if num is a Gaussian prime number.
 
     References
     ==========
 
     .. [1] https://oeis.org/wiki/Gaussian_primes
     """
-    from sympy import I
-    num += 0*I
+
+    from sympy import sympify
+    num = sympify(num)
     a, b = num.as_real_imag()
     a = as_int(a)
     b = as_int(b)
