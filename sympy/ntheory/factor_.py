@@ -346,26 +346,13 @@ def multiplicity_in_factorial(b, n):
     if n < 0:
         raise ValueError('expecting non-negative integer got %s' % n )
 
-    m = 0
+    factors = factorint(b)
 
-    primelist = factorint(b)
+    min_e = min((n - (sum(digits(n, p)) - p))//(p - 1) for p in factors)
+    # the exponent of prime in n! = (n - sum(digits of n in base `prime`)/(prime - 1)
+    # subtracting prime since digits include prime as first element
 
-    for p in primelist:
-        multiples_curr_sum = 0
-        curr_factor = p
-        curr_multiple = n
-
-        while curr_multiple != 0:
-            curr_multiple = n//curr_factor
-            multiples_curr_sum = multiples_curr_sum+curr_multiple
-            curr_factor = curr_factor*p
-
-        power = multiples_curr_sum//multiplicity(p, b)
-
-        if (m > power or p == list(primelist)[0]):
-            m = power
-
-    return m
+    return min_e//min(factors.values())
 
 
 def perfect_power(n, candidates=None, big=True, factor=True):
