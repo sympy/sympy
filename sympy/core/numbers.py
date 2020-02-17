@@ -2605,6 +2605,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.Zero
@@ -2666,6 +2669,9 @@ class One(IntegerConstant, metaclass=Singleton):
     q = 1
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
@@ -2774,6 +2780,9 @@ class Half(RationalConstant, metaclass=Singleton):
     q = 2
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
