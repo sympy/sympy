@@ -122,6 +122,8 @@ class DiophantineSolutionSet(set):
         else:
             self.parameters = tuple(parameters)
 
+        self.kw_parameter_mapping = {str(p): p for p in self.parameters}
+
     def add(self, solution):
         if len(solution) != len(self.symbols):
             raise ValueError("Solution should have a length of %s, not %s" % (len(self.symbols), len(solution)))
@@ -142,7 +144,11 @@ class DiophantineSolutionSet(set):
         result = DiophantineSolutionSet(self.symbols, self.parameters)
 
         subs_dict = dict(zip(self.parameters, values))
-        subs_dict.update(kw_values)
+
+        for parameter in kw_values:
+            if parameter not in self.kw_parameter_mapping:
+                raise ValueError("Unknown parameter %s specified in substitution" % parameter)
+            subs_dict[self.kw_parameter_mapping[parameter]] = kw_values[parameter]
 
         for solution in self:
             result.add(solution.subs(subs_dict))

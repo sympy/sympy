@@ -959,14 +959,14 @@ def test_ternary_quadratic():
 def test_diophantine_solution_set():
     s1 = DiophantineSolutionSet([])
     assert set(s1) == set()
-    assert s1.symbols == []
+    assert s1.symbols == ()
     assert s1.parameters == ()
     raises(ValueError, lambda: s1.add((x,)))
     assert list(s1.dict_iterator()) == []
 
     s2 = DiophantineSolutionSet([x, y], [t, u])
-    assert s2.symbols == [x, y]
-    assert s2.parameters == [t, u]
+    assert s2.symbols == (x, y)
+    assert s2.parameters == (t, u)
     raises(ValueError, lambda: s2.add((1,)))
     s2.add((3, 4))
     assert set(s2) == {(3, 4)}
