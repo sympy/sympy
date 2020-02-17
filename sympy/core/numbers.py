@@ -2726,6 +2726,9 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.One
