@@ -643,3 +643,23 @@ def isprime(n):
     # Add a random M-R base
     #import random
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
+
+
+def is_gaussian_prime(num):
+    """Test if num is a Gaussian prime number.
+
+    References
+    ==========
+
+    .. [1] https://oeis.org/wiki/Gaussian_primes
+    """
+    a, b = num.as_real_imag()
+    a = as_int(a)
+    b = as_int(b)
+    if a == 0:
+        b = abs(b)
+        return isprime(b) and b % 4 == 3
+    elif b == 0:
+        a = abs(a)
+        return isprime(a) and a % 4 == 3
+    return isprime(a**2 + b**2)

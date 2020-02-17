@@ -4,7 +4,7 @@ Number theory module (primes, etc)
 
 from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi
-from .primetest import isprime
+from .primetest import isprime, is_gaussian_prime
 from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
     perfect_power, pollard_pm1, pollard_rho, primefactors, totient, trailing, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
@@ -28,7 +28,7 @@ __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
 
-    'isprime',
+    'isprime', 'is_gaussian_prime',
 
 
     'divisors', 'proper_divisors', 'factorint', 'multiplicity', 'perfect_power',
