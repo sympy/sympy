@@ -75,6 +75,10 @@ class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
     pass
 
 
+def eye_Determinant(n):
+    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
+
+
 class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
 
