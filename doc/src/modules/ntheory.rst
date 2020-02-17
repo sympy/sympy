@@ -24,8 +24,6 @@ Ntheory Functions Reference
 
 .. autofunction:: randprime
 
-.. autofunction:: is_gaussian_prime
-
 .. autofunction:: primorial
 
 .. autofunction:: cycle_length
@@ -149,6 +147,8 @@ Ntheory Functions Reference
 .. autofunction:: is_extra_strong_lucas_prp
 
 .. autofunction:: isprime
+
+.. autofunction:: is_gaussian_prime
 
 .. module:: sympy.ntheory.residue_ntheory
 
