@@ -754,7 +754,7 @@ class Function(Application, Expr):
         ix = argindex - 1
         A = self.args[ix]
         if A._diff_wrt:
-            if len(self.args) == 1 :
+            if len(self.args) == 1:
                 return Derivative(self, A)
             if A.is_Symbol:
                 for i, v in enumerate(self.args):
@@ -771,7 +771,7 @@ class Function(Application, Expr):
                         break
                 else:
                     # there is no possible interaction bewtween args
-                    return Derivative(self, A)    
+                    return Derivative(self, A)
         # See issue 4624 and issue 4719, 5600 and 8510
         D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
         args = self.args[:ix] + (D,) + self.args[ix + 1:]
@@ -1401,7 +1401,7 @@ class Derivative(Expr):
         if isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             expr = expr.expr
-            return cls.Derivative(expr, *variable_count, **kwargs)
+            return Derivative(expr, *variable_count, **kwargs)
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
