@@ -2,9 +2,11 @@
 
 from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
     pi, cos, sin, exp, GoldenRatio, TribonacciConstant, cbrt)
-
+from sympy.solvers.solveset import nonlinsolve
+from sympy.geometry import Circle, intersection
 from sympy.testing.pytest import raises, slow
-
+from sympy.sets.sets import FiniteSet
+from sympy import Point2D
 from sympy.polys.numberfields import (
     minimal_polynomial,
     primitive_element,
@@ -765,3 +767,18 @@ def test_issue_14831():
     e = (-3*sqrt(12*sqrt(2) + 17) + 12*sqrt(2) +
          17 - 2*sqrt(2)*sqrt(12*sqrt(2) + 17))
     assert minimal_polynomial(e, x) == x
+
+
+def test_issue_18248():
+    assert nonlinsolve([x*y**3-sqrt(2)/3, x*y**6-4/(9*(sqrt(3)))],x,y) == \
+            FiniteSet((sqrt(3)/2, sqrt(6)/3), (sqrt(3)/2, -sqrt(6)/6 - sqrt(2)*I/2),
+            (sqrt(3)/2, -sqrt(6)/6 + sqrt(2)*I/2))
+
+
+def test_issue_13230():
+    c1 = Circle(Point2D(3, sqrt(5)), 5)
+    c2 = Circle(Point2D(4, sqrt(7)), 6)
+    assert intersection(c1, c2) == [Point2D(-1 + (-sqrt(7) + sqrt(5))*(-2*sqrt(7)/29
+    + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
+    + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
+    + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
