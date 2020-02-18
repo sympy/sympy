@@ -979,23 +979,25 @@ def test_diophantine_solution_set():
     assert len(s3.parameters) == 2
     s3.add((t**2 + u, t - u, 1))
     assert set(s3) == {(t**2 + u, t - u, 1)}
-    assert s3.subs(2) == {(u + 4, 2 - u, 1)}
+    assert s3.subs(t, 2) == {(u + 4, 2 - u, 1)}
     assert s3(2) == {(u + 4, 2 - u, 1)}
-    assert s3.subs(7, 8) == {(57, -1, 1)}
+    assert s3.subs({t: 7, u: 8}) == {(57, -1, 1)}
     assert s3(7, 8) == {(57, -1, 1)}
-    assert s3.subs(t=5) == {(u + 25, 5 - u, 1)}
-    assert s3(t=5) == {(u + 25, 5 - u, 1)}
-    assert s3.subs(u=-3) == {(t**2 - 3, t + 3, 1)}
-    assert s3(u=-3) == {(t**2 - 3, t + 3, 1)}
-    assert s3.subs(2, u=8) == {(12, -6, 1)}
-    assert s3(2, u=8) == {(12, -6, 1)}
-    assert s3.subs(t=5, u=-3) == {(22, 8, 1)}
-    assert s3(t=5, u=-3) == {(22, 8, 1)}
+    assert s3.subs({t: 5}) == {(u + 25, 5 - u, 1)}
+    assert s3(5) == {(u + 25, 5 - u, 1)}
+    assert s3.subs(u, -3) == {(t**2 - 3, t + 3, 1)}
+    assert s3(None, -3) == {(t**2 - 3, t + 3, 1)}
+    assert s3.subs({t: 2, u: 8}) == {(12, -6, 1)}
+    assert s3(2, 8) == {(12, -6, 1)}
+    assert s3.subs({t: 5, u: -3}) == {(22, 8, 1)}
+    assert s3(5, -3) == {(22, 8, 1)}
     raises(ValueError, lambda: s3.subs(x=1))
     raises(ValueError, lambda: s3.subs(1, 2, 3))
     raises(ValueError, lambda: s3.add(()))
     raises(ValueError, lambda: s3.add((1, 2, 3, 4)))
     raises(ValueError, lambda: s3.add((1, 2)))
+    raises(ValueError, lambda: s3(1, 2, 3))
+    raises(TypeError, lambda: s3(t=1))
 
     s4 = DiophantineSolutionSet([x])
     assert len(s4.parameters) == 1

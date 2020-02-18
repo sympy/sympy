@@ -97,16 +97,21 @@ class DiophantineSolutionSet(set):
         >>> s3.add((t**2, t + u))
         >>> s3
         {(t**2, t + u)}
-        >>> s3.subs(2, 3)
+        >>> s3.subs({t: 2, u: 3})
         {(4, 5)}
-        >>> s3.subs(-1)
+        >>> s3.subs(t, -1)
         {(1, u - 1)}
-        >>> s3.subs(t=3)
+        >>> s3.subs(t, 3)
         {(9, u + 3)}
+
+    Evaluation at specific values. Positional arguments are given in the same order as the parameters:
+
         >>> s3(-2, 3)
         {(4, 1)}
         >>> s3(5)
         {(25, u + 5)}
+        >>> s3(None, 2)
+        {(t**2, t + 2)}
     """
 
     def __init__(self, symbols_seq, parameters=None):
@@ -122,8 +127,6 @@ class DiophantineSolutionSet(set):
         else:
             self.parameters = tuple(parameters)
 
-        self.kw_parameter_mapping = {str(p): p for p in self.parameters}
-
     def add(self, solution):
         if len(solution) != len(self.symbols):
             raise ValueError("Solution should have a length of %s, not %s" % (len(self.symbols), len(solution)))
@@ -137,25 +140,16 @@ class DiophantineSolutionSet(set):
         for solution in ordered(self):
             yield dict(zip(self.symbols, solution))
 
-    def subs(self, *values, **kw_values):
-        if len(values) > len(self.parameters):
-            raise ValueError("Substitution should have at most %s values, not %s" % (len(self.parameters), len(values)))
-
+    def subs(self, *args, **kwargs):
         result = DiophantineSolutionSet(self.symbols, self.parameters)
-
-        subs_dict = dict(zip(self.parameters, values))
-
-        for parameter in kw_values:
-            if parameter not in self.kw_parameter_mapping:
-                raise ValueError("Unknown parameter %s specified in substitution" % parameter)
-            subs_dict[self.kw_parameter_mapping[parameter]] = kw_values[parameter]
-
         for solution in self:
-            result.add(solution.subs(subs_dict))
+            result.add(solution.subs(*args, **kwargs))
         return result
 
-    def __call__(self, *values, **kw_values):
-        return self.subs(*values, **kw_values)
+    def __call__(self, *args):
+        if len(args) > len(self.parameters):
+            raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
+        return self.subs(zip(self.parameters, args))
 
 
 def _is_int(i):
@@ -743,7 +737,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
         result = _diop_linear(var, coeff, param)
 
         if param is None:
-            result = result.subs(*[0]*len(result.parameters))
+            result = result(*[0]*len(result.parameters))
 
         if len(result) > 0:
             return list(result)[0]
