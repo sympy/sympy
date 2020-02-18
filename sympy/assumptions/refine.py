@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.assumptions import Q, ask
+from sympy.matrices.expressions.matexpr import MatrixElement
+
 
 def refine(expr, assumptions=True):
     """
@@ -332,6 +334,22 @@ def refine_sign(expr, assumptions):
     return expr
 
 
+def refine_matrixelement(expr, assumptions):
+    """
+    Examples
+    ========
+    >>>refine(X[0, 1], Q.symmetric(X))
+    X[0, 1]
+    >>> refine(X[1, 0], Q.symmetric(X))
+    X[0,1]
+    """ 
+    arg = expr.args[0]
+    if ask(Q.symmetric(arg), assumptions):
+        if (expr.args[1] > expr.args[2]):
+            return(MatrixElement(expr.args[0],expr.args[2],expr.args[1])) 
+        else:
+            return(expr)
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -344,5 +362,6 @@ handlers_dict = {
     'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
-    'sign': refine_sign
+    'sign': refine_sign,
+    'matrixelement': refine_matrixelement
 }

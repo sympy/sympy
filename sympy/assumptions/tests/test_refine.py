@@ -5,6 +5,8 @@ from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import slow
 from sympy.core import S
+from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+
 
 
 def test_Abs():
@@ -226,3 +228,10 @@ def test_refine_issue_12724():
     y1 = Symbol('y1', real = True)
     expr3 = refine(Abs(x * y1**2 * z), Q.positive(x))
     assert expr3 == x * y1**2 * Abs(z)
+
+def test_matrixelement():
+    x = MatrixSymbol('x', 3, 3)
+    assert refine(matrixelement(x[0,1]), Q.symmetric(x)) == x[0,1]
+    assert refine(matrixelement(x[1,0]), Q.symmetric(x)) == x[0,1]
+    assert refine(matrixelement(x[2,1]), Q.symmetric(x)) == x[1,2]
+    assert refine(matrixelement(x[1,2]), Q.symmetric(x)) == x[1,2]
