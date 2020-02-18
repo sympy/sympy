@@ -6,7 +6,7 @@ from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne,
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import (unset_show, plot_contour, PlotGrid, TextBackend,
-                                MatplotlibBackend, DefaultBackend)
+                            DefaultBackend)
 from sympy.utilities import lambdify as lambdify_
 from sympy.testing.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
@@ -603,14 +603,19 @@ def test_issue_13516():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     x = Symbol('x')
     if matplotlib:
+        from sympy.plotting.plot import MatplotlibBackend
         pm = plot(sin(x), backend="matplotlib", show=False)
+        assert pm.backend == MatplotlibBackend
         assert len(pm[0].get_segments()) >= 30
 
     pt = plot(sin(x), backend="text", show=False)
+    assert pt.backend == TextBackend
     assert len(pt[0].get_segments()) >= 30
 
     pd = plot(sin(x), backend="default", show=False)
+    assert pd.backend == DefaultBackend
     assert len(pd[0].get_segments()) >= 30
 
     p = plot(sin(x), show=False)
+    assert p.backend == DefaultBackend
     assert len(p[0].get_segments()) >= 30
