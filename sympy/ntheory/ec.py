@@ -124,15 +124,15 @@ class EllipticCurve():
         if self.characteristic > 0:
             raise ValueError("No torsion point for Finite Field.")
         l = [EllipticCurvePoint.point_at_infinity(self)]
-        for x in solve(self._eq.subs(y, 0)):
-            if x.is_rational:
-                l.append(self(x, 0))
+        for xx in solve(self._eq.subs(y, 0)):
+            if xx.is_rational:
+                l.append(self(xx, 0))
         for i in divisors(self.discriminant, generator=True):
             j = int(i**.5)
             if j**2 == i:
-                for x in solve(self._eq.subs(y, j)):
-                    p = self(x, j)
-                    if x.is_rational and p.order() != oo:
+                for xx in solve(self._eq.subs(y, j)):
+                    p = self(xx, j)
+                    if xx.is_rational and p.order() != oo:
                         l.extend([p, -p])
         return l
 
