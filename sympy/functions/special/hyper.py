@@ -236,15 +236,15 @@ class hyper(TupleParametersBase):
         terms = []
 
         for i in range(n):
-            Rf1 = 1
-            Rf2 = 1
+            num = 1
+            den = 1
             for a in ap:
-                Rf1 *= RisingFactorial(a, i)
+                num *= RisingFactorial(a, i)
 
             for b in bq:
-                Rf2 *= RisingFactorial(b, i)
+                den *= RisingFactorial(b, i)
 
-            terms.append(((Rf1/Rf2) * (arg**i)) / factorial(i))
+            terms.append(((num/den) * (arg**i)) / factorial(i))
 
         return (Add(*terms) + Order(x**n,x))
 
