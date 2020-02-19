@@ -4,7 +4,7 @@
 
 from typing import ClassVar, Dict, Iterable, List, Optional, Type
 
-from sympy.core import Add, S
+from sympy.core import S
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
