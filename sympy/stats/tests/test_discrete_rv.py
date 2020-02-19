@@ -1,17 +1,19 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, erf, beta,
+                   zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
                    floor)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
-                         where, moment_generating_function, skewness, cdf)
+                         where, moment_generating_function, skewness, cdf,
+                         kurtosis)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
-                                   YuleSimon, Zeta)
+                                   Poisson, Geometric, Hermite, Logarithmic,
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow, raises
+from sympy.testing.pytest import slow, nocache_fail, raises, skip
+from sympy.external import import_module
 
 x = Symbol('x')
 
@@ -32,7 +34,8 @@ def test_Poisson():
     assert density(x) == PoissonDistribution(l)
     assert isinstance(E(x, evaluate=False), Sum)
     assert isinstance(E(2*x, evaluate=False), Sum)
-
+    # issue 8248
+    assert x.pspace.compute_expectation(1) == 1
 
 def test_GeometricDistribution():
     p = S.One / 5
@@ -41,6 +44,30 @@ def test_GeometricDistribution():
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
 
+def test_Hermite():
+    a1 = Symbol("a1", positive=True)
+    a2 = Symbol("a2", negative=True)
+    raises(ValueError, lambda: Hermite("H", a1, a2))
+
+    a1 = Symbol("a1", negative=True)
+    a2 = Symbol("a2", positive=True)
+    raises(ValueError, lambda: Hermite("H", a1, a2))
+
+    a1 = Symbol("a1", positive=True)
+    x = Symbol("x")
+    H = Hermite("H", a1, a2)
+    assert moment_generating_function(H)(x) == exp(a1*(exp(x) - 1)
+                                            + a2*(exp(2*x) - 1))
+    assert characteristic_function(H)(x) == exp(a1*(exp(I*x) - 1)
+                                            + a2*(exp(2*I*x) - 1))
+    assert E(H) == a1 + 2*a2
+
+    H = Hermite("H", a1=5, a2=4)
+    assert density(H)(2) == 33*exp(-9)/2
+    assert E(H) == 13
+    assert variance(H) == 21
+    assert kurtosis(H) == Rational(464,147)
+    assert skewness(H) == 37*sqrt(21)/441
 
 def test_Logarithmic():
     p = S.Half
@@ -51,11 +78,13 @@ def test_Logarithmic():
     assert isinstance(E(x, evaluate=False), Sum)
 
 
+@nocache_fail
 def test_negative_binomial():
     r = 5
     p = S.One / 3
     x = NegativeBinomial('x', r, p)
     assert E(x) == p*r / (1-p)
+    # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
     assert isinstance(E(x, evaluate=False), Sum)
@@ -100,13 +129,11 @@ def test_zeta():
 
 @slow
 def test_sample_discrete():
-    X, Y, Z = Geometric('X', S.Half), Poisson('Y', 4), Poisson('Z', 1000)
-    W = Poisson('W', Rational(1, 100))
+    X = Geometric('X', S.Half)
     assert sample(X) in X.pspace.domain.set
-    assert sample(Y) in Y.pspace.domain.set
-    assert sample(Z) in Z.pspace.domain.set
-    assert sample(W) in W.pspace.domain.set
-
+    samps = sample(X, size=4)
+    for samp in samps:
+        assert samp in X.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
@@ -234,3 +261,48 @@ def test_product_spaces():
 #    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
 #        """X2 <= 2), (0, True)), (X2, 1, oo))"""
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
+
+
+def test_sampling_methods():
+    distribs_numpy = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+        Zeta('Z', 2)
+    ]
+    distribs_scipy = [
+        Geometric('G', 0.5),
+        Logarithmic('L', 0.5),
+        Poisson('P', 1),
+        Skellam('S', 1, 1),
+        YuleSimon('Y', 1),
+        Zeta('Z', 2)
+    ]
+    distribs_pymc3 = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        for X in distribs_numpy:
+            samps = X.pspace.distribution._sample_numpy(size)
+            for samp in samps:
+                assert samp in X.pspace.domain.set
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            samps = sample(X, size=size)
+            for samp in samps:
+                assert samp in X.pspace.domain.set
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            samps = X.pspace.distribution._sample_pymc3(size)
+            for samp in samps:
+                assert samp in X.pspace.domain.set

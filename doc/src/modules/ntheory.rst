@@ -56,7 +56,11 @@ Ntheory Functions Reference
 
 .. autofunction:: divisors
 
+.. autofunction:: proper_divisors
+
 .. autofunction:: divisor_count
+
+.. autofunction:: proper_divisor_count
 
 .. autofunction:: udivisors
 
@@ -143,6 +147,8 @@ Ntheory Functions Reference
 .. autofunction:: is_extra_strong_lucas_prp
 
 .. autofunction:: isprime
+
+.. autofunction:: is_gaussian_prime
 
 .. module:: sympy.ntheory.residue_ntheory
 

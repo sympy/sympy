@@ -2,7 +2,7 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.str import StrPrinter
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def setup_test_printer(**kwargs):

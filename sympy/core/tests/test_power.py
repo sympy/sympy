@@ -1,15 +1,15 @@
 from sympy.core import (
     Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, symbols, oo, zoo, Rational, N)
+    Basic, I, nan, pi, symbols, oo, zoo, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
-from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
+from sympy.core.expr import unchanged
 
 
 def test_rational():
@@ -433,7 +433,7 @@ def test_better_sqrt():
     assert sqrt(1/(3 - I)) == sqrt(10)*sqrt(3 + I)/10
     # symbolic
     i = symbols('i', imaginary=True)
-    assert sqrt(3/i) == Mul(sqrt(3), sqrt(-i)/abs(i), evaluate=False)
+    assert sqrt(3/i) == Mul(sqrt(3), 1/sqrt(i), evaluate=False)
     # multiples of 1/2; don't make this too automatic
     assert sqrt((3 + 4*I))**3 == (2 + I)**3
     assert Pow(3 + 4*I, Rational(3, 2)) == 2 + 11*I
@@ -504,3 +504,25 @@ def test_issue_17450():
     assert (Pow(exp(1+sqrt(2)), ((1-sqrt(2))*I*pi), evaluate=False)).is_real is None
     assert ((-10)**(10*I*pi/3)).is_real is False
     assert ((-5)**(4*I*pi)).is_real is False
+
+
+def test_issue_18190():
+    assert sqrt(1 / tan(1 + I)) == 1 / sqrt(tan(1 + I))
+
+
+def test_issue_14815():
+    x = Symbol('x', real=True)
+    assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', real=False)
+    assert sqrt(x).is_extended_negative is None
+    x = Symbol('x', complex=True)
+    assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', extended_real=True)
+    assert sqrt(x).is_extended_negative is False
+    assert sqrt(zoo, evaluate=False).is_extended_negative is None
+    assert sqrt(nan, evaluate=False).is_extended_negative is None
+
+
+def test_issue_18509():
+    assert unchanged(Mul, oo, 1/pi**oo)
+    assert (1/pi**oo).is_extended_positive == False

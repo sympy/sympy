@@ -1,8 +1,9 @@
 from __future__ import print_function, division
-
+from typing import Dict, Callable
 from sympy.core import S, Add, Expr, Basic, Mul
-from sympy.assumptions import Q, ask
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.logic.boolalg import Boolean
+from sympy.assumptions import Q, ask  # type: ignore
 
 
 def refine(expr, assumptions=True):
@@ -367,4 +368,4 @@ handlers_dict = {
     'im': refine_im,
     'sign': refine_sign,
     'matrixelement': refine_matrixelement
-}
+} # type: Dict[str, Callable[[Expr, Boolean], Expr]]

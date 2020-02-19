@@ -1,7 +1,7 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
 from sympy import Poly, S, Rational as Q
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.polys.orthopolys import (
     jacobi_poly,
@@ -103,7 +103,7 @@ def test_hermite_poly():
 def test_legendre_poly():
     raises(ValueError, lambda: legendre_poly(-1, x))
 
-    assert legendre_poly(1, x, polys=True) == Poly(x)
+    assert legendre_poly(1, x, polys=True) == Poly(x, domain='QQ')
 
     assert legendre_poly(0, x) == 1
     assert legendre_poly(1, x) == x
@@ -121,7 +121,7 @@ def test_legendre_poly():
 def test_laguerre_poly():
     raises(ValueError, lambda: laguerre_poly(-1, x))
 
-    assert laguerre_poly(1, x, polys=True) == Poly(-x + 1)
+    assert laguerre_poly(1, x, polys=True) == Poly(-x + 1, domain='QQ')
 
     assert laguerre_poly(0, x) == 1
     assert laguerre_poly(1, x) == -x + 1

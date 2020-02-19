@@ -499,7 +499,9 @@ class AskDiagonalHandler(CommonHandler):
         if Q.diagonal(expr) in conjuncts(assumptions):
             return True
 
-    Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return True
 
     @staticmethod
     def Transpose(expr, assumptions):

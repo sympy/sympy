@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
-from sympy.core.compatibility import string_types
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import GoldenRatio
 from sympy.core.symbol import Dummy
@@ -158,7 +157,7 @@ class Limit(Expr):
         elif z0 is S.NegativeInfinity:
             dir = "+"
 
-        if isinstance(dir, string_types):
+        if isinstance(dir, str):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or "

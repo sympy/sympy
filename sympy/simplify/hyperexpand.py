@@ -64,7 +64,7 @@ from itertools import product
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
-from sympy.core.compatibility import default_sort_key, range, reduce
+from sympy.core.compatibility import default_sort_key, reduce
 from sympy.core.mod import Mod
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
@@ -77,7 +77,7 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
 from sympy.polys import poly, Poly
 from sympy.series import residue
-from sympy.simplify import simplify
+from sympy.simplify import simplify  # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -1048,7 +1048,7 @@ class UnShiftA(Operator):
         A = Dummy('A')
         n = D = Poly(ai*A - ai, A)
         for b in bq:
-            n *= (D + b - 1)
+            n *= D + (b - 1).as_poly(A)
 
         b0 = -n.nth(0)
         if b0 == 0:
@@ -1090,7 +1090,7 @@ class UnShiftB(Operator):
         D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
-            n *= (D + a)
+            n *= (D + a.as_poly(B))
 
         b0 = n.nth(0)
         if b0 == 0:

@@ -3,7 +3,7 @@ from sympy.core import S, symbols, I
 from sympy.discrete.convolutions import (
     convolution, convolution_fft, convolution_ntt, convolution_fwht,
     convolution_subset, covering_product, intersecting_product)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
 def test_convolution():

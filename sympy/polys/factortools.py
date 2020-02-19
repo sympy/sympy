@@ -76,8 +76,6 @@ from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
-from sympy.core.compatibility import range
-
 
 def dup_trial_division(f, factors, K):
     """
@@ -929,7 +927,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.utilities.randtest import _randint
+    from sympy.testing.randtest import _randint
 
     randint = _randint(seed)
 

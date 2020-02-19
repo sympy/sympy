@@ -11,7 +11,7 @@ from sympy.polys.domains import FF, GF, ZZ, QQ, RR, CC, EX
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
 from sympy import Integer, Symbol, I, sqrt
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import x, y, z
 
 
