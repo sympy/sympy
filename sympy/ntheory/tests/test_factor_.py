@@ -1,7 +1,6 @@
 from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
-from sympy.core.compatibility import long
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
@@ -226,7 +225,7 @@ def test_factorint():
     assert factorint(13*17*19, limit=15) == {13: 1, 17*19: 1}
     assert factorint(1951*15013*15053, limit=2000) == {225990689: 1, 1951: 1}
     assert factorint(primorial(17) + 1, use_pm1=0) == \
-        {long(19026377261): 1, 3467: 1, 277: 1, 105229: 1}
+        {int(19026377261): 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization
     a = nextprime(2**2**8)  # 78 digits

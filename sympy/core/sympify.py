@@ -329,9 +329,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 coerced = coerce(a)
             except (TypeError, ValueError):
                 continue
-            # XXX: AttributeError only needed here for Py2
-            except AttributeError:
-                continue
             try:
                 return sympify(coerced)
             except SympifyError:

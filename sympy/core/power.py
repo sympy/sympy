@@ -71,9 +71,15 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
-    if HAS_GMPY:
-        x, t = gmpy.iroot(y, n)
-        return as_int(x), t
+    if HAS_GMPY and n < 2**63:
+        # Currently it works only for n < 2**63, else it produces TypeError
+        # sympy issue: https://github.com/sympy/sympy/issues/18374
+        # gmpy2 issue: https://github.com/aleaxit/gmpy/issues/257
+        if HAS_GMPY >= 2:
+            x, t = gmpy.iroot(y, n)
+        else:
+            x, t = gmpy.root(y, n)
+        return as_int(x), bool(t)
     return _integer_nthroot_python(y, n)
 
 def _integer_nthroot_python(y, n):
@@ -500,7 +506,7 @@ class Pow(Expr):
             if self.base.is_extended_nonnegative:
                 return True
         elif self.base.is_positive:
-            if self.exp.is_extended_real:
+            if self.exp.is_real:
                 return True
         elif self.base.is_extended_negative:
             if self.exp.is_even:
@@ -524,6 +530,9 @@ class Pow(Expr):
                 return log(self.base).is_imaginary
 
     def _eval_is_extended_negative(self):
+        if self.exp is S(1)/2:
+            if self.base.is_complex or self.base.is_extended_real:
+                return False
         if self.base.is_extended_negative:
             if self.exp.is_odd and self.base.is_finite:
                 return True
@@ -1450,11 +1459,13 @@ class Pow(Expr):
 
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
+                rest = rest.simplify() #test_issue_6364
 
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
 
                 k, l = rest.leadterm(x)
+
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:
@@ -1564,7 +1575,7 @@ class Pow(Expr):
 
             nuse = n - ei
 
-            if e.is_extended_real and e.is_positive:
+            if e.is_real:
                 lt = b.as_leading_term(x)
 
                 # Try to correct nuse (= m) guess from:

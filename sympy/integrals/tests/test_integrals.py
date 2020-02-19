@@ -1649,8 +1649,20 @@ def test_issue_2975():
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
 
+
 def test_issue_17119():
     assert integrate(x**(0.5)*(1+x)) == Float(2/3)*x**Float(3/2)+Float(2/5)*x**Float(5/2)
 
+
 def test_issue_14431():
     assert integrate((x-t)**(-1/2)*t, (t,0,x)) == Float(4/3)*x**Float(3/2)
+
+
+def test_issue_4231():
+    f = (1 + 2*x + sqrt(x + log(x))*(1 + 3*x) + x**2)/(x*(x + sqrt(x + log(x)))*sqrt(x + log(x)))
+    assert integrate(f, x) == 2*sqrt(x + log(x)) + 2*log(x + sqrt(x + log(x)))
+
+
+def test_issue_17841():
+    f = diff(1/(x**2+x+I), x)
+    assert integrate(f, x) == 1/(x**2 + x + I)
