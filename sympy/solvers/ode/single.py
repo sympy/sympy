@@ -419,7 +419,7 @@ class FirstLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)))
+        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x))))
             * exp(-Integral(P, x)))))
         return [gensol]
 
