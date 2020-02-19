@@ -8,8 +8,7 @@ def _sum_free_test(subset):
     """
     for i in subset:
         for j in subset:
-            if i + j in subset:
-                raise AssertionError("This subset is not sum free")
+            assert (i + j in subset) is False
 
 def test_schur_number():
     random.seed(1000)
@@ -26,7 +25,6 @@ def test_schur_number():
             """
             t += len(item)
             for l in item:
-                if l in numbers:
-                    raise AssertionError("Every number must exist once")
+                assert (l in numbers) is False
                 numbers.append(l)
         assert n == t
