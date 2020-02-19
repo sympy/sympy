@@ -4,7 +4,7 @@ from sympy.core.numbers import Integer, Rational
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
-    primerange, pollard_rho, perfect_power, multiplicity,
+    primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
@@ -101,6 +101,12 @@ def test_multiplicity():
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
     assert multiplicity(3, Rational(1, 9)) == -2
+
+
+def test_multiplicity_in_factorial():
+    n = fac(1000)
+    for i in (2, 4, 6, 12, 30, 36, 48, 60, 72, 96):
+        assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
 
 
 def test_perfect_power():
