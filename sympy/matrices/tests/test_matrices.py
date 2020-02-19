@@ -12,7 +12,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
-from sympy.core.compatibility import long, iterable, Hashable
+from sympy.core.compatibility import iterable, Hashable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
@@ -757,141 +757,6 @@ def test_as_mutable():
     assert zeros(3, 0).as_immutable() == ImmutableMatrix(zeros(3, 0))
 
 
-def test_determinant():
-
-    for M in [Matrix(), Matrix([[1]])]:
-        assert (
-            M.det() ==
-            M._eval_det_bareiss() ==
-            M._eval_det_berkowitz() ==
-            M._eval_det_lu() ==
-            1)
-
-    M = Matrix(( (-3,  2),
-                 ( 8, -5) ))
-
-    assert M.det(method="bareiss") == -1
-    assert M.det(method="berkowitz") == -1
-    assert M.det(method="lu") == -1
-
-    M = Matrix(( (x,   1),
-                 (y, 2*y) ))
-
-    assert M.det(method="bareiss") == 2*x*y - y
-    assert M.det(method="berkowitz") == 2*x*y - y
-    assert M.det(method="lu") == 2*x*y - y
-
-    M = Matrix(( (1, 1, 1),
-                 (1, 2, 3),
-                 (1, 3, 6) ))
-
-    assert M.det(method="bareiss") == 1
-    assert M.det(method="berkowitz") == 1
-    assert M.det(method="lu") == 1
-
-    M = Matrix(( ( 3, -2,  0, 5),
-                 (-2,  1, -2, 2),
-                 ( 0, -2,  5, 0),
-                 ( 5,  0,  3, 4) ))
-
-    assert M.det(method="bareiss") == -289
-    assert M.det(method="berkowitz") == -289
-    assert M.det(method="lu") == -289
-
-    M = Matrix(( ( 1,  2,  3,  4),
-                 ( 5,  6,  7,  8),
-                 ( 9, 10, 11, 12),
-                 (13, 14, 15, 16) ))
-
-    assert M.det(method="bareiss") == 0
-    assert M.det(method="berkowitz") == 0
-    assert M.det(method="lu") == 0
-
-    M = Matrix(( (3, 2, 0, 0, 0),
-                 (0, 3, 2, 0, 0),
-                 (0, 0, 3, 2, 0),
-                 (0, 0, 0, 3, 2),
-                 (2, 0, 0, 0, 3) ))
-
-    assert M.det(method="bareiss") == 275
-    assert M.det(method="berkowitz") == 275
-    assert M.det(method="lu") == 275
-
-    M = Matrix(( ( 3,  0,  0, 0),
-                 (-2,  1,  0, 0),
-                 ( 0, -2,  5, 0),
-                 ( 5,  0,  3, 4) ))
-
-    assert M.det(method="bareiss") == 60
-    assert M.det(method="berkowitz") == 60
-    assert M.det(method="lu") == 60
-
-    M = Matrix(( ( 1,  0,  0,  0),
-                 ( 5,  0,  0,  0),
-                 ( 9, 10, 11, 0),
-                 (13, 14, 15, 16) ))
-
-    assert M.det(method="bareiss") == 0
-    assert M.det(method="berkowitz") == 0
-    assert M.det(method="lu") == 0
-
-    M = Matrix(( (3, 2, 0, 0, 0),
-                 (0, 3, 2, 0, 0),
-                 (0, 0, 3, 2, 0),
-                 (0, 0, 0, 3, 2),
-                 (0, 0, 0, 0, 3) ))
-
-    assert M.det(method="bareiss") == 243
-    assert M.det(method="berkowitz") == 243
-    assert M.det(method="lu") == 243
-
-    M = Matrix(( (1, 0,  1,  2, 12),
-                 (2, 0,  1,  1,  4),
-                 (2, 1,  1, -1,  3),
-                 (3, 2, -1,  1,  8),
-                 (1, 1,  1,  0,  6) ))
-
-    assert M.det(method="bareiss") == -55
-    assert M.det(method="berkowitz") == -55
-    assert M.det(method="lu") == -55
-
-    M = Matrix(( (-5,  2,  3,  4,  5),
-                 ( 1, -4,  3,  4,  5),
-                 ( 1,  2, -3,  4,  5),
-                 ( 1,  2,  3, -2,  5),
-                 ( 1,  2,  3,  4, -1) ))
-
-    assert M.det(method="bareiss") == 11664
-    assert M.det(method="berkowitz") == 11664
-    assert M.det(method="lu") == 11664
-
-    M = Matrix(( ( 2,  7, -1, 3, 2),
-                 ( 0,  0,  1, 0, 1),
-                 (-2,  0,  7, 0, 2),
-                 (-3, -2,  4, 5, 3),
-                 ( 1,  0,  0, 0, 1) ))
-
-    assert M.det(method="bareiss") == 123
-    assert M.det(method="berkowitz") == 123
-    assert M.det(method="lu") == 123
-
-    M = Matrix(( (x, y, z),
-                 (1, 0, 0),
-                 (y, z, x) ))
-
-    assert M.det(method="bareiss") == z**2 - x*y
-    assert M.det(method="berkowitz") == z**2 - x*y
-    assert M.det(method="lu") == z**2 - x*y
-
-    # issue 13835
-    a = symbols('a')
-    M = lambda n: Matrix([[i + a*j for i in range(n)]
-                          for j in range(n)])
-    assert M(5).det() == 0
-    assert M(6).det() == 0
-    assert M(7).det() == 0
-
-
 def test_slicing():
     m0 = eye(4)
     assert m0[:3, :3] == eye(3)
@@ -1189,6 +1054,32 @@ def test_inverse():
     assert A.inv(method="LDL") == Ainv
     assert A.inv(method="QR") == Ainv
 
+    AA = Matrix([[0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
+            [1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+            [1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            [1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1],
+            [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0],
+            [1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1],
+            [0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0],
+            [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0],
+            [1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+            [0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1],
+            [1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+            [0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0],
+            [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+            [0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1],
+            [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+            [0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+            [0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1],
+            [0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0],
+            [0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0]])
+    assert AA.inv(method="BLOCK") * AA == eye(AA.shape[0])
     # test that immutability is not a problem
     cls = ImmutableMatrix
     m = cls([[48, 49, 31],
@@ -1223,26 +1114,6 @@ def test_matrix_inverse_mod():
     A = Matrix(3, 3, [1, 6, 1, 4, 1, 5, 3, 2, 5])
     Ai = Matrix(3, 3, [6, 0, 3, 6, 6, 4, 1, 6, 1])
     assert A.inv_mod(7) == Ai
-
-
-def test_util():
-    R = Rational
-
-    v1 = Matrix(1, 3, [1, 2, 3])
-    v2 = Matrix(1, 3, [3, 4, 5])
-    assert v1.norm() == sqrt(14)
-    assert v1.project(v2) == Matrix(1, 3, [R(39)/25, R(52)/25, R(13)/5])
-    assert Matrix.zeros(1, 2) == Matrix(1, 2, [0, 0])
-    assert ones(1, 2) == Matrix(1, 2, [1, 1])
-    assert v1.copy() == v1
-    # cofactor
-    assert eye(3) == eye(3).cofactor_matrix()
-    test = Matrix([[1, 3, 2], [2, 6, 3], [2, 3, 6]])
-    assert test.cofactor_matrix() == \
-        Matrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
-    test = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert test.cofactor_matrix() == \
-        Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
 
 def test_jacobian_hessian():
@@ -2167,13 +2038,13 @@ def test_creation_args():
     """
     raises(ValueError, lambda: zeros(3, -1))
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
-    assert zeros(long(3)) == zeros(3)
+    assert zeros(int(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     raises(ValueError, lambda: zeros(3.))
-    assert eye(long(3)) == eye(3)
+    assert eye(int(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
     raises(ValueError, lambda: eye(3.))
-    assert ones(long(3), Integer(4)) == ones(3, 4)
+    assert ones(int(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
     raises(ValueError, lambda: Matrix([1, [2]]))
@@ -4137,17 +4008,6 @@ def test_issue_14489():
     assert Mod(A, 3) == Matrix([2, 1, 2])
     assert Mod(B, 4) == Matrix([2, 0, 1])
 
-def test_issue_14517():
-    M = Matrix([
-        [   0, 10*I,    10*I,       0],
-        [10*I,    0,       0,    10*I],
-        [10*I,    0, 5 + 2*I,    10*I],
-        [   0, 10*I,    10*I, 5 + 2*I]])
-    ev = M.eigenvals()
-    # test one random eigenvalue, the computation is a little slow
-    test_ev = random.choice(list(ev.keys()))
-    assert (M - test_ev*eye(4)).det() == 0
-
 def test_issue_14943():
     # Test that __array__ accepts the optional dtype argument
     try:
@@ -4185,87 +4045,6 @@ def test_issue_8240():
     assert len(eigenvals) == 3
     assert eigenvals.count(x) == 2
     assert eigenvals.count(y) == 1
-
-def test_legacy_det():
-    # Minimal support for legacy keys for 'method' in det()
-    # Partially copied from test_determinant()
-
-    M = Matrix(( ( 3, -2,  0, 5),
-                 (-2,  1, -2, 2),
-                 ( 0, -2,  5, 0),
-                 ( 5,  0,  3, 4) ))
-
-    assert M.det(method="bareis") == -289
-    assert M.det(method="det_lu") == -289
-    assert M.det(method="det_LU") == -289
-
-    M = Matrix(( (3, 2, 0, 0, 0),
-                 (0, 3, 2, 0, 0),
-                 (0, 0, 3, 2, 0),
-                 (0, 0, 0, 3, 2),
-                 (2, 0, 0, 0, 3) ))
-
-    assert M.det(method="bareis") == 275
-    assert M.det(method="det_lu") == 275
-    assert M.det(method="Bareis") == 275
-
-    M = Matrix(( (1, 0,  1,  2, 12),
-                 (2, 0,  1,  1,  4),
-                 (2, 1,  1, -1,  3),
-                 (3, 2, -1,  1,  8),
-                 (1, 1,  1,  0,  6) ))
-
-    assert M.det(method="bareis") == -55
-    assert M.det(method="det_lu") == -55
-    assert M.det(method="BAREISS") == -55
-
-    M = Matrix(( ( 3,  0,  0, 0),
-                 (-2,  1,  0, 0),
-                 ( 0, -2,  5, 0),
-                 ( 5,  0,  3, 4) ))
-
-    assert M.det(method="bareiss") == 60
-    assert M.det(method="berkowitz") == 60
-    assert M.det(method="lu") == 60
-
-    M = Matrix(( ( 1,  0,  0,  0),
-                 ( 5,  0,  0,  0),
-                 ( 9, 10, 11, 0),
-                 (13, 14, 15, 16) ))
-
-    assert M.det(method="bareiss") == 0
-    assert M.det(method="berkowitz") == 0
-    assert M.det(method="lu") == 0
-
-    M = Matrix(( (3, 2, 0, 0, 0),
-                 (0, 3, 2, 0, 0),
-                 (0, 0, 3, 2, 0),
-                 (0, 0, 0, 3, 2),
-                 (0, 0, 0, 0, 3) ))
-
-    assert M.det(method="bareiss") == 243
-    assert M.det(method="berkowitz") == 243
-    assert M.det(method="lu") == 243
-
-    M = Matrix(( (-5,  2,  3,  4,  5),
-                 ( 1, -4,  3,  4,  5),
-                 ( 1,  2, -3,  4,  5),
-                 ( 1,  2,  3, -2,  5),
-                 ( 1,  2,  3,  4, -1) ))
-
-    assert M.det(method="bareis") == 11664
-    assert M.det(method="det_lu") == 11664
-    assert M.det(method="BERKOWITZ") == 11664
-
-    M = Matrix(( ( 2,  7, -1, 3, 2),
-                 ( 0,  0,  1, 0, 1),
-                 (-2,  0,  7, 0, 2),
-                 (-3, -2,  4, 5, 3),
-                 ( 1,  0,  0, 0, 1) ))
-
-    assert M.det(method="bareis") == 123
-    assert M.det(method="det_lu") == 123
-    assert M.det(method="LU") == 123
 
 def test_case_6913():
     m = MatrixSymbol('m', 1, 1)

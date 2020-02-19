@@ -8,7 +8,6 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import round
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
@@ -1759,8 +1758,6 @@ def test_is_constant():
     assert meter.is_constant() is True
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
-
-    assert Poly(3, x).is_constant() is True
 
 
 def test_equals():

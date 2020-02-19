@@ -3324,3 +3324,96 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
+
+
+#ROUTE-CIPHER
+
+#Input key as list where first element tells about direction of spiral and second element denotes the starting corner
+
+def create(start_row,start_col,m,n,key):
+    l1,l2,l3,l4=[],[],[],[]
+    for i in range(start_row,n-1):
+            l1.append(mes[start_row][i])   #creates a list from 1 to 3
+    for i in range(start_col,m-1):
+            l2.append(mes[i][n-1])         #creates a list from 0 to 45
+    for i in range(n-1,start_row,-1):
+            l3.append(mes[m-1][i])         #creates a list from 83 to 8
+    for i in range(m-1,start_col,-1):
+            l4.append(mes[i][start_col])   #creates a list from 7 to 4
+
+    if key[1] == 1 :            #1 when clockwise spiral starts from top-left corner
+        if key[0]=="CI" or key[0]=="AO":
+            return l1+l2+l3+l4
+        elif key[0]=="AI" or key[0]=="CO":
+            l=(l1+l2+l3+l4)[-1::-1]
+            if l != []:
+                l.insert(0,l.pop()) #shift last element to the front
+            return l
+
+    elif key[1] == 2 :          #2 when spiral starts from top-right corner
+        if key[0]=="CI" or key[0]=="AO":
+            return l2+l3+l4+l1
+        elif key[0]=="AI" or key[0]=="CO":
+            l=(l2+l3+l4+l1)[-1::-1]
+            if l != []:
+                l.insert(0,l.pop())
+            return l
+
+    elif key[1]== 3 :           #3 when spiral starts from bottom right corner
+        if key[0]=="CI" or key[0]=="AO":
+            return l3+l4+l2+l1
+        elif key[0]=="AI" or key[0]=="CO":
+            l=(l3+l4+l2+l1)[-1::-1]
+            if l != []:
+                l.insert(0,l.pop())
+            return l
+
+    elif key[1] == 4 :          #4 when spiral starts from bottom left corner
+        if key[0]=="CI" or key[0]=="AO":
+            return l4+l1+l2+l3
+        elif key[0]=="AI" or key[0]=="CO":
+            l=(l4+l1+l2+l3)[-1::-1]
+            if l != []:
+                l.insert(0,l.pop())
+            return l
+'''1 when clockwise spiral starts from top-left corner
+   2 when spiral starts from top-right corner
+   3 when spiral starts from bottom right corner
+   4 when spiral starts from bottom left corner'''
+
+#key input:
+#AO=Anticlockwise Outwards
+#AI=Anticlockwise Inwards
+#CO=Clockwise Outwards
+#CI=Clockwise Inwards
+#Along with these key will also contain number 1,2,3,4 to indicate start or ending corner
+
+#NOTE: AO= Reverse of CI and CO= Reverse of AI
+#Hence we can return the same thing for AO and CI or CO and AI in create function
+
+# will pass 1,2,3,4 according to route
+def encipher_route(message, cols, key):
+    i = 0
+    j = 0
+    temp = []
+    if (len(message)/cols)%2:
+       message=message+((cols-len(message)%cols)*"$")
+    #message converted to grid of given number of columns
+    #filling the empty spaces in grid with "#"
+    for c in range(0,len(message),cols):
+            mes.append([message[l] for l in range(c,c+cols)])
+    end_row=len(mes)
+    end_col=len(mes[0])
+    while i<len(mes) and j<len(mes[0]):
+        for k in create(i, j, end_row, end_col, key):
+                temp.append(k)
+        i = i+1
+        j = j+1
+        end_row=end_row-1
+        end_col=end_col-1
+    if key[0]=="AO":
+        return ''.join(temp[-1::-1])
+    elif key[0]=="CO":
+        return ''.join(temp[-1::-1])
+    else:
+        return ''.join(temp)

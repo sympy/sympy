@@ -4,7 +4,7 @@ from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplif
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density
+from sympy.stats import density, median
 from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV, MultivariateNormalDistribution
@@ -33,6 +33,7 @@ def test_Normal():
     sigma = MatrixSymbol('sigma', n, n)
     X = Normal('X', mu, sigma)
     assert density(X) == MultivariateNormalDistribution(mu, sigma)
+    raises (NotImplementedError, lambda: median(m))
     # Below tests should work after issue #17267 is resolved
     # assert E(X) == mu
     # assert variance(X) == sigma

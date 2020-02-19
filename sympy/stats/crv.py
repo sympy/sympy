@@ -171,10 +171,13 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
+    def sample(self, size=()):
         """ A random realization from the distribution """
         icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
+        if not size:
+            return icdf(random.uniform(0, 1))
+        else:
+            return [icdf(random.uniform(0, 1))]*size
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -208,7 +211,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         # CDF is integral of PDF from left bound to z
         pdf = self.pdf(x)
-        cdf = integrate(pdf, (x, left_bound, z), **kwargs)
+        cdf = integrate(pdf.doit(), (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
@@ -262,14 +265,10 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def moment_generating_function(self, t, **kwargs):
         """ Moment generating function """
-        if len(kwargs) == 0:
-
-            try:
+        if not kwargs:
                 mgf = self._moment_generating_function(t)
                 if mgf is not None:
                     return mgf
-            except NotImplementedError:
-                return None
         return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
@@ -303,8 +302,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         pdf = self.pdf(x)
         cdf = integrate(pdf, (x, left_bound, x), **kwargs)
-
-        quantile = solveset(cdf - p, x, S.Reals)
+        quantile = solveset(cdf - p, x, self.set)
         return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
 
     def _quantile(self, x):
@@ -506,13 +504,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample()}
+        return {self.value: self.distribution.sample(size)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)

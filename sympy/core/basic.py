@@ -6,7 +6,7 @@ from itertools import chain, zip_longest
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, Iterator, ordered, Mapping
+from .compatibility import iterable, ordered, Mapping
 from .singleton import S
 
 from inspect import getmro
@@ -1939,7 +1939,7 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal(Iterator):
+class preorder_traversal(object):
     """
     Do a pre-order traversal of a tree.
 

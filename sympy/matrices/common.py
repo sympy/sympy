@@ -2190,6 +2190,22 @@ class MatrixArithmetic(MatrixRequired):
 
         return a.multiply(b)
 
+    def _eval_pow_by_cayley(self, exp):
+        from sympy.discrete.recurrences import linrec_coeffs
+        row = self.shape[0]
+        p = self.charpoly()
+
+        coeffs = (-p).all_coeffs()[1:]
+        coeffs = linrec_coeffs(coeffs, exp)
+        new_mat = self.eye(row)
+        ans = self.zeros(row)
+
+        for i in range(row):
+            ans += coeffs[i]*new_mat
+            new_mat *= self
+
+        return ans
+
     def _eval_pow_by_recursion_dotprodsimp(self, num, prevsimp=None):
         if prevsimp is None:
             prevsimp = [True]*len(self)
@@ -2377,25 +2393,28 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
-    def pow(self, exp, jordan=None, dotprodsimp=None):
-        """Return self**exp a scalar or symbol.
+
+    def pow(self, exp, method=None):
+        r"""Return self**exp a scalar or symbol.
 
         Parameters
         ==========
 
-        jordan : bool, optional
-            If left as None then Jordan form exponentiation will be used under
-            certain conditions, True specifies that jordan_pow should always
-            be used if possible and False means it should not be used unless
-            it is the only way to calculate the power.
+        method : multiply, mulsimp, jordan, cayley
+            If multiply then it returns exponentiation using recursion.
+            If jordan then Jordan form exponentiation will be used.
+            If cayley then the exponentiation is done using Cayley-Hamilton
+            theorem.
+            If mulsimp then the exponentiation is done using recursion
+            with dotprodsimp. This specifies whether intermediate term
+            algebraic simplification is used during naive matrix power to
+            control expression blowup and thus speed up calculation.
+            If None, then it heuristically decides which method to use.
 
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during naive matrix power to control expression blowup and thus
-            speed up calculation. If the power is calculated using Jordan form
-            then this option has no effect. Default is on.
         """
 
+        if method is not None and method not in ['multiply', 'mulsimp', 'jordan', 'cayley']:
+            raise TypeError('No such method')
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2417,19 +2436,39 @@ class MatrixArithmetic(MatrixRequired):
             if exp < 0:
                 exp = -exp
                 a = a.inv()
-            # When certain conditions are met,
-            # Jordan block algorithm is faster than
-            # computation by recursion.
-            elif jordan_pow is not None and (jordan or \
-                    (jordan is not False and a.rows == 2 and exp > 100000)):
-                try:
-                    return jordan_pow(exp)
-                except MatrixError:
-                    if jordan:
-                        raise
+        # When certain conditions are met,
+        # Jordan block algorithm is faster than
+        # computation by recursion.
+        if method == 'jordan':
+            try:
+                return jordan_pow(exp)
+            except MatrixError:
+                if method == 'jordan':
+                    raise
 
-            if _get_intermediate_simp_bool(True, dotprodsimp):
+        elif method == 'cayley':
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("cayley method is only valid for integer powers")
+            return a._eval_pow_by_cayley(exp)
+
+        elif method == "mulsimp":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("mulsimp method is only valid for integer powers")
+            return a._eval_pow_by_recursion_dotprodsimp(exp)
+
+        elif method == "multiply":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("multiply method is only valid for integer powers")
+            return a._eval_pow_by_recursion(exp)
+
+        elif method is None and exp.is_Number and exp % 1 == 0:
+            # Decide heuristically which method to apply
+            if a.rows == 2 and exp > 100000:
+                return jordan_pow(exp)
+            elif _get_intermediate_simp_bool(True, None):
                 return a._eval_pow_by_recursion_dotprodsimp(exp)
+            elif exp > 10000:
+                return a._eval_pow_by_cayley(exp)
             else:
                 return a._eval_pow_by_recursion(exp)
 

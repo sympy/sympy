@@ -38,7 +38,7 @@ Examples
 """
 
 __all__ = [
-    'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
+    'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf','median',
     'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
     'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
     'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
@@ -79,7 +79,7 @@ __all__ = [
     'Probability', 'Expectation', 'Variance', 'Covariance',
 
 ]
-from .rv_interface import (P, E, H, density, where, given, sample, cdf,
+from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
         kurtosis, covariance, dependent, entropy, independent, random_symbols,
         correlation, factorial_moment, moment, cmoment, sampling_density,
