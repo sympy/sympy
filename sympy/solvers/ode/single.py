@@ -4,14 +4,15 @@
 
 from typing import ClassVar, Dict, Iterable, List, Optional, Type
 
-from sympy.core import Add, S
+from sympy.core import S
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.integrals import Integral
-from sympy.simplify import simplify, collect
+from sympy.polys.polytools import cancel
+from sympy.simplify import simplify
 from sympy.utilities import numbered_symbols
 from sympy.functions import exp
 
@@ -232,7 +233,7 @@ class SinglePatternODESolver(SingleODESolver):
             return False
 
         eq = expand(eq / eq.coeff(df))
-        eq = eq.collect(f(x))
+        eq = eq.collect(f(x), func = cancel)
 
         pattern = self._equation(f(x), x, 1)
 
@@ -351,7 +352,7 @@ class NthAlgebraic(SingleODESolver):
         return diffcls
 
 
-class FirstLinear(SingleODESolver):
+class FirstLinear(SinglePatternODESolver):
     r"""
     Solves 1st order linear differential equations.
 
@@ -405,64 +406,27 @@ class FirstLinear(SingleODESolver):
     hint = '1st_linear'
     has_integral = True
 
-    def _matches(self):
-        eq = self.ode_problem.eq_expanded
-        f = self.ode_problem.func.func
-        x = self.ode_problem.sym
-        order = self.ode_problem.order
-        a = Wild('a', exclude=[f(x)])
-        b = Wild('b', exclude=[f(x)])
-        c = Wild('c', exclude=[f(x)])
-        c1 = Wild('c1', exclude=[x])
-        df = f(x).diff(x)
+    def _wilds(self, f, x, order):
+        P = Wild('P', exclude=[f(x)])
+        Q = Wild('Q', exclude=[f(x), f(x).diff(x)])
+        return P, Q
 
-        if order != 1:
-            return False
-
-        reduced_eq = None
-        if eq.is_Add:
-            deriv_coef = eq.coeff(f(x).diff(x, order))
-            if deriv_coef not in (1, 0):
-                r = deriv_coef.match(a*f(x)**c1)
-                if r and r[c1]:
-                    den = f(x)**r[c1]
-                    reduced_eq = Add(*[arg/den for arg in eq.args])
-        if not reduced_eq:
-            reduced_eq = eq
-
-        if eq.is_Add:
-            ind, dep = reduced_eq.as_independent(f)
-        else:
-            u = Dummy('u')
-            ind, dep = (reduced_eq + u).as_independent(f)
-            ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        coefficients = {a: dep.coeff(df),
-                        b: dep.coeff(f(x)),
-                        c: ind}
-        # double check f[a] since the preconditioning may have failed
-        if not coefficients[a].has(f) and not coefficients[b].has(f) and (
-                coefficients[a]*df + coefficients[b]*f(x) + coefficients[c]).expand() - reduced_eq == 0:
-            coefficients['a'] = a
-            coefficients['b'] = b
-            coefficients['c'] = c
-            self.coeffs = coefficients
-            return True
-
-        return False
+    def _equation(self, fx, x, order):
+        P, Q = self.wilds()
+        return fx.diff(x) + P*fx - Q
 
     def _get_general_solution(self, *, simplify: bool = True):
+        P, Q = self.wilds_match()
+        fx = self.ode_problem.func
         x = self.ode_problem.sym
-        f = self.ode_problem.func.func
-        r = self.coeffs  # a*diff(f(x),x) + b*f(x) + c
-        (C1,) = self.ode_problem.get_numbered_constants(num=1)
-
-        t = exp(Integral(r[r['b']]/r[r['a']], x))
-        tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
-        f = r.get('u', f(x))  # take almost-linear u if present, else f(x)
-        return Eq(f, (tt + C1)/t)
+        (C1,)  = self.ode_problem.get_numbered_constants(num=1)
+        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
+            * exp(-Integral(P, x)))))
+        return [gensol]
 
 
-class AlmostLinear(FirstLinear):
+
+class AlmostLinear(SinglePatternODESolver):
     r"""
     Solves an almost-linear differential equation.
 
@@ -527,41 +491,63 @@ class AlmostLinear(FirstLinear):
     hint = "almost_linear"
     has_integral = True
 
-    def _matches(self):
-        ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
+    def _wilds(self, f, x, order):
+        P = Wild('P', exclude=[f(x)])
+        Q = Wild('Q', exclude=[f(x).diff(x)])
+        return P, Q
+
+    def _equation(self, fx, x, order):
+        P,Q = self.wilds()
+        df = fx.diff(x)
         eq = self.ode_problem.eq_expanded
-        f = self.ode_problem.func.func
-        x = self.ode_problem.sym
-        order = self.ode_problem.order
-
-        if order != 1:
-            return False
-
-        df = f(x).diff(x)
-        c = Wild('c', exclude=[f(x)])
-        d = Wild('d', exclude=[df, f(x).diff(x, 2)])
+        c = Wild('c', exclude=[fx])
+        d = Wild('d', exclude=[df, fx.diff(x, 2)])
         e = Wild('e', exclude=[df])
-
-        r = collect(eq, [df, f(x)]).match(e*df + d)
+        eq = expand(eq)
+        eq = eq.collect(fx)
+        r = eq.match(e*df+d)
+        self.fxx = None
+        self.gx = None
+        self.kx = None
         if r:
             r2 = r.copy()
             r2[c] = S.Zero
             if r2[d].is_Add:
                 # Separate the terms having f(x) to r[d] and
                 # remaining to r[c]
-                no_f, r2[d] = r2[d].as_independent(f(x))
+                no_f, r2[d] = r2[d].as_independent(fx)
                 r2[c] += no_f
-            factor = simplify(r2[d].diff(f(x))/r[e])
-            if factor and not factor.has(f(x)):
+            factor = simplify(r2[d].diff(fx)/r[e])
+            if factor and not factor.has(fx):
                 r2[d] = factor_terms(r2[d])
-                u = r2[d].as_independent(f(x), as_Add=False)[1]
+                u = r2[d].as_independent(fx, as_Add=False)[1]
                 r2.update({'a': e, 'b': d, 'c': c, 'u': u})
                 r2[d] /= u
-                r2[e] /= u.diff(f(x))
+                r2[e] /= u.diff(fx)
                 self.coeffs = r2
-                return True
+                du = u.diff(x)
+                temp = du + (r2[r2['b']]/r2[r2['a']])*u - r2[r2['c']]/r2[r2['a']]
+                temp = expand(temp/ temp.coeff(fx.diff(x)))
+                self.fxx = r2[e]
+                self.kx = r2[d]
+                self.gx = -r2[c]
+                self.substituting = u
+                return fx.diff(x) + P*fx - Q
+        return S.Zero
 
-        return False
+    def _get_general_solution(self, *, simplify: bool = True):
+        P, Q = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        (C1,)  = self.ode_problem.get_numbered_constants(num=1)
+        if self.fxx is None or self.gx is None or self.kx is None:
+            gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
+            * exp(-Integral(P, x)))))
+        else:
+            gensol = Eq(self.substituting, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/self.fxx, x)),x))
+                * exp(-Integral(self.kx/self.fxx, x)))))
+
+        return [gensol]
 
 
 class Bernoulli(SinglePatternODESolver):
