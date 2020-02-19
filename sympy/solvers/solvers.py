@@ -1539,7 +1539,7 @@ def _solve(f, *symbols, **flags):
         msg = ''  # there is no failure message
 
         # Poly is generally robust enough to convert anything to
-        # a p   olynomial and tell us the different generators that it
+        # a polynomial and tell us the different generators that it
         # contains, so we will inspect the generators identified by
         # polys to figure out what to do.
 
