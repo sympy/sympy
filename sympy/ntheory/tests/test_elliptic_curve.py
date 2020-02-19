@@ -1,4 +1,6 @@
-from sympy.ntheory.ec import EllipticCurve
+from sympy.ntheory.elliptic_curve import EllipticCurve
+
+
 def test_elliptic_curve():
     # Point addition and multiplication
     e3 = EllipticCurve(-1, 9)
