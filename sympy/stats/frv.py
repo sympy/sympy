@@ -339,7 +339,7 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 

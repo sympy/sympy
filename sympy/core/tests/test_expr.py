@@ -1759,8 +1759,6 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-    assert Poly(3, x).is_constant() is True
-
 
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)

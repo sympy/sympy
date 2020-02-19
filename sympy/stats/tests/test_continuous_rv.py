@@ -2,9 +2,9 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re, Lambda,
+                   besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj)
+                   factorial, binomial, erfi, besselj, besselk)
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -21,7 +21,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
-
+from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
 from sympy.stats.crv import SingleContinuousPSpace
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
@@ -338,7 +338,6 @@ def test_ContinuousRV():
 
 
 def test_arcsin():
-    from sympy import asin
 
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
@@ -348,7 +347,7 @@ def test_arcsin():
     assert cdf(X)(x) == Piecewise((0, a > x),
                             (2*asin(sqrt((-a + x)/(-a + b)))/pi, b >= x),
                             (1, True))
-
+    assert pspace(X).domain.set == Interval(a, b)
 
 def test_benini():
     alpha = Symbol("alpha", positive=True)
@@ -359,6 +358,8 @@ def test_benini():
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
+    assert pspace(X).domain.set == Interval(sigma, oo)
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
@@ -448,7 +449,7 @@ def test_cauchy():
     X = Cauchy('x', x0, gamma)
     # Tests the characteristic function
     assert characteristic_function(X)(x) == exp(-gamma*Abs(x) + I*x*x0)
-
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
     assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
@@ -640,6 +641,7 @@ def test_f_distribution():
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     d1 = Symbol("d1", nonpositive=True)
     raises(ValueError, lambda: FDistribution('x', d1, d1))
 
@@ -704,6 +706,9 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
+    assert characteristic_function(X)(x) == 2 * (-I*b*x)**(a/2) \
+            * besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
+    raises(NotImplementedError, lambda: moment_generating_function(X))
 
 def test_sampling_gamma_inverse():
     scipy = import_module('scipy')
@@ -736,6 +741,7 @@ def test_gumbel():
     exp(-mu/beta)*exp(y/beta)*exp(-exp(-mu/beta)*exp(y/beta))/beta
     assert cdf(X)(x).expand() == \
     exp(-exp(mu/beta)*exp(-x/beta))
+    assert characteristic_function(X)(x) == exp(I*mu*x)*gamma(-I*beta*x + 1)
 
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
@@ -760,6 +766,8 @@ def test_laplace():
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
+    X = Laplace('x', [1, 2], [1, 1])
+    assert isinstance(pspace(X).distribution, MultivariateLaplaceDistribution)
 
 def test_levy():
     mu = Symbol("mu", real=True)
@@ -770,6 +778,7 @@ def test_levy():
     assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
     assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
 
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     mu = Symbol("mu", real=False)
     raises(ValueError, lambda: Levy('x',mu,c))
 
@@ -833,9 +842,14 @@ def test_lognormal():
     for i in range(3):
         X = LogNormal('x', i, 1)
         assert sample(X) in X.pspace.domain.set
+
+    size = 5
+    samps = sample(X, size=size)
+    for samp in samps:
+        assert samp in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
-
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     mu = Symbol("mu", real=True)
     sigma = Symbol("sigma", positive=True)
 
@@ -1002,6 +1016,7 @@ def test_raised_cosine():
 
     X = RaisedCosine("x", mu, s)
 
+    assert pspace(X).domain.set == Interval(mu - s, mu + s)
     #Tests characteristics_function
     assert characteristic_function(X)(x) == \
            Piecewise((exp(-I*pi*mu/s)/2, Eq(x, -pi/s)), (exp(I*pi*mu/s)/2, Eq(x, pi/s)), (pi**2*exp(I*mu*x)*sin(s*x)/(s*x*(-s**2*x**2 + pi**2)), True))
@@ -1059,6 +1074,7 @@ def test_studentt():
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S.Half)/(sqrt(nu)*beta(S.Half, nu/2))
     assert cdf(X)(x) == S.Half + x*gamma(nu/2 + S.Half)*hyper((S.Half, nu/2 + S.Half),
                                 (Rational(3, 2),), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+    raises(NotImplementedError, lambda: moment_generating_function(X))
 
 def test_trapezoidal():
     a = Symbol("a", real=True)
@@ -1084,12 +1100,15 @@ def test_triangular():
     c = Symbol("c")
 
     X = Triangular('x', a, b, c)
+    assert pspace(X).domain.set == Interval(a, b)
     assert str(density(X)(x)) == ("Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)), (a <= x) & (c > x)), "
     "(2/(-a + b), Eq(c, x)), ((2*b - 2*x)/((-a + b)*(b - c)), (b >= x) & (c < x)), (0, True))")
 
     #Tests moment_generating_function
     assert moment_generating_function(X)(x).expand() == \
     ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
+    assert str(characteristic_function(X)(x)) == \
+    '(2*(-a + b)*exp(I*c*x) - 2*(-a + c)*exp(I*b*x) - 2*(b - c)*exp(I*a*x))/(x**2*(-a + b)*(-a + c)*(b - c))'
 
 def test_quadratic_u():
     a = Symbol("a", real=True)
@@ -1098,10 +1117,12 @@ def test_quadratic_u():
     X = QuadraticU("x", a, b)
     Y = QuadraticU("x", 1, 2)
 
+    assert pspace(X).domain.set == Interval(a, b)
     # Tests _moment_generating_function
     assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
     assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
 
+    assert characteristic_function(Y)(1) == 3*I*(-1 + 4*I)*exp(I*exp(2*I))
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
@@ -1203,6 +1224,7 @@ def test_wignersemicircle():
     R = Symbol("R", positive=True)
 
     X = WignerSemicircle('x', R)
+    assert pspace(X).domain.set == Interval(-R, R)
     assert density(X)(x) == 2*sqrt(-x**2 + R**2)/(pi*R**2)
     assert E(X) == 0
 
@@ -1224,10 +1246,13 @@ def test_prefab_sampling():
 
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
+    size = 5
     for var in variables:
         for i in range(niter):
             assert sample(var) in var.pspace.domain.set
-
+            samps = sample(var, size=size)
+            for samp in samps:
+                assert samp in var.pspace.domain.set
 
 def test_input_value_assertions():
     a, b = symbols('a b')
@@ -1302,6 +1327,8 @@ def test_random_parameters():
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
     assert isinstance(pspace(meas), JointPSpace)
+    X = Normal('x', [1, 2], [1, 1])
+    assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 

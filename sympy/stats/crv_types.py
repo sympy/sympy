@@ -60,7 +60,7 @@ from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
+                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
                    hyper, uppergamma, sinh, Ne, expint, Rational)
 from sympy.external import import_module
 from sympy.matrices import MatrixBase, MatrixExpr
@@ -190,14 +190,15 @@ def rv(symbol, cls, args):
 class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
+    @property
     def set(self):
         return Interval(self.a, self.b)
 
     def pdf(self, x):
-        return 1/(pi*sqrt((x - self.a)*(self.b - x)))
+        a, b = self.a, self.b
+        return 1/(pi*sqrt((x - a)*(b - x)))
 
     def _cdf(self, x):
-        from sympy import asin
         a, b = self.a, self.b
         return Piecewise(
             (S.Zero, x < a),
@@ -363,8 +364,11 @@ class BetaDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
-    def sample(self):
-        return random.betavariate(self.alpha, self.beta)
+    def sample(self, size=()):
+        if not size:
+            return random.betavariate(self.alpha, self.beta)
+        else:
+            return [random.betavariate(self.alpha, self.beta)]*size
 
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
@@ -1172,8 +1176,11 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return self.rate * exp(-self.rate*x)
 
-    def sample(self):
-        return random.expovariate(self.rate)
+    def sample(self, size=()):
+        if not size:
+            return random.expovariate(self.rate)
+        else:
+            return [random.expovariate(self.rate)]*size
 
     def _cdf(self, x):
         return Piecewise(
@@ -1604,8 +1611,11 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-    def sample(self):
-        return random.gammavariate(self.k, self.theta)
+    def sample(self, size=()):
+        if not size:
+            return random.gammavariate(self.k, self.theta)
+        else:
+            return [random.gammavariate(self.k, self.theta)]*size
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
@@ -1714,17 +1724,17 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
-    def sample(self):
+    def sample(self, size=()):
         scipy = import_module('scipy')
         if scipy:
             from scipy.stats import invgamma
-            return invgamma.rvs(float(self.a), 0, float(self.b))
+            return invgamma.rvs(float(self.a), 0, float(self.b), size=size)
         else:
             raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
-        return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
+        return 2 * (-I*b*t)**(a/2) * besselk(a, sqrt(-4*I*b*t)) / gamma(a)
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the '
@@ -2389,8 +2399,11 @@ class LogNormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
-    def sample(self):
-        return random.lognormvariate(self.mean, self.std)
+    def sample(self, size=()):
+        if not size:
+            return random.lognormvariate(self.mean, self.std)
+        else:
+            return [random.lognormvariate(self.mean, self.std)]*size
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2722,8 +2735,11 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def sample(self):
-        return random.normalvariate(self.mean, self.std)
+    def sample(self, size=()):
+        if not size:
+            return random.normalvariate(self.mean, self.std)
+        else:
+            return [random.normalvariate(self.mean, self.std)]*size
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2853,11 +2869,11 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
         mu, s = self.mean, self.shape
         return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
 
-    def sample(self):
+    def sample(self, size=()):
         scipy = import_module('scipy')
         if scipy:
             from scipy.stats import invgauss
-            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
+            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape), size=size)
         else:
             raise NotImplementedError(
                 'Sampling the Inverse Gaussian Distribution requires Scipy.')
@@ -2966,8 +2982,11 @@ class ParetoDistribution(SingleContinuousDistribution):
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
 
-    def sample(self):
-        return random.paretovariate(self.alpha)
+    def sample(self, size=()):
+        if not size:
+            return random.paretovariate(self.alpha)
+        else:
+            return [random.paretovariate(self.alpha)]*size
 
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha
@@ -3142,14 +3161,13 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         a, b = self.a, self.b
-
-        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
+        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) \
+        - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
 
     def _characteristic_function(self, t):
-        def _moment_generating_function(self, t):
-            a, b = self.a, self.b
-
-            return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
+        a, b = self.a, self.b
+        return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) \
+                / ((a-b)**3 * t**2)
 
 
 def QuadraticU(name, a, b):
@@ -3819,8 +3837,11 @@ class UniformDistribution(SingleContinuousDistribution):
                               Min(self.left, self.right): self.left})
         return result
 
-    def sample(self):
-        return random.uniform(self.left, self.right)
+    def sample(self, size=()):
+        if not size:
+            return random.uniform(self.left, self.right)
+        else:
+            return [random.uniform(self.left, self.right)]*size
 
 
 def Uniform(name, left, right):
@@ -4074,8 +4095,11 @@ class WeibullDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
-    def sample(self):
-        return random.weibullvariate(self.alpha, self.beta)
+    def sample(self, size=()):
+        if not size:
+            return random.weibullvariate(self.alpha, self.beta)
+        else:
+            return [random.weibullvariate(self.alpha, self.beta)]*size
 
 def Weibull(name, alpha, beta):
     r"""
