@@ -2321,3 +2321,6 @@ def test_solve_floor():
     assert solveset(floor(x+1), x, S.Reals) == Interval.Ropen(-1, 0)
     assert solveset(x*floor(x+1), x, S.Reals) == Interval(-1, 0)
     assert solveset(floor(2*x-3)-5, x, S.Reals) == Interval.Ropen(4, 9/2)
+
+    raises(NotImplementedError, lambda: solveset(floor(x) + sin(x), x, S.Reals))
+    raises(NotImplementedError, lambda: solveset(floor(2/(1 + (x*sin(x)))), x, S.Reals))

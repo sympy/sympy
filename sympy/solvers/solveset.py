@@ -786,47 +786,69 @@ def _solve_radical(f, symbol, solveset_solver):
     return solution_set
 
 
+def _recursive_check_f(f):
+    not_compute = False
+    floor_type = False
+    if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
+        not_compute = True
+        return f, not_compute, floor_type
+    if type(f) == floor:
+        floor_type = True
+        f, not_compute, _ = _recursive_check_f(f.args[0])
+        return f, not_compute, floor_type
+    elif f.is_Add:
+        cp_f = 0
+        operation_type = "Add"
+    elif f.is_Mul:
+        cp_f = 1
+        operation_type = "Mul"
+    elif f.is_Pow:
+        cp_f, not_compute, floor_type = _recursive_check_f(f.args[0])
+        return cp_f ** f.args[1], not_compute, floor_type
+    else:
+        return f, not_compute, floor_type
+
+    arg = f.args
+    lst = list(arg)
+
+    for i, r in enumerate(arg):
+        if isinstance(r, (TrigonometricFunction, HyperbolicFunction)):
+            not_compute = True
+            return f, not_compute, floor_type
+        if type(r) == floor:
+            floor_type = True
+            lst[i], temp_not_compute, _ = _recursive_check_f(r.args[0])
+            not_compute = temp_not_compute if temp_not_compute else not_compute
+        if r.is_Mul or r.is_Add or r.is_Pow:
+            temp_r = r.args[0] if r.is_Pow else r
+            lst[i], temp_not_compute, temp_floor_type = _recursive_check_f(temp_r)
+            lst[i] = lst[i] ** r.args[1] if r.is_Pow else lst[i]
+            floor_type = floor_type if floor_type else temp_floor_type
+            not_compute = temp_not_compute if temp_not_compute else not_compute
+
+        cp_f = cp_f + lst[i] if operation_type == "Add" else cp_f * lst[i]
+
+    return cp_f, not_compute, floor_type
+
+
 def _solve_floor(f, symbol, solver):
     """ Helper functions to solve equations with floor """
-    result = set()
-    lower_limit = []
-    upper_limit = []
-    if type(f) == floor:
-        lower_limit = solver(f.args[0], symbol)
-        upper_limit = solver(f.args[0]-1, symbol)
+    floor_eq, not_compute, floor_type = _recursive_check_f(f)
+
+    if not_compute:
+        raise NotImplementedError(filldedent('''
+                                The floor equation
+                                cannot be solved with
+                                the current implementation.
+                                '''))
+
+    if floor_type is False:
+        return EmptySet
+    else:
         result = set()
-    elif f.is_Add:
-        arg = f.args
-        floor_type = False
-        lst = list(arg)
-        i = 0
-        cp_f = 0
-        for r in arg:
-            if type(r) == floor:
-                floor_type = True
-                lst[i] = r.args[0]
-            elif r.is_Mul:
-                arg_mul = r.args
-                lst_mul = list(arg_mul)
-                c = 0
-                cp_arg = 1
-                for m in arg_mul:
-                    if type(m) == floor:
-                        floor_type = True
-                        lst_mul[c] = m.args[0]
-                    cp_arg = cp_arg*lst_mul[c]
-                    c = c+1
-                lst[i] = cp_arg
-            cp_f = cp_f+lst[i]
-            i = i+1
 
-        if floor_type is False:
-            return EmptySet
-        else:
-            result = set()
-
-        lower_limit = solver(cp_f, symbol)
-        upper_limit = solver(cp_f-1, symbol)
+    lower_limit = solver(floor_eq, symbol)
+    upper_limit = solver(floor_eq-1, symbol)
 
     for l, r in zip(lower_limit, upper_limit):
         result.add(Interval.Ropen(l, r) if l < r else Interval.Lopen(r, l))
