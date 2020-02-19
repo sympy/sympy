@@ -2041,6 +2041,15 @@ class divisor_sigma(Function):
         k = sympify(k)
         if n.is_prime:
             return 1 + n**k
+        if n.is_integer:
+            if n.is_Mul or n.is_Pow:  # prime is already handled
+                p = []
+                for b, e in (_.as_base_exp() for _ in Mul.make_args(n)):
+                    if b.is_prime and e.is_positive:
+                        p.append((b**(e + 1) - 1)/(b - 1))
+                    else:
+                        return
+                return Mul(*p)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
