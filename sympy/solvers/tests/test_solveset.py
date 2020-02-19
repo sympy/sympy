@@ -1,7 +1,7 @@
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
-from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
+from sympy.core.numbers import (E, I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Gt,
     Ne)
 from sympy.core.singleton import S
