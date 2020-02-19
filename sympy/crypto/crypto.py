@@ -3330,7 +3330,7 @@ def decipher_bg(message, key):
 
 #Input key as list where first element tells about direction of spiral and second element denotes the starting corner
 
-def create(start_row,start_col,m,n,key):
+def create(start_row,start_col,m,n,key,mes):
     l1,l2,l3,l4=[],[],[],[]
     for i in range(start_row,n-1):
             l1.append(mes[start_row][i])   #creates a list from 1 to 3
@@ -3396,6 +3396,7 @@ def encipher_route(message, cols, key):
     i = 0
     j = 0
     temp = []
+    mes = []
     if (len(message)/cols)%2:
        message=message+((cols-len(message)%cols)*"$")
     #message converted to grid of given number of columns
@@ -3405,7 +3406,7 @@ def encipher_route(message, cols, key):
     end_row=len(mes)
     end_col=len(mes[0])
     while i<len(mes) and j<len(mes[0]):
-        for k in create(i, j, end_row, end_col, key):
+        for k in create(i, j, end_row, end_col, key, mes):
                 temp.append(k)
         i = i+1
         j = j+1
