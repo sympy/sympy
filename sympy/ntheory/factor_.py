@@ -3,6 +3,7 @@ Integer factorization
 """
 from __future__ import print_function, division
 
+from collections import defaultdict
 import random
 import math
 
@@ -252,15 +253,27 @@ def multiplicity(p, n):
 
     >>> from sympy.ntheory import multiplicity
     >>> from sympy.core.numbers import Rational as R
-    >>> from sympy import factorial
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
     >>> multiplicity(3, R(1, 9))
     -2
-    >>> multiplicity(5, factorial(60))
-    14
+
+    Note: when checking for the multiplicity of a number in a
+    large factorial it is most efficient to send it as an unevaluated
+    factorial or to call ``multiplicity_in_factorial`` directly:
+
+    >>> from sympy.ntheory import multiplicity_in_factorial
+    >>> from sympy import factorial
+    >>> p = factorial(25)
+    >>> n = 2**100
+    >>> nfac = factorial(n, evaluate=False)
+    >>> multiplicity(p, nfac)
+    52818775009509558395695966887
+    >>> _ == multiplicity_in_factorial(p, n)
+    True
 
     """
+    from sympy.functions.combinatorial.factorials import factorial
 
     try:
         p, n = as_int(p), as_int(n)
@@ -282,6 +295,11 @@ def multiplicity(p, n):
                     multiplicity(p.q, n.p),
                     multiplicity(p.p, n.q))
                 return like - cross
+        elif (isinstance(p, (SYMPY_INTS, Integer)) and
+                isinstance(n, factorial) and
+                isinstance(n.args[0], Integer) and
+                n.args[0] >= 0):
+            return multiplicity_in_factorial(p, n.args[0])
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
@@ -315,44 +333,69 @@ def multiplicity(p, n):
     return m
 
 
-def multiplicity_in_factorial(b, n):
-    """
-    Finds the greatest integer m such that b**m divides factorial of n without calculating the factorial
+def multiplicity_in_factorial(p, n):
+    """return the largest integer ``m`` such that ``p**m`` divides ``n!``
+    without calculating the factorial of ``n``.
+
 
     Examples
     ========
 
     >>> from sympy.ntheory import multiplicity_in_factorial
+    >>> from sympy import factorial
 
-    >>> multiplicity_in_factorial(5, 60)
-    14
-    >>> multiplicity_in_factorial(5, 25)
+    >>> multiplicity_in_factorial(2, 3)
+    1
+
+    An instructive use of this is to tell how many trailing zeros
+    a given factorial has. For example, there are 6 in 25!:
+
+    >>> factorial(25)
+    15511210043330985984000000
+    >>> multiplicity_in_factorial(10, 25)
     6
-    >>> multiplicity_in_factorial(12, 49)
-    22
-    >>> multiplicity_in_factorial(10, 100)
-    24
-    >>> multiplicity_in_factorial(42, 10**10)
-    1666666660
+
+    For large factorials, it is much faster/feasible to use
+    this function rather than computing the actual factorial:
+
+    >>> multiplicity_in_factorial(factorial(25), 2**100)
+    52818775009509558395695966887
 
     """
 
-    b = as_int(b)
-    n = as_int(n)
+    p, n = as_int(p), as_int(n)
 
-    if b <= 0:
-        raise ValueError('expecting positive integer got %s' % b )
+    if p <= 0:
+        raise ValueError('expecting positive integer got %s' % p )
 
     if n < 0:
         raise ValueError('expecting non-negative integer got %s' % n )
 
-    factors = factorint(b)
+    factors = factorint(p)
 
-    min_e = min((n - (sum(digits(n, p)) - p))//(p - 1) for p in factors)
-    # the exponent of prime in n! = (n - sum(digits of n in base `prime`)/(prime - 1)
-    # subtracting prime since digits include prime as first element
+    # keep only the largest of a given multiplicity since those
+    # of a given multiplicity will be goverened by the behavior
+    # of the largest factor
+    test = defaultdict(int)
+    for k, v in factors.items():
+        test[v] = max(k, test[v])
+    keep = set(test.values())
+    # remove others from factors
+    for k in list(factors.keys()):
+        if k not in keep:
+            factors.pop(k)
 
-    return min_e//min(factors.values())
+    mp = S.Infinity
+    for i in factors:
+        # multiplicity of i in n! is
+        mi = (n - (sum(digits(n, i)) - i))//(i - 1)
+        # multiplicity of p in n! depends on multiplicity
+        # of prime `i` in p, so we floor divide by factors[i]
+        # and keep it if smaller than the multiplicity of p
+        # seen so far
+        mp = min(mp, mi//factors[i])
+
+    return mp
 
 
 def perfect_power(n, candidates=None, big=True, factor=True):
