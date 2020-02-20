@@ -4073,3 +4073,9 @@ def test_issue_18408():
     sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
     assert checkodesol(eq, sol) == (True, 0)
+
+
+def test_issue_9446():
+    f = Function('f')
+    assert dsolve(Eq(f(2 * x), sin(Derivative(f(x)))), f(x)) == \
+    [Eq(f(x), C1 + Integral(asin(f(2*x)), x)), Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x))]
