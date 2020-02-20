@@ -1,7 +1,7 @@
 from sympy.assumptions import Q
 from sympy.core.add import Add
 from sympy.core.function import Function
-from sympy.core.numbers import , I, Integer, oo, pi, Rational
+from sympy.core.numbers import I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import Abs
