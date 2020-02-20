@@ -1,12 +1,12 @@
 from sympy import (
-    Rational, Poly, Symbol, N, I, Abs, sqrt, exp, MatrixError, Float, sin,
+    Rational, Poly, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
 from sympy.matrices import eye, Matrix
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix, MatrixEigen
 from sympy.abc import x, y
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
-from sympy.matrices.matrices import NonSquareMatrixError
+from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
 class EigenOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixEigen):
     pass
