@@ -177,6 +177,9 @@ Ntheory Functions Reference
 .. automodule:: sympy.ntheory.continued_fraction
    :members:
 
+.. automodule:: sympy.ntheory.digits
+   :members:
+
 .. autoclass:: sympy.ntheory.mobius
    :members:
 
