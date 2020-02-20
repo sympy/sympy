@@ -1,8 +1,12 @@
+from typing import Dict, Any
+
 import inspect
 
 from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
-global_namespace = dict()
+# XXX: This parameter to dispatch isn't documented and isn't used anywhere in
+# sympy. Maybe it should just be removed.
+global_namespace = dict()  # type: Dict[str, Any]
 
 
 def dispatch(*types, **kwargs):

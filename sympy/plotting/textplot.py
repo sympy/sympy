@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
-from sympy.core.compatibility import range
 from sympy.utilities.lambdify import lambdify
 
 import math
@@ -64,7 +63,8 @@ def textplot_str(expr, a, b, W=55, H=18):
     for val in x:
         try:
             y.append(f(val))
-        except:
+        # Not sure what exceptions to catch here or why...
+        except (ValueError, TypeError, ZeroDivisionError):
             y.append(None)
 
     # Normalize height to screen space

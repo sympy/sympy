@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from typing import Any
+
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
@@ -335,7 +337,7 @@ class NDimArray(object):
         s = latex(self, mode='plain')
         return "$\\displaystyle %s$" % s
 
-    _repr_latex_orig = _repr_latex_
+    _repr_latex_orig = _repr_latex_  # type: Any
 
     def tolist(self):
         """

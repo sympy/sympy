@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
-from sympy.core.compatibility import range, as_int
+from sympy.core.compatibility import as_int
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational
@@ -719,6 +719,10 @@ class polygamma(Function):
                 nz = unpolarify(z)
                 if z != nz:
                     return polygamma(n, nz)
+
+            if n.is_positive:
+                if z is S.Half:
+                    return (-1)**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
 
             if n is S.NegativeOne:
                 return loggamma(z)

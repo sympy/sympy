@@ -1,10 +1,9 @@
-from distutils.version import LooseVersion as V
 from itertools import product
 import math
 import inspect
 
 import mpmath
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
@@ -12,14 +11,14 @@ from sympy import (
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
     MatrixSymbol, fresnelc, fresnels)
-from sympy.functions.elementary.complexes import re, im, Abs, arg
+from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
@@ -1012,10 +1011,11 @@ def test_scipy_fns():
         f = lambdify(x, sympy_fn(x), modules="scipy")
         for i in range(20):
             tv = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
-            # SciPy thinks that factorial(z) is 0 when re(z) < 0.
+            # SciPy thinks that factorial(z) is 0 when re(z) < 0 and
+            # does not support complex numbers.
             # SymPy does not think so.
-            if sympy_fn == factorial and numpy.real(tv) < 0:
-                tv = tv + 2*numpy.abs(numpy.real(tv))
+            if sympy_fn == factorial:
+                tv = numpy.abs(tv)
             # SciPy supports gammaln for real arguments only,
             # and there is also a branch cut along the negative real axis
             if sympy_fn == loggamma:

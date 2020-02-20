@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS, range
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
 from sympy.ntheory import factorint
 from sympy.polys.polyconfig import query

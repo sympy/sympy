@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
+from typing import Dict, List
+
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, as_int, string_types
+from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
@@ -91,12 +93,12 @@ def vfree_group(symbols):
 def _parse_symbols(symbols):
     if not symbols:
         return tuple()
-    if isinstance(symbols, string_types):
+    if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr or FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
-        if all(isinstance(s, string_types) for s in symbols):
+        if all(isinstance(s, str) for s in symbols):
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols
@@ -109,7 +111,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}
+_free_group_cache = {}  # type: Dict[int, FreeGroup]
 
 class FreeGroup(DefaultPrinting):
     """
@@ -134,7 +136,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
-    relators = tuple()
+    relators = []  # type: List[Expr]
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))

@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import raises, skip, ignore_warnings
+from sympy.testing.pytest import raises, skip, ignore_warnings
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -118,7 +118,6 @@ def test_Min():
 
     # issue 7233
     e = Min(0, x)
-    assert e.evalf == e.n
     assert e.n().args == (0, x)
 
     # issue 8643
@@ -185,7 +184,6 @@ def test_Max():
         + Heaviside(x - Max(1, x**2) + 1)
 
     e = Max(0, x)
-    assert e.evalf == e.n
     assert e.n().args == (0, x)
 
     # issue 8643

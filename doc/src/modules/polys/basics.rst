@@ -69,7 +69,7 @@ keyword parameter. By default, it is determined by the coefficients
 of the polynomial arguments.
 
 Polynomial expressions can be transformed into polynomials by the
-method :obj:`sympy.core.basic.Basic.as_poly`::
+method :obj:`sympy.core.expr.Expr.as_poly`::
 
     >>> e = (x + y)*(y - 2*z)
     >>> e.as_poly()

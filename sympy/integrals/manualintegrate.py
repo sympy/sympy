@@ -18,12 +18,15 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 from __future__ import print_function, division
 
+from typing import Dict as tDict, Optional
+
 from collections import namedtuple, defaultdict
 
 import sympy
 
 from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
+from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.polynomials import OrthogonalPolynomial
@@ -1193,8 +1196,8 @@ def fallback_rule(integral):
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache = {}
-_parts_u_cache = defaultdict(int)
+_integral_cache = {}  # type: tDict[Expr, Optional[Expr]]
+_parts_u_cache = defaultdict(int)  # type: tDict[Expr, int]
 _cache_dummy = sympy.Dummy("z")
 
 def integral_steps(integrand, symbol, **options):

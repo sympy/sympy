@@ -28,7 +28,6 @@
 from sympy import S, Mul, eye, trace
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
-from sympy.core.compatibility import range
 
 
 # DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_name="S")

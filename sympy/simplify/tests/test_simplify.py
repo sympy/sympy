@@ -1,20 +1,19 @@
 from sympy import (
     Abs, acos, Add, asin, atan, Basic, binomial, besselsimp,
-    collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
+    cos, cosh, count_ops, csch, diff, E,
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
-    factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
+    factorial, Float, Function, gamma, GoldenRatio, hyper,
     hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
-    Rational, root, S, separatevars, signsimp, simplify, sign, sin,
-    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
+    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
+    Rational, S, separatevars, signsimp, simplify, sign, sin,
+    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
     zoo)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
-from sympy.utilities.pytest import XFAIL, slow, raises
-from sympy.core.compatibility import range, PY3
+from sympy.testing.pytest import XFAIL, slow
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i
 
 
 def test_issue_7263():
@@ -22,13 +21,10 @@ def test_issue_7263():
             673.447451402970) < 1e-12
 
 
-@XFAIL
 def test_factorial_simplify():
-    # There are more tests in test_factorials.py. These are just to
-    # ensure that simplify() calls factorial_simplify correctly
-    from sympy.specfun.factorials import factorial
+    # There are more tests in test_factorials.py.
     x = Symbol('x')
-    assert simplify(factorial(x)/x) == factorial(x - 1)
+    assert simplify(factorial(x)/x) == gamma(x)
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 
@@ -71,8 +67,8 @@ def test_simplify_expr():
 
     f = Symbol('f')
     A = Matrix([[2*k - m*w**2, -k], [-k, k - m*w**2]]).inv()
-    assert simplify((A*Matrix([0, f]))[1]) == \
-        -f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2))
+    assert simplify((A*Matrix([0, f]))[1] -
+            (-f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2)))) == 0
 
     f = -x + y/(z + t) + z*x/(z + t) + z*a/(z + t) + t*x/(z + t)
     assert simplify(f) == (y + a*z)/(z + t)
@@ -407,10 +403,10 @@ def test_nsimplify():
     # issue 10336
     inf = Float('inf')
     infs = (-oo, oo, inf, -inf)
-    for i in infs:
-        ans = sign(i)*oo
-        assert nsimplify(i) == ans
-        assert nsimplify(i + x) == x + ans
+    for zi in infs:
+        ans = sign(zi)*oo
+        assert nsimplify(zi) == ans
+        assert nsimplify(zi + x) == x + ans
 
     assert nsimplify(0.33333333, rational=True, rational_conversion='exact') == Rational(0.33333333)
 
@@ -609,7 +605,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, exp_polar, cosh, cosine_transform, bessely
+    from sympy import besselj, besseli, cosh, cosine_transform, bessely
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -782,8 +778,7 @@ def test_clear_coefficients():
 
 def test_nc_simplify():
     from sympy.simplify.simplify import nc_simplify
-    from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
-                                                       MatPow, Identity)
+    from sympy.matrices.expressions import MatPow, Identity
     from sympy.core import Pow
     from functools import reduce
 
@@ -825,7 +820,7 @@ def test_nc_simplify():
     _check(b**-1*a**-1*(a*b)**2, a*b)
     _check(a**-1*b*c**-1, (c*b**-1*a)**-1)
     expr = a**3*b*a**4*b*a**4*b*a**2*b*a**2*(b*a**2)**2*b*a**2*b*a**2
-    for i in range(10):
+    for _ in range(10):
         expr *= a*b
     _check(expr, a**3*(b*a**4)**2*(b*a**2)**6*(a*b)**10)
     _check((a*b*a*b)**2, (a*b*a*b)**2, deep=False)

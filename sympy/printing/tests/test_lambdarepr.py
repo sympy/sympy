@@ -1,6 +1,6 @@
 from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
                   Expr, sqrt
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, NumExprPrinter
