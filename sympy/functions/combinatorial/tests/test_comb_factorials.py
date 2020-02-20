@@ -136,7 +136,8 @@ def test_ff_eval_apply():
     assert ff(n, n) == factorial(n)
 
     assert ff(x, k).rewrite(rf) == rf(x - k + 1, k)
-    assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
+    assert ff(x, k).rewrite(gamma) == Piecewise((gamma(x + 1)/gamma(-k + x + 1), x >= 0), ((-1)**k*gamma(k - x)/gamma(-x), True))
+    assert ff(5, k).rewrite(gamma) == 120/gamma(6 - k)
     assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
     assert ff(x, y).rewrite(factorial) == ff(x, y)

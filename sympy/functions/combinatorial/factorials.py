@@ -2,13 +2,14 @@ from __future__ import print_function, division
 
 from typing import List
 
-from sympy.core import S, sympify, Dummy, Mod
+from sympy.core import S, sympify, Dummy, Mod, zoo
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ge, Gt, Lt
+from sympy.logic import And
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
@@ -668,7 +669,7 @@ class FallingFactorial(CombinatorialFunction):
     Rewrite
 
     >>> ff(x, k).rewrite(gamma)
-    (-1)**k*gamma(k - x)/gamma(-x)
+    Piecewise((gamma(x + 1)/gamma(-k + x + 1), x >= 0), ((-1)**k*gamma(k - x)/gamma(-x), True))
     >>> ff(x, k).rewrite(rf)
     RisingFactorial(-k + x + 1, k)
     >>> ff(x, m).rewrite(binomial)
@@ -742,8 +743,11 @@ class FallingFactorial(CombinatorialFunction):
                                             range(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
-        from sympy import gamma
-        return (-1)**k*gamma(k - x) / gamma(-x)
+        from sympy import gamma, Piecewise
+
+        return Piecewise(
+            (gamma(x + 1) / gamma(x - k + 1), Ge(x, 0)),
+            ((-1)**k*gamma(k - x) / gamma(-x), True))
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
