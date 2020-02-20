@@ -2,14 +2,13 @@ from __future__ import print_function, division
 
 from typing import List
 
-from sympy.core import S, sympify, Dummy, Mod, zoo
+from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
-from sympy.core.relational import Eq, Ge, Gt, Lt
-from sympy.logic import And
+from sympy.core.relational import Eq, Ge
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
