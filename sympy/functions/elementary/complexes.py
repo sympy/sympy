@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
@@ -790,14 +788,14 @@ class adjoint(Function):
         arg = printer._print(self.args[0])
         tex = r'%s^{\dagger}' % arg
         if exp:
-            tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
+            tex = r'\left({}\right)^{{{}}}'.format(tex, printer._print(exp))
         return tex
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u'\N{DAGGER}')
+            pform = pform**prettyForm('\N{DAGGER}')
         else:
             pform = pform**prettyForm('+')
         return pform

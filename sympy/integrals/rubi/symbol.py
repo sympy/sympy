@@ -5,7 +5,7 @@ from sympy.utilities.decorator import doctest_depends_on
 if matchpy:
     from matchpy import Wildcard
 else:
-    class Wildcard(object):
+    class Wildcard:
         def __init__(self, min_length, fixed_size, variable_name, optional):
             pass
 

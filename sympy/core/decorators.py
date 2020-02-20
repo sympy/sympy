@@ -5,7 +5,6 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 
-from __future__ import print_function, division
 
 from functools import wraps
 from .sympify import SympifyError, sympify
@@ -31,7 +30,7 @@ def deprecated(**decorator_kwargs):
                 _sympy_deprecated_func = wrapped
                 def __init__(self, *args, **kwargs):
                     _warn_deprecation(wrapped, 4)
-                    super(wrapper, self).__init__(*args, **kwargs)
+                    super().__init__(*args, **kwargs)
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
@@ -209,7 +208,7 @@ def sympify_return(*args):
     return wrapper
 
 
-class _SympifyWrapper(object):
+class _SympifyWrapper:
     '''Internal class used by sympify_return and sympify_method_args'''
 
     def __init__(self, func, args):

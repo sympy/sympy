@@ -2,7 +2,6 @@
 Convolution (using **FFT**, **NTT**, **FWHT**), Subset Convolution,
 Covering Product, Intersecting Product
 """
-from __future__ import print_function, division
 
 from sympy.core import S, sympify
 from sympy.core.compatibility import as_int, iterable

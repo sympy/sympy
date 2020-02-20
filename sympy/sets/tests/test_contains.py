@@ -30,7 +30,7 @@ def test_binary_symbols():
     y = Symbol('y')
     z = Symbol('z')
     assert Contains(x, FiniteSet(y, Eq(z, True))
-        ).binary_symbols == set([y, z])
+        ).binary_symbols == {y, z}
 
 
 def test_as_set():

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Mul, sympify
 from sympy.matrices.expressions.matexpr import (
     MatrixExpr, ShapeError, OneMatrix, ZeroMatrix
@@ -66,7 +64,7 @@ class HadamardProduct(MatrixExpr):
         if check:
             validate(*args)
 
-        return super(HadamardProduct, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     @property
     def shape(self):
@@ -151,7 +149,7 @@ def validate(*args):
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
+            raise ShapeError("Matrices {} and {} are not aligned".format(A, B))
 
 
 # TODO Implement algorithm for rewriting Hadamard product as diagonal matrix
@@ -375,7 +373,7 @@ class HadamardPower(MatrixExpr):
                 .format(base.shape, exp.shape)
                 )
 
-        obj = super(HadamardPower, cls).__new__(cls, base, exp)
+        obj = super().__new__(cls, base, exp)
         return obj
 
     @property

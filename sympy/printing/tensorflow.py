@@ -78,7 +78,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(TensorflowPrinter, self).__init__(settings)
+        super().__init__(settings)
 
         version = self._settings['tensorflow_version']
         if version is None and tensorflow:
@@ -88,10 +88,10 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     def _print_Function(self, expr):
         op = self.mapping.get(type(expr), None)
         if op is None:
-            return super(TensorflowPrinter, self)._print_Basic(expr)
+            return super()._print_Basic(expr)
         children = [self._print(arg) for arg in expr.args]
         if len(children) == 1:
-            return "%s(%s)" % (
+            return "{}({})".format(
                 self._module_format(op),
                 children[0]
             )
@@ -129,7 +129,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         def unfold(expr, args):
             if not args:
                 return self._print(expr)
-            return "%s(%s, %s)[0]" % (
+            return "{}({}, {})[0]".format(
                     self._module_format("tensorflow.gradients"),
                     unfold(expr, args[:-1]),
                     self._print(args[-1]),
@@ -146,13 +146,13 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
-            return '{0}({1}, {2}, {3})'.format(
+            return '{}({}, {}, {})'.format(
                 self._module_format(tensorflow_piecewise),
                 self._print(cond),
                 self._print(e),
                 0)
 
-        return '{0}({1}, {2}, {3})'.format(
+        return '{}({}, {}, {})'.format(
             self._module_format(tensorflow_piecewise),
             self._print(cond),
             self._print(e),
@@ -172,7 +172,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     def _print_MatrixBase(self, expr):
         tensorflow_f = "tensorflow.Variable" if expr.free_symbols else "tensorflow.constant"
         data = "["+", ".join(["["+", ".join([self._print(j) for j in i])+"]" for i in expr.tolist()])+"]"
-        return "%s(%s)" % (
+        return "{}({})".format(
             self._module_format(tensorflow_f),
             data,
         )
@@ -182,7 +182,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         mat_args = [arg for arg in expr.args if isinstance(arg, MatrixExpr)]
         args = [arg for arg in expr.args if arg not in mat_args]
         if args:
-            return "%s*%s" % (
+            return "{}*{}".format(
                 self.parenthesize(Mul.fromiter(args), PRECEDENCE["Mul"]),
                 self._expand_fold_binary_op(
                     "tensorflow.linalg.matmul", mat_args)
@@ -197,7 +197,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
 
     def _print_Assignment(self, expr):
         # TODO: is this necessary?
-        return "%s = %s" % (
+        return "{} = {}".format(
             self._print(expr.lhs),
             self._print(expr.rhs),
         )
@@ -219,7 +219,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     def _print_CodegenArrayTensorProduct(self, expr):
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
-        return '%s("%s", %s)' % (
+        return '{}("{}", {})'.format(
                 self._module_format('tensorflow.linalg.einsum'),
                 contraction_string,
                 ", ".join([self._print(arg) for arg in expr.args])
@@ -235,7 +235,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             return self._print(base)
         if isinstance(base, CodegenArrayTensorProduct):
             elems = ["%s" % (self._print(arg)) for arg in base.args]
-            return "%s(\"%s\", %s)" % (
+            return "{}(\"{}\", {})".format(
                 self._module_format("tensorflow.linalg.einsum"),
                 contraction_string,
                 ", ".join(elems)
@@ -261,14 +261,14 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             elems = [expr.expr]
         diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
         elems = [self._print(i) for i in elems]
-        return '%s("%s", %s)' % (
+        return '{}("{}", {})'.format(
             self._module_format("tensorflow.linalg.einsum"),
-            "{0}->{1}{2}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
+            "{}->{}{}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
             ", ".join(elems)
         )
 
     def _print_CodegenArrayPermuteDims(self, expr):
-        return "%s(%s, %s)" % (
+        return "{}({}, {})".format(
             self._module_format("tensorflow.transpose"),
             self._print(expr.expr),
             self._print(expr.permutation.array_form),

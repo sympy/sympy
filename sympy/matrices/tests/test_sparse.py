@@ -464,8 +464,8 @@ def test_sparse_matrix():
     x = Symbol('x')
     y = Symbol('y')
     sparse_eye3 = sparse_eye(3)
-    assert sparse_eye3.charpoly(x) == PurePoly(((x - 1)**3))
-    assert sparse_eye3.charpoly(y) == PurePoly(((y - 1)**3))
+    assert sparse_eye3.charpoly(x) == PurePoly((x - 1)**3)
+    assert sparse_eye3.charpoly(y) == PurePoly((y - 1)**3)
 
     # test values
     M = Matrix([( 0, 1, -1),
@@ -528,7 +528,7 @@ def test_errors():
     raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[5])
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2, 3])
     raises(TypeError,
-        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
+        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set()))
     raises(
         IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2])
     raises(TypeError, lambda: SparseMatrix([1, 2, 3]).cross(1))

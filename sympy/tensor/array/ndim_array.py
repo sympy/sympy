@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Any
 
 from sympy import Basic
@@ -11,7 +9,7 @@ from sympy.core.compatibility import SYMPY_INTS, Iterable
 
 import itertools
 
-class NDimArray(object):
+class NDimArray:
     """
 
     Examples

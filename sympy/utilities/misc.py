@@ -1,6 +1,5 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-from __future__ import print_function, division
 
 from typing import List
 
@@ -223,13 +222,13 @@ def debug_decorator(func):
         r = f(*args, **kw)
 
         _debug_iter -= 1
-        s = "%s%s = %s\n" % (get_function_name(f), args, r)
+        s = "{}{} = {}\n".format(get_function_name(f), args, r)
         if _debug_tmp != []:
             s += tree(_debug_tmp)
         _debug_tmp = oldtmp
         _debug_tmp.append(s)
         if _debug_iter == 0:
-            print((_debug_tmp[0]))
+            print(_debug_tmp[0])
             _debug_tmp = []
         return r
 

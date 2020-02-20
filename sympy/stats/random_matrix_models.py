@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
                    gamma, Product, Dummy, Sum, Abs, IndexedBase, I)
 from sympy.core.sympify import _sympify
@@ -214,7 +212,7 @@ class CircularEnsemble(RandomMatrixEnsemble):
         circular ensembles.
         """
         n = self.dimension
-        Zbn = ((2*pi)**n)*(gamma(beta*n/2 + 1)/S((gamma(beta/2 + 1)))**n)
+        Zbn = ((2*pi)**n)*(gamma(beta*n/2 + 1)/S(gamma(beta/2 + 1))**n)
         t = IndexedBase('t')
         i, j, k = (Dummy('i', integer=True), Dummy('j', integer=True),
                    Dummy('k', integer=True))

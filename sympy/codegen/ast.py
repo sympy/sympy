@@ -122,7 +122,6 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict, List
 
@@ -256,7 +255,7 @@ class Token(Basic):
         return tuple([getattr(self, attr) for attr in self.__slots__])
 
     def __hash__(self):
-        return super(Token, self).__hash__()
+        return super().__hash__()
 
     def _joiner(self, k, indent_level):
         return (',\n' + ' '*indent_level) if k in self.indented_args else ', '
@@ -300,7 +299,7 @@ class Token(Basic):
                 indented = self._indented(printer, attr, value, *args, **kwargs)
             arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented.lstrip()))
 
-        return "{0}({1})".format(self.__class__.__name__, joiner.join(arg_reprs))
+        return "{}({})".format(self.__class__.__name__, joiner.join(arg_reprs))
 
     _sympystr = _sympyrepr
 
@@ -385,7 +384,7 @@ class NoneToken(Token):
         return ()
 
     def __hash__(self):
-        return super(NoneToken, self).__hash__()
+        return super().__hash__()
 
 
 none = NoneToken()
@@ -407,7 +406,7 @@ class AssignmentBase(Basic):
 
         cls._check_args(lhs, rhs)
 
-        return super(AssignmentBase, cls).__new__(cls, lhs, rhs)
+        return super().__new__(cls, lhs, rhs)
 
     @property
     def lhs(self):
@@ -635,14 +634,14 @@ class CodeBlock(Basic):
         il = printer._context.get('indent_level', 0)
         joiner = ',\n' + ' '*il
         joined = joiner.join(map(printer._print, self.args))
-        return ('{0}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
+        return ('{}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
                 ' '*il + joined + '\n' + ' '*(il - 4) + ')')
 
     _sympystr = _sympyrepr
 
     @property
     def free_symbols(self):
-        return super(CodeBlock, self).free_symbols - set(self.left_hand_sides)
+        return super().free_symbols - set(self.left_hand_sides)
 
     @classmethod
     def topological_sort(cls, assignments):
@@ -1271,14 +1270,14 @@ class ComplexBaseType(FloatBaseType):
         """ Casts without checking if out of bounds or subnormal. """
         from sympy.functions import re, im
         return (
-            super(ComplexBaseType, self).cast_nocheck(re(value)) +
-            super(ComplexBaseType, self).cast_nocheck(im(value))*1j
+            super().cast_nocheck(re(value)) +
+            super().cast_nocheck(im(value))*1j
         )
 
     def _check(self, value):
         from sympy.functions import re, im
-        super(ComplexBaseType, self)._check(re(value))
-        super(ComplexBaseType, self)._check(im(value))
+        super()._check(re(value))
+        super()._check(im(value))
 
 
 class ComplexType(ComplexBaseType, FloatType):
@@ -1493,7 +1492,7 @@ class Variable(Node):
         try:
             rhs = _sympify(rhs)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, rhs))
+            raise TypeError("Invalid comparison {} < {}".format(self, rhs))
         return op(self, rhs, evaluate=False)
 
     __lt__ = lambda self, other: self._relation(other, Lt)

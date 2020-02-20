@@ -10,7 +10,6 @@ are_coplanar
 are_similar
 
 """
-from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
@@ -171,7 +170,7 @@ def are_similar(e1, e2):
     n1 = e1.__class__.__name__
     n2 = e2.__class__.__name__
     raise GeometryError(
-        "Cannot test similarity between %s and %s" % (n1, n2))
+        "Cannot test similarity between {} and {}".format(n1, n2))
 
 
 def centroid(*args):

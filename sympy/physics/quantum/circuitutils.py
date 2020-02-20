@@ -1,6 +1,5 @@
 """Primitive circuit operations on quantum circuits."""
 
-from __future__ import print_function, division
 
 from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
 from sympy.utilities import numbered_symbols

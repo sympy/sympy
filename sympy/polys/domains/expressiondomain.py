@@ -1,6 +1,5 @@
 """Implementation of :class:`ExpressionDomain` class. """
 
-from __future__ import print_function, division
 
 from sympy.core import sympify, SympifyError
 from sympy.polys.domains.characteristiczero import CharacteristicZero

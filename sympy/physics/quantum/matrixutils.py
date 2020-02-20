@@ -1,6 +1,5 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
-from __future__ import print_function, division
 
 from sympy import MatrixBase, I, Expr, Integer
 from sympy.matrices import eye, zeros
@@ -27,14 +26,14 @@ __all__ = [
 
 np = import_module('numpy')
 if not np:
-    class numpy_ndarray(object):
+    class numpy_ndarray:
         pass
 else:
     numpy_ndarray = np.ndarray  # type: ignore
 
 scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 if not scipy:
-    class scipy_sparse_matrix(object):
+    class scipy_sparse_matrix:
         pass
     sparse = None
 else:

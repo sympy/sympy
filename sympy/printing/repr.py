@@ -5,7 +5,6 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -43,7 +42,7 @@ class ReprPrinter(Printer):
                 l.append(self._print(o))
             return expr.__class__.__name__ + '(%s)' % ', '.join(l)
         elif hasattr(expr, "__module__") and hasattr(expr, "__name__"):
-            return "<'%s.%s'>" % (expr.__module__, expr.__name__)
+            return "<'{}.{}'>".format(expr.__module__, expr.__name__)
         else:
             return str(expr)
 
@@ -146,7 +145,7 @@ class ReprPrinter(Printer):
     def _print_MatrixBase(self, expr):
         # special case for some empty matrices
         if (expr.rows == 0) ^ (expr.cols == 0):
-            return '%s(%s, %s, %s)' % (expr.__class__.__name__,
+            return '{}({}, {}, {})'.format(expr.__class__.__name__,
                                        self._print(expr.rows),
                                        self._print(expr.cols),
                                        self._print([]))
@@ -155,7 +154,7 @@ class ReprPrinter(Printer):
             l.append([])
             for j in range(expr.cols):
                 l[-1].append(expr[i, j])
-        return '%s(%s)' % (expr.__class__.__name__, self._print(l))
+        return '{}({})'.format(expr.__class__.__name__, self._print(l))
 
     def _print_MutableSparseMatrix(self, expr):
         return self._print_MatrixBase(expr)
@@ -205,20 +204,20 @@ class ReprPrinter(Printer):
         return clsname + "(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
-        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
+        return 'Rational({}, {})'.format(self._print(expr.p), self._print(expr.q))
 
     def _print_PythonRational(self, expr):
         return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
     def _print_Fraction(self, expr):
-        return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
+        return 'Fraction({}, {})'.format(self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
         r = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):
-        return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
+        return "Sum2({}, ({}, {}, {}))".format(self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
@@ -228,17 +227,17 @@ class ReprPrinter(Printer):
             d['dummy_index'] = expr.dummy_index
 
         if d == {}:
-            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+            return "{}({})".format(expr.__class__.__name__, self._print(expr.name))
         else:
-            attr = ['%s=%s' % (k, v) for k, v in d.items()]
-            return "%s(%s, %s)" % (expr.__class__.__name__,
+            attr = ['{}={}'.format(k, v) for k, v in d.items()]
+            return "{}({}, {})".format(expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        return "{}({})".format(expr.__class__.__name__, self._print(expr.name))
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        return "{}({}, {})".format(expr.__class__.__name__, expr.func, expr.arg)
 
     def _print_str(self, expr):
         return repr(expr)
@@ -250,24 +249,24 @@ class ReprPrinter(Printer):
             return "(%s)" % self.reprify(expr, ", ")
 
     def _print_WildFunction(self, expr):
-        return "%s('%s')" % (expr.__class__.__name__, expr.name)
+        return "{}('{}')".format(expr.__class__.__name__, expr.name)
 
     def _print_AlgebraicNumber(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__,
+        return "{}({}, {})".format(expr.__class__.__name__,
             self._print(expr.root), self._print(expr.coeffs()))
 
     def _print_PolyRing(self, ring):
-        return "%s(%s, %s, %s)" % (ring.__class__.__name__,
+        return "{}({}, {}, {})".format(ring.__class__.__name__,
             self._print(ring.symbols), self._print(ring.domain), self._print(ring.order))
 
     def _print_FracField(self, field):
-        return "%s(%s, %s, %s)" % (field.__class__.__name__,
+        return "{}({}, {}, {})".format(field.__class__.__name__,
             self._print(field.symbols), self._print(field.domain), self._print(field.order))
 
     def _print_PolyElement(self, poly):
         terms = list(poly.terms())
         terms.sort(key=poly.ring.order, reverse=True)
-        return "%s(%s, %s)" % (poly.__class__.__name__, self._print(poly.ring), self._print(terms))
+        return "{}({}, {})".format(poly.__class__.__name__, self._print(poly.ring), self._print(terms))
 
     def _print_FracElement(self, frac):
         numer_terms = list(frac.numer.terms())
@@ -276,12 +275,12 @@ class ReprPrinter(Printer):
         denom_terms.sort(key=frac.field.order, reverse=True)
         numer = self._print(numer_terms)
         denom = self._print(denom_terms)
-        return "%s(%s, %s, %s)" % (frac.__class__.__name__, self._print(frac.field), numer, denom)
+        return "{}({}, {}, {})".format(frac.__class__.__name__, self._print(frac.field), numer, denom)
 
     def _print_FractionField(self, domain):
         cls = domain.__class__.__name__
         field = self._print(domain.field)
-        return "%s(%s)" % (cls, field)
+        return "{}({})".format(cls, field)
 
     def _print_PolynomialRingBase(self, ring):
         cls = ring.__class__.__name__
@@ -292,7 +291,7 @@ class ReprPrinter(Printer):
             orderstr = ", order=" + order
         else:
             orderstr = ""
-        return "%s(%s, %s%s)" % (cls, dom, gens, orderstr)
+        return "{}({}, {}{})".format(cls, dom, gens, orderstr)
 
     def _print_DMP(self, p):
         cls = p.__class__.__name__
@@ -302,7 +301,7 @@ class ReprPrinter(Printer):
             ringstr = ", ring=" + self._print(p.ring)
         else:
             ringstr = ""
-        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+        return "{}({}, {}{})".format(cls, rep, dom, ringstr)
 
     def _print_MonogenicFiniteExtension(self, ext):
         # The expanded tree shown by srepr(ext.modulus)
@@ -312,7 +311,7 @@ class ReprPrinter(Printer):
     def _print_ExtensionElement(self, f):
         rep = self._print(f.rep)
         ext = self._print(f.ext)
-        return "ExtElem(%s, %s)" % (rep, ext)
+        return "ExtElem({}, {})".format(rep, ext)
 
 
 def srepr(expr, **settings):

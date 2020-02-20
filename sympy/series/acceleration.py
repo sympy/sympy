@@ -9,7 +9,6 @@ Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
 
-from __future__ import print_function, division
 
 from sympy import factorial, Integer, S
 

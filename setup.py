@@ -332,7 +332,7 @@ class sdist_sympy(sdist):
             with open(commit_hash_filepath, 'w') as f:
                 f.write(commit_hash)
 
-        super(sdist_sympy, self).run()
+        super().run()
 
         try:
             os.remove(commit_hash_filepath)
@@ -340,7 +340,7 @@ class sdist_sympy(sdist):
                 'Successfully removed temporary file {}.'
                 .format(commit_hash_filepath))
         except OSError as e:
-            print("Error deleting %s - %s." % (e.filename, e.strerror))
+            print("Error deleting {} - {}.".format(e.filename, e.strerror))
 
 
 # Check that this list is uptodate against the result of the command:

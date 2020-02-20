@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 '''
 Use llvmlite to create executable functions from Sympy expressions
 
@@ -31,7 +29,7 @@ class LLVMJitPrinter(Printer):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
             raise ImportError("llvmlite is required for LLVMJITPrinter")
-        super(LLVMJitPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fp_type = ll.DoubleType()
         self.module = module
         self.builder = builder
@@ -114,7 +112,7 @@ class LLVMJitPrinter(Printer):
 # handle a variable number of parameters.
 class LLVMJitCallbackPrinter(LLVMJitPrinter):
     def __init__(self, *args, **kwargs):
-        super(LLVMJitCallbackPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _print_Indexed(self, expr):
         array, idx = self.func_arg_map[expr.base]
@@ -148,7 +146,7 @@ link_names = set()
 current_link_suffix = 0
 
 
-class LLVMJitCode(object):
+class LLVMJitCode:
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -291,7 +289,7 @@ class LLVMJitCode(object):
 
 class LLVMJitCodeCallback(LLVMJitCode):
     def __init__(self, signature):
-        super(LLVMJitCodeCallback, self).__init__(signature)
+        super().__init__(signature)
 
     def _create_param_dict(self, func_args):
         for i, a in enumerate(func_args):
@@ -327,7 +325,7 @@ class LLVMJitCodeCallback(LLVMJitCode):
         return strmod
 
 
-class CodeSignature(object):
+class CodeSignature:
     def __init__(self, ret_type):
         self.ret_type = ret_type
         self.arg_ctypes = []

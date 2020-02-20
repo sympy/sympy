@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions import MatrixExpr
 from sympy import S, I, sqrt, exp
@@ -10,7 +8,7 @@ class DFT(MatrixExpr):
         n = _sympify(n)
         cls._check_dim(n)
 
-        obj = super(DFT, cls).__new__(cls, n)
+        obj = super().__new__(cls, n)
         return obj
 
     n = property(lambda self: self.args[0])  # type: ignore

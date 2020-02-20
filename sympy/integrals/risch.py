@@ -23,7 +23,6 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
-from __future__ import print_function, division
 
 from sympy import real_roots, default_sort_key
 from sympy.abc import z
@@ -114,7 +113,7 @@ def integer_powers(exprs):
     return sorted(iter(newterms.items()), key=lambda item: item[0].sort_key())
 
 
-class DifferentialExtension(object):
+class DifferentialExtension:
     """
     A container for all the information relating to a differential extension.
 
@@ -280,7 +279,7 @@ class DifferentialExtension(object):
     def __getattr__(self, attr):
         # Avoid AttributeErrors when debugging
         if attr not in self.__slots__:
-            raise AttributeError("%s has no attribute %s" % (repr(self), repr(attr)))
+            raise AttributeError("{} has no attribute {}".format(repr(self), repr(attr)))
         return None
 
     def _rewrite_exps_pows(self, exps, pows, numpows,
@@ -509,8 +508,8 @@ class DifferentialExtension(object):
 
                     if const or len(ans) > 1:
                         rad = Mul(*[term**(power/n) for term, power in ans])
-                        self.newf = self.newf.xreplace(dict((exp(p*exparg),
-                            exp(const*p)*rad) for exparg, p in others))
+                        self.newf = self.newf.xreplace({exp(p*exparg):
+                            exp(const*p)*rad for exparg, p in others})
                         self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
                             reversed([f(self.x) for f in self.Tfuncs])))))
                         restart = True
@@ -539,7 +538,7 @@ class DifferentialExtension(object):
                     i = Symbol('i')
                 self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
-                        dict((exp(exparg), self.t**p) for exparg, p in others))
+                        {exp(exparg): self.t**p for exparg, p in others})
                 new_extension = True
 
         if restart:
@@ -726,7 +725,7 @@ def update_sets(seq, atoms, func):
     return list(s)
 
 
-class DecrementLevel(object):
+class DecrementLevel:
     """
     A context manager for decrementing the level of a DifferentialExtension.
     """
@@ -794,7 +793,7 @@ def frac_in(f, t, **kwargs):
     if cancel:
         fa, fd = fa.cancel(fd, include=True)
     if fa is None or fd is None:
-        raise ValueError("Could not turn %s into a fraction in %s." % (f, t))
+        raise ValueError("Could not turn {} into a fraction in {}.".format(f, t))
     return (fa, fd)
 
 
@@ -827,7 +826,7 @@ def as_poly_1t(p, t, z):
         # XXX: Is there a better Poly exception that we could raise here?
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
-        raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
+        raise PolynomialError("{} is not an element of K[{}, 1/{}].".format(p, t, t))
     d = pd.degree(t)
     one_t_part = pa.slice(0, d + 1)
     r = pd.degree() - pa.degree()
@@ -1304,8 +1303,8 @@ def residue_reduce_to_basic(H, DE, z):
     i = Dummy('i')
     s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
-    return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
-        {z: i}).subs(s))) for a in H))
+    return sum(RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
+        {z: i}).subs(s))) for a in H)
 
 
 def residue_reduce_derivation(H, DE, z):
@@ -1317,8 +1316,8 @@ def residue_reduce_derivation(H, DE, z):
     """
     # TODO: verify that this is correct for multiple extensions
     i = Dummy('i')
-    return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
-        DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H)))
+    return S(sum(RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
+        DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H))
 
 
 def integrate_primitive_polynomial(p, DE):

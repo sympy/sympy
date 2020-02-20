@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import functools
 
 from sympy import Basic, Tuple, S

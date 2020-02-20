@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
-
 import glob
 import os
 import shutil
@@ -74,7 +72,7 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
     destdir = destdir or '.'
     if not os.path.isdir(destdir):
         if os.path.exists(destdir):
-            raise IOError("{} is not a directory".format(destdir))
+            raise OSError("{} is not a directory".format(destdir))
         else:
             make_dirs(destdir)
     if cwd is None:

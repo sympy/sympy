@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
@@ -94,7 +92,7 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u''
+    _label_separator = ''
 
     @property
     def free_symbols(self):
@@ -226,8 +224,8 @@ class QExpr(Expr):
     def _print_sequence_pretty(self, seq, sep, printer, *args):
         pform = printer._print(seq[0], *args)
         for item in seq[1:]:
-            pform = prettyForm(*pform.right((sep)))
-            pform = prettyForm(*pform.right((printer._print(item, *args))))
+            pform = prettyForm(*pform.right(sep))
+            pform = prettyForm(*pform.right(printer._print(item, *args)))
         return pform
 
     # Utilities for printing: these operate prettyForm objects
@@ -306,7 +304,7 @@ class QExpr(Expr):
     def _sympyrepr(self, printer, *args):
         classname = self.__class__.__name__
         label = self._print_label_repr(printer, *args)
-        return '%s(%s)' % (classname, label)
+        return '{}({})'.format(classname, label)
 
     def _pretty(self, printer, *args):
         pform = self._print_contents_pretty(printer, *args)
@@ -407,7 +405,7 @@ def split_qexpr_parts(e):
 
 def dispatch_method(self, basename, arg, **options):
     """Dispatch a method to the proper handlers."""
-    method_name = '%s_%s' % (basename, arg.__class__.__name__)
+    method_name = '{}_{}'.format(basename, arg.__class__.__name__)
     if hasattr(self, method_name):
         f = getattr(self, method_name)
         # This can raise and we will allow it to propagate.

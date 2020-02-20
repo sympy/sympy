@@ -1,4 +1,3 @@
-
 from sympy import TableForm, S
 from sympy.printing.latex import latex
 from sympy.abc import x

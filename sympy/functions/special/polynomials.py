@@ -6,7 +6,6 @@ combinatorial polynomials.
 
 """
 
-from __future__ import print_function, division
 
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
@@ -928,9 +927,9 @@ class assoc_legendre(Function):
             return 2**m*sqrt(S.Pi) / (gamma((1 - m - n)/2)*gamma(1 - (m - n)/2))
         if n.is_Number and m.is_Number and n.is_integer and m.is_integer:
             if n.is_negative:
-                raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
+                raise ValueError("{} : 1st index must be nonnegative integer (got {!r})".format(cls, n))
             if abs(m) > n:
-                raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
+                raise ValueError("{} : abs('2nd index') must be <= '1st index' (got {!r}, {!r})".format(cls, n, m))
             return cls._eval_at_order(int(n), abs(int(m))).subs(_x, x)
 
     def fdiff(self, argindex=3):

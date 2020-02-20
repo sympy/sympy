@@ -6,7 +6,7 @@ from sympy.geometry import point
 
 def test_source():
     # Dummy stdout
-    class StdOut(object):
+    class StdOut:
         def write(self, x):
             pass
 

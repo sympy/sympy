@@ -730,7 +730,7 @@ def test_namespace_type():
     # lambdify had a bug where it would reject modules of type unicode
     # on Python 2.
     x = sympy.Symbol('x')
-    lambdify(x, x, modules=u'math')
+    lambdify(x, x, modules='math')
 
 
 def test_imps():

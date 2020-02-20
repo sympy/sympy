@@ -29,12 +29,12 @@ def test_free_group():
     assert not F == G
     assert F.order() is oo
     assert F.is_abelian == False
-    assert F.center() == set([F.identity])
+    assert F.center() == {F.identity}
 
     (e,) = free_group("")
     assert e.order() == 1
     assert e.generators == ()
-    assert e.elements == set([e.identity])
+    assert e.elements == {e.identity}
     assert e.is_abelian == True
 
 

@@ -1,6 +1,5 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
-from __future__ import print_function, division
 
 import sys
 import warnings
@@ -121,19 +120,19 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict((L, g(L)) for L in greek_letters)
+greek_unicode = {L: g(L) for L in greek_letters}
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
+greek_unicode['varsigma'] = '\N{GREEK SMALL LETTER FINAL SIGMA}'
 
 # BOLD
 b = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
 B = lambda l: U('MATHEMATICAL BOLD CAPITAL %s' % l.upper())
 
-bold_unicode = dict((l, b(l)) for l in ascii_lowercase)
+bold_unicode = {l: b(l) for l in ascii_lowercase}
 bold_unicode.update((L, B(L)) for L in ascii_uppercase)
 
 # GREEK BOLD
@@ -145,11 +144,11 @@ greek_bold_letters = list(greeks) # make a copy, not strictly required here
 greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
+greek_bold_unicode = {L: g(L) for L in greek_bold_letters}
 greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
 greek_bold_unicode['lambda'] = greek_unicode['lamda']
 greek_bold_unicode['Lambda'] = greek_unicode['Lamda']
-greek_bold_unicode['varsigma'] = u'\N{MATHEMATICAL BOLD SMALL FINAL SIGMA}'
+greek_bold_unicode['varsigma'] = '\N{MATHEMATICAL BOLD SMALL FINAL SIGMA}'
 
 digit_2txt = {
     '0':    'ZERO',
@@ -216,21 +215,21 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: center_accent(s, u'\N{COMBINING RING ABOVE}'),
-    'ddddot': lambda s: center_accent(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
-    'dddot': lambda s: center_accent(s, u'\N{COMBINING THREE DOTS ABOVE}'),
-    'ddot': lambda s: center_accent(s, u'\N{COMBINING DIAERESIS}'),
-    'dot': lambda s: center_accent(s, u'\N{COMBINING DOT ABOVE}'),
-    'check': lambda s: center_accent(s, u'\N{COMBINING CARON}'),
-    'breve': lambda s: center_accent(s, u'\N{COMBINING BREVE}'),
-    'acute': lambda s: center_accent(s, u'\N{COMBINING ACUTE ACCENT}'),
-    'grave': lambda s: center_accent(s, u'\N{COMBINING GRAVE ACCENT}'),
-    'tilde': lambda s: center_accent(s, u'\N{COMBINING TILDE}'),
-    'hat': lambda s: center_accent(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
-    'bar': lambda s: center_accent(s, u'\N{COMBINING OVERLINE}'),
-    'vec': lambda s: center_accent(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u'\N{PRIME}',
-    'prm': lambda s: s+u'\N{PRIME}',
+    'mathring': lambda s: center_accent(s, '\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: center_accent(s, '\N{COMBINING FOUR DOTS ABOVE}'),
+    'dddot': lambda s: center_accent(s, '\N{COMBINING THREE DOTS ABOVE}'),
+    'ddot': lambda s: center_accent(s, '\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: center_accent(s, '\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: center_accent(s, '\N{COMBINING CARON}'),
+    'breve': lambda s: center_accent(s, '\N{COMBINING BREVE}'),
+    'acute': lambda s: center_accent(s, '\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: center_accent(s, '\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: center_accent(s, '\N{COMBINING TILDE}'),
+    'hat': lambda s: center_accent(s, '\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: center_accent(s, '\N{COMBINING OVERLINE}'),
+    'vec': lambda s: center_accent(s, '\N{COMBINING RIGHT ARROW ABOVE}'),
+    'prime': lambda s: s+'\N{PRIME}',
+    'prm': lambda s: s+'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -238,10 +237,10 @@ modifier_dict = {
     # 'scr': lambda s: s,
     # 'frak': lambda s: s,
     # Brackets
-    'norm': lambda s: u'\N{DOUBLE VERTICAL LINE}'+s+u'\N{DOUBLE VERTICAL LINE}',
-    'avg': lambda s: u'\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+u'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
-    'abs': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
-    'mag': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
+    'norm': lambda s: '\N{DOUBLE VERTICAL LINE}'+s+'\N{DOUBLE VERTICAL LINE}',
+    'avg': lambda s: '\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
+    'abs': lambda s: '\N{VERTICAL LINE}'+s+'\N{VERTICAL LINE}',
+    'mag': lambda s: '\N{VERTICAL LINE}'+s+'\N{VERTICAL LINE}',
 }
 
 # VERTICAL OBJECTS
@@ -596,12 +595,12 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u'\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                          u'\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                          u'\N{BOX DRAWINGS LIGHT UP}'),
-        'G': (3, 0, 3, 1, u'\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
-                          u'\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
-                          u'\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}')
+        'F': (2, 0, 2, 0, '\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          '\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          '\N{BOX DRAWINGS LIGHT UP}'),
+        'G': (3, 0, 3, 1, '\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
+                          '\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
+                          '\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}')
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
@@ -618,11 +617,11 @@ def is_combining(sym):
 
     See stringPict.width on usage.
     """
-    return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
-                    u'\N{COMBINING LATIN SMALL LETTER X}' or
+    return True if ('\N{COMBINING GRAVE ACCENT}' <= sym <=
+                    '\N{COMBINING LATIN SMALL LETTER X}' or
 
-                    u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
-                    u'\N{COMBINING ASTERISK ABOVE}') else False
+                    '\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
+                    '\N{COMBINING ASTERISK ABOVE}') else False
 
 
 def center_accent(string, accent):

@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, print_function)
-
 from sympy import log, exp, Symbol, Pow, sin, MatrixSymbol
 from sympy.assumptions import assuming, Q
 from sympy.printing.ccode import ccode

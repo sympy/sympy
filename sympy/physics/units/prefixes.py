@@ -63,10 +63,10 @@ class Prefix(Expr):
     def __str__(self):
         # TODO: add proper printers and tests:
         if self.base == 10:
-            return "Prefix(%r, %r, %r)" % (
+            return "Prefix({!r}, {!r}, {!r})".format(
                 str(self.name), str(self.abbrev), self._exponent)
         else:
-            return "Prefix(%r, %r, %r, %r)" % (
+            return "Prefix({!r}, {!r}, {!r}, {!r})".format(
                 str(self.name), str(self.abbrev), self._exponent, self.base)
 
     __repr__ = __str__
@@ -74,7 +74,7 @@ class Prefix(Expr):
     def __mul__(self, other):
         from sympy.physics.units import Quantity
         if not isinstance(other, (Quantity, Prefix)):
-            return super(Prefix, self).__mul__(other)
+            return super().__mul__(other)
 
         fact = self.scale_factor * other.scale_factor
 
@@ -91,7 +91,7 @@ class Prefix(Expr):
 
     def __div__(self, other):
         if not hasattr(other, "scale_factor"):
-            return super(Prefix, self).__div__(other)
+            return super().__div__(other)
 
         fact = self.scale_factor / other.scale_factor
 
@@ -140,8 +140,8 @@ def prefix_unit(unit, prefixes):
 
     for prefix_abbr, prefix in prefixes.items():
         quantity = Quantity(
-                "%s%s" % (prefix.name, unit.name),
-                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+                "{}{}".format(prefix.name, unit.name),
+                abbrev=("{}{}".format(prefix.abbrev, unit.abbrev))
            )
         UnitSystem._quantity_dimensional_equivalence_map_global[quantity] = unit
         UnitSystem._quantity_scale_factors_global[quantity] = (prefix.scale_factor, unit)

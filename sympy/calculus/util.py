@@ -1407,7 +1407,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min >= other:
                 return False
-        return super(AccumulationBounds, self).__lt__(other)
+        return super().__lt__(other)
 
     def __le__(self, other):
         """
@@ -1444,7 +1444,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min > other:
                 return False
-        return super(AccumulationBounds, self).__le__(other)
+        return super().__le__(other)
 
     def __gt__(self, other):
         """
@@ -1481,7 +1481,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max <= other:
                 return False
-        return super(AccumulationBounds, self).__gt__(other)
+        return super().__gt__(other)
 
     def __ge__(self, other):
         """
@@ -1518,7 +1518,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other:
                 return False
-        return super(AccumulationBounds, self).__ge__(other)
+        return super().__ge__(other)
 
     def __contains__(self, other):
         """

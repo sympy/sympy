@@ -65,7 +65,6 @@ When is this module NOT the best approach?
 
 """
 
-from __future__ import print_function, division
 
 import sys
 import os
@@ -96,7 +95,7 @@ class CodeWrapError(Exception):
     pass
 
 
-class CodeWrapper(object):
+class CodeWrapper:
     """Base Class for code wrappers"""
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
@@ -104,11 +103,11 @@ class CodeWrapper(object):
 
     @property
     def filename(self):
-        return "%s_%s" % (self._filename, CodeWrapper._module_counter)
+        return "{}_{}".format(self._filename, CodeWrapper._module_counter)
 
     @property
     def module_name(self):
-        return "%s_%s" % (self._module_basename, CodeWrapper._module_counter)
+        return "{}_{}".format(self._module_basename, CodeWrapper._module_counter)
 
     def __init__(self, generator, filepath=None, flags=[], verbose=False):
         """
@@ -169,7 +168,7 @@ class CodeWrapper(object):
             retoutput = check_output(command, stderr=STDOUT)
         except CalledProcessError as e:
             raise CodeWrapError(
-                "Error while executing command: %s. Command output is:\n%s" % (
+                "Error while executing command: {}. Command output is:\n{}".format(
                     " ".join(command), e.output.decode('utf-8')))
         if not self.quiet:
             print(retoutput)
@@ -300,7 +299,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
         self._need_numpy = False
 
-        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -310,7 +309,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _prepare_files(self, routine, build_dir=os.curdir):
         # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
-        codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
+        codefilename = "{}.{}".format(self.filename, self.generator.code_extension)
 
         # pyx
         with open(os.path.join(build_dir, pyxfilename), 'w') as f:
@@ -379,8 +378,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             for arg, val in py_inf.items():
                 proto = self._prototype_arg(arg)
                 mat, ind = [self._string_var(v) for v in val]
-                local_decs.append("    cdef {0} = {1}.shape[{2}]".format(proto, mat, ind))
-            local_decs.extend(["    cdef {0}".format(self._declare_arg(a)) for a in py_loc])
+                local_decs.append("    cdef {} = {}.shape[{}]".format(proto, mat, ind))
+            local_decs.extend(["    cdef {}".format(self._declare_arg(a)) for a in py_loc])
             declarations = "\n".join(local_decs)
             if declarations:
                 declarations = declarations + "\n"
@@ -389,11 +388,11 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             args_c = ", ".join([self._call_arg(a) for a in routine.arguments])
             rets = ", ".join([self._string_var(r.name) for r in py_rets])
             if routine.results:
-                body = '    return %s(%s)' % (routine.name, args_c)
+                body = '    return {}({})'.format(routine.name, args_c)
                 if rets:
                     body = body + ', ' + rets
             else:
-                body = '    %s(%s)\n' % (routine.name, args_c)
+                body = '    {}({})\n'.format(routine.name, args_c)
                 body = body + '    return ' + rets
 
             functions.append(self.pyx_func.format(name=name, arg_string=arg_string,
@@ -447,7 +446,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             mtype = np_types[t]
             return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
         else:
-            return "%s %s" % (t, self._string_var(arg.name))
+            return "{} {}".format(t, self._string_var(arg.name))
 
     def _declare_arg(self, arg):
         proto = self._prototype_arg(arg)
@@ -460,9 +459,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _call_arg(self, arg):
         if arg.dimensions:
             t = arg.get_datatype('c')
-            return "<{0}*> {1}.data".format(t, self._string_var(arg.name))
+            return "<{}*> {}.data".format(t, self._string_var(arg.name))
         elif isinstance(arg, ResultBase):
-            return "&{0}".format(self._string_var(arg.name))
+            return "&{}".format(self._string_var(arg.name))
         else:
             return self._string_var(arg.name)
 
@@ -486,7 +485,7 @@ class F2PyCodeWrapper(CodeWrapper):
                 warn(msg.format(k))
             kwargs.pop(k, None)
 
-        super(F2PyCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -526,7 +525,7 @@ def _validate_backend_language(backend, language):
     if not langs:
         raise ValueError("Unrecognized backend: " + backend)
     if language.upper() not in langs:
-        raise ValueError(("Backend {0} and language {1} are "
+        raise ValueError(("Backend {} and language {} are "
                           "incompatible").format(backend, language))
 
 
@@ -801,7 +800,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
                 warn(msg.format(k))
             kwargs.pop(k, None)
 
-        super(UfuncifyCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -893,7 +892,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         function_creation = []
         ufunc_init = []
         module = self.module_name
-        include_file = "\"{0}.h\"".format(prefix)
+        include_file = "\"{}.h\"".format(prefix)
         top = _ufunc_top.substitute(include_file=include_file, module=module)
 
         name = funcname
@@ -935,7 +934,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         docstring = '"Created in SymPy with Ufuncify"'
 
         # Function Creation
-        function_creation.append("PyObject *ufunc{0};".format(r_index))
+        function_creation.append("PyObject *ufunc{};".format(r_index))
 
         # Ufunc initialization
         init_form = _ufunc_init_form.substitute(module=module,

@@ -6,7 +6,7 @@ lfortran = import_module('lfortran')
 cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if not lfortran and not cin:
-    class SymPyExpression(object):
+    class SymPyExpression:
         def __init__(self, *args, **kwargs):
             raise ImportError('Module not available.')
 
@@ -17,7 +17,7 @@ else:
         from sympy.parsing.c.c_parser import parse_c
 
     @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
-    class SymPyExpression(object):  # type: ignore
+    class SymPyExpression:  # type: ignore
         """Class to store and handle SymPy expressions
 
         This class will hold SymPy Expressions and handle the API for the
@@ -99,7 +99,7 @@ else:
 
         def __init__(self, source_code = None, mode = None):
             """Constructor for SymPyExpression class"""
-            super(SymPyExpression, self).__init__()
+            super().__init__()
             if not(mode or source_code):
                 self._expr = []
             elif mode:

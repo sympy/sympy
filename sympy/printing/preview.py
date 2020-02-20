@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import io
 from io import BytesIO
 import os
@@ -177,7 +175,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         workdir = tempfile.mkdtemp()
 
-        with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
+        with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             fh.write(unicode(latex_main) % u_decode(latex_string))
 
         if outputTexFile is not None:

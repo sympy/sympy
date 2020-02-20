@@ -10,7 +10,6 @@ This module contains functions to:
 
     - solve a system of Non Linear Equations with N variables and M equations
 """
-from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
@@ -313,7 +312,7 @@ def _invert_complex(f, g_ys, symbol):
         g, h = f.as_independent(symbol)
 
         if g is not S.One:
-            if g in set([S.NegativeInfinity, S.ComplexInfinity, S.Infinity]):
+            if g in {S.NegativeInfinity, S.ComplexInfinity, S.Infinity}:
                 return (h, S.EmptySet)
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
@@ -897,13 +896,13 @@ def _solveset(f, symbol, domain, _check=False):
     orig_f = f
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
-        if coeff in set([S.ComplexInfinity, S.NegativeInfinity, S.Infinity]):
+        if coeff in {S.ComplexInfinity, S.NegativeInfinity, S.Infinity}:
             f = together(orig_f)
     elif f.is_Add:
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
-        if m not in set([S.ComplexInfinity, S.Zero, S.Infinity,
-                              S.NegativeInfinity]):
+        if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
+                              S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
     # assign the solvers to use
@@ -1339,8 +1338,7 @@ def _term_factors(f):
     [-2, -1, x**2, x, x + 1]
     """
     for add_arg in Add.make_args(f):
-        for mul_arg in Mul.make_args(add_arg):
-            yield mul_arg
+        yield from Mul.make_args(add_arg)
 
 
 def _solve_exponential(lhs, rhs, symbol, domain):

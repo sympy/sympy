@@ -684,8 +684,8 @@ def test_gh_issue_2711():
     a = Wild('a')
     b = Wild('b')
 
-    assert f.find(a) == set([(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
-                             (), meijerg(((), ()), ((S.Zero,), ()), x)])
+    assert f.find(a) == {(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
+                             (), meijerg(((), ()), ((S.Zero,), ()), x)}
     assert f.find(a + b) == \
         {meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero}
     assert f.find(a**2) == {meijerg(((), ()), ((S.Zero,), ()), x), x}

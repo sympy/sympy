@@ -2,7 +2,6 @@
 A MathML printer.
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -54,7 +53,7 @@ class MathMLPrinterBase(Printer):
         class RawText(Text):
             def writexml(self, writer, indent='', addindent='', newl=''):
                 if self.data:
-                    writer.write(u'{}{}{}'.format(indent, self.data, newl))
+                    writer.write('{}{}{}'.format(indent, self.data, newl))
 
         def createRawTextNode(data):
             r = RawText()
@@ -109,14 +108,14 @@ class MathMLPrinterBase(Printer):
                         node.writexml(
                             writer, indent + addindent, addindent, newl)
                     writer.write(indent)
-                writer.write("</%s>%s" % (self.tagName, newl))
+                writer.write("</{}>{}".format(self.tagName, newl))
             else:
                 writer.write("/>%s" % (newl))
         self._Element_writexml_old = Element.writexml
         Element.writexml = writexml
 
         def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s" % (indent, self.data, newl))
+            _write_data(writer, "{}{}{}".format(indent, self.data, newl))
         self._Text_writexml_old = Text.writexml
         Text.writexml = writexml
 
@@ -334,7 +333,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         """We use unicode #x3c6 for Greek letter phi as defined here
         http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
-        x.appendChild(self.dom.createTextNode(u"\N{GREEK SMALL LETTER PHI}"))
+        x.appendChild(self.dom.createTextNode("\N{GREEK SMALL LETTER PHI}"))
         return x
 
     def _print_Exp1(self, e):
@@ -1098,8 +1097,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_AccumulationBounds(self, i):
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', u'\u27e9')
-        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', '\u27e9')
+        brac.setAttribute('open', '\u27e8')
         brac.appendChild(self._print(i.min))
         brac.appendChild(self._print(i.max))
         return brac
@@ -1452,7 +1451,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mi
 
     def _print_Range(self, s):
-        dots = u"\u2026"
+        dots = "\u2026"
         brac = self.dom.createElement('mfenced')
         brac.setAttribute('close', '}')
         brac.setAttribute('open', '{')
@@ -1657,8 +1656,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         power = expr.args[2]
         sup = self.dom.createElement('msup')
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', u'\u27e9')
-        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', '\u27e9')
+        brac.setAttribute('open', '\u27e8')
         brac.appendChild(self._print(shift))
         sup.appendChild(brac)
         sup.appendChild(self._print(power))
@@ -1847,8 +1846,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_floor(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('close', u'\u230B')
-        x.setAttribute('open', u'\u230A')
+        x.setAttribute('close', '\u230B')
+        x.setAttribute('open', '\u230A')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow
@@ -1856,8 +1855,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_ceiling(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('close', u'\u2309')
-        x.setAttribute('open', u'\u2308')
+        x.setAttribute('close', '\u2309')
+        x.setAttribute('open', '\u2308')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow

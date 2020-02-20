@@ -11,7 +11,6 @@ source code files that are compilable without further modifications.
 
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict, Tuple
 
@@ -131,7 +130,7 @@ def _as_macro_if_defined(meth):
     @wraps(meth)
     def _meth_wrapper(self, expr, **kwargs):
         if expr in self.math_macros:
-            return '%s%s' % (self.math_macros[expr], self._get_math_macro_suffix(real))
+            return '{}{}'.format(self.math_macros[expr], self._get_math_macro_suffix(real))
         else:
             return meth(self, expr, **kwargs)
 
@@ -236,7 +235,7 @@ class C89CodePrinter(CodePrinter):
                                         settings.pop('type_literal_suffixes', {}).items()))
         self.type_math_macro_suffixes = dict(chain(self.type_math_macro_suffixes.items(),
                                         settings.pop('type_math_macro_suffixes', {}).items()))
-        super(C89CodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
         self.headers = set()
@@ -251,7 +250,7 @@ class C89CodePrinter(CodePrinter):
         return codestring if codestring.endswith(';') else codestring + ';'
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
@@ -268,7 +267,7 @@ class C89CodePrinter(CodePrinter):
 
     @_as_macro_if_defined
     def _print_Mul(self, expr, **kwargs):
-        return super(C89CodePrinter, self)._print_Mul(expr, **kwargs)
+        return super()._print_Mul(expr, **kwargs)
 
     @_as_macro_if_defined
     def _print_Pow(self, expr):
@@ -277,13 +276,13 @@ class C89CodePrinter(CodePrinter):
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
         if expr.exp == -1:
-            return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
+            return '1.0{}/{}'.format(suffix.upper(), self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
+            return '{}sqrt{}({})'.format(self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
-            return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
+            return '{}cbrt{}({})'.format(self._ns, suffix, self._print(expr.base))
         else:
-            return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
+            return '{}pow{}({}, {})'.format(self._ns, suffix, self._print(expr.base),
                                    self._print(expr.exp))
 
     def _print_Mod(self, expr):
@@ -319,7 +318,7 @@ class C89CodePrinter(CodePrinter):
                 shift *= dims[i]
             strides = temp
         flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
-        return "%s[%s]" % (self._print(expr.base.label),
+        return "{}[{}]".format(self._print(expr.base.label),
                            self._print(flat_index))
 
     def _print_Idx(self, expr):
@@ -327,7 +326,7 @@ class C89CodePrinter(CodePrinter):
 
     @_as_macro_if_defined
     def _print_NumberSymbol(self, expr):
-        return super(C89CodePrinter, self)._print_NumberSymbol(expr)
+        return super()._print_NumberSymbol(expr)
 
     def _print_Infinity(self, expr):
         return 'HUGE_VAL'
@@ -362,7 +361,7 @@ class C89CodePrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c),
+            ecpairs = ["(({}) ? (\n{}\n)\n".format(self._print(c),
                                                self._print(e))
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
@@ -374,13 +373,13 @@ class C89CodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+        return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
             strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-        name = super(C89CodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
         if expr in self._settings['dereference']:
-            return '(*{0})'.format(name)
+            return '(*{})'.format(name)
         else:
             return name
 
@@ -388,7 +387,7 @@ class C89CodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
@@ -419,10 +418,10 @@ class C89CodePrinter(CodePrinter):
             if len(args) == 1:     # and printing smaller Max objects is slow
                 return self._print(args[0]) # when there are many arguments.
             half = len(args) // 2
-            return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
-                'a': inner_print_max(args[:half]),
-                'b': inner_print_max(args[half:])
-            }
+            return "(({a} > {b}) ? {a} : {b})".format(
+                a=inner_print_max(args[:half]),
+                b=inner_print_max(args[half:])
+            )
         return inner_print_max(expr.args)
 
     def _print_Min(self, expr):
@@ -432,10 +431,10 @@ class C89CodePrinter(CodePrinter):
             if len(args) == 1:     # and printing smaller Min objects is slow
                 return self._print(args[0]) # when there are many arguments.
             half = len(args) // 2
-            return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
-                'a': inner_print_min(args[:half]),
-                'b': inner_print_min(args[half:])
-            }
+            return "(({a} < {b}) ? {a} : {b})".format(
+                a=inner_print_min(args[:half]),
+                b=inner_print_min(args[half:])
+            )
         return inner_print_min(expr.args)
 
     def indent_code(self, code):
@@ -461,7 +460,7 @@ class C89CodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 
@@ -573,7 +572,7 @@ class C89CodePrinter(CodePrinter):
         )
 
     def _print_FunctionDefinition(self, expr):
-        return "%s%s" % (self._print_FunctionPrototype(expr),
+        return "{}{}".format(self._print_FunctionPrototype(expr),
                          self._print_Scope(expr))
 
     def _print_Return(self, expr):
@@ -681,7 +680,7 @@ class C99CodePrinter(C89CodePrinter):
                         suffix=suffix,
                         next = self._print(curr_arg)
                     )
-                args += ', %s%s' % (
+                args += ', {}{}'.format(
                     self._print(expr.func(expr.args[-1])),
                     paren_pile
                 )

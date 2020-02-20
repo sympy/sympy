@@ -1,6 +1,5 @@
 """Sparse polynomial rings. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -393,7 +392,7 @@ class PolyRing(DefaultPrinting, IPolys):
         try:
             poly = self._rebuild_expr(expr, mapping)
         except CoercionFailed:
-            raise ValueError("expected an expression convertible to a polynomial in %s, got %s" % (self, expr))
+            raise ValueError("expected an expression convertible to a polynomial in {}, got {}".format(self, expr))
         else:
             return self.ring_new(poly)
 
@@ -614,7 +613,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def as_expr(self, *symbols):
         if symbols and len(symbols) != self.ring.ngens:
-            raise ValueError("not enough symbols, expected %s got %s" % (self.ring.ngens, len(symbols)))
+            raise ValueError("not enough symbols, expected {} got {}".format(self.ring.ngens, len(symbols)))
         else:
             symbols = self.ring.symbols
 
@@ -2280,7 +2279,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if 0 < len(values) <= f.ring.ngens:
             return f.evaluate(list(zip(f.ring.gens, values)))
         else:
-            raise ValueError("expected at least 1 and at most %s values, got %s" % (f.ring.ngens, len(values)))
+            raise ValueError("expected at least 1 and at most {} values, got {}".format(f.ring.ngens, len(values)))
 
     def evaluate(self, x, a=None):
         f = self

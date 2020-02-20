@@ -1,6 +1,5 @@
 """Options manager for :class:`~.Poly` and public API functions. """
 
-from __future__ import print_function, division
 
 __all__ = ["Options"]
 
@@ -15,7 +14,7 @@ import sympy.polys
 
 import re
 
-class Option(object):
+class Option:
     """Base class for all kinds of options. """
 
     option = None  # type: Optional[str]
@@ -55,7 +54,7 @@ class BooleanOption(Option):
         if value in [True, False]:
             return bool(value)
         else:
-            raise OptionError("'%s' must have a boolean value assigned, got %s" % (cls.option, value))
+            raise OptionError("'{}' must have a boolean value assigned, got {}".format(cls.option, value))
 
 
 class OptionType(type):
@@ -172,11 +171,11 @@ class Options(dict):
 
             for require_option in cls.requires:
                 if self.get(require_option) is None:
-                    raise OptionError("'%s' option is only allowed together with '%s'" % (option, require_option))
+                    raise OptionError("'{}' option is only allowed together with '{}'".format(option, require_option))
 
             for exclude_option in cls.excludes:
                 if self.get(exclude_option) is not None:
-                    raise OptionError("'%s' option is not allowed together with '%s'" % (option, exclude_option))
+                    raise OptionError("'{}' option is not allowed together with '{}'".format(option, exclude_option))
 
         for option in self.__order__:
             self.__options__[option].postprocess(self)
@@ -185,7 +184,7 @@ class Options(dict):
     def _init_dependencies_order(cls):
         """Resolve the order of options' processing. """
         if cls.__order__ is None:
-            vertices, edges = [], set([])
+            vertices, edges = [], set()
 
             for name, option in cls.__options__.items():
                 vertices.append(name)
@@ -218,7 +217,7 @@ class Options(dict):
         if attr in self.__options__:
             self[attr] = value
         else:
-            super(Options, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     @property
     def args(self):
@@ -525,7 +524,7 @@ class Gaussian(BooleanOption, metaclass=OptionType):
     @classmethod
     def postprocess(cls, options):
         if 'gaussian' in options and options['gaussian'] is True:
-            options['extension'] = set([S.ImaginaryUnit])
+            options['extension'] = {S.ImaginaryUnit}
             Extension.postprocess(options)
 
 
@@ -546,7 +545,7 @@ class Extension(Option, metaclass=OptionType):
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
-                extension = set([extension])
+                extension = {extension}
             else:
                 if not extension:
                     extension = None

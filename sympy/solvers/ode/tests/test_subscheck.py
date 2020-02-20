@@ -44,9 +44,9 @@ def test_checkodesol():
     assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
         [(True, 0), (True, 0), (False, C2)]
-    assert checkodesol(f(x).diff(x, 2), set([Eq(f(x), C1 + C2*x),
-        Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
-        set([(True, 0), (True, 0), (False, C2)])
+    assert checkodesol(f(x).diff(x, 2), {Eq(f(x), C1 + C2*x),
+        Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)}) == \
+        {(True, 0), (True, 0), (False, C2)}
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), Eq(C1*exp(x), f(x))) == (True, 0)
@@ -96,7 +96,7 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
-    sol = [Eq(x(t), (C1*exp((Integral(2, t).doit())) + C2*exp(-(Integral(2, t)).doit()))*\
+    sol = [Eq(x(t), (C1*exp(Integral(2, t).doit()) + C2*exp(-(Integral(2, t)).doit()))*\
     exp((Integral(5*t, t)).doit())), Eq(y(t), (C1*exp((Integral(2, t)).doit()) - \
     C2*exp(-(Integral(2, t)).doit()))*exp((Integral(5*t, t)).doit()))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
@@ -189,5 +189,5 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
-    sol = set([Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)])
+    sol = {Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)}
     assert checksysodesol(eq, sol) == (True, [0, 0])

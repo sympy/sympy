@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import GoldenRatio

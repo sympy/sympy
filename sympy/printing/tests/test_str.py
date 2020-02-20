@@ -563,13 +563,13 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1])) == '{1}'
+    assert sstr({1}) == '{1}'
     assert sstr(frozenset([1])) == 'frozenset({1})'
-    assert sstr(set([1, 2, 3])) == '{1, 2, 3}'
+    assert sstr({1, 2, 3}) == '{1, 2, 3}'
     assert sstr(frozenset([1, 2, 3])) == 'frozenset({1, 2, 3})'
 
     assert sstr(
-        set([1, x, x**2, x**3, x**4])) == '{1, x, x**2, x**3, x**4}'
+        {1, x, x**2, x**3, x**4}) == '{1, x, x**2, x**3, x**4}'
     assert sstr(
         frozenset([1, x, x**2, x**3, x**4])) == 'frozenset({1, x, x**2, x**3, x**4})'
 

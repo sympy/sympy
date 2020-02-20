@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
@@ -365,7 +363,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
         for symbol in syms:
             if SYMPY_DEBUG:
-                print("DEBUG: parsing of expression %s with symbol %s " % (
+                print("DEBUG: parsing of expression {} with symbol {} ".format(
                     str(terms), str(symbol))
                 )
 
@@ -414,8 +412,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             collected[key] = val + order_term
 
     if func is not None:
-        collected = dict(
-            [(key, func(val)) for key, val in collected.items()])
+        collected = {
+            key: func(val) for key, val in collected.items()}
 
     if evaluate:
         return Add(*[key*val for key, val in collected.items()])

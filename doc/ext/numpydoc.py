@@ -16,7 +16,6 @@ It will:
 .. [1] https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
 """
-from __future__ import division, absolute_import, print_function
 
 import sys
 import re
@@ -142,11 +141,11 @@ from sphinx.domains.c import CDomain
 from sphinx.domains.python import PythonDomain
 
 
-class ManglingDomainBase(object):
+class ManglingDomainBase:
     directive_mangling_map = {}
 
     def __init__(self, *a, **kw):
-        super(ManglingDomainBase, self).__init__(*a, **kw)
+        super().__init__(*a, **kw)
         self.wrap_mangling_directives()
 
     def wrap_mangling_directives(self):

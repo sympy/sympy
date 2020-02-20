@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.special.gamma_functions import gamma, digamma

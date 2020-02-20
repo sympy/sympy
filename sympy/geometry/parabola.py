@@ -5,7 +5,6 @@ Contains
 
 """
 
-from __future__ import division, print_function
 from sympy.core import S
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol
@@ -321,7 +320,7 @@ class Parabola(GeometrySet):
             else:
                 return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
         elif isinstance(o, Point2D):
-            if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
+            if simplify(parabola_eq.subs([(x, o._args[0]), (y, o._args[1])])) == 0:
                 return [o]
             else:
                 return []

@@ -17,7 +17,6 @@ or
 If no arguments are given, all files in sympy/ are checked.
 """
 
-from __future__ import print_function
 
 import os
 import sys
@@ -65,7 +64,7 @@ def print_header(name, underline=None, color=None):
 
     print()
     if color:
-        print("%s%s%s" % (c_color % colors[color], name, c_normal))
+        print("{}{}{}".format(c_color % colors[color], name, c_normal))
     else:
         print(name)
     if underline and not color:
@@ -87,7 +86,7 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
     small_header_color = "Purple"
 
     if no_color:
-        score_string = "Doctests: %s%% (%s of %s)" % (score, total_doctests,
+        score_string = "Doctests: {}% ({} of {})".format(score, total_doctests,
             total_members)
 
     elif score < 100:
@@ -103,7 +102,7 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
 
     if sphinx:
         if no_color:
-            sphinx_score_string = "Sphinx: %s%% (%s of %s)" % (sphinx_score,
+            sphinx_score_string = "Sphinx: {}% ({} of {})".format(sphinx_score,
                 total_members - total_sphinx, total_members)
         elif sphinx_score < 100:
             if sphinx_score < 50:
@@ -127,9 +126,9 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
         print('-'*70)
     else:
         if sphinx:
-            print("%s: %s %s" % (module_path, score_string, sphinx_score_string))
+            print("{}: {} {}".format(module_path, score_string, sphinx_score_string))
         else:
-            print("%s: %s" % (module_path, score_string))
+            print("{}: {}".format(module_path, score_string))
 
     if verbose:
         print_header('CLASSES', '*', not no_color and big_header_color)
@@ -235,7 +234,7 @@ def _get_arg_list(name, fobj):
     arg_list = [x[:trunc] for x in arg_list]
 
     # Construct the parameter string (enclosed in brackets)
-    str_param = "%s(%s)" % (name, ', '.join(arg_list))
+    str_param = "{}({})".format(name, ', '.join(arg_list))
 
     return str_param
 
@@ -337,7 +336,7 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
     if add_md or add_mdt or add_idt or not in_sphinx:
         try:
             line_no = inspect.getsourcelines(obj)[1]
-        except IOError:
+        except OSError:
             # Raised when source does not exist
             # which means the function is not there.
             return False, False
@@ -373,7 +372,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
     # Get the line number of class
     try:
         source, line_no = inspect.getsourcelines(obj)
-    except IOError:
+    except OSError:
         # Raised when source does not exist
         # which means the class is not there.
         return False, False, None
@@ -421,7 +420,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         m = sys.modules[module_path]
     except Exception as a:
         # Most likely cause, absence of __init__
-        print("%s could not be loaded due to %s." % (module_path, repr(a)))
+        print("{} could not be loaded due to {}.".format(module_path, repr(a)))
         return 0, 0, 0
 
     c_skipped = []
@@ -559,7 +558,7 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
     if os.path.isdir(file):
         doctests, total_sphinx, num_functions = 0, 0, 0
         for F in os.listdir(file):
-            _doctests, _total_sphinx,  _num_functions = go(sympy_top, '%s/%s' % (file, F),
+            _doctests, _total_sphinx,  _num_functions = go(sympy_top, '{}/{}'.format(file, F),
                 verbose=verbose, no_color=no_color, exact=False, sphinx=sphinx)
             doctests += _doctests
             total_sphinx += _total_sphinx

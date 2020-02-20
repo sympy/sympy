@@ -1,6 +1,5 @@
 """Dirac notation for states."""
 
-from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
@@ -36,10 +35,10 @@ _straight_bracket = "|"
 
 # Unicode brackets
 # MATHEMATICAL ANGLE BRACKETS
-_lbracket_ucode = u"\N{MATHEMATICAL LEFT ANGLE BRACKET}"
-_rbracket_ucode = u"\N{MATHEMATICAL RIGHT ANGLE BRACKET}"
+_lbracket_ucode = "\N{MATHEMATICAL LEFT ANGLE BRACKET}"
+_rbracket_ucode = "\N{MATHEMATICAL RIGHT ANGLE BRACKET}"
 # LIGHT VERTICAL BAR
-_straight_bracket_ucode = u"\N{LIGHT VERTICAL BAR}"
+_straight_bracket_ucode = "\N{LIGHT VERTICAL BAR}"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
@@ -135,9 +134,9 @@ class StateBase(QExpr):
         # Setup for unicode vs ascii
         if use_unicode:
             lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
-            slash, bslash, vert = u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
-                                  u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
-                                  u'\N{BOX DRAWINGS LIGHT VERTICAL}'
+            slash, bslash, vert = '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
+                                  '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
+                                  '\N{BOX DRAWINGS LIGHT VERTICAL}'
         else:
             lbracket, rbracket = self.lbracket, self.rbracket
             slash, bslash, vert = '/', '\\', '|'
@@ -172,7 +171,7 @@ class StateBase(QExpr):
 
     def _sympystr(self, printer, *args):
         contents = self._print_contents(printer, *args)
-        return '%s%s%s' % (self.lbracket, contents, self.rbracket)
+        return '{}{}{}'.format(self.lbracket, contents, self.rbracket)
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
@@ -189,7 +188,7 @@ class StateBase(QExpr):
         contents = self._print_contents_latex(printer, *args)
         # The extra {} brackets are needed to get matplotlib's latex
         # rendered to render this properly.
-        return '{%s%s%s}' % (self.lbracket_latex, contents, self.rbracket_latex)
+        return '{{{}{}{}}}'.format(self.lbracket_latex, contents, self.rbracket_latex)
 
 
 class KetBase(StateBase):
@@ -519,12 +518,12 @@ class TimeDepState(StateBase):
     def _print_contents(self, printer, *args):
         label = self._print_label(printer, *args)
         time = self._print_time(printer, *args)
-        return '%s;%s' % (label, time)
+        return '{};{}'.format(label, time)
 
     def _print_label_repr(self, printer, *args):
         label = self._print_sequence(self.label, ',', printer, *args)
         time = self._print_time_repr(printer, *args)
-        return '%s,%s' % (label, time)
+        return '{},{}'.format(label, time)
 
     def _print_contents_pretty(self, printer, *args):
         label = self._print_label_pretty(printer, *args)
@@ -535,7 +534,7 @@ class TimeDepState(StateBase):
         label = self._print_sequence(
             self.label, self._label_separator, printer, *args)
         time = self._print_time_latex(printer, *args)
-        return '%s;%s' % (label, time)
+        return '{};{}'.format(label, time)
 
 
 class TimeDepKet(TimeDepState, KetBase):
@@ -768,7 +767,7 @@ class Wavefunction(Function):
                 new_args[ct] = arg
             ct += 1
 
-        return super(Wavefunction, cls).__new__(cls, *new_args, **options)
+        return super().__new__(cls, *new_args, **options)
 
     def __call__(self, *args, **options):
         var = self.variables

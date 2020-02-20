@@ -1,5 +1,4 @@
 """ Generic SymPy-Independent Strategies """
-from __future__ import print_function, division
 
 from sympy.core.compatibility import get_function_name
 
@@ -13,8 +12,7 @@ def exhaust(brule):
         for nexpr in brule(expr):
             if nexpr not in seen:
                 seen.add(nexpr)
-                for nnexpr in exhaust_brl(nexpr):
-                    yield nnexpr
+                yield from exhaust_brl(nexpr)
         if seen == {expr}:
             yield expr
     return exhaust_brl
@@ -35,14 +33,14 @@ def debug(brule, file=None):
 
     def write(brl, expr, result):
         file.write("Rule: %s\n" % get_function_name(brl))
-        file.write("In: %s\nOut: %s\n\n" % (expr, result))
+        file.write("In: {}\nOut: {}\n\n".format(expr, result))
 
     return onaction(brule, write)
 
 def multiplex(*brules):
     """ Multiplex many branching rules into one """
     def multiplex_brl(expr):
-        seen = set([])
+        seen = set()
         for brl in brules:
             for nexpr in brl(expr):
                 if nexpr not in seen:
@@ -54,7 +52,7 @@ def condition(cond, brule):
     """ Only apply branching rule if condition is true """
     def conditioned_brl(expr):
         if cond(expr):
-            for x in brule(expr): yield x
+            yield from brule(expr)
         else:
             pass
     return conditioned_brl
@@ -62,8 +60,7 @@ def condition(cond, brule):
 def sfilter(pred, brule):
     """ Yield only those results which satisfy the predicate """
     def filtered_brl(expr):
-        for x in filter(pred, brule(expr)):
-            yield x
+        yield from filter(pred, brule(expr))
     return filtered_brl
 
 def notempty(brule):
@@ -99,8 +96,7 @@ def chain(*brules):
 
         head, tail = brules[0], brules[1:]
         for nexpr in head(expr):
-            for nnexpr in chain(*tail)(nexpr):
-                yield nnexpr
+            yield from chain(*tail)(nexpr)
 
     return chain_brl
 

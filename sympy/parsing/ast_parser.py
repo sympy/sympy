@@ -20,7 +20,6 @@ to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
 
-from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import exec_

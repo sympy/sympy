@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple

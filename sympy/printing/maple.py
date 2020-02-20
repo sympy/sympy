@@ -8,7 +8,6 @@ Maple expressions, using the functions defined in the Maple objects where possib
 FIXME: This module is still under actively developed. Some functions may be not completed.
 """
 
-from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.core.numbers import Integer, IntegerConstant
@@ -89,7 +88,7 @@ class MapleCodePrinter(CodePrinter):
     def __init__(self, settings=None):
         if settings is None:
             settings = dict()
-        super(MapleCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -98,10 +97,10 @@ class MapleCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "# {0}".format(text)
+        return "# {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "{0} := {1};".format(name,
+        return "{} := {};".format(name,
                                     value.evalf(self._settings['precision']))
 
     def _format_code(self, lines):

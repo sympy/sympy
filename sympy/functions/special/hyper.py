@@ -1,6 +1,5 @@
 """Hypergeometric and Meijer G-functions"""
 
-from __future__ import print_function, division
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
@@ -231,7 +230,7 @@ class hyper(TupleParametersBase):
         bq = self.args[1]
 
         if x0 != 0:
-            return super(hyper, self)._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx)
 
         terms = []
 

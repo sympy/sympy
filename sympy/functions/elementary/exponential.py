@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -1063,7 +1061,7 @@ class LambertW(Function):
                 s = S.Zero
 
             return s + Order(x**n, x)
-        return super(LambertW, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _eval_is_zero(self):
         x = self.args[0]

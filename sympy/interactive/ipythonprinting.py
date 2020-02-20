@@ -26,7 +26,6 @@ notebook.
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import print_function, division
 
 import warnings
 

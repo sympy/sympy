@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import itertools
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
 from sympy.combinatorics.free_groups import FreeGroup
@@ -7,7 +6,7 @@ from sympy.core.numbers import igcd
 from sympy.ntheory.factor_ import totient
 from sympy import S
 
-class GroupHomomorphism(object):
+class GroupHomomorphism:
     '''
     A class representing group homomorphisms. Instantiate using `homomorphism()`.
 

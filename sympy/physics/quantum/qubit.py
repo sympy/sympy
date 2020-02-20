@@ -6,7 +6,6 @@ Todo:
 * Update tests.
 """
 
-from __future__ import print_function, division
 
 import math
 
@@ -287,15 +286,15 @@ class IntQubitState(QubitState):
         if len(args) == 1 and isinstance(args[0], QubitState):
             return QubitState._eval_args(args)
         # otherwise, args should be integer
-        elif not all((isinstance(a, (int, Integer)) for a in args)):
-            raise ValueError('values must be integers, got (%s)' % (tuple(type(a) for a in args),))
+        elif not all(isinstance(a, (int, Integer)) for a in args):
+            raise ValueError('values must be integers, got ({})'.format(tuple(type(a) for a in args)))
         # use nqubits if specified
         if nqubits is not None:
             if not isinstance(nqubits, (int, Integer)):
                 raise ValueError('nqubits must be an integer, got (%s)' % type(nqubits))
             if len(args) != 1:
                 raise ValueError(
-                    'too many positional arguments (%s). should be (number, nqubits=n)' % (args,))
+                    'too many positional arguments ({}). should be (number, nqubits=n)'.format(args))
             return cls._eval_args_with_nqubits(args[0], nqubits)
         # For a single argument, we construct the binary representation of
         # that integer with the minimal number of bits.
@@ -316,7 +315,7 @@ class IntQubitState(QubitState):
         need = bitcount(abs(number))
         if nqubits < need:
             raise ValueError(
-                'cannot represent %s with %s bits' % (number, nqubits))
+                'cannot represent {} with {} bits'.format(number, nqubits))
         qubit_values = [(number >> i) & 1 for i in reversed(range(nqubits))]
         return QubitState._eval_args(qubit_values)
 

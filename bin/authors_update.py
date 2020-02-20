@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A tool to generate AUTHORS. We started tracking authors before moving
 to git, so we have to do some manual rearrangement of the git history
@@ -7,8 +6,6 @@ authors in order to get the order in AUTHORS. bin/mailmap_update.py
 should be run before committing the results.
 """
 
-from __future__ import unicode_literals
-from __future__ import print_function
 
 import codecs
 import sys

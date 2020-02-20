@@ -301,7 +301,7 @@ def test_dense_conversion():
 
 
 def test_free_symbols():
-    assert (C*D).free_symbols == set((C, D))
+    assert (C*D).free_symbols == {C, D}
 
 
 def test_zero_matmul():

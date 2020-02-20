@@ -12,7 +12,6 @@ Goals:
 
 """
 
-from __future__ import print_function, division
 
 import os
 import sys
@@ -1101,7 +1100,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     return SymPyTestResults(runner.failures, runner.tries)
 
 
-class SymPyTests(object):
+class SymPyTests:
 
     def __init__(self, reporter, kw="", post_mortem=False,
                  seed=None, fast_threshold=None, slow_threshold=None):
@@ -1355,7 +1354,7 @@ class SymPyTests(object):
         return sorted([os.path.normcase(gi) for gi in g])
 
 
-class SymPyDocTests(object):
+class SymPyDocTests:
 
     def __init__(self, reporter, normal):
         self._count = 0
@@ -1536,7 +1535,7 @@ class SymPyDocTests(object):
 
         if disable_viewers:
             tempdir = tempfile.mkdtemp()
-            os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
+            os.environ['PATH'] = '{}:{}'.format(tempdir, os.environ['PATH'])
 
             vw = ('#!/usr/bin/env {}\n'
                   'import sys\n'
@@ -1560,7 +1559,7 @@ class SymPyDocTests(object):
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
-            class DummyWindow(object):
+            class DummyWindow:
                 def __init__(self, *args, **kwargs):
                     self.has_exit = True
                     self.width = 600
@@ -1633,10 +1632,10 @@ class SymPyDocTestFinder(DocTestFinder):
                         continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (rawname %s)" % (val, module, rawname)
+                        "{} is not in module {} (rawname {})".format(val, module, rawname)
 
                     try:
-                        valname = '%s.%s' % (name, rawname)
+                        valname = '{}.{}'.format(name, rawname)
                         self._find(tests, val, valname, module,
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
@@ -1655,7 +1654,7 @@ class SymPyDocTestFinder(DocTestFinder):
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
                                      (type(val),))
-                valname = '%s.__test__.%s' % (name, valname)
+                valname = '{}.__test__.{}'.format(name, valname)
                 self._find(tests, val, valname, module, source_lines,
                            globs, seen)
 
@@ -1686,10 +1685,10 @@ class SymPyDocTestFinder(DocTestFinder):
                             continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (valname %s)" % (
+                        "{} is not in module {} (valname {})".format(
                             val, module, valname)
 
-                    valname = '%s.%s' % (name, valname)
+                    valname = '{}.{}'.format(name, valname)
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
 
@@ -1870,12 +1869,12 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         front_sep = r'\s|\+|\-|\*|,'
         back_sep = front_sep + r'|j|e'
 
-        fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
-        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
+        fbeg = r'^{}(?={}|$)'.format(got_floats, back_sep)
+        fmidend = r'(?<={}){}(?={}|$)'.format(front_sep, got_floats, back_sep)
         self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
 
-        fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
-        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
+        fbeg = r'^{}(?={}|$)'.format(want_floats, back_sep)
+        fmidend = r'(?<={}){}(?={}|$)'.format(front_sep, want_floats, back_sep)
         self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
 
     def check_output(self, want, got, optionflags):
@@ -1949,7 +1948,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         return False
 
 
-class Reporter(object):
+class Reporter:
     """
     Parent class for all reporters.
     """
@@ -2028,7 +2027,7 @@ class PyTestReporter(Reporter):
                 stdout = process.stdout.read()
                 if PY3:
                     stdout = stdout.decode("utf-8")
-            except (OSError, IOError):
+            except OSError:
                 pass
             else:
                 # We support the following output formats from stty:
@@ -2187,7 +2186,7 @@ class PyTestReporter(Reporter):
             elif HAS_GMPY == 2:
                 import gmpy2 as gmpy
             version = gmpy.version()
-        self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
+        self.write("ground types:       {} {}\n".format(GROUND_TYPES, version))
         numpy = import_module('numpy')
         self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
@@ -2238,19 +2237,19 @@ class PyTestReporter(Reporter):
             self.write_center('slowest tests', '_')
             sorted_slow = sorted(self.slow_test_functions, key=lambda r: r[1])
             for slow_func_name, taken in sorted_slow:
-                print('%s - Took %.3f seconds' % (slow_func_name, taken))
+                print('{} - Took {:.3f} seconds'.format(slow_func_name, taken))
 
         if self.fast_test_functions:
             self.write_center('unexpectedly fast tests', '_')
             sorted_fast = sorted(self.fast_test_functions,
                                  key=lambda r: r[1])
             for fast_func_name, taken in sorted_fast:
-                print('%s - Took %.3f seconds' % (fast_func_name, taken))
+                print('{} - Took {:.3f} seconds'.format(fast_func_name, taken))
 
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
-                self.write("%s: %s\n" % (e[0], e[1]))
+                self.write("{}: {}\n".format(e[0], e[1]))
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
@@ -2260,7 +2259,7 @@ class PyTestReporter(Reporter):
                 if f is None:
                     s = "%s" % filename
                 else:
-                    s = "%s:%s" % (filename, f.__name__)
+                    s = "{}:{}".format(filename, f.__name__)
                 self.write_center(s, "_")
                 self.write_exception(t, val, tb)
             self.write("\n")
@@ -2269,7 +2268,7 @@ class PyTestReporter(Reporter):
             for e in self._failed:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
-                self.write_center("%s:%s" % (filename, f.__name__), "_")
+                self.write_center("{}:{}".format(filename, f.__name__), "_")
                 self.write_exception(t, val, tb)
             self.write("\n")
 

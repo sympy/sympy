@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, Add,

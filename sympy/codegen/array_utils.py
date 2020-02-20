@@ -106,7 +106,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         # Check that no contraction happens when the shape is mismatched:
         for i in contraction_indices:
-            if len(set(shape[j] for j in i if shape[j] != -1)) != 1:
+            if len({shape[j] for j in i if shape[j] != -1}) != 1:
                 raise ValueError("contracting indices of different dimensions")
 
     @classmethod
@@ -512,7 +512,7 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
             raise ValueError("summing arrays of different ranks")
         obj._subranks = ranks
         shapes = [arg.shape for arg in args]
-        if len(set([i for i in shapes if i is not None])) > 1:
+        if len({i for i in shapes if i is not None}) > 1:
             raise ValueError("mismatching shapes in addition")
         if any(i is None for i in shapes):
             obj._shape = None
@@ -687,7 +687,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         # dimensions:
         shape = expr.shape
         for i in diagonal_indices:
-            if len(set(shape[j] for j in i)) != 1:
+            if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
 
     @staticmethod
@@ -911,7 +911,7 @@ def _get_argindex(subindices, ind):
             return i
         if isinstance(sind, (set, frozenset)) and ind in sind:
             return i
-    raise IndexError("%s not found in %s" % (ind, subindices))
+    raise IndexError("{} not found in {}".format(ind, subindices))
 
 
 def _codegen_array_parse(expr):
@@ -1121,7 +1121,7 @@ def _has_multiple_lines(expr):
     return False
 
 
-class _RecognizeMatOp(object):
+class _RecognizeMatOp:
     """
     Class to help parsing matrix multiplication lines.
     """
@@ -1148,7 +1148,7 @@ class _RecognizeMatOp(object):
             s = "+"
         else:
             s = op.__name__
-            return "_RecognizeMatOp(%s, %s)" % (s, repr(self.args))
+            return "_RecognizeMatOp({}, {})".format(s, repr(self.args))
         return "_RecognizeMatOp(%s)" % (s.join(repr(i) for i in self.args))
 
     def __eq__(self, other):
@@ -1177,7 +1177,7 @@ class _RecognizeMatMulLines(list):
         return reduce(lambda x, y: x*y, [get_rank(i) for i in self], S.One)
 
     def __repr__(self):
-        return "_RecognizeMatMulLines(%s)" % super(_RecognizeMatMulLines, self).__repr__()
+        return "_RecognizeMatMulLines(%s)" % super().__repr__()
 
 
 def _support_function_tp1_recognize(contraction_indices, args):

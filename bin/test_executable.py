@@ -2,7 +2,6 @@
 """
 Test that only executable files have an executable bit set
 """
-from __future__ import print_function
 
 import os
 import sys

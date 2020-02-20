@@ -104,7 +104,6 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
 
-from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
@@ -174,7 +173,7 @@ class Indexed(Expr):
         return obj
 
     def _hashable_content(self):
-        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -336,7 +335,7 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
-        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+        return "{}[{}]".format(p.doprint(self.base), ", ".join(indices))
 
     @property
     def free_symbols(self):
@@ -472,7 +471,7 @@ class IndexedBase(Expr, NotIterable):
         return self._name
 
     def _hashable_content(self):
-        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
@@ -763,7 +762,7 @@ class Idx(Expr):
             return True
         if self.lower is not None and (self.lower > other_upper) == True:
             return False
-        return super(Idx, self).__le__(other)
+        return super().__le__(other)
 
     def __ge__(self, other):
         if isinstance(other, Idx):
@@ -777,7 +776,7 @@ class Idx(Expr):
             return True
         if self.upper is not None and (self.upper < other_lower) == True:
             return False
-        return super(Idx, self).__ge__(other)
+        return super().__ge__(other)
 
     def __lt__(self, other):
         if isinstance(other, Idx):
@@ -791,7 +790,7 @@ class Idx(Expr):
             return True
         if self.lower is not None and (self.lower >= other_upper) == True:
             return False
-        return super(Idx, self).__lt__(other)
+        return super().__lt__(other)
 
     def __gt__(self, other):
         if isinstance(other, Idx):
@@ -805,4 +804,4 @@ class Idx(Expr):
             return True
         if self.upper is not None and (self.upper <= other_lower) == True:
             return False
-        return super(Idx, self).__gt__(other)
+        return super().__gt__(other)

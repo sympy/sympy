@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function

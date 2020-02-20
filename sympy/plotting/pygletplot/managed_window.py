@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from pyglet.window import Window
 from pyglet.clock import Clock
 
@@ -43,7 +41,7 @@ class ManagedWindow(Window):
         gl_lock.acquire()
         try:
             try:
-                super(ManagedWindow, self).__init__(**self.win_args)
+                super().__init__(**self.win_args)
                 self.switch_to()
                 self.setup()
             except Exception as e:
@@ -70,7 +68,7 @@ class ManagedWindow(Window):
                     self.has_exit = True
             finally:
                 gl_lock.release()
-        super(ManagedWindow, self).close()
+        super().close()
 
     def close(self):
         """

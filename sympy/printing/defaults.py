@@ -1,6 +1,4 @@
-from __future__ import print_function, division
-
-class DefaultPrinting(object):
+class DefaultPrinting:
     """
     The default implementation of printing for SymPy classes.
 

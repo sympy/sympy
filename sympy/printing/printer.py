@@ -170,7 +170,6 @@ The output of the code above is::
     \\operatorname{Mod}{\\left( ModOpWrong(x, m),7 \\right)}
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -194,7 +193,7 @@ def printer_context(printer, **kwargs):
         printer._context = original
 
 
-class Printer(object):
+class Printer:
     """ Generic printer
 
     Its job is to provide infrastructure for implementing new printers easily.

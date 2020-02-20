@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Dict, List
 
 from sympy.core import S
@@ -234,7 +232,7 @@ class FreeGroup(DefaultPrinting):
         if isinstance(gen, self.dtype):
             return self.generators.index(gen)
         else:
-            raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
+            raise ValueError("expected a generator of Free Group {}, got {}".format(self, gen))
 
     def order(self):
         """Return the order of the free group.

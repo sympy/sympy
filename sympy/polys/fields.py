@@ -1,6 +1,5 @@
 """Sparse rational function fields. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -248,7 +247,7 @@ class FracField(DefaultPrinting):
         try:
             frac = self._rebuild_expr(expr, mapping)
         except CoercionFailed:
-            raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
+            raise ValueError("expected an expression convertible to a rational function in {}, got {}".format(self, expr))
         else:
             return self.field_new(frac)
 
@@ -586,7 +585,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         if 0 < len(values) <= f.field.ngens:
             return f.evaluate(list(zip(f.field.gens, values)))
         else:
-            raise ValueError("expected at least 1 and at most %s values, got %s" % (f.field.ngens, len(values)))
+            raise ValueError("expected at least 1 and at most {} values, got {}".format(f.field.ngens, len(values)))
 
     def evaluate(f, x, a=None):
         if isinstance(x, list) and a is None:

@@ -3,7 +3,6 @@ This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 
-from __future__ import print_function, division
 
 from sympy.core import S, Symbol, diff, symbols
 from sympy.solvers import linsolve
@@ -21,7 +20,7 @@ from sympy.utilities.decorator import doctest_depends_on
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
-class Beam(object):
+class Beam:
     """
     A Beam is a structural element that is capable of withstanding load
     primarily by resisting against bending. Beams are characterized by
@@ -1780,7 +1779,7 @@ class Beam3D(Beam):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
+        super().__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
         self.area = area
         self._load_vector = [0, 0, 0]

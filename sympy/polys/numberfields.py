@@ -1,6 +1,5 @@
 """Computational algebraic field theory. """
 
-from __future__ import print_function, division
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
@@ -1082,7 +1081,7 @@ def to_number_field(extension, theta=None, **args):
             return AlgebraicNumber(theta, coeffs)
         else:
             raise IsomorphismFailed(
-                "%s is not in a subfield of %s" % (root, theta.root))
+                "{} is not in a subfield of {}".format(root, theta.root))
 
 
 class IntervalPrinter(MpmathPrinter, LambdaPrinter):

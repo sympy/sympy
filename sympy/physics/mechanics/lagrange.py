@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
@@ -11,7 +9,7 @@ from sympy.utilities.iterables import iterable
 __all__ = ['LagrangesMethod']
 
 
-class LagrangesMethod(object):
+class LagrangesMethod:
     """Lagrange's method object.
 
     This object generates the equations of motion in a two step procedure. The
@@ -176,7 +174,7 @@ class LagrangesMethod(object):
         """
 
         qds = self._qdots
-        qdd_zero = dict((i, 0) for i in self._qdoubledots)
+        qdd_zero = {i: 0 for i in self._qdoubledots}
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:
@@ -408,8 +406,8 @@ class LagrangesMethod(object):
             raise TypeError("op_point must be either a dictionary or an "
                             "iterable of dictionaries.")
         # Compose the system to be solved
-        mass_matrix = self.mass_matrix.col_join((-self.lam_coeffs.row_join(
-                zeros(k, k))))
+        mass_matrix = self.mass_matrix.col_join(-self.lam_coeffs.row_join(
+                zeros(k, k)))
         force_matrix = self.forcing.col_join(self._f_cd)
         # Sub in the operating point
         mass_matrix = msubs(mass_matrix, op_point_dict)

@@ -3,7 +3,6 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from __future__ import print_function, division
 
 from sympy import (Symbol, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
@@ -66,7 +65,7 @@ def DifferentialOperators(base, generator):
     return (ring, ring.derivative_operator)
 
 
-class DifferentialOperatorAlgebra(object):
+class DifferentialOperatorAlgebra:
     r"""
     An Ore Algebra is a set of noncommutative polynomials in the
     intermediate ``Dx`` and coefficients in a base polynomial ring :math:`A`.
@@ -136,7 +135,7 @@ class DifferentialOperatorAlgebra(object):
             return False
 
 
-class DifferentialOperator(object):
+class DifferentialOperator:
     """
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the
@@ -373,7 +372,7 @@ class DifferentialOperator(object):
         return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
 
-class HolonomicFunction(object):
+class HolonomicFunction:
     r"""
     A Holonomic Function is a solution to a linear homogeneous ordinary
     differential equation with polynomial coefficients. This differential
@@ -470,10 +469,10 @@ class HolonomicFunction(object):
 
     def __str__(self):
         if self._have_init_cond():
-            str_sol = 'HolonomicFunction(%s, %s, %s, %s)' % (str(self.annihilator),\
+            str_sol = 'HolonomicFunction({}, {}, {}, {})'.format(str(self.annihilator),\
                 sstr(self.x), sstr(self.x0), sstr(self.y0))
         else:
-            str_sol = 'HolonomicFunction(%s, %s)' % (str(self.annihilator),\
+            str_sol = 'HolonomicFunction({}, {})'.format(str(self.annihilator),\
                 sstr(self.x))
 
         return str_sol

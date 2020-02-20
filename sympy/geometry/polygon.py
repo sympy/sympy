@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols
@@ -1290,8 +1288,8 @@ class Polygon(GeometrySet):
         from sympy.core.evalf import N
 
         verts = map(N, self.vertices)
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {} z".format(coords[0], " L ".join(coords[1:]))
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
@@ -2029,7 +2027,7 @@ class RegularPolygon(Polygon):
         return self.args == o.args
 
     def __hash__(self):
-        return super(RegularPolygon, self).__hash__()
+        return super().__hash__()
 
 
 class Triangle(Polygon):

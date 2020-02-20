@@ -12,7 +12,6 @@ and the Diffie-Hellman key exchange.
 
 """
 
-from __future__ import print_function
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
@@ -102,8 +101,8 @@ def padded_key(key, symbols, filter=True):
     """
     syms = list(uniq(symbols))
     if len(syms) != len(symbols):
-        extra = ''.join(sorted(set(
-            [i for i in symbols if symbols.count(i) > 1])))
+        extra = ''.join(sorted({
+            i for i in symbols if symbols.count(i) > 1}))
         raise ValueError('duplicate characters in symbols: %s' % extra)
     extra = set(key) - set(syms)
     if extra:
@@ -1008,7 +1007,7 @@ def encipher_bifid(msg, key, symbols=None):
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
     ch = {i: ch for ch, i in row_col.items()}
-    rv = ''.join((ch[i] for i in zip(rc[::2], rc[1::2])))
+    rv = ''.join(ch[i] for i in zip(rc[::2], rc[1::2]))
     return rv
 
 
@@ -1102,13 +1101,13 @@ def decipher_bifid(msg, key, symbols=None):
         long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the reverse fractionalization
-    row_col = dict(
-        [(ch, divmod(i, N)) for i, ch in enumerate(long_key)])
+    row_col = {
+        ch: divmod(i, N) for i, ch in enumerate(long_key)}
     rc = [i for c in msg for i in row_col[c]]
     n = len(msg)
     rc = zip(*(rc[:n], rc[n:]))
     ch = {i: ch for ch, i in row_col.items()}
-    rv = ''.join((ch[i] for i in rc))
+    rv = ''.join(ch[i] for i in rc)
     return rv
 
 
@@ -2660,7 +2659,7 @@ def encipher_elgamal(i, key, seed=None):
     p, r, e = key
     if i < 0 or i >= p:
         raise ValueError(
-            'Message (%s) should be in range(%s)' % (i, p))
+            'Message ({}) should be in range({})'.format(i, p))
     randrange = _randrange(seed)
     a = randrange(2, p)
     return pow(r, a, p), i*pow(e, a, p) % p

@@ -1,6 +1,5 @@
 """benchmarking through py.test"""
 
-from __future__ import print_function, division
 
 import py
 from py.__.test.item import Item
@@ -18,7 +17,7 @@ from sympy.core.compatibility import exec_
 units = ["s", "ms", "us", "ns"]
 scaling = [1, 1e3, 1e6, 1e9]
 
-unitn = dict((s, i) for i, s in enumerate(units))
+unitn = {s: i for i, s in enumerate(units)}
 
 precision = 3
 
@@ -60,7 +59,7 @@ class Timer(timeit.Timer):
 class Function(py.__.test.item.Function):
 
     def __init__(self, *args, **kw):
-        super(Function, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.benchtime = None
         self.benchtitle = None
 
@@ -111,10 +110,10 @@ class Function(py.__.test.item.Function):
 class BenchSession(TerminalSession):
 
     def header(self, colitems):
-        super(BenchSession, self).header(colitems)
+        super().header(colitems)
 
     def footer(self, colitems):
-        super(BenchSession, self).footer(colitems)
+        super().footer(colitems)
 
         self.out.write('\n')
         self.print_bench_results()
@@ -196,7 +195,7 @@ class BenchSession(TerminalSession):
                 else:
                     txt += ' '*(wm[i] + we[i] + 1)
 
-            s[1] = '%s %s' % (txt, u)
+            s[1] = '{} {}'.format(txt, u)
 
         # align all columns besides the last one
         for i in range(2):

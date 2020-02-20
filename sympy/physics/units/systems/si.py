@@ -5,7 +5,6 @@ Added kelvin, candela and mole.
 
 """
 
-from __future__ import division
 
 from typing import List
 

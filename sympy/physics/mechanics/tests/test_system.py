@@ -79,9 +79,9 @@ def test_form_1():
     inter = comb_explicit_rhs
     assert simplify(symsystem1.comb_explicit_rhs - inter) == zeros(5, 1)
 
-    assert set(symsystem1.dynamic_symbols()) == set([y, v, lam, u, x])
+    assert set(symsystem1.dynamic_symbols()) == {y, v, lam, u, x}
     assert type(symsystem1.dynamic_symbols()) == tuple
-    assert set(symsystem1.constant_symbols()) == set([l, g, m])
+    assert set(symsystem1.constant_symbols()) == {l, g, m}
     assert type(symsystem1.constant_symbols()) == tuple
 
     assert symsystem1.output_eqns == out_eqns
@@ -106,9 +106,9 @@ def test_form_2():
     assert simplify(symsystem2.comb_implicit_rhs - inter) == zeros(5, 1)
     assert simplify(symsystem2.comb_implicit_mat-comb_implicit_mat) == zeros(5)
 
-    assert set(symsystem2.dynamic_symbols()) == set([y, v, lam, u, x])
+    assert set(symsystem2.dynamic_symbols()) == {y, v, lam, u, x}
     assert type(symsystem2.dynamic_symbols()) == tuple
-    assert set(symsystem2.constant_symbols()) == set([l, g, m])
+    assert set(symsystem2.constant_symbols()) == {l, g, m}
     assert type(symsystem2.constant_symbols()) == tuple
 
     inter = comb_explicit_rhs
@@ -150,9 +150,9 @@ def test_form_3():
     symsystem3.compute_explicit_form()
     assert simplify(symsystem3.comb_explicit_rhs - inter) == zeros(5, 1)
 
-    assert set(symsystem3.dynamic_symbols()) == set([y, v, lam, u, x])
+    assert set(symsystem3.dynamic_symbols()) == {y, v, lam, u, x}
     assert type(symsystem3.dynamic_symbols()) == tuple
-    assert set(symsystem3.constant_symbols()) == set([l, g, m])
+    assert set(symsystem3.constant_symbols()) == {l, g, m}
     assert type(symsystem3.constant_symbols()) == tuple
 
     assert symsystem3.output_eqns == {}

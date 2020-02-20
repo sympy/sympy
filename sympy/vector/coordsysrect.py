@@ -92,7 +92,7 @@ class CoordSys3D(Basic):
                 pass
             else:
                 raise TypeError("transformation: "
-                                "wrong type {0}".format(type(transformation)))
+                                "wrong type {}".format(type(transformation)))
 
         # If orientation information has been provided, store
         # the rotation matrix accordingly
@@ -187,19 +187,19 @@ class CoordSys3D(Basic):
         # positioned/oriented wrt different parents, even though
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
-            obj = super(CoordSys3D, cls).__new__(
+            obj = super().__new__(
                 cls, Symbol(name), transformation, parent)
         else:
-            obj = super(CoordSys3D, cls).__new__(
+            obj = super().__new__(
                 cls, Symbol(name), transformation)
         obj._name = name
         # Initialize the base vectors
 
         _check_strings('vector_names', vector_names)
         vector_names = list(vector_names)
-        latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
+        latex_vects = [(r'\mathbf{{\hat{{{}}}_{{{}}}}}'.format(x, name)) for
                            x in vector_names]
-        pretty_vects = ['%s_%s' % (x, name) for x in vector_names]
+        pretty_vects = ['{}_{}'.format(x, name) for x in vector_names]
 
         obj._vector_names = vector_names
 
@@ -213,9 +213,9 @@ class CoordSys3D(Basic):
 
         _check_strings('variable_names', vector_names)
         variable_names = list(variable_names)
-        latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
+        latex_scalars = [(r"\mathbf{{{{{}}}_{{{}}}}}".format(x, name)) for
                          x in variable_names]
-        pretty_scalars = ['%s_%s' % (x, name) for x in variable_names]
+        pretty_scalars = ['{}_{}'.format(x, name) for x in variable_names]
 
         obj._variable_names = variable_names
         obj._vector_names = vector_names

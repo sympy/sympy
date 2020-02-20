@@ -104,7 +104,7 @@ class VectorLatexPrinter(LatexPrinter):
             if inv_trig_power_case:
                 name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                name = r"\operatorname{%s}^{%s}" % (func, exp)
+                name = r"\operatorname{{{}}}^{{{}}}".format(func, exp)
             else:
                 name = r"\operatorname{%s}" % func
 
@@ -170,29 +170,29 @@ class VectorPrettyPrinter(PrettyPrinter):
                 syms.pop()
                 dot_i += 1
             else:
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
 
         if not (isinstance(type(deriv.expr), UndefinedFunction)
                 and (deriv.expr.args == (t,))):
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
         else:
             pform = self._print_Function(deriv.expr)
 
         # the following condition would happen with some sort of non-standard
         # dynamic symbol I guess, so we'll just print the SymPy way
         if len(pform.picture) > 1:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
         if dot_i >= 5:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # Deal with special symbols
-        dots = {0 : u"",
-                1 : u"\N{COMBINING DOT ABOVE}",
-                2 : u"\N{COMBINING DIAERESIS}",
-                3 : u"\N{COMBINING THREE DOTS ABOVE}",
-                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
+        dots = {0 : "",
+                1 : "\N{COMBINING DOT ABOVE}",
+                2 : "\N{COMBINING DIAERESIS}",
+                3 : "\N{COMBINING THREE DOTS ABOVE}",
+                4 : "\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
         #if unicode is false then calculate number of apostrophes needed and add to output
@@ -218,7 +218,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code
         if not (isinstance(func, UndefinedFunction) and (args == (t,))):
-            return super(VectorPrettyPrinter, self)._print_Function(e)
+            return super()._print_Function(e)
         return pform
 
 

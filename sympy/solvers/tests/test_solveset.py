@@ -458,8 +458,8 @@ def test_solveset_sqrt_2():
     rb = Rational(4, 5)
     assert all(abs(eq.subs(x, i).n()) < 1e-10 for i in (ra, rb)) and \
         len(ans) == 2 and \
-        set([i.n(chop=True) for i in ans]) == \
-        set([i.n(chop=True) for i in (ra, rb)])
+        {i.n(chop=True) for i in ans} == \
+        {i.n(chop=True) for i in (ra, rb)}
 
     assert solveset_real(sqrt(x) + x**Rational(1, 3) +
                                  x**Rational(1, 4), x) == FiniteSet(0)
@@ -1639,10 +1639,10 @@ def test_substitution_basic():
     assert substitution(system, [x, y]) == soln
 
     soln = FiniteSet((-1, 1))
-    assert substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y]) == soln
+    assert substitution([x + y], [x], [{y: 1}], [y], set(), [x, y]) == soln
     assert substitution(
         [x + y], [x], [{y: 1}], [y],
-        set([x + 1]), [y, x]) == S.EmptySet
+        {x + 1}, [y, x]) == S.EmptySet
 
 
 def test_issue_5132_substitution():
@@ -1924,8 +1924,8 @@ def test_issue_17882():
 def test_term_factors():
     assert list(_term_factors(3**x - 2)) == [-2, 3**x]
     expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
-    assert set(_term_factors(expr)) == set([
-        3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)])
+    assert set(_term_factors(expr)) == {
+        3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)}
 
 
 #################### tests for transolve and its helpers ###############

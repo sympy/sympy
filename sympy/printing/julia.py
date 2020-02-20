@@ -9,7 +9,6 @@ complete source code files.
 
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -73,7 +72,7 @@ class JuliaCodePrinter(CodePrinter):
     # for Julia.
 
     def __init__(self, settings={}):
-        super(JuliaCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
@@ -89,11 +88,11 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _get_comment(self, text):
-        return "# {0}".format(text)
+        return "# {}".format(text)
 
 
     def _declare_number_const(self, name, value):
-        return "const {0} = {1}".format(name, value)
+        return "const {} = {}".format(name, value)
 
 
     def _format_code(self, lines):
@@ -113,7 +112,7 @@ class JuliaCodePrinter(CodePrinter):
             # Julia arrays start at 1 and end at dimension
             var, start, stop = map(self._print,
                     [i.label, i.lower + 1, i.upper + 1])
-            open_lines.append("for %s = %s:%s" % (var, start, stop))
+            open_lines.append("for {} = {}:{}".format(var, start, stop))
             close_lines.append("end")
         return open_lines, close_lines
 
@@ -196,7 +195,7 @@ class JuliaCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
@@ -214,13 +213,13 @@ class JuliaCodePrinter(CodePrinter):
                 sym = '/' if expr.base.is_number else './'
                 return "1" + sym + "%s" % self.parenthesize(expr.base, PREC)
 
-        return '%s%s%s' % (self.parenthesize(expr.base, PREC), powsymbol,
+        return '{}{}{}'.format(self.parenthesize(expr.base, PREC), powsymbol,
                            self.parenthesize(expr.exp, PREC))
 
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
-        return '%s^%s' % (self.parenthesize(expr.base, PREC),
+        return '{}^{}'.format(self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))
 
 
@@ -228,7 +227,7 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "pi"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_ImaginaryUnit(self, expr):
@@ -239,28 +238,28 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "e"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_EulerGamma(self, expr):
         if self._settings["inline"]:
             return "eulergamma"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_Catalan(self, expr):
         if self._settings["inline"]:
             return "catalan"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_GoldenRatio(self, expr):
         if self._settings["inline"]:
             return "golden"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_Assignment(self, expr):
@@ -288,7 +287,7 @@ class JuliaCodePrinter(CodePrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return self._get_statement("{} = {}".format(lhs_code, rhs_code))
 
 
     def _print_Infinity(self, expr):
@@ -334,7 +333,7 @@ class JuliaCodePrinter(CodePrinter):
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
         if A.rows == 0 or A.cols == 0:
-            return 'zeros(%s, %s)' % (A.rows, A.cols)
+            return 'zeros({}, {})'.format(A.rows, A.cols)
         elif (A.rows, A.cols) == (1, 1):
             return "[%s]" % A[0, 0]
         elif A.rows == 1:
@@ -353,7 +352,7 @@ class JuliaCodePrinter(CodePrinter):
         I = Matrix([k[0] + 1 for k in L])
         J = Matrix([k[1] + 1 for k in L])
         AIJ = Matrix([k[2] for k in L])
-        return "sparse(%s, %s, %s, %s, %s)" % (self._print(I), self._print(J),
+        return "sparse({}, {}, {}, {}, {})".format(self._print(I), self._print(J),
                                             self._print(AIJ), A.rows, A.cols)
 
 
@@ -373,7 +372,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
-            + '[%s,%s]' % (expr.i + 1, expr.j + 1)
+            + '[{},{}]'.format(expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):
@@ -399,7 +398,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        return "%s[%s]" % (self._print(expr.base.label), ",".join(inds))
+        return "{}[{}]".format(self._print(expr.base.label), ",".join(inds))
 
 
     def _print_Idx(self, expr):
@@ -449,7 +448,7 @@ class JuliaCodePrinter(CodePrinter):
             # Express each (cond, expr) pair in a nested Horner form:
             #   (condition) .* (expr) + (not cond) .* (<others>)
             # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}) ? ({1}) :".format
+            ecpairs = ["({}) ? ({}) :".format
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
             elast = " (%s)" % self._print(expr.args[-1].expr)
@@ -499,7 +498,7 @@ class JuliaCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 

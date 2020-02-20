@@ -2,7 +2,6 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-from __future__ import print_function, division
 
 from typing import Tuple
 
@@ -1365,7 +1364,7 @@ def evalf(x, prec, options):
     return r
 
 
-class EvalfMixin(object):
+class EvalfMixin:
     """Mixin class adding evalf capabililty."""
 
     __slots__ = ()  # type: Tuple[str, ...]

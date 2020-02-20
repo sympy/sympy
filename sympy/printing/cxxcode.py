@@ -1,7 +1,6 @@
 """
 C++ code printer
 """
-from __future__ import (absolute_import, division, print_function)
 
 from itertools import chain
 from sympy.codegen.ast import Type, none
@@ -66,7 +65,7 @@ def _attach_print_method(cls, sympy_name, func_name):
     if hasattr(cls, meth_name):
         raise ValueError("Edit method (or subclass) instead of overwriting.")
     def _print_method(self, expr):
-        return '{0}{1}({2})'.format(self._ns, func_name, ', '.join(map(self._print, expr.args)))
+        return '{}{}({})'.format(self._ns, func_name, ', '.join(map(self._print, expr.args)))
     _print_method.__doc__ = "Prints code for %s" % k
     setattr(cls, meth_name, _print_method)
 
@@ -76,25 +75,25 @@ def _attach_print_methods(cls, cont):
         _attach_print_method(cls, sympy_name, cxx_name)
 
 
-class _CXXCodePrinterBase(object):
+class _CXXCodePrinterBase:
     printmethod = "_cxxcode"
     language = 'C++'
     _ns = 'std::'  # namespace
 
     def __init__(self, settings=None):
-        super(_CXXCodePrinterBase, self).__init__(settings or {})
+        super().__init__(settings or {})
 
     def _print_Max(self, expr):
         from sympy import Max
         if len(expr.args) == 1:
             return self._print(expr.args[0])
-        return "%smax(%s, %s)" % (self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
+        return "{}max({}, {})".format(self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
 
     def _print_Min(self, expr):
         from sympy import Min
         if len(expr.args) == 1:
             return self._print(expr.args[0])
-        return "%smin(%s, %s)" % (self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
+        return "{}min({}, {})".format(self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
 
     def _print_using(self, expr):
         if expr.alias == none:
@@ -133,7 +132,7 @@ class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
 
     def _print_using(self, expr):
         if expr.alias == none:
-            return super(CXX11CodePrinter, self)._print_using(expr)
+            return super()._print_using(expr)
         else:
             return 'using %(alias)s = %(type)s' % expr.kwargs(apply=self._print)
 

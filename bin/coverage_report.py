@@ -22,7 +22,6 @@ sympy/logic/ by following up the previous command with
 $ bin/coverage_report.py -c
 
 """
-from __future__ import print_function
 
 import os
 import re

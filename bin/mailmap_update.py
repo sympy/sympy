@@ -87,7 +87,7 @@ dups = near_dups
 # some may have been real dups, so disregard those
 # for which all email addresses were the same
 multi = [k for k in dups if len(dups[k]) > 1 and
-    len(set([i for i, _ in dups[k]])) > 1]
+    len({i for i, _ in dups[k]}) > 1]
 if multi:
     # not fatal but make it red
     print()

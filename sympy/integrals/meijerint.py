@@ -25,7 +25,6 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
-from __future__ import print_function, division
 
 from typing import Dict, Tuple
 
@@ -372,7 +371,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
+    return {e.func for e in expr.atoms(Function) if x in e.free_symbols}
 
 
 def _find_splitting_points(expr, x):
@@ -771,9 +770,9 @@ def _check_antecedents_1(g, x, helper=False):
     debug('Checking antecedents for 1 function:')
     debug('  delta=%s, eta=%s, m=%s, n=%s, p=%s, q=%s'
           % (delta, eta, m, n, p, q))
-    debug('  ap = %s, %s' % (list(g.an), list(g.aother)))
-    debug('  bq = %s, %s' % (list(g.bm), list(g.bother)))
-    debug('  cond_3=%s, cond_3*=%s, cond_4=%s' % (cond_3, cond_3_star, cond_4))
+    debug('  ap = {}, {}'.format(list(g.an), list(g.aother)))
+    debug('  bq = {}, {}'.format(list(g.bm), list(g.bother)))
+    debug('  cond_3={}, cond_3*={}, cond_4={}'.format(cond_3, cond_3_star, cond_4))
 
     conds = []
 
@@ -969,7 +968,7 @@ def _check_antecedents(g1, g2, x):
            % (sigma, s, t, u, v, bstar, rho))
     _debug('  omega=%s, m=%s, n=%s, p=%s, q=%s, c*=%s, mu=%s,'
            % (omega, m, n, p, q, cstar, mu))
-    _debug('  phi=%s, eta=%s, psi=%s, theta=%s' % (phi, eta, psi, theta))
+    _debug('  phi={}, eta={}, psi={}, theta={}'.format(phi, eta, psi, theta))
 
     def _c1():
         for g in [g1, g2]:
@@ -1326,9 +1325,9 @@ def _check_antecedents_inversion(g, x):
         epsilon = nan
     theta = ((1 - sigma)/2 + Add(*g.bq) - Add(*g.ap))/sigma
     delta = g.delta
-    _debug('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s' % (
+    _debug('  m={}, n={}, p={}, q={}, tau={}, nu={}, rho={}, sigma={}'.format(
         m, n, p, q, tau, nu, rho, sigma))
-    _debug('  epsilon=%s, theta=%s, delta=%s' % (epsilon, theta, delta))
+    _debug('  epsilon={}, theta={}, delta={}'.format(epsilon, theta, delta))
 
     # First check if the computation is valid.
     if not (g.delta >= e/2 or (p >= 1 and p >= q)):
@@ -1759,7 +1758,7 @@ def meijerint_definite(f, x, a, b):
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
     from sympy import arg, exp, I, And, DiracDelta, SingularityFunction
-    _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
+    _debug('Integrating', f, 'wrt {} from {} to {}.'.format(x, a, b))
 
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')

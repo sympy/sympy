@@ -187,7 +187,7 @@ def test_issue_4362():
     e = sqrt(1/c)
     assert e.as_numer_denom() == (e, 1)
     i = Symbol('i', integer=True)
-    assert (((1 + x/y)**i)).as_numer_denom() == ((x + y)**i, y**i)
+    assert ((1 + x/y)**i).as_numer_denom() == ((x + y)**i, y**i)
 
 
 def test_Pow_signs():
@@ -435,7 +435,7 @@ def test_better_sqrt():
     i = symbols('i', imaginary=True)
     assert sqrt(3/i) == Mul(sqrt(3), 1/sqrt(i), evaluate=False)
     # multiples of 1/2; don't make this too automatic
-    assert sqrt((3 + 4*I))**3 == (2 + I)**3
+    assert sqrt(3 + 4*I)**3 == (2 + I)**3
     assert Pow(3 + 4*I, Rational(3, 2)) == 2 + 11*I
     assert Pow(6 + 8*I, Rational(3, 2)) == 2*sqrt(2)*(2 + 11*I)
     n, d = (3 + 4*I), (3 - 4*I)**3

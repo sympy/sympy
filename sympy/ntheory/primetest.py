@@ -3,7 +3,6 @@ Primality testing
 
 """
 
-from __future__ import print_function, division
 
 from sympy.core.compatibility import as_int
 

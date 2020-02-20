@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from collections import defaultdict
 
 from sympy.core import SympifyError, Add
@@ -148,7 +146,7 @@ class SparseMatrix(MatrixBase):
                     # no collisions
                     if v:
                         if (i, j) in self._smat and v != self._smat[i, j]:
-                            raise ValueError('collision at %s' % ((i, j),))
+                            raise ValueError('collision at {}'.format((i, j)))
                         self._smat[i, j] = v
                 # manual copy, copy.deepcopy() doesn't work
                 for key, v in args[2].items():
@@ -189,8 +187,8 @@ class SparseMatrix(MatrixBase):
                     if i and i >= self.rows or j and j >= self.cols:
                         r, c = self.shape
                         raise ValueError(filldedent('''
-                            The location %s is out of designated
-                            range: %s''' % ((i, j), (r - 1, c - 1))))
+                            The location {} is out of designated
+                            range: {}'''.format((i, j), (r - 1, c - 1))))
         else:
             if (len(args) == 1 and isinstance(args[0], (list, tuple))):
                 # list of values or lists

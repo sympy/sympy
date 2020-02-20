@@ -21,7 +21,6 @@
 # incorporation in various projects. The tests below assume that the binary cc
 # is somewhere in the path and that it can compile ANSI C code.
 
-from __future__ import print_function
 
 from sympy.abc import x, y, z
 from sympy.testing.pytest import skip
@@ -165,7 +164,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     #    includes the numerical tests
     test_strings = []
     for fn_name, args, expected, threshold in numerical_tests:
-        call_string = "%s(%s)-(%s)" % (
+        call_string = "{}({})-({})".format(
             fn_name, ",".join(str(arg) for arg in args), expected)
         if language == "F95":
             call_string = fortranize_double_constants(call_string)
@@ -216,9 +215,9 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         os.chdir(oldwork)
 
     # 7) Do the assertions in the end
-    assert compiled, "failed to compile %s code with:\n%s" % (
+    assert compiled, "failed to compile {} code with:\n{}".format(
         language, "\n".join(commands))
-    assert executed, "failed to execute %s code from:\n%s" % (
+    assert executed, "failed to execute {} code from:\n{}".format(
         language, "\n".join(commands))
 
 

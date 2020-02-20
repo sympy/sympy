@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from .matexpr import MatrixExpr
 from sympy.core.function import FunctionClass, Lambda
 from sympy.core.symbol import Dummy
@@ -98,7 +96,7 @@ class FunctionMatrix(MatrixExpr):
             i, j = Dummy('i'), Dummy('j')
             lamda = Lambda((i, j), lamda(i, j))
 
-        return super(FunctionMatrix, cls).__new__(cls, rows, cols, lamda)
+        return super().__new__(cls, rows, cols, lamda)
 
     @property
     def shape(self):

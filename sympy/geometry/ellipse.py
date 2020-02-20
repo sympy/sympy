@@ -6,7 +6,6 @@ Contains
 
 """
 
-from __future__ import division, print_function
 
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
@@ -119,7 +118,7 @@ class Ellipse(GeometrySet):
                                            self.vradius == o.vradius)
 
     def __hash__(self):
-        return super(Ellipse, self).__hash__()
+        return super().__hash__()
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
@@ -134,7 +133,7 @@ class Ellipse(GeometrySet):
             center = Point(center, dim=2)
 
         if len(center) != 2:
-            raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
+            raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError(filldedent('''
@@ -734,7 +733,7 @@ class Ellipse(GeometrySet):
             if isinstance(intersect, Ellipse):
                 return True
             elif intersect:
-                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
+                return all((self.tangent_lines(i)[0]).equals(o.tangent_lines(i)[0]) for i in intersect)
             else:
                 return False
         elif isinstance(o, Line2D):
@@ -1184,7 +1183,7 @@ class Ellipse(GeometrySet):
             raise NotImplementedError(filldedent(
                 'General Ellipse is not supported but the equation '
                 'of the reflected Ellipse is given by the zeros of: ' +
-                "f(%s, %s) = %s" % (str(x), str(y), str(result))))
+                "f({}, {}) = {}".format(str(x), str(y), str(result))))
 
     def rotate(self, angle=0, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
@@ -1204,7 +1203,7 @@ class Ellipse(GeometrySet):
         if self.hradius == self.vradius:
             return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
-            return super(Ellipse, self).rotate(angle, pt)
+            return super().rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes

@@ -1,6 +1,5 @@
 """The commutator: [A,B] = A*B - B*A."""
 
-from __future__ import print_function, division
 
 from sympy import S, Expr, Mul, Add, Pow
 from sympy.printing.pretty.stringpict import prettyForm
@@ -213,18 +212,18 @@ class Commutator(Expr):
         return Commutator(Dagger(self.args[1]), Dagger(self.args[0]))
 
     def _sympyrepr(self, printer, *args):
-        return "%s(%s,%s)" % (
+        return "{}({},{})".format(
             self.__class__.__name__, printer._print(
                 self.args[0]), printer._print(self.args[1])
         )
 
     def _sympystr(self, printer, *args):
-        return "[%s,%s]" % (self.args[0], self.args[1])
+        return "[{},{}]".format(self.args[0], self.args[1])
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u','))))
-        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
+        pform = prettyForm(*pform.right(prettyForm(',')))
+        pform = prettyForm(*pform.right(printer._print(self.args[1], *args)))
         pform = prettyForm(*pform.parens(left='[', right=']'))
         return pform
 

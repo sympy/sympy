@@ -1,6 +1,5 @@
 """Fourier Series"""
 
-from __future__ import print_function, division
 
 from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
@@ -314,7 +313,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         a0 = self.a0 + s
         sfunc = self.function + s
@@ -341,7 +340,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         an = self.an.subs(x, x + s)
         bn = self.bn.subs(x, x + s)
@@ -369,7 +368,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         an = self.an.coeff_mul(s)
         bn = self.bn.coeff_mul(s)
@@ -398,7 +397,7 @@ class FourierSeries(SeriesBase):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         an = self.an.subs(x, x * s)
         bn = self.bn.subs(x, x * s)
@@ -528,7 +527,7 @@ class FiniteFourierSeries(FourierSeries):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         _expr = self.truncate().subs(x, x + s)
         sfunc = self.function.subs(x, x + s)
@@ -539,7 +538,7 @@ class FiniteFourierSeries(FourierSeries):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         _expr = self.truncate() * s
         sfunc = self.function * s
@@ -550,7 +549,7 @@ class FiniteFourierSeries(FourierSeries):
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
-            raise ValueError("'%s' should be independent of %s" % (s, x))
+            raise ValueError("'{}' should be independent of {}".format(s, x))
 
         _expr = self.truncate().subs(x, x * s)
         sfunc = self.function.subs(x, x * s)

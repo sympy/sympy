@@ -1,6 +1,5 @@
 """Implementation of the Kronecker product"""
 
-from __future__ import division, print_function
 
 from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
@@ -115,7 +114,7 @@ class KroneckerProduct(MatrixExpr):
         check = kwargs.get('check', True)
         if check:
             validate(*args)
-        return super(KroneckerProduct, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     @property
     def shape(self):

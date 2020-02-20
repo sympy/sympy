@@ -43,7 +43,7 @@ def restart_ordering(on_ambiguity=ambiguity_warn):
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
-class Dispatcher(object):
+class Dispatcher:
     """ Dispatch methods based on type signature
 
     Use ``dispatch`` to add implementations

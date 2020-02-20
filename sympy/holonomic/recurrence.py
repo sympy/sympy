@@ -1,6 +1,5 @@
 """Recurrence Operators"""
 
-from __future__ import print_function, division
 
 from sympy import symbols, Symbol, S
 from sympy.printing import sstr
@@ -29,7 +28,7 @@ def RecurrenceOperators(base, generator):
     return (ring, ring.shift_operator)
 
 
-class RecurrenceOperatorAlgebra(object):
+class RecurrenceOperatorAlgebra:
     """
     A Recurrence Operator Algebra is a set of noncommutative polynomials
     in intermediate `Sn` and coefficients in a base ring A. It follows the
@@ -96,7 +95,7 @@ def _add_lists(list1, list2):
     return sol
 
 
-class RecurrenceOperator(object):
+class RecurrenceOperator:
     """
     The Recurrence Operators are defined by a list of polynomials
     in the base ring and the parent ring of the Operator.
@@ -311,7 +310,7 @@ class RecurrenceOperator(object):
                 return False
 
 
-class HolonomicSequence(object):
+class HolonomicSequence:
     """
     A Holonomic Sequence is a type of sequence satisfying a linear homogeneous
     recurrence relation with Polynomial coefficients. Alternatively, A sequence
@@ -332,14 +331,14 @@ class HolonomicSequence(object):
         self.n = recurrence.parent.base.gens[0]
 
     def __repr__(self):
-        str_sol = 'HolonomicSequence(%s, %s)' % ((self.recurrence).__repr__(), sstr(self.n))
+        str_sol = 'HolonomicSequence({}, {})'.format((self.recurrence).__repr__(), sstr(self.n))
         if not self._have_init_cond:
             return str_sol
         else:
             cond_str = ''
             seq_str = 0
             for i in self.u0:
-                cond_str += ', u(%s) = %s' % (sstr(seq_str), sstr(i))
+                cond_str += ', u({}) = {}'.format(sstr(seq_str), sstr(i))
                 seq_str += 1
 
             sol = str_sol + cond_str

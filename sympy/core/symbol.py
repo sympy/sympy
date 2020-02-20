@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import is_sequence, ordered
 from .basic import Basic
@@ -201,8 +199,8 @@ class Symbol(AtomicExpr, Boolean):
             if assumptions[k] != base[k]:
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
-                    non-matching assumptions for %s: existing value
-                    is %s and new value is %s''' % (
+                    non-matching assumptions for {}: existing value
+                    is {} and new value is {}'''.format(
                     k, base[k], assumptions[k])))
         base.update(assumptions)
         return base
@@ -266,8 +264,8 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def assumptions0(self):
-        return dict((key, value) for key, value
-                in self._assumptions.items() if value is not None)
+        return {key: value for key, value
+                in self._assumptions.items() if value is not None}
 
     @cacheit
     def sort_key(self, order=None):
@@ -476,7 +474,7 @@ class Wild(Symbol):
         return obj
 
     def _hashable_content(self):
-        return super(Wild, self)._hashable_content() + (self.exclude, self.properties)
+        return super()._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
     def matches(self, expr, repl_dict={}, old=False):

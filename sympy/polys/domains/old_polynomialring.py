@@ -1,6 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.core.compatibility import iterable
 from sympy.polys.agca.modules import FreeModulePolyRing
@@ -245,7 +244,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         try:
             rep, _ = dict_from_basic(a, gens=self.gens)
         except PolynomialError:
-            raise CoercionFailed("can't convert %s to type %s" % (a, self))
+            raise CoercionFailed("can't convert {} to type {}".format(a, self))
 
         for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)

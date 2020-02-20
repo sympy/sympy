@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Tuple as tTuple
 
 from .sympify import sympify, _sympify, SympifyError
@@ -1173,7 +1171,7 @@ class Expr(Basic, EvalfMixin):
         from .mul import Mul
         from .exprtools import decompose_power
 
-        gens, terms = set([]), []
+        gens, terms = set(), []
 
         for term in Add.make_args(self):
             coeff, _term = term.as_coeff_Mul()
@@ -2518,7 +2516,7 @@ class Expr(Basic, EvalfMixin):
         return res, n
 
     def _eval_is_polynomial(self, syms):
-        if self.free_symbols.intersection(syms) == set([]):
+        if self.free_symbols.intersection(syms) == set():
             return True
         return False
 
@@ -2584,14 +2582,14 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set([]):
+        if syms.intersection(self.free_symbols) == set():
             # constant polynomial
             return True
         else:
             return self._eval_is_polynomial(syms)
 
     def _eval_is_rational_function(self, syms):
-        if self.free_symbols.intersection(syms) == set([]):
+        if self.free_symbols.intersection(syms) == set():
             return True
         return False
 
@@ -2654,14 +2652,14 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set([]):
+        if syms.intersection(self.free_symbols) == set():
             # constant rational function
             return True
         else:
             return self._eval_is_rational_function(syms)
 
     def _eval_is_algebraic_expr(self, syms):
-        if self.free_symbols.intersection(syms) == set([]):
+        if self.free_symbols.intersection(syms) == set():
             return True
         return False
 
@@ -2712,7 +2710,7 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set([]):
+        if syms.intersection(self.free_symbols) == set():
             # constant algebraic expression
             return True
         else:
@@ -3305,7 +3303,7 @@ class Expr(Basic, EvalfMixin):
         obj = self._eval_as_leading_term(x)
         if obj is not None:
             return powsimp(obj, deep=True, combine='exp')
-        raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
+        raise NotImplementedError('as_leading_term({}, {})'.format(self, x))
 
     def _eval_as_leading_term(self, x):
         return self
@@ -3345,8 +3343,8 @@ class Expr(Basic, EvalfMixin):
         if x in c.free_symbols:
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
-                cannot compute leadterm(%s, %s). The coefficient
-                should have been free of %s but got %s""" % (self, x, x, c)))
+                cannot compute leadterm({}, {}). The coefficient
+                should have been free of {} but got {}""".format(self, x, x, c)))
         c = c.subs(d, log(x))
         return c, e
 
@@ -3799,7 +3797,7 @@ class AtomicExpr(Atom, Expr):
         from sympy import Tuple, MatrixExpr
         from sympy.matrices.common import MatrixCommon
         if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
-            return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
+            return super()._eval_derivative_n_times(s, n)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
         else:
@@ -3922,7 +3920,7 @@ def unchanged(func, *args):
     return f.func == func and f.args == args
 
 
-class ExprBuilder(object):
+class ExprBuilder:
     def __init__(self, op, args=[], validator=None, check=True):
         if not hasattr(op, "__call__"):
             raise TypeError("op {} needs to be callable".format(op))

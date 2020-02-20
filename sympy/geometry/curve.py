@@ -6,7 +6,6 @@ Curve
 
 """
 
-from __future__ import division, print_function
 
 from sympy import sqrt
 from sympy.core import sympify, diff

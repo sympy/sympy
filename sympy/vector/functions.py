@@ -112,7 +112,7 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
+            system_set = set()
             expr = sympify(expr)
             # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):

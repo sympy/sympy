@@ -186,7 +186,6 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
 """
 
-from __future__ import print_function, division
 
 from collections import defaultdict
 

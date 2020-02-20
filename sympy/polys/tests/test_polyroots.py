@@ -49,8 +49,8 @@ def test_roots_quadratic():
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c),
-         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c)]
+        [-e*(a + c)/(a - c) - sqrt(a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c),
+         -e*(a + c)/(a - c) + sqrt(a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)]
 
     # check for simplification
     f = Poly(y*x**2 - 2*x - 2*y, x)

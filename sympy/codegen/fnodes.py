@@ -569,7 +569,7 @@ class FFunction(Function):
         if printer._settings['standard'] < self._required_standard:
             raise NotImplementedError("%s requires Fortran %d or newer" %
                                       (name, self._required_standard))
-        return '{0}({1})'.format(name, ', '.join(map(printer._print, self.args)))
+        return '{}({})'.format(name, ', '.join(map(printer._print, self.args)))
 
 
 class F95Function(FFunction):
@@ -606,7 +606,7 @@ class _literal(Float):
     _decimals = None  # type: int
 
     def _fcode(self, printer, *args, **kwargs):
-        mantissa, sgnd_ex = ('%.{0}e'.format(self._decimals) % self).split('e')
+        mantissa, sgnd_ex = ('%.{}e'.format(self._decimals) % self).split('e')
         mantissa = mantissa.strip('0').rstrip('.')
         ex_sgn, ex_num = sgnd_ex[0], sgnd_ex[1:].lstrip('0')
         ex_sgn = '' if ex_sgn == '+' else ex_sgn

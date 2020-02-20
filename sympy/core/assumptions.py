@@ -150,7 +150,6 @@ References
 .. [11] https://en.wikipedia.org/wiki/Algebraic_number
 
 """
-from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
@@ -228,7 +227,7 @@ class StdFactKB(FactKB):
     This is the only kind of FactKB that Basic objects should use.
     """
     def __init__(self, facts=None):
-        super(StdFactKB, self).__init__(_assume_rules)
+        super().__init__(_assume_rules)
         # save a copy of the facts dict
         if not facts:
             self._generator = {}

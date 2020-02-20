@@ -1,6 +1,5 @@
 """Functions to get the correct sympy version to run tests."""
 
-from __future__ import print_function
 
 import os
 import sys

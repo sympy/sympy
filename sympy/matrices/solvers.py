@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
@@ -669,7 +667,7 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
 
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
-        w                = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
+        w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
         arbitrary_matrix = M.__class__(cols, rows, w).T
 
     return A_pinv.multiply(B) + (eye(A.cols) -

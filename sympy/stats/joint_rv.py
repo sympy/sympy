@@ -9,7 +9,6 @@ sympy.stats.crv
 sympy.stats.drv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy)
@@ -310,7 +309,7 @@ class MarginalDistribution(Basic):
     @property
     def symbols(self):
         rvs = self.args[1]
-        return set([rv.pspace.symbol for rv in rvs])
+        return {rv.pspace.symbol for rv in rvs}
 
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]

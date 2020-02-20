@@ -1,5 +1,4 @@
 """Inference in propositional logic"""
-from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
 from sympy.core.compatibility import ordered
@@ -181,12 +180,12 @@ def pl_true(expr, model={}, deep=False):
     expr = sympify(expr)
     if not _validate(expr):
         raise ValueError("%s is not a valid boolean expression" % expr)
-    model = dict((k, v) for k, v in model.items() if v in boolean)
+    model = {k: v for k, v in model.items() if v in boolean}
     result = expr.subs(model)
     if result in boolean:
         return bool(result)
     if deep:
-        model = dict((k, True) for k in result.atoms())
+        model = {k: True for k in result.atoms()}
         if pl_true(result, model):
             if valid(result):
                 return True
@@ -226,7 +225,7 @@ def entails(expr, formula_set={}):
     return not satisfiable(And(*formula_set))
 
 
-class KB(object):
+class KB:
     """Base class for all knowledge bases"""
     def __init__(self, sentence=None):
         self.clauses_ = set()

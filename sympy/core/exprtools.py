@@ -1,6 +1,5 @@
 """Tools for manipulating of large commutative expressions. """
 
-from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
@@ -284,7 +283,7 @@ def decompose_power_rat(expr):
     return base, exp
 
 
-class Factors(object):
+class Factors:
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 
     __slots__ = ('factors', 'gens')
@@ -411,7 +410,7 @@ class Factors(object):
 
     def __repr__(self):  # Factors
         return "Factors({%s})" % ', '.join(
-            ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
+            ['{}: {}'.format(k, v) for k, v in ordered(self.factors.items())])
 
     @property
     def is_zero(self):  # Factors
@@ -812,7 +811,7 @@ class Factors(object):
         return not self == other
 
 
-class Term(object):
+class Term:
     """Efficient representation of ``coeff*(numer/denom)``. """
 
     __slots__ = ('coeff', 'numer', 'denom')
@@ -857,7 +856,7 @@ class Term(object):
         return hash((self.coeff, self.numer, self.denom))
 
     def __repr__(self):  # Term
-        return "Term(%s, %s, %s)" % (self.coeff, self.numer, self.denom)
+        return "Term({}, {}, {})".format(self.coeff, self.numer, self.denom)
 
     def as_expr(self):  # Term
         return self.coeff*(self.numer.as_expr()/self.denom.as_expr())
@@ -1139,7 +1138,7 @@ def _factor_sum_int(expr, **kwargs):
     limits = expr.limits
 
     # get the wrt variables
-    wrt = set([i.args[0] for i in limits])
+    wrt = {i.args[0] for i in limits}
 
     # factor out any common terms that are independent of wrt
     f = factor_terms(result, **kwargs)

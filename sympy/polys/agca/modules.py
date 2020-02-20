@@ -17,7 +17,6 @@ non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
 
-from __future__ import print_function, division
 
 from copy import copy
 
@@ -40,7 +39,7 @@ from sympy.core.basic import _aresame
 ##########################################################################
 
 
-class Module(object):
+class Module:
     """
     Abstract base class for modules.
 
@@ -158,7 +157,7 @@ class Module(object):
         raise NotImplementedError
 
 
-class ModuleElement(object):
+class ModuleElement:
     """
     Base class for module element wrappers.
 
@@ -811,7 +810,7 @@ class SubModule(Module):
         <[x**2, x]>
         """
         if not self.subset(gens):
-            raise ValueError('%s not a subset of %s' % (gens, self))
+            raise ValueError('{} not a subset of {}'.format(gens, self))
         return self.__class__(gens, self.container)
 
     def is_full_module(self):
@@ -905,7 +904,7 @@ class SubModule(Module):
         try:
             e = self.convert(e)
         except CoercionFailed:
-            raise ValueError('%s is not an element of %s' % (e, self))
+            raise ValueError('{} is not an element of {}'.format(e, self))
         return self._in_terms_of_generators(e)
 
     def reduce_element(self, x):
@@ -941,7 +940,7 @@ class SubModule(Module):
         <[x, 1] + <[x**2, x]>>
         """
         if not self.is_submodule(other):
-            raise ValueError('%s not a submodule of %s' % (other, self))
+            raise ValueError('{} not a submodule of {}'.format(other, self))
         return SubQuotientModule(self.gens,
                 self.container.quotient_module(other), **opts)
 
@@ -1354,7 +1353,7 @@ class QuotientModule(Module):
     def __init__(self, ring, base, submodule):
         Module.__init__(self, ring)
         if not base.is_submodule(submodule):
-            raise ValueError('%s is not a submodule of %s' % (submodule, base))
+            raise ValueError('{} is not a submodule of {}'.format(submodule, base))
         self.base = base
         self.killed_module = submodule
         self.rank = base.rank

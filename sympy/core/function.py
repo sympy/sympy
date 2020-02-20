@@ -29,7 +29,6 @@ There are three types of functions implemented in SymPy:
     (x,)
 
 """
-from __future__ import print_function, division
 
 from typing import Any, Dict as tDict, Optional, Set as tSet
 
@@ -180,7 +179,7 @@ class FunctionClass(ManagedProperties):
             nargs = (as_int(nargs),)
         cls._nargs = nargs
 
-        super(FunctionClass, cls).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
@@ -282,7 +281,7 @@ class Application(Basic, metaclass=FunctionClass):
             if evaluated is not None:
                 return evaluated
 
-        obj = super(Application, cls).__new__(cls, *args, **options)
+        obj = super().__new__(cls, *args, **options)
 
         # make nargs uniform here
         sentinel = object()
@@ -463,7 +462,7 @@ class Function(Application, Expr):
                 'given': n})
 
         evaluate = options.get('evaluate', global_parameters.evaluate)
-        result = super(Function, cls).__new__(cls, *args, **options)
+        result = super().__new__(cls, *args, **options)
         if evaluate and isinstance(result, cls) and result.args:
             pr2 = min(cls._should_evalf(a) for a in result.args)
             if pr2 > 0:
@@ -619,8 +618,8 @@ class Function(Application, Expr):
         """
         from sympy.utilities.misc import filldedent
         raise PoleError(filldedent('''
-            Asymptotic expansion of %s around %s is
-            not implemented.''' % (type(self), args0)))
+            Asymptotic expansion of {} around {} is
+            not implemented.'''.format(type(self), args0)))
 
     def _eval_nseries(self, x, n, logx):
         """
@@ -816,9 +815,9 @@ class AppliedUndef(Function):
         args = list(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
         if u:
-            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
+            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction{}: {}'.format(
                 's'*(len(u) > 1), ', '.join(u)))
-        obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
+        obj = super().__new__(cls, *args, **options)
         return obj
 
     def _eval_as_leading_term(self, x):
@@ -850,7 +849,7 @@ class AppliedUndef(Function):
         return True
 
 
-class UndefSageHelper(object):
+class UndefSageHelper:
     """
     Helper to facilitate Sage conversion.
     """
@@ -896,7 +895,7 @@ class UndefinedFunction(FunctionClass):
         __dict__.update({'_kwargs': kwargs})
         # do this for pickling
         __dict__['__module__'] = None
-        obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        obj = super().__new__(mcl, name, bases, __dict__)
         obj.name = name
         obj._sage_ = _undef_sage_helper
         return obj
@@ -1271,7 +1270,7 @@ class Derivative(Expr):
                 count = v
                 prev, prevcount = variable_count[-1]
                 if prevcount != 1:
-                    raise TypeError("tuple {0} followed by number {1}".format((prev, prevcount), v))
+                    raise TypeError("tuple {} followed by number {}".format((prev, prevcount), v))
                 if count == 0:
                     variable_count.pop()
                 else:
@@ -1327,7 +1326,7 @@ class Derivative(Expr):
             if not v._diff_wrt:
                 __ = ''  # filler to make error message neater
                 raise ValueError(filldedent('''
-                    Can't calculate derivative wrt %s.%s''' % (v,
+                    Can't calculate derivative wrt {}.{}'''.format(v,
                     __)))
 
         # We make a special case for 0th derivative, because there is no
@@ -1726,7 +1725,7 @@ class Derivative(Expr):
             # g(x) cannot be replaced with anything that has g(y)
             syms = {vi: Dummy() for vi in self._wrt_variables
                 if not vi.is_Symbol}
-            wrt = set(syms.get(vi, vi) for vi in self._wrt_variables)
+            wrt = {syms.get(vi, vi) for vi in self._wrt_variables}
             forbidden = args[0].xreplace(syms).free_symbols & wrt
             nfree = new.xreplace(syms).free_symbols
             ofree = old.xreplace(syms).free_symbols
@@ -1977,8 +1976,7 @@ class Lambda(Expr):
         def _variables(args):
             if isinstance(args, Tuple):
                 for arg in args:
-                    for a in _variables(arg):
-                        yield a
+                    yield from _variables(arg)
             else:
                 yield args
         return tuple(_variables(self.signature))
@@ -2025,7 +2023,7 @@ class Lambda(Expr):
                     symargmap[par] = arg
                 elif isinstance(par, Tuple):
                     if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
-                        raise BadArgumentsError("Can't match %s and %s" % (args, pars))
+                        raise BadArgumentsError("Can't match {} and {}".format(args, pars))
                     rmatch(par, arg)
 
         rmatch(sig, args)
@@ -2045,7 +2043,7 @@ class Lambda(Expr):
         return self.args == other.xreplace(d).args
 
     def __hash__(self):
-        return super(Lambda, self).__hash__()
+        return super().__hash__()
 
     def _hashable_content(self):
         return (self.expr.xreplace(self.canonical_variables),)
@@ -2295,7 +2293,7 @@ class Subs(Expr):
         return not(self == other)
 
     def __hash__(self):
-        return super(Subs, self).__hash__()
+        return super().__hash__()
 
     def _hashable_content(self):
         return (self._expr.xreplace(self.canonical_variables),
@@ -2309,7 +2307,7 @@ class Subs(Expr):
         #    foo.doit().subs(reps) == foo.subs(reps).doit()
         pt = list(self.point)
         if old in self.variables:
-            if _atomic(new) == set([new]) and not any(
+            if _atomic(new) == {new} and not any(
                     i.has(new) for i in self.args):
                 # the substitution is neutral
                 return self.xreplace({old: new})

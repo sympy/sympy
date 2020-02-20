@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
 import os
 from .compilation import compile_run_strings
 from .util import CompilerNotFoundError
@@ -20,7 +19,7 @@ def has_fortran():
         else:
             if info['exit_status'] != os.EX_OK or 'hello world' not in stdout:
                 if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
-                    raise ValueError("Failed to compile test program:\n%s\n%s\n" % (stdout, stderr))
+                    raise ValueError("Failed to compile test program:\n{}\n{}\n".format(stdout, stderr))
                 has_fortran.result = False
             else:
                 has_fortran.result = True
@@ -46,7 +45,7 @@ def has_c():
         else:
             if info['exit_status'] != os.EX_OK or 'hello world' not in stdout:
                 if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
-                    raise ValueError("Failed to compile test program:\n%s\n%s\n" % (stdout, stderr))
+                    raise ValueError("Failed to compile test program:\n{}\n{}\n".format(stdout, stderr))
                 has_c.result = False
             else:
                 has_c.result = True
@@ -71,7 +70,7 @@ def has_cxx():
         else:
             if info['exit_status'] != os.EX_OK or 'hello world' not in stdout:
                 if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
-                    raise ValueError("Failed to compile test program:\n%s\n%s\n" % (stdout, stderr))
+                    raise ValueError("Failed to compile test program:\n{}\n{}\n".format(stdout, stderr))
                 has_cxx.result = False
             else:
                 has_cxx.result = True

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import sys
 sys._running_pytest = True  # type: ignore
 from distutils.version import LooseVersion as V
@@ -40,7 +38,7 @@ def pytest_report_header(config):
         elif HAS_GMPY == 2:
             import gmpy2 as gmpy
         version = gmpy.version()
-    s += "ground types: %s %s\n" % (GROUND_TYPES, version)
+    s += "ground types: {} {}\n".format(GROUND_TYPES, version)
     return s
 
 

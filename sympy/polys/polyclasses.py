@@ -1,6 +1,5 @@
 """OO layer for several polynomial representations. """
 
-from __future__ import print_function, division
 
 from sympy import oo
 from sympy.core.sympify import CantSympify
@@ -162,7 +161,7 @@ class DMP(PicklableWithSlots, CantSympify):
         self.ring = ring
 
     def __repr__(f):
-        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.dom, f.ring)
+        return "{}({}, {}, {})".format(f.__class__.__name__, f.rep, f.dom, f.ring)
 
     def __hash__(f):
         return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom, f.ring))
@@ -170,7 +169,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
         if not isinstance(g, DMP) or f.lev != g.lev:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if f.dom == g.dom and f.ring == g.ring:
             return f.lev, f.dom, f.per, f.rep, g.rep
@@ -1139,7 +1138,7 @@ class DMF(PicklableWithSlots, CantSympify):
         return num, den, lev
 
     def __repr__(f):
-        return "%s((%s, %s), %s, %s)" % (f.__class__.__name__, f.num, f.den,
+        return "{}(({}, {}), {}, {})".format(f.__class__.__name__, f.num, f.den,
                                          f.dom, f.ring)
 
     def __hash__(f):
@@ -1149,7 +1148,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
@@ -1184,7 +1183,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def frac_unify(f, g):
         """Unify representations of two multivariate fractions. """
         if not isinstance(g, DMF) or f.lev != g.lev:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den),
@@ -1537,7 +1536,7 @@ class ANP(PicklableWithSlots, CantSympify):
         self.dom = dom
 
     def __repr__(f):
-        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.mod, f.dom)
+        return "{}({}, {}, {})".format(f.__class__.__name__, f.rep, f.mod, f.dom)
 
     def __hash__(f):
         return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
@@ -1545,7 +1544,7 @@ class ANP(PicklableWithSlots, CantSympify):
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
         if not isinstance(g, ANP) or f.mod != g.mod:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if f.dom == g.dom:
             return f.dom, f.per, f.rep, g.rep, f.mod

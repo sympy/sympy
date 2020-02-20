@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, pi, Rational
 from sympy.functions import hermite, sqrt, exp, factorial, Abs
 from sympy.physics.quantum.constants import hbar

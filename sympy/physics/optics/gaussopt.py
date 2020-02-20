@@ -21,7 +21,6 @@ image distance
     positive for real images
 """
 
-from __future__ import print_function, division
 
 __all__ = [
     'RayTransferMatrix',

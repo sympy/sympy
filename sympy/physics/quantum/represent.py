@@ -6,7 +6,6 @@ TODO:
 * Document default basis functionality.
 """
 
-from __future__ import print_function, division
 
 from sympy import Add, Expr, I, integrate, Mul, Pow
 from sympy.physics.quantum.dagger import Dagger
@@ -472,7 +471,7 @@ def get_basis(expr, **options):
         if isinstance(expr, KetBase):
             return _make_default(expr.__class__)
         elif isinstance(expr, BraBase):
-            return _make_default((expr.dual_class()))
+            return _make_default(expr.dual_class())
         elif isinstance(expr, Operator):
             state_inst = operators_to_state(expr)
             return (state_inst if state_inst is not None else None)

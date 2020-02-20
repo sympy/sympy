@@ -25,9 +25,9 @@ class Point(Basic):
                     parent_point))
         # Super class construction
         if parent_point is None:
-            obj = super(Point, cls).__new__(cls, Symbol(name), position)
+            obj = super().__new__(cls, Symbol(name), position)
         else:
-            obj = super(Point, cls).__new__(cls, Symbol(name),
+            obj = super().__new__(cls, Symbol(name),
                                             position, parent_point)
         # Decide the object parameters
         obj._name = name

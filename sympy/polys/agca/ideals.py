@@ -1,12 +1,11 @@
 """Computations with ideals of polynomial rings."""
 
-from __future__ import print_function, division
 
 from sympy.core.compatibility import reduce
 from sympy.polys.polyerrors import CoercionFailed
 
 
-class Ideal(object):
+class Ideal:
     """
     Abstract base class for ideals.
 
@@ -112,7 +111,7 @@ class Ideal(object):
         """Helper to check ``J`` is an ideal of our ring."""
         if not isinstance(J, Ideal) or J.ring != self.ring:
             raise ValueError(
-                'J must be an ideal of %s, got %s' % (self.ring, J))
+                'J must be an ideal of {}, got {}'.format(self.ring, J))
 
     def contains(self, elem):
         """

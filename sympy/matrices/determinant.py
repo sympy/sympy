@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from types import FunctionType
 
 from sympy.core.numbers import Float, Integer

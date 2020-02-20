@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Tuple
 
 from sympy.core.sympify import _sympify, sympify
@@ -71,7 +69,7 @@ class AssocOp(Basic):
         elif len(args) == 1:
             return args[0]
 
-        obj = super(AssocOp, cls).__new__(cls, *args)
+        obj = super().__new__(cls, *args)
         if is_commutative is None:
             is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
@@ -446,8 +444,7 @@ class LatticeOp(AssocOp):
             elif arg == ncls.identity:
                 continue
             elif arg.func == ncls:
-                for x in arg.args:
-                    yield x
+                yield from arg.args
             else:
                 yield arg
 

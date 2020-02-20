@@ -1,6 +1,5 @@
 """Definitions of common exceptions for :mod:`sympy.core` module. """
 
-from __future__ import print_function, division
 
 
 class BaseCoreError(Exception):

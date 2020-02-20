@@ -1,4 +1,3 @@
-from __future__ import unicode_literals, print_function
 from sympy.external import import_module
 import os
 
@@ -49,7 +48,7 @@ if cin:
     import sys
     import tempfile
 
-    class BaseParser(object):
+    class BaseParser:
         """Base Class for the C parser"""
 
         def __init__(self):
@@ -59,7 +58,7 @@ if cin:
         def diagnostics(self, out):
             """Diagostics function for the Clang AST"""
             for diag in self.tu.diagnostics:
-                print('%s %s (line %s, col %s) %s' % (
+                print('{} {} (line {}, col {}) {}'.format(
                         {
                             4: 'FATAL',
                             3: 'ERROR',
@@ -82,7 +81,7 @@ if cin:
 
         def __init__(self, name):
             """Initializes the code converter"""
-            super(CCodeConverter, self).__init__()
+            super().__init__()
             self._py_nodes = []
 
         def parse(self, filenames, flags):
@@ -185,7 +184,7 @@ if cin:
                 handler = getattr(self, 'transform_%s' % node.kind.name.lower())
             except AttributeError:
                 print(
-                    "Ignoring node of type %s (%s)" % (
+                    "Ignoring node of type {} ({})".format(
                         node.kind,
                         ' '.join(
                             t.spelling for t in node.get_tokens())

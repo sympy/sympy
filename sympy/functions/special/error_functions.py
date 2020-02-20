@@ -1,7 +1,6 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
@@ -1159,7 +1158,7 @@ class Ei(Function):
         if x0.is_zero:
             f = self._eval_rewrite_as_Si(*self.args)
             return f._eval_nseries(x, n, logx)
-        return super(Ei, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
 
 class expint(Function):
@@ -1336,7 +1335,7 @@ class expint(Function):
             elif nu.is_Integer and nu > 1:
                 f = self._eval_rewrite_as_Ei(*self.args)
                 return f._eval_nseries(x, n, logx)
-        return super(expint, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _sage_(self):
         import sage.all as sage
@@ -1672,7 +1671,7 @@ class TrigonometricIntegral(Function):
         from sympy import log, EulerGamma, Pow
         n += 1
         if self.args[0].subs(x, 0) != 0:
-            return super(TrigonometricIntegral, self)._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx)
         baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
         if self._trigfunc(0) != 0:
             baseseries -= 1
@@ -2299,7 +2298,7 @@ class fresnels(FresnelIntegral):
                 ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
-        return super(fresnels, self)._eval_aseries(n, args0, x, logx)
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class fresnelc(FresnelIntegral):
@@ -2440,7 +2439,7 @@ class fresnelc(FresnelIntegral):
                 ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
-        return super(fresnelc, self)._eval_aseries(n, args0, x, logx)
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 ###############################################################################
@@ -2480,7 +2479,7 @@ class _erfs(Function):
             return (Add(*l))._eval_nseries(x, n, logx) + o
 
         # All other points are not handled
-        return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+        return super()._eval_aseries(n, args0, x, logx)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2528,4 +2527,4 @@ class _eis(Function):
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
-        return super(_eis, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)

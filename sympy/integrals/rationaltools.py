@@ -1,6 +1,5 @@
 """This module implements tools for integrating rational functions. """
 
-from __future__ import print_function, division
 
 from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy
@@ -214,7 +213,7 @@ def ratint_logpart(f, g, x, t=None):
     res, R = resultant(a, b, includePRS=True)
     res = Poly(res, t, composite=False)
 
-    assert res, "BUG: resultant(%s, %s) can't be zero" % (a, b)
+    assert res, "BUG: resultant({}, {}) can't be zero".format(a, b)
 
     R_map, H = {}, []
 

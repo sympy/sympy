@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
@@ -175,7 +173,7 @@ def _separatevars(expr, force):
 
 def _separatevars_dict(expr, symbols):
     if symbols:
-        if not all((t.is_Atom for t in symbols)):
+        if not all(t.is_Atom for t in symbols):
             raise ValueError("symbols must be Atoms.")
         symbols = list(symbols)
     elif symbols is None:
@@ -185,7 +183,7 @@ def _separatevars_dict(expr, symbols):
         if not symbols:
             return None
 
-    ret = dict(((i, []) for i in symbols + ['coeff']))
+    ret = {i: [] for i in symbols + ['coeff']}
 
     for i in Mul.make_args(expr):
         expsym = i.free_symbols
@@ -260,7 +258,7 @@ def posify(eq):
             syms = syms.union(e.atoms(Symbol))
         reps = {}
         for s in syms:
-            reps.update(dict((v, k) for k, v in posify(s)[1].items()))
+            reps.update({v: k for k, v in posify(s)[1].items()})
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
         return f(eq), {r: s for s, r in reps.items()}
@@ -669,8 +667,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         expr = sum_simplify(expr, **kwargs)
 
     if expr.has(Integral):
-        expr = expr.xreplace(dict([
-            (i, factor_terms(i)) for i in expr.atoms(Integral)]))
+        expr = expr.xreplace({
+            i: factor_terms(i) for i in expr.atoms(Integral)})
 
     if expr.has(Product):
         expr = product_simplify(expr)
@@ -725,8 +723,8 @@ def sum_simplify(s, **kwargs):
     from sympy.core.function import expand
 
     if not isinstance(s, Add):
-        s = s.xreplace(dict([(a, sum_simplify(a, **kwargs))
-            for a in s.atoms(Add) if a.has(Sum)]))
+        s = s.xreplace({a: sum_simplify(a, **kwargs)
+            for a in s.atoms(Add) if a.has(Sum)})
     s = expand(s)
     if not isinstance(s, Add):
         return s
@@ -1134,8 +1132,7 @@ def walk(e, *target):
     if isinstance(e, target):
         yield e
         for i in e.args:
-            for w in walk(i, *target):
-                yield w
+            yield from walk(i, *target)
 
 
 def bottom_up(rv, F, atoms=False, nonbasic=False):
@@ -1575,10 +1572,10 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     r = S.ComplexInfinity
                 elif fl < 0:
                     fl = -fl
-                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
                     r = -Rational(str(fl/d))*d
                 elif fl > 0:
-                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
                     r = Integer(0)

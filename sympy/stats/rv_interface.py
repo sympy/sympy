@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from sympy.sets import FiniteSet
 from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
 from .rv import (probability, expectation, density, where, given, pspace, cdf,

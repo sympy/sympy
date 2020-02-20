@@ -1,6 +1,3 @@
-from __future__ import (absolute_import, print_function)
-
-
 import sympy as sp
 from sympy.core.compatibility import exec_
 from sympy.codegen.ast import Assignment

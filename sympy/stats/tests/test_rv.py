@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from sympy import (S, Symbol, Interval, exp,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta, Lambda, log, pi, FallingFactorial, Rational)
@@ -38,9 +37,9 @@ def test_where():
 def test_random_symbols():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
-    assert set(random_symbols(2*X + 1)) == set((X,))
-    assert set(random_symbols(2*X + Y)) == set((X, Y))
-    assert set(random_symbols(2*X + Y.symbol)) == set((X,))
+    assert set(random_symbols(2*X + 1)) == {X}
+    assert set(random_symbols(2*X + Y)) == {X, Y}
+    assert set(random_symbols(2*X + Y.symbol)) == {X}
     assert set(random_symbols(2)) == set()
 
 def test_characteristic_function():

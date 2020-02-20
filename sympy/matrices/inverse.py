@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core.numbers import mod_inverse
 
 from .common import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError

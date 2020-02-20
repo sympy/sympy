@@ -243,7 +243,6 @@ res_z(f, g, x)
 """
 
 
-from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
 from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
@@ -536,7 +535,7 @@ def res(f, g, x):
 
     """
     if f == 0 or g == 0:
-         raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
+         raise PolynomialError("The resultant of {} and {} is not defined".format(f, g))
     else:
         return sylvester(f, g, x, 1).det()
 
@@ -1381,7 +1380,7 @@ def euclid_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         euclid_seq.append( a2 )
         d2 =  degree(a2, x)                   # actual degree of a2
 
@@ -1929,7 +1928,7 @@ def subresultants_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         sigma3 =  LC(a2, x)                   # leading coeff of a2
         d2 =  degree(a2, x)                   # actual degree of a2
         p1 = d1 - d2                          # degree difference

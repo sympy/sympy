@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
 from sympy.core.function import Function, ArgumentIndexError
@@ -2522,7 +2520,7 @@ class atan(InverseTrigonometricFunction):
         elif args0[0] is S.NegativeInfinity:
             return (-S.Pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
-            return super(atan, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
 
     def inverse(self, argindex=1):
         """
@@ -3155,4 +3153,4 @@ class atan2(InverseTrigonometricFunction):
     def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
-            return super(atan2, self)._eval_evalf(prec)
+            return super()._eval_evalf(prec)

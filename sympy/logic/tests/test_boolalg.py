@@ -947,19 +947,19 @@ def test_as_Boolean():
 
 
 def test_binary_symbols():
-    assert ITE(x < 1, y, z).binary_symbols == set((y, z))
+    assert ITE(x < 1, y, z).binary_symbols == {y, z}
     for f in (Eq, Ne):
         assert f(x, 1).binary_symbols == set()
-        assert f(x, True).binary_symbols == set([x])
-        assert f(x, False).binary_symbols == set([x])
+        assert f(x, True).binary_symbols == {x}
+        assert f(x, False).binary_symbols == {x}
     assert S.true.binary_symbols == set()
     assert S.false.binary_symbols == set()
-    assert x.binary_symbols == set([x])
-    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == set([x, y])
+    assert x.binary_symbols == {x}
+    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
     assert Q.is_true(x < 1).binary_symbols == set()
-    assert Q.is_true(x).binary_symbols == set([x])
-    assert Q.is_true(Eq(x, True)).binary_symbols == set([x])
+    assert Q.is_true(x).binary_symbols == {x}
+    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 

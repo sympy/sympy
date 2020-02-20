@@ -1,6 +1,5 @@
 """Tools to assist importing optional external modules."""
 
-from __future__ import print_function, division
 import sys
 from distutils.version import LooseVersion
 
@@ -148,7 +147,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
     except catch as e:
         if warn_not_installed:
             warnings.warn(
-                "%s module could not be used (%s)" % (module, repr(e)),
+                "{} module could not be used ({})".format(module, repr(e)),
                 stacklevel=2)
         return
 

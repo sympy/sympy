@@ -1,6 +1,5 @@
 """Tools for setting up interactive sessions. """
 
-from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
@@ -290,7 +289,7 @@ def init_python_session():
 
                     try:
                         readline.read_history_file(history)
-                    except IOError:
+                    except OSError:
                         pass
 
                     atexit.register(readline.write_history_file, history)

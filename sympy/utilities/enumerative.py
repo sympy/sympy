@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 """
 Algorithms and classes to support enumerative combinatorics.
 
@@ -91,7 +89,7 @@ time that would be spent skipping over zeros.
 
 """
 
-class PartComponent(object):
+class PartComponent:
     """Internal class used in support of the multiset partitions
     enumerators and the associated visitor functions.
 

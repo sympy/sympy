@@ -46,7 +46,6 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function        -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 
@@ -735,10 +734,10 @@ def rsolve(f, y, init=None):
                         kspec = int(result[k])
                     else:
                         raise ValueError(
-                            "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
+                            "'{}({} + k)' expected, got '{}'".format(y.func, n, h))
                 else:
                     raise ValueError(
-                        "'%s' expected, got '%s'" % (y.func, h.func))
+                        "'{}' expected, got '{}'".format(y.func, h.func))
             else:
                 coeff *= h
 

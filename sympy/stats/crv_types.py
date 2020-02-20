@@ -52,7 +52,6 @@ Weibull
 WignerSemicircle
 """
 
-from __future__ import print_function, division
 
 import random
 
@@ -2867,7 +2866,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, s = self.mean, self.shape
-        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/(2*pi*x**3))
 
     def sample(self, size=()):
         scipy = import_module('scipy')

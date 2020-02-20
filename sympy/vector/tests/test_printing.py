@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy import Integral, latex, Function
 from sympy import pretty as xpretty
 from sympy.vector import CoordSys3D, Vector, express
@@ -113,33 +112,33 @@ def test_str_printing():
 
 @XFAIL
 def test_pretty_printing_ascii():
-    assert pretty(v[0]) == u'0'
-    assert pretty(v[1]) == u'i_N'
-    assert pretty(v[5]) == u'(a) i_N + (-b) j_N'
+    assert pretty(v[0]) == '0'
+    assert pretty(v[1]) == 'i_N'
+    assert pretty(v[5]) == '(a) i_N + (-b) j_N'
     assert pretty(v[8]) == pretty_v_8
-    assert pretty(v[2]) == u'(-1) i_N'
+    assert pretty(v[2]) == '(-1) i_N'
     assert pretty(v[11]) == pretty_v_11
     assert pretty(s) == pretty_s
-    assert pretty(d[0]) == u'(0|0)'
-    assert pretty(d[5]) == u'(a) (i_N|k_N) + (-b) (j_N|k_N)'
+    assert pretty(d[0]) == '(0|0)'
+    assert pretty(d[5]) == '(a) (i_N|k_N) + (-b) (j_N|k_N)'
     assert pretty(d[7]) == pretty_d_7
-    assert pretty(d[10]) == u'(cos(a)) (i_C|k_N) + (-sin(a)) (j_C|k_N)'
+    assert pretty(d[10]) == '(cos(a)) (i_C|k_N) + (-sin(a)) (j_C|k_N)'
 
 
 def test_pretty_print_unicode_v():
-    assert upretty(v[0]) == u'0'
-    assert upretty(v[1]) == u'i_N'
-    assert upretty(v[5]) == u'(a) i_N + (-b) j_N'
+    assert upretty(v[0]) == '0'
+    assert upretty(v[1]) == 'i_N'
+    assert upretty(v[5]) == '(a) i_N + (-b) j_N'
     # Make sure the printing works in other objects
-    assert upretty(v[5].args) == u'((a) i_N, (-b) j_N)'
+    assert upretty(v[5].args) == '((a) i_N, (-b) j_N)'
     assert upretty(v[8]) == upretty_v_8
-    assert upretty(v[2]) == u'(-1) i_N'
+    assert upretty(v[2]) == '(-1) i_N'
     assert upretty(v[11]) == upretty_v_11
     assert upretty(s) == upretty_s
-    assert upretty(d[0]) == u'(0|0)'
-    assert upretty(d[5]) == u'(a) (i_N|k_N) + (-b) (j_N|k_N)'
+    assert upretty(d[0]) == '(0|0)'
+    assert upretty(d[5]) == '(a) (i_N|k_N) + (-b) (j_N|k_N)'
     assert upretty(d[7]) == upretty_d_7
-    assert upretty(d[10]) == u'(cos(a)) (i_C|k_N) + (-sin(a)) (j_C|k_N)'
+    assert upretty(d[10]) == '(cos(a)) (i_C|k_N) + (-sin(a)) (j_C|k_N)'
 
 
 def test_latex_printing():

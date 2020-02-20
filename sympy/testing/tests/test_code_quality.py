@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
@@ -198,15 +196,15 @@ def test_files():
         "setupegg.py",
     ]]
     # Files to exclude from all tests
-    exclude = set([
+    exclude = {
         "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevparser.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevlexer.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevlistener.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)slatex%(sep)s_antlr%(sep)slatexparser.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)slatex%(sep)s_antlr%(sep)slatexlexer.py" % sepd,
-    ])
+    }
     # Files to exclude from the implicit import test
-    import_exclude = set([
+    import_exclude = {
         # glob imports are allowed in top-level __init__.py:
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
@@ -236,9 +234,9 @@ def test_files():
         "%(sep)sutilities%(sep)stmpfiles.py" % sepd,
         "%(sep)sutilities%(sep)squality_unicode.py" % sepd,
         "%(sep)sutilities%(sep)sbenchmarking.py" % sepd,
-    ])
+    }
     check_files(top_level_files, test)
-    check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")
+    check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh"}, "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
@@ -134,7 +132,7 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     expr_str = purestr(expr)
     if repeat:
         expr_str += '_%s' % str(pos)
-    return '"%s" [%s];' % (expr_str, attrprint(style))
+    return '"{}" [{}];'.format(expr_str, attrprint(style))
 
 
 def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True):
@@ -158,9 +156,9 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
         expr_str, arg_strs = purestr(expr, with_args=True)
         if repeat:
             expr_str += '_%s' % str(pos)
-            arg_strs = ['%s_%s' % (a, str(pos + (i,)))
+            arg_strs = ['{}_{}'.format(a, str(pos + (i,)))
                 for i, a in enumerate(arg_strs)]
-        return ['"%s" -> "%s";' % (expr_str, a) for a in arg_strs]
+        return ['"{}" -> "{}";'.format(expr_str, a) for a in arg_strs]
 
 template = \
 """digraph{

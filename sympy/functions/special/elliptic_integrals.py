@@ -1,6 +1,5 @@
 """ Elliptic Integrals. """
 
-from __future__ import print_function, division
 
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
@@ -295,7 +294,7 @@ class elliptic_e(Function):
         from sympy.simplify import hyperexpand
         if len(self.args) == 1:
             return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
-        return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
+        return super()._eval_nseries(x, n=n, logx=logx)
 
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:

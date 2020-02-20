@@ -1,6 +1,5 @@
 """Implementation of :class:`Domain` class. """
 
-from __future__ import print_function, division
 
 from typing import Any, Optional, Type
 
@@ -14,7 +13,7 @@ from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
-class Domain(object):
+class Domain:
     """Represents an abstract domain. """
 
     dtype = None  # type: Optional[Type]
@@ -100,7 +99,7 @@ class Domain(object):
             if result is not None:
                 return result
 
-        raise CoercionFailed("can't convert %s of type %s from %s to %s" % (element, type(element), base, self))
+        raise CoercionFailed("can't convert {} of type {} from {} to {}".format(element, type(element), base, self))
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
@@ -157,7 +156,7 @@ class Domain(object):
                 except (TypeError, ValueError):
                     pass
 
-        raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
+        raise CoercionFailed("can't convert {} of type {} to {}".format(element, type(element), self))
 
     def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
@@ -241,7 +240,7 @@ class Domain(object):
 
     def unify_with_symbols(K0, K1, symbols):
         if (K0.is_Composite and (set(K0.symbols) & set(symbols))) or (K1.is_Composite and (set(K1.symbols) & set(symbols))):
-            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
+            raise UnificationFailed("can't unify {} with {}, given {} generators".format(K0, K1, tuple(symbols)))
 
         return K0.unify(K1)
 

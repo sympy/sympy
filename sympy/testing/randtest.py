@@ -1,6 +1,5 @@
 """ Helpers for randomized testing """
 
-from __future__ import print_function, division
 
 from random import uniform, Random, randrange, randint
 

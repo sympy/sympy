@@ -69,10 +69,10 @@ class GLSLPrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "float {0} = {1};".format(name, value)
+        return "float {} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -100,7 +100,7 @@ class GLSLPrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 
@@ -115,22 +115,22 @@ class GLSLPrinter(CodePrinter):
             return self._print(A[0]);
         if A.rows <= 4 and A.cols <= 4 and glsl_types:
             if A.rows == 1:
-                return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
+                return 'vec{}{}'.format(A.cols, A.table(self,rowstart='(',rowend=')'))
             elif A.rows == A.cols:
                 return 'mat%s(%s)' %   (A.rows, A.table(self,rowsep=', ',
                                         rowstart='',rowend=''))
             else:
-                return 'mat%sx%s(%s)' % (A.cols, A.rows,
+                return 'mat{}x{}({})'.format(A.cols, A.rows,
                                         A.table(self,rowsep=', ',
                                         rowstart='',rowend=''))
         elif A.cols == 1 or A.rows == 1:
-            return 'float[%s](%s)' % (A.cols*A.rows, A.table(self,rowsep=mat_separator,rowstart='',rowend=''))
+            return 'float[{}]({})'.format(A.cols*A.rows, A.table(self,rowsep=mat_separator,rowstart='',rowend=''))
         elif not self._settings['mat_nested']:
-            return 'float[%s](\n%s\n) /* a %sx%s matrix */' % (A.cols*A.rows,
+            return 'float[{}](\n{}\n) /* a {}x{} matrix */'.format(A.cols*A.rows,
                             A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
                             A.rows,A.cols)
         elif self._settings['mat_nested']:
-            return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
+            return 'float[{}][{}](\n{}\n)'.format(A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
 
     _print_Matrix = \
         _print_DenseMatrix = \
@@ -161,18 +161,18 @@ class GLSLPrinter(CodePrinter):
         pnt = self._print(expr.parent)
         if glsl_types and ((rows <= 4 and cols <=4) or nest):
             # print('end _print_MatrixElement case A',nest,glsl_types)
-            return "%s[%s][%s]" % (pnt, i, j)
+            return "{}[{}][{}]".format(pnt, i, j)
         else:
             # print('end _print_MatrixElement case B',nest,glsl_types)
-            return "{0}[{1}]".format(pnt, i + j*rows)
+            return "{}[{}]".format(pnt, i + j*rows)
 
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
         glsl_types = self._settings['glsl_types']
         if len(expr) <= 4 and glsl_types:
-            return 'vec%s(%s)' % (len(expr),l)
+            return 'vec{}({})'.format(len(expr),l)
         else:
-            return 'float[%s](%s)' % (len(expr),l)
+            return 'float[{}]({})'.format(len(expr),l)
 
     _print_tuple = _print_list
     _print_Tuple = _print_list
@@ -204,7 +204,7 @@ class GLSLPrinter(CodePrinter):
                 try:
                     return func(*[self.parenthesize(item, 0) for item in func_args])
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(func_args, ", "))
+                    return "{}({})".format(func, self.stringify(func_args, ", "))
         elif isinstance(func, Lambda):
             # inlined function
             return self._print(func(*func_args))
@@ -238,7 +238,7 @@ class GLSLPrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c),
+            ecpairs = ["(({}) ? (\n{}\n)\n".format(self._print(c),
                                                self._print(e))
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
@@ -255,7 +255,7 @@ class GLSLPrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label),
+        return "{}[{}]".format(self._print(expr.base.label),
                            self._print(elem))
 
     def _print_Pow(self, expr):
@@ -279,13 +279,13 @@ class GLSLPrinter(CodePrinter):
         return str(float(expr))
 
     def _print_Rational(self, expr):
-        return "%s.0/%s.0" % (expr.p, expr.q)
+        return "{}.0/{}.0".format(expr.p, expr.q)
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Add(self, expr, order=None):
         if self._settings['use_operators']:

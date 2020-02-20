@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
 from sympy.functions.special.spherical_harmonics import Ynm
 

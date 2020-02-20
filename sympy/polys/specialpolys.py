@@ -1,6 +1,5 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.core.containers import Tuple
@@ -101,7 +100,7 @@ def symmetric_poly(n, *gens, **args):
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
-        raise ValueError("can't generate symmetric polynomial of order %s for %s" % (n, gens))
+        raise ValueError("can't generate symmetric polynomial of order {} for {}".format(n, gens))
     elif not n:
         poly = S.One
     else:
@@ -149,12 +148,12 @@ def interpolating_poly(n, x, X='x', Y='y'):
     ok = getattr(x, 'free_symbols', None)
 
     if isinstance(X, str):
-        X = symbols("%s:%s" % (X, n))
+        X = symbols("{}:{}".format(X, n))
     elif ok and ok & Tuple(*X).free_symbols:
         ok = False
 
     if isinstance(Y, str):
-        Y = symbols("%s:%s" % (Y, n))
+        Y = symbols("{}:{}".format(Y, n))
     elif ok and ok & Tuple(*Y).free_symbols:
         ok = False
 

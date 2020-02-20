@@ -1,5 +1,4 @@
 # conceal the implicit import from the code quality tester
-from __future__ import print_function, division
 
 from sympy import (exp, gamma, integrate, oo, pi, sqrt, Symbol, symbols,
         besseli, laplace_transform, fourier_transform, mellin_transform,
@@ -254,4 +253,4 @@ if __name__ == '__main__':
     timings.sort(key=lambda x: -x[0])
 
     for ti, string in timings:
-        print('%.2fs %s' % (ti, string))
+        print('{:.2f}s {}'.format(ti, string))

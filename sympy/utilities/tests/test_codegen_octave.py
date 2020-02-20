@@ -470,8 +470,8 @@ def test_m_loops():
         '  end\n'
         'end\n'
     )
-    assert (source == expected % {'rhs': 'A(%s, %s).*x(j)' % (i, j)} or
-            source == expected % {'rhs': 'x(j).*A(%s, %s)' % (i, j)})
+    assert (source == expected % {'rhs': 'A({}, {}).*x(j)'.format(i, j)} or
+            source == expected % {'rhs': 'x(j).*A({}, {})'.format(i, j)})
 
 
 def test_m_tensor_loops_multiple_contractions():

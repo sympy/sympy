@@ -8,7 +8,6 @@ using the functions defined in math.h where possible.
 
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -115,10 +114,10 @@ class RCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "{0} = {1};".format(name, value)
+        return "{} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -151,7 +150,7 @@ class RCodePrinter(CodePrinter):
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return '%s^%s' % (self.parenthesize(expr.base, PREC),
+            return '{}^{}'.format(self.parenthesize(expr.base, PREC),
                                  self.parenthesize(expr.exp, PREC))
 
 
@@ -161,7 +160,7 @@ class RCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
+        return "{}[{}]".format(self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
@@ -213,7 +212,7 @@ class RCodePrinter(CodePrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return self._get_statement("{} = {}".format(lhs_code, rhs_code))
 
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
@@ -221,10 +220,10 @@ class RCodePrinter(CodePrinter):
         if expr.args[-1].cond == True:
             last_line = "%s" % self._print(expr.args[-1].expr)
         else:
-            last_line = "ifelse(%s,%s,NA)" % (self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
+            last_line = "ifelse({},{},NA)".format(self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
         code=last_line
         for e, c in reversed(expr.args[:-1]):
-            code= "ifelse(%s,%s," % (self._print(c), self._print(e))+code+")"
+            code= "ifelse({},{},".format(self._print(c), self._print(e))+code+")"
         return(code)
 
     def _print_ITE(self, expr):
@@ -233,13 +232,13 @@ class RCodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+        return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
             strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-        name = super(RCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
         if expr in self._dereference:
-            return '(*{0})'.format(name)
+            return '(*{})'.format(name)
         else:
             return name
 
@@ -247,7 +246,7 @@ class RCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
@@ -261,7 +260,7 @@ class RCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         op = expr.op
         rhs_code = self._print(expr.rhs)
-        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+        return "{} {} {};".format(lhs_code, op, rhs_code)
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -299,7 +298,7 @@ class RCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 

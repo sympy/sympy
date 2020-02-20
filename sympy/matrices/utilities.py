@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import os
 
 from sympy.core.function import expand_mul

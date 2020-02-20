@@ -1,6 +1,5 @@
 """Implementation of :class:`AlgebraicField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
@@ -77,7 +76,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             return self(to_number_field(a, self.ext).native_coeffs())
         except (NotAlgebraic, IsomorphismFailed):
             raise CoercionFailed(
-                "%s is not a valid algebraic number in %s" % (a, self))
+                "{} is not a valid algebraic number in {}".format(a, self))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """

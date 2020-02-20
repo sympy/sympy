@@ -106,13 +106,13 @@ def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
            {(-133, -11), (5, -57)}
-    assert diop_solve(6*x*y + 2*x + 3*y + 1) == set([])
+    assert diop_solve(6*x*y + 2*x + 3*y + 1) == set()
     assert diop_solve(-13*x*y + 2*x - 4*y - 54) == {(27, 0)}
     assert diop_solve(-27*x*y - 30*x - 12*y - 54) == {(-14, -1)}
     assert diop_solve(2*x*y + 5*x + 56*y + 7) == {(-161, -3), (-47, -6), (-35, -12),
                                                   (-29, -69), (-27, 64), (-21, 7),
                                                   (-9, 1), (105, -2)}
-    assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
+    assert diop_solve(6*x*y + 9*x + 2*y + 3) == set()
     assert diop_solve(x*y + x + y + 1) == {(-1, t), (t, -1)}
     assert diophantine(48*x*y)
 
@@ -121,7 +121,7 @@ def test_quadratic_elliptical_case():
     # Elliptical case: B**2 - 4AC < 0
 
     assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == {(-11, -1)}
-    assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
+    assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set()
     assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == {(-1, -1)}
     assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == {(-15, 6)}
     assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == \
@@ -480,7 +480,7 @@ def test_diophantine():
     assert check_solutions((x - y)*(y - z)*(z - x))
     assert check_solutions((x - y)*(x**2 + y**2 - z**2))
     assert check_solutions((x - 3*y + 7*z)*(x**2 + y**2 - z**2))
-    assert check_solutions((x**2 - 3*y**2 - 1))
+    assert check_solutions(x**2 - 3*y**2 - 1)
     assert check_solutions(y**2 + 7*x*y)
     assert check_solutions(x**2 - 3*x*y + y**2)
     assert check_solutions(z*(x**2 - y**2 - 15))
@@ -821,7 +821,7 @@ def test_issue_9539():
 
 def test_issue_8943():
     assert diophantine(
-        (3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x))) == \
+        3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x)) == \
            {(0, 0, 0)}
 
 

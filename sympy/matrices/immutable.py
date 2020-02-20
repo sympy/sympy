@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from typing import Callable
 
 from sympy.core import Basic, Dict, Integer, S, Tuple
@@ -122,7 +120,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
         return self
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super(ImmutableDenseMatrix, self).is_diagonalizable(
+        return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
     is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
@@ -184,7 +182,7 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
         return self
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super(ImmutableSparseMatrix, self).is_diagonalizable(
+        return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
     is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)

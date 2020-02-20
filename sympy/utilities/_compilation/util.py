@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
-
 from collections import namedtuple
 from hashlib import sha256
 import os
@@ -25,7 +23,7 @@ if sys.version_info[0] == 2:
     class FileNotFoundError(IOError):
         pass
 
-    class TemporaryDirectory(object):
+    class TemporaryDirectory:
         def __init__(self):
             self.path = tempfile.mkdtemp()
         def __enter__(self):

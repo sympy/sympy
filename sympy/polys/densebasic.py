@@ -1,6 +1,5 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
 
 from sympy import oo
 from sympy.core import igcd
@@ -213,7 +212,7 @@ def dmp_degree_in(f, j, u):
     if not j:
         return dmp_degree(f, u)
     if j < 0 or j > u:
-        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
+        raise IndexError("0 <= j <= {} expected, got {}".format(u, j))
 
     return _rec_degree_in(f, u, 0, j)
 
@@ -314,13 +313,13 @@ def _rec_validate(f, g, i, K):
     """Recursive helper for :func:`dmp_validate`."""
     if type(g) is not list:
         if K is not None and not K.of_type(g):
-            raise TypeError("%s in %s in not of type %s" % (g, f, K.dtype))
+            raise TypeError("{} in {} in not of type {}".format(g, f, K.dtype))
 
-        return set([i - 1])
+        return {i - 1}
     elif not g:
-        return set([i])
+        return {i}
     else:
-        levels = set([])
+        levels = set()
 
         for c in g:
             levels |= _rec_validate(f, c, i + 1, K)
@@ -1839,7 +1838,7 @@ def dmp_slice(f, m, n, u, K):
 def dmp_slice_in(f, m, n, j, u, K):
     """Take a continuous subsequence of terms of ``f`` in ``x_j`` in ``K[X]``. """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("-{} <= j < {} expected, got {}".format(u, u, j))
 
     if not u:
         return dup_slice(f, m, n, K)

@@ -8,7 +8,6 @@ as attributes of the coordinate systems (eg `R2_r.x` and `R2_p.theta`), or by
 using the usual `coord_sys.coord_function(index, name)` interface.
 """
 
-from __future__ import print_function, division
 
 from typing import Any
 

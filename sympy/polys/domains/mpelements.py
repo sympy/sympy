@@ -1,6 +1,5 @@
 """Real and complex elements. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.utilities import public

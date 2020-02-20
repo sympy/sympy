@@ -16,11 +16,10 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
-from __future__ import print_function, division
 
 from sympy.utilities.iterables import kbins
 
-class Compound(object):
+class Compound:
     """ A little class to represent an interior node in the tree
 
     This is analogous to SymPy.Basic for non-Atoms
@@ -37,9 +36,9 @@ class Compound(object):
         return hash((type(self), self.op, self.args))
 
     def __str__(self):
-        return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
+        return "{}[{}]".format(str(self.op), ', '.join(map(str, self.args)))
 
-class Variable(object):
+class Variable:
     """ A Wild token """
     def __init__(self, arg):
         self.arg = arg
@@ -53,7 +52,7 @@ class Variable(object):
     def __str__(self):
         return "Variable(%s)" % str(self.arg)
 
-class CondVariable(object):
+class CondVariable:
     """ A wild token that matches conditionally
 
     arg   - a wild token
@@ -102,11 +101,9 @@ def unify(x, y, s=None, **fns):
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
-        for match in unify_var(x, y, s, **fns):
-            yield match
+        yield from unify_var(x, y, s, **fns)
     elif isinstance(y, (Variable, CondVariable)):
-        for match in unify_var(y, x, s, **fns):
-            yield match
+        yield from unify_var(y, x, s, **fns)
     elif isinstance(x, Compound) and isinstance(y, Compound):
         is_commutative = fns.get('is_commutative', lambda x: False)
         is_associative = fns.get('is_associative', lambda x: False)
@@ -120,24 +117,20 @@ def unify(x, y, s=None, **fns):
                 for aaargs, bbargs in combs:
                     aa = [unpack(Compound(a.op, arg)) for arg in aaargs]
                     bb = [unpack(Compound(b.op, arg)) for arg in bbargs]
-                    for match in unify(aa, bb, sop, **fns):
-                        yield match
+                    yield from unify(aa, bb, sop, **fns)
             elif len(x.args) == len(y.args):
-                for match in unify(x.args, y.args, sop, **fns):
-                    yield match
+                yield from unify(x.args, y.args, sop, **fns)
 
     elif is_args(x) and is_args(y) and len(x) == len(y):
         if len(x) == 0:
             yield s
         else:
             for shead in unify(x[0], y[0], s, **fns):
-                for match in unify(x[1:], y[1:], shead, **fns):
-                    yield match
+                yield from unify(x[1:], y[1:], shead, **fns)
 
 def unify_var(var, x, s, **fns):
     if var in s:
-        for match in unify(s[var], x, s, **fns):
-            yield match
+        yield from unify(s[var], x, s, **fns)
     elif occur_check(var, x):
         pass
     elif isinstance(var, CondVariable) and var.valid(x):

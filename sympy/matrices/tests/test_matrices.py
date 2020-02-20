@@ -1556,11 +1556,11 @@ def test_issue_3950():
 
 
 def test_issue_3981():
-    class Index1(object):
+    class Index1:
         def __index__(self):
             return 1
 
-    class Index2(object):
+    class Index2:
         def __index__(self):
             return 2
     index1 = Index1()
@@ -2240,7 +2240,7 @@ def test_errors():
     raises(ShapeError,
         lambda: Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
     raises(TypeError, lambda: Matrix([[1, 2], [3, 4]]).copyin_list([0,
-           1], set([])))
+           1], set()))
     raises(NonSquareMatrixError, lambda: Matrix([[1, 2, 3], [2, 3, 0]]).inv())
     raises(ShapeError,
         lambda: Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]])))
@@ -2914,7 +2914,7 @@ def test_issue_5964():
 
 
 def test_issue_7604():
-    x, y = symbols(u"x y")
+    x, y = symbols("x y")
     assert sstr(Matrix([[x, 2*y], [y**2, x + 3]])) == \
         'Matrix([\n[   x,   2*y],\n[y**2, x + 3]])'
 

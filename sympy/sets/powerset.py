@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
@@ -80,7 +78,7 @@ class PowerSet(Set):
         if not isinstance(arg, Set):
             raise ValueError('{} must be a set.'.format(arg))
 
-        return super(PowerSet, cls).__new__(cls, arg)
+        return super().__new__(cls, arg)
 
     @property
     def arg(self):

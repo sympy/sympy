@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.compatibility import as_int
 from sympy.core.function import Function, ArgumentIndexError
@@ -194,7 +192,7 @@ class gamma(Function):
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):
-            return super(gamma, self)._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx)
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
@@ -642,7 +640,7 @@ class polygamma(Function):
         # the mpmath polygamma implementation valid only for nonnegative integers
         if n.is_number and n.is_real:
             if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super(polygamma, self)._eval_evalf(prec)
+                return super()._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -672,7 +670,7 @@ class polygamma(Function):
         from sympy import Order
         if args0[1] != oo or not \
                 (self.args[0].is_Integer and self.args[0].is_nonnegative):
-            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
         z = self.args[1]
         N = self.args[0]
 
@@ -993,12 +991,12 @@ class loggamma(Function):
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
-        return super(loggamma, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
         if args0[0] != oo:
-            return super(loggamma, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
         m = min(n, ceiling((n + S.One)/2))
         r = log(z)*(z - S.Half) - z + log(2*pi)/2

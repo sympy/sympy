@@ -1,6 +1,5 @@
 """1D quantum particle in a box."""
 
-from __future__ import print_function, division
 
 from sympy import Symbol, pi, sqrt, sin, Interval, S
 

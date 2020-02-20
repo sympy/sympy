@@ -1,6 +1,5 @@
 """Implementation of RootOf class and related tools. """
 
-from __future__ import print_function, division
 
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
@@ -31,7 +30,7 @@ __all__ = ['CRootOf']
 
 
 
-class _pure_key_dict(object):
+class _pure_key_dict:
     """A minimal dictionary that makes sure that the key is a
     univariate PurePoly instance.
 
@@ -558,7 +557,7 @@ class ComplexRootOf(RootOf):
         # with the indexing method but assert that the desired state
         # is not broken
         C, F = 0, 1  # location of ComplexInterval and factor
-        fs = set([i[F] for i in complexes])
+        fs = {i[F] for i in complexes}
         for i in range(1, len(complexes)):
             if complexes[i][F] != complexes[i - 1][F]:
                 # if this fails the factors of a root were not

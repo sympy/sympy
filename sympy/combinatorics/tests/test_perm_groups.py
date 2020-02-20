@@ -1101,17 +1101,17 @@ def test_is_symmetric():
 def test_conjugacy_class():
     S = SymmetricGroup(4)
     x = Permutation(1, 2, 3)
-    C = set([Permutation(0, 1, 2, size = 4), Permutation(0, 1, 3),
+    C = {Permutation(0, 1, 2, size = 4), Permutation(0, 1, 3),
              Permutation(0, 2, 1, size = 4), Permutation(0, 2, 3),
              Permutation(0, 3, 1), Permutation(0, 3, 2),
-             Permutation(1, 2, 3), Permutation(1, 3, 2)])
+             Permutation(1, 2, 3), Permutation(1, 3, 2)}
     assert S.conjugacy_class(x) == C
 
 def test_conjugacy_classes():
     S = SymmetricGroup(3)
-    expected = [set([Permutation(size = 3)]),
-         set([Permutation(0, 1, size = 3), Permutation(0, 2), Permutation(1, 2)]),
-         set([Permutation(0, 1, 2), Permutation(0, 2, 1)])]
+    expected = [{Permutation(size = 3)},
+         {Permutation(0, 1, size = 3), Permutation(0, 2), Permutation(1, 2)},
+         {Permutation(0, 1, 2), Permutation(0, 2, 1)}]
     computed = S.conjugacy_classes()
 
     assert len(expected) == len(computed)

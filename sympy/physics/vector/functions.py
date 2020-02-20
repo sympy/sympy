@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy import integrate, trigsimp
@@ -121,7 +119,7 @@ def express(expr, frame, frame2=None, variables=False):
     else:
         if variables:
             #Given expr is a scalar field
-            frame_set = set([])
+            frame_set = set()
             expr = sympify(expr)
             #Substitute all the coordinate variables
             for x in expr.free_symbols:

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import S, Dict, Basic, Tuple
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray

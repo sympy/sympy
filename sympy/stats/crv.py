@@ -8,7 +8,6 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -348,7 +347,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
@@ -468,7 +467,7 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
             # create a clone of the variable to
@@ -518,7 +517,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return expr
 
         expr = _sympify(expr)
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         x = self.value.symbol
         try:

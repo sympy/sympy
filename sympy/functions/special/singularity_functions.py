@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, sympify, oo, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not

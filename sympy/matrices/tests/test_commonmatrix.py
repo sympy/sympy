@@ -447,10 +447,10 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2, 2, [0, 1, 2, 3]
-        ).values()) == set([1, 2, 3])
+        ).values()) == {1, 2, 3}
     x = Symbol('x', real=True)
     assert set(PropertiesOnlyMatrix(2, 2, [x, 0, 0, 1]
-        ).values()) == set([x, 1])
+        ).values()) == {x, 1}
 
 
 # OperationsOnlyMatrix tests
@@ -1405,7 +1405,7 @@ def test_singular_values():
     A[2, 2] = 5
     vals = A.singular_values()
     # since Abs(x) cannot be sorted, test set equality
-    assert set(vals) == set([5, 1, Abs(x)])
+    assert set(vals) == {5, 1, Abs(x)}
 
     A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
     vals = [sv.trigsimp() for sv in A.singular_values()]

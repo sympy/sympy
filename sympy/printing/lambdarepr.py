@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from .pycode import (
     PythonCodePrinter,
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
@@ -126,7 +125,7 @@ class NumExprPrinter(LambdaPrinter):
             else:
                 raise TypeError("numexpr does not support function '%s'" %
                                 func_name)
-        return "%s(%s)" % (nstr, self._print_seq(e.args))
+        return "{}({})".format(nstr, self._print_seq(e.args))
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
@@ -145,7 +144,7 @@ class NumExprPrinter(LambdaPrinter):
                 is_last_cond_True = True
                 break
             else:
-                ans.append('where(%s, %s, ' % (cond, expr))
+                ans.append('where({}, {}, '.format(cond, expr))
                 parenthesis_count += 1
         if not is_last_cond_True:
             # simplest way to put a nan but raises
@@ -176,7 +175,7 @@ class NumExprPrinter(LambdaPrinter):
     blacklisted
 
     def doprint(self, expr):
-        lstr = super(NumExprPrinter, self).doprint(expr)
+        lstr = super().doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
 
 

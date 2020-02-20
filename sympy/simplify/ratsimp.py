@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from itertools import combinations_with_replacement
 from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational
@@ -144,7 +142,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
             M1 = staircase(N)
             M2 = staircase(D)
-            debug('%s / %s: %s, %s' % (N, D, M1, M2))
+            debug('{} / {}: {}, {}'.format(N, D, M1, M2))
 
             Cs = symbols("c:%d" % len(M1), cls=Dummy)
             Ds = symbols("d:%d" % len(M2), cls=Dummy)

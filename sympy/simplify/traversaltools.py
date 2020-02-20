@@ -1,6 +1,5 @@
 """Tools for applying functions to specified parts of expressions. """
 
-from __future__ import print_function, division
 
 from sympy.core import sympify
 

@@ -4,7 +4,6 @@ Second quantization operators and states for bosons.
 This follow the formulation of Fetter and Welecka, "Quantum Theory
 of Many-Particle Systems."
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 
@@ -220,7 +219,7 @@ class AntiSymmetricTensor(TensorSymbol):
             return (12, label, h)
 
     def _latex(self, printer):
-        return "%s^{%s}_{%s}" % (
+        return "{}^{{{}}}_{{{}}}".format(
             self.symbol,
             "".join([ i.name for i in self.args[1]]),
             "".join([ i.name for i in self.args[2]])
@@ -369,7 +368,7 @@ class SqOperator(Expr):
         return NotImplemented
 
     def __str__(self):
-        return "%s(%r)" % (self.op_symbol, self.state)
+        return "{}({!r})".format(self.op_symbol, self.state)
 
     def apply_operator(self, state):
         """
@@ -933,7 +932,7 @@ class FockState(Expr):
         return ("FockState(%r)") % (self.args)
 
     def __str__(self):
-        return "%s%r%s" % (self.lbracket, self._labels(), self.rbracket)
+        return "{}{!r}{}".format(self.lbracket, self._labels(), self.rbracket)
 
     def _labels(self):
         return self.args[0]
@@ -1170,9 +1169,9 @@ class FermionState(FockState):
 
     def __repr__(self):
         if self.fermi_level:
-            return "FockStateKet(%r, fermi_level=%s)" % (self.args[0], self.fermi_level)
+            return "FockStateKet({!r}, fermi_level={})".format(self.args[0], self.fermi_level)
         else:
-            return "FockStateKet(%r)" % (self.args[0],)
+            return "FockStateKet({!r})".format(self.args[0])
 
     def _labels(self):
         return self._negate_holes(self.args[0])
@@ -1400,7 +1399,7 @@ class InnerProduct(Basic):
     def __repr__(self):
         sbra = repr(self.bra)
         sket = repr(self.ket)
-        return "%s|%s" % (sbra[:-1], sket[1:])
+        return "{}|{}".format(sbra[:-1], sket[1:])
 
     def __str__(self):
         return self.__repr__()
@@ -1431,14 +1430,14 @@ def matrix_rep(op, basis):
     return a
 
 
-class BosonicBasis(object):
+class BosonicBasis:
     """
     Base class for a basis set of bosonic Fock states.
     """
     pass
 
 
-class VarBosonicBasis(object):
+class VarBosonicBasis:
     """
     A single state, variable particle number basis set.
 
@@ -1533,10 +1532,10 @@ class FixedBosonicBasis(BosonicBasis):
         first_loop = "for i0 in range(%i)" % self.n_levels
         other_loops = ''
         for cur, prev in zip(tup[1:], tup):
-            temp = "for %s in range(%s + 1) " % (cur, prev)
+            temp = "for {} in range({} + 1) ".format(cur, prev)
             other_loops = other_loops + temp
         tup_string = "(%s)" % ", ".join(tup)
-        list_comp = "[%s %s %s]" % (tup_string, first_loop, other_loops)
+        list_comp = "[{} {} {}]".format(tup_string, first_loop, other_loops)
         result = eval(list_comp)
         if self.n_particles == 1:
             result = [(item,) for item in result]
@@ -1722,10 +1721,10 @@ class Commutator(Function):
         return (a*b - b*a).doit(**hints)
 
     def __repr__(self):
-        return "Commutator(%s,%s)" % (self.args[0], self.args[1])
+        return "Commutator({},{})".format(self.args[0], self.args[1])
 
     def __str__(self):
-        return "[%s,%s]" % (self.args[0], self.args[1])
+        return "[{},{}]".format(self.args[0], self.args[1])
 
     def _latex(self, printer):
         return "\\left[%s,%s\\right]" % tuple([
@@ -2537,8 +2536,8 @@ def _get_ordered_dummies(mul, verbose=False):
     """
     # setup dicts to avoid repeated calculations in key()
     args = Mul.make_args(mul)
-    fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
-    fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
+    fac_dum = { fac: fac.atoms(Dummy) for fac in args }
+    fac_repr = { fac: __kprint(fac) for fac in args }
     all_dums = set().union(*fac_dum.values())
     mask = {}
     for d in all_dums:
@@ -2674,7 +2673,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
     return ordered
 
 
-class _SymbolFactory(object):
+class _SymbolFactory:
     def __init__(self, label):
         self._counterVar = 0
         self._label = label
@@ -2969,8 +2968,8 @@ def simplify_index_permutations(expr, permutation_operators):
         terms = set(expr.args)
 
         for P in permutation_operators:
-            new_terms = set([])
-            on_hold = set([])
+            new_terms = set()
+            on_hold = set()
             while terms:
                 term = terms.pop()
                 permuted = P.get_permuted(term)

@@ -118,7 +118,7 @@ def test_Assignment_printing():
     for cls in assignment_classes:
         for lhs, rhs in pairs:
             a = cls(lhs, rhs)
-            assert repr(a) == '%s(%s, %s)' % (cls.__name__, repr(lhs), repr(rhs))
+            assert repr(a) == '{}({}, {})'.format(cls.__name__, repr(lhs), repr(rhs))
 
 
 def test_CodeBlock():

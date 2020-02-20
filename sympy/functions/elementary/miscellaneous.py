@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -564,8 +562,7 @@ class MinMaxBase(Expr, LatticeOp):
             elif arg == cls.identity:
                 continue
             elif arg.func == cls:
-                for x in arg.args:
-                    yield x
+                yield from arg.args
             else:
                 yield arg
 

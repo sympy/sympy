@@ -31,7 +31,6 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -251,7 +250,7 @@ class RustCodePrinter(CodePrinter):
         return "// %s" % text
 
     def _declare_number_const(self, name, value):
-        return "const %s: f64 = %s;" % (name, value)
+        return "const {}: f64 = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -308,26 +307,26 @@ class RustCodePrinter(CodePrinter):
                         break
             if func is not None:
                 if style == 1:
-                    ret = "%(var)s.%(method)s(%(args)s)" % {
-                        'var': self._print_caller_var(expr.args[0]),
-                        'method': func,
-                        'args': self.stringify(expr.args[1:], ", ") if len(expr.args) > 1 else ''
-                    }
+                    ret = "{var}.{method}({args})".format(
+                        var=self._print_caller_var(expr.args[0]),
+                        method=func,
+                        args=self.stringify(expr.args[1:], ", ") if len(expr.args) > 1 else ''
+                    )
                 elif style == 2:
-                    ret = "%(var)s.%(method)s()" % {
-                        'var': self._print_caller_var(expr.args[0]),
-                        'method': func,
-                    }
+                    ret = "{var}.{method}()".format(
+                        var=self._print_caller_var(expr.args[0]),
+                        method=func,
+                    )
                 elif style == 3:
-                    ret = "%(var)s.%(method)s()" % {
-                        'var': self._print_caller_var(expr.args[1]),
-                        'method': func,
-                    }
+                    ret = "{var}.{method}()".format(
+                        var=self._print_caller_var(expr.args[1]),
+                        method=func,
+                    )
                 else:
-                    ret = "%(func)s(%(args)s)" % {
-                        'func': func,
-                        'args': self.stringify(expr.args, ", "),
-                    }
+                    ret = "{func}({args})".format(
+                        func=func,
+                        args=self.stringify(expr.args, ", "),
+                    )
                 return ret
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
@@ -342,14 +341,14 @@ class RustCodePrinter(CodePrinter):
         return self._print_Function(expr)
 
     def _print_Float(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Float(expr)
+        ret = super()._print_Float(expr)
         if _type:
             return ret + '_f64'
         else:
             return ret
 
     def _print_Integer(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Integer(expr)
+        ret = super()._print_Integer(expr)
         if _type:
             return ret + '_i32'
         else:
@@ -363,7 +362,7 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -373,7 +372,7 @@ class RustCodePrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+        return "{}[{}]".format(self._print(expr.base.label), self._print(elem))
 
     def _print_Idx(self, expr):
         return expr.label.name
@@ -444,7 +443,7 @@ class RustCodePrinter(CodePrinter):
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 
     def _print_MatrixElement(self, expr):
-        return "%s[%s]" % (expr.parent,
+        return "{}[{}]".format(expr.parent,
                            expr.j + expr.i*expr.parent.shape[1])
 
     # FIXME: Str/CodePrinter could define each of these to call the _print
@@ -458,7 +457,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_Symbol(self, expr):
 
-        name = super(RustCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if expr in self._dereference:
             return '(*%s)' % name
@@ -477,7 +476,7 @@ class RustCodePrinter(CodePrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return self._get_statement("{} = {}".format(lhs_code, rhs_code))
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -503,7 +502,7 @@ class RustCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 

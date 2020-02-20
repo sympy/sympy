@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Integer
 import sympy.polys
 

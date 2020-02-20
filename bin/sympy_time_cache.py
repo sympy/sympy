@@ -1,17 +1,15 @@
-from __future__ import print_function
-
 import time
 import timeit
 
 
-class TreeNode(object):
+class TreeNode:
     def __init__(self, name):
         self._name = name
         self._children = []
         self._time = 0
 
     def __str__(self):
-        return "%s: %s" % (self._name, self._time)
+        return "{}: {}".format(self._name, self._time)
 
     __repr__ = __str__
 
@@ -54,7 +52,7 @@ class TreeNode(object):
     def print_generic(self, n=50, method="time"):
         slowest = sorted((getattr(node, method)(), node.name()) for node in self.linearize())[-n:]
         for time, name in slowest[::-1]:
-            print("%s %s" % (time, name))
+            print("{} {}".format(time, name))
 
     def print_slowest(self, n=50):
         self.print_generic(n=50, method="time")
@@ -78,7 +76,7 @@ class TreeNode(object):
         for child in self.children():
             f.write("cfn=%s\n" % child.name())
             f.write("calls=1 1\n")
-            f.write("%s %s\n" % (counter, child.time()))
+            f.write("{} {}\n".format(counter, child.time()))
             counter += 1
 
         f.write("\n\n")

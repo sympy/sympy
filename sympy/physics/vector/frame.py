@@ -49,8 +49,8 @@ class CoordinateSym(Symbol):
         # We can't use the cached Symbol.__new__ because this class depends on
         # frame and index, which are not passed to Symbol.__xnew__.
         assumptions = {}
-        super(CoordinateSym, cls)._sanitize(assumptions, cls)
-        obj = super(CoordinateSym, cls).__xnew__(cls, name, **assumptions)
+        super()._sanitize(assumptions, cls)
+        obj = super().__xnew__(cls, name, **assumptions)
         _check_frame(frame)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified")
@@ -76,7 +76,7 @@ class CoordinateSym(Symbol):
         return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
 
 
-class ReferenceFrame(object):
+class ReferenceFrame:
     """A reference frame in classical mechanics.
 
     ReferenceFrame is a class used to represent a reference frame in classical
@@ -159,21 +159,21 @@ class ReferenceFrame(object):
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(name.lower() + u"_" + indices[0]),
-                                (name.lower() + u"_" + indices[1]),
-                                (name.lower() + u"_" + indices[2])]
-            self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+            self.pretty_vecs = [(name.lower() + "_" + indices[0]),
+                                (name.lower() + "_" + indices[1]),
+                                (name.lower() + "_" + indices[2])]
+            self.latex_vecs = [(r"\mathbf{{\hat{{{}}}_{{{}}}}}".format(name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
-                               (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                               (r"\mathbf{{\hat{{{}}}_{{{}}}}}".format(name.lower(),
                                indices[2]))]
             self.indices = indices
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [name.lower() + u"_x",
-                                name.lower() + u"_y",
-                                name.lower() + u"_z"]
+            self.pretty_vecs = [name.lower() + "_x",
+                                name.lower() + "_y",
+                                name.lower() + "_z"]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]

@@ -123,7 +123,7 @@ def test_Coefficient():
     assert Coefficient(x, x, -1) == 0
 
 def test_Denominator():
-    assert Denominator((-S(1)/S(2) + I/3)) == 6
+    assert Denominator(-S(1)/S(2) + I/3) == 6
     assert Denominator((-a/b)**3) == (b)**(3)
     assert Denominator(S(3)/2) == 2
     assert Denominator(x/y) == y
@@ -392,7 +392,7 @@ def test_LeafCount():
     assert LeafCount(1 + a + x**2) == 6
 
 def test_Numerator():
-    assert Numerator((-S(1)/S(2) + I/3)) == -3 + 2*I
+    assert Numerator(-S(1)/S(2) + I/3) == -3 + 2*I
     assert Numerator((-a/b)**3) == (-a)**(3)
     assert Numerator(S(3)/2) == 3
     assert Numerator(x/y) == x
@@ -1691,7 +1691,7 @@ def test_AtomBaseQ():
 def test_SumBaseQ():
     assert not SumBaseQ((x + 1)**2)
     assert SumBaseQ((x + 1)**3)
-    assert SumBaseQ((3*x+3))
+    assert SumBaseQ(3*x+3)
     assert not SumBaseQ(x)
 
 def test_NegSumBaseQ():

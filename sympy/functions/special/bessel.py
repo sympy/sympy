@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import wraps
 
 from sympy import S, pi, I, Rational, Wild, cacheit, sympify

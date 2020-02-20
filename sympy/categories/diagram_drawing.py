@@ -82,7 +82,6 @@ References
 [Xypic] http://xy-pic.sourceforge.net/
 
 """
-from __future__ import print_function, division
 
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
@@ -99,7 +98,7 @@ from itertools import chain
 __doctest_requires__ = {('preview_diagram',): 'pyglet'}
 
 
-class _GrowableGrid(object):
+class _GrowableGrid:
     """
     Holds a growable grid of objects.
 
@@ -172,7 +171,7 @@ class _GrowableGrid(object):
             self._array[i].insert(0, None)
 
 
-class DiagramGrid(object):
+class DiagramGrid:
     r"""
     Constructs and holds the fitting of the diagram into a grid.
 
@@ -1357,7 +1356,7 @@ class DiagramGrid(object):
         return repr(self._grid._array)
 
 
-class ArrowStringDescription(object):
+class ArrowStringDescription:
     r"""
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
@@ -1484,7 +1483,7 @@ class ArrowStringDescription(object):
             curving_str = ""
 
         if self.looping_start and self.looping_end:
-            looping_str = "@(%s,%s)" % (self.looping_start, self.looping_end)
+            looping_str = "@({},{})".format(self.looping_start, self.looping_end)
         else:
             looping_str = ""
 
@@ -1500,7 +1499,7 @@ class ArrowStringDescription(object):
                 self.label_displacement, self.label)
 
 
-class XypicDiagramDrawer(object):
+class XypicDiagramDrawer:
     r"""
     Given a :class:`~.Diagram` and the corresponding
     :class:`DiagramGrid`, produces the Xy-pic representation of the
@@ -2026,7 +2025,7 @@ class XypicDiagramDrawer(object):
             two supplied objects.
             """
             return len([m for m in morphisms_str_info
-                        if set([m.domain, m.codomain]) == set([A, B])])
+                        if {m.domain, m.codomain} == {A, B}])
 
         def count_morphisms_filtered(dom, cod, curving):
             """

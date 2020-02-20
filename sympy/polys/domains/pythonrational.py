@@ -1,6 +1,5 @@
 """Rational number type based on Python integers. """
 
-from __future__ import print_function, division
 
 import operator
 

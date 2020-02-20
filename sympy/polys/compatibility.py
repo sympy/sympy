@@ -1,6 +1,5 @@
 """Compatibility interface between dense and sparse polys. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
@@ -222,7 +221,7 @@ from sympy.polys.galoistools import (
 from sympy.utilities import public
 
 @public
-class IPolys(object):
+class IPolys:
     symbols = None
     ngens = None
     domain = None

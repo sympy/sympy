@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps

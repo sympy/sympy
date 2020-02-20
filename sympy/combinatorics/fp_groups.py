@@ -1,6 +1,5 @@
 """Finitely Presented Groups and its algorithms. """
 
-from __future__ import print_function, division
 from sympy import S
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
@@ -560,9 +559,9 @@ class FpSubgroup(DefaultPrinting):
 
     '''
     def __init__(self, G, gens, normal=False):
-        super(FpSubgroup,self).__init__()
+        super().__init__()
         self.parent = G
-        self.generators = list(set([g for g in gens if g != G.identity]))
+        self.generators = list({g for g in gens if g != G.identity})
         self._min_words = None #for use in __contains__
         self.C = None
         self.normal = normal
@@ -768,10 +767,10 @@ def low_index_subgroups(G, N, Y=[]):
     len_short_rel = 5
     # elements of R2 only checked at the last step for complete
     # coset tables
-    R2 = set([rel for rel in R if len(rel) > len_short_rel])
+    R2 = {rel for rel in R if len(rel) > len_short_rel}
     # elements of R1 are used in inner parts of the process to prune
     # branches of the search tree,
-    R1 = set([rel.identity_cyclic_reduction() for rel in set(R) - R2])
+    R1 = {rel.identity_cyclic_reduction() for rel in set(R) - R2}
     R1_c_list = C.conjugates(R1)
     S = []
     descendant_subgroups(S, C, R1_c_list, C.A[0], R2, N, Y)
@@ -1159,7 +1158,7 @@ def define_schreier_generators(C, homomorphism=False):
             if homomorphism:
                 tau[beta] = tau[alpha]*x
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
-            y_alpha_x = '%s_%s' % (x, alpha)
+            y_alpha_x = '{}_{}'.format(x, alpha)
             y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
             if homomorphism:
@@ -1183,7 +1182,7 @@ def define_schreier_generators(C, homomorphism=False):
 def reidemeister_relators(C):
     R = C.fp_group.relators
     rels = [rewrite(C, coset, word) for word in R for coset in range(C.n)]
-    order_1_gens = set([i for i in rels if len(i) == 1])
+    order_1_gens = {i for i in rels if len(i) == 1}
 
     # remove all the order 1 generators from relators
     rels = list(filter(lambda rel: rel not in order_1_gens, rels))

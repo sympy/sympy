@@ -1,4 +1,3 @@
-
 from sympy import symbols, S, oo
 
 from sympy.core import Basic, Expr

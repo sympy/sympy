@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
@@ -256,8 +254,7 @@ def iproduct(*iterables):
         for e in iterables[0]:
             yield (e,)
     elif len(iterables) == 2:
-        for e12 in _iproduct2(*iterables):
-            yield e12
+        yield from _iproduct2(*iterables)
     else:
         first, others = iterables[0], iterables[1:]
         for ef, eo in _iproduct2(first, iproduct(*others)):
@@ -335,12 +332,10 @@ def postorder_traversal(node, keys=None):
             else:
                 args = ordered(args)
         for arg in args:
-            for subtree in postorder_traversal(arg, keys):
-                yield subtree
+            yield from postorder_traversal(arg, keys)
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item, keys):
-                yield subtree
+            yield from postorder_traversal(item, keys)
     yield node
 
 
@@ -534,14 +529,12 @@ def variations(seq, n, repetition=False):
         seq = tuple(seq)
         if len(seq) < n:
             return
-        for i in permutations(seq, n):
-            yield i
+        yield from permutations(seq, n)
     else:
         if n == 0:
             yield ()
         else:
-            for i in product(seq, repeat=n):
-                yield i
+            yield from product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
@@ -586,15 +579,12 @@ def subsets(seq, k=None, repetition=False):
     """
     if k is None:
         for k in range(len(seq) + 1):
-            for i in subsets(seq, k, repetition):
-                yield i
+            yield from subsets(seq, k, repetition)
     else:
         if not repetition:
-            for i in combinations(seq, k):
-                yield i
+            yield from combinations(seq, k)
         else:
-            for i in combinations_with_replacement(seq, k):
-                yield i
+            yield from combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
@@ -653,7 +643,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
         cls = Symbol
 
     while True:
-        name = '%s%s' % (prefix, start)
+        name = '{}{}'.format(prefix, start)
         s = cls(name, *args, **assumptions)
         if s not in exclude:
             yield s
@@ -2075,11 +2065,9 @@ def uniq(seq, result=None):
             yield s
             result.append(s)
         if hasattr(seq, '__getitem__'):
-            for s in uniq(seq[i + 1:], result):
-                yield s
+            yield from uniq(seq[i + 1:], result)
         else:
-            for s in uniq(seq, result):
-                yield s
+            yield from uniq(seq, result)
 
 
 def generate_bell(n):
@@ -2155,8 +2143,7 @@ def generate_bell(n):
         yield (0, 1)
         yield (1, 0)
     elif n == 3:
-        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
-            yield li
+        yield from [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
     else:
         m = n - 1
         op = [0] + [-1]*m
@@ -2562,16 +2549,13 @@ def kbins(l, k, ordered=None):
                         yield [lista[:i]] + part
 
     if ordered is None:
-        for p in partition(l, k):
-            yield p
+        yield from partition(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            for p in partition(pl, k):
-                yield p
+            yield from partition(pl, k)
     elif ordered == 00:
-        for p in multiset_partitions(l, k):
-            yield p
+        yield from multiset_partitions(l, k)
     elif ordered == 10:
         for p in multiset_partitions(l, k):
             for perm in permutations(p):

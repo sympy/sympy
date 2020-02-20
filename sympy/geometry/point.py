@@ -17,7 +17,6 @@ False
 
 """
 
-from __future__ import division, print_function
 
 import warnings
 
@@ -162,9 +161,9 @@ class Point(GeometryEntity):
         # Turn any Floats into rationals and simplify
         # any expressions before we instantiate
         if evaluate:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                 for f in coords.atoms(Float)]))
+            coords = coords.xreplace({
+                f: simplify(nsimplify(f, rational=True))
+                 for f in coords.atoms(Float)})
 
         # return 2D or 3D instances
         if len(coords) == 2:
@@ -634,8 +633,8 @@ class Point(GeometryEntity):
             rv = (x1*y2 - x2*y1).equals(0)
             if rv is None:
                 raise Undecidable(filldedent(
-                    '''can't determine if %s is a scalar multiple of
-                    %s''' % (s, o)))
+                    '''can't determine if {} is a scalar multiple of
+                    {}'''.format(s, o)))
 
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of each other

@@ -1,7 +1,6 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
-from __future__ import print_function, division
 
 from sympy.core import Add, Basic, Mul
 from sympy.core.basic import preorder_traversal
@@ -14,7 +13,7 @@ def sub_pre(e):
     """
     # replacing Add, A, from which -1 can be extracted with -1*-A
     adds = [a for a in e.atoms(Add) if a.could_extract_minus_sign()]
-    reps = dict((a, Mul._from_args([S.NegativeOne, -a])) for a in adds)
+    reps = {a: Mul._from_args([S.NegativeOne, -a]) for a in adds}
     e = e.xreplace(reps)
 
     # repeat again for persisting Adds but mark these with a leading 1, -1

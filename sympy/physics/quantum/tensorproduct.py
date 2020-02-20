@@ -1,6 +1,5 @@
 """Abstract tensor product."""
 
-from __future__ import print_function, division
 
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
 from sympy.core.trace import Tr
@@ -201,7 +200,7 @@ class TensorProduct(Expr):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
+                    pform = prettyForm(*pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
                 else:
                     pform = prettyForm(*pform.right('x' + ' '))
         return pform
@@ -218,7 +217,7 @@ class TensorProduct(Expr):
             s = r", ".join([_label_wrap(arg._print_label_latex(printer, *args),
                                         len(arg.args)) for arg in self.args])
 
-            return r"{%s%s%s}" % (self.args[0].lbracket_latex, s,
+            return r"{{{}{}{}}}".format(self.args[0].lbracket_latex, s,
                                   self.args[0].rbracket_latex)
 
         length = len(self.args)

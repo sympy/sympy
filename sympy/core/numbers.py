@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 import numbers
 import decimal
 import fractions
@@ -553,7 +551,7 @@ def mod_inverse(a, m):
         elif big:
             c = 1/a
     if c is None:
-        raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
+        raise ValueError('inverse of {} (mod {}) does not exist'.format(a, m))
     return c
 
 
@@ -781,7 +779,7 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
+            raise TypeError("Invalid comparison {} < {}".format(self, other))
         raise NotImplementedError('%s needs .__lt__() method' %
             (self.__class__.__name__))
 
@@ -789,7 +787,7 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
+            raise TypeError("Invalid comparison {} <= {}".format(self, other))
         raise NotImplementedError('%s needs .__le__() method' %
             (self.__class__.__name__))
 
@@ -797,18 +795,18 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
+            raise TypeError("Invalid comparison {} > {}".format(self, other))
         return _sympify(other).__lt__(self)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
+            raise TypeError("Invalid comparison {} >= {}".format(self, other))
         return _sympify(other).__le__(self)
 
     def __hash__(self):
-        return super(Number, self).__hash__()
+        return super().__hash__()
 
     def is_constant(self, *wrt, **flags):
         return True
@@ -1177,7 +1175,7 @@ class Float(Number):
                             num[1] >= 0,
                             all(type(i) in (int, int) for i in num)
                             )):
-                        raise ValueError('malformed mpf: %s' % (num,))
+                        raise ValueError('malformed mpf: {}'.format(num))
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(
@@ -1482,7 +1480,7 @@ class Float(Number):
         return rv
 
     def __hash__(self):
-        return super(Float, self).__hash__()
+        return super().__hash__()
 
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
@@ -1968,7 +1966,7 @@ class Rational(Number):
         return Expr.__le__(*rv)
 
     def __hash__(self):
-        return super(Rational, self).__hash__()
+        return super().__hash__()
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
@@ -2332,7 +2330,7 @@ class Integer(Rational):
                 return (-self)**expt
         if isinstance(expt, Float):
             # Rational knows how to exponentiate by a Float
-            return super(Integer, self)._eval_power(expt)
+            return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -2495,7 +2493,7 @@ class AlgebraicNumber(Expr):
         return obj
 
     def __hash__(self):
-        return super(AlgebraicNumber, self).__hash__()
+        return super().__hash__()
 
     def _eval_evalf(self, prec):
         return self.as_expr()._evalf(prec)
@@ -2944,7 +2942,7 @@ class Infinity(Number, metaclass=Singleton):
         return sage.oo
 
     def __hash__(self):
-        return super(Infinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
@@ -3109,7 +3107,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
         return -(sage.oo)
 
     def __hash__(self):
-        return super(NegativeInfinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
@@ -3243,7 +3241,7 @@ class NaN(Number, metaclass=Singleton):
         return sage.NaN
 
     def __hash__(self):
-        return super(NaN, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         # NaN is structurally equal to another NaN
@@ -3399,7 +3397,7 @@ class NumberSymbol(AtomicExpr):
         return self.__int__()
 
     def __hash__(self):
-        return super(NumberSymbol, self).__hash__()
+        return super().__hash__()
 
 
 class Exp1(NumberSymbol, metaclass=Singleton):

@@ -1,6 +1,5 @@
 """Singleton mechanism"""
 
-from __future__ import print_function, division
 
 from typing import Any, Dict, Type
 
@@ -111,7 +110,7 @@ class SingletonRegistry(Registry):
         it as an attribute of the given name, and unregisters the class."""
         if name not in self._classes_to_install:
             raise AttributeError(
-                "Attribute '%s' was not installed on SymPy registry %s" % (
+                "Attribute '{}' was not installed on SymPy registry {}".format(
                 name, self))
         class_to_install = self._classes_to_install[name]
         value_to_install = class_to_install()
@@ -165,7 +164,7 @@ class Singleton(ManagedProperties):
     "Maps singleton classes to their instances."
 
     def __new__(cls, *args, **kwargs):
-        result = super(Singleton, cls).__new__(cls, *args, **kwargs)
+        result = super().__new__(cls, *args, **kwargs)
         S.register(result)
         return result
 
@@ -175,7 +174,7 @@ class Singleton(ManagedProperties):
         # __call__ is invoked first, before __new__() and __init__().
         if self not in Singleton._instances:
             Singleton._instances[self] = \
-                super(Singleton, self).__call__(*args, **kwargs)
+                super().__call__(*args, **kwargs)
                 # Invokes the standard constructor of SomeClass.
         return Singleton._instances[self]
 

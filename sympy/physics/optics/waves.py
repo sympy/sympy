@@ -6,7 +6,6 @@ This module has all the classes and functions related to waves in optics.
 * TWave
 """
 
-from __future__ import print_function, division
 
 __all__ = ['TWave']
 

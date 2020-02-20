@@ -1,7 +1,6 @@
 """ This module cooks up a docstring when imported. Its only purpose is to
     be displayed in the sphinx documentation. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict, List, Tuple, Type
 
@@ -29,6 +28,6 @@ for about, category in sorted(t.items()):
             cond = ""
         else:
             cond = ',\\text{ if } %s' % latex(cond)
-        doc += ".. math::\n  %s%s\n\n" % (latex(obj), cond)
+        doc += ".. math::\n  {}{}\n\n".format(latex(obj), cond)
 
 __doc__ = doc

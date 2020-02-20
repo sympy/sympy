@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Any, Callable
 from sympy.core.logic import FuzzyBool
 
@@ -295,7 +293,7 @@ class MatrixExpr(Expr):
             if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
-                raise IndexError("Invalid indices (%s, %s)" % (i, j))
+                raise IndexError("Invalid indices ({}, {})".format(i, j))
         elif isinstance(key, (SYMPY_INTS, Integer)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
@@ -555,12 +553,12 @@ class MatrixExpr(Expr):
                 if i1 in index_ranges:
                     r1, r2 = index_ranges[i1]
                     if r1 != 0 or matrix_symbol.shape[0] != r2+1:
-                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                        raise ValueError("index range mismatch: {} vs. (0, {})".format(
                             (r1, r2), matrix_symbol.shape[0]))
                 if i2 in index_ranges:
                     r1, r2 = index_ranges[i2]
                     if r1 != 0 or matrix_symbol.shape[1] != r2+1:
-                        raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
+                        raise ValueError("index range mismatch: {} vs. (0, {})".format(
                             (r1, r2), matrix_symbol.shape[1]))
                 if (i1 == i2) and (i1 in index_ranges):
                     return [(trace(matrix_symbol), None)]
@@ -811,7 +809,7 @@ class MatrixSymbol(MatrixExpr):
 
     @property
     def free_symbols(self):
-        return set((self,))
+        return {self}
 
     def doit(self, **hints):
         if hints.get('deep', True):
@@ -861,7 +859,7 @@ class Identity(MatrixExpr):
         n = _sympify(n)
         cls._check_dim(n)
 
-        return super(Identity, cls).__new__(cls, n)
+        return super().__new__(cls, n)
 
     @property
     def rows(self):
@@ -935,7 +933,7 @@ class GenericIdentity(Identity):
         return not (self == other)
 
     def __hash__(self):
-        return super(GenericIdentity, self).__hash__()
+        return super().__hash__()
 
 
 class ZeroMatrix(MatrixExpr):
@@ -959,7 +957,7 @@ class ZeroMatrix(MatrixExpr):
         cls._check_dim(m)
         cls._check_dim(n)
 
-        return super(ZeroMatrix, cls).__new__(cls, m, n)
+        return super().__new__(cls, m, n)
 
     @property
     def shape(self):
@@ -1029,7 +1027,7 @@ class GenericZeroMatrix(ZeroMatrix):
         return not (self == other)
 
     def __hash__(self):
-        return super(GenericZeroMatrix, self).__hash__()
+        return super().__hash__()
 
 
 class OneMatrix(MatrixExpr):
@@ -1041,7 +1039,7 @@ class OneMatrix(MatrixExpr):
         cls._check_dim(m)
         cls._check_dim(n)
 
-        obj = super(OneMatrix, cls).__new__(cls, m, n)
+        obj = super().__new__(cls, m, n)
         return obj
 
     @property
@@ -1079,7 +1077,7 @@ def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
 
-class _LeftRightArgs(object):
+class _LeftRightArgs:
     r"""
     Helper class to compute matrix derivatives.
 
@@ -1121,7 +1119,7 @@ class _LeftRightArgs(object):
 
     def __repr__(self):
         built = [self._build(i) for i in self._lines]
-        return "_LeftRightArgs(lines=%s, higher=%s)" % (
+        return "_LeftRightArgs(lines={}, higher={})".format(
             built,
             self.higher,
         )

@@ -7,7 +7,7 @@ from sympy.utilities.misc import filldedent
 __all__ = ['Vector']
 
 
-class Vector(object):
+class Vector:
     """The class used to define vectors.
 
     It along with ReferenceFrame are the building blocks of describing a
@@ -255,7 +255,7 @@ class Vector(object):
         from sympy.printing.pretty.stringpict import prettyForm
         e = self
 
-        class Fake(object):
+        class Fake:
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
@@ -739,7 +739,7 @@ class VectorTypeError(TypeError):
     def __init__(self, other, want):
         msg = filldedent("Expected an instance of %s, but received object "
                          "'%s' of %s." % (type(want), other, type(other)))
-        super(VectorTypeError, self).__init__(msg)
+        super().__init__(msg)
 
 
 def _check_vector(other):

@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
 """ This sub-module is private, i.e. external code should not depend on it.
 
 These functions are used by tests run as part of continuous integration.

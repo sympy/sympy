@@ -1,6 +1,5 @@
 """Constants (like hbar) related to quantum mechanics."""
 
-from __future__ import print_function, division
 
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
@@ -51,7 +50,7 @@ class HBar(NumberSymbol, metaclass=Singleton):
 
     def _pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u'\N{PLANCK CONSTANT OVER TWO PI}')
+            return prettyForm('\N{PLANCK CONSTANT OVER TWO PI}')
         return prettyForm('hbar')
 
     def _latex(self, printer, *args):

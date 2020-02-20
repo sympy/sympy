@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
                    series, factorial, And)
@@ -307,7 +305,7 @@ class DiscretePSpace(PSpace):
         # XXX: Converting from set to tuple. The order matters to Lambda
         # though so we should be starting with a set...
         density = Lambda(tuple(self.symbols), self.pdf/self.probability(condition))
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalDiscreteDomain(self.domain, condition)
         return DiscretePSpace(domain, density)
 
@@ -341,7 +339,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             return expr
 
         expr = _sympify(expr)
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         x = self.value.symbol
         try:

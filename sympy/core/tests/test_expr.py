@@ -16,7 +16,7 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
 
-class DummyNumber(object):
+class DummyNumber:
     """
     Minimal implementation of a number that works with SymPy.
 
@@ -160,7 +160,7 @@ def test_ibasic():
     assert dotest(s)
 
 
-class NonBasic(object):
+class NonBasic:
     '''This class represents an object that knows how to implement binary
     operations like +, -, etc with Expr but is not a subclass of Basic itself.
     The NonExpr subclass below does subclass Basic but not Expr.
@@ -508,7 +508,7 @@ def test_atoms():
     assert (2*(x**(y**x))).atoms() == {S(2), x, y}
 
     assert S.Half.atoms() == {S.Half}
-    assert S.Half.atoms(Symbol) == set([])
+    assert S.Half.atoms(Symbol) == set()
 
     assert sin(oo).atoms(oo) == set()
 
@@ -651,7 +651,7 @@ def test_SAGE1():
 
 
 def test_SAGE2():
-    class MyInt(object):
+    class MyInt:
         def __int__(self):
             return 5
     assert sympify(MyInt()) == 5
@@ -1389,7 +1389,7 @@ def test_coeff2():
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
-    assert g.coeff((psi(r).diff(r))) == 2/r
+    assert g.coeff(psi(r).diff(r)) == 2/r
 
 
 def test_coeff2_0():
@@ -1430,7 +1430,7 @@ def test_issue_4963():
 
 
 def test_action_verbs():
-    assert nsimplify((1/(exp(3*pi*x/5) + 1))) == \
+    assert nsimplify(1/(exp(3*pi*x/5) + 1)) == \
         (1/(exp(3*pi*x/5) + 1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
@@ -2096,7 +2096,7 @@ def test_non_string_equality():
     # Make sure == doesn't try to convert the resulting expression to a string
     # (e.g., by calling sympify() instead of _sympify())
 
-    class BadRepr(object):
+    class BadRepr:
         def __repr__(self):
             raise RuntimeError
 

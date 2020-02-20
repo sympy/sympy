@@ -1,6 +1,5 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-from __future__ import print_function, division
 
 from sympy import sqrt, I, Symbol, Integer, S
 from sympy.physics.quantum.constants import hbar
@@ -149,12 +148,12 @@ class RaisingOp(SHOOp):
 
     def _print_contents(self, printer, *args):
         arg0 = printer._print(self.args[0], *args)
-        return '%s(%s)' % (self.__class__.__name__, arg0)
+        return '{}({})'.format(self.__class__.__name__, arg0)
 
     def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\N{DAGGER}')
+        pform = pform**prettyForm('\N{DAGGER}')
         return pform
 
     def _print_contents_latex(self, printer, *args):

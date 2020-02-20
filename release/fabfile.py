@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Fab file for releasing
 
@@ -32,7 +31,6 @@ name of the release branch is the same as the version being released (like
 get_sympy_short_version() to get the SymPy version (the SymPy __version__
 *must* be changed in sympy/release.py for this to work).
 """
-from __future__ import print_function
 
 from collections import defaultdict, OrderedDict
 
@@ -449,7 +447,7 @@ def compare_tar_against_git():
     """
     with hide("commands"):
         with cd("/home/vagrant/repos/sympy"):
-            git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
+            git_lsfiles = {i.strip() for i in run("git ls-files").split("\n")}
         tar_output_orig = set(show_files('source', print_=False).split("\n"))
         tar_output = set()
     for file in tar_output_orig:
@@ -494,7 +492,7 @@ def md5(file='*', print_=True):
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
-    out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
+    out = '\n'.join(["{}\t{}".format(i, os.path.split(j)[1]) for i, j in out])
     if print_:
         print(out)
     return out
@@ -514,7 +512,7 @@ def size(file='*', print_=True):
     """
     out = local("du -h release/" + file, capture=True)
     out = [i.split() for i in out.strip().split('\n')]
-    out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
+    out = '\n'.join(["{}\t{}".format(i, os.path.split(j)[1]) for i, j in out])
     if print_:
         print(out)
     return out
@@ -1150,7 +1148,7 @@ def save_token_file(token):
     except OSError as e:
         print("> Unable to create folder for token file: ", e)
         return
-    except IOError as e:
+    except OSError as e:
         print("> Unable to save token file: ", e)
         return
 
@@ -1166,7 +1164,7 @@ def load_token_file(path="~/.sympy/release-token"):
         try:
             with open(path) as f:
                 token = f.readline()
-        except IOError:
+        except OSError:
             print("> Unable to read token file")
             return
     else:
@@ -1175,7 +1173,7 @@ def load_token_file(path="~/.sympy/release-token"):
 
     return token.strip()
 
-class URLs(object):
+class URLs:
     """
     This class contains URLs and templates which used in requests to GitHub API
     """
@@ -1261,7 +1259,7 @@ def vagrant():
     # change from the default user to 'vagrant'
     env.user = vc['User']
     # connect to the port-forwarded ssh
-    env.hosts = ['%s:%s' % (vc['HostName'], vc['Port'])]
+    env.hosts = ['{}:{}'.format(vc['HostName'], vc['Port'])]
     # use vagrant ssh key
     env.key_filename = vc['IdentityFile'].strip('"')
     # Forward the agent if specified:

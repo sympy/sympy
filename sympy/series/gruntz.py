@@ -116,7 +116,6 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
-from __future__ import print_function, division
 
 from sympy import cacheit
 from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
@@ -197,7 +196,7 @@ class SubsSet(dict):
         self.rewrites = {}
 
     def __repr__(self):
-        return super(SubsSet, self).__repr__() + ', ' + self.rewrites.__repr__()
+        return super().__repr__() + ', ' + self.rewrites.__repr__()
 
     def __getitem__(self, key):
         if not key in self:

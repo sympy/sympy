@@ -7,7 +7,6 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from __future__ import print_function, division
 
 from typing import Callable, Dict
 

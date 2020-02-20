@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from textwrap import dedent
 from itertools import islice, product
 

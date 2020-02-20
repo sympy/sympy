@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import ask, Q
 from sympy.core import Basic, Add
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
@@ -81,7 +79,7 @@ class BlockMatrix(MatrixExpr):
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
                 not is_sequence(args[0]) or \
-                len(set([isMat(r) for r in args[0]])) != 1:
+                len({isMat(r) for r in args[0]}) != 1:
             raise ValueError(filldedent('''
                 expecting a sequence of 1 or more rows
                 containing Matrices.'''))
@@ -91,24 +89,24 @@ class BlockMatrix(MatrixExpr):
                 rows = [rows]  # rows is not list of lists or []
             # regularity check
             # same number of matrices in each row
-            blocky = ok = len(set([len(r) for r in rows])) == 1
+            blocky = ok = len({len(r) for r in rows}) == 1
             if ok:
                 # same number of rows for each matrix in a row
                 for r in rows:
-                    ok = len(set([i.rows for i in r])) == 1
+                    ok = len({i.rows for i in r}) == 1
                     if not ok:
                         break
                 blocky = ok
                 # same number of cols for each matrix in each col
                 for c in range(len(rows[0])):
-                    ok = len(set([rows[i][c].cols
-                        for i in range(len(rows))])) == 1
+                    ok = len({rows[i][c].cols
+                        for i in range(len(rows))}) == 1
                     if not ok:
                         break
             if not ok:
                 # same total cols in each row
-                ok = len(set([
-                    sum([i.cols for i in r]) for r in rows])) == 1
+                ok = len({
+                    sum([i.cols for i in r]) for r in rows}) == 1
                 if blocky and ok:
                     raise ValueError(filldedent('''
                         Although this matrix is comprised of blocks,
@@ -267,7 +265,7 @@ class BlockMatrix(MatrixExpr):
             return True
         if (isinstance(other, BlockMatrix) and self.blocks == other.blocks):
             return True
-        return super(BlockMatrix, self).equals(other)
+        return super().equals(other)
 
 
 class BlockDiagMatrix(BlockMatrix):

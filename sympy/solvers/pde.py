@@ -32,7 +32,6 @@ more information on each (run help(pde)):
     variable coefficients.
 
 """
-from __future__ import print_function, division
 
 from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
@@ -479,7 +478,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         return s is S.Zero, s
 
     raise NotImplementedError(filldedent('''
-        Unable to test if %s is a solution to %s.''' % (sol, pde)))
+        Unable to test if {} is a solution to {}.'''.format(sol, pde)))
 
 
 

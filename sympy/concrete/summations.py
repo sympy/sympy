@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
@@ -204,7 +202,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if d:
                 reps[xab[0]] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])

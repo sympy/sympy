@@ -1,6 +1,5 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
-from __future__ import print_function, division
 
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.core.basic import preorder_traversal

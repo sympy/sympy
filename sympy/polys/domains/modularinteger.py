@@ -1,6 +1,5 @@
 """Implementation of :class:`ModularInteger` class. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict, Tuple, Type
 
@@ -33,10 +32,10 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return hash((self.val, self.mod))
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, self.val)
+        return "{}({})".format(self.__class__.__name__, self.val)
 
     def __str__(self):
-        return "%s mod %s" % (self.val, self.mod)
+        return "{} mod {}".format(self.val, self.mod)
 
     def __int__(self):
         return int(self.to_int())

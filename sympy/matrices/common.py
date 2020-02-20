@@ -4,7 +4,6 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import division, print_function
 
 from sympy.core.logic import FuzzyBool
 
@@ -53,7 +52,7 @@ class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
     pass
 
 
-class MatrixRequired(object):
+class MatrixRequired:
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
     rows = None  # type: int
@@ -547,7 +546,7 @@ class MatrixShaping(MatrixRequired):
             c += 1
         if not rv:
             raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
+            The {} diagonal is out of range [{}, {}]'''.format(
             k, 1 - self.rows, self.cols - 1)))
         return self._new(1, len(rv), rv)
 
@@ -2255,7 +2254,7 @@ class MatrixArithmetic(MatrixRequired):
         # our first sanity check.
         if hasattr(other, 'shape'):
             if self.shape != other.shape:
-                raise ShapeError("Matrix size mismatch: %s + %s" % (
+                raise ShapeError("Matrix size mismatch: {} + {}".format(
                     self.shape, other.shape))
 
         # honest sympy matrices defer to their class's routine
@@ -2269,7 +2268,7 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_add(self, other)
 
-        raise TypeError('cannot add %s and %s' % (type(self), type(other)))
+        raise TypeError('cannot add {} and {}'.format(type(self), type(other)))
 
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
@@ -2335,7 +2334,7 @@ class MatrixArithmetic(MatrixRequired):
         # our first sanity check.
         if hasattr(other, 'shape') and len(other.shape) == 2:
             if self.shape[1] != other.shape[0]:
-                raise ShapeError("Matrix size mismatch: %s * %s." % (
+                raise ShapeError("Matrix size mismatch: {} * {}.".format(
                     self.shape, other.shape))
 
         # honest sympy matrices defer to their class's routine
@@ -2543,7 +2542,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
     _diff_wrt = True  # type: bool
 
 
-class _MinimalMatrix(object):
+class _MinimalMatrix:
     """Class providing the minimum functionality
     for a matrix-like object and implementing every method
     required for a `MatrixRequired`.  This class does not have everything
@@ -2654,7 +2653,7 @@ class _CastableMatrix: # this is needed here ONLY FOR TESTS.
         return self
 
 
-class _MatrixWrapper(object):
+class _MatrixWrapper:
     """Wrapper class providing the minimum functionality for a matrix-like
     object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
     math operations should work on matrix-like objects. This one is intended for
@@ -2712,12 +2711,12 @@ def a2idx(j, n=None):
         if jindex is not None:
             j = jindex()
         else:
-            raise IndexError("Invalid index a[%r]" % (j,))
+            raise IndexError("Invalid index a[{!r}]".format(j))
     if n is not None:
         if j < 0:
             j += n
         if not (j >= 0 and j < n):
-            raise IndexError("Index out of range: a[%s]" % (j,))
+            raise IndexError("Index out of range: a[{}]".format(j))
     return int(j)
 
 
@@ -2755,4 +2754,4 @@ def classof(A, B):
         if isinstance(B, numpy.ndarray):
             return A.__class__
 
-    raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+    raise TypeError("Incompatible classes {}, {}".format(A.__class__, B.__class__))

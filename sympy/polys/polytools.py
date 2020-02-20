@@ -1,6 +1,5 @@
 """User-friendly public interface to polynomial functions. """
 
-from __future__ import print_function, division
 
 from functools import wraps
 
@@ -164,7 +163,7 @@ class Poly(Basic):
             raise PolynomialError(
                 "invalid polynomial representation: %s" % rep)
         elif rep.lev != len(gens) - 1:
-            raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
+            raise PolynomialError("invalid arguments: {}, {}".format(rep, gens))
 
         expr = basic_from_dict(rep.to_sympy_dict(), *gens)
 
@@ -277,7 +276,7 @@ class Poly(Basic):
         return cls._from_dict(rep, opt)
 
     def __hash__(self):
-        return super(Poly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -412,7 +411,7 @@ class Poly(Basic):
             try:
                 return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
             except CoercionFailed:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
+                raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)
@@ -441,7 +440,7 @@ class Poly(Basic):
             else:
                 G = g.rep.convert(dom)
         else:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         cls = f.__class__
 
@@ -601,7 +600,7 @@ class Poly(Basic):
                 gens[gens.index(x)] = y
                 return f.per(f.rep, gens=gens)
 
-        raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
+        raise PolynomialError("can't replace {} with {} in {}".format(x, y, f))
 
     def match(f, *args, **kwargs):
         """Match expression from Poly. See Basic.match()"""
@@ -692,7 +691,7 @@ class Poly(Basic):
                 index = f.gens.index(gen)
             except ValueError:
                 raise GeneratorsError(
-                    "%s doesn't have %s as generator" % (f, gen))
+                    "{} doesn't have {} as generator".format(f, gen))
             else:
                 indices.add(index)
 
@@ -1031,7 +1030,7 @@ class Poly(Basic):
                     index = gens.index(gen)
                 except ValueError:
                     raise GeneratorsError(
-                        "%s doesn't have %s as generator" % (f, gen))
+                        "{} doesn't have {} as generator".format(f, gen))
                 else:
                     gens[index] = value
 
@@ -2412,7 +2411,7 @@ class Poly(Basic):
             result = f.rep.eval(a, j)
         except CoercionFailed:
             if not auto:
-                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
+                raise DomainError("can't evaluate at {} in {}".format(a, f.rep.dom))
             else:
                 a_domain, [a] = construct_domain([a])
                 new_domain = f.get_domain().unify_with_symbols(a_domain, f.gens)
@@ -3643,7 +3642,7 @@ class Poly(Basic):
                 sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
         except NoConvergence:
             raise NoConvergence(
-                'convergence to root failed; try n < %s or maxsteps > %s' % (
+                'convergence to root failed; try n < {} or maxsteps > {}'.format(
                 n, maxsteps))
         finally:
             mpmath.mp.dps = dps
@@ -4161,7 +4160,7 @@ class PurePoly(Poly):
         return (self.rep,)
 
     def __hash__(self):
-        return super(PurePoly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -4218,13 +4217,13 @@ class PurePoly(Poly):
             try:
                 return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
             except CoercionFailed:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
+                raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if len(f.gens) != len(g.gens):
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         if not (isinstance(f.rep, DMP) and isinstance(g.rep, DMP)):
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("can't unify {} with {}".format(f, g))
 
         cls = f.__class__
         gens = f.gens
@@ -4457,9 +4456,9 @@ def degree(f, gen=0):
     elif not f.is_Poly and len(f.free_symbols) > 1:
         raise TypeError(filldedent('''
          A symbolic generator of interest is required for a multivariate
-         expression like func = %s, e.g. degree(func, gen = %s) instead of
-         degree(func, gen = %s).
-        ''' % (f, next(ordered(f.free_symbols)), gen)))
+         expression like func = {}, e.g. degree(func, gen = {}) instead of
+         degree(func, gen = {}).
+        '''.format(f, next(ordered(f.free_symbols)), gen)))
 
     return Integer(p.degree(gen))
 

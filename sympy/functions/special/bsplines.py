@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, sympify
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
@@ -277,7 +275,7 @@ def interpolating_spline(d, x, X, Y):
 
     coeff = linsolve((Matrix(A), Matrix(Y)), symbols("c0:{}".format(len(X)), cls=Dummy))
     coeff = list(coeff)[0]
-    intervals = set([c for b in basis for (e, c) in b.args if c != True])
+    intervals = {c for b in basis for (e, c) in b.args if c != True}
 
     # Sorting the intervals
     #  ival contains the end-points of each interval
@@ -287,7 +285,7 @@ def interpolating_spline(d, x, X, Y):
     com = sorted(com, key=lambda x: x[0])
     intervals = [y for x, y in com]
 
-    basis_dicts = [dict((c, e) for (e, c) in b.args) for b in basis]
+    basis_dicts = [{c: e for (e, c) in b.args} for b in basis]
     spline = []
     for i in intervals:
         piece = sum(

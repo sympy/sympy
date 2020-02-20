@@ -12,12 +12,11 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from __future__ import print_function, division
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
 from sympy.core.compatibility import unicode
 
-class stringPict(object):
+class stringPict:
     """An ASCII picture.
     The pictures are represented as a list of equal length strings.
     """
@@ -346,13 +345,13 @@ class stringPict(object):
         return False
 
     def __hash__(self):
-        return super(stringPict, self).__hash__()
+        return super().__hash__()
 
     def __str__(self):
         return str.join('\n', self.picture)
 
     def __unicode__(self):
-        return unicode.join(u'\n', self.picture)
+        return unicode.join('\n', self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)" % ('\n'.join(self.picture), self.baseline)
@@ -437,7 +436,7 @@ class prettyForm(stringPict):
         Parentheses are needed around +, - and neg.
         """
         quantity = {
-            'degree': u"\N{DEGREE SIGN}"
+            'degree': "\N{DEGREE SIGN}"
         }
 
         if len(others) == 0:

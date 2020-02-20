@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.exprtools import factor_terms
@@ -302,7 +300,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             return diophantine(eq/fl[0], param=param, syms=syms, permute=permute)
         terms = fl[1]
 
-    sols = set([])
+    sols = set()
 
     for term in terms:
 
@@ -336,7 +334,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
-    final_soln = set([])
+    final_soln = set()
     for sol in sols:
         if all(_is_int(s) for s in sol):
             if do_permute_signs:
@@ -455,8 +453,8 @@ def diop_solve(eq, param=symbols("t", integer=True)):
         return _diop_general_pythagorean(var, coeff, param)
 
     elif eq_type == "univariate":
-        return set([(int(i),) for i in solveset_real(
-            eq, var[0]).intersect(S.Integers)])
+        return {(int(i),) for i in solveset_real(
+            eq, var[0]).intersect(S.Integers)}
 
     elif eq_type == "general_sum_of_squares":
         return _diop_general_sum_of_squares(var, -int(coeff[1]), limit=S.Infinity)
@@ -949,7 +947,7 @@ def _diop_quadratic(var, coeff, t):
     # We consider two cases; DE - BF = 0 and DE - BF != 0
     # More details, http://www.alpertron.com.ar/METHODS.HTM#SHyperb
 
-    sol = set([])
+    sol = set()
     discr = B**2 - 4*A*C
     if A == 0 and C == 0 and B != 0:
 
@@ -3212,8 +3210,7 @@ def power_representation(n, p, k, zeros=False):
         return
 
     if p == 1:
-        for t in partition(n, k, zeros=zeros):
-            yield t
+        yield from partition(n, k, zeros=zeros)
         return
 
     if p == 2:
@@ -3255,12 +3252,10 @@ def pow_rep_recursive(n_i, k, n_remaining, terms, p):
         yield tuple(terms)
     else:
         if n_i >= 1 and k > 0:
-            for t in pow_rep_recursive(n_i - 1, k, n_remaining, terms, p):
-                yield t
+            yield from pow_rep_recursive(n_i - 1, k, n_remaining, terms, p)
             residual = n_remaining - pow(n_i, p)
             if residual >= 0:
-                for t in pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p):
-                    yield t
+                yield from pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p)
 
 
 def sum_of_squares(n, k, zeros=False):
@@ -3307,8 +3302,7 @@ def sum_of_squares(n, k, zeros=False):
     ========
     sympy.utilities.iterables.signed_permutations
     """
-    for t in power_representation(n, 2, k, zeros):
-        yield t
+    yield from power_representation(n, 2, k, zeros)
 
 
 def _can_do_sum_of_squares(n, k):

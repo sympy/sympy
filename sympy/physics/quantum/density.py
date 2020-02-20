@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from itertools import product
 
 from sympy import Tuple, Add, Mul, Matrix, log, expand, S
@@ -38,7 +36,7 @@ class Density(HermitianOperator):
     @classmethod
     def _eval_args(cls, args):
         # call this to qsympify the args
-        args = super(Density, cls)._eval_args(args)
+        args = super()._eval_args(args)
 
         for arg in args:
             # Check if arg is a tuple

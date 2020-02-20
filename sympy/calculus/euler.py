@@ -87,7 +87,7 @@ def euler_equations(L, funcs=(), vars=()):
 
     for f in funcs:
         if not vars == f.args:
-            raise ValueError("Variables %s don't match args: %s" % (vars, f))
+            raise ValueError("Variables {} don't match args: {}".format(vars, f))
 
     order = max(len(d.variables) for d in L.atoms(Derivative)
                 if d.expr in funcs)

@@ -1,5 +1,4 @@
 """ Caching facility for SymPy """
-from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 

@@ -5546,7 +5546,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             for i in range(0, 5): # check at 5 random points
                 rand_x = randint(1, 40)
-                substitutions = dict((s, rand_x) for s in args)
+                substitutions = {s: rand_x for s in args}
                 rand_val.append(float(abs(res.subs(substitutions).n())))
 
             if stdev(rand_val) < Pow(10, -3):
@@ -5562,7 +5562,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             for i in range(0, 5): # check at 5 random points
                 rand_x = randint(1, 40)
-                substitutions = dict((s, rand_x) for s in args)
+                substitutions = {s: rand_x for s in args}
                 rand_val.append(float(abs(dres.subs(substitutions).n())))
             if stdev(rand_val) < Pow(10, -3):
                 return True
