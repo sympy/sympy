@@ -1,7 +1,7 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, simplify)
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, simplify, integrate)
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, infinitesimals, checkinfsol,
     dsolve)
@@ -4079,3 +4079,5 @@ def test_issue_9446():
     f = Function('f')
     assert dsolve(Eq(f(2 * x), sin(Derivative(f(x)))), f(x)) == \
     [Eq(f(x), C1 + Integral(asin(f(2*x)), x)), Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x))]
+
+    assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
