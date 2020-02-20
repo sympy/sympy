@@ -407,6 +407,8 @@ def test_divisor_sigma():
     j = Symbol("j", integer=True, positive=True)
     k = Symbol("k", integer=True, positive=True)
     assert divisor_sigma(a**j*b**k) == (a**(j + 1) - 1)*(b**(k + 1) - 1)/((a - 1)*(b - 1))
+    assert divisor_sigma(a**j*b**k, 2) == (a**(2*j + 2) - 1)*(b**(2*k + 2) - 1)/((a**2 - 1)*(b**2 - 1))
+    assert divisor_sigma(a**j*b**k, 0) == (j + 1)*(k + 1)
 
     m = Symbol("m", integer=True)
     k = Symbol("k", integer=True)

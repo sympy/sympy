@@ -2043,16 +2043,6 @@ class divisor_sigma(Function):
         if n.is_prime:
             return 1 + n**k
 
-        if n.is_integer and not n.is_Integer:
-            p = []
-            for b, e in (_.as_base_exp() for _ in Mul.make_args(n)):
-                if b.is_prime and e.is_positive:
-                    p.append((b**(k*(e + 1)) - 1)/(b**k - 1) if k != 0
-                    else e + 1)
-                else:
-                    return
-            return Mul(*p)
-
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
@@ -2064,6 +2054,17 @@ class divisor_sigma(Function):
             else:
                 return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
                            else e + 1 for p, e in factorint(n).items()])
+
+        if n.is_integer:  # symbolic case
+            args = []
+            for p, e in (_.as_base_exp() for _ in Mul.make_args(n)):
+                if p.is_prime and e.is_positive:
+                    args.append((p**(k*(e + 1)) - 1)/(p**k - 1) if
+                                k != 0 else e + 1)
+                else:
+                    return
+            return Mul(*args)
+
 
 def core(n, t=2):
     r"""
