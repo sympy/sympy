@@ -4,21 +4,50 @@ can be partitioned into k sum-free sets.(http://mathworld.wolfram.com/SchurNumbe
 """
 import math
 from sympy import Symbol
+from sympy.core import S
+from sympy.core.function import Function
 
 
-def schur_number_lower_bound(n):
+class schur_number_lower_bound(Function):
+    """
+    Gives the value for 1/2 * (3**n  - 1)
+    """
+
+    @classmethod
+    def eval(cls, k):
+        expr = (1/2) * (3**k - 1)
+
+        if k.is_Number:
+            if k is S.Infinity:
+                return S.Infinity
+            if k.is_zero:
+                return 0
+            if not k.is_Integer or k.is_negative:
+                raise ValueError("k should be a positive integer")
+            expr = int(expr)
+
+        return expr
+
+
+class schur_number_subsets_lower_bound(Function):
     """
     This function returns a lower bound to Schur's Number
     """
-    n = int(n)
-    if n <= 0:
-        raise ValueError("n must be a positive integer.")
-    elif n <= 3:
-        min_k = 1
-    else:
-        min_k = math.ceil(math.log(2*n + 1, 3))
 
-    return min_k
+    @classmethod
+    def eval(cls, n):
+        n = int(n)
+
+        if n is S.Infinity:
+            return S.Infinity
+        if n <= 0:
+            raise ValueError("n must be a positive integer.")
+        elif n <= 3:
+            min_k = 1
+        else:
+            min_k = math.ceil(math.log(2*n + 1, 3))
+
+        return min_k
 
 def schur_partition(n):
     """
@@ -49,7 +78,7 @@ def schur_partition(n):
     [[3, 2], [6, 5, 8], [1, 4, 7]]
     """
     n = int(n)
-    number_of_subsets = schur_number_lower_bound(n)
+    number_of_subsets = schur_number_subsets_lower_bound(n)
     if n == 1:
         sum_free_subsets = [[1]]
     elif n == 2:
@@ -59,7 +88,7 @@ def schur_partition(n):
     else:
         sum_free_subsets = [[1,4],[2,3]]
 
-    while len(sum_free_subsets) < number_of_subsets  :
+    while len(sum_free_subsets) < number_of_subsets:
         sum_free_subsets = _generate_next_list(sum_free_subsets, n)
         missed_elements = [3*k + 1 for k in range(len(sum_free_subsets),(n-1)//3 + 1)]
         sum_free_subsets[-1] += missed_elements
