@@ -501,19 +501,6 @@ def test_conjugate():
                           [ 5, 0]])
 
 
-def test_doit():
-    a = OperationsOnlyMatrix([[Add(x, x, evaluate=False)]])
-    assert a[0] != 2*x
-    assert a.doit() == Matrix([[2*x]])
-
-
-def test_evalf():
-    a = OperationsOnlyMatrix(2, 1, [sqrt(5), 6])
-    assert all(a.evalf()[i] == a[i].evalf() for i in range(2))
-    assert all(a.evalf(2)[i] == a[i].evalf(2) for i in range(2))
-    assert all(a.n(2)[i] == a[i].n(2) for i in range(2))
-
-
 def test_expand():
     m0 = OperationsOnlyMatrix([[x*(x + y), 2], [((x + y)*y)*x, x*(y + x*(x + y))]])
     # Test if expand() returns a matrix
