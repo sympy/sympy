@@ -1045,18 +1045,17 @@ def _TR11(rv):
                 arg_denoms[fi.base.args[0]] = fi.base.func
 
             elif fi.func in (sin, cos):
-                if len(arg_denoms):
-                    arg_num = fi.args[0]
-                    for arg_denom in list(arg_denoms):
-                        base = arg_num/arg_denom
-                        if not (fi.func == cos and arg_denoms[arg_denom] == cos) :
-                            if base % 2 == 0:
-                                rv = TR11(rv, arg_denom)
-                                arg_denoms.pop(arg_denom)
+                arg_num = fi.args[0]
+                for arg_denom in ordered(arg_denoms):
+                    base = arg_num/arg_denom
+                    if not (fi.func == cos and arg_denoms[arg_denom] == cos) :
+                        if base % 2 == 0:
+                            rv = TR11(rv, arg_denom)
+                            arg_denoms.pop(arg_denom)
 
-                            elif (1/base) % 2 == 0:
-                                rv = TR11(rv, arg_num)
-                                arg_denoms.pop(arg_denom)
+                        elif (1/base) % 2 == 0:
+                            rv = TR11(rv, arg_num)
+                            arg_denom = arg_denom/2
 
         return rv
 
