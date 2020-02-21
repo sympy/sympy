@@ -3,9 +3,9 @@ The Schur number S(k) is the largest integer n for which the interval [1,n]
 can be partitioned into k sum-free sets.(http://mathworld.wolfram.com/SchurNumber.html)
 """
 import math
-from sympy import Symbol
 from sympy.core import S
 from sympy.core.function import Function
+from sympy.core.numbers import Integer
 
 
 class schur_number_lower_bound(Function):
@@ -15,7 +15,7 @@ class schur_number_lower_bound(Function):
 
     @classmethod
     def eval(cls, k):
-        expr = (1/2) * (3**k - 1)
+        expr = (3**k - 1)/2
 
         if k.is_Number:
             if k is S.Infinity:
@@ -24,9 +24,8 @@ class schur_number_lower_bound(Function):
                 return 0
             if not k.is_Integer or k.is_negative:
                 raise ValueError("k should be a positive integer")
-            expr = int(expr)
 
-        return expr
+        return Integer(expr)
 
 
 class schur_number_subsets_lower_bound(Function):
@@ -47,14 +46,33 @@ class schur_number_subsets_lower_bound(Function):
         else:
             min_k = math.ceil(math.log(2*n + 1, 3))
 
-        return min_k
+        return Integer(min_k)
+
 
 def schur_partition(n):
     """
-    This function makes the partition in the minimum number of sum-free subsets
+
+    This function returns the partition in the minimum number of sum-free subsets
     according to the lower bound given by the Schur Number.
-    The partition is returned in a list of lists.
-    *** Note that it is possible for some n to make the partition into less
+
+    Parameters
+    ==========
+
+    n: a number
+        n is the upper limit of the range [1, n] for which we need to find and
+        return the minimum number of free subsets according to the lower bound
+        of schur number
+
+    Returns
+    =======
+
+    List of lists
+        List of the minimum number of sum-free subsets
+
+    Notes
+    =====
+
+    It is possible for some n to make the partition into less
     subsets since the only known Schur numbers are:
     S(1) = 1, S(2) = 4 , S(3) = 13, S(4) = 44.
     e.g for n = 44 the lower bound from the function above is 5 subsets but it has been proven
@@ -82,20 +100,21 @@ def schur_partition(n):
     if n == 1:
         sum_free_subsets = [[1]]
     elif n == 2:
-        sum_free_subsets = [[1,2]]
+        sum_free_subsets = [[1, 2]]
     elif n == 3:
-        sum_free_subsets = [[1,2,3]]
+        sum_free_subsets = [[1, 2, 3]]
     else:
-        sum_free_subsets = [[1,4],[2,3]]
+        sum_free_subsets = [[1, 4], [2, 3]]
 
     while len(sum_free_subsets) < number_of_subsets:
         sum_free_subsets = _generate_next_list(sum_free_subsets, n)
-        missed_elements = [3*k + 1 for k in range(len(sum_free_subsets),(n-1)//3 + 1)]
+        missed_elements = [3*k + 1 for k in range(len(sum_free_subsets), (n-1)//3 + 1)]
         sum_free_subsets[-1] += missed_elements
 
     return sum_free_subsets
 
-def _generate_next_list(current_list,n):
+
+def _generate_next_list(current_list, n):
     new_list = []
 
     for item in current_list:
@@ -104,17 +123,8 @@ def _generate_next_list(current_list,n):
         new_item = temp_1 + temp_2
         new_list.append(new_item)
 
-    last_list = [3*k + 1 for k in range(0, len(current_list)+1) if 3*k +1 <= n]
+    last_list = [3*k + 1 for k in range(0, len(current_list)+1) if 3*k + 1 <= n]
     new_list.append(last_list)
     current_list = new_list
 
     return current_list
-
-def Schur_number_lower_bound():
-    """
-    This function returns the inequality to be solved symbolically
-    in order to find the Schur Number
-    """
-    n = Symbol("n")
-    k = Symbol("k")
-    return k >= 1/2*(3**n-1)

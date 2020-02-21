@@ -1,4 +1,5 @@
 from sympy.combinatorics.schur_number import schur_partition
+from sympy.testing.randtest import _randint
 import random
 
 def _sum_free_test(subset):
@@ -11,10 +12,9 @@ def _sum_free_test(subset):
             assert (i + j in subset) is False
 
 def test_schur_number():
-    random.seed(1000)
-
+    random_number_generator = _randint(1000)
     for _ in range(5):
-        n = random.randint(1, 1000)
+        n = random_number_generator(1, 1000)
         result = schur_partition(n)
         t = 0
         numbers = []
