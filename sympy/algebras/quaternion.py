@@ -101,9 +101,14 @@ class Quaternion(Expr):
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import pi, sqrt
-        >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
-        >>> q
+        >>> Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
         1/2 + 1/2*i + 1/2*j + 1/2*k
+
+        The given vector will be normalized:
+
+        >>> Quaternion.from_axis_angle((99, 99, 99), 2*pi/3)
+        1/2 + 1/2*i + 1/2*j + 1/2*k
+
         """
         (x, y, z) = vector
         norm = sqrt(x**2 + y**2 + z**2)
@@ -571,7 +576,7 @@ class Quaternion(Expr):
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q))
+        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q, normalize=False))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         >>> (axis, angle) = q.to_axis_angle()
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
@@ -607,12 +612,12 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> q = Quaternion(1, 1, 1, 1)
-        >>> (axis, angle) = q.to_axis_angle()
-        >>> axis
-        (sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)
-        >>> angle
-        2*pi/3
+        >>> from sympy import S
+        >>> Quaternion(1, 1, 1, 1).to_axis_angle()
+        ((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
+        >>> Quaternion(S.Half, S.Half, S.Half, S.Half).to_axis_angle(normalize=False)
+        ((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
+
         """
         q = self
         if q.a.is_negative:
@@ -660,7 +665,7 @@ class Quaternion(Expr):
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(q.to_rotation_matrix())
+        >>> trigsimp(q.to_rotation_matrix(normalize=False))
         Matrix([
         [cos(x), -sin(x), 0],
         [sin(x),  cos(x), 0],
@@ -669,14 +674,11 @@ class Quaternion(Expr):
         Generates a 4x4 transformation matrix (used for rotation about a point
         other than the origin) if the point(v) is passed as an argument.
 
-        Examples
-        ========
-
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
+        >>> trigsimp(q.to_rotation_matrix((1, 1, 1), normalize=False))
          Matrix([
         [cos(x), -sin(x), 0,  sin(x) - cos(x) + 1],
         [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
