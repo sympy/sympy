@@ -466,9 +466,9 @@ class MathMLContentPrinter(MathMLPrinterBase):
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
                 xmldeg = self.dom.createElement('degree')
-                xmlci = self.dom.createElement('ci')
-                xmlci.appendChild(self.dom.createTextNode(str(e.exp.q)))
-                xmldeg.appendChild(xmlci)
+                xmlcn = self.dom.createElement('cn')
+                xmlcn.appendChild(self.dom.createTextNode(str(e.exp.q)))
+                xmldeg.appendChild(xmlcn)
                 x.appendChild(xmldeg)
             x.appendChild(self._print(e.base))
             return x
