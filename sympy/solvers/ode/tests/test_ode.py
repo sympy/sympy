@@ -1001,6 +1001,7 @@ def test_classify_ode():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+        'almost_linear',
         '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_homogeneous',
         'nth_linear_euler_eq_homogeneous',
@@ -1009,7 +1010,8 @@ def test_classify_ode():
         '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-        '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+        'almost_linear_Integral')
     assert classify_ode(f(x).diff(x)**2, f(x)) == ('nth_algebraic',
          'separable',
          '1st_linear',
