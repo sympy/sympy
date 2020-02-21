@@ -20,7 +20,7 @@ def mplot2d(f, var, show=True):
     """
 
     import warnings
-    warnings.filterwarnings("ignore", "Could not match \S")
+    warnings.filterwarnings("ignore", r"Could not match \S")
 
     p = import_module('pylab')
     if not p:
