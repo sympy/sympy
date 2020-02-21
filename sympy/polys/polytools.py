@@ -5949,7 +5949,7 @@ def _symbolic_factor_list(expr, opt, method):
                 factors.append((_factors_product(other), exp))
     if method == 'sqf':
         factors = [(reduce(mul, (f for f, _ in factors if _ == k)), k)
-                   for k in set(dict(factors).values())]
+                   for k in set(i for _, i in factors)]
 
     return coeff, factors
 
