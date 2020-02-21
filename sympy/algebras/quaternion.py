@@ -79,7 +79,7 @@ class Quaternion(Expr):
         return self._real_field
 
     @classmethod
-    def from_axis_angle(cls, vector, angle):
+    def from_axis_angle(cls, vector, angle, normalize=True):
         """Returns a rotation quaternion given the axis and the angle of rotation.
 
         Parameters
@@ -89,6 +89,8 @@ class Quaternion(Expr):
             The vector representation of the given axis.
         angle : number
             The angle by which axis is rotated (in radians).
+        normalize : bool
+            If ``False``, *vector* is assumed to have unit length.
 
         Returns
         =======
@@ -101,18 +103,20 @@ class Quaternion(Expr):
 
         >>> from sympy.algebras.quaternion import Quaternion
         >>> from sympy import pi, sqrt
-        >>> Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
+        >>> axis = sqrt(3)/3, sqrt(3)/3, sqrt(3)/3
+        >>> Quaternion.from_axis_angle(axis, 2*pi/3, normalize=False)
         1/2 + 1/2*i + 1/2*j + 1/2*k
 
-        The given vector will be normalized:
+        By default, the given vector will be normalized:
 
         >>> Quaternion.from_axis_angle((99, 99, 99), 2*pi/3)
         1/2 + 1/2*i + 1/2*j + 1/2*k
 
         """
-        (x, y, z) = vector
-        norm = sqrt(x**2 + y**2 + z**2)
-        (x, y, z) = (x / norm, y / norm, z / norm)
+        x, y, z = vector
+        if normalize:
+            norm = sqrt(x**2 + y**2 + z**2)
+            x, y, z = x / norm, y / norm, z / norm
         s = sin(angle * S.Half)
         a = cos(angle * S.Half)
         b = x * s
@@ -535,8 +539,8 @@ class Quaternion(Expr):
         # q^p = ||q||^p * (cos(p*a) + u*sin(p*a))
 
         q = self
-        (v, angle) = q.to_axis_angle()
-        q2 = Quaternion.from_axis_angle(v, p * angle)
+        v, angle = q.to_axis_angle()
+        q2 = Quaternion.from_axis_angle(v, p * angle, normalize=False)
         return q2 * (q.norm()**p)
 
     def integrate(self, *args):
@@ -560,7 +564,7 @@ class Quaternion(Expr):
             It's important to note that when r is a tuple, it must be of the form
             (axis, angle)
         normalize : bool
-            If ``False`` (and r is a quaternion), r is assumed to have
+            If ``False``, the quaternion/the rotation axis is assumed to have
             unit length.
 
         Returns
@@ -579,7 +583,7 @@ class Quaternion(Expr):
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q, normalize=False))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         >>> (axis, angle) = q.to_axis_angle()
-        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
+        >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle), normalize=False))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
         """
         x, y, z = pin
@@ -589,7 +593,7 @@ class Quaternion(Expr):
                 q = q.normalize()
         else:
             vector, angle = r
-            q = Quaternion.from_axis_angle(vector, angle)
+            q = Quaternion.from_axis_angle(vector, angle, normalize=normalize)
         pout = q * Quaternion(0, x, y, z) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
