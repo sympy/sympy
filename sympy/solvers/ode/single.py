@@ -11,7 +11,7 @@ from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.integrals import Integral
-from sympy.simplify import simplify, collect
+from sympy.simplify import simplify
 from sympy.utilities import numbered_symbols
 from sympy.functions import exp
 
