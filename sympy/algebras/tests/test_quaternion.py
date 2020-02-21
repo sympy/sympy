@@ -98,6 +98,8 @@ def test_quaternion_functions():
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
     assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
+    assert Quaternion.rotate_point((1, 0, 0), q, normalize=False) == \
+        (w**2 + x**2 - y**2 - z**2, 2*w*z + 2*x*y, -2*w*y + 2*x*z)
     n = Symbol('n')
     raises(TypeError, lambda: q1**n)
     n = Symbol('n', integer=True)
@@ -124,15 +126,15 @@ def test_quaternion_conversions():
     theta = symbols("theta", real=True)
     q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))
 
-    assert trigsimp(q2.to_rotation_matrix()) == Matrix([
+    assert trigsimp(q2.to_rotation_matrix(normalize=False)) == Matrix([
                                                [cos(theta), -sin(theta), 0],
                                                [sin(theta),  cos(theta), 0],
                                                [0,           0,          1]])
 
-    assert q2.to_axis_angle() == ((0, 0, sin(theta/2)/Abs(sin(theta/2))),
-                                   2*acos(cos(theta/2)))
+    assert q2.to_axis_angle(normalize=False) == ((0, 0, sin(theta/2)/Abs(sin(theta/2))),
+                                                 2*acos(cos(theta/2)))
 
-    assert trigsimp(q2.to_rotation_matrix((1, 1, 1))) == Matrix([
+    assert trigsimp(q2.to_rotation_matrix((1, 1, 1), normalize=False)) == Matrix([
                [cos(theta), -sin(theta), 0, sin(theta) - cos(theta) + 1],
                [sin(theta),  cos(theta), 0, -sin(theta) - cos(theta) + 1],
                [0,           0,          1,  0],
