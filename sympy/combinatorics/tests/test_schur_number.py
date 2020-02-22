@@ -1,6 +1,5 @@
 from sympy.combinatorics.schur_number import schur_partition
 from sympy.testing.randtest import _randint
-import random
 
 def _sum_free_test(subset):
     """
