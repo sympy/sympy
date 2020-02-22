@@ -502,6 +502,9 @@ class AlmostLinear(SinglePatternODESolver):
         d = Wild('d', exclude=[df, fx.diff(x, 2)])
         e = Wild('e', exclude=[df])
         r = self.ode_problem.eq.match(e*df+d)
+        self.fxx = None
+        self.gx = None
+        self.kx = None
         if r:
             r2 = r.copy()
             r2[c] = S.Zero
