@@ -419,7 +419,7 @@ class FirstLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x))))
+        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
             * exp(-Integral(P, x)))))
         return [gensol]
 
@@ -492,10 +492,11 @@ class AlmostLinear(SinglePatternODESolver):
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
-        Q = Wild('Q', exclude=[f(x), f(x).diff(x)])
+        Q = Wild('Q', exclude=[f(x).diff(x)])
         return P, Q
 
     def _equation(self, fx, x, order):
+        P,Q = self.wilds()
         df = fx.diff(x)
         c = Wild('c', exclude=[fx])
         d = Wild('d', exclude=[df, fx.diff(x, 2)])
@@ -517,15 +518,27 @@ class AlmostLinear(SinglePatternODESolver):
                 r2[d] /= u
                 r2[e] /= u.diff(fx)
                 self.coeffs = r2
-                return u.diff(x) + (r2[r2['b']]/r2[r2['a']])*u + r2[r2['c']]/r2[r2['a']]
+                du = u.diff(x)
+                temp = du + (r2[r2['b']]/r2[r2['a']])*u - r2[r2['c']]/r2[r2['a']]
+                temp = expand(temp/ temp.coeff(fx.diff(x)))
+                self.fxx = r2[e]
+                self.kx = r2[d]
+                self.gx = -r2[c]
+                self.substituting = u
+                return fx.diff(x) + P*fx - Q
         return self.ode_problem.eq
 
     def _get_general_solution(self, *, simplify: bool = True):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
+        eq = self.ode_problem.eq
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x))))
+        try:
+            gensol = Eq(self.substituting, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/selffxx, x)),x))
+                * exp(-Integral(self.kx/self.fxx, x)))))
+        except:
+            gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
             * exp(-Integral(P, x)))))
         return [gensol]
 

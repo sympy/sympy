@@ -73,28 +73,28 @@ def test_dsolve_all_hint():
     _u1 = sol1.rhs.args[1].args[1][0]
 
     expected = {
-        '1st_homogeneous_coeff_subs_indep_div_dep_Integral': Eq(f(x), C1),
-        'separable_Integral': Eq(Integral(1, (_y, f(x))), C1 + Integral(0, x)),
-        'separable': Eq(f(x), C1),
-        'Bernoulli': Eq(f(x), C1),
-        'Bernoulli_Integral': Eq(f(x), C1 + Integral(0, x)),
-        'lie_group': Eq(f(x), C1),
-        'nth_linear_constant_coeff_homogeneous': Eq(f(x), C1),
-        'nth_algebraic_Integral': Eq(f(x), C1),
-        '1st_power_series': Eq(f(x), C1),
-        '1st_homogeneous_coeff_subs_indep_div_dep': Eq(f(x), C1),
-        '1st_linear': Eq(f(x), C1),
-        '1st_homogeneous_coeff_subs_dep_div_indep': Eq(f(x), C1),
-        '1st_homogeneous_coeff_subs_dep_div_indep_Integral': Eq(log(x), C1 + Integral(-1/_u1, (_u1, f(x)/x))),
-        '1st_homogeneous_coeff_best': Eq(f(x), C1),
-        'nth_linear_euler_eq_homogeneous': Eq(f(x), C1),
-        'nth_algebraic': Eq(f(x), C1),
-        '1st_linear_Integral': Eq(f(x), C1 + Integral(0, x)),
-        'best': Eq(f(x), C1),
-        'best_hint': 'nth_algebraic',
-        'default': 'nth_algebraic',
-        'order': 1
-    }
+        'Bernoulli_Integral': Eq(f(x), C1 + Integral(0, x)), 
+        '1st_homogeneous_coeff_best': Eq(f(x), C1), 
+        'Bernoulli': Eq(f(x), C1), 
+        'nth_algebraic': Eq(f(x), C1), 
+        'nth_linear_euler_eq_homogeneous': Eq(f(x), C1), 
+        'nth_linear_constant_coeff_homogeneous': Eq(f(x), C1), 
+        'separable': Eq(f(x), C1), 'almost_linear': Eq(f(x), C1), 
+        '1st_homogeneous_coeff_subs_indep_div_dep': Eq(f(x), C1), 
+        'nth_algebraic_Integral': Eq(f(x), C1), 
+        '1st_linear': Eq(f(x), C1), 
+        '1st_linear_Integral': Eq(f(x), C1 + Integral(0, x)), 
+        'lie_group': Eq(f(x), C1), 
+        '1st_homogeneous_coeff_subs_dep_div_indep': Eq(f(x), C1), 
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral': Eq(log(x), C1 + Integral(-1/_u1, (_u1, f(x)/x))), 
+        'almost_linear_Integral': Eq(f(x), C1 + Integral(0, x)), 
+        '1st_power_series': Eq(f(x), C1), 
+        'separable_Integral': Eq(Integral(1, (_y, f(x))), C1 + Integral(0, x)), 
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral': Eq(f(x), C1), 
+        'best': Eq(f(x), C1), 
+        'best_hint': 'nth_algebraic', 
+        'default': 'nth_algebraic', 
+        'order': 1}
     assert output == expected
 
     assert dsolve(eq, hint='best') == Eq(f(x), C1)
@@ -1110,9 +1110,9 @@ def test_classify_ode():
 
 
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', 'Bernoulli',
+        ('factorable', 'nth_algebraic', 'separable', '1st_linear', 'Bernoulli',
          '1st_power_series', 'lie_group', 'nth_algebraic_Integral',
-         'separable_Integral', 'Bernoulli_Integral')
+         'separable_Integral', '1st_linear_Integral', 'Bernoulli_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
         ('1st_power_series', 'lie_group')
