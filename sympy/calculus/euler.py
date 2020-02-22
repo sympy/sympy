@@ -66,8 +66,8 @@ def euler_equations(L, funcs=(), vars=()):
 
     """
     
-    if L.is_number:
-        return 0
+    if L == 0:
+        return L
     
     funcs = tuple(funcs) if iterable(funcs) else (funcs,)
 
