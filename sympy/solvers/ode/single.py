@@ -536,7 +536,7 @@ class AlmostLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        if fxx is None or gx is None or kx is None:
+        if self.fxx is None or self.gx is None or self.kx is None:
             gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
             * exp(-Integral(P, x)))))
         else:
