@@ -72,5 +72,3 @@ def test_euler_when_L_out_turn_to_zero():
     f, g, h = f(), g(), h()
     L = f.diff(x)*h.diff(z)
     assert euler(L, f, (x,y)) == 0
-    
-    
