@@ -65,10 +65,8 @@ def euler_equations(L, funcs=(), vars=()):
     .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
 
     """
-    
     if L.is_number:
         return 0
-    
     funcs = tuple(funcs) if iterable(funcs) else (funcs,)
 
     if not funcs:
