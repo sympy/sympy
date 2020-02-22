@@ -62,3 +62,15 @@ def test_euler_high_order():
     w = Symbol('w')
     L = D(x(t, w), t, w)**2/2
     assert euler(L) == [Eq(D(x(t, w), t, t, w, w), 0)]
+    
+    
+
+def test_euler_when_L_out_turn_to_zero():
+    # an example issue
+    from sympy import symbols
+    x, y, z = symbols("x y z")
+    f, g, h = symbols("f g h", cls= Function, args=(x,y))
+    f, g, h = f(), g(), h()
+    L = f.diff(x)*h.diff(z)
+    assert euler(L, f, (x,y)) == 0
+
