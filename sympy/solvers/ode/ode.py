@@ -943,7 +943,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     'nth_algebraic_Integral', 'separable_Integral',
     '1st_linear_Integral', 'Bernoulli_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-    '1st_homogeneous_coeff_subs_dep_div_indep_Integral', 
+    '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
     'almost_linear_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
     ('nth_linear_constant_coeff_undetermined_coefficients',
