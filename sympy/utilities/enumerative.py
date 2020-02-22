@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import range
 
 """
 Algorithms and classes to support enumerative combinatorics.
@@ -160,7 +159,7 @@ def multiset_partitions_taocp(multiplicities):
 
     state
         Internal data structure which encodes a particular partition.
-        This output is then usually processed by a vistor function
+        This output is then usually processed by a visitor function
         which combines the information from this data structure with
         the components themselves to produce an actual partition.
 

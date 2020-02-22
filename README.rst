@@ -1,7 +1,7 @@
 SymPy
 =====
 
-|pypi version| |Build status| |Gitter Badge| |Zenodo Badge|
+|pypi version| |Build status| |Gitter Badge| |Zenodo Badge| |codecov Badge|
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
@@ -12,6 +12,8 @@ SymPy
    :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |Zenodo Badge| image:: https://zenodo.org/badge/18918/sympy/sympy.svg
    :target: https://zenodo.org/badge/latestdoi/18918/sympy/sympy
+.. |codecov Badge| image:: https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/sympy/sympy
 
 A Python library for symbolic mathematics.
 
@@ -103,13 +105,17 @@ the mpmath installation guide:
 
 https://github.com/fredrik-johansson/mpmath#1-download--installation
 
-To install SymPy itself, then simply run::
+To install SymPy using PyPI, run the following command::
+
+    $ pip install sympy
+
+To install SymPy from GitHub source, first clone SymPy using ``git``::
+
+    $ git clone https://github.com/sympy/sympy.git
+
+Then, in the ``sympy`` repository that you cloned, simply run::
 
     $ python setup.py install
-
-If you install it system-wide, you may need to prefix the previous command with ``sudo``::
-
-    $ sudo python setup.py install
 
 See https://docs.sympy.org/dev/install.html for more information.
 

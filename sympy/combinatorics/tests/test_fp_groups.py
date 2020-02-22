@@ -4,7 +4,7 @@ from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                            simplify_presentation)
 from sympy.combinatorics.free_groups import (free_group, FreeGroup)
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 """
 References

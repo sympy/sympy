@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import divisors
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, range)
+    default_sort_key)
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
@@ -36,7 +36,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.simplify import (simplify, collect, powsimp, posify,
+from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
@@ -3460,7 +3460,10 @@ def unrad(eq, *syms, **flags):
     # check for trivial case
     # - already a polynomial in integer powers
     if all(_Q(g) == 1 for g in gens):
-        return
+        if (len(gens) == len(poly.gens) and d!=1):
+            return eq, []
+        else:
+            return
     # - an exponent has a symbol of interest (don't handle)
     if any(g.as_base_exp()[1].has(*syms) for g in gens):
         return

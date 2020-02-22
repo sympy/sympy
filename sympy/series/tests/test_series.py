@@ -1,8 +1,7 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
     Function, log, sqrt, Symbol, Subs, pi, symbols, atan, LambertW, Rational
 from sympy.abc import x, y, n, k
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
 
 
@@ -219,3 +218,6 @@ def test_issue_7259():
     assert series(LambertW(x), x) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
     assert series(LambertW(x**2), x, n=8) == x**2 - x**4 + 3*x**6/2 + O(x**8)
     assert series(LambertW(sin(x)), x, n=4) == x - x**2 + 4*x**3/3 + O(x**4)
+
+def test_issue_11884():
+    assert cos(x).series(x, 1, n=1) == cos(1) + O(x - 1, (x, 1))

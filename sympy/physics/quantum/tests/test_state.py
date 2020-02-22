@@ -1,12 +1,13 @@
 from sympy import (Add, conjugate, diff, I, Integer, Mul, oo, pi, Pow,
                    Rational, sin, sqrt, Symbol, symbols, sympify, S)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.state import (
     Ket, Bra, TimeDepKet, TimeDepBra,
-    KetBase, BraBase, StateBase, Wavefunction
+    KetBase, BraBase, StateBase, Wavefunction,
+    OrthogonalKet, OrthogonalBra
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
 
@@ -226,3 +227,13 @@ def test_wavefunction():
 
     k = Wavefunction(x**2, 'x')
     assert type(k.variables[0]) == Symbol
+
+def test_orthogonal_states():
+    braket = OrthogonalBra(x) * OrthogonalKet(x)
+    assert braket.doit() == 1
+
+    braket = OrthogonalBra(x) * OrthogonalKet(x+1)
+    assert braket.doit() == 0
+
+    braket = OrthogonalBra(x) * OrthogonalKet(y)
+    assert braket.doit() == braket

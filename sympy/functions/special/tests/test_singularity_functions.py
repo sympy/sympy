@@ -6,7 +6,7 @@ from sympy import (
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 x, y, a, n = symbols('x y a n')
 

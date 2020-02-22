@@ -148,6 +148,8 @@ Ntheory Functions Reference
 
 .. autofunction:: isprime
 
+.. autofunction:: is_gaussian_prime
+
 .. module:: sympy.ntheory.residue_ntheory
 
 .. autofunction:: n_order

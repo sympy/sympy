@@ -1,8 +1,7 @@
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
     log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
-from sympy.core.compatibility import range, PY3
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -15,7 +14,7 @@ x, y, z, t = symbols('x,y,z,t')
 
 
 def rel_check(a, b):
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
     for do in range(len(set([type(a), type(b)]))):
         if S.NaN in (a, b):
@@ -353,10 +352,9 @@ def test_new_relational():
 
     # finally, some fuzz testing
     from random import randint
-    from sympy.core.compatibility import unichr
     for i in range(100):
         while 1:
-            strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
+            strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
             relation_type = strtype(randint(0, length))
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
@@ -635,8 +633,7 @@ def test_inequalities_cant_sympify_other():
 
     for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan, Rational(1, 3)):
         for op in (lt, gt, le, ge):
-            if PY3:
-                raises(TypeError, lambda: op(a, bar))
+            raises(TypeError, lambda: op(a, bar))
 
 
 def test_ineq_avoid_wild_symbol_flip():
@@ -847,6 +844,11 @@ def test_issue_10304():
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_18412():
+    d = (Rational(1, 6) + z / 4 / y)
+    assert Eq(x, pi * y**3 * d).replace(y**3, z) == Eq(x, pi * z * d)
 
 
 def test_issue_10401():

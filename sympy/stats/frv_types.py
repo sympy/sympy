@@ -23,7 +23,6 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
 from sympy.external import import_module
-from sympy.core.compatibility import range
 from sympy.tensor.array import ArrayComprehensionMap
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
@@ -73,10 +72,17 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
         _value_check(Eq(sum(density.values()), 1), "Total Probability must be 1.")
 
 def FiniteRV(name, density):
-    """
+    r"""
     Create a Finite Random Variable given a dict representing the density.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    density: A dict
+        Dictionary conatining the pdf of finite distribution
+
+    Examples
+    ========
 
     >>> from sympy.stats import FiniteRV, P, E
 
@@ -87,15 +93,39 @@ def FiniteRV(name, density):
     2.00000000000000
     >>> P(X >= 2)
     0.700000000000000
+
+    Returns
+    =======
+
+    RandomSymbol
+
     """
     return rv(name, FiniteDistributionHandmade, density)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
+
+    @staticmethod
+    def check(*args):
+        # not using _value_check since there is a
+        # suggestion for the user
+        if len(set(args)) != len(args):
+            from sympy.utilities.iterables import multiset
+            from sympy.utilities.misc import filldedent
+            weights = multiset(args)
+            n = Integer(len(args))
+            for k in weights:
+                weights[k] /= n
+            raise ValueError(filldedent("""
+                Repeated args detected but set expected. For a
+                distribution having different weights for each
+                item use the following:""") + (
+                '\nS("FiniteRV(%s, %s)")' % ("'X'", weights)))
+
     @property
     def p(self):
         return Rational(1, len(self.args))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
         return dict((k, self.p) for k in self.set)
@@ -117,11 +147,15 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
 
 def DiscreteUniform(name, items):
-    """
+    r"""
     Create a Finite Random Variable representing a uniform distribution over
     the input set.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    items: list/tuple
+        Items over which Uniform distribution is to be made
 
     Examples
     ========
@@ -136,6 +170,11 @@ def DiscreteUniform(name, items):
     >>> Y = DiscreteUniform('Y', list(range(5))) # distribution over a range
     >>> density(Y).dict
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -182,10 +221,14 @@ class DieDistribution(SingleFiniteDistribution):
         return Piecewise((S.One/self.sides, cond), (S.Zero, True))
 
 def Die(name, sides=6):
-    """
+    r"""
     Create a Finite Random Variable representing a fair die.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    sides: Integer
+        Represents the number of sides of the Die, by default is 6
 
     Examples
     ========
@@ -207,6 +250,11 @@ def Die(name, sides=6):
     Density(DieDistribution(n))
     >>> density(Dn).dict.subs(n, 4).doit()
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
+
+    Returns
+    =======
+
+    RandomSymbol
     """
 
     return rv(name, DieDistribution, sides)
@@ -231,10 +279,18 @@ class BernoulliDistribution(SingleFiniteDistribution):
 
 
 def Bernoulli(name, p, succ=1, fail=0):
-    """
+    r"""
     Create a Finite Random Variable representing a Bernoulli process.
 
-    Returns a RandomSymbol
+    Parameters
+    ==========
+
+    p : Rational number between 0 and 1
+       Represents probability of success
+    succ : Integer/symbol/string
+       Represents event of success
+    fail : Integer/symbol/string
+       Represents event of failure
 
     Examples
     ========
@@ -250,6 +306,11 @@ def Bernoulli(name, p, succ=1, fail=0):
     >>> density(X).dict
     {Heads: 1/2, Tails: 1/2}
 
+    Returns
+    =======
+
+    RandomSymbol
+
     References
     ==========
 
@@ -262,12 +323,14 @@ def Bernoulli(name, p, succ=1, fail=0):
 
 
 def Coin(name, p=S.Half):
-    """
+    r"""
     Create a Finite Random Variable representing a Coin toss.
 
-    Probability p is the chance of gettings "Heads." Half by default
+    Parameters
+    ==========
 
-    Returns a RandomSymbol.
+    p : Rational Numeber between 0 and 1
+      Represents probability of getting "Heads", by default is Half
 
     Examples
     ========
@@ -282,6 +345,11 @@ def Coin(name, p=S.Half):
     >>> C2 = Coin('C2', Rational(3, 5)) # An unfair coin
     >>> density(C2).dict
     {H: 3/5, T: 2/5}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     See Also
     ========
@@ -334,7 +402,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
         return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:
@@ -343,10 +411,20 @@ class BinomialDistribution(SingleFiniteDistribution):
                     for k in range(0, self.n + 1))
 
 def Binomial(name, n, p, succ=1, fail=0):
-    """
+    r"""
     Create a Finite Random Variable representing a binomial distribution.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    n : Positive Integer
+      Represents number of trials
+    p : Rational Number between 0 and 1
+      Represents probability of success
+    succ : Integer/symbol/string
+      Represents event of success, by default is 1
+    fail : Integer/symbol/string
+      Represents event of failure, by default is 0
 
     Examples
     ========
@@ -365,6 +443,11 @@ def Binomial(name, n, p, succ=1, fail=0):
     Density(BinomialDistribution(n, 1/2, 1, 0))
     >>> density(X).dict.subs(n, 4).doit()
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -420,20 +503,30 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 def BetaBinomial(name, n, alpha, beta):
-    """
+    r"""
     Create a Finite Random Variable representing a Beta-binomial distribution.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    n : Positive Integer
+      Represents number of trials
+    alpha : Real positive number
+    beta : Real positive number
 
     Examples
     ========
 
     >>> from sympy.stats import BetaBinomial, density
-    >>> from sympy import S
 
     >>> X = BetaBinomial('X', 2, 1, 1)
     >>> density(X).dict
     {0: 1/3, 1: 2*beta(2, 2), 2: 1/3}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -487,20 +580,33 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         return scipy.stats.hypergeom.rvs(M=m, n=n, N=N, size=size)
 
 def Hypergeometric(name, N, m, n):
-    """
+    r"""
     Create a Finite Random Variable representing a hypergeometric distribution.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    N : Positive Integer
+      Represents finite population of size N.
+    m : Positive Integer
+      Represents number of trials with required feature.
+    n : Positive Integer
+      Represents numbers of draws.
+
 
     Examples
     ========
 
     >>> from sympy.stats import Hypergeometric, density
-    >>> from sympy import S
 
     >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
     >>> density(X).dict
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -524,10 +630,8 @@ class RademacherDistribution(SingleFiniteDistribution):
         return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (S.Zero, True)))
 
 def Rademacher(name):
-    """
+    r"""
     Create a Finite Random Variable representing a Rademacher distribution.
-
-    Return a RandomSymbol.
 
     Examples
     ========
@@ -537,6 +641,11 @@ def Rademacher(name):
     >>> X = Rademacher('X')
     >>> density(X).dict
     {-1: 1/2, 1: 1/2}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     See Also
     ========

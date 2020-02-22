@@ -109,9 +109,9 @@ from __future__ import print_function, division
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
-from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
+from sympy.core.compatibility import (is_sequence, NotIterable,
                                       Iterable)
-from sympy.core.logic import fuzzy_bool
+from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -150,7 +150,7 @@ class Indexed(Expr):
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
-        if isinstance(base, (string_types, Symbol)):
+        if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
@@ -436,7 +436,7 @@ class IndexedBase(Expr, NotIterable):
         from sympy import MatrixBase, NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
-        if isinstance(label, string_types):
+        if isinstance(label, str):
             label = Symbol(label, **assumptions)
         elif isinstance(label, Symbol):
             assumptions = label._merge(assumptions)
@@ -641,7 +641,7 @@ class Idx(Expr):
     def __new__(cls, label, range=None, **kw_args):
         from sympy.utilities.misc import filldedent
 
-        if isinstance(label, string_types):
+        if isinstance(label, str):
             label = Symbol(label, integer=True)
         label, range = list(map(sympify, (label, range)))
 
@@ -663,7 +663,7 @@ class Idx(Expr):
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
-            if not (range.is_integer or range is S.Infinity):
+            if range is not S.Infinity and fuzzy_not(range.is_integer):
                 raise TypeError("Idx object requires an integer dimension.")
             args = label, Tuple(0, range - 1)
         elif range:

@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (

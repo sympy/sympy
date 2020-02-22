@@ -5,9 +5,8 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
 
-from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -19,8 +18,8 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import slow, XFAIL, SKIP, raises
+from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
@@ -2127,8 +2126,21 @@ def test_issue_17650():
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
 
 
+def test_issue_17882():
+    eq = -8*x**2/(9*(x**2 - 1)**(S(4)/3)) + 4/(3*(x**2 - 1)**(S(1)/3))
+    assert unrad(eq) == (4*x**2 - 12, [])
+
+
 def test_issue_17949():
     assert solve(exp(+x+x**2), x) == []
     assert solve(exp(-x+x**2), x) == []
     assert solve(exp(+x-x**2), x) == []
     assert solve(exp(-x-x**2), x) == []
+
+
+def test_issue_11553():
+    eq1 = x + y + 1
+    eq2 = x + GoldenRatio
+    assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
+    eq3 = x + 2 + TribonacciConstant
+    assert solve([eq1, eq3], x, y) == {x: -2 - TribonacciConstant, y: 1 + TribonacciConstant}

@@ -162,7 +162,11 @@ class IdentityMorphism(Morphism):
     Morphism
     """
     def __new__(cls, domain):
-        return Basic.__new__(cls, domain, domain)
+        return Basic.__new__(cls, domain)
+
+    @property
+    def codomain(self):
+        return self.domain
 
 
 class NamedMorphism(Morphism):
@@ -194,7 +198,10 @@ class NamedMorphism(Morphism):
         if not name:
             raise ValueError("Empty morphism names not allowed.")
 
-        return Basic.__new__(cls, domain, codomain, Symbol(name))
+        if not isinstance(name, Symbol):
+            name = Symbol(name)
+
+        return Basic.__new__(cls, domain, codomain, name)
 
     @property
     def name(self):
@@ -444,11 +451,17 @@ class Category(Basic):
     ========
     Diagram
     """
-    def __new__(cls, name, objects=EmptySet, commutative_diagrams=EmptySet):
-        if not name:
+    def __new__(cls, symbol, objects=EmptySet, commutative_diagrams=EmptySet):
+        if not symbol:
             raise ValueError("A Category cannot have an empty name.")
 
-        new_category = Basic.__new__(cls, Symbol(name), Class(objects),
+        if not isinstance(symbol, Symbol):
+            symbol = Symbol(symbol)
+
+        if not isinstance(objects, Class):
+            objects = Class(objects)
+
+        new_category = Basic.__new__(cls, symbol, objects,
                                      FiniteSet(*commutative_diagrams))
         return new_category
 

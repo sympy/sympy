@@ -1,4 +1,3 @@
-from sympy.core.compatibility import range, PY3
 from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
@@ -9,7 +8,7 @@ from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
                    Dummy, floor, And, Eq)
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t
 
 import itertools
@@ -320,18 +319,11 @@ def test_Range_set():
         assert r.inf == rev.inf and r.sup == rev.sup
         assert r.step == -rev.step
 
-    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
-    # compatibility imports above)
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange # noqa
+    builtin_range = range
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)
-    if PY3:
-        assert S(builtin_range(1000000000000)) == \
-            Range(1000000000000)
+    assert S(builtin_range(1000000000000)) == Range(1000000000000)
 
     # test Range.as_relational
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x, floor(x))
@@ -699,6 +691,7 @@ def test_ImageSet_contains():
 
 
 def test_ComplexRegion_contains():
+    r = Symbol('r', real=True)
     # contains in ComplexRegion
     a = Interval(2, 3)
     b = Interval(4, 6)
@@ -711,6 +704,10 @@ def test_ComplexRegion_contains():
     assert 8 + 2.5*I in c2
     assert 2.5 + 6.1*I not in c1
     assert 4.5 + 3.2*I not in c1
+    assert c1.contains(x) == Contains(x, c1, evaluate=False)
+    assert c1.contains(r) == False
+    assert c2.contains(x) == Contains(x, c2, evaluate=False)
+    assert c2.contains(r) == False
 
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
@@ -724,6 +721,25 @@ def test_ComplexRegion_contains():
     assert 0 in c3
     assert 1 + I not in c3
     assert 1 - I not in c3
+    assert c3.contains(x) == Contains(x, c3, evaluate=False)
+    assert c3.contains(r + 2*I) == Contains(
+        r + 2*I, c3, evaluate=False)  # is in fact False
+    assert c3.contains(1/(1 + r**2)) == Contains(
+        1/(1 + r**2), c3, evaluate=False)  # is in fact True
+
+    r2 = Interval(0, 3)
+    theta2 = Interval(pi, 2*pi, left_open=True)
+    c4 = ComplexRegion(r2*theta2, polar=True)
+    assert c4.contains(0) == True
+    assert c4.contains(2 + I) == False
+    assert c4.contains(-2 + I) == False
+    assert c4.contains(-2 - I) == True
+    assert c4.contains(2 - I) == True
+    assert c4.contains(-2) == False
+    assert c4.contains(2) == True
+    assert c4.contains(x) == Contains(x, c4, evaluate=False)
+    assert c4.contains(3/(1 + r**2)) == Contains(
+        3/(1 + r**2), c4, evaluate=False)  # is in fact True
 
     raises(ValueError, lambda: ComplexRegion(r1*theta1, polar=2))
 

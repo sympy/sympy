@@ -69,12 +69,12 @@ def null_safe(rule):
             return result
     return null_safe_rl
 
-def tryit(rule):
+def tryit(rule, exception):
     """ Return original expr if rule raises exception """
     def try_rl(expr):
         try:
             return rule(expr)
-        except Exception:
+        except exception:
             return expr
     return try_rl
 

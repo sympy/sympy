@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core.backend import sympify
-from sympy.core.compatibility import string_types
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -52,7 +51,7 @@ class RigidBody(object):
     """
 
     def __init__(self, name, masscenter, frame, mass, inertia):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
         self.masscenter = masscenter
@@ -64,7 +63,8 @@ class RigidBody(object):
     def __str__(self):
         return self._name
 
-    __repr__ = __str__
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def frame(self):
@@ -309,6 +309,8 @@ class RigidBody(object):
                 deprecated_since_version="1.5", issue=9800).warn()
         self.potential_energy = scalar
 
+    # XXX: To be consistent with the parallel_axis method in Particle this
+    # should have a frame argument...
     def parallel_axis(self, point):
         """Returns the inertia dyadic of the body with respect to another
         point.

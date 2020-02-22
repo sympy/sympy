@@ -1,5 +1,5 @@
 from sympy.printing.tree import tree
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 # Remove this flag after making _assumptions cache deterministic.

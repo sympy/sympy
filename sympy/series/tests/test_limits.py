@@ -12,7 +12,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.utilities.pytest import XFAIL, raises, nocache_fail
+from sympy.testing.pytest import XFAIL, raises, nocache_fail
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -247,6 +247,8 @@ def test_doit2():
     # limit() breaks on the contained Integral.
     assert l.doit(deep=False) == l
 
+def test_issue_2929():
+    assert limit((x * exp(x))/(exp(x) - 1), x, -oo) == 0
 
 def test_issue_3792():
     assert limit((1 - cos(x))/x**2, x, S.Half) == 4 - 4*cos(S.Half)
@@ -480,6 +482,11 @@ def test_issue_9205():
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
+def test_issue_9471():
+    assert limit((((27**(log(n,3))))/n**3),n,oo) == 1
+    assert limit((((27**(log(n,3)+1)))/n**3),n,oo) == 27
+
+
 def test_issue_11879():
     assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
 
@@ -524,6 +531,22 @@ def test_issue_14456():
 
 def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) is -oo
+
+
+def test_issue_13382():
+    assert limit(x*(((x + 1)**2 + 1)/(x**2 + 1) - 1), x, oo) == 2
+
+
+def test_issue_13403():
+    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x ,oo) == 1
+
+
+def test_issue_13416():
+    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x ,oo) == 1
+
+
+def test_issue_13462():
+    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
 
 
 def test_issue_14574():
@@ -588,6 +611,7 @@ def test_issue_12571():
 def test_issue_14590():
     assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)
 
+
 def test_issue_17431():
     assert limit(((n + 1) + 1) / (((n + 1) + 2) * factorial(n + 1)) *
                  (n + 2) * factorial(n) / (n + 1), n, oo) == 0
@@ -598,3 +622,22 @@ def test_issue_17431():
 
 def test_issue_17671():
     assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
+
+
+def test_issue_18306():
+    assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
+
+
+def test_issue_18442():
+    assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == AccumBounds(-oo, oo)
+
+
+def test_issue_18508():
+    assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
+    assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
+    assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
+
+def test_issue_13715():
+    n = Symbol('n')
+    p = Symbol('p', zero=True)
+    assert limit(n + p, n, 0) == 0

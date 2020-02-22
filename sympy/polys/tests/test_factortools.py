@@ -9,9 +9,8 @@ from sympy.polys.polyclasses import ANP
 from sympy.polys.specialpolys import f_polys, w_polys
 
 from sympy import nextprime, sin, sqrt, I
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
-from sympy.core.compatibility import range
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()

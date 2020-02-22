@@ -26,6 +26,12 @@ matrix:
       sudo: true
       script: bin/test quality
       env:
+        - TEST_QUALITY="true"
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_FLAKE8="true"
 
     - stage: baseline
       python: 3.8
@@ -180,18 +186,12 @@ matrix:
             - pypy3
 
     - stage: allowed_failures
-      python: 3.8
-      dist: xenial
-      env:
-        - TEST_FLAKE8="true"
-    - python: 3.6
+      python: 3.6
       dist: xenial
       env:
         - BENCHMARK="true"
 
   allow_failures:
-    - env:
-        - TEST_FLAKE8="true"
     - env:
         - BENCHMARK="true"
 
@@ -207,7 +207,6 @@ before_install:
     fi
   - if [[ "${TEST_FLAKE8}" == "true" ]]; then
       pip install flake8;
-      flake8 sympy;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;

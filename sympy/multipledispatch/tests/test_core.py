@@ -1,9 +1,11 @@
+from typing import Dict, Any
+
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.utilities.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, XFAIL, warns
 from functools import partial
 
-test_namespace = dict()
+test_namespace = dict()  # type: Dict[str, Any]
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
@@ -19,7 +21,7 @@ def test_singledispatch():
     def g(x): # noqa:F811
         return x + 2
 
-    @dispatch(float)
+    @dispatch(float) # noqa:F811
     def f(x): # noqa:F811
         return x - 1
 
@@ -35,7 +37,7 @@ def test_multipledispatch():
     def f(x, y): # noqa:F811
         return x + y
 
-    @dispatch(float, float)
+    @dispatch(float, float) # noqa:F811
     def f(x, y): # noqa:F811
         return x - y
 
@@ -55,7 +57,7 @@ def test_inheritance():
     def f(x): # noqa:F811
         return 'a'
 
-    @dispatch(B)
+    @dispatch(B) # noqa:F811
     def f(x): # noqa:F811
         return 'b'
 
@@ -70,7 +72,7 @@ def test_inheritance_and_multiple_dispatch():
     def f(x, y): # noqa:F811
         return type(x), type(y)
 
-    @dispatch(A, B)
+    @dispatch(A, B) # noqa:F811
     def f(x, y): # noqa:F811
         return 0
 
@@ -86,7 +88,7 @@ def test_competing_solutions():
     def h(x): # noqa:F811
         return 1
 
-    @dispatch(C)
+    @dispatch(C) # noqa:F811
     def h(x): # noqa:F811
         return 2
 
@@ -98,7 +100,7 @@ def test_competing_multiple():
     def h(x, y): # noqa:F811
         return 1
 
-    @dispatch(C, B)
+    @dispatch(C, B) # noqa:F811
     def h(x, y): # noqa:F811
         return 2
 
@@ -114,7 +116,7 @@ def test_competing_ambiguous():
         return 2
 
     with warns(AmbiguityWarning):
-        @dispatch(C, A)
+        @dispatch(C, A) # noqa:F811
         def f(x, y): # noqa:F811
             return 2
 
@@ -180,7 +182,7 @@ def test_methods():
         def f(self, x): # noqa:F811
             return x - 1
 
-        @dispatch(int)
+        @dispatch(int) # noqa:F811
         def f(self, x): # noqa:F811
             return x + 1
 
@@ -201,7 +203,7 @@ def test_methods_multiple_dispatch():
         def f(x, y): # noqa:F811
             return 1
 
-        @dispatch(A, C)
+        @dispatch(A, C) # noqa:F811
         def f(x, y): # noqa:F811
             return 2
 

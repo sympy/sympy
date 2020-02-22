@@ -7,7 +7,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import x
 
 a = Symbol('a', real=True)
@@ -452,14 +452,14 @@ def test_AccumBounds_pow():
     assert AccumBounds(-1, 2)**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-2, S.Half)**oo == AccumBounds(-oo, oo)
 
-    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x, evaluate=False)
+    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x)
 
     assert AccumBounds(2, 3)**(-oo) is S.Zero
     assert AccumBounds(0, 2)**(-oo) == AccumBounds(0, oo)
     assert AccumBounds(-1, 2)**(-oo) == AccumBounds(-oo, oo)
 
     assert (tan(x)**sin(2*x)).subs(x, AccumBounds(0, pi/2)) == \
-        Pow(AccumBounds(-oo, oo), AccumBounds(0, 1), evaluate=False)
+        Pow(AccumBounds(-oo, oo), AccumBounds(0, 1))
 
 
 def test_comparison_AccumBounds():

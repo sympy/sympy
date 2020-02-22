@@ -1,13 +1,12 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest, range, PY3, Mapping)
+from .compatibility import iterable, ordered, Mapping
 from .singleton import S
 
 from inspect import getmro
@@ -26,7 +25,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(with_metaclass(ManagedProperties)):
+class Basic(metaclass=ManagedProperties):
     """
     Base class for all objects in SymPy.
 
@@ -56,10 +55,10 @@ class Basic(with_metaclass(ManagedProperties)):
     (x,)
 
     """
-    __slots__ = ['_mhash',              # hash value
+    __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
                  '_assumptions'
-                ]
+                )
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -334,7 +333,7 @@ class Basic(with_metaclass(ManagedProperties)):
             # __cmp__. Until we can remove it
             # (https://github.com/sympy/sympy/issues/4269), we only compare
             # types in Python 2 directly if they actually have __ne__.
-            if PY3 or type(tself).__ne__ is not type.__ne__:
+            if type(tself).__ne__ is not type.__ne__:
                 if tself != tother:
                     return False
             elif tself is not tother:
@@ -504,12 +503,11 @@ class Basic(with_metaclass(ManagedProperties)):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
+        nodes = preorder_traversal(self)
+        if types:
+            result = {node for node in nodes if isinstance(node, types)}
         else:
-            types = (Atom,)
-        result = set()
-        for expr in preorder_traversal(self):
-            if isinstance(expr, types):
-                result.add(expr)
+            result = {node for node in nodes if not node.args}
         return result
 
     @property
@@ -890,7 +888,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         """
         from sympy.core.containers import Dict
-        from sympy.utilities import default_sort_key
+        from sympy.utilities.iterables import sift
         from sympy import Dummy, Symbol
 
         unordered = False
@@ -914,11 +912,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if isinstance(s[0], string_types):
+            if isinstance(s[0], str):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, string_types))
+                s = [sympify(_, strict=not isinstance(_, str))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -930,23 +928,10 @@ class Basic(with_metaclass(ManagedProperties)):
 
         if unordered:
             sequence = dict(sequence)
-            if not all(k.is_Atom for k in sequence):
-                d = {}
-                for o, n in sequence.items():
-                    try:
-                        ops = o.count_ops(), len(o.args)
-                    except TypeError:
-                        ops = (0, 0)
-                    d.setdefault(ops, []).append((o, n))
-                newseq = []
-                for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(
-                        sorted([v[0] for v in d[k]], key=default_sort_key))
-                sequence = [(k, sequence[k]) for k in newseq]
-                del newseq, d
-            else:
-                sequence = sorted([(k, v) for (k, v) in sequence.items()],
-                                  key=default_sort_key)
+            atoms, nonatoms = sift(list(sequence),
+                lambda x: x.is_Atom, binary=True)
+            sequence = [(k, sequence[k]) for k in
+                list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
@@ -1768,13 +1753,16 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
         else:
             pattern = args[:-1]
-            if isinstance(args[-1], string_types):
+            if isinstance(args[-1], str):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                name = getattr(args[-1], '__name__', None)
-                if name is None:
-                    name = args[-1].__class__.__name__
-                rule = '_eval_rewrite_as_' + name
+                # rewrite arg is usually a class but can also be a
+                # singleton (e.g. GoldenRatio) so we check
+                # __name__ or __class__.__name__
+                clsname = getattr(args[-1], "__name__", None)
+                if clsname is None:
+                    clsname = args[-1].__class__.__name__
+                rule = '_eval_rewrite_as_' + clsname
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
@@ -1789,7 +1777,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
-    _constructor_postprocessor_mapping = {}
+    _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
@@ -1834,7 +1822,7 @@ class Atom(Basic):
 
     is_Atom = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:
@@ -1951,7 +1939,7 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal(Iterator):
+class preorder_traversal(object):
     """
     Do a pre-order traversal of a tree.
 
