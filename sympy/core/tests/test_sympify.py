@@ -734,13 +734,13 @@ def test_issue_14706():
     assert numpy.all(x + y2 == numpy.full((2, 2), x + 1.0))
     assert numpy.all(y1 + x == numpy.full((1, 1), x + 1.0))
     assert numpy.all(y2 + x == numpy.full((2, 2), x + 1.0))
-    for y in [y3,
+    for y_ in [y3,
               numpy.int(1),
               numpy.float(1),
               numpy.complex(1)]:
-        assert x + y == y + x
-        assert isinstance(x + y, Add)
-        assert isinstance(y + x, Add)
+        assert x + y_ == y_ + x
+        assert isinstance(x + y_, Add)
+        assert isinstance(y_ + x, Add)
 
     assert x + numpy.array(x) == 2 * x
     assert x + numpy.array([x]) == numpy.array([2*x], dtype=object)
