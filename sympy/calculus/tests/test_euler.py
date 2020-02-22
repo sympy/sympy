@@ -65,10 +65,11 @@ def test_euler_high_order():
     
     
 def test_euler_when_L_out_turn_to_zero():
-    # an example issue
-    from sympy import symbols
-    x, y, z = symbols("x y z")
-    f, g, h = symbols("f g h", cls= Function, args=(x,y))
-    f, g, h = f(), g(), h()
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
     L = f.diff(x)*h.diff(z)
-    assert euler(L, f, (x,y)) == 0
+    assert euler(L, f(x,y), [x,y]) == 0
