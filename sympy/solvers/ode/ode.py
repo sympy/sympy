@@ -930,16 +930,21 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('nth_algebraic', 'separable', '1st_linear', 'Bernoulli',
+    ('nth_algebraic',
+    'separable',
+    '1st_linear',
+    'Bernoulli',
     '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
-    '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous',
-    'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral',
-    'separable_Integral', '1st_linear_Integral', 'Bernoulli_Integral',
+    'almost_linear',
+    '1st_power_series', 'lie_group', 'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_euler_eq_homogeneous',
+    'nth_algebraic_Integral', 'separable_Integral',
+    '1st_linear_Integral', 'Bernoulli_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-    '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+    '1st_homogeneous_coeff_subs_dep_div_indep_Integral', 
+    'almost_linear_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
     ('nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
