@@ -15,7 +15,7 @@ from sympy.solvers.diophantine.diophantine import (diop_DN,
     classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
     check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
     _diop_ternary_quadratic_normal, _diop_general_sum_of_squares, _nint_or_floor,
-    _odd, _even, _remove_gcd, _can_do_sum_of_squares)
+    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL
@@ -510,28 +510,28 @@ def test_diophantine():
     eq = 92*x**2 - 99*y**2 - z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
-        (9, 7, 51)
+           {(9, 7, 51)}
     assert diophantine(eq) == {(
         891*p**2 + 9*q**2, -693*p**2 - 102*p*q + 7*q**2,
         5049*p**2 - 1386*p*q - 51*q**2)}
     eq = 2*x**2 + 2*y**2 - z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
-        (1, 1, 2)
+           {(1, 1, 2)}
     assert diophantine(eq) == {(
         2*p**2 - q**2, -2*p**2 + 4*p*q - q**2,
         4*p**2 - 4*p*q + 2*q**2)}
     eq = 411*x**2+57*y**2-221*z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
-        (2021, 2645, 3066)
+           {(2021, 2645, 3066)}
     assert diophantine(eq) == \
            {(115197*p**2 - 446641*q**2, -150765*p**2 + 1355172*p*q -
              584545*q**2, 174762*p**2 - 301530*p*q + 677586*q**2)}
     eq = 573*x**2+267*y**2-984*z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
-        (49, 233, 127)
+           {(49, 233, 127)}
     assert diophantine(eq) == \
            {(4361*p**2 - 16072*q**2, -20737*p**2 + 83312*p*q - 76424*q**2,
              11303*p**2 - 41474*p*q + 41656*q**2)}
@@ -539,7 +539,7 @@ def test_diophantine():
     eq = x**2 + 3*y**2 - 12*z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
-        (0, 2, 1)
+           {(0, 2, 1)}
     assert diophantine(eq) == \
            {(24*p*q, 2*p**2 - 24*q**2, p**2 + 12*q**2)}
     # solvers have not been written for every type
@@ -954,3 +954,50 @@ def test_ternary_quadratic():
         124*x**2 - 30*y**2 - 7729*z**2) == (
         -1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q -
         695610*q**2, -60*p**2 + 5400*p*q + 15458*q**2)
+
+
+def test_diophantine_solution_set():
+    s1 = DiophantineSolutionSet([])
+    assert set(s1) == set()
+    assert s1.symbols == ()
+    assert s1.parameters == ()
+    raises(ValueError, lambda: s1.add((x,)))
+    assert list(s1.dict_iterator()) == []
+
+    s2 = DiophantineSolutionSet([x, y], [t, u])
+    assert s2.symbols == (x, y)
+    assert s2.parameters == (t, u)
+    raises(ValueError, lambda: s2.add((1,)))
+    s2.add((3, 4))
+    assert set(s2) == {(3, 4)}
+    s2.update((3, 4), (-1, u))
+    assert set(s2) == {(3, 4), (-1, u)}
+    raises(ValueError, lambda: s1.update(s2))
+    assert list(s2.dict_iterator()) == [{x: -1, y: u}, {x: 3, y: 4}]
+
+    s3 = DiophantineSolutionSet([x, y, z], [t, u])
+    assert len(s3.parameters) == 2
+    s3.add((t**2 + u, t - u, 1))
+    assert set(s3) == {(t**2 + u, t - u, 1)}
+    assert s3.subs(t, 2) == {(u + 4, 2 - u, 1)}
+    assert s3(2) == {(u + 4, 2 - u, 1)}
+    assert s3.subs({t: 7, u: 8}) == {(57, -1, 1)}
+    assert s3(7, 8) == {(57, -1, 1)}
+    assert s3.subs({t: 5}) == {(u + 25, 5 - u, 1)}
+    assert s3(5) == {(u + 25, 5 - u, 1)}
+    assert s3.subs(u, -3) == {(t**2 - 3, t + 3, 1)}
+    assert s3(None, -3) == {(t**2 - 3, t + 3, 1)}
+    assert s3.subs({t: 2, u: 8}) == {(12, -6, 1)}
+    assert s3(2, 8) == {(12, -6, 1)}
+    assert s3.subs({t: 5, u: -3}) == {(22, 8, 1)}
+    assert s3(5, -3) == {(22, 8, 1)}
+    raises(ValueError, lambda: s3.subs(x=1))
+    raises(ValueError, lambda: s3.subs(1, 2, 3))
+    raises(ValueError, lambda: s3.add(()))
+    raises(ValueError, lambda: s3.add((1, 2, 3, 4)))
+    raises(ValueError, lambda: s3.add((1, 2)))
+    raises(ValueError, lambda: s3(1, 2, 3))
+    raises(TypeError, lambda: s3(t=1))
+
+    s4 = DiophantineSolutionSet([x])
+    assert len(s4.parameters) == 1
