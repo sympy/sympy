@@ -54,6 +54,7 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+from sympy.core.function import Function
 
 from types import GeneratorType
 from collections import defaultdict
@@ -789,12 +790,13 @@ def _solve_radical(f, symbol, solveset_solver):
 def _recursive_check_f(f):
     not_compute = False
     floor_type = False
-    if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
-        not_compute = True
-        return f, not_compute, floor_type
+
     if type(f) == floor:
         floor_type = True
         f, not_compute, _ = _recursive_check_f(f.args[0])
+        return f, not_compute, floor_type
+    elif isinstance(f, Function):
+        not_compute = True
         return f, not_compute, floor_type
     elif f.is_Add:
         cp_f = 0
@@ -812,13 +814,14 @@ def _recursive_check_f(f):
     lst = list(arg)
 
     for i, r in enumerate(arg):
-        if isinstance(r, (TrigonometricFunction, HyperbolicFunction)):
-            not_compute = True
-            return f, not_compute, floor_type
-        if type(r) == floor:
-            floor_type = True
-            lst[i], temp_not_compute, _ = _recursive_check_f(r.args[0])
-            not_compute = temp_not_compute if temp_not_compute else not_compute
+        if isinstance(r, Function):
+            if type(r) == floor:
+                floor_type = True
+                lst[i], temp_not_compute, _ = _recursive_check_f(r.args[0])
+                not_compute = temp_not_compute if temp_not_compute else not_compute
+            else:
+                not_compute = True
+                return f, not_compute, floor_type
         if r.is_Mul or r.is_Add or r.is_Pow:
             temp_r = r.args[0] if r.is_Pow else r
             lst[i], temp_not_compute, temp_floor_type = _recursive_check_f(temp_r)
