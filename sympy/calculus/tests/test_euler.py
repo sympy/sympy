@@ -64,7 +64,6 @@ def test_euler_high_order():
     assert euler(L) == [Eq(D(x(t, w), t, t, w, w), 0)]
     
     
-
 def test_euler_when_L_out_turn_to_zero():
     # an example issue
     from sympy import symbols
