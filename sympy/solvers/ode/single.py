@@ -532,14 +532,14 @@ class AlmostLinear(SinglePatternODESolver):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        eq = self.ode_problem.eq
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        try:
-            gensol = Eq(self.substituting, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/selffxx, x)),x))
-                * exp(-Integral(self.kx/self.fxx, x)))))
-        except:
+        if fxx is None or gx is None or kx is None:
             gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
             * exp(-Integral(P, x)))))
+        else:
+            gensol = Eq(self.substituting, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/self.fxx, x)),x))
+                * exp(-Integral(self.kx/self.fxx, x)))))
+
         return [gensol]
 
 
