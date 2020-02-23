@@ -11,6 +11,7 @@ from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.integrals import Integral
+from sympy.polys.polytools import cancel
 from sympy.simplify import simplify
 from sympy.utilities import numbered_symbols
 from sympy.functions import exp
@@ -232,7 +233,7 @@ class SinglePatternODESolver(SingleODESolver):
             return False
 
         eq = expand(eq / eq.coeff(df))
-        eq = eq.collect(f(x))
+        eq = eq.collect(f(x), func = cancel)
 
         pattern = self._equation(f(x), x, 1)
 
@@ -498,10 +499,13 @@ class AlmostLinear(SinglePatternODESolver):
     def _equation(self, fx, x, order):
         P,Q = self.wilds()
         df = fx.diff(x)
+        eq = self.ode_problem.eq_expanded
         c = Wild('c', exclude=[fx])
         d = Wild('d', exclude=[df, fx.diff(x, 2)])
         e = Wild('e', exclude=[df])
-        r = self.ode_problem.eq.match(e*df+d)
+        eq = expand(eq)
+        eq = eq.collect(fx)
+        r = eq.match(e*df+d)
         self.fxx = None
         self.gx = None
         self.kx = None

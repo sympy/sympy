@@ -1074,8 +1074,9 @@ def test_classify_ode():
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) + 2*f(x)/(k*f(x) +
         k*x*f(x)) + x*f(x).diff(x)/(k*f(x) + k*x*f(x)) + z, f(x)) == \
-        ('separable', '1st_exact', '1st_power_series', 'lie_group',
-         'separable_Integral', '1st_exact_Integral')
+        ('separable', '1st_exact', '1st_linear', 'Bernoulli',
+        '1st_power_series', 'lie_group', 'separable_Integral', '1st_exact_Integral',
+        '1st_linear_Integral', 'Bernoulli_Integral')
     # preprocessing
     ans = ('nth_algebraic', 'separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
