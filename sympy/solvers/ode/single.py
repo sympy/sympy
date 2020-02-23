@@ -533,7 +533,7 @@ class AlmostLinear(SinglePatternODESolver):
                 self.gx = -r2[c]
                 self.substituting = u
                 return fx.diff(x) + P*fx - Q
-        return self.ode_problem.eq
+        return S.Zero
 
     def _get_general_solution(self, *, simplify: bool = True):
         P, Q = self.wilds_match()
