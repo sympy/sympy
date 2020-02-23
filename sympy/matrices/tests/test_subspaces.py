@@ -1,6 +1,9 @@
+from sympy.core.numbers import Rational
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
 from sympy.matrices.matrices import MatrixSubspaces
 from sympy.matrices import Matrix
+from sympy.testing.pytest import raises
 
 class SubspaceOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSubspaces):
     pass
