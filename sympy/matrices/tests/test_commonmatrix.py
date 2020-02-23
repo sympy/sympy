@@ -11,8 +11,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
     MatrixOperations, MatrixArithmetic, MatrixSpecial)
-from sympy.matrices.matrices import (MatrixDeterminant,
-     MatrixSubspaces, MatrixCalculus)
+from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
 from sympy.utilities.iterables import flatten
@@ -69,19 +68,7 @@ def zeros_Arithmetic(n):
     return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
-    pass
-
-
-def eye_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
-
-
 class SpecialOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSpecial):
-    pass
-
-
-class SubspaceOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSubspaces):
     pass
 
 
@@ -928,50 +915,6 @@ def test_jordan_block():
     # Using alias keyword
     assert SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) == \
         SpecialOnlyMatrix.jordan_block(size=3, eigenval=2)
-
-
-# SubspaceOnlyMatrix tests
-def test_columnspace():
-    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
-                            [-2, -5,  1, -1, -8],
-                            [ 0, -3,  3,  4,  1],
-                            [ 3,  6,  0, -7,  2]])
-
-    basis = m.columnspace()
-    assert basis[0] == Matrix([1, -2, 0, 3])
-    assert basis[1] == Matrix([2, -5, -3, 6])
-    assert basis[2] == Matrix([2, -1, 4, -7])
-
-    assert len(basis) == 3
-    assert Matrix.hstack(m, *basis).columnspace() == basis
-
-
-def test_rowspace():
-    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
-                            [-2, -5,  1, -1, -8],
-                            [ 0, -3,  3,  4,  1],
-                            [ 3,  6,  0, -7,  2]])
-
-    basis = m.rowspace()
-    assert basis[0] == Matrix([[1, 2, 0, 2, 5]])
-    assert basis[1] == Matrix([[0, -1, 1, 3, 2]])
-    assert basis[2] == Matrix([[0, 0, 0, 5, 5]])
-
-    assert len(basis) == 3
-
-
-def test_nullspace():
-    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
-                            [-2, -5,  1, -1, -8],
-                            [ 0, -3,  3,  4,  1],
-                            [ 3,  6,  0, -7,  2]])
-
-    basis = m.nullspace()
-    assert basis[0] == Matrix([-2, 1, 1, 0, 0])
-    assert basis[1] == Matrix([-1, -1, 0, -1, 1])
-    # make sure the null space is really gets zeroed
-    assert all(e.is_zero for e in m*basis[0])
-    assert all(e.is_zero for e in m*basis[1])
 
 
 def test_orthogonalize():
