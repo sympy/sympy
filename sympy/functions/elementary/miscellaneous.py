@@ -49,6 +49,13 @@ class IdentityFunction(Lambda, metaclass=Singleton):
         #construct "by hand" to avoid infinite loop
         return Expr.__new__(cls, Tuple(x), x)
 
+    @property
+    def args(self):
+        return ()
+
+    def __getnewargs__(self):
+        return ()
+
 Id = S.IdentityFunction
 
 ###############################################################################
