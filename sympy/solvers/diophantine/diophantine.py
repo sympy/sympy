@@ -163,16 +163,18 @@ class DiophantineEquationType:
     name = None
 
     def __init__(self, equation, free_symbols=None):
-        try:
-            if free_symbols is None:
-                free_symbols = list(equation.free_symbols)
-            assert free_symbols
-        except (AttributeError, AssertionError):
+        self.equation = S(equation).expand(force=True)
+
+        if free_symbols is not None:
+            self.free_symbols = free_symbols
+        else:
+            self.free_symbols = list(self.equation.free_symbols)
+
+        if not self.free_symbols:
             raise ValueError('equation should have 1 or more free symbols')
 
-        free_symbols.sort(key=default_sort_key)
-        self.free_symbols = free_symbols
-        self.equation = equation.expand(force=True)
+        self.free_symbols.sort(key=default_sort_key)
+
         self.coeff = self.equation.as_coefficients_dict()
         if not all(_is_int(c) for c in self.coeff.values()):
             raise TypeError("Coefficients should be Integers")
