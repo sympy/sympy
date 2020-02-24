@@ -1043,6 +1043,9 @@ def _TR11(rv):
 
     """
     def f(rv):
+        if not isinstance(rv, Expr):
+            return rv
+
         def sincos_args(flat):
             # find arguments of sin and cos that
             # appears as bases in args of flat
@@ -1076,10 +1079,7 @@ def _TR11(rv):
         rv = handle_match(rv, den_args, num_args)
         return rv
 
-    if getattr(rv, "as_numer_denom()", False):
-        return bottom_up(rv, f)
-
-    return rv
+    return bottom_up(rv, f)
 
 
 def TR12(rv, first=True):
