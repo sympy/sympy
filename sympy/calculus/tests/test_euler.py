@@ -62,8 +62,8 @@ def test_euler_high_order():
     w = Symbol('w')
     L = D(x(t, w), t, w)**2/2
     assert euler(L) == [Eq(D(x(t, w), t, t, w, w), 0)]
-    
-    
+
+
 def test_euler_when_L_out_turn_to_zero():
     x = Symbol('x')
     y = Symbol('y')
