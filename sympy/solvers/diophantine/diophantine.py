@@ -163,7 +163,7 @@ class DiophantineEquationType:
     name = None
 
     def __init__(self, equation, free_symbols=None):
-        self.equation = S(equation).expand(force=True)
+        self.equation = _sympify(equation).expand(force=True)
 
         if free_symbols is not None:
             self.free_symbols = free_symbols
