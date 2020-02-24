@@ -341,15 +341,15 @@ all_diop_classes = [
     Linear,
     Univariate,
     BinaryQuadratic,
-    HomogeneousTernaryQuadratic,
-    HomogeneousGeneralQuadratic,
-    HomogeneousTernaryQuadraticNormal,
     InhomogeneousTernaryQuadratic,
+    HomogeneousTernaryQuadraticNormal,
+    HomogeneousTernaryQuadratic,
     InhomogeneousGeneralQuadratic,
-    GeneralPythagorean,
-    GeneralSumOfEvenPowers,
+    HomogeneousGeneralQuadratic,
     GeneralSumOfSquares,
-    CubicThue
+    GeneralPythagorean,
+    CubicThue,
+    GeneralSumOfEvenPowers,
 ]
 
 diop_known = set([diop_class.name for diop_class in all_diop_classes])
