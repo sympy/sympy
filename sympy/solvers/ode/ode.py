@@ -4796,7 +4796,7 @@ def ode_almost_linear(eq, func, order, match):
     ========
 
     >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -4932,7 +4932,7 @@ def ode_linear_coefficients(eq, func, order, match):
     ========
 
     >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -4997,7 +4997,7 @@ def ode_separable_reduced(eq, func, order, match):
     ========
 
     >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -5053,7 +5053,7 @@ def ode_1st_power_series(eq, func, order, match):
     ========
 
     >>> from sympy import Function, Derivative, pprint, exp
-    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
@@ -6151,7 +6151,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     ========
 
     >>> from sympy import Function, diff
-    >>> from sympy.solvers.ode import infinitesimals
+    >>> from sympy.solvers.ode.ode import infinitesimals
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = f(x).diff(x) - x**2*f(x)
@@ -8277,6 +8277,120 @@ def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
     return sol
 
+def matrix_exp(A, t):
+    '''Matrix exponential exp(A*t) for the matrix A and scalar t.
+
+    The matrix exponential exp(A*t) appears in the solution of linear
+    differential equations. For example if x is a vector and A is a matrix
+    then the initial value problem
+
+        dx(t)/dt = A x(t),   x(0) = x0
+
+    has the unique solution
+
+        x(t) = exp(A t) x0
+
+    Example:
+
+    >>> from sympy import Symbol, Matrix, pprint
+    >>> from sympy.solvers.ode.ode import matrix_exp
+    >>> t = Symbol('t')
+    >>> A = Matrix([[2, -5], [2, -4]])
+    >>> pprint(A)
+    [2  -5]
+    [     ]
+    [2  -4]
+    >>> pprint(matrix_exp(A, t))
+    [   -t           -t                    -t              ]
+    [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
+    [                                                      ]
+    [         -t                     -t           -t       ]
+    [      2*e  *sin(t)         - 3*e  *sin(t) + e  *cos(t)]
+    '''
+    P, J = matrix_exp_jordan_form(A, t)
+    return P * J * P.inv()
+
+def matrix_exp_jordan_form(A, t):
+    '''Matrix exponential exp(A*t) for the matrix A and scalar t.
+
+    Returns the Jordan form of the exp(A t).
+
+    >>> from sympy import Matrix, Symbol
+    >>> from sympy.solvers.ode.ode import matrix_exp, matrix_exp_jordan_form
+    >>> t = Symbol('t')
+    >>> A = Matrix([[1, 1], [0, 1]])
+    >>> P, J = matrix_exp_jordan_form(A, t)
+    >>> P * J * P.inv() == matrix_exp(A, t)
+    True
+    '''
+
+    N, M = A.shape
+    if N != M:
+        raise ValueError('Needed square matrix but got shape (%s, %s)' % (N, M))
+    elif A.has(t):
+        raise ValueError('Matrix A should not depend on t')
+
+    def jordan_chains(A):
+        '''Chains from Jordan normal form analogous to M.eigenvects().
+
+        Returns a dict with eignevalues as keys like:
+            {e1: [[v111,v112,...], [v121, v122,...]], e2:...}
+        where vijk is the kth vector in the jth chain for eigenvalue i.
+        '''
+        P, blocks = A.jordan_cells()
+        basis = [P[:,i] for i in range(P.shape[1])]
+        n = 0
+        chains = {}
+        for b in blocks:
+            eigval = b[0, 0]
+            size = b.shape[0]
+            if eigval not in chains:
+                chains[eigval] = []
+            chains[eigval].append(basis[n:n+size])
+            n += size
+        return chains
+
+    eigenchains = jordan_chains(A)
+
+    # Needed for consistency across Python versions:
+    eigenchains = sorted(eigenchains.items(), key=default_sort_key)
+    isreal = not A.has(I)
+
+    blocks = []
+    vectors = []
+    seen_conjugate = set()
+    for e, chains in eigenchains:
+        for chain in chains:
+            n = len(chain)
+            if isreal and im(e).is_nonzero:
+                if e in seen_conjugate:
+                    continue
+                seen_conjugate.add(e.conjugate())
+                exprt = exp(re(e) * t)
+                imrt = im(e) * t
+                imblock = Matrix([[cos(imrt), sin(imrt)],
+                                  [-sin(imrt), cos(imrt)]])
+                expJblock2 = Matrix(n, n, lambda i,j:
+                        imblock * t**(j-i) / factorial(j-i) if j >= i
+                        else zeros(2, 2))
+                expJblock = Matrix(2*n, 2*n, lambda i,j: expJblock2[i//2,j//2][i%2,j%2])
+
+                blocks.append(exprt * expJblock)
+                for i in range(n):
+                    vectors.append(re(chain[i]))
+                    vectors.append(im(chain[i]))
+            else:
+                vectors.extend(chain)
+                fun = lambda i,j: t**(j-i)/factorial(j-i) if j >= i else 0
+                expJblock = Matrix(n, n, fun)
+                blocks.append(exp(e * t) * expJblock)
+
+    expJ = Matrix.diag(*blocks)
+    P = Matrix(N, N, lambda i,j: vectors[j][i])
+
+    return P, expJ
+
+
 def _linear_neq_order1_type1(match_):
     r"""
     System of n first-order constant-coefficient linear nonhomogeneous differential equation
@@ -8351,47 +8465,16 @@ def _linear_neq_order1_type1(match_):
     n = len(eq)
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
     M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
-    evector = M.eigenvects(simplify=True)
-    def is_complex(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
-    def is_complex_conjugate(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
-    conjugate_root = []
-    e_vector = zeros(n,1)
-    for evects in evector:
-        if evects[0] not in conjugate_root:
-            # If number of column of an eigenvector is not equal to the multiplicity
-            # of its eigenvalue then the legt eigenvectors are calculated
-            if len(evects[2])!=evects[1]:
-                var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
-                Mnew = (M - evects[0]*eye(evects[2][-1].rows))*var_mat
-                w = [0 for i in range(evects[1])]
-                w[0] = evects[2][-1]
-                for r in range(1, evects[1]):
-                    w_ = Mnew - w[r-1]
-                    sol_dict = solve(list(w_), var_mat[1:])
-                    sol_dict[var_mat[0]] = var_mat[0]
-                    for key, value in sol_dict.items():
-                        sol_dict[key] = value.subs(var_mat[0],1)
-                    w[r] = Matrix(n, 1, lambda i,j: sol_dict[var_mat[i]])
-                    evects[2].append(w[r])
-            for i in range(evects[1]):
-                C = next(constants)
-                for j in range(i+1):
-                    if evects[0].has(I):
-                        evects[2][j] = simplify(evects[2][j])
-                        e_vector += C*is_complex(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                        C = next(constants)
-                        e_vector += C*is_complex_conjugate(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                    else:
-                        e_vector += C*evects[2][j]*t**(i-j)*exp(evects[0]*t)/factorial(i-j)
-            if evects[0].has(I):
-                conjugate_root.append(conjugate(evects[0]))
-    sol = []
-    for i in range(len(eq)):
-        sol.append(Eq(func[i],e_vector[i]))
-    return sol
+    P, J = matrix_exp_jordan_form(M, t)
+    P = simplify(P)
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+    sol_vector = P * J * Cvect
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
+
 
 def sysode_nonlinear_2eq_order1(match_):
     func = match_['func']
