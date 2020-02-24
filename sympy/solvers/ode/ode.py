@@ -231,8 +231,6 @@ of those tests will surely fail.
 """
 from __future__ import print_function, division
 
-from typing import Dict, Type
-
 from collections import defaultdict
 from itertools import islice
 
@@ -275,6 +273,8 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 from .subscheck import sub_func_doit
+from .single import NthAlgebraic, FirstLinear, AlmostLinear, Bernoulli, SingleODEProblem, SingleODESolver
+
 
 #: This is a list of hints in the order that they should be preferred by
 #: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
@@ -661,13 +661,16 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
     r = match
-    if hint.endswith('_Integral'):
-        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
-    else:
-        solvefunc = globals()['ode_' + hint]
     func = r['func']
     order = r['order']
     match = r[hint]
+
+    if isinstance(match, SingleODESolver):
+        solvefunc = match
+    elif hint.endswith('_Integral'):
+        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
+    else:
+        solvefunc = globals()['ode_' + hint]
 
     free = eq.free_symbols
     cons = lambda s: s.free_symbols.difference(free)
@@ -676,15 +679,21 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
         # simplifications
-        sols = solvefunc(eq, func, order, match)
+        if isinstance(solvefunc, SingleODESolver):
+            sols = solvefunc.get_general_solution()
+        else:
+            sols = solvefunc(eq, func, order, match)
         if iterable(sols):
             rv = [odesimp(eq, s, func, hint) for s in sols]
         else:
             rv =  odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
-        match['simplify'] = False  # Some hints can take advantage of this option
-        exprs = solvefunc(eq, func, order, match)
+        if isinstance(solvefunc, SingleODESolver):
+            exprs = solvefunc.get_general_solution(simplify=False)
+        else:
+            match['simplify'] = False  # Some hints can take advantage of this option
+            exprs = solvefunc(eq, func, order, match)
         if isinstance(exprs, list):
             rv = [_handle_Integral(expr, func, hint) for expr in exprs]
         else:
@@ -921,13 +930,17 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('nth_algebraic', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('nth_algebraic',
+    'separable',
+    '1st_linear',
+    'Bernoulli',
+    '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
-    '1st_power_series', 'lie_group',
-    'nth_linear_constant_coeff_homogeneous',
-    'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral',
-    'separable_Integral', '1st_linear_Integral',
+    '1st_power_series', 'lie_group', 'nth_linear_constant_coeff_homogeneous',
+    'nth_linear_euler_eq_homogeneous',
+    'nth_algebraic_Integral', 'separable_Integral',
+    '1st_linear_Integral', 'Bernoulli_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
@@ -944,6 +957,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
 
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+
     # Some methods want the unprocessed equation
     eq_orig = eq
 
@@ -958,12 +974,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     eta = kwargs.get('eta')
     terms = kwargs.get('n')
 
-    if isinstance(eq, Equality):
-        if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, dict=dict, ics=ics, xi=xi,
-                n=terms, eta=eta, prep=False)
-        eq = eq.lhs
-
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
@@ -971,8 +981,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     df = f(x).diff(x)
     a = Wild('a', exclude=[f(x)])
-    b = Wild('b', exclude=[f(x)])
-    c = Wild('c', exclude=[f(x)])
     d = Wild('d', exclude=[df, f(x).diff(x, 2)])
     e = Wild('e', exclude=[df])
     k = Wild('k', exclude=[df])
@@ -1038,10 +1046,21 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
     # d^3/dx^3(x y) = F(x)
-    r = _nth_algebraic_match(eq_orig, func)
-    if r['solutions']:
-        matching_hints['nth_algebraic'] = r
-        matching_hints['nth_algebraic_Integral'] = r
+    ode = SingleODEProblem(eq_orig, func, x, prep=prep)
+    solvers = {
+        NthAlgebraic: ('nth_algebraic',),
+        FirstLinear: ('1st_linear',),
+        AlmostLinear: ('almost_linear',),
+        Bernoulli: ('Bernoulli',)
+        }
+
+    for solvercls in solvers:
+        solver = solvercls(ode)
+        if solver.matches():
+            for hints in solvers[solvercls]:
+                matching_hints[hints] = solver
+                if solvercls.has_integral:
+                    matching_hints[hints + "_Integral"] = solver
 
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
@@ -1057,36 +1076,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-
-        ## Linear case: a(x)*y'+b(x)*y+c(x) == 0
-        if eq.is_Add:
-            ind, dep = reduced_eq.as_independent(f)
-        else:
-            u = Dummy('u')
-            ind, dep = (reduced_eq + u).as_independent(f)
-            ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        r = {a: dep.coeff(df),
-             b: dep.coeff(f(x)),
-             c: ind}
-        # double check f[a] since the preconditioning may have failed
-        if not r[a].has(f) and not r[b].has(f) and (
-                r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
-            r['a'] = a
-            r['b'] = b
-            r['c'] = c
-            matching_hints["1st_linear"] = r
-            matching_hints["1st_linear_Integral"] = r
-
-        ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
-        r = collect(
-            reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
-            r['a'] = a
-            r['b'] = b
-            r['c'] = c
-            r['n'] = n
-            matching_hints["Bernoulli"] = r
-            matching_hints["Bernoulli_Integral"] = r
 
         ## Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
         r = collect(reduced_eq,
@@ -1278,26 +1267,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                         r2.update({'power': xpart.as_base_exp()[1], 'u': test})
                         matching_hints["separable_reduced"] = r2
                         matching_hints["separable_reduced_Integral"] = r2
-
-        ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
-        r = collect(eq, [df, f(x)]).match(e*df + d)
-        if r:
-            r2 = r.copy()
-            r2[c] = S.Zero
-            if r2[d].is_Add:
-                # Separate the terms having f(x) to r[d] and
-                # remaining to r[c]
-                no_f, r2[d] = r2[d].as_independent(f(x))
-                r2[c] += no_f
-            factor = simplify(r2[d].diff(f(x))/r[e])
-            if factor and not factor.has(f(x)):
-                r2[d] = factor_terms(r2[d])
-                u = r2[d].as_independent(f(x), as_Add=False)[1]
-                r2.update({'a': e, 'b': d, 'c': c, 'u': u})
-                r2[d] /= u
-                r2[e] /= u.diff(f(x))
-                matching_hints["almost_linear"] = r2
-                matching_hints["almost_linear_Integral"] = r2
 
 
     elif order == 2:
@@ -3474,151 +3443,6 @@ def homogeneous_order(eq, *symbols):
         return e
 
 
-def ode_1st_linear(eq, func, order, match):
-    r"""
-    Solves 1st order linear differential equations.
-
-    These are differential equations of the form
-
-    .. math:: dy/dx + P(x) y = Q(x)\text{.}
-
-    These kinds of differential equations can be solved in a general way.  The
-    integrating factor `e^{\int P(x) \,dx}` will turn the equation into a
-    separable equation.  The general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
-        >>> from sympy.abc import x
-        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x))
-        >>> pprint(genform)
-                    d
-        P(x)*f(x) + --(f(x)) = Q(x)
-                    dx
-        >>> pprint(dsolve(genform, f(x), hint='1st_linear_Integral'))
-               /       /                   \
-               |      |                    |
-               |      |         /          |     /
-               |      |        |           |    |
-               |      |        | P(x) dx   |  - | P(x) dx
-               |      |        |           |    |
-               |      |       /            |   /
-        f(x) = |C1 +  | Q(x)*e           dx|*e
-               |      |                    |
-               \     /                     /
-
-
-    Examples
-    ========
-
-    >>> f = Function('f')
-    >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
-    ... f(x), '1st_linear'))
-    f(x) = x*(C1 - cos(x))
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 92
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    r = match  # a*diff(f(x),x) + b*f(x) + c
-    C1 = get_numbered_constants(eq, num=1)
-    t = exp(Integral(r[r['b']]/r[r['a']], x))
-    tt = Integral(t*(-r[r['c']]/r[r['a']]), x)
-    f = match.get('u', f(x))  # take almost-linear u if present, else f(x)
-    return Eq(f, (tt + C1)/t)
-
-
-def ode_Bernoulli(eq, func, order, match):
-    r"""
-    Solves Bernoulli differential equations.
-
-    These are equations of the form
-
-    .. math:: dy/dx + P(x) y = Q(x) y^n\text{, }n \ne 1`\text{.}
-
-    The substitution `w = 1/y^{1-n}` will transform an equation of this form
-    into one that is linear (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_1st_linear`).  The general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, n
-        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-        >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n)
-        >>> pprint(genform)
-                    d                n
-        P(x)*f(x) + --(f(x)) = Q(x)*f (x)
-                    dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
-                                                                                      1
-                                                                                    -----
-                                                                                    1 - n
-               //               /                            \                     \
-               ||              |                             |                     |
-               ||              |                  /          |             /       |
-               ||              |                 |           |            |        |
-               ||              |        (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
-               ||              |                 |           |            |        |
-               ||              |                /            |           /         |
-        f(x) = ||C1 + (n - 1)* | -Q(x)*e                   dx|*e                   |
-               ||              |                             |                     |
-               \\              /                            /                     /
-
-
-    Note that the equation is separable when `n = 1` (see the docstring of
-    :py:meth:`~sympy.solvers.ode.ode.ode_separable`).
-
-    >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
-    ... hint='separable_Integral'))
-     f(x)
-       /
-      |                /
-      |  1            |
-      |  - dy = C1 +  | (-P(x) + Q(x)) dx
-      |  y            |
-      |              /
-     /
-
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq, pprint, log
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-
-    >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
-    ... f(x), hint='Bernoulli'))
-                    1
-    f(x) = -------------------
-             /     log(x)   1\
-           x*|C1 + ------ + -|
-             \       x      x/
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Bernoulli_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 95
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    f = func.func
-    r = match  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
-    C1 = get_numbered_constants(eq, num=1)
-    t = exp((1 - r[r['n']])*Integral(r[r['b']]/r[r['a']], x))
-    tt = (r[r['n']] - 1)*Integral(t*r[r['c']]/r[r['a']], x)
-    return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
-
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
@@ -4209,103 +4033,6 @@ def ode_nth_order_reducible(eq, func, order, match):
 
     return fsol
 
-# This needs to produce an invertible function but the inverse depends
-# which variable we are integrating with respect to. Since the class can
-# be stored in cached results we need to ensure that we always get the
-# same class back for each particular integration variable so we store these
-# classes in a global dict:
-_nth_algebraic_diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
-
-def _nth_algebraic_diffx(var):
-    cls = _nth_algebraic_diffx_stored.get(var, None)
-
-    if cls is None:
-        # A class that behaves like Derivative wrt var but is "invertible".
-        class diffx(Function):
-            def inverse(self):
-                # don't use integrate here because fx has been replaced by _t
-                # in the equation; integrals will not be correct while solve
-                # is at work.
-                return lambda expr: Integral(expr, var) + Dummy('C')
-
-        cls = _nth_algebraic_diffx_stored.setdefault(var, diffx)
-
-    return cls
-
-def _nth_algebraic_match(eq, func):
-    r"""
-    Matches any differential equation that nth_algebraic can solve. Uses
-    `sympy.solve` but teaches it how to integrate derivatives.
-
-    This involves calling `sympy.solve` and does most of the work of finding a
-    solution (apart from evaluating the integrals).
-    """
-
-    # The independent variable
-    var = func.args[0]
-
-    # Derivative that solve can handle:
-    diffx = _nth_algebraic_diffx(var)
-
-    # Replace derivatives wrt the independent variable with diffx
-    def replace(eq, var):
-        def expand_diffx(*args):
-            differand, diffs = args[0], args[1:]
-            toreplace = differand
-            for v, n in diffs:
-                for _ in range(n):
-                    if v == var:
-                        toreplace = diffx(toreplace)
-                    else:
-                        toreplace = Derivative(toreplace, v)
-            return toreplace
-        return eq.replace(Derivative, expand_diffx)
-
-    # Restore derivatives in solution afterwards
-    def unreplace(eq, var):
-        return eq.replace(diffx, lambda e: Derivative(e, var))
-
-    subs_eqn = replace(eq, var)
-    try:
-        # turn off simplification to protect Integrals that have
-        # _t instead of fx in them and would otherwise factor
-        # as t_*Integral(1, x)
-        solns = solve(subs_eqn, func, simplify=False)
-    except NotImplementedError:
-        solns = []
-
-    solns = [simplify(unreplace(soln, var)) for soln in solns]
-    solns = [Equality(func, soln) for soln in solns]
-    return {'var':var, 'solutions':solns}
-
-def ode_nth_algebraic(eq, func, order, match):
-    r"""
-    Solves an `n`\th order ordinary differential equation using algebra and
-    integrals.
-
-    There is no general form for the kind of equation that this can solve. The
-    the equation is solved algebraically treating differentiation as an
-    invertible algebraic function.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> eq = Eq(f(x) * (f(x).diff(x)**2 - 1), 0)
-    >>> dsolve(eq, f(x), hint='nth_algebraic')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    [Eq(f(x), 0), Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
-
-    Note that this solver can return algebraic solutions that do not have any
-    integration constants (f(x) = 0 in the above example).
-
-    # indirect doctest
-
-    """
-
-    return match['solutions']
 
 def _remove_redundant_solutions(eq, solns, order, var):
     r"""
@@ -4750,75 +4477,6 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     sol = _solve_variation_of_parameters(eq, func, order, match)
     return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
 
-
-def ode_almost_linear(eq, func, order, match):
-    r"""
-    Solves an almost-linear differential equation.
-
-    The general form of an almost linear differential equation is
-
-    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
-                \text{where} l'(y) = g(y)\text{.}
-
-    This can be solved by substituting `l(y) = u(y)`.  Making the given
-    substitution reduces it to a linear differential equation of the form `u'
-    + P(x) u + Q(x) = 0`.
-
-    The general solution is
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, y, n
-        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
-        >>> pprint(genform)
-             d
-        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
-             dy
-        >>> pprint(dsolve(genform, hint = 'almost_linear'))
-               /     //       y*k(x)                \\
-               |     ||       ------                ||
-               |     ||        f(x)                 ||  -y*k(x)
-               |     ||-g(x)*e                      ||  --------
-               |     ||--------------  for k(x) != 0||    f(x)
-        l(y) = |C1 + |<     k(x)                    ||*e
-               |     ||                             ||
-               |     ||   -y*g(x)                   ||
-               |     ||   --------       otherwise  ||
-               |     ||     f(x)                    ||
-               \     \\                             //
-
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.ode.ode_1st_linear`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> d = f(x).diff(x)
-    >>> eq = x*d + x*f(x) + 1
-    >>> dsolve(eq, f(x), hint='almost_linear')
-    Eq(f(x), (C1 - Ei(x))*exp(-x))
-    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
-                         -x
-    f(x) = (C1 - Ei(x))*e
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    # Since ode_1st_linear has already been implemented, and the
-    # coefficients have been modified to the required form in
-    # classify_ode, just passing eq, func, order and match to
-    # ode_1st_linear will give the required output.
-    return ode_1st_linear(eq, func, order, match)
 
 def _linear_coeff_match(expr, func):
     r"""
