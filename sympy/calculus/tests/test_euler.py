@@ -69,7 +69,6 @@ def test_euler_when_L_out_turn_to_zero():
     y = Symbol('y')
     z = Symbol('z')
     f = Function('f')
-    g = Function('g')
     h = Function('h')
     L = f.diff(x)*h.diff(z)
     assert euler(L, f(x,y), [x,y]) == 0
