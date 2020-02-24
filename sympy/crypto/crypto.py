@@ -3326,46 +3326,46 @@ def decipher_bg(message, key):
     return orig_msg
 
 
-#ROUTE-CIPHER
+######################################################## ROUTE-CIPHER ############################################################
 
 #Input key as list where first element tells about direction of spiral and second element denotes the starting corner
 
-def create(start_row,start_col,m,n,key,mes):
-    l1,l2,l3,l4=[],[],[],[]
-    for i in range(start_row,n-1):
+def create(start_row, start_col, m, n, key, mes):
+    l1, l2, l3, l4 = [], [], [], []
+    for i in range(start_row, n-1):
             l1.append(mes[start_row][i])   #creates a list from 1 to 3
-    for i in range(start_col,m-1):
+    for i in range(start_col, m-1):
             l2.append(mes[i][n-1])         #creates a list from 0 to 45
-    for i in range(n-1,start_row,-1):
+    for i in range(n-1, start_row, -1):
             l3.append(mes[m-1][i])         #creates a list from 83 to 8
-    for i in range(m-1,start_col,-1):
+    for i in range(m-1, start_col, -1):
             l4.append(mes[i][start_col])   #creates a list from 7 to 4
 
     if key[1] == 1 :            #1 when clockwise spiral starts from top-left corner
-        if key[0]=="CI" or key[0]=="AO":
-            return l1+l2+l3+l4
-        elif key[0]=="AI" or key[0]=="CO":
-            l=(l1+l2+l3+l4)[-1::-1]
+        if key[0] == "CI" or key[0] == "AO":
+            return l1 + l2 + l3 + l4
+        elif key[0] == "AI" or key[0] == "CO":
+            l = (l1 + l2 + l3 + l4)[-1 : :-1]
             if l != []:
-                l.insert(0,l.pop()) #shift last element to the front
+                l.insert(0, l.pop()) #shift last element to the front
             return l
 
     elif key[1] == 2 :          #2 when spiral starts from top-right corner
-        if key[0]=="CI" or key[0]=="AO":
-            return l2+l3+l4+l1
-        elif key[0]=="AI" or key[0]=="CO":
-            l=(l2+l3+l4+l1)[-1::-1]
+        if key[0] == "CI" or key[0] == "AO":
+            return l2 + l3 + l4 + l1
+        elif key[0] == "AI" or key[0] == "CO":
+            l = (l2 + l3 + l4 + l1)[-1 : :-1]
             if l != []:
-                l.insert(0,l.pop())
+                l.insert(0, l.pop())
             return l
 
-    elif key[1]== 3 :           #3 when spiral starts from bottom right corner
-        if key[0]=="CI" or key[0]=="AO":
-            return l3+l4+l2+l1
-        elif key[0]=="AI" or key[0]=="CO":
-            l=(l3+l4+l2+l1)[-1::-1]
+    elif key[1] == 3 :           #3 when spiral starts from bottom right corner
+        if key[0] == "CI" or key[0] == "AO":
+            return l3 + l4 + l1 + l2
+        elif key[0] == "AI" or key[0] == "CO":
+            l = (l3 +l4 +l1 +l2)[-1 : :-1]
             if l != []:
-                l.insert(0,l.pop())
+                l.insert(0, l.pop())
             return l
 
     elif key[1] == 4 :          #4 when spiral starts from bottom left corner

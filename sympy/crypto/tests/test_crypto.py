@@ -15,7 +15,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
       encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
-      encipher_railfence, decipher_railfence)
+      encipher_railfence, decipher_railfence, create, encipher_route)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -560,3 +560,64 @@ def test_bg_public_key():
     assert 5293 == bg_public_key(67, 79)
     assert 713 == bg_public_key(23, 31)
     raises(ValueError, lambda: bg_private_key(13, 17))
+
+def test_encipher_route():
+    message = "testingroute"
+    '''The grid formed will be
+       t e s t
+       i n g r
+       o u t e
+       $ $ $ $'''
+    # NOTE: The number of rows need to br even in the grid
+    cols = 4
+    # Anticlockwise Inwards from Top-Left corner
+    key = ["AI", 1]
+    assert encipher_route(message, cols, key) == "tio$$$$ertsenutg"
+    # Anticlockwise Inwards from Top-Right corner
+    key[1] = 2
+    assert encipher_route(message, cols, key) == "tsetio$$$$ergnut"
+    # Anticlockwise Inwards from Bottom-Right corner
+    key[1] = 3
+    assert encipher_route(message, cols, key) == "$ertsetio$$$tgnu"
+    # Anticlockwise Inwards from Bottom-Left corner
+    key[1] = 4
+    assert encipher_route(message, cols, key) == "$$$$ertsetioutgn"
+
+    # Anticlockwise Outwards ends at Top-Left corner
+    key = ["AO", 1]
+    assert encipher_route(message, cols, key) == "utgnio$$$$ertset"
+    # Anticlockwise Outwards ends at Top-Right corner
+    key[1] = 2
+    assert encipher_route(message, cols, key) == "nutgsetio$$$$ert"
+    # Anticlockwise Outwards ends at Bottom-Right corner
+    key[1] = 3
+    assert encipher_route(message, cols, key) == "gnutertsetio$$$$"
+    # Anticlockwise Outwards ends at Bottom-Left corner
+    key[1] = 4
+    assert encipher_route(message, cols, key) == "tgnu$$$ertsetio$"
+
+    # Clockwise Inwards from Top-Left corner
+    key = ["CI", 1]
+    assert encipher_route(message, cols, key) == "testre$$$$oingtu"
+    # Clockwise Inwards from Top-Right corner
+    key[1] = 2
+    assert encipher_route(message, cols, key) == "tre$$$$oitesgtun"
+    # Clockwise Inwards from Bottom-Right corner
+    key[1] = 3
+    assert encipher_route(message, cols, key) == "$$$$oitestretung"
+    # Clockwise Inwards from Bottom-Left corner
+    key[1] = 4
+    assert encipher_route(message, cols, key) == "$oitestre$$$ungt"
+
+    # Clockwise Outwards ends at Top-Left corner
+    key = ["CO", 1]
+    assert encipher_route(message, cols, key) == "gtunestre$$$$oit"
+    # Clockwise Outwards ends at Top-Right corner
+    key[1] = 2
+    assert encipher_route(message, cols, key) == "tungre$$$$oitest"
+    # Clockwise Outwards ends at Bottom-Right corner
+    key[1] = 3
+    assert encipher_route(message, cols, key) == "ungt$$$oitestre$"
+    # Clockwise Outwards ends at Bottom-Left corner
+    key[1] = 4
+    assert encipher_route(message, cols, key) == "ngtuoitestre$$$$"
