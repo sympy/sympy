@@ -1020,6 +1020,7 @@ def TR11(rv, base=None):
 
     return bottom_up(rv, f)
 
+
 def _TR11(rv):
     """
     Helper for TR11 to find half-arguments for sin in factors of
@@ -1075,7 +1076,10 @@ def _TR11(rv):
         rv = handle_match(rv, den_args, num_args)
         return rv
 
-    return bottom_up(rv, f)
+    if getattr(rv, "as_numer_denom()", False):
+        return bottom_up(rv, f)
+
+    return rv
 
 
 def TR12(rv, first=True):
