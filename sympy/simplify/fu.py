@@ -1022,41 +1022,57 @@ def TR11(rv, base=None):
 
 def _TR11(rv):
     """
-    Helper for TR11 to find the `base` argument of TR11.
+    Helper for TR11 to find half-arguments for sin in factors of
+    num/den that appear in cos or sin factors in the den/num.
 
     Examples
     ========
 
-    >>> from sympy.simplify.fu import _TR11 as T
-    >>> from sympy import cos, sin, pi
+    >>> from sympy.simplify.fu import TR11, _TR11
+    >>> from sympy import cos, sin
     >>> from sympy.abc import x
-    >>> T(sin(x/3)*sin(2*x)*sin(x/4)/(cos(x/6)*cos(x/8)))
-    4*sin(x/8)*sin(x/6)*sin(2*x)
-    >>> T(sin(x/3)/cos(x/6))
+    >>> TR11(sin(x/3)/(cos(x/6)))
+    sin(x/3)/cos(x/6)
+    >>> _TR11(sin(x/3)/(cos(x/6)))
     2*sin(x/6)
-    >>> T(sin(2*x)*cos(x/8)/sin(x/4))
-    sin(2*x)/(2*sin(x/8))
+    >>> TR11(sin(x/6)/(sin(x/3)))
+    sin(x/6)/sin(x/3)
+    >>> _TR11(sin(x/6)/(sin(x/3)))
+    1/(2*cos(x/6))
 
     """
     def f(rv):
-        arg_denoms = dict()
-        for fi in rv.args:
-            if fi.is_Pow and fi.exp.is_negative and fi.base.func in (sin, cos):
-                arg_denoms[fi.base.args[0]] = fi.base.func
-
-            elif fi.func in (sin, cos):
-                arg_num = fi.args[0]
-                for arg_denom in ordered(arg_denoms):
-                    base = arg_num/arg_denom
-                    if not (fi.func == cos and arg_denoms[arg_denom] == cos) :
-                        if base % 2 == 0:
-                            rv = TR11(rv, arg_denom)
-                            arg_denoms.pop(arg_denom)
-
-                        elif (1/base) % 2 == 0:
-                            rv = TR11(rv, arg_num)
-                            arg_denom = arg_denom/2
-
+        def sincos_args(flat):
+            # find arguments of sin and cos that
+            # appears as bases in args of flat
+            # and have Integer exponents
+            args = defaultdict(set)
+            for fi in Mul.make_args(flat):
+                b, e = fi.as_base_exp()
+                if e.is_Integer and e > 0:
+                    if b.func in (cos, sin):
+                        args[b.func].add(b.args[0])
+            return args
+        num_args, den_args = map(sincos_args, rv.as_numer_denom())
+        def handle_match(rv, num_args, den_args):
+            # for arg in sin args of num_args, look for arg/2
+            # in den_args and pass this half-angle to TR11
+            # for handling in rv
+            for narg in num_args[sin]:
+                half = narg/2
+                if half in den_args[cos]:
+                    func = cos
+                elif half in den_args[sin]:
+                    func = sin
+                else:
+                    continue
+                rv = TR11(rv, half)
+                den_args[func].remove(half)
+            return rv
+        # sin in num, sin or cos in den
+        rv = handle_match(rv, num_args, den_args)
+        # sin in den, sin or cos in num
+        rv = handle_match(rv, den_args, num_args)
         return rv
 
     return bottom_up(rv, f)
