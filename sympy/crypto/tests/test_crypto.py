@@ -15,7 +15,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
       encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
-      encipher_railfence, decipher_railfence, create, encipher_route)
+      encipher_railfence, decipher_railfence, encipher_route)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
