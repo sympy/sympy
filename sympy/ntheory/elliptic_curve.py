@@ -88,7 +88,7 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
 
         >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
         >>> e1.minimal()
@@ -111,7 +111,7 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e2 = EllipticCurve(1, 1, 1, 1, 1, modulus=5)
         >>> e2.points()
         {(0, 2), (1, 4), (2, 0), (2, 2), (3, 0), (3, 1), (4, 0)}
@@ -154,7 +154,7 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e2 = EllipticCurve(-43, 166)
         >>> sorted(e2.torsion_points())
         [(-5, -16), (-5, 16), O, (3, -8), (3, 8), (11, -32), (11, 32)]
@@ -185,7 +185,7 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e2 = EllipticCurve(-43, 166)
         >>> e2.characteristic
         0
@@ -201,7 +201,7 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e2 = EllipticCurve(0, 17)
         >>> e2.discriminant
         -124848
@@ -224,7 +224,7 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e1 = EllipticCurve(-2, 0, 0, 1, 1)
         >>> e1.j_invariant
         1404928/389
@@ -242,7 +242,7 @@ class EllipticCurve:
         ========
 
         >>> from sympy.polys.domains import FF
-        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e2 = EllipticCurve(1, 0, modulus=19)
         >>> e2.order
         19
@@ -271,7 +271,7 @@ class EllipticCurvePoint:
     Examples
     ========
 
-    >>> from sympy.ntheory.ec import EllipticCurve
+    >>> from sympy.ntheory.elliptic_curve import EllipticCurve
     >>> e1 = EllipticCurve(-17, 16)
     >>> p1 = e1(0, -4, 1)
     >>> p2 = e1(1, 0)
