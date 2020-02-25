@@ -255,7 +255,7 @@ from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, tan, sqrt, \
     atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import wronskian, Matrix, eye, zeros
+from sympy.matrices import wronskian, Matrix, zeros
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots, gcd)
 from sympy.polys.polyroots import roots_quartic
@@ -4476,75 +4476,6 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     r[-1] = r[-1]/r[ode_order(eq, f(x))]
     sol = _solve_variation_of_parameters(eq, func, order, match)
     return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
-
-def ode_almost_linear(eq, func, order, match):
-    r"""
-    Solves an almost-linear differential equation.
-
-    The general form of an almost linear differential equation is
-
-    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
-                \text{where} l'(y) = g(y)\text{.}
-
-    This can be solved by substituting `l(y) = u(y)`.  Making the given
-    substitution reduces it to a linear differential equation of the form `u'
-    + P(x) u + Q(x) = 0`.
-
-    The general solution is
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, y, n
-        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
-        >>> pprint(genform)
-             d
-        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
-             dy
-        >>> pprint(dsolve(genform, hint = 'almost_linear'))
-               /     //       y*k(x)                \\
-               |     ||       ------                ||
-               |     ||        f(x)                 ||  -y*k(x)
-               |     ||-g(x)*e                      ||  --------
-               |     ||--------------  for k(x) != 0||    f(x)
-        l(y) = |C1 + |<     k(x)                    ||*e
-               |     ||                             ||
-               |     ||   -y*g(x)                   ||
-               |     ||   --------       otherwise  ||
-               |     ||     f(x)                    ||
-               \     \\                             //
-
-
-    See Also
-    ========
-    :meth:`sympy.solvers.ode.ode.ode_1st_linear`
-
-    Examples
-    ========
-
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> d = f(x).diff(x)
-    >>> eq = x*d + x*f(x) + 1
-    >>> dsolve(eq, f(x), hint='almost_linear')
-    Eq(f(x), (C1 - Ei(x))*exp(-x))
-    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
-                         -x
-    f(x) = (C1 - Ei(x))*e
-
-    References
-    ==========
-
-    - Joel Moses, "Symbolic Integration - The Stormy Decade", Communications
-      of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    """
-
-    # Since ode_1st_linear has already been implemented, and the
-    # coefficients have been modified to the required form in
-    # classify_ode, just passing eq, func, order and match to
-    # ode_1st_linear will give the required output.
-    return ode_1st_linear(eq, func, order, match)
 
 def _linear_coeff_match(expr, func):
     r"""
