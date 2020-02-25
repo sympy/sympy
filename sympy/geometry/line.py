@@ -29,6 +29,7 @@ from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.util import intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets import Intersection
@@ -36,10 +37,9 @@ from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
-from sympy.geometry.util import intersection
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point3D
+from .point import Point, Point3D, Point2D
 
 
 class LinearEntity(GeometrySet):
@@ -2081,6 +2081,49 @@ class Line2D(LinearEntity2D, Line):
         a, b, c = self.coefficients
         return a * x + b * y + c
 
+    def bisectors(self, line):
+        """Returns the lines which are the bisections between the self line and another one.
+
+        Parameters
+        ==========
+
+        line : Line2D
+
+        Returns
+        =======
+
+        list: two Line2D instances
+
+        Examples
+        ========
+
+        >>> r1 = Line3D(Point3D(0, 0), Point3D(1, 0))
+        >>> r2 = Line3D(Point3D(0, 0), Point3D(0, 1))
+        >>> r1.bisectors(r2)
+        [Line2D(Point2D(0, 0), Point2D(1, 1)), Line2D(Point2D(0, 0), Point2D(1, -1))]
+
+        """
+
+        point = intersection(self, line)
+
+        # Three cases: Lines may intersect in a point, may be equal or may not intersect.
+        if not point:
+            return GeometryError("The lines do not intersect")
+        else:
+            if not isinstance(point[0], Point2D):
+                # Intersection is a line because both lines are coincident
+                return [self]
+
+        normalize = lambda x: Point(x).unit.args
+
+        d1 = normalize(self.direction)
+        d2 = normalize(line.direction)
+
+        bis1 = Line2D(point[0], Point2D(d1[0] + d2[0], d1[1] + d2[1]))
+        bis2 = Line2D(point[0], Point2D(d1[0] - d2[0], d1[1] - d2[1]))
+
+        return [bis1, bis2]
+
 
 class Ray2D(LinearEntity2D, Ray):
     """
@@ -2556,9 +2599,9 @@ class Line3D(LinearEntity3D, Line):
         [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 0)), Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
 
         """
-        
+
         point = intersection(self, line)
-        
+
         # Three cases: Lines may intersect in a point, may be equal or may not intersect.
         if not point:
             return GeometryError("The lines do not intersect")
