@@ -14,7 +14,7 @@ from sympy.solvers.diophantine.diophantine import (diop_DN,
     sum_of_three_squares, transformation_to_DN, transformation_to_normal,
     classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
     check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
-    _diop_ternary_quadratic_normal, _diop_general_sum_of_squares, _nint_or_floor,
+    _diop_ternary_quadratic_normal, _nint_or_floor,
     _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet)
 from sympy.utilities import default_sort_key
 
@@ -583,8 +583,9 @@ def test_general_pythagorean():
 def test_diop_general_sum_of_squares_quick():
     for i in range(3, 10):
         assert check_solutions(sum(i**2 for i in symbols(':%i' % i)) - i)
-    raises(ValueError, lambda: _diop_general_sum_of_squares((x, y), 2))
-    assert _diop_general_sum_of_squares((x, y, z), -2) == set()
+
+    assert diop_general_sum_of_squares(x**2 + y**2 - 2) is None
+    assert diop_general_sum_of_squares(x**2 + y**2 + z**2 + 2) == set()
     eq = x**2 + y**2 + z**2 - (1 + 4 + 9)
     assert diop_general_sum_of_squares(eq) == \
            {(1, 2, 3)}
