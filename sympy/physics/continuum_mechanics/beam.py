@@ -1,5 +1,5 @@
 """
-aaaaaaaaaaaaaThis module can be used to solve 2D beam bending problems with
+This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 
