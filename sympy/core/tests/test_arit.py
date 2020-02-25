@@ -1759,9 +1759,9 @@ def test_Mod_Pow():
     assert Mod(expr, 3**10) == 25708
     expr = Pow(expr, expr, evaluate=False)
     assert Mod(expr, 3**10) == 26608
-    # XXX This used to fail in a nondeterministic way because of overflow
-    # error in mpmath
     expr = Pow(expr, expr, evaluate=False)
+    # XXX This used to fail in a nondeterministic way because of overflow
+    # error.
     assert Mod(expr, 3**10) == 1966
 
 
