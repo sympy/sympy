@@ -70,6 +70,8 @@ def test_classify_diop():
         [x, y], {x*y**2: 1, 1: 1}, 'cubic_thue')
     assert classify_diop(x**4 + y**4 + z**4 - (1 + 16 + 81)) == (
         [x, y, z], {1: -98, x**4: 1, z**4: 1, y**4: 1}, 'general_sum_of_even_powers')
+    assert classify_diop(x**2 + y**2 + z**2) == (
+        [x, y, z], {x**2: 1, y**2: 1, z**2: 1}, 'homogeneous_ternary_quadratic_normal')
 
 
 def test_linear():
