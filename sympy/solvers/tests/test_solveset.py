@@ -2303,8 +2303,6 @@ def test_solve_modular():
             Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
             S.Integers)
 
-@XFAIL
-def test_solve_modular_fail():
     # issue 17373 (https://github.com/sympy/sympy/issues/17373)
     assert solveset(Mod(x**4, 14) - 11, x, S.Integers) == \
             Union(ImageSet(Lambda(n, 14*n + 3), S.Integers),

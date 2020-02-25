@@ -776,7 +776,6 @@ def test_K7():
     assert sexpr == sqrt(y)
 
 
-@XFAIL
 def test_K8():
     z = symbols('z', complex=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0  # Passes
@@ -2344,11 +2343,9 @@ def test_V11():
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**R(1, 3)))
 
 
-@XFAIL
 def test_V12():
-    r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
-    # Correct result in python2.7.4, wrong result in python3.5
     # https://github.com/sympy/sympy/issues/7157
+    r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
     assert r1 == -1/(tan(x/2) + 2)
 
 
