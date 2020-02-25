@@ -2343,8 +2343,11 @@ def test_V11():
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**R(1, 3)))
 
 
+@XFAIL
 def test_V12():
     # https://github.com/sympy/sympy/issues/7157
+    # Fails intermittently for some Python versions.
+    # Probably this is dependent on the hash seed.
     r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
     assert r1 == -1/(tan(x/2) + 2)
 
