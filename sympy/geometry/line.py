@@ -2550,31 +2550,30 @@ class Line3D(LinearEntity3D, Line):
         Examples
         ========
 
-        >>> # TODO
+        >>> r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+        >>> r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
+        >>> r1.bisectors(r2)
+        [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 0)), Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
 
         """
-
-        p = intersection(self, line)
-
-        if not p:
-            # TODO
+        
+        point = intersection(self, line)
+        
+        # Three cases: Lines may intersect in a point, may be equal or may not intersect.
+        if not point:
             return GeometryError("The lines do not intersect")
         else:
-            if not isinstance(p[0], Point3D):
+            if not isinstance(point[0], Point3D):
                 # Intersection is a line because both lines are coincident
                 return [self]
 
-        # Normalize direction vectors:
-        def normalize(vector: list):
-            length = (vector[0] ** 2 + vector[1] ** 2 + vector[2] ** 2) ** 0.5
-            vector = [i / length for i in vector]
-            return vector
+        normalize = lambda x: Point(x).unit.args
 
         d1 = normalize(self.direction_ratio)
         d2 = normalize(line.direction_ratio)
 
-        bis1 = Line3D(p[0], direction_ratio=[d1[i] + d2[i] for i in range(3)])
-        bis2 = Line3D(p[0], direction_ratio=[d1[i] - d2[i] for i in range(3)])
+        bis1 = Line3D(point[0], direction_ratio=[d1[i] + d2[i] for i in range(3)])
+        bis2 = Line3D(point[0], direction_ratio=[d1[i] - d2[i] for i in range(3)])
 
         return [bis1, bis2]
 
