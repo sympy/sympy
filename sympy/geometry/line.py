@@ -40,7 +40,6 @@ from sympy.utilities.misc import Undecidable, filldedent
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D, Point2D
-from .line import Line2D, Line3D
 
 
 class LinearEntity(GeometrySet):
