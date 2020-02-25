@@ -2097,8 +2097,8 @@ class Line2D(LinearEntity2D, Line):
         Examples
         ========
 
-        >>> r1 = Line3D(Point3D(0, 0), Point3D(1, 0))
-        >>> r2 = Line3D(Point3D(0, 0), Point3D(0, 1))
+        >>> r1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        >>> r2 = Line2D(Point2D(0, 0), Point2D(0, 1))
         >>> r1.bisectors(r2)
         [Line2D(Point2D(0, 0), Point2D(1, 1)), Line2D(Point2D(0, 0), Point2D(1, -1))]
 
