@@ -668,6 +668,14 @@ class BinaryQuadratic(DiophantineEquationType):
 
 
 class InhomogeneousTernaryQuadratic(DiophantineEquationType):
+    """
+
+    Representation of an inhomogeneous ternary quadratic.
+
+    No solver is currently implemented for this equation type.
+
+    """
+
     name = 'inhomogeneous_ternary_quadratic'
 
     def matches(self):
