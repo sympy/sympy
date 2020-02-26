@@ -149,7 +149,7 @@ class DiophantineSolutionSet(set):
     def __call__(self, *args):
         if len(args) > len(self.parameters):
             raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
-        return self.subs(zip(self.parameters, args))
+        return self.subs(list(zip(self.parameters, args)))
 
 
 class DiophantineEquationType:
@@ -590,9 +590,9 @@ class BinaryQuadratic(DiophantineEquationType):
                     x_0 = S(num) / (4*A*r)
                     y_0 = S(s0 - t0) / (2*r)
                     if isinstance(s0, Symbol) or isinstance(t0, Symbol):
-                        if check_param(x_0, y_0, 4*A*r, t) != (None, None):
-                            ans = check_param(x_0, y_0, 4*A*r, t)
-                            result.add((ans[0], ans[1]))
+                        if check_param(x_0, y_0, 4*A*r, params) != (None, None):
+                            ans = check_param(x_0, y_0, 4*A*r, params)
+                            result.update(*ans)
                     elif x_0.is_Integer and y_0.is_Integer:
                         if is_solution_quad(var, coeff, x_0, y_0):
                             result.add((x_0, y_0))
@@ -1559,6 +1559,12 @@ def merge_solution(var, var_t, solution):
             return tuple()
 
     return tuple(sol)
+
+
+def _diop_solve(eq, params=None):
+    for diop_type in all_diop_classes:
+        if diop_type(eq).matches():
+            return diop_type(eq).solve(params=params)
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -2707,7 +2713,7 @@ def _find_DN(var, coeff):
     return -coeff[Y**2]/coeff[X**2], -coeff[1]/coeff[X**2]
 
 
-def check_param(x, y, a, t):
+def check_param(x, y, a, params):
     """
     If there is a number modulo ``a`` such that ``x`` and ``y`` are both
     integers, then return a parametric representation for ``x`` and ``y``
@@ -2718,21 +2724,21 @@ def check_param(x, y, a, t):
     from sympy.simplify.simplify import clear_coefficients
 
     if x.is_number and not x.is_Integer:
-        return (None, None)
+        return DiophantineSolutionSet([x, y], parameters=params)
 
     if y.is_number and not y.is_Integer:
-        return (None, None)
+        return DiophantineSolutionSet([x, y], parameters=params)
 
     m, n = symbols("m, n", integer=True)
     c, p = (m*x + n*y).as_content_primitive()
     if a % c.q:
-        return (None, None)
+        return DiophantineSolutionSet([x, y], parameters=params)
 
     # clear_coefficients(mx + b, R)[1] -> (R - b)/m
     eq = clear_coefficients(x, m)[1] - clear_coefficients(y, n)[1]
     junk, eq = eq.as_content_primitive()
 
-    return diop_solve(eq, t)
+    return _diop_solve(eq, params=params)
 
 
 def diop_ternary_quadratic(eq, parameterize=False):
