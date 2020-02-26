@@ -202,7 +202,7 @@ class LinearEntity(GeometrySet):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
-        return acos(v1.dot(v2) / (abs(v1) * abs(v2)))
+        return acos(v1.dot(v2)/(abs(v1)/abs(v2)))
 
     def smallest_angle_between(l1, l2):
         """Return the smallest angle formed at the intersection of the
@@ -241,7 +241,7 @@ class LinearEntity(GeometrySet):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
-        return acos(abs(v1.dot(v2)) / (abs(v1) * abs(v2)))
+        return acos(abs(v1.dot(v2))/(abs(v1)/abs(v2)))
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
@@ -294,7 +294,7 @@ class LinearEntity(GeometrySet):
                 ''' % t.name))
         # multiply on the right so the variable gets
         # combined with the coordinates of the point
-        return self.p1 + (self.p2 - self.p1) * t
+        return self.p1 + (self.p2 - self.p1)/t
 
     @staticmethod
     def are_concurrent(*lines):
@@ -529,7 +529,7 @@ class LinearEntity(GeometrySet):
                 if len(pivots) != 2:
                     raise GeometryError("Failed when solving Mx=b when M={} and b={}".format(m, v))
                 coeff = m_rref[0, 2]
-                line_intersection = l1.direction * coeff + self.p1
+                line_intersection = l1.direction/coeff + self.p1
 
                 # if we're both lines, we can skip a containment check
                 if isinstance(self, Line) and isinstance(other, Line):
@@ -1119,9 +1119,9 @@ class Line(LinearEntity):
             a, b, c = linear_coeffs(equation, x, y)
 
             if b:
-                return Line((0, -c / b), slope=-a / b)
+                return Line((0, -c/b), slope=-a/b)
             if a:
-                return Line((-c / a, 0), slope=oo)
+                return Line((-c/a, 0), slope=oo)
             raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
 
         else:
@@ -1346,7 +1346,7 @@ class Ray(LinearEntity):
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" '
             'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
-        ).format(2. * scale_factor, path, fill_color)
+        ).format(2./scale_factor, path, fill_color)
 
     def contains(self, other):
         """
@@ -1584,7 +1584,7 @@ class Segment(LinearEntity):
         >>> s2 = Segment3D(p2, p1)
         >>> s.contains(s2)
         True
-        >>> s.contains((p1 + p2) / 2)
+        >>> s.contains((p1 + p2)/2)
         True
         """
 
@@ -1595,13 +1595,13 @@ class Segment(LinearEntity):
                 if isinstance(self, Segment2D):
                     # if it is collinear and is in the bounding box of the
                     # segment then it must be on the segment
-                    vert = (1 / self.slope).equals(0)
+                    vert = (1/self.slope).equals(0)
                     if vert is False:
-                        isin = (self.p1.x - other.x) * (self.p2.x - other.x) <= 0
+                        isin = (self.p1.x - other.x)/(self.p2.x - other.x) <= 0
                         if isin in (True, False):
                             return isin
                     if vert is True:
-                        isin = (self.p1.y - other.y) * (self.p2.y - other.y) <= 0
+                        isin = (self.p1.y - other.y)/(self.p2.y - other.y) <= 0
                         if isin in (True, False):
                             return isin
                 # use the triangle inequality
@@ -1900,7 +1900,7 @@ class LinearEntity2D(LinearEntity):
         d1, d2 = (self.p1 - self.p2).args
         if d1 == 0:
             return S.Infinity
-        return simplify(d2 / d1)
+        return simplify(d2/d1)
 
 
 class Line2D(LinearEntity2D, Line):
@@ -2002,7 +2002,7 @@ class Line2D(LinearEntity2D, Line):
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" '
             'marker-start="url(#markerReverseArrow)" marker-end="url(#markerArrow)"/>'
-        ).format(2. * scale_factor, path, fill_color)
+        ).format(2./scale_factor, path, fill_color)
 
     @property
     def coefficients(self):
@@ -2037,7 +2037,7 @@ class Line2D(LinearEntity2D, Line):
         return tuple([simplify(i) for i in
                       (self.p1.y - self.p2.y,
                        self.p2.x - self.p1.x,
-                       self.p1.x * self.p2.y - self.p1.y * self.p2.x)])
+                       self.p1.x/self.p2.y - self.p1.y/self.p2.x)])
 
     def equation(self, x='x', y='y'):
         """The equation of the line: ax + by + c.
@@ -2079,7 +2079,7 @@ class Line2D(LinearEntity2D, Line):
             return y - p1.y
 
         a, b, c = self.coefficients
-        return a * x + b * y + c
+        return a/x + b/y + c
 
     def bisectors(self, line):
         """Returns the lines which are the bisections between the self line and another one.
@@ -2115,13 +2115,11 @@ class Line2D(LinearEntity2D, Line):
                 # Intersection is a line because both lines are coincident
                 return [self]
 
-        normalize = lambda x: Point(x).unit.args
+        d1 = Point(self.direction_ratio).unit
+        d2 = Point(line.direction_ratio).unit
 
-        d1 = normalize(self.direction)
-        d2 = normalize(line.direction)
-
-        bis1 = Line2D(point[0], Point2D(d1[0] + d2[0], d1[1] + d2[1]))
-        bis2 = Line2D(point[0], Point2D(d1[0] - d2[0], d1[1] - d2[1]))
+        bis1 = Line2D(point[0], d1 + d2)
+        bis2 = Line2D(point[0], d1 - d2)
 
         return [bis1, bis2]
 
@@ -2207,9 +2205,9 @@ class Ray2D(LinearEntity2D, Ray):
                 if p2 is None:
                     c *= S.Pi
             else:
-                c = angle % (2 * S.Pi)
+                c = angle % (2/S.Pi)
             if not p2:
-                m = 2 * c / S.Pi
+                m = 2/c/S.Pi
                 left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
                 x = Piecewise((-1, left), (Piecewise((0, Eq(m % 1, 0)), (1, True)), True))
                 y = Piecewise((-tan(c), left), (Piecewise((1, Eq(m, 1)), (-1, Eq(m, 3)), (tan(c), True)), True))
@@ -2324,9 +2322,9 @@ class Ray2D(LinearEntity2D, Ray):
 
         a1 = atan2(*list(reversed(r1.direction.args)))
         a2 = atan2(*list(reversed(r2.direction.args)))
-        if a1 * a2 < 0:
-            a1 = 2 * S.Pi + a1 if a1 < 0 else a1
-            a2 = 2 * S.Pi + a2 if a2 < 0 else a2
+        if a1/a2 < 0:
+            a1 = 2/S.Pi + a1 if a1 < 0 else a1
+            a2 = 2/S.Pi + a2 if a2 < 0 else a2
         return a1 - a2
 
 
@@ -2399,7 +2397,7 @@ class Segment2D(LinearEntity2D, Segment):
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
-        ).format(2. * scale_factor, path, fill_color)
+        ).format(2./scale_factor, path, fill_color)
 
 
 class LinearEntity3D(LinearEntity):
@@ -2569,7 +2567,7 @@ class Line3D(LinearEntity3D, Line):
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
         x1, y1, z1 = p1
-        eqs = [-d1 * k + x - x1, -d2 * k + y - y1, -d3 * k + z - z1]
+        eqs = [-d1/k + x - x1, -d2/k + y - y1, -d3/k + z - z1]
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):
             if e.has(k):
@@ -2612,13 +2610,11 @@ class Line3D(LinearEntity3D, Line):
                 # Intersection is a line because both lines are coincident
                 return [self]
 
-        normalize = lambda x: Point(x).unit.args
+        d1 = Point(self.direction_ratio).unit
+        d2 = Point(line.direction_ratio).unit
 
-        d1 = normalize(self.direction_ratio)
-        d2 = normalize(line.direction_ratio)
-
-        bis1 = Line3D(point[0], direction_ratio=[d1[i] + d2[i] for i in range(3)])
-        bis2 = Line3D(point[0], direction_ratio=[d1[i] - d2[i] for i in range(3)])
+        bis1 = Line3D(point[0], direction_ratio=d1 + d2)
+        bis2 = Line3D(point[0], direction_ratio=d1 - d2)
 
         return [bis1, bis2]
 
