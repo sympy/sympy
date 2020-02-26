@@ -2097,6 +2097,7 @@ class Line2D(LinearEntity2D, Line):
         Examples
         ========
 
+        >>> from sympy.geometry import Point2D, Line2D
         >>> r1 = Line2D(Point2D(0, 0), Point2D(1, 0))
         >>> r2 = Line2D(Point2D(0, 0), Point2D(0, 1))
         >>> r1.bisectors(r2)
@@ -2593,6 +2594,7 @@ class Line3D(LinearEntity3D, Line):
         Examples
         ========
 
+        >>> from sympy.geometry import Point3D, Line3D
         >>> r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
         >>> r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
         >>> r1.bisectors(r2)
