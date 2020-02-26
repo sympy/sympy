@@ -2115,8 +2115,8 @@ class Line2D(LinearEntity2D, Line):
                 # Intersection is a line because both lines are coincident
                 return [self]
 
-        d1 = Point(self.direction_ratio).unit
-        d2 = Point(line.direction_ratio).unit
+        d1 = Point(self.direction).unit
+        d2 = Point(line.direction).unit
 
         bis1 = Line2D(point[0], d1 + d2)
         bis2 = Line2D(point[0], d1 - d2)
