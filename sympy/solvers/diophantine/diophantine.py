@@ -48,6 +48,8 @@ class DiophantineSolutionSet(set):
         List of free symbols in the original equation.
     parameters: list (optional)
         List of parameters to be used in the solution.
+    n_parameters: int (optional)
+        The number of parameters to be used in the solution.
 
     Examples
     ========
@@ -97,7 +99,7 @@ class DiophantineSolutionSet(set):
         {(t**2, t + 2)}
     """
 
-    def __init__(self, symbols_seq, parameters=None):
+    def __init__(self, symbols_seq, parameters=None, n_parameters=None):
         super().__init__()
 
         if not is_sequence(symbols_seq):
@@ -105,10 +107,25 @@ class DiophantineSolutionSet(set):
 
         self.symbols = tuple(symbols_seq)
 
+        if n_parameters is not None:
+            self.n_parameters = n_parameters
+        else:
+            if parameters is None:
+                self.n_parameters = len(self.symbols)
+            else:
+                self.n_parameters = len(parameters)
+
         if parameters is None:
-            self.parameters = symbols('%s1:%i' % ('t', len(self.symbols) + 1), integer=True)
+            self.parameters = symbols('%s1:%i' % ('t', self.n_parameters + 1), integer=True)
         else:
             self.parameters = tuple(parameters)
+
+            if n_parameters is not None:
+                if len(self.parameters) < self.n_parameters:
+                    raise ValueError(
+                        "%s parameters required but only provided %s" % (self.n_parameters, len(self.parameters)))
+
+                self.parameters = self.parameters[:n_parameters]
 
     def add(self, solution):
         if len(solution) != len(self.symbols):
@@ -142,7 +159,7 @@ class DiophantineEquationType:
     Parameters
     ==========
 
-    equation
+    equation:
         The diophantine equation that is being solved.
     free_symbols: list (optional)
         The symbols being solved for.
@@ -155,7 +172,7 @@ class DiophantineEquationType:
     homogeneous
         Does the equation contain a term of degree 0
     homogeneous_order
-        Does the equation contain any coefficient that is in the symbols being solved for
+        Does the equation contain a term of degree 1
     dimension
         The number of symbols being solved for
     """
@@ -193,12 +210,32 @@ class DiophantineEquationType:
 
 
 class Univariate(DiophantineEquationType):
+    """
+    Representation of a univariate diophantine equation.
+
+    A univariate diophantine equation is an equation of the form
+    `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` where `a_{1}, a_{2}, ..a_{n}` are
+    integer constants and `x` is an integer variable.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import Univariate
+    >>> from sympy.abc import x
+    >>> Univariate((x - 2)*(x - 3)**2).solve() # solves equation (x - 2)*(x - 3)**2 == 0
+    {(2,), (3,)}
+
+    """
+
     name = 'univariate'
 
     def matches(self):
         return self.dimension == 1
 
     def solve(self, params=None, limit=None):
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         result = DiophantineSolutionSet(self.free_symbols, parameters=params)
         for i in solveset_real(self.equation, self.free_symbols[0]).intersect(S.Integers):
             result.add((i,))
@@ -206,19 +243,40 @@ class Univariate(DiophantineEquationType):
 
 
 class Linear(DiophantineEquationType):
+    """
+    Representation of a linear diophantine equation.
+
+    A linear diophantine equation is an equation of the form `a_{1}x_{1} +
+    a_{2}x_{2} + .. + a_{n}x_{n} = 0` where `a_{1}, a_{2}, ..a_{n}` are
+    integer constants and `x_{1}, x_{2}, ..x_{n}` are integer variables.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import Linear
+    >>> from sympy.abc import x, y, z, t
+    >>> l1 = Linear(2*x - 3*y - 5)
+    >>> l1.matches() # is this equation linear
+    True
+    >>> l1.solve() # solves equation 2*x - 3*y - 5 == 0
+    {(3*t1 - 5, 2*t1 - 5)}
+
+    Here x = -3*t_0 - 5 and y = -2*t_0 - 5
+
+    >>> Linear(2*x - 3*y - 4*z -3).solve()
+    {(t1, 2*t1 + 4*t2 + 3, -t1 - 3*t2 - 3)}
+
+    """
+
     name = 'linear'
 
     def matches(self):
         return self.total_degree == 1
 
     def solve(self, params=None, limit=None):
-        """
-        Solves diophantine equations of the form:
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
 
-        a_0*x_0 + a_1*x_1 + ... + a_n*x_n == c
-
-        Note that no solution exists if gcd(a_0, ..., a_n) doesn't divide c.
-        """
         coeff = self.coeff
         var = self.free_symbols
 
@@ -230,6 +288,7 @@ class Linear(DiophantineEquationType):
             c = 0
 
         result = DiophantineSolutionSet(var, parameters=params)
+        params = result.parameters
 
         if len(var) == 1:
             q, r = divmod(c, coeff[var[0]])
@@ -385,12 +444,46 @@ class Linear(DiophantineEquationType):
 
 
 class BinaryQuadratic(DiophantineEquationType):
+    """
+    Representation of a binary quadratic diophantine equation.
+
+    A binary quadratic diophantine equation is an equation of the
+    form `Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0`, where `A, B, C, D, E,
+    F` are integer constants and `x` and `y` are integer variables.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, t
+    >>> from sympy.solvers.diophantine.diophantine import BinaryQuadratic
+    >>> b1 = BinaryQuadratic(x**3 + y**2 + 1)
+    >>> b1.matches()
+    False
+    >>> b2 = BinaryQuadratic(x**2 + y**2 + 2*x + 2*y + 2)
+    >>> b2.matches()
+    True
+    >>> b2.solve()
+    {(-1, -1)}
+
+    References
+    ==========
+
+    .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
+          Available: http://www.alpertron.com.ar/METHODS.HTM
+    .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
+          Available: http://www.jpr2718.org/ax2p.pdf
+
+    """
+
     name = 'binary_quadratic'
 
     def matches(self):
         return self.total_degree == 2 and self.dimension == 2
 
     def solve(self, params=None, limit=None) -> DiophantineSolutionSet:
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         var = self.free_symbols
         coeff = self.coeff
 
@@ -586,6 +679,19 @@ class InhomogeneousTernaryQuadratic(DiophantineEquationType):
 
 
 class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
+    """
+    Representation of a homogeneous ternary quadratic normal diophantine equation.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.diophantine.diophantine import HomogeneousTernaryQuadraticNormal
+    >>> HomogeneousTernaryQuadraticNormal(4*x**2 - 5*y**2 + z**2).solve()
+    {(1, 2, 4)}
+
+    """
+
     name = 'homogeneous_ternary_quadratic_normal'
 
     def matches(self):
@@ -600,6 +706,9 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
         return len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols)
 
     def solve(self, params=None, limit=None) -> DiophantineSolutionSet:
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         var = self.free_symbols
         coeff = self.coeff
 
@@ -608,14 +717,6 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
         a = coeff[x**2]
         b = coeff[y**2]
         c = coeff[z**2]
-        try:
-            assert len([k for k in coeff if coeff[k]]) == 3
-            assert all(coeff[i**2] for i in var)
-        except AssertionError:
-            raise ValueError(filldedent('''
-        coeff dict is not consistent with assumption of this routine:
-        coefficients should be those of an expression in the form
-        a*x**2 + b*y**2 + c*z**2 where a*b*c != 0.'''))
 
         (sqf_of_a, sqf_of_b, sqf_of_c), (a_1, b_1, c_1), (a_2, b_2, c_2) = \
             sqf_normal(a, b, c, steps=True)
@@ -666,6 +767,21 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
 
 
 class HomogeneousTernaryQuadratic(DiophantineEquationType):
+    """
+    Representation of a homogeneous ternary quadratic diophantine equation.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.diophantine.diophantine import HomogeneousTernaryQuadratic
+    >>> HomogeneousTernaryQuadratic(x**2 + y**2 - 3*z**2 + x*y).solve()
+    {(-1, 2, 1)}
+    >>> HomogeneousTernaryQuadratic(3*x**2 + y**2 - 3*z**2 + 5*x*y + y*z).solve()
+    {(3, 12, 13)}
+
+    """
+
     name = 'homogeneous_ternary_quadratic'
 
     def matches(self):
@@ -680,6 +796,9 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         return not (len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols))
 
     def solve(self, params=None, limit=None):
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         _var = self.free_symbols
         coeff = self.coeff
 
@@ -794,6 +913,14 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
 
 
 class InhomogeneousGeneralQuadratic(DiophantineEquationType):
+    """
+
+    Representation of an inhomogeneous general quadratic.
+
+    No solver is currently implemented for this equation type.
+
+    """
+
     name = 'inhomogeneous_general_quadratic'
 
     def matches(self):
@@ -809,6 +936,14 @@ class InhomogeneousGeneralQuadratic(DiophantineEquationType):
 
 
 class HomogeneousGeneralQuadratic(DiophantineEquationType):
+    """
+
+    Representation of a homogeneous general quadratic.
+
+    No solver is currently implemented for this equation type.
+
+    """
+
     name = 'homogeneous_general_quadratic'
 
     def matches(self):
@@ -824,6 +959,38 @@ class HomogeneousGeneralQuadratic(DiophantineEquationType):
 
 
 class GeneralSumOfSquares(DiophantineEquationType):
+    r"""
+    Representation of the diophantine equation
+
+    `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
+
+    Details
+    =======
+
+    When `n = 3` if `k = 4^a(8m + 7)` for some `a, m \in Z` then there will be
+    no solutions. Refer [1]_ for more details.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import GeneralSumOfSquares
+    >>> from sympy.abc import a, b, c, d, e, f
+    >>> GeneralSumOfSquares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345).solve()
+    {(15, 22, 22, 24, 24)}
+
+    By default only 1 solution is returned. Use the `limit` keyword for more:
+
+    >>> sorted(GeneralSumOfSquares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345).solve(limit=3))
+    [(15, 22, 22, 24, 24), (16, 19, 24, 24, 24), (16, 20, 22, 23, 26)]
+
+    References
+    ==========
+
+    .. [1] Representing an integer as a sum of three squares, [online],
+        Available:
+        http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+    """
+
     name = 'general_sum_of_squares'
 
     def matches(self):
@@ -836,6 +1003,9 @@ class GeneralSumOfSquares(DiophantineEquationType):
         return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
 
     def solve(self, params=None, limit=1):
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         var = self.free_symbols
         k = -int(self.coeff[1])
         n = self.dimension
@@ -861,6 +1031,21 @@ class GeneralSumOfSquares(DiophantineEquationType):
 
 
 class GeneralPythagorean(DiophantineEquationType):
+    """
+    Representation of the general pythagorean equation,
+    `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import GeneralPythagorean
+    >>> from sympy.abc import a, b, c, d, e, x, y, z, t, u
+    >>> GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve()
+    {(t1**2 + t2**2 - t3**2, 2*t1*t3, 2*t2*t3, t1**2 + t2**2 + t3**2)}
+    >>> GeneralPythagorean(9*a**2 - 4*b**2 + 16*c**2 + 25*d**2 + e**2).solve(params=[x, y, z, t])
+    {(-10*t**2 + 10*x**2 + 10*y**2 + 10*z**2, 15*t**2 + 15*x**2 + 15*y**2 + 15*z**2, 15*t*x, 12*t*y, 60*t*z)}
+    """
+
     name = 'general_pythagorean'
 
     def matches(self):
@@ -879,45 +1064,68 @@ class GeneralPythagorean(DiophantineEquationType):
         return abs(sum(sign(self.coeff[k]) for k in self.coeff)) == self.dimension - 2
 
     def solve(self, params=None, limit=1):
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         coeff = self.coeff
         var = self.free_symbols
+        n = self.dimension
 
-        if sign(coeff[var[0]**2]) + sign(coeff[var[1]**2]) + sign(coeff[var[2]**2]) < 0:
+        if sign(coeff[var[0] ** 2]) + sign(coeff[var[1] ** 2]) + sign(coeff[var[2] ** 2]) < 0:
             for key in coeff.keys():
                 coeff[key] = -coeff[key]
 
-        result = DiophantineSolutionSet(var, parameters=params)
-        t = result.parameters[0]
+        result = DiophantineSolutionSet(var, parameters=params, n_parameters=n-1)
 
-        n = len(var)
         index = 0
 
         for i, v in enumerate(var):
-            if sign(coeff[v**2]) == -1:
+            if sign(coeff[v ** 2]) == -1:
                 index = i
 
-        m = symbols('%s1:%i' % (t, n), integer=True)
-        ith = sum(m_i**2 for m_i in m)
-        L = [ith - 2*m[n - 2]**2]
-        L.extend([2*m[i]*m[n - 2] for i in range(n - 2)])
+        m = result.parameters
+
+        ith = sum(m_i ** 2 for m_i in m)
+        L = [ith - 2 * m[n - 2] ** 2]
+        L.extend([2 * m[i] * m[n - 2] for i in range(n - 2)])
         sol = L[:index] + [ith] + L[index:]
 
         lcm = 1
         for i, v in enumerate(var):
             if i == index or (index > 0 and i == 0) or (index == 0 and i == 1):
-                lcm = ilcm(lcm, sqrt(abs(coeff[v**2])))
+                lcm = ilcm(lcm, sqrt(abs(coeff[v ** 2])))
             else:
-                s = sqrt(coeff[v**2])
+                s = sqrt(coeff[v ** 2])
                 lcm = ilcm(lcm, s if _odd(s) else s // 2)
 
         for i, v in enumerate(var):
-            sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2]))
+            sol[i] = (lcm * sol[i]) / sqrt(abs(coeff[v ** 2]))
 
         result.add(sol)
         return result
 
 
 class CubicThue(DiophantineEquationType):
+    """
+    Representation of a cubic Thue diophantine equation.
+
+    A cubic Thue diophantine equation is a polynomial of the form
+    `f(x, y) = r` of degree 3, where `x` and `y` are integers
+    and `r` is a rational number.
+
+    No solver is currently implemented for this equation type.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.solvers.diophantine.diophantine import CubicThue
+    >>> c1 = CubicThue(x**3 + y**2 + 1)
+    >>> c1.matches()
+    True
+
+    """
+
     name = 'cubic_thue'
 
     def matches(self):
@@ -925,6 +1133,23 @@ class CubicThue(DiophantineEquationType):
 
 
 class GeneralSumOfEvenPowers(DiophantineEquationType):
+    """
+    Representation of the diophantine equation
+
+    `x_{1}^e + x_{2}^e + . . . + x_{n}^e - k = 0`
+
+    where `e` is an even, integer power.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine.diophantine import GeneralSumOfEvenPowers
+    >>> from sympy.abc import a, b
+    >>> GeneralSumOfEvenPowers(a**4 + b**4 - (2**4 + 3**4)).solve()
+    {(2, 3)}
+
+    """
+
     name = 'general_sum_of_even_powers'
 
     def matches(self):
@@ -937,6 +1162,9 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
         return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
 
     def solve(self, params=None, limit=1):
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
         var = self.free_symbols
         coeff = self.coeff
 
@@ -2552,7 +2780,10 @@ def diop_ternary_quadratic(eq, parameterize=False):
 
 def _diop_ternary_quadratic(_var, coeff):
     eq = sum([i*coeff[i] for i in coeff])
-    return HomogeneousTernaryQuadratic(eq, free_symbols=_var).solve()
+    if HomogeneousTernaryQuadratic(eq).matches():
+        return HomogeneousTernaryQuadratic(eq, free_symbols=_var).solve()
+    elif HomogeneousTernaryQuadraticNormal(eq).matches():
+        return HomogeneousTernaryQuadraticNormal(eq, free_symbols=_var).solve()
 
 
 def transformation_to_normal(eq):
@@ -3183,7 +3414,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
         if param is None:
             params = None
         else:
-            params = [param]
+            params = symbols('%s1:%i' % (param, len(var)), integer=True)
         return list(GeneralPythagorean(eq).solve(params=params))[0]
 
 
