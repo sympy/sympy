@@ -43,16 +43,7 @@ from sympy.solvers.solveset import (
     _solve_exponential, _is_logarithmic,
     _solve_logarithm, _term_factors, _is_modular)
 
-
-a = Symbol('a')
-b = Symbol('b')
-c = Symbol('c')
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
-q = Symbol('q')
-m = Symbol('m')
-n = Symbol('n')
+from sympy.abc import a, b, c, x, y, z, q, m, n
 
 
 def test_invert_real():
