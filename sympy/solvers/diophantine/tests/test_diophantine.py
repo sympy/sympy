@@ -15,7 +15,7 @@ from sympy.solvers.diophantine.diophantine import (diop_DN,
     classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
     check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
     _diop_ternary_quadratic_normal, _nint_or_floor,
-    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet)
+    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet, GeneralPythagorean)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL
@@ -579,6 +579,9 @@ def test_general_pythagorean():
     assert check_solutions(-e**2 + 9*a**2 + 4*b**2 + 4*c**2 + 25*d**2)
     assert check_solutions(16*a**2 - b**2 + 9*c**2 + d**2 + 25*e**2)
 
+    assert GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve(params=[x, y, z]) == \
+           {(x**2 + y**2 - z**2, 2*x*z, 2*y*z, x**2 + y**2 + z**2)}
+
 
 def test_diop_general_sum_of_squares_quick():
     for i in range(3, 10):
@@ -966,6 +969,7 @@ def test_diophantine_solution_set():
     assert s1.parameters == ()
     raises(ValueError, lambda: s1.add((x,)))
     assert list(s1.dict_iterator()) == []
+    assert s1.n_parameters == 0
 
     s2 = DiophantineSolutionSet([x, y], [t, u])
     assert s2.symbols == (x, y)
@@ -977,6 +981,7 @@ def test_diophantine_solution_set():
     assert set(s2) == {(3, 4), (-1, u)}
     raises(ValueError, lambda: s1.update(s2))
     assert list(s2.dict_iterator()) == [{x: -1, y: u}, {x: 3, y: 4}]
+    assert s2.n_parameters == 2
 
     s3 = DiophantineSolutionSet([x, y, z], [t, u])
     assert len(s3.parameters) == 2
@@ -1001,6 +1006,18 @@ def test_diophantine_solution_set():
     raises(ValueError, lambda: s3.add((1, 2)))
     raises(ValueError, lambda: s3(1, 2, 3))
     raises(TypeError, lambda: s3(t=1))
+    assert s3.n_parameters == 2
 
     s4 = DiophantineSolutionSet([x])
     assert len(s4.parameters) == 1
+    assert s4.n_parameters == 1
+
+    s5 = DiophantineSolutionSet([x, y, z], n_parameters=2)
+    assert len(s5.parameters) == 2
+    assert s5.n_parameters == 2
+
+    s6 = DiophantineSolutionSet([x, y, z], [t, u], n_parameters=1)
+    assert len(s6.parameters) == 1
+    assert s6.n_parameters == 1
+
+    raises(ValueError, lambda: DiophantineSolutionSet([x, y, z], [t, u], n_parameters=3))
