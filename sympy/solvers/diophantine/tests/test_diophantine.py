@@ -15,7 +15,8 @@ from sympy.solvers.diophantine.diophantine import (diop_DN,
     classify_diop, base_solution_linear, cornacchia, sqf_normal, gaussian_reduce, holzer,
     check_param, parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
     _diop_ternary_quadratic_normal, _nint_or_floor,
-    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet, GeneralPythagorean)
+    _odd, _even, _remove_gcd, _can_do_sum_of_squares, DiophantineSolutionSet, GeneralPythagorean,
+    BinaryQuadratic)
 from sympy.utilities import default_sort_key
 
 from sympy.testing.pytest import slow, raises, XFAIL
@@ -751,7 +752,7 @@ def test_diopcoverage():
     eq = (2*x + y + 1)**2
     assert diop_solve(eq) == {(t_0, -2*t_0 - 1)}
     eq = 2*x**2 + 6*x*y + 12*x + 4*y**2 + 18*y + 18
-    assert diop_solve(eq) == {(t_0, -t_0 - 3), (2*t_0 - 3, -t_0)}
+    assert diop_solve(eq) == {(t, -t - 3), (2*t - 3, -t)}
     assert diop_quadratic(x + y**2 - 3) == {(-t**2 + 3, -t)}
 
     assert diop_linear(x + y - 3) == (t_0, 3 - t_0)
@@ -775,9 +776,9 @@ def test_diopcoverage():
             (m1**2 + m2**2 - m3**2, 2*m1*m3,
             2*m2*m3, m1**2 + m2**2 + m3**2)
 
-    assert check_param(S(3) + x/3, S(4) + x/2, S(2), x) == (None, None)
-    assert check_param(Rational(3, 2), S(4) + x, S(2), x) == (None, None)
-    assert check_param(S(4) + x, Rational(3, 2), S(2), x) == (None, None)
+    assert len(check_param(S(3) + x/3, S(4) + x/2, S(2), [x])) == 0
+    assert len(check_param(Rational(3, 2), S(4) + x, S(2), [x])) == 0
+    assert len(check_param(S(4) + x, Rational(3, 2), S(2), [x])) == 0
 
     assert _nint_or_floor(16, 10) == 2
     assert _odd(1) == (not _even(1)) == True
@@ -1021,3 +1022,16 @@ def test_diophantine_solution_set():
     assert s6.n_parameters == 1
 
     raises(ValueError, lambda: DiophantineSolutionSet([x, y, z], [t, u], n_parameters=3))
+
+    s7 = DiophantineSolutionSet([x, y], [t, u])
+    s7.add((t, 11*t))
+    s7.add((-t, 22*t))
+    assert s7(0, 0) == {(0, 0)}
+
+
+def test_quadratic_parameter_passing():
+    eq = -33*x*y + 3*y**2
+    solution = BinaryQuadratic(eq).solve(params=[t, u])
+    # test that parameters are passed all the way to the final solution
+    assert solution == {(t, 11*t), (-t, 22*t)}
+    assert solution(0, 0) == {(0, 0)}
