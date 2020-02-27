@@ -580,7 +580,7 @@ def test_general_pythagorean():
     assert check_solutions(-e**2 + 9*a**2 + 4*b**2 + 4*c**2 + 25*d**2)
     assert check_solutions(16*a**2 - b**2 + 9*c**2 + d**2 + 25*e**2)
 
-    assert GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve(params=[x, y, z]) == \
+    assert GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve(parameters=[x, y, z]) == \
            {(x**2 + y**2 - z**2, 2*x*z, 2*y*z, x**2 + y**2 + z**2)}
 
 
@@ -964,13 +964,12 @@ def test_ternary_quadratic():
 
 
 def test_diophantine_solution_set():
-    s1 = DiophantineSolutionSet([])
+    s1 = DiophantineSolutionSet([], [])
     assert set(s1) == set()
     assert s1.symbols == ()
     assert s1.parameters == ()
     raises(ValueError, lambda: s1.add((x,)))
     assert list(s1.dict_iterator()) == []
-    assert s1.n_parameters == 0
 
     s2 = DiophantineSolutionSet([x, y], [t, u])
     assert s2.symbols == (x, y)
@@ -982,7 +981,6 @@ def test_diophantine_solution_set():
     assert set(s2) == {(3, 4), (-1, u)}
     raises(ValueError, lambda: s1.update(s2))
     assert list(s2.dict_iterator()) == [{x: -1, y: u}, {x: 3, y: 4}]
-    assert s2.n_parameters == 2
 
     s3 = DiophantineSolutionSet([x, y, z], [t, u])
     assert len(s3.parameters) == 2
@@ -1007,31 +1005,16 @@ def test_diophantine_solution_set():
     raises(ValueError, lambda: s3.add((1, 2)))
     raises(ValueError, lambda: s3(1, 2, 3))
     raises(TypeError, lambda: s3(t=1))
-    assert s3.n_parameters == 2
 
-    s4 = DiophantineSolutionSet([x])
-    assert len(s4.parameters) == 1
-    assert s4.n_parameters == 1
-
-    s5 = DiophantineSolutionSet([x, y, z], n_parameters=2)
-    assert len(s5.parameters) == 2
-    assert s5.n_parameters == 2
-
-    s6 = DiophantineSolutionSet([x, y, z], [t, u], n_parameters=1)
-    assert len(s6.parameters) == 1
-    assert s6.n_parameters == 1
-
-    raises(ValueError, lambda: DiophantineSolutionSet([x, y, z], [t, u], n_parameters=3))
-
-    s7 = DiophantineSolutionSet([x, y], [t, u])
-    s7.add((t, 11*t))
-    s7.add((-t, 22*t))
-    assert s7(0, 0) == {(0, 0)}
+    s4 = DiophantineSolutionSet([x, y], [t, u])
+    s4.add((t, 11*t))
+    s4.add((-t, 22*t))
+    assert s4(0, 0) == {(0, 0)}
 
 
 def test_quadratic_parameter_passing():
     eq = -33*x*y + 3*y**2
-    solution = BinaryQuadratic(eq).solve(params=[t, u])
+    solution = BinaryQuadratic(eq).solve(parameters=[t, u])
     # test that parameters are passed all the way to the final solution
     assert solution == {(t, 11*t), (-t, 22*t)}
     assert solution(0, 0) == {(0, 0)}
