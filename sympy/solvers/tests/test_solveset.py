@@ -1,7 +1,7 @@
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
-from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
 from sympy.core.relational import (Eq, Gt,
     Ne)
 from sympy.core.singleton import S
@@ -2315,5 +2315,5 @@ def test_solve_modular_fail():
 # end of modular tests
 
 def test_issue_17276():
-    assert nonlinsolve([Eq(x,5**1/5), Eq(x*y, 25*sqrt(5))], x, y) == \
-    FiniteSet((1.0, 25.0*sqrt(5)))
+    assert nonlinsolve([Eq(x, 5**(Integer(S(1))/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
+     FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))
