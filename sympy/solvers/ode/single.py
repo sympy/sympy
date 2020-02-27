@@ -501,7 +501,6 @@ class AlmostLinear(SinglePatternODESolver):
         P, Q, R = self.wilds()
         eq = self.ode_problem.eq_expanded
         eq = eq.collect(fx, func = cancel)
-        df = fx.diff(x)
         match = eq.match(P*fx.diff(x) + Q)
         if match is None:
             return S.Zero
