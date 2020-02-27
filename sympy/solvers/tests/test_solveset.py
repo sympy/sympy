@@ -43,7 +43,8 @@ from sympy.solvers.solveset import (
     _solve_exponential, _is_logarithmic,
     _solve_logarithm, _term_factors, _is_modular)
 
-from sympy.abc import a, b, c, d, e, f, t, w, x, y, z, q, r, m, n
+from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
+    t, w, x, y, z)
 
 
 def test_invert_real():
@@ -640,7 +641,7 @@ def test_issue_9565():
 def test_issue_10069():
     eq = abs(1/(x - 1)) - 1 > 0
     assert solveset_real(eq, x) == Union(
-		Interval.open(0, 1), Interval.open(1, 2))
+        Interval.open(0, 1), Interval.open(1, 2))
 
 
 def test_real_imag_splitting():
@@ -1126,8 +1127,6 @@ def test_abs_invert_solvify():
 
 
 def test_linear_eq_to_matrix():
-    from sympy.abc import d, e, f, g, h, i, j, k, l
-
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
@@ -2246,19 +2245,19 @@ def test_solve_modular():
     # issue 13178
     n = symbols('n', integer=True)
     a = 742938285
-    z = 1898888478
+    b = 1898888478
     m = 2**31 - 1
-    x = 20170816
-    assert solveset(x - Mod(a**n*z, m), n, S.Integers) == \
+    c = 20170816
+    assert solveset(c - Mod(a**n*b, m), n, S.Integers) == \
             ImageSet(Lambda(n, 2147483646*n + 100), S.Naturals0)
-    assert solveset(x - Mod(a**n*z, m), n, S.Naturals0) == \
+    assert solveset(c - Mod(a**n*b, m), n, S.Naturals0) == \
             Intersection(ImageSet(Lambda(n, 2147483646*n + 100), S.Naturals0),
             S.Naturals0)
-    assert solveset(x - Mod(a**(2*n)*z, m), n, S.Integers) == \
+    assert solveset(c - Mod(a**(2*n)*b, m), n, S.Integers) == \
             Intersection(ImageSet(Lambda(n, 1073741823*n + 50), S.Naturals0),
             S.Integers)
-    assert solveset(x - Mod(a**(2*n + 7)*z, m), n, S.Integers) == EmptySet()
-    assert solveset(x - Mod(a**(n - 4)*z, m), n, S.Integers) == \
+    assert solveset(c - Mod(a**(2*n + 7)*b, m), n, S.Integers) == EmptySet()
+    assert solveset(c - Mod(a**(n - 4)*b, m), n, S.Integers) == \
             Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
             S.Integers)
 
