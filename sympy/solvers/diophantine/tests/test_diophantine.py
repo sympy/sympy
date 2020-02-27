@@ -165,6 +165,7 @@ def test_quadratic_non_perfect_square():
     assert check_solutions(3*x**2 - 2*y**2 - 2*x - 2*y)
     assert check_solutions(x**2 - x*y - y**2 - 3*y)
     assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
+    assert BinaryQuadratic(x**2 + y**2 + 2*x + 2*y + 2).solve() == {(-1, -1)}
 
 
 def test_issue_9106():
