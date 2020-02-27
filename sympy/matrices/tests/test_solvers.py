@@ -1,6 +1,6 @@
 from sympy import I, expand_mul, symbols, simplify, sympify, Rational, Symbol, S
-from sympy.matrices import Matrix, eye
-from sympy.matrices.matrices import NonSquareMatrixError, ShapeError, ImmutableMatrix, ImmutableDenseMatrix
+from sympy.matrices import Matrix, eye, ImmutableMatrix, ImmutableDenseMatrix
+from sympy.matrices.matrices import NonSquareMatrixError, ShapeError
 from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
