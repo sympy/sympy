@@ -1213,8 +1213,8 @@ def test_linsolve():
 
     # No solution
     A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
-    b = Matrix([0, 0, 1])
-    assert linsolve((A, b), (x, y, z)) == EmptySet()
+    B = Matrix([0, 0, 1])
+    assert linsolve((A, B), (x, y, z)) == EmptySet()
 
     # Issue #10056
     A, B, J1, J2 = symbols('A B J1 J2')
