@@ -207,7 +207,7 @@ class LatexPrinter(Printer):
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
-        if (prec_val < level) or ((not strict) and prec_val <= level):
+        if (prec_val <= level) or ((not strict) and prec_val <= level):
             return r"\left({}\right)".format(self._print(item))
         else:
             return self._print(item)
