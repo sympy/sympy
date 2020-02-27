@@ -265,7 +265,7 @@ def test_is_function_class_equation():
 
 
 def test_garbage_input():
-    raises(ValueError, lambda: solveset_real([x], x))
+    raises(ValueError, lambda: solveset_real([y], y))
     x = Symbol('x', real=True)
     assert solveset_real(x, 1) == S.EmptySet
     assert solveset_real(x - 1, 1) == FiniteSet(x)
@@ -1178,7 +1178,7 @@ def test_linsolve():
     # Test for different input forms
 
     M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
-    system1 = A, b = M[:, :-1], M[:, -1]
+    system1 = A, B = M[:, :-1], M[:, -1]
     Eqns = [x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
             2*x1 + 4*x2 + 6*x4 - 4]
 
@@ -1197,7 +1197,7 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(x1))
     raises(ValueError, lambda: linsolve(x1, x2))
     raises(ValueError, lambda: linsolve((A,), x1, x2))
-    raises(ValueError, lambda: linsolve(A, b, x1, x2))
+    raises(ValueError, lambda: linsolve(A, B, x1, x2))
 
     #raise ValueError if equations are non-linear in given variables
     raises(ValueError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
