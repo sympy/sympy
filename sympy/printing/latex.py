@@ -205,9 +205,9 @@ class LatexPrinter(Printer):
             self._settings['imaginary_unit_latex'] = \
                 self._settings['imaginary_unit']
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, diff=False, strict=False):
         prec_val = precedence_traditional(item)
-        if (prec_val < level) or ((not strict) and prec_val <= level):
+        if ((prec_val < level) or ((not strict) and prec_val <= level) or (diff == True)):
             return r"\left({}\right)".format(self._print(item))
         else:
             return self._print(item)
@@ -735,6 +735,7 @@ class LatexPrinter(Printer):
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
+                                                  diff=True,
                                                   strict=True))
 
     def _print_Subs(self, subs):
