@@ -425,7 +425,6 @@ class FirstLinear(SinglePatternODESolver):
         return [gensol]
 
 
-
 class AlmostLinear(SinglePatternODESolver):
     r"""
     Solves an almost-linear differential equation.
@@ -507,7 +506,7 @@ class AlmostLinear(SinglePatternODESolver):
 
         P = match[P]
         Q = match[Q]
-        R, Q = Q.as_independent(fx)
+        R, Q = Q.as_independent(fx) if Q.is_Add else (S.Zero, Q)
         if Q.diff(fx) != 0 and not simplify(Q.diff(fx)/P).has(fx):
             self.ly = factor_terms(Q).as_independent(fx, as_Add=False)[1]
             self.fxx = P / self.ly.diff(fx)
