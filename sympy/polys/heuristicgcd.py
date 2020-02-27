@@ -68,7 +68,7 @@ def heugcd(f, g):
 
     x = max(min(B, 99*domain.sqrt(B)),
             2*min(f_norm // abs(f.LC),
-                  g_norm // abs(g.LC)) + 2)
+                  g_norm // abs(g.LC)) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = f.evaluate(x0, x)

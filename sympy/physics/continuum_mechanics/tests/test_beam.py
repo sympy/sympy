@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols, S, Interval, pi, Rational
+from sympy import Symbol, symbols, S, Interval, pi, Rational, simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
 from sympy.testing.pytest import raises
@@ -139,7 +139,7 @@ def test_Beam():
     # Test for deflection distribution function
     p = b2.deflection()
     q = x*(E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I) + (w0*SingularityFunction(x, a1, 5)/120 + w2*SingularityFunction(x, c1, 3)/6)/(E*I) + (E*I*(-c*f + d) + c*w0*SingularityFunction(e, a1, 4)/24 + c*w2*SingularityFunction(e, c1, 2)/2 - w0*SingularityFunction(c, a1, 5)/120 - w2*SingularityFunction(c, c1, 3)/6)/(E*I)
-    assert p == q
+    assert simplify(p - q) == 0
 
     b3 = Beam(9, E, I)
     b3.apply_load(value=-2, start=2, order=2, end=3)
@@ -512,7 +512,7 @@ def test_Beam3D():
         A*G*l*m*Rational(3, 2) - 3*E*I*q))/(6*A*E*G*I))
     dx, dy, dz = b.deflection()
     assert dx == dz == 0
-    assert dy == expected_deflection
+    assert simplify(dy - expected_deflection) == 0
 
     b2 = Beam3D(30, E, G, I, A, x)
     b2.apply_load(50, start=0, order=0, dir="y")

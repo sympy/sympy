@@ -301,7 +301,7 @@ class BlockDiagMatrix(BlockMatrix):
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
                         for j in range(len(mats))]
                         for i in range(len(mats))]
-        return ImmutableDenseMatrix(data)
+        return ImmutableDenseMatrix(data, evaluate=False)
 
     @property
     def shape(self):

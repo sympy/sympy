@@ -5,6 +5,10 @@ set -e
 # Echo each command
 set -x
 
+if [[ "${TEST_FLAKE8}" == "true" ]]; then
+    flake8 sympy;
+fi
+
 if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
 fi
@@ -136,10 +140,9 @@ import sympy
 test_list = [
     # numpy
     '*numpy*',
-    'sympy/core/tests/test_numbers.py',
+    'sympy/core/',
     'sympy/matrices/',
     'sympy/physics/quantum/',
-    'sympy/core/tests/test_sympify.py',
     'sympy/utilities/tests/test_lambdify.py',
 
     # scipy

@@ -24,6 +24,8 @@ class StrPrinter(Printer):
         "sympy_integers": False,
         "abbrev": False,
         "perm_cyclic": True,
+        "min": None,
+        "max": None,
     }  # type: Dict[str, Any]
 
     _relationals = dict()  # type: Dict[str, str]
@@ -153,10 +155,6 @@ class StrPrinter(Printer):
 
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
-
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
-        return str(expr)
 
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
@@ -691,7 +689,9 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):

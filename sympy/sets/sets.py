@@ -6,7 +6,7 @@ from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered, PY3, reduce
+from sympy.core.compatibility import iterable, ordered, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
@@ -915,9 +915,8 @@ class Interval(Set, EvalfMixin):
                 "left_open and right_open can have only true/false values, "
                 "got %s and %s" % (left_open, right_open))
 
-        inftys = [S.Infinity, S.NegativeInfinity]
-        # Only allow real intervals (use symbols with 'is_extended_real=True').
-        if not all(i.is_extended_real is not False or i in inftys for i in (start, end)):
+        # Only allow real intervals
+        if fuzzy_not(fuzzy_and(i.is_extended_real for i in (start, end, end-start))):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
@@ -1063,16 +1062,13 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(*finite_points)
 
     def _contains(self, other):
-        if not isinstance(other, Expr) or (
-                other is S.Infinity or
-                other is S.NegativeInfinity or
-                other is S.NaN or
-                other is S.ComplexInfinity) or other.is_extended_real is False:
-            return false
+        if (not isinstance(other, Expr) or other is S.NaN
+            or other.is_real is False):
+                return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
-            if not other.is_extended_real is None:
-                return other.is_extended_real
+            if other.is_real is not None:
+                return other.is_real
 
         d = Dummy()
         return self.as_relational(d).subs(d, other)
@@ -2107,10 +2103,8 @@ def imageset(*args):
             else:
                 s = [Symbol('x%i' % i) for i in range(1, N + 1)]
         else:
-            if PY3:
-                s = inspect.signature(f).parameters
-            else:
-                s = inspect.getargspec(f).args
+            s = inspect.signature(f).parameters
+
         dexpr = _sympify(f(*[Dummy() for i in s]))
         var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
         f = Lambda(var, f(*var))

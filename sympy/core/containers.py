@@ -249,6 +249,13 @@ class Dict(Basic):
 
     @property
     def args(self):
+        """Returns a tuple of arguments of 'self'.
+
+        See Also
+        ========
+
+        sympy.core.basic.Basic.args
+        """
         return tuple(self.elements)
 
     def items(self):

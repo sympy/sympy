@@ -2,7 +2,7 @@ from __future__ import (absolute_import, print_function)
 
 
 import sympy as sp
-from sympy.core.compatibility import exec_, PY3
+from sympy.core.compatibility import exec_
 from sympy.codegen.ast import Assignment
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
 from sympy.codegen.fnodes import bind_C
@@ -40,7 +40,7 @@ def test_newtons_method_function__ccode():
         mod, info = compile_link_import_strings([
             ('newton.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
-            ('_newton.pyx', ("#cython: language_level={}\n".format("3" if PY3 else "2") +
+            ('_newton.pyx', ("#cython: language_level={}\n".format("3") +
                              "cdef extern double newton(double)\n"
                              "def py_newton(x):\n"
                              "    return newton(x)\n"))
@@ -63,7 +63,7 @@ def test_newtons_method_function__fcode():
     with TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton.f90', f_mod),
-            ('_newton.pyx', ("#cython: language_level={}\n".format("3" if PY3 else "2") +
+            ('_newton.pyx', ("#cython: language_level={}\n".format("3") +
                              "cdef extern double newton(double*)\n"
                              "def py_newton(double x):\n"
                              "    return newton(&x)\n"))
@@ -101,7 +101,7 @@ def test_newtons_method_function__ccode_parameters():
         mod, info = compile_link_import_strings([
             ('newton_par.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
-            ('_newton_par.pyx', ("#cython: language_level={}\n".format("3" if PY3 else "2") +
+            ('_newton_par.pyx', ("#cython: language_level={}\n".format("3") +
                                  "cdef extern double newton(double, double, double, double)\n"
                              "def py_newton(x, A=1, k=1, p=1):\n"
                              "    return newton(x, A, k, p)\n"))

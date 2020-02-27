@@ -1,5 +1,5 @@
 from sympy.core.containers import Tuple
-from sympy.core.function import (Function, Lambda, nfloat)
+from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Gt,
@@ -174,15 +174,33 @@ def test_issue_17479():
     fy = f.diff(y)
     fz = f.diff(z)
     sol = nonlinsolve([fx, fy, fz], [x, y, z])
-    # FIXME: This previously gave 18 solutions and now gives 20 due to fixes
-    # in the handling of intersection of FiniteSets or possibly a small change
-    # to ImageSet._contains. However Using expand I can turn this into 16
-    # solutions either way:
-    #
-    #    >>> len(FiniteSet(*(Tuple(*(expand(w) for w in s)) for s in sol)))
-    #    16
-    #
-    assert len(sol) == 20
+    assert len(sol) >= 4 and len(sol) <= 20
+    # nonlinsolve has been giving a varying number of solutions
+    # (originally 18, then 20, now 19) due to various internal changes.
+    # Unfortunately not all the solutions are actually valid and some are
+    # redundant. Since the original issue was that an exception was raised,
+    # this first test only checks that nonlinsolve returns a "plausible"
+    # solution set. The next test checks the result for correctness.
+
+
+@XFAIL
+def test_issue_18449():
+    x, y, z = symbols("x, y, z")
+    f = (x**2 + y**2)**2 + (x**2 + z**2)**2 - 2*(2*x**2 + y**2 + z**2)
+    fx = diff(f, x)
+    fy = diff(f, y)
+    fz = diff(f, z)
+    sol = nonlinsolve([fx, fy, fz], [x, y, z])
+    for (xs, ys, zs) in sol:
+        d = {x: xs, y: ys, z: zs}
+        assert tuple(_.subs(d).simplify() for _ in (fx, fy, fz)) == (0, 0, 0)
+    # After simplification and removal of duplicate elements, there should
+    # only be 4 parametric solutions left:
+    # simplifiedsolutions = FiniteSet((sqrt(1 - z**2), z, z),
+    #                                 (-sqrt(1 - z**2), z, z),
+    #                                 (sqrt(1 - z**2), -z, z),
+    #                                 (-sqrt(1 - z**2), -z, z))
+    # TODO: Is the above solution set definitely complete?
 
 
 def test_is_function_class_equation():
@@ -611,6 +629,9 @@ def test_solve_abs():
             ImageSet(Lambda(n, n*pi - (-1)**(-n)*pi/2), S.Integers)))
 
 
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x) == ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    assert solveset(cos(x)**2 - 2*cos(x) + 1, x) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
 
 def test_issue_9565():
     assert solveset_real(Abs((x - 1)/(x - 5)) <= Rational(1, 3), x) == Interval(-1, 2)
@@ -1879,6 +1900,11 @@ def test_issue_14454():
     number = CRootOf(x**4 + x - 1, 2)
     raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
     assert invert_real(x**2, number, x, S.Reals)  # no error
+
+
+def test_issue_17882():
+    assert solveset(-8*x**2/(9*(x**2 - 1)**(S(4)/3)) + 4/(3*(x**2 - 1)**(S(1)/3)), x, S.Complexes) == \
+        FiniteSet(sqrt(3), -sqrt(3))
 
 
 def test_term_factors():

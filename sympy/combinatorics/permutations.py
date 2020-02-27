@@ -900,6 +900,8 @@ class Permutation(Atom):
             if isinstance(a, Cycle):  # f
                 return cls._af_new(a.list(size))
             if not is_sequence(a):  # b
+                if size is not None and a + 1 > size:
+                    raise ValueError('size is too small when max is %s' % a)
                 return cls._af_new(list(range(a + 1)))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
@@ -929,10 +931,12 @@ class Permutation(Atom):
             raise ValueError('there were repeated elements.')
         temp = set(temp)
 
-        if not is_cycle and \
-                any(i not in temp for i in range(len(temp))):
-            raise ValueError("Integers 0 through %s must be present." %
-                             max(temp))
+        if not is_cycle:
+            if any(i not in temp for i in range(len(temp))):
+                raise ValueError('Integers 0 through %s must be present.' %
+                max(temp))
+            if size is not None and temp and max(temp) + 1 > size:
+                raise ValueError('max element should not exceed %s' % (size - 1))
 
         if is_cycle:
             # it's not necessarily canonical so we won't store
