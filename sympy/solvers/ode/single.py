@@ -239,7 +239,7 @@ class SinglePatternODESolver(SingleODESolver):
 
         self._wilds_match = match = eq.match(pattern)
 
-        return match is not None
+        return self._matched is not None or match is not None
 
     def _wilds(self, f, x, order):
         msg = "Subclasses of SingleODESolver should implement _wilds"
@@ -492,59 +492,36 @@ class AlmostLinear(SinglePatternODESolver):
     has_integral = True
 
     def _wilds(self, f, x, order):
-        P = Wild('P', exclude=[f(x)])
+        P = Wild('P', exclude=[f(x).diff(x)])
         Q = Wild('Q', exclude=[f(x).diff(x)])
-        return P, Q
+        R = Wild('R', exclude=[f(x), f(x).diff(x)])
+        return P, Q, R
 
     def _equation(self, fx, x, order):
-        P,Q = self.wilds()
-        df = fx.diff(x)
+        P, Q, R = self.wilds()
         eq = self.ode_problem.eq_expanded
-        c = Wild('c', exclude=[fx])
-        d = Wild('d', exclude=[df, fx.diff(x, 2)])
-        e = Wild('e', exclude=[df])
-        eq = expand(eq)
-        eq = eq.collect(fx)
-        r = eq.match(e*df+d)
-        self.fxx = None
-        self.gx = None
-        self.kx = None
-        if r:
-            r2 = r.copy()
-            r2[c] = S.Zero
-            if r2[d].is_Add:
-                # Separate the terms having f(x) to r[d] and
-                # remaining to r[c]
-                no_f, r2[d] = r2[d].as_independent(fx)
-                r2[c] += no_f
-            factor = simplify(r2[d].diff(fx)/r[e])
-            if factor and not factor.has(fx):
-                r2[d] = factor_terms(r2[d])
-                u = r2[d].as_independent(fx, as_Add=False)[1]
-                r2.update({'a': e, 'b': d, 'c': c, 'u': u})
-                r2[d] /= u
-                r2[e] /= u.diff(fx)
-                self.coeffs = r2
-                du = u.diff(x)
-                temp = du + (r2[r2['b']]/r2[r2['a']])*u - r2[r2['c']]/r2[r2['a']]
-                temp = expand(temp/ temp.coeff(fx.diff(x)))
-                self.fxx = r2[e]
-                self.kx = r2[d]
-                self.gx = -r2[c]
-                self.substituting = u
-                return fx.diff(x) + P*fx - Q
+        eq = eq.collect(fx, func = cancel)
+        df = fx.diff(x)
+        match = eq.match(P*fx.diff(x) + Q)
+        if match is None:
+            return S.Zero
+
+        P = match[P]
+        Q = match[Q]
+        R, Q = Q.as_independent(fx)
+        if Q.diff(fx) != 0 and not simplify(Q.diff(fx)/P).has(fx):
+            self.ly = factor_terms(Q).as_independent(fx, as_Add=False)[1]
+            self.fxx = P / self.ly.diff(fx)
+            self.gx = -R
+            self.kx = factor_terms(Q) / self.ly
+            self._matched = True
+
         return S.Zero
 
     def _get_general_solution(self, *, simplify: bool = True):
-        P, Q = self.wilds_match()
-        fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        if self.fxx is None or self.gx is None or self.kx is None:
-            gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
-            * exp(-Integral(P, x)))))
-        else:
-            gensol = Eq(self.substituting, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/self.fxx, x)),x))
+        gensol = Eq(self.ly, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/self.fxx, x)),x))
                 * exp(-Integral(self.kx/self.fxx, x)))))
 
         return [gensol]
