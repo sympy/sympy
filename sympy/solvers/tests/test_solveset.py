@@ -620,8 +620,8 @@ def test_solve_abs():
     assert invert_real(eq, 0, x)[1] == sol
     reps = {a: 3, b: 1}
     eqab = eq.subs(reps)
-    for i in sol.subs(reps):
-        assert not eqab.subs(x, i)
+    for si in sol.subs(reps):
+        assert not eqab.subs(x, si)
     assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == Union(
         Intersection(Interval(0, oo),
             ImageSet(Lambda(n, (-1)**n*pi/2 + n*pi), S.Integers)),
