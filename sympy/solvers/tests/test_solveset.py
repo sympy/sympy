@@ -1206,9 +1206,9 @@ def test_linsolve():
 
     # Fully symbolic test
     A = Matrix([[a, b], [c, d]])
-    B = Matrix([[e], [f]])
+    B = Matrix([[e], [g]])
     system2 = (A, B)
-    sol = FiniteSet(((-b*f + d*e)/(a*d - b*c), (a*f - c*e)/(a*d - b*c)))
+    sol = FiniteSet(((-b*g + d*e)/(a*d - b*c), (a*g - c*e)/(a*d - b*c)))
     assert linsolve(system2, [x, y]) == sol
 
     # No solution
