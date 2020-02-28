@@ -185,8 +185,6 @@ class SingleODESolver:
     # Cache whether or not the equation has matched the method
     _matched = None  # type: Optional[bool]
 
-    # Flag to check whether to divide the equation by coefficient of f(x).diff(x)
-    simplify = True
 
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
@@ -240,7 +238,7 @@ class SinglePatternODESolver(SingleODESolver):
 
         pattern = self._equation(f(x), x, 1)
 
-        if self.simplify:
+        if not isinstance(pattern.coeff(df), Wild):
             eq = expand(eq / eq.coeff(df))
         eq = eq.collect(f(x), func = cancel)
 
@@ -440,34 +438,34 @@ class AlmostLinear(SinglePatternODESolver):
 
     The general form of an almost linear differential equation is
 
-    .. math:: a(x) g'(f(x)) f'(x) + b(x) * g(f(x)) + c(x) = 0
+    .. math:: a(x) g'(f(y)) f'(y) + b(x) g(f(y)) + c(x) = 0
 
-    This can be solved by substituting `f(x) = u`.  Making the given
-    substitution reduces it to a linear differential equation of the form `u'
-    + P(x) u + Q(x) = 0`.
+    This can be solved by substituting `g(f(y)) = l(y)`.  Making the given
+    substitution reduces it to a linear differential equation of the form 
+    `a(x) (l(y))' + b(x) l(y) + c(x) = 0`.
 
     The general solution is
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, y, n
-        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
+        >>> a, b, c, l = map(Function, ['a', 'b', 'c', 'l'])
+        >>> genform = Eq(a(x)*(l(y).diff(y)) + b(x)*l(y) + c(x), 0)
         >>> pprint(genform)
             d
-        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
+        a(x)*--(l(y)) + b(x)*l(y) + c(x) = 0
             dy
         >>> pprint(dsolve(genform, hint = 'almost_linear'))
-                /     //       y*k(x)                \\
-                |     ||       ------                ||
-                |     ||        f(x)                 ||  -y*k(x)
-                |     ||-g(x)*e                      ||  --------
-                |     ||--------------  for k(x) != 0||    f(x)
-        l(y) = |C1 + |<     k(x)                    ||*e
-                |     ||                             ||
-                |     ||   -y*g(x)                   ||
-                |     ||   --------       otherwise  ||
-                |     ||     f(x)                    ||
-                \     \\                             //
+               /     //       y*b(x)                \\          
+               |     ||       ------                ||          
+               |     ||        a(x)                 ||  -y*b(x) 
+               |     ||-c(x)*e                      ||  --------
+               |     ||--------------  for b(x) != 0||    a(x)  
+        l(y) = |C1 + |<     b(x)                    ||*e        
+               |     ||                             ||          
+               |     ||   -y*c(x)                   ||          
+               |     ||   --------       otherwise  ||          
+               |     ||     a(x)                    ||          
+               \     \\                             //          
 
 
     See Also
@@ -505,18 +503,22 @@ class AlmostLinear(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         P, Q = self.wilds()
-        self.simplify = False
         return P*fx.diff(x) + Q
 
     def _verify(self):
-        P, Q = self.wilds_match()
+        a, b = self.wilds_match()
         fx = self.ode_problem.func
-        R, Q = Q.as_independent(fx) if Q.is_Add else (S.Zero, Q)
-        if Q.diff(fx) != 0 and not simplify(Q.diff(fx)/P).has(fx):
-            self.ly = factor_terms(Q).as_independent(fx, as_Add=False)[1]
-            self.fxx = P / self.ly.diff(fx)
-            self.gx = -R
-            self.kx = factor_terms(Q) / self.ly
+        c, b = b.as_independent(fx) if b.is_Add else (S.Zero, b)
+        # a, b and c are the function a(x), b(x) and c(x) respectively.
+        # c(x) is obtained by separating out b as terms with and without fx i.e, l(y)
+        # The following conditions checks if the given equation is an almost-linear differential equation using the fact that
+        # a(x)*(l(y))' / l(y)' is independent of l(y)
+
+        if b.diff(fx) != 0 and not simplify(b.diff(fx)/a).has(fx):
+            self.ly = factor_terms(b).as_independent(fx, as_Add=False)[1] # Gives the term containing fx i.e., l(y)
+            self.ax = a / self.ly.diff(fx)
+            self.cx = -c  # cx is taken as -c(x) to simplify expression in the solution integral
+            self.bx = factor_terms(b) / self.ly
             return True
 
         return False
@@ -524,8 +526,8 @@ class AlmostLinear(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify: bool = True):
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/self.fxx, x)),x))
-                * exp(-Integral(self.kx/self.fxx, x)))))
+        gensol = Eq(self.ly, (((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+                * exp(-Integral(self.bx/self.ax, x)))))
 
         return [gensol]
 
