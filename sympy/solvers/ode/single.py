@@ -185,6 +185,9 @@ class SingleODESolver:
     # Cache whether or not the equation has matched the method
     _matched = None  # type: Optional[bool]
 
+    # Flag to check whether to divide the equation by coefficient of f(x).diff(x)
+    simplify = True
+
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
 
@@ -192,6 +195,9 @@ class SingleODESolver:
         if self._matched is None:
             self._matched = self._matches()
         return self._matched
+
+    def _verify(self) -> bool:
+        return True
 
     def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         if not self.matches():
@@ -232,14 +238,17 @@ class SinglePatternODESolver(SingleODESolver):
         if order != 1:
             return False
 
-        eq = expand(eq / eq.coeff(df))
-        eq = eq.collect(f(x), func = cancel)
-
         pattern = self._equation(f(x), x, 1)
+
+        if self.simplify:
+            eq = expand(eq / eq.coeff(df))
+        eq = eq.collect(f(x), func = cancel)
 
         self._wilds_match = match = eq.match(pattern)
 
-        return self._matched is not None or match is not None
+        if match is not None:
+            return self._verify()
+        return False
 
     def _wilds(self, f, x, order):
         msg = "Subclasses of SingleODESolver should implement _wilds"
@@ -431,10 +440,9 @@ class AlmostLinear(SinglePatternODESolver):
 
     The general form of an almost linear differential equation is
 
-    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
-                \text{where} l'(y) = g(y)\text{.}
+    .. math:: a(x) g'(f(x)) f'(x) + b(x) * g(f(x)) + c(x) = 0
 
-    This can be solved by substituting `l(y) = u(y)`.  Making the given
+    This can be solved by substituting `f(x) = u`.  Making the given
     substitution reduces it to a linear differential equation of the form `u'
     + P(x) u + Q(x) = 0`.
 
@@ -493,28 +501,25 @@ class AlmostLinear(SinglePatternODESolver):
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x).diff(x)])
         Q = Wild('Q', exclude=[f(x).diff(x)])
-        R = Wild('R', exclude=[f(x), f(x).diff(x)])
-        return P, Q, R
+        return P, Q
 
     def _equation(self, fx, x, order):
-        P, Q, R = self.wilds()
-        eq = self.ode_problem.eq_expanded
-        eq = eq.collect(fx, func = cancel)
-        match = eq.match(P*fx.diff(x) + Q)
-        if match is None:
-            return S.Zero
+        P, Q = self.wilds()
+        self.simplify = False
+        return P*fx.diff(x) + Q
 
-        P = match[P]
-        Q = match[Q]
+    def _verify(self):
+        P, Q = self.wilds_match()
+        fx = self.ode_problem.func
         R, Q = Q.as_independent(fx) if Q.is_Add else (S.Zero, Q)
         if Q.diff(fx) != 0 and not simplify(Q.diff(fx)/P).has(fx):
             self.ly = factor_terms(Q).as_independent(fx, as_Add=False)[1]
             self.fxx = P / self.ly.diff(fx)
             self.gx = -R
             self.kx = factor_terms(Q) / self.ly
-            self._matched = True
+            return True
 
-        return S.Zero
+        return False
 
     def _get_general_solution(self, *, simplify: bool = True):
         x = self.ode_problem.sym
