@@ -2271,3 +2271,7 @@ def test_solve_modular_fail():
             ImageSet(Lambda(n, 74*n + 31), S.Integers)
 
 # end of modular tests
+
+def test_issue_17276():
+    assert nonlinsolve([Eq(x, 5**(S(1)/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
+     FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))
