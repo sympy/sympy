@@ -198,4 +198,5 @@ if lfortran and cin:
 
 elif not lfortran and not cin:
     def test_raise():
-        raises(ImportError, lambda: SymPyExpression())
+        raises(ImportError, lambda: SymPyExpression('int a;', 'c'))
+        raises(ImportError, lambda: SymPyExpression('integer :: a', 'f'))
