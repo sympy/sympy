@@ -102,18 +102,6 @@ SymPy Expression Reference
 .. autoclass:: SymPyExpression
   :members:
 
-`Fortran` Parsing Reference
----------------------------------
-
-.. module:: sympy.parsing.fortran.fortran_parser
-
-.. autoclass:: ASR2PyVisitor
-  :members:
-
-.. autofunction:: call_visitor
-
-.. autofunction:: src_to_sympy
-
 Runtime Installation
 --------------------
 
