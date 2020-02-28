@@ -4,31 +4,57 @@ can be partitioned into k sum-free sets.(http://mathworld.wolfram.com/SchurNumbe
 """
 import math
 from sympy.core import S
+from sympy.core.basic import Basic
 from sympy.core.function import Function
 from sympy.core.numbers import Integer
 
 
-class schur_number_lower_bound(Function):
+class SchurNumber(Function):
     """
-    Gives the value for 1/2 * (3**n  - 1)
+    This function creates a SchurNumber object
+    which is evaluated for k <= 4 otherwise only
+    the lower bound information can be retrieved.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.schur_number import SchurNumber
+
+    Since S(3) = 13, hence the output is a number
+    >>> SchurNumber(3)
+    13
+
+    We don't know the schur number for values greater than 4, hence
+    only the object is returned
+    >>> SchurNumber(6)
+    SchurNumber(6)
+
+    Now, the lower bound information can be retrieved using lower_bound()
+    method
+    >>> SchurNumber(6).lower_bound()
+    364
+
     """
 
     @classmethod
     def eval(cls, k):
-        expr = (3**k - 1)/2
-
         if k.is_Number:
             if k is S.Infinity:
                 return S.Infinity
             if k.is_zero:
                 return 0
-            if not k.is_Integer or k.is_negative:
+            if not k.is_integer or k.is_negative:
                 raise ValueError("k should be a positive integer")
+            first_known_schur_numbers = {1: 1, 2: 4, 3: 13, 4: 44}
+            if k <= 4:
+                return Integer(first_known_schur_numbers[k])
 
-        return Integer(expr)
+    def lower_bound(self):
+        f_ = self.args[0]
+        return (3**f_ - 1)/2
 
 
-class schur_number_subsets_lower_bound(Function):
+class SchurSubsetsNumber(Function):
     """
     This function returns a lower bound to Schur's Number
     """
@@ -95,8 +121,12 @@ def schur_partition(n):
     >>> schur_partition(8)
     [[3, 2], [6, 5, 8], [1, 4, 7]]
     """
+
+    if isinstance(n, Basic) and not n.is_Number:
+        raise ValueError("Input value must be a number")
+
     n = int(n)
-    number_of_subsets = schur_number_subsets_lower_bound(n)
+    number_of_subsets = SchurSubsetsNumber(n)
     if n == 1:
         sum_free_subsets = [[1]]
     elif n == 2:

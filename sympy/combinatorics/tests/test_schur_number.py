@@ -1,5 +1,8 @@
 from sympy.combinatorics.schur_number import schur_partition
 from sympy.testing.randtest import _randint
+from sympy.testing.pytest import raises
+from sympy.core.symbol import symbols
+
 
 def _sum_free_test(subset):
     """
@@ -9,6 +12,7 @@ def _sum_free_test(subset):
     for i in subset:
         for j in subset:
             assert (i + j in subset) is False
+
 
 def test_schur_number():
     random_number_generator = _randint(1000)
@@ -27,3 +31,6 @@ def test_schur_number():
                 assert (l in numbers) is False
                 numbers.append(l)
         assert n == t
+
+    x = symbols("x")
+    raises(ValueError, lambda: schur_partition(x))

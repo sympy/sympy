@@ -4922,10 +4922,10 @@ def test_sympy__integrals__rubi__utility_function__ProductLog():
     from sympy.integrals.rubi.utility_function import ProductLog
     assert _test_args(ProductLog(1))
 
-def test_sympy__combinatorics__schur_number__schur_number_lower_bound():
-    from sympy.combinatorics.schur_number import schur_number_lower_bound
-    assert _test_args(schur_number_lower_bound(1))
+def test_sympy__combinatorics__schur_number__SchurNumber():
+    from sympy.combinatorics.schur_number import SchurNumber
+    assert _test_args(SchurNumber(1))
 
-def test_sympy__combinatorics__schur_number__schur_number_subsets_lower_bound():
-    from sympy.combinatorics.schur_number import schur_number_subsets_lower_bound
-    assert _test_args(schur_number_subsets_lower_bound(4))
+def test_sympy__combinatorics__schur_number__SchurSubsetsNumber():
+    from sympy.combinatorics.schur_number import SchurSubsetsNumber
+    assert _test_args(SchurSubsetsNumber(4))
