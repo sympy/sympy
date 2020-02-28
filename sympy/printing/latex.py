@@ -207,7 +207,7 @@ class LatexPrinter(Printer):
 
     def parenthesize(self, item, level, diff=False, strict=False):
         prec_val = precedence_traditional(item)
-        if ((prec_val < level) or ((not strict) and prec_val <= level) or (diff == True)):
+        if (((prec_val < level) or ((not strict) and prec_val <= level)) or ((diff == True) and (strict == True))):
             return r"\left({}\right)".format(self._print(item))
         else:
             return self._print(item)
@@ -716,26 +716,33 @@ class LatexPrinter(Printer):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
-
         tex = ""
         dim = 0
         for x, num in reversed(expr.variable_count):
-            dim += num
+            dim = dim + num
             if num == 1:
                 tex += r"%s %s" % (diff_symbol, self._print(x))
             else:
                 tex += r"%s %s^{%s}" % (diff_symbol,
                                         self.parenthesize_super(self._print(x)),
                                         self._print(num))
-
+        neg = False
+        terms = expr.args
+        for i,term in enumerate(terms):
+            if _coeff_isneg(term):
+                neg = True
         if dim == 1:
             tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
-
+        if neg == True:
+            return r"%s %s" % (tex, self.parenthesize(expr.expr,
+                                                  PRECEDENCE["Mul"],
+                                                  diff = True,
+                                                  strict=True))
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
-                                                  diff=True,
+                                                  diff = False,
                                                   strict=True))
 
     def _print_Subs(self, subs):
