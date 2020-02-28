@@ -731,10 +731,12 @@ class LatexPrinter(Printer):
         for i,term in enumerate(terms):
             if _coeff_isneg(term):
                 neg = True
+
         if dim == 1:
             tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
+
         if neg == True:
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
