@@ -691,12 +691,6 @@ class RiccatiSpecial(SinglePatternODESolver):
         a, b, c, d = self.wilds()
         return a*fx.diff(x) + b*fx**2 + c*fx/x + d/x**2
 
-    def _verify(self):
-        a, b, c, d = self.wilds_match()
-        if c != 0 or d != 0:
-            return True
-        return False
-
     def _get_general_solution(self, *, simplify: bool = True):
         a, b, c, d = self.wilds_match()
         fx = self.ode_problem.func
