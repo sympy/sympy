@@ -39,7 +39,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point3D, Point2D
+from .point import Point
 
 
 class LinearEntity(GeometrySet):
