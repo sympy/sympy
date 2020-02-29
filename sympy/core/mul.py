@@ -1431,50 +1431,23 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
-        '''
-        Step 1: Check if exp is integer or not. If not , return None
-        Step 2: If integer , check if  the coeff is integer or fractional
-        Step 2.1 : If coeff is even , check if any of the symbol is even , if yes , it is even.
-        Step 2.2 : If coeff is fraction, we will simplify it to find if whole exp is even or odd
-        '''
-        from sympy.simplify.radsimp import fraction
-        from sympy.ntheory import factorint
         is_integer = self.is_integer
-        # Check if exp is even or not.
-        if is_integer:
-            coeff, args = self.as_coeff_mul()
-            #check for coefficient being 1 or -1
-            if coeff.is_integer:
-                # if any of the symbol is even , return even(False) 
-                r = True;
-                for arg in args:
-                    if arg.is_even: 
-                        return False
-                    elif arg.is_even == None:
-                        r = None
-                if coeff.is_even:
-                    r = False
-                return r
 
-            else:
-                num,den = fraction(coeff)
-                fact2_num_dict = factorint(num,limit=2)
-                fact2_den_dict = factorint(den,limit=2)
-                if(num%2 == 0):
-                    fact2_num = fact2_num_dict[2];
-                else:
-                    fact2_num=0
-                if(den%2 == 0):
-                    fact2_den = fact2_den_dict[2];
-                else:
-                    fact2_den=0
-                for arg in args:
-                    if arg.is_even:
-                        fact2_num += 1;
-                if(fact2_num > fact2_den):
-                    return False
-                else:
-                    return None
+        if is_integer:
+            r, acc = True, 1
+            for t in self.args:
+                if t.is_even:
+                    r = False
+                elif t.is_integer:
+                    if r is False:
+                        pass
+                    elif acc != 1 and (acc + t).is_odd:
+                        r = False
+                    elif t.is_odd is None:
+                        r = None
+                acc = t
+            return r
+
         # !integer -> !odd
         elif is_integer is False:
             return False
