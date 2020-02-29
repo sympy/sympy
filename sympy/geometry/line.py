@@ -2111,15 +2111,15 @@ class Line2D(LinearEntity2D, Line):
         if not point:
             return GeometryError("The lines do not intersect")
         else:
-            if not isinstance(point[0], Point2D):
+            if isinstance(point[0], Line):
                 # Intersection is a line because both lines are coincident
                 return [self]
 
         d1 = Point(self.direction).unit
         d2 = Point(line.direction).unit
 
-        bis1 = Line2D(point[0], d1 + d2)
-        bis2 = Line2D(point[0], d1 - d2)
+        bis1 = Line(point[0], d1 + d2)
+        bis2 = Line(point[0], d1 - d2)
 
         return [bis1, bis2]
 
@@ -2606,15 +2606,15 @@ class Line3D(LinearEntity3D, Line):
         if not point:
             return GeometryError("The lines do not intersect")
         else:
-            if not isinstance(point[0], Point3D):
+            if isinstance(point[0], Line):
                 # Intersection is a line because both lines are coincident
                 return [self]
 
         d1 = Point(self.direction_ratio).unit
         d2 = Point(line.direction_ratio).unit
 
-        bis1 = Line3D(point[0], direction_ratio=d1 + d2)
-        bis2 = Line3D(point[0], direction_ratio=d1 - d2)
+        bis1 = Line(point[0], direction_ratio=d1 + d2)
+        bis2 = Line(point[0], direction_ratio=d1 - d2)
 
         return [bis1, bis2]
 
