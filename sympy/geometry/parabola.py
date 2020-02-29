@@ -9,7 +9,7 @@ from __future__ import division, print_function
 from sympy.core import S
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol
-from sympy import symbols, simplify, solve
+from sympy import symbols, simplify, solve  # type:ignore
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
@@ -183,7 +183,7 @@ class Parabola(GeometrySet):
         The eccentricity for every Parabola is 1 by definition.
 
         """
-        return S(1)
+        return S.One
 
     def equation(self, x='x', y='y'):
         """The equation of the parabola.

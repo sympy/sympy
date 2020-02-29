@@ -65,7 +65,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(exp(x), x)     # No solution exists
     ∅
     >>> solveset(cos(x) - x, x)  # Not able to find solution
-    {x | x ∊ ℂ ∧ -x + cos(x) = 0}
+    {x | x ∊ ℂ ∧ (-x + cos(x) = 0)}
 
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
@@ -142,9 +142,9 @@ In the ``solveset`` module, the non linear system of equations is solved using
    ``solve`` can be used for such cases:
 
    >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
-   ⎡⎧      ⎛y⎞⎫⎤
-   ⎢⎨x: 2⋅W⎜─⎟⎬⎥
-   ⎣⎩      ⎝2⎠⎭⎦
+   ⎡⎧      ⎛-y ⎞⎫  ⎧      ⎛y⎞⎫⎤
+   ⎢⎨x: 2⋅W⎜───⎟⎬, ⎨x: 2⋅W⎜─⎟⎬⎥
+   ⎣⎩      ⎝ 2 ⎠⎭  ⎩      ⎝2⎠⎭⎦
 
    3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
    having trigonometric functions.

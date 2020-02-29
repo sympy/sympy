@@ -1,7 +1,6 @@
 import random
 
-from sympy import Integer, Matrix, Rational, sqrt, symbols
-from sympy.core.compatibility import range, long
+from sympy import Integer, Matrix, Rational, sqrt, symbols, S
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
@@ -11,7 +10,7 @@ from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.shor import Qubit
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
 
@@ -152,9 +151,9 @@ def test_measure_partial():
     #Basic test of collapse of entangled two qubits (Bell States)
     state = Qubit('01') + Qubit('10')
     assert measure_partial(state, (0,)) == \
-        [(Qubit('10'), Rational(1, 2)), (Qubit('01'), Rational(1, 2))]
-    assert measure_partial(state, long(0)) == \
-        [(Qubit('10'), Rational(1, 2)), (Qubit('01'), Rational(1, 2))]
+        [(Qubit('10'), S.Half), (Qubit('01'), S.Half)]
+    assert measure_partial(state, int(0)) == \
+        [(Qubit('10'), S.Half), (Qubit('01'), S.Half)]
     assert measure_partial(state, (0,)) == \
         measure_partial(state, (1,))[::-1]
 
@@ -170,7 +169,7 @@ def test_measure_partial():
     state2 = Qubit('1111') + Qubit('1101') + Qubit('1011') + Qubit('1000')
     assert measure_partial(state2, (0, 1, 3)) == \
         [(Qubit('1000'), Rational(1, 4)), (Qubit('1101'), Rational(1, 4)),
-         (Qubit('1011')/sqrt(2) + Qubit('1111')/sqrt(2), Rational(1, 2))]
+         (Qubit('1011')/sqrt(2) + Qubit('1111')/sqrt(2), S.Half)]
     assert measure_partial(state2, (0,)) == \
         [(Qubit('1000'), Rational(1, 4)),
          (Qubit('1111')/sqrt(3) + Qubit('1101')/sqrt(3) +
@@ -180,8 +179,8 @@ def test_measure_partial():
 def test_measure_all():
     assert measure_all(Qubit('11')) == [(Qubit('11'), 1)]
     state = Qubit('11') + Qubit('10')
-    assert measure_all(state) == [(Qubit('10'), Rational(1, 2)),
-           (Qubit('11'), Rational(1, 2))]
+    assert measure_all(state) == [(Qubit('10'), S.Half),
+           (Qubit('11'), S.Half)]
     state2 = Qubit('11')/sqrt(5) + 2*Qubit('00')/sqrt(5)
     assert measure_all(state2) == \
         [(Qubit('00'), Rational(4, 5)), (Qubit('11'), Rational(1, 5))]

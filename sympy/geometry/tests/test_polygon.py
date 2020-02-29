@@ -1,10 +1,11 @@
-from sympy import Abs, Rational, Float, S, Symbol, symbols, cos, pi, sqrt, oo
+from sympy import (Abs, Rational, Float, S, Symbol, symbols, cos, sin, pi, sqrt, \
+                    oo, acos)
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, \
                             Polygon, Ray, RegularPolygon, Segment, Triangle, \
-                            are_similar,convex_hull, intersection, Line)
-from sympy.utilities.pytest import raises, slow, warns
-from sympy.utilities.randtest import verify_numerically
+                            are_similar,convex_hull, intersection, Line, Ray2D)
+from sympy.testing.pytest import raises, slow, warns
+from sympy.testing.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
 from sympy import integrate
 
@@ -23,7 +24,7 @@ def test_polygon():
     v = Symbol('v', real=True)
     w = Symbol('w', real=True)
     x1 = Symbol('x1', real=True)
-    half = Rational(1, 2)
+    half = S.Half
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
     t = Triangle(a, b, c)
     assert Polygon(a, Point(1, 0), b, c) == t
@@ -118,7 +119,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-    assert p6.intersection(r) == [Point(-9, -S(84)/13), Point(-9, S(33)/5)]
+    assert p6.intersection(r) == [Point(-9, Rational(-84, 13)), Point(-9, Rational(33, 5))]
     assert p10.area == 0
     assert p11 == RegularPolygon(Point(0, 0), 1, 3, 0)
     assert p11.vertices[0] == Point(1, 0)
@@ -136,8 +137,8 @@ def test_polygon():
     raises(ValueError, lambda: RegularPolygon(Point(0, 0), 1, 2.5))
 
     assert p1 != p2
-    assert p1.interior_angle == 3*pi/5
-    assert p1.exterior_angle == 2*pi/5
+    assert p1.interior_angle == pi*Rational(3, 5)
+    assert p1.exterior_angle == pi*Rational(2, 5)
     assert p2.apothem == 5*cos(pi/5)
     assert p2.circumcenter == p1.circumcenter == Point(0, 0)
     assert p1.circumradius == p1.radius == 10
@@ -166,11 +167,11 @@ def test_polygon():
     # while spin works in place (notice that rotation is 2pi/3 below)
     # rotate returns a new object
     p1_old = p1
-    assert p1.rotate(pi/3) == RegularPolygon(Point(0, 0), 10, 5, 2*pi/3)
+    assert p1.rotate(pi/3) == RegularPolygon(Point(0, 0), 10, 5, pi*Rational(2, 3))
     assert p1 == p1_old
 
     assert p1.area == (-250*sqrt(5) + 1250)/(4*tan(pi/5))
-    assert p1.length == 20*sqrt(-sqrt(5)/8 + S(5)/8)
+    assert p1.length == 20*sqrt(-sqrt(5)/8 + Rational(5, 8))
     assert p1.scale(2, 2) == \
         RegularPolygon(p1.center, p1.radius*2, p1._n, p1.rotation)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3) == \
@@ -247,6 +248,9 @@ def test_polygon():
 
     # Exradius
     assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
+
+    # Excenters
+    assert t1.excenters[t1.sides[2]] == Point2D(25*sqrt(2), -5*sqrt(2)/2)
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
@@ -371,8 +375,8 @@ def test_triangle_kwargs():
 
 
 def test_transform():
-    pts = [Point(0, 0), Point(S(1)/2, S(1)/4), Point(1, 1)]
-    pts_out = [Point(-4, -10), Point(-3, -S(37)/4), Point(-2, -7)]
+    pts = [Point(0, 0), Point(S.Half, Rational(1, 4)), Point(1, 1)]
+    pts_out = [Point(-4, -10), Point(-3, Rational(-37, 4)), Point(-2, -7)]
     assert Triangle(*pts).scale(2, 3, (4, 5)) == Triangle(*pts_out)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
         Polygon(Point(-2, -10), Point(-4, -7), Point(-6, -10), Point(-4, -13))
@@ -390,7 +394,7 @@ def test_reflect():
     dr = l.perpendicular_segment(r).length
 
     assert verify_numerically(dp, dr)
-    t = Triangle((0, 0), (1, 0), (2, 3))
+
     assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=oo)) \
         == Triangle(Point(5, 0), Point(4, 0), Point(4, 2))
     assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=oo)) \
@@ -402,8 +406,19 @@ def test_reflect():
 
 def test_bisectors():
     p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+    p = Polygon(Point(0, 0), Point(2, 0), Point(1, 1), Point(0, 3))
+    q = Polygon(Point(1, 0), Point(2, 0), Point(3, 3), Point(-1, 5))
+    poly = Polygon(Point(3, 4), Point(0, 0), Point(8, 7), Point(-1, 1), Point(19, -19))
     t = Triangle(p1, p2, p3)
     assert t.bisectors()[p2] == Segment(Point(1, 0), Point(0, sqrt(2) - 1))
+    assert p.bisectors()[Point2D(0, 3)] == Ray2D(Point2D(0, 3), \
+        Point2D(sin(acos(2*sqrt(5)/5)/2), 3 - cos(acos(2*sqrt(5)/5)/2)))
+    assert q.bisectors()[Point2D(-1, 5)] == \
+        Ray2D(Point2D(-1, 5), Point2D(-1 + sqrt(29)*(5*sin(acos(9*sqrt(145)/145)/2) + \
+        2*cos(acos(9*sqrt(145)/145)/2))/29, sqrt(29)*(-5*cos(acos(9*sqrt(145)/145)/2) + \
+        2*sin(acos(9*sqrt(145)/145)/2))/29 + 5))
+    assert poly.bisectors()[Point2D(-1, 1)] == Ray2D(Point2D(-1, 1), \
+        Point2D(-1 + sin(acos(sqrt(26)/26)/2 + pi/4), 1 - sin(-acos(sqrt(26)/26)/2 + pi/4)))
 
 def test_incenter():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).incenter \
@@ -422,40 +437,40 @@ def test_exradii():
 
 def test_medians():
     t = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
-    assert t.medians[Point(0, 0)] == Segment(Point(0, 0), Point(S(1)/2, S(1)/2))
+    assert t.medians[Point(0, 0)] == Segment(Point(0, 0), Point(S.Half, S.Half))
 
 def test_medial():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).medial \
-        == Triangle(Point(S(1)/2, 0), Point(S(1)/2, S(1)/2), Point(0, S(1)/2))
+        == Triangle(Point(S.Half, 0), Point(S.Half, S.Half), Point(0, S.Half))
 
 def test_nine_point_circle():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).nine_point_circle \
-        == Circle(Point2D(S(1)/4, S(1)/4), sqrt(2)/4)
+        == Circle(Point2D(Rational(1, 4), Rational(1, 4)), sqrt(2)/4)
 
 def test_eulerline():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).eulerline \
-        == Line(Point2D(0, 0), Point2D(S(1)/2, S(1)/2))
+        == Line(Point2D(0, 0), Point2D(S.Half, S.Half))
     assert Triangle(Point(0, 0), Point(10, 0), Point(5, 5*sqrt(3))).eulerline \
         == Point2D(5, 5*sqrt(3)/3)
     assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
-        == Line(Point2D(S(64)/7, 3), Point2D(-S(29)/14, -S(7)/2))
+        == Line(Point2D(Rational(64, 7), 3), Point2D(Rational(-29, 14), Rational(-7, 2)))
 
 def test_intersection():
     poly1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
     poly2 = Polygon(Point(0, 1), Point(-5, 0),
-                    Point(0, -4), Point(0, S(1)/5),
-                    Point(S(1)/2, -0.1), Point(1,0), Point(0, 1))
+                    Point(0, -4), Point(0, Rational(1, 5)),
+                    Point(S.Half, -0.1), Point(1,0), Point(0, 1))
 
-    assert poly1.intersection(poly2) == [Point2D(S(1)/3, 0),
-        Segment(Point(0, S(1)/5), Point(0, 0)),
+    assert poly1.intersection(poly2) == [Point2D(Rational(1, 3), 0),
+        Segment(Point(0, Rational(1, 5)), Point(0, 0)),
         Segment(Point(1, 0), Point(0, 1))]
-    assert poly2.intersection(poly1) == [Point(S(1)/3, 0),
-        Segment(Point(0, 0), Point(0, S(1)/5)),
+    assert poly2.intersection(poly1) == [Point(Rational(1, 3), 0),
+        Segment(Point(0, 0), Point(0, Rational(1, 5))),
         Segment(Point(1, 0), Point(0, 1))]
     assert poly1.intersection(Point(0, 0)) == [Point(0, 0)]
     assert poly1.intersection(Point(-12,  -43)) == []
     assert poly2.intersection(Line((-12, 0), (12, 0))) == [Point(-5, 0),
-        Point(0, 0),Point(S(1)/3, 0), Point(1, 0)]
+        Point(0, 0),Point(Rational(1, 3), 0), Point(1, 0)]
     assert poly2.intersection(Line((-12, 12), (12, 12))) == []
     assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(1, 0),
         Point(0, 1))]
@@ -464,20 +479,20 @@ def test_intersection():
     assert poly1.intersection(poly1) == [Segment(Point(0, 0), Point(1, 0)),
         Segment(Point(0, 1), Point(0, 0)), Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(poly2) == [Segment(Point(-5, 0), Point(0, -4)),
-        Segment(Point(0, -4), Point(0, S(1)/5)),
-        Segment(Point(0, S(1)/5), Point(S(1)/2, -S(1)/10)),
+        Segment(Point(0, -4), Point(0, Rational(1, 5))),
+        Segment(Point(0, Rational(1, 5)), Point(S.Half, Rational(-1, 10))),
         Segment(Point(0, 1), Point(-5, 0)),
-        Segment(Point(S(1)/2, -S(1)/10), Point(1, 0)),
+        Segment(Point(S.Half, Rational(-1, 10)), Point(1, 0)),
         Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) \
-        == [Point(-S(5)/7, S(6)/7), Segment(Point2D(0, 1), Point(1, 0))]
+        == [Point(Rational(-5, 7), Rational(6, 7)), Segment(Point2D(0, 1), Point(1, 0))]
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
 
 
 def test_parameter_value():
     t = Symbol('t')
     sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
-    assert sq.parameter_value((0.5, 1), t) == {t: S(3)/8}
+    assert sq.parameter_value((0.5, 1), t) == {t: Rational(3, 8)}
     q = Polygon((0, 0), (2, 1), (2, 4), (4, 0))
     assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)}  # ~= 0.708
     raises(ValueError, lambda: sq.parameter_value((5, 6), t))
@@ -522,3 +537,77 @@ def test_second_moment_of_area():
     assert (I_xx - rectangle.second_moment_of_area(p)[0]) == 0
     assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
     assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
+
+
+    r = RegularPolygon(Point(0, 0), 5, 3)
+    assert r.second_moment_of_area() == (1875*sqrt(3)/S(32), 1875*sqrt(3)/S(32), 0)
+
+
+def test_first_moment():
+    a, b  = symbols('a, b', positive=True)
+    # rectangle
+    p1 = Polygon((0, 0), (a, 0), (a, b), (0, b))
+    assert p1.first_moment_of_area() == (a*b**2/8, a**2*b/8)
+    assert p1.first_moment_of_area((a/3, b/4)) == (-3*a*b**2/32, -a**2*b/9)
+
+    p1 = Polygon((0, 0), (40, 0), (40, 30), (0, 30))
+    assert p1.first_moment_of_area() == (4500, 6000)
+
+    # triangle
+    p2 = Polygon((0, 0), (a, 0), (a/2, b))
+    assert p2.first_moment_of_area() == (4*a*b**2/81, a**2*b/24)
+    assert p2.first_moment_of_area((a/8, b/6)) == (-25*a*b**2/648, -5*a**2*b/768)
+
+    p2 = Polygon((0, 0), (12, 0), (12, 30))
+    p2.first_moment_of_area() == (1600/3, -640/3)
+
+
+def test_section_modulus_and_polar_second_moment_of_area():
+    a, b = symbols('a, b', positive=True)
+    x, y = symbols('x, y')
+    rectangle = Polygon((0, b), (0, 0), (a, 0), (a, b))
+    assert rectangle.section_modulus(Point(x, y)) == (a*b**3/12/(-b/2 + y), a**3*b/12/(-a/2 + x))
+    assert rectangle.polar_second_moment_of_area() == a**3*b/12 + a*b**3/12
+
+    convex = RegularPolygon((0, 0), 1, 6)
+    assert convex.section_modulus() == (Rational(5, 8), sqrt(3)*Rational(5, 16))
+    assert convex.polar_second_moment_of_area() == 5*sqrt(3)/S(8)
+
+    concave = Polygon((0, 0), (1, 8), (3, 4), (4, 6), (7, 1))
+    assert concave.section_modulus() == (Rational(-6371, 429), Rational(-9778, 519))
+    assert concave.polar_second_moment_of_area() == Rational(-38669, 252)
+
+
+def test_cut_section():
+    # concave polygon
+    p = Polygon((-1, -1), (1, Rational(5, 2)), (2, 1), (3, Rational(5, 2)), (4, 2), (5, 3), (-1, 3))
+    l = Line((0, 0), (Rational(9, 2), 3))
+    p1 = p.cut_section(l)[0]
+    p2 = p.cut_section(l)[1]
+    assert p1 == Polygon(
+        Point2D(Rational(-9, 13), Rational(-6, 13)), Point2D(1, Rational(5, 2)), Point2D(Rational(24, 13), Rational(16, 13)),
+        Point2D(Rational(12, 5), Rational(8, 5)), Point2D(3, Rational(5, 2)), Point2D(Rational(24, 7), Rational(16, 7)),
+        Point2D(Rational(9, 2), 3), Point2D(-1, 3), Point2D(-1, Rational(-2, 3)))
+    assert p2 == Polygon(Point2D(-1, -1), Point2D(Rational(-9, 13), Rational(-6, 13)), Point2D(Rational(24, 13), Rational(16, 13)),
+        Point2D(2, 1), Point2D(Rational(12, 5), Rational(8, 5)), Point2D(Rational(24, 7), Rational(16, 7)), Point2D(4, 2), Point2D(5, 3),
+        Point2D(Rational(9, 2), 3), Point2D(-1, Rational(-2, 3)))
+
+    # convex polygon
+    p = RegularPolygon(Point2D(0,0), 6, 6)
+    s = p.cut_section(Line((0, 0), slope=1))
+    assert s[0] == Polygon(Point2D(-3*sqrt(3) + 9, -3*sqrt(3) + 9), Point2D(3, 3*sqrt(3)),
+        Point2D(-3, 3*sqrt(3)), Point2D(-6, 0), Point2D(-9 + 3*sqrt(3), -9 + 3*sqrt(3)))
+    assert s[1] == Polygon(Point2D(6, 0), Point2D(-3*sqrt(3) + 9, -3*sqrt(3) + 9),
+        Point2D(-9 + 3*sqrt(3), -9 + 3*sqrt(3)), Point2D(-3, -3*sqrt(3)), Point2D(3, -3*sqrt(3)))
+
+    # case where line does not intersects but coincides with the edge of polygon
+    a, b = 20, 10
+    t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
+    p = Polygon(t1, t2, t3, t4)
+    p1, p2 = p.cut_section(Line((0, b), slope=0))
+    assert p1 == None
+    assert p2 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
+
+    p3, p4 = p.cut_section(Line((0, 0), slope=0))
+    assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
+    assert p4 == None

@@ -1,7 +1,7 @@
 from sympy import Rational, oo, sqrt, S
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
 from sympy import Circle, Ellipse, symbols, sign
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_parabola_geom():
@@ -18,7 +18,7 @@ def test_parabola_geom():
     d5 = Line(Point(b, a), slope=oo)
     d6 = Line(Point(a, b), slope=0)
 
-    half = Rational(1, 2)
+    half = S.Half
 
     pa1 = Parabola(None, d2)
     pa2 = Parabola(directrix=d1)
@@ -112,4 +112,4 @@ def test_parabola_intersection():
     assert parabola1.intersection(Ellipse(p2, 2, 1)) == [Point2D(0, -1), Point2D(0, -1)]
     assert parabola1.intersection(Ellipse(Point(0, 19), 5, 7)) == []
     assert parabola1.intersection(Ellipse((0, 3), 12, 4)) == \
-           [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, S(59)/9), Point2D(4*sqrt(17)/3, S(59)/9)]
+           [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, Rational(59, 9)), Point2D(4*sqrt(17)/3, Rational(59, 9))]

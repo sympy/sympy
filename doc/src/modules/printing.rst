@@ -1,5 +1,6 @@
-Printing System
-===============
+========
+Printing
+========
 
 See the :ref:`tutorial-printing` section in tutorial for introduction into
 printing.
@@ -37,6 +38,8 @@ that span across multiple lines.
 The module ``pretty_symbology`` provides primitives to construct 2D shapes
 (hline, vline, etc) together with a technique to use unicode automatically
 when possible.
+
+.. module:: sympy.printing.pretty
 
 .. module:: sympy.printing.pretty.pretty
 
@@ -300,6 +303,20 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Maple code printing
+-------------------
+
+.. module:: sympy.printing.maple
+
+.. autoclass:: sympy.printing.maple.MapleCodePrinter
+   :members:
+
+   .. autoattribute:: MapleCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.maple.maple_code
+
+.. autofunction:: sympy.printing.maple.print_maple_code
+
 Javascript Code printing
 ------------------------
 
@@ -373,6 +390,8 @@ Theano Code printing
 .. autofunction:: sympy.printing.theanocode.theano_code
 
 .. autofunction:: sympy.printing.theanocode.theano_function
+
+.. autofunction:: sympy.printing.theanocode.dim_handling
 
 Gtk
 ---
@@ -515,6 +534,8 @@ This module generates readable representations of SymPy expressions.
    :members: parenthesize, stringify, emptyPrinter
 
    .. autoattribute:: StrPrinter.printmethod
+
+.. autofunction:: sstr
 
 .. autofunction:: sstrrepr
 

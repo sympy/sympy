@@ -1879,7 +1879,7 @@ def test_Erfc():
     assert Erfc(oo) == 0
 
 def test_Erfi():
-    assert Erfi(oo) == oo
+    assert Erfi(oo) is oo
     assert Erfi(0) == 0
 
 def test_Gamma():

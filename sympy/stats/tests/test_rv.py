@@ -1,24 +1,23 @@
-from sympy import (S, Symbol, Interval,
-        Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta, Lambda, log, pi)
-from sympy.core.numbers import comp
+from __future__ import unicode_literals
+from sympy import (S, Symbol, Interval, exp,
+        symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+        DiracDelta, Lambda, log, pi, FallingFactorial, Rational)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace,
-        random_symbols, sample, Geometric)
-from sympy.stats.frv_types import BernoulliDistribution
+        random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
+        DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, PSpace)
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import range
-
+        RandomSymbol, sample_iter, PSpace)
+from sympy.testing.pytest import raises
+from sympy.core.numbers import comp
+from sympy.stats.frv_types import BernoulliDistribution
 
 def test_where():
     X, Y = Die('X'), Die('Y')
     Z = Normal('Z', 0, 1)
 
     assert where(Z**2 <= 1).set == Interval(-1, 1)
-    assert where(
-        Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
+    assert where(Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
     assert where(And(X > Y, Y > 4)).as_boolean() == And(
         Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
@@ -44,6 +43,67 @@ def test_random_symbols():
     assert set(random_symbols(2*X + Y.symbol)) == set((X,))
     assert set(random_symbols(2)) == set()
 
+def test_characteristic_function():
+    #  Imports I from sympy
+    from sympy import I
+    X = Normal('X',0,1)
+    Y = DiscreteUniform('Y', [1,2,7])
+    Z = Poisson('Z', 2)
+    t = symbols('_t')
+    P = Lambda(t, exp(-t**2/2))
+    Q = Lambda(t, exp(7*t*I)/3 + exp(2*t*I)/3 + exp(t*I)/3)
+    R = Lambda(t, exp(2 * exp(t*I) - 2))
+
+
+    assert characteristic_function(X) == P
+    assert characteristic_function(Y) == Q
+    assert characteristic_function(Z) == R
+
+def test_moment_generating_function():
+
+    X = Normal('X',0,1)
+    Y = DiscreteUniform('Y', [1,2,7])
+    Z = Poisson('Z', 2)
+    t = symbols('_t')
+    P = Lambda(t, exp(t**2/2))
+    Q = Lambda(t, (exp(7*t)/3 + exp(2*t)/3 + exp(t)/3))
+    R = Lambda(t, exp(2 * exp(t) - 2))
+
+
+    assert moment_generating_function(X) == P
+    assert moment_generating_function(Y) == Q
+    assert moment_generating_function(Z) == R
+
+def test_sample_iter():
+
+    X = Normal('X',0,1)
+    Y = DiscreteUniform('Y', [1,2,7])
+    Z = Poisson('Z', 2)
+
+    expr = X**2 + 3
+    iterator = sample_iter(expr)
+
+    expr2 = Y**2 + 5*Y + 4
+    iterator2 = sample_iter(expr2)
+
+    expr3 = Z**3 + 4
+    iterator3 = sample_iter(expr3)
+
+    def is_iterator(obj):
+        if (
+            hasattr(obj, '__iter__') and
+            (hasattr(obj, 'next') or
+            hasattr(obj, '__next__')) and
+            callable(obj.__iter__) and
+            obj.__iter__() is obj
+           ):
+            return True
+        else:
+            return False
+
+    assert is_iterator(iterator)
+    assert is_iterator(iterator2)
+    assert is_iterator(iterator3)
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
@@ -54,7 +114,6 @@ def test_pspace():
     assert pspace(X) == X.pspace
     assert pspace(2*X + 1) == X.pspace
     assert pspace(2*X + Y) == IndependentProductPSpace(Y.pspace, X.pspace)
-
 
 def test_rs_swap():
     X = Normal('x', 0, 1)
@@ -113,7 +172,7 @@ def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
     G = Geometric('G', 0.5)
-    assert H(X, X > 0) == -log(2)/2 + S(1)/2 + log(pi)/2
+    assert H(X, X > 0) == -log(2)/2 + S.Half + log(pi)/2
     assert H(D, D > 2) == log(2)
     assert comp(H(G).evalf().round(2), 1.39)
 
@@ -150,6 +209,24 @@ def test_given():
     B = given(X, Y > 2)
 
     assert X == A == B
+
+
+def test_factorial_moment():
+    X = Poisson('X', 2)
+    Y = Binomial('Y', 2, S.Half)
+    Z = Hypergeometric('Z', 4, 2, 2)
+    assert factorial_moment(X, 2) == 4
+    assert factorial_moment(Y, 2) == S.Half
+    assert factorial_moment(Z, 2) == Rational(1, 3)
+
+    x, y, z, l = symbols('x y z l')
+    Y = Binomial('Y', 2, y)
+    Z = Hypergeometric('Z', 10, 2, 3)
+    assert factorial_moment(Y, l) == y**2*FallingFactorial(
+        2, l) + 2*y*(1 - y)*FallingFactorial(1, l) + (1 - y)**2*\
+            FallingFactorial(0, l)
+    assert factorial_moment(Z, l) == 7*FallingFactorial(0, l)/\
+        15 + 7*FallingFactorial(1, l)/15 + FallingFactorial(2, l)/15
 
 
 def test_dependence():
@@ -244,5 +321,5 @@ def test_issue_12237():
     V = P(Y < 0, X)
     W = P(X + Y > 0, X)
     assert W == P(X + Y > 0, X)
-    assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
-    assert V == S(1)/2
+    assert U == BernoulliDistribution(S.Half, S.Zero, S.One)
+    assert V == S.Half

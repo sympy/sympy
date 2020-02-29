@@ -1,7 +1,8 @@
-from sympy import Abs, S, Symbol, I, Rational, PurePoly, Float
-from sympy.matrices import (Matrix, SparseMatrix, eye, ones, zeros,
-    ShapeError)
-from sympy.utilities.pytest import raises
+from sympy import Abs, S, Symbol, symbols, I, Rational, PurePoly, Float
+from sympy.matrices import \
+    Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
+    ones, zeros, ShapeError
+from sympy.testing.pytest import raises
 
 def test_sparse_matrix():
     def sparse_eye(n):
@@ -221,6 +222,22 @@ def test_sparse_matrix():
                           ( 1,  2, -3,  4,  5),
                           ( 1,  2,  3, -2,  5),
                           ( 1,  2,  3,  4, -1) )).det() == 11664
+
+    assert SparseMatrix(( ( 3,  0,  0, 0),
+                          (-2,  1,  0, 0),
+                          ( 0, -2,  5, 0),
+                          ( 5,  0,  3, 4) )).det() == 60
+
+    assert SparseMatrix(( ( 1,  0,  0,  0),
+                          ( 5,  0,  0,  0),
+                          ( 9, 10, 11, 0),
+                          (13, 14, 15, 16) )).det() == 0
+
+    assert SparseMatrix(( (3, 2, 0, 0, 0),
+                          (0, 3, 2, 0, 0),
+                          (0, 0, 3, 2, 0),
+                          (0, 0, 0, 3, 2),
+                          (0, 0, 0, 0, 3) )).det() == 243
 
     assert SparseMatrix(( ( 2,  7, -1, 3, 2),
                           ( 0,  0,  1, 0, 1),
@@ -588,9 +605,9 @@ def test_sparse_solve():
         [-1, 2, -1],
         [ 0, 0, 2]])
     ans = SparseMatrix([
-        [S(2)/3, S(1)/3, S(1)/6],
-        [S(1)/3, S(2)/3, S(1)/3],
-        [     0,      0, S(1)/2]])
+        [Rational(2, 3), Rational(1, 3), Rational(1, 6)],
+        [Rational(1, 3), Rational(2, 3), Rational(1, 3)],
+        [             0,              0,        S.Half]])
     assert A.inv(method='CH') == ans
     assert A.inv(method='LDL') == ans
     assert A * ans == SparseMatrix(eye(3))
@@ -604,6 +621,46 @@ def test_sparse_solve():
     assert A*s == A[:, 0]
     s = A.solve_least_squares(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
+
+
+def test_lower_triangular_solve():
+    a, b, c, d = symbols('a:d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, 0], [c, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[u/a, v/a], [(w - c*u/a)/d, (x - c*v/a)/d]])
+    assert A.lower_triangular_solve(B) == sol
+    assert A.lower_triangular_solve(C) == sol
+
+
+def test_upper_triangular_solve():
+    a, b, c, d = symbols('a:d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, b], [0, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[(u - b*w/d)/a, (v - b*x/d)/a], [w/d, x/d]])
+    assert A.upper_triangular_solve(B) == sol
+    assert A.upper_triangular_solve(C) == sol
+
+
+def test_diagonal_solve():
+    a, d = symbols('a d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, 0], [0, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[u/a, v/a], [w/d, x/d]])
+    assert A.diagonal_solve(B) == sol
+    assert A.diagonal_solve(C) == sol
+
 
 def test_hermitian():
     x = Symbol('x')

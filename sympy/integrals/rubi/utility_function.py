@@ -1,8 +1,8 @@
-'''
+"""
 Utility functions for Rubi integration.
 
 See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Integration%20utility%20functions.pdf
-'''
+"""
 from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum,
@@ -32,10 +32,10 @@ from random import randint
 
 
 class rubi_unevaluated_expr(UnevaluatedExpr):
-    '''
+    """
     This is needed to convert `exp` as `Pow`.
     sympy's UnevaluatedExpr has an issue with `is_commutative`.
-    '''
+    """
     @property
     def is_commutative(self):
         from sympy.core.logic import fuzzy_and
@@ -45,7 +45,7 @@ _E = rubi_unevaluated_expr(E)
 
 
 class rubi_exp(Function):
-    '''
+    """
     sympy's exp is not identified as `Pow`. So it is not matched with `Pow`.
     Like `a = exp(2)` is not identified as `Pow(E, 2)`. Rubi rules need it.
     So, another exp has been created only for rubi module.
@@ -60,13 +60,13 @@ class rubi_exp(Function):
     >>> isinstance(rubi_exp(2), Pow)
     True
 
-    '''
+    """
     @classmethod
     def eval(cls, *args):
         return Pow(_E, args[0])
 
 class rubi_log(Function):
-    '''
+    """
     For rule matching different `exp` has been used. So for proper results,
     `log` is modified little only for case when it encounters rubi's `exp`.
     For other cases it is same.
@@ -79,7 +79,7 @@ class rubi_log(Function):
     >>> rubi_log(a)
     2
 
-    '''
+    """
     @classmethod
     def eval(cls, *args):
         if args[0].has(_E):
@@ -106,20 +106,11 @@ if matchpy:
     a, b, c, d, e = symbols('a b c d e')
 
 
-class Int(Function):
-    '''
-    Integrates given `expr` by matching rubi rules.
-    '''
-    @classmethod
-    def eval(cls, expr, var):
-        if isinstance(expr, (int, Integer, float, Float)):
-            return S(expr)*var
-        from sympy.integrals.rubi.rubi import util_rubi_integrate
-        return util_rubi_integrate(expr, var)
+Int = Integral
 
 
 def replace_pow_exp(z):
-    '''
+    """
     This function converts back rubi's `exp` to general sympy's `exp`.
 
     Examples
@@ -132,7 +123,7 @@ def replace_pow_exp(z):
     >>> replace_pow_exp(expr)
     exp(5)
 
-    '''
+    """
     z = S(z)
     if z.has(_E):
         z = z.replace(_E, E)
@@ -210,9 +201,8 @@ def NegativeQ(u):
 def NonzeroQ(expr):
     return Simplify(expr) != 0
 
+
 def FreeQ(nodes, var):
-    if var == Int:
-        return FreeQ(nodes, Integral)
     if isinstance(nodes, list):
         return not any(S(expr).has(var) for expr in nodes)
     else:
@@ -220,9 +210,9 @@ def FreeQ(nodes, var):
         return not nodes.has(var)
 
 def NFreeQ(nodes, var):
-    ''' Note that in rubi 4.10.8 this function was not defined in `Integration Utility Functions.m`,
+    """ Note that in rubi 4.10.8 this function was not defined in `Integration Utility Functions.m`,
     but was used in rules. So explicitly its returning `False`
-    '''
+    """
     return False
     # return not FreeQ(nodes, var)
 
@@ -825,7 +815,7 @@ def NumericQ(u):
 
 def Length(expr):
     """
-    Returns number of elements in the experssion just as sympy's len.
+    Returns number of elements in the expression just as sympy's len.
 
     Examples
     ========
@@ -1873,7 +1863,7 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, n, p = tuple([match[i] for i in keys])
             if IntegerQ(m/n):
-                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) == S.NaN:
+                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) is S.NaN:
                     return expr
                 else:
                     return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
@@ -1887,7 +1877,7 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, d, n = tuple([match[i] for i in keys])
             if IntegerQ(m) and ZeroQ(b*c - a*d):
-                if u*b**m/d**m*(c + d*x)**(m + n) == S.NaN:
+                if u*b**m/d**m*(c + d*x)**(m + n) is S.NaN:
                     return expr
                 else:
                     return u*b**m/d**m*(c + d*x)**(m + n)
@@ -3317,6 +3307,7 @@ def FunctionOfLinearSubst(u, a, b, x):
             return  -FunctionOfLinearSubst(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x)**lst[0]
         return FunctionOfLinearSubst(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x)**lst[0]
     return u.func(*[FunctionOfLinearSubst(i, a, b, x) for i in u.args])
+
 
 def FunctionOfLinear(*args):
     # (* If u (x) is equivalent to an expression of the form f (a+b*x) and not the case that a==0 and
@@ -5077,10 +5068,10 @@ def Divides(y, u, x):
         return False
 
 def DerivativeDivides(y, u, x):
-    '''
+    """
     If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
     is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
-    '''
+    """
     from matchpy import is_match
     pattern0 = Pattern(Mul(a , b_), CustomConstraint(lambda a, b : FreeQ(a, b)))
     def f1(y, u, x):
@@ -6698,7 +6689,7 @@ def HypergeometricPFQ(a, b, c):
     return hyper(a, b, c)
 
 def Sum_doit(exp, args):
-    '''
+    """
     This function perform summation using sympy's `Sum`.
 
     Examples
@@ -6709,7 +6700,7 @@ def Sum_doit(exp, args):
     >>> Sum_doit(2*x + 2, [x, 0, 1.7])
     6
 
-    '''
+    """
     exp = replace_pow_exp(exp)
     if not isinstance(args[2], (int, Integer)):
         new_args = [args[0], args[1], Floor(args[2])]
@@ -6787,7 +6778,7 @@ def Quotient(m, n):
     return Floor(m/n)
 
 def process_trig(expr):
-    '''
+    """
     This function processes trigonometric expressions such that all `cot` is
     rewritten in terms of `tan`, `sec` in terms of `cos`, `csc` in terms of `sin` and
     similarly for `coth`, `sech` and `csch`.
@@ -6803,7 +6794,7 @@ def process_trig(expr):
     >>> process_trig(coth(x)*csc(x))
     1/(sin(x)*tanh(x))
 
-    '''
+    """
     expr = expr.replace(lambda x: isinstance(x, cot), lambda x: 1/tan(x.args[0]))
     expr = expr.replace(lambda x: isinstance(x, sec), lambda x: 1/cos(x.args[0]))
     expr = expr.replace(lambda x: isinstance(x, csc), lambda x: 1/sin(x.args[0]))

@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
-from sympy.core.compatibility import range
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -243,7 +242,6 @@ class TensorProduct(Expr):
         """Distribute TensorProducts across addition."""
         args = self.args
         add_args = []
-        stop = False
         for i in range(len(args)):
             if isinstance(args[i], Add):
                 for aa in args[i].args:

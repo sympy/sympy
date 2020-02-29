@@ -1,8 +1,8 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
-                    besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                  imageset, Intersection, Matrix, symbols, Product, IndexedBase)
-from sympy.matrices import ImmutableMatrix
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, Interval,
+                   Range, factorial, Mul, Integer,
+                   Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
+                   Intersection, Matrix, symbols, Product, IndexedBase)
+from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
@@ -39,8 +39,6 @@ def JointRV(symbol, pdf, _set=None):
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
 
-    Returns a RandomSymbol.
-
     Examples
     ========
 
@@ -54,12 +52,18 @@ def JointRV(symbol, pdf, _set=None):
     >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
     """
     #TODO: Add support for sets provided by the user
     symbol = sympify(symbol)
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
         and i.base == IndexedBase(symbol))
-    syms.sort(key = lambda index: index.args[1])
+    syms = tuple(sorted(syms, key = lambda index: index.args[1]))
     _set = S.Reals**len(syms)
     pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
@@ -74,69 +78,71 @@ def JointRV(symbol, pdf, _set=None):
 # Multivariate Normal distribution ---------------------------------------------------------
 
 class MultivariateNormalDistribution(JointDistribution):
-    _argnames = ['mu', 'sigma']
+    _argnames = ('mu', 'sigma')
 
     is_Continuous=True
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(len(mu) == len(sigma.col(0)),
+        _value_check(mu.shape[0] == sigma.shape[0],
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
-        k = len(mu)
+        k = mu.shape[0]
         args = ImmutableMatrix(args)
         x = args - mu
-        return  S(1)/sqrt((2*pi)**(k)*det(sigma))*exp(
-            -S(1)/2*x.transpose()*(sigma.inv()*\
+        return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
+            Rational(-1, 2)*x.transpose()*(sigma.inv()*\
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
-        k = len(self.mu)
+        k = self.mu.shape[0]
         for i in range(k):
             if i not in indices:
                 _mu = _mu.row_del(i)
                 _sigma = _sigma.col_del(i)
                 _sigma = _sigma.row_del(i)
-        return Lambda(sym, S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
-            -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
+        return Lambda(tuple(sym), S.One/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
+            Rational(-1, 2)*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
 #-------------------------------------------------------------------------------
 # Multivariate Laplace distribution ---------------------------------------------------------
 
 class MultivariateLaplaceDistribution(JointDistribution):
-    _argnames = ['mu', 'sigma']
+    _argnames = ('mu', 'sigma')
     is_Continuous=True
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the mean vector and covariance matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The covariance matrix must be positive definite. ")
+        _value_check(mu.shape[0] == sigma.shape[0],
+                     "Size of the mean vector and covariance matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
+                         "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         mu_T = mu.transpose()
-        k = S(len(mu))
+        k = S(mu.shape[0])
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         args_T = args.transpose()
@@ -152,26 +158,27 @@ class MultivariateLaplaceDistribution(JointDistribution):
 # Multivariate StudentT distribution ---------------------------------------------------------
 
 class MultivariateTDistribution(JointDistribution):
-    _argnames = ['mu', 'shape_mat', 'dof']
+    _argnames = ('mu', 'shape_mat', 'dof')
     is_Continuous=True
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma, v):
-        _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the location vector and shape matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The shape matrix must be positive definite. ")
+        _value_check(mu.shape[0] == sigma.shape[0],
+                     "Size of the location vector and shape matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
+                         "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.shape_mat
         v = S(self.dof)
-        k = S(len(mu))
+        k = S(mu.shape[0])
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         x = args - mu
@@ -185,10 +192,23 @@ def MultivariateT(syms, mu, sigma, v):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
-    mu: A list/tuple/set consisting of k means,represents a k
-        dimensional location vector
+    syms: A symbol/str
+        For identifying the random variable.
+    mu: A list/matrix
+        Representing the location vector
     sigma: The shape matrix for the distribution
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, MultivariateT
+    >>> from sympy import Symbol
+
+    >>> x = Symbol("x")
+    >>> X = MultivariateT("x", [1, 1], [[1, 0], [0, 1]], 2)
+
+    >>> density(X)(1, 2)
+    2/(9*pi)
 
     Returns
     =======
@@ -203,7 +223,7 @@ def MultivariateT(syms, mu, sigma, v):
 
 class NormalGammaDistribution(JointDistribution):
 
-    _argnames = ['mu', 'lamda', 'alpha', 'beta']
+    _argnames = ('mu', 'lamda', 'alpha', 'beta')
     is_Continuous=True
 
     @staticmethod
@@ -222,7 +242,7 @@ class NormalGammaDistribution(JointDistribution):
         mu = self.mu
 
         return beta**alpha*sqrt(lamda)/(gamma(alpha)*sqrt(2*pi))*\
-        tau**(alpha - S(1)/2)*exp(-1*beta*tau)*\
+        tau**(alpha - S.Half)*exp(-1*beta*tau)*\
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
     def marginal_distribution(self, indices, *sym):
@@ -232,7 +252,7 @@ class NormalGammaDistribution(JointDistribution):
             #For marginal over `x`, return non-standardized Student-T's
             #distribution
             x = sym[0]
-            v, mu, sigma = self.alpha - S(1)/2, self.mu, \
+            v, mu, sigma = self.alpha - S.Half, self.mu, \
                 S(self.beta)/(self.lamda * self.alpha)
             return Lambda(sym, gamma((v + 1)/2)/(gamma(v/2)*sqrt(pi*v)*sigma)*\
                 (1 + 1/v*((x - mu)/sigma)**2)**((-v -1)/2))
@@ -240,7 +260,7 @@ class NormalGammaDistribution(JointDistribution):
         from sympy.stats.crv_types import GammaDistribution
         return Lambda(sym, GammaDistribution(self.alpha, self.beta)(sym[0]))
 
-def NormalGamma(syms, mu, lamda, alpha, beta):
+def NormalGamma(sym, mu, lamda, alpha, beta):
     """
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
@@ -248,25 +268,39 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    syms: list/tuple/set of two symbols for identifying each component
-    mu: A real number, as the mean of the normal distribution
+    sym: A symbol/str
+        For identifying the random variable.
+    mu: A real number
+        The mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
     lamda: a positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, NormalGamma
+    >>> from sympy import symbols
+
+    >>> X = NormalGamma('x', 0, 1, 2, 3)
+    >>> y, z = symbols('y z')
+
+    >>> density(X)(y, z)
+    9*sqrt(2)*z**(3/2)*exp(-3*z)*exp(-y**2*z/2)/(2*sqrt(pi))
 
     Returns
     =======
 
     A random symbol
     """
-    return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+    return multivariate_rv(NormalGammaDistribution, sym, mu, lamda, alpha, beta)
 
 #-------------------------------------------------------------------------------
 # Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
 
 class MultivariateBetaDistribution(JointDistribution):
 
-    _argnames = ['alpha']
+    _argnames = ('alpha',)
     is_Continuous = True
 
     @staticmethod
@@ -339,7 +373,7 @@ Dirichlet = MultivariateBeta
 
 class MultivariateEwensDistribution(JointDistribution):
 
-    _argnames = ['n', 'theta']
+    _argnames = ('n', 'theta')
     is_Discrete = True
     is_Continuous = False
 
@@ -358,7 +392,7 @@ class MultivariateEwensDistribution(JointDistribution):
         prod_set = Range(0, self.n + 1)
         for i in range(2, self.n + 1):
             prod_set *= Range(0, self.n//i + 1)
-        return prod_set
+        return prod_set.flatten()
 
     def pdf(self, *syms):
         n, theta = self.n, self.theta
@@ -428,7 +462,7 @@ def MultivariateEwens(syms, n, theta):
 
 class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
-    _argnames = ['delta', 'v', 'lamda', 'mu']
+    _argnames = ('delta', 'v', 'lamda', 'mu')
     is_Continuous=True
 
     def check(self, delta, v, l, mu):
@@ -443,7 +477,6 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
     @property
     def set(self):
-        from sympy.sets.sets import Interval
         return S.Reals**len(self.lamda)
 
     def pdf(self, *y):
@@ -522,10 +555,11 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
+    syms: list/tuple/set of symbols
+        For identifying each component
     omega: A square matrix
            Every element of square matrix must be absolute value of
-           sqaure root of correlation coefficient
+           square root of correlation coefficient
     v: positive real
     lamda: a list of positive reals
     mu: a list of positive reals
@@ -583,14 +617,14 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
 
 class MultinomialDistribution(JointDistribution):
 
-    _argnames = ['n', 'p']
+    _argnames = ('n', 'p')
     is_Continuous=False
     is_Discrete = True
 
     @staticmethod
     def check(n, p):
         _value_check(n > 0,
-                        "number of trials must be a positve integer")
+                        "number of trials must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
                         "probability must be in range [0, 1]")
@@ -652,14 +686,14 @@ def Multinomial(syms, n, *p):
 
 class NegativeMultinomialDistribution(JointDistribution):
 
-    _argnames = ['k0', 'p']
+    _argnames = ('k0', 'p')
     is_Continuous=False
     is_Discrete = True
 
     @staticmethod
     def check(k0, p):
         _value_check(k0 > 0,
-                        "number of failures must be a positve integer")
+                        "number of failures must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
                         "probability must be in range [0, 1].")

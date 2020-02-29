@@ -1,6 +1,6 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, zeros, S
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
-                                     RigidBody, Vector)
+                                     RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
@@ -9,7 +9,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
 
 from sympy.physics.mechanics.functions import gravity, center_of_mass
 from sympy.physics.vector.vector import Vector
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -234,7 +234,7 @@ def test_gravity():
 def test_center_of_mass():
     a = ReferenceFrame('a')
     m = symbols('m', real=True)
-    p1 = Particle('p1', Point('p1_pt'), S(1))
+    p1 = Particle('p1', Point('p1_pt'), S.One)
     p2 = Particle('p2', Point('p2_pt'), S(2))
     p3 = Particle('p3', Point('p3_pt'), S(3))
     p4 = Particle('p4', Point('p4_pt'), m)

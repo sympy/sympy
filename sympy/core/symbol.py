@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import StdFactKB, _assume_defined
-from sympy.core.compatibility import (string_types, range, is_sequence,
-    ordered)
+from sympy.core.compatibility import is_sequence, ordered
 from .basic import Basic
 from .sympify import sympify
 from .singleton import S
@@ -87,7 +86,7 @@ def _symbol(s, matching_symbol=None, **assumptions):
     sympy.core.symbol.Symbol
 
     """
-    if isinstance(s, string_types):
+    if isinstance(s, str):
         if matching_symbol and matching_symbol.name == s:
             return matching_symbol
         return Symbol(s, **assumptions)
@@ -113,7 +112,7 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
         modify : a single arg function that changes its string argument
-            in some way (the default is to preppend underscores)
+            in some way (the default is to prepend underscores)
 
     Examples
     ========
@@ -157,7 +156,7 @@ class Symbol(AtomicExpr, Boolean):
 
     is_comparable = False
 
-    __slots__ = ['name']
+    __slots__ = ('name',)
 
     is_Symbol = True
     is_symbol = True
@@ -190,20 +189,6 @@ class Symbol(AtomicExpr, Boolean):
 
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
-            from collections import defaultdict
-            from sympy.utilities.exceptions import SymPyDeprecationWarning
-            keymap = defaultdict(lambda: None)
-            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
-            if keymap[key]:
-                SymPyDeprecationWarning(
-                    feature="%s assumption" % key,
-                    useinstead="%s" % keymap[key],
-                    issue=8071,
-                    deprecated_since_version="0.7.6").warn()
-                assumptions[keymap[key]] = assumptions[key]
-                assumptions.pop(key)
-                key = keymap[key]
-
             v = assumptions[key]
             if v is None:
                 assumptions.pop(key)
@@ -214,6 +199,7 @@ class Symbol(AtomicExpr, Boolean):
         base = self.assumptions0
         for k in set(assumptions) & set(base):
             if assumptions[k] != base[k]:
+                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                     non-matching assumptions for %s: existing value
                     is %s and new value is %s''' % (
@@ -235,7 +221,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
         obj = Expr.__new__(cls)
@@ -347,7 +333,7 @@ class Dummy(Symbol):
     _prng = random.Random()
     _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
-    __slots__ = ['dummy_index']
+    __slots__ = ('dummy_index',)
 
     is_Dummy = True
 
@@ -470,7 +456,7 @@ class Wild(Symbol):
     """
     is_Wild = True
 
-    __slots__ = ['exclude', 'properties']
+    __slots__ = ('exclude', 'properties')
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
@@ -623,7 +609,7 @@ def symbols(names, **args):
     """
     result = []
 
-    if isinstance(names, string_types):
+    if isinstance(names, str):
         marker = 0
         literals = [r'\,', r'\:', r'\ ']
         for i in range(len(literals)):
@@ -746,7 +732,7 @@ def var(names, **args):
     >>> x.is_real and y.is_real
     True
 
-    See :func:`symbol` documentation for more details on what kinds of
+    See :func:`symbols` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.
 
     """

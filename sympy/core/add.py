@@ -4,7 +4,8 @@ from collections import defaultdict
 from functools import cmp_to_key
 
 from .basic import Basic
-from .compatibility import reduce, is_sequence, range
+from .compatibility import reduce, is_sequence
+from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
@@ -71,7 +72,7 @@ def _unevaluated_Add(*args):
 
 class Add(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ()
 
     is_Add = True
 
@@ -122,6 +123,8 @@ class Add(Expr, AssocOp):
 
             # O(x)
             if o.is_Order:
+                if o.expr.is_zero:
+                    continue
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
@@ -138,7 +141,7 @@ class Add(Expr, AssocOp):
                         o.is_finite is False) and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                if coeff.is_Number:
+                if coeff.is_Number or isinstance(coeff, AccumBounds):
                     coeff += o
                     if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
@@ -210,7 +213,7 @@ class Add(Expr, AssocOp):
         noncommutative = False
         for s, c in terms.items():
             # 0*s
-            if c is S.Zero:
+            if c.is_zero:
                 continue
             # 1*s
             elif c is S.One:
@@ -338,21 +341,18 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1 = []
-            l2 = []
-            for f in self.args:
-                if f.has(*deps):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-            return self._new_rawargs(*l1), tuple(l2)
+            from sympy.utilities.iterables import sift
+            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+    def as_coeff_Add(self, rational=False, deps=None):
+        """
+        Efficiently extract the coefficient of a summation.
+        """
         coeff, args = self.args[0], self.args[1:]
 
         if coeff.is_Number and not rational or coeff.is_Rational:
@@ -386,7 +386,20 @@ class Add(Expr, AssocOp):
                     return _unevaluated_Mul(
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
-
+        elif e.is_Number and abs(e) != 1:
+            # handle the Float case: (2.0 + 4*x)**e -> 4**e*(0.5 + x)**e
+            c, m = zip(*[i.as_coeff_Mul() for i in self.args])
+            if any(i.is_Float for i in c):  # XXX should this always be done?
+                big = -1
+                for i in c:
+                    if abs(i) >= big:
+                        big = abs(i)
+                if big > 0 and big != 1:
+                    from sympy.functions.elementary.complexes import sign
+                    bigs = (big, -big)
+                    c = [sign(i) if i in bigs else i/big for i in c]
+                    addpow = Add(*[c*m for c, m in zip(c, m)])**e
+                    return big**e*addpow
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
@@ -411,7 +424,7 @@ class Add(Expr, AssocOp):
         Returns lhs - rhs, but treats oo like a symbol so oo - oo
         returns 0, instead of a nan.
         """
-        from sympy.core.function import expand_mul
+        from sympy.simplify.simplify import signsimp
         from sympy.core.symbol import Dummy
         inf = (S.Infinity, S.NegativeInfinity)
         if lhs.has(*inf) or rhs.has(*inf):
@@ -420,14 +433,14 @@ class Add(Expr, AssocOp):
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
             ireps = {v: k for k, v in reps.items()}
-            eq = expand_mul(lhs.xreplace(reps) - rhs.xreplace(reps))
+            eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
             if eq.has(oo):
                 eq = eq.replace(
-                    lambda x: x.is_Pow and x.base == oo,
+                    lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
             return eq.xreplace(ireps)
         else:
-            return expand_mul(lhs - rhs)
+            return signsimp(lhs - rhs)
 
     @cacheit
     def as_two_terms(self):
@@ -450,7 +463,24 @@ class Add(Expr, AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
+        """
+        Decomposes an expression to its numerator part and its
+        denominator part.
 
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y, z
+        >>> (x*y/z).as_numer_denom()
+        (x*y, z)
+        >>> (x*(y + 1)/y**7).as_numer_denom()
+        (x*(y + 1), y**7)
+
+        See Also
+        ========
+
+        sympy.core.expr.Expr.as_numer_denom
+        """
         # clear rational denominator
         content, expr = self.primitive()
         ncon, dcon = content.as_numer_denom()
@@ -511,6 +541,19 @@ class Add(Expr, AssocOp):
         (a.is_algebraic for a in self.args), quick_exit=True)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
+
+    def _eval_is_infinite(self):
+        sawinf = False
+        for a in self.args:
+            ainf = a.is_infinite
+            if ainf is None:
+                return None
+            elif ainf is True:
+                # infinite+infinite might not be infinite
+                if sawinf is True:
+                    return None
+                sawinf = True
+        return sawinf
 
     def _eval_is_imaginary(self):
         nz = []
@@ -837,7 +880,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms
+        from sympy import expand_mul, Order
 
         old = self
 
@@ -847,26 +890,36 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
-        if not expr:
-            # simple leading term analysis gave us 0 but we have to send
+        leading_terms = [t.as_leading_term(x) for t in expr.args]
+
+        min, new_expr = Order(0), 0
+
+        try:
+            for term in leading_terms:
+                order = Order(term, x)
+                if not min or order not in min:
+                    min = order
+                    new_expr = term
+                elif order == min:
+                    new_expr += term
+
+        except TypeError:
+            return expr
+
+        new_expr=new_expr.together()
+        if new_expr.is_Add:
+            new_expr = new_expr.simplify()
+
+        if not new_expr:
+            # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
-        elif expr is S.NaN:
+
+        elif new_expr is S.NaN:
             return old.func._from_args(infinite)
-        elif not expr.is_Add:
-            return expr
+
         else:
-            plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
-            rv = factor_terms(plain, fraction=False)
-            rv_simplify = rv.simplify()
-            # if it simplifies to an x-free expression, return that;
-            # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_simplify.free_symbols:
-                if rv_simplify.is_zero and plain.is_zero is not True:
-                    return (expr - plain)._eval_as_leading_term(x)
-                return rv_simplify
-            return rv
+            return new_expr
 
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args])
@@ -876,9 +929,6 @@ class Add(Expr, AssocOp):
 
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
-
-    def __neg__(self):
-        return self*(-1)
 
     def _sage_(self):
         s = 0
@@ -1062,6 +1112,12 @@ class Add(Expr, AssocOp):
             raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
 
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
+
+    def __neg__(self):
+        if not global_parameters.distribute:
+            return super(Add, self).__neg__()
+        return Add(*[-i for i in self.args])
+
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

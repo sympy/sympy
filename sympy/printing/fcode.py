@@ -19,6 +19,8 @@ it is necessary to make them different for Fortran.
 
 from __future__ import print_function, division
 
+from typing import Dict, Any
+
 from collections import defaultdict
 from itertools import chain
 import string
@@ -33,7 +35,6 @@ from sympy.codegen.fnodes import (
     intent_in, intent_out, intent_inout
 )
 from sympy.core import S, Add, N, Float, Symbol
-from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
@@ -103,7 +104,7 @@ class FCodePrinter(CodePrinter):
         'contract': True,
         'standard': 77,
         'name_mangling' : True,
-    }
+    }  # type: Dict[str, Any]
 
     _operators = {
         'and': '.and.',
@@ -204,7 +205,7 @@ class FCodePrinter(CodePrinter):
         arg, = expr.args
         if arg.is_integer:
             new_expr = merge(0, isign(1, arg), Eq(arg, 0))
-        elif arg.is_complex:
+        elif (arg.is_complex or arg.is_infinite):
             new_expr = merge(cmplx(literal_dp(0), literal_dp(0)), arg/Abs(arg), Eq(Abs(arg), literal_dp(0)))
         else:
             new_expr = merge(literal_dp(0), dsign(literal_dp(1), arg), Eq(arg, literal_dp(0)))
@@ -365,6 +366,13 @@ class FCodePrinter(CodePrinter):
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        op = op if op not in self._relationals else self._relationals[op]
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
@@ -424,14 +432,6 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
-
-    def _print_Equality(self, expr):
-        lhs, rhs = expr.args
-        return ' == '.join(map(lambda arg: self._print(arg), (lhs, rhs)))
-
-    def _print_Unequality(self, expr):
-        lhs, rhs = expr.args
-        return ' /= '.join(map(lambda arg: self._print(arg), (lhs, rhs)))
 
     def _print_Type(self, type_):
         type_ = self.type_aliases.get(type_, type_)
@@ -579,7 +579,7 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

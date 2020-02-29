@@ -458,7 +458,7 @@ class LinearEntity(GeometrySet):
                 return [seg]
             elif st1 >= 0: # st2 < 0:
                 return [Segment(ray.p1, seg.p1)]
-            elif st2 > 0: # st1 <= 0
+            elif st2 >= 0: # st1 < 0:
                 return [Segment(ray.p1, seg.p2)]
 
         def intersect_parallel_segments(seg1, seg2):
@@ -778,7 +778,7 @@ class LinearEntity(GeometrySet):
         See Also
         ========
 
-        is_perpendicular, perpendicular_segment
+        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
 
         Examples
         ========
@@ -1104,7 +1104,7 @@ class Line(LinearEntity):
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
 
-        if len(args) == 1 and isinstance(args[0], Expr):
+        if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
@@ -1319,7 +1319,7 @@ class Ray(LinearEntity):
             return Ray2D(p1, p2, **kwargs)
         elif dim == 3:
             return Ray3D(p1, p2, **kwargs)
-        return LinearEntity.__new__(cls, p1, *pts, **kwargs)
+        return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
         """Returns SVG path element for the LinearEntity.
@@ -1843,7 +1843,7 @@ class LinearEntity2D(LinearEntity):
         See Also
         ========
 
-        is_perpendicular, perpendicular_segment
+        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
 
         Examples
         ========
@@ -2005,7 +2005,7 @@ class Line2D(LinearEntity2D, Line):
         See Also
         ========
 
-        sympy.geometry.line.Line.equation
+        sympy.geometry.line.Line2D.equation
 
         Examples
         ========
@@ -2052,7 +2052,7 @@ class Line2D(LinearEntity2D, Line):
         See Also
         ========
 
-        LinearEntity.coefficients
+        sympy.geometry.line.Line2D.coefficients
 
         Examples
         ========
@@ -2388,7 +2388,7 @@ class LinearEntity3D(LinearEntity):
         See Also
         ========
 
-        sympy.geometry.line.Line.equation
+        sympy.geometry.line.Line3D.equation
 
         Examples
         ========
@@ -2409,7 +2409,7 @@ class LinearEntity3D(LinearEntity):
         See Also
         ========
 
-        sympy.geometry.line.Line.equation
+        sympy.geometry.line.Line3D.equation
 
         Examples
         ========
@@ -2517,7 +2517,6 @@ class Line3D(LinearEntity3D, Line):
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
         x1, y1, z1 = p1
-        v = (x, y, z)
         eqs = [-d1*k + x - x1, -d2*k + y - y1, -d3*k + z - z1]
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):

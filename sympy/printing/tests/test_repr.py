@@ -1,7 +1,10 @@
-from sympy.utilities.pytest import raises
+from typing import Any, Dict
+
+from sympy.testing.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
+from sympy.combinatorics import Cycle, Permutation
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -13,19 +16,25 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {}
+ENV = {}  # type: Dict[str, Any]
 exec_("from sympy import *", ENV)
 
 
-def sT(expr, string):
+def sT(expr, string, import_stmt=None):
     """
     sT := sreprTest
 
     Tests that srepr delivers the expected string and that
     the condition eval(srepr(expr))==expr holds.
     """
+    if import_stmt is None:
+        ENV2 = ENV
+    else:
+        ENV2 = ENV.copy()
+        exec_(import_stmt, ENV2)
+
     assert srepr(expr) == string
-    assert eval(string, ENV) == expr
+    assert eval(string, ENV2) == expr
 
 
 def test_printmethod():
@@ -275,6 +284,7 @@ def test_Naturals0():
 def test_Reals():
     sT(S.Reals, "Reals")
 
+
 def test_matrix_expressions():
     n = symbols('n', integer=True)
     A = MatrixSymbol("A", n, n)
@@ -282,3 +292,16 @@ def test_matrix_expressions():
     sT(A, "MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
     sT(A*B, "MatMul(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
     sT(A + B, "MatAdd(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+
+
+def test_Cycle():
+    # FIXME: sT fails because Cycle is not immutable and calling srepr(Cycle(1, 2))
+    # adds keys to the Cycle dict (GH-17661)
+    #import_stmt = "from sympy.combinatorics import Cycle"
+    #sT(Cycle(1, 2), "Cycle(1, 2)", import_stmt)
+    assert srepr(Cycle(1, 2)) == "Cycle(1, 2)"
+
+
+def test_Permutation():
+    import_stmt = "from sympy.combinatorics import Permutation"
+    sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)

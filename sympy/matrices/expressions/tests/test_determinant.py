@@ -5,7 +5,7 @@ from sympy.matrices.expressions import (
     det, ZeroMatrix, Transpose
 )
 from sympy.matrices.expressions.matexpr import OneMatrix
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import refine, Q
 
 n = symbols('n', integer=True)

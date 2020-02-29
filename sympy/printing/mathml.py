@@ -4,16 +4,20 @@ A MathML printer.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy import sympify, S, Mul
-from sympy.core.compatibility import range, string_types, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy.core.function import _coeff_isneg
 from sympy.printing.conventions import split_super_sub, requires_partial
-from sympy.printing.precedence import precedence_traditional, PRECEDENCE
+from sympy.printing.precedence import \
+    precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
+
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -35,7 +39,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -138,6 +142,14 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'Number': 'cn',
             'int': 'cn',
             'Pow': 'power',
+            'Max': 'max',
+            'Min': 'min',
+            'Abs': 'abs',
+            'And': 'and',
+            'Or': 'or',
+            'Xor': 'xor',
+            'Not': 'not',
+            'Implies': 'implies',
             'Symbol': 'ci',
             'MatrixSymbol': 'ci',
             'RandomSymbol': 'ci',
@@ -147,14 +159,27 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'cos': 'cos',
             'tan': 'tan',
             'cot': 'cot',
+            'csc': 'csc',
+            'sec': 'sec',
+            'sinh': 'sinh',
+            'cosh': 'cosh',
+            'tanh': 'tanh',
+            'coth': 'coth',
+            'csch': 'csch',
+            'sech': 'sech',
             'asin': 'arcsin',
             'asinh': 'arcsinh',
             'acos': 'arccos',
             'acosh': 'arccosh',
             'atan': 'arctan',
             'atanh': 'arctanh',
-            'acot': 'arccot',
             'atan2': 'arctan',
+            'acot': 'arccot',
+            'acoth': 'arccoth',
+            'asec': 'arcsec',
+            'asech': 'arcsech',
+            'acsc': 'arccsc',
+            'acsch': 'arccsch',
             'log': 'ln',
             'Equality': 'eq',
             'Unequality': 'neq',
@@ -162,6 +187,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'LessThan': 'leq',
             'StrictGreaterThan': 'gt',
             'StrictLessThan': 'lt',
+            'Union': 'union',
+            'Intersection': 'intersect',
         }
 
         for cls in e.__class__.__mro__:
@@ -235,6 +262,27 @@ class MathMLContentPrinter(MathMLPrinterBase):
             x.appendChild(plusNodes.pop(0))
         return x
 
+    def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
+        root = self.dom.createElement('piecewise')
+        for i, (e, c) in enumerate(expr.args):
+            if i == len(expr.args) - 1 and c == True:
+                piece = self.dom.createElement('otherwise')
+                piece.appendChild(self._print(e))
+            else:
+                piece = self.dom.createElement('piece')
+                piece.appendChild(self._print(e))
+                piece.appendChild(self._print(c))
+            root.appendChild(piece)
+        return root
+
     def _print_MatrixBase(self, m):
         x = self.dom.createElement('matrix')
         for i in range(m.rows):
@@ -297,6 +345,18 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
+
+    def _print_NaN(self, e):
+        return self.dom.createElement('notanumber')
+
+    def _print_EmptySet(self, e):
+        return self.dom.createElement('emptyset')
+
+    def _print_BooleanTrue(self, e):
+        return self.dom.createElement('true')
+
+    def _print_BooleanFalse(self, e):
+        return self.dom.createElement('false')
 
     def _print_NegativeInfinity(self, e):
         x = self.dom.createElement('apply')
@@ -428,7 +488,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Derivative(self, e):
         x = self.dom.createElement('apply')
         diff_symbol = self.mathml_tag(e)
-        if requires_partial(e):
+        if requires_partial(e.expr):
             diff_symbol = 'partialdiff'
         x.appendChild(self.dom.createElement(diff_symbol))
         x_1 = self.dom.createElement('bvar')
@@ -485,6 +545,32 @@ class MathMLContentPrinter(MathMLPrinterBase):
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
 
+    _print_Implies = _print_AssocOp
+    _print_Not = _print_AssocOp
+    _print_Xor = _print_AssocOp
+
+    def _print_FiniteSet(self, e):
+        x = self.dom.createElement('set')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    def _print_Complement(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('setdiff'))
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    def _print_ProductSet(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('cartesianproduct'))
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        return x
+
+    # XXX Symmetric difference is not supported for MathML content printers.
+
 
 class MathMLPresentationPrinter(MathMLPrinterBase):
     """Prints an expression to the Presentation MathML markup language.
@@ -539,6 +625,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'BooleanTrue': 'True',
             'BooleanFalse': 'False',
             'NoneType': 'None',
+            'mathieus': 'S',
+            'mathieuc': 'C',
+            'mathieusprime': 'S&#x2032;',
+            'mathieucprime': 'C&#x2032;',
         }
 
         def mul_symbol_selection():
@@ -551,7 +641,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 return '&#xB7;'
             elif self._settings["mul_symbol"] == 'ldot':
                 return '&#x2024;'
-            elif not isinstance(self._settings["mul_symbol"], string_types):
+            elif not isinstance(self._settings["mul_symbol"], str):
                 raise TypeError
             else:
                 return self._settings["mul_symbol"]
@@ -1016,7 +1106,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Derivative(self, e):
 
-        if requires_partial(e):
+        if requires_partial(e.expr):
             d = '&#x2202;'
         else:
             d = self.mathml_tag(e)
@@ -1209,28 +1299,36 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             mrow.appendChild(self._print(arg))
         return mrow
 
-    def _print_SetOp(self, expr, symbol):
+    def _print_SetOp(self, expr, symbol, prec):
         mrow = self.dom.createElement('mrow')
-        mrow.appendChild(self._print(expr.args[0]))
+        mrow.appendChild(self.parenthesize(expr.args[0], prec))
         for arg in expr.args[1:]:
             x = self.dom.createElement('mo')
             x.appendChild(self.dom.createTextNode(symbol))
-            y = self._print(arg)
+            y = self.parenthesize(arg, prec)
             mrow.appendChild(x)
             mrow.appendChild(y)
         return mrow
 
     def _print_Union(self, expr):
-        return self._print_SetOp(expr, '&#x222A;')
+        prec = PRECEDENCE_TRADITIONAL['Union']
+        return self._print_SetOp(expr, '&#x222A;', prec)
 
     def _print_Intersection(self, expr):
-        return self._print_SetOp(expr, '&#x2229;')
+        prec = PRECEDENCE_TRADITIONAL['Intersection']
+        return self._print_SetOp(expr, '&#x2229;', prec)
 
     def _print_Complement(self, expr):
-        return self._print_SetOp(expr, '&#x2216;')
+        prec = PRECEDENCE_TRADITIONAL['Complement']
+        return self._print_SetOp(expr, '&#x2216;', prec)
 
     def _print_SymmetricDifference(self, expr):
-        return self._print_SetOp(expr, '&#x2206;')
+        prec = PRECEDENCE_TRADITIONAL['SymmetricDifference']
+        return self._print_SetOp(expr, '&#x2206;', prec)
+
+    def _print_ProductSet(self, expr):
+        prec = PRECEDENCE_TRADITIONAL['ProductSet']
+        return self._print_SetOp(expr, '&#x00d7;', prec)
 
     def _print_FiniteSet(self, s):
         return self._print_set(s.args)
@@ -1359,7 +1457,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.setAttribute('close', '}')
         brac.setAttribute('open', '{')
 
-        if s.start.is_infinite:
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
         elif s.stop.is_infinite:
             it = iter(s)
@@ -1566,47 +1669,47 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('NaN'))
         return x
 
-    def _print_bernoulli(self, e):
+    def _print_number_function(self, e, name):
+        # Print name_arg[0] for one argument or name_arg[0](arg[1])
+        # for more than one argument
         sub = self.dom.createElement('msub')
         mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('B'))
+        mi.appendChild(self.dom.createTextNode(name))
         sub.appendChild(mi)
         sub.appendChild(self._print(e.args[0]))
-        return sub
+        if len(e.args) == 1:
+            return sub
+        # TODO: copy-pasted from _print_Function: can we do better?
+        mrow = self.dom.createElement('mrow')
+        y = self.dom.createElement('mfenced')
+        for arg in e.args[1:]:
+            y.appendChild(self._print(arg))
+        mrow.appendChild(sub)
+        mrow.appendChild(y)
+        return mrow
+
+    def _print_bernoulli(self, e):
+        return self._print_number_function(e, 'B')
 
     _print_bell = _print_bernoulli
 
     def _print_catalan(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('C'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'C')
+
+    def _print_euler(self, e):
+        return self._print_number_function(e, 'E')
 
     def _print_fibonacci(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('F'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'F')
 
     def _print_lucas(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('L'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'L')
+
+    def _print_stieltjes(self, e):
+        return self._print_number_function(e, '&#x03B3;')
 
     def _print_tribonacci(self, e):
-        sub = self.dom.createElement('msub')
-        mi = self.dom.createElement('mi')
-        mi.appendChild(self.dom.createTextNode('T'))
-        sub.appendChild(mi)
-        sub.appendChild(self._print(e.args[0]))
-        return sub
+        return self._print_number_function(e, 'T')
 
     def _print_ComplexInfinity(self, e):
         x = self.dom.createElement('mover')

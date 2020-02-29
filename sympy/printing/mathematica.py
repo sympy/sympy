@@ -3,6 +3,11 @@ Mathematica code printer
 """
 
 from __future__ import print_function, division
+
+from typing import Any, Dict, Set, Tuple
+
+from sympy.core import Basic, Expr, Float
+
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -107,7 +112,6 @@ known_functions = {
     "DiracDelta": [(lambda x: True, "DiracDelta")],
     "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
-    "LambertW": [(lambda x: True, "ProductLog")],
 }
 
 
@@ -125,10 +129,10 @@ class MCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
-    }
+    }  # type: Dict[str, Any]
 
-    _number_symbols = set()
-    _not_supported = set()
+    _number_symbols = set()  # type: Set[Tuple[Expr, Float]]
+    _not_supported = set()  # type: Set[Basic]
 
     def __init__(self, settings={}):
         """Register function mappings supplied by user"""
@@ -157,6 +161,11 @@ class MCodePrinter(CodePrinter):
             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
         return res
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     # Primitive numbers
     def _print_Zero(self, expr):
@@ -200,7 +209,9 @@ class MCodePrinter(CodePrinter):
         return 'GoldenRatio'
 
     def _print_TribonacciConstant(self, expr):
-        return self.doprint(expr._eval_expand_func())
+        expanded = expr.expand(func=True)
+        PREC = precedence(expr)
+        return self.parenthesize(expanded, PREC)
 
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
@@ -297,6 +308,12 @@ class MCodePrinter(CodePrinter):
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function
+
+    def _print_LambertW(self, expr):
+        if len(expr.args) == 1:
+            return "ProductLog[{}]".format(self._print(expr.args[0]))
+        return "ProductLog[{}, {}]".format(
+            self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Integral(self, expr):
         if len(expr.variables) == 1 and not expr.limits[0][1:]:

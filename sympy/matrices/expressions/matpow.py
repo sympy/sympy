@@ -2,9 +2,10 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
+
+from .permutation import PermutationMatrix
 
 
 class MatPow(MatrixExpr):
@@ -71,13 +72,15 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
-        elif isinstance(base, MatrixBase) and exp.is_number:
+        elif isinstance(base, PermutationMatrix):
+            return PermutationMatrix(base.args[0] ** exp).doit()
+        elif isinstance(base, MatrixBase):
             if exp is S.One:
                 return base
             return base**exp
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
-        elif exp is S(-1) and base.is_square:
+        elif exp is S.NegativeOne and base.is_square:
             return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base
@@ -86,6 +89,10 @@ class MatPow(MatrixExpr):
     def _eval_transpose(self):
         base, exp = self.args
         return MatPow(base.T, exp)
+
+    def _eval_derivative(self, x):
+        from sympy import Pow
+        return Pow._eval_derivative(self, x)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder

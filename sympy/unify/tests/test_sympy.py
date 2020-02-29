@@ -1,9 +1,8 @@
-from sympy import Add, Basic, symbols, Symbol
+from sympy import Add, Basic, symbols, Symbol, And
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative)
 from sympy.abc import x, y, z, n
-from sympy.utilities.pytest import XFAIL
 
 def test_deconstruct():
     expr     = Basic(1, 2, 3)
@@ -131,10 +130,12 @@ def test_FiniteSet_complex():
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
-@XFAIL
+
 def test_and():
     variables = x, y
-    str(list(unify((x>0) & (z<3), pattern, variables=variables)))
+    expected = tuple([{x: z > 0, y: n < 3}])
+    assert iterdicteq(unify((z>0) & (n<3), And(x, y), variables=variables),
+                      expected)
 
 def test_Union():
     from sympy import Interval

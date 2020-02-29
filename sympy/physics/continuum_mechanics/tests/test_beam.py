@@ -1,7 +1,7 @@
-from sympy import Symbol, symbols, S, simplify, Interval, pi
+from sympy import Symbol, symbols, S, Interval, pi, Rational, simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
 from sympy.geometry import Circle, Polygon, Point2D, Triangle
@@ -89,12 +89,12 @@ def test_Beam():
 
     # Test for slope distribution function
     p = b1.slope()
-    q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + S(4000)/3
+    q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3)
     assert p == q/(E*I)
 
     # Test for deflection distribution function
     p = b1.deflection()
-    q = 4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3) + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000
+    q = x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3) + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000
     assert p == q/(E*I)
 
     # Test using symbols
@@ -139,7 +139,7 @@ def test_Beam():
     # Test for deflection distribution function
     p = b2.deflection()
     q = x*(E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I) + (w0*SingularityFunction(x, a1, 5)/120 + w2*SingularityFunction(x, c1, 3)/6)/(E*I) + (E*I*(-c*f + d) + c*w0*SingularityFunction(e, a1, 4)/24 + c*w2*SingularityFunction(e, c1, 2)/2 - w0*SingularityFunction(c, a1, 5)/120 - w2*SingularityFunction(c, c1, 3)/6)/(E*I)
-    assert p == q
+    assert simplify(p - q) == 0
 
     b3 = Beam(9, E, I)
     b3.apply_load(value=-2, start=2, order=2, end=3)
@@ -254,7 +254,7 @@ def test_beam_units():
     b.apply_load(12*kilo*newton*meter, 2*meter, -2)
     b.bc_deflection = [(0*meter, 0*meter), (3*meter, 0*meter)]
     b.solve_for_reaction_loads(R1, R2)
-    assert b.reaction_loads == {R1: -28000*newton/3, R2: 4000*newton/3}
+    assert b.reaction_loads == {R1: newton*Rational(-28000, 3), R2: newton*Rational(4000, 3)}
     assert b.deflection().subs(x, 1*meter) == 62000*meter/(9*E*I)
 
 
@@ -320,7 +320,7 @@ def test_composite_beam():
     b.bc_slope = [(0, 0)]
     b.bc_deflection = [(0, 0), (l, 0), (4*l, 0)]
     b.solve_for_reaction_loads(M1, R1, R2, R3)
-    assert b.reaction_loads == {R3: -P/2, R2: -5*P/4, M1: -P*l/4, R1: 3*P/4}
+    assert b.reaction_loads == {R3: -P/2, R2: P*Rational(-5, 4), M1: -P*l/4, R1: P*Rational(3, 4)}
     assert b.slope().subs(x, 3*l) == -7*P*l**2/(48*E*I)
     assert b.deflection().subs(x, 2*l) == 7*P*l**3/(24*E*I)
     assert b.deflection().subs(x, 3*l) == 5*P*l**3/(16*E*I)
@@ -354,7 +354,7 @@ def test_point_cflexure():
     b.apply_load(10, 2, -1)
     b.apply_load(20, 4, -1)
     b.apply_load(3, 6, 0)
-    assert b.point_cflexure() == [S(10)/3]
+    assert b.point_cflexure() == [Rational(10, 3)]
 
 
 def test_remove_load():
@@ -414,8 +414,8 @@ def test_apply_support():
     R_10, R_30 = symbols('R_10, R_30')
     b.solve_for_reaction_loads(R_10, R_30)
     assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
-            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + S(4000)/3)/(E*I)
-    assert b.deflection() == (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I)
+    assert b.deflection() == (x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
 
     P = Symbol('P', positive=True)
@@ -509,10 +509,10 @@ def test_Beam3D():
         12*E*I*q)/(A*G*l**2 + 12*E*I)/2 - m) + 3*E*I*l*(A*G*l*(l*q - 2*m) +
         12*E*I*q)/(A*G*l**2 + 12*E*I) + x*(-A*G*l**2*q/2 +
         3*A*G*l**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(A*G*l**2 + 12*E*I)/4 +
-        3*A*G*l*m/2 - 3*E*I*q))/(6*A*E*G*I))
+        A*G*l*m*Rational(3, 2) - 3*E*I*q))/(6*A*E*G*I))
     dx, dy, dz = b.deflection()
     assert dx == dz == 0
-    assert dy == expected_deflection
+    assert simplify(dy - expected_deflection) == 0
 
     b2 = Beam3D(30, E, G, I, A, x)
     b2.apply_load(50, start=0, order=0, dir="y")
@@ -569,11 +569,11 @@ def test_parabolic_loads():
 
     beam.solve_for_reaction_loads(R, M)
 
-    assert beam.reaction_loads[R] == -L**3 / 3
+    assert beam.reaction_loads[R] == -L**3/3
 
     # cantilever beam fixed at x=0 and parabolic distributed loading across
     # first half of beam
-    beam = Beam(2 * L, E, I)
+    beam = Beam(2*L, E, I)
 
     beam.bc_deflection.append((0, 0))
     beam.bc_slope.append((0, 0))
@@ -586,27 +586,27 @@ def test_parabolic_loads():
     beam.solve_for_reaction_loads(R, M)
 
     # result should be the same as the prior example
-    assert beam.reaction_loads[R] == -L**3 / 3
+    assert beam.reaction_loads[R] == -L**3/3
 
     # check constant load
-    beam = Beam(2 * L, E, I)
+    beam = Beam(2*L, E, I)
     beam.apply_load(P, 0, 0, end=L)
     loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
     assert loading.xreplace({x: 5}) == 40
     assert loading.xreplace({x: 15}) == 0
 
     # check ramp load
-    beam = Beam(2 * L, E, I)
+    beam = Beam(2*L, E, I)
     beam.apply_load(P, 0, 1, end=L)
     assert beam.load == (P*SingularityFunction(x, 0, 1) -
                          P*SingularityFunction(x, L, 1) -
                          P*L*SingularityFunction(x, L, 0))
 
     # check higher order load: x**8 load from x=0 to x=L
-    beam = Beam(2 * L, E, I)
+    beam = Beam(2*L, E, I)
     beam.apply_load(P, 0, 8, end=L)
     loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
-    assert loading.xreplace({x: 5}) == 40 * 5**8
+    assert loading.xreplace({x: 5}) == 40*5**8
     assert loading.xreplace({x: 15}) == 0
 
 
@@ -622,7 +622,7 @@ def test_cross_section():
     assert b0.second_moment == I
     assert b0.cross_section == None
     b0.cross_section = Circle((0, 0), 5)
-    assert b0.second_moment == 625*pi/4
+    assert b0.second_moment == pi*Rational(625, 4)
     assert b0.cross_section == Circle((0, 0), 5)
     b0.second_moment = 2*n - 6
     assert b0.second_moment == 2*n-6

@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
 
 
@@ -13,9 +12,9 @@ class PlotCurve(PlotModeBase):
     def _on_calculate_verts(self):
         self.t_interval = self.intervals[0]
         self.t_set = list(self.t_interval.frange())
-        self.bounds = [[S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0]]
+        self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0]]
         evaluate = self._get_evaluator()
 
         self._calculating_verts_pos = 0.0

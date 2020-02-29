@@ -15,11 +15,13 @@ sympy.stats.rv_interface
 
 from __future__ import print_function, division
 
+from typing import Tuple as tTuple
+
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
-from sympy.core.compatibility import string_types
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
@@ -140,10 +142,10 @@ class PSpace(Basic):
     sympy.stats.frv.FinitePSpace
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-    is_real = None
+    is_Finite = None  # type: bool
+    is_Continuous = None  # type: bool
+    is_Discrete = None  # type: bool
+    is_real = None  # type: bool
 
     @property
     def domain(self):
@@ -183,7 +185,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             s = Symbol(s)
         if not isinstance(s, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -275,13 +277,28 @@ class RandomSymbol(Expr):
 class RandomIndexedSymbol(RandomSymbol):
 
     def __new__(cls, idx_obj, pspace=None):
-        if not isinstance(idx_obj, Indexed):
-            raise TypeError("An indexed object is expected not %s"%(idx_obj))
+        if not isinstance(idx_obj, (Indexed, Function)):
+            raise TypeError("An Function or Indexed object is expected not %s"%(idx_obj))
         return Basic.__new__(cls, idx_obj, pspace)
 
     symbol = property(lambda self: self.args[0])
     name = property(lambda self: str(self.args[0]))
-    key = property(lambda self: self.symbol.args[1])
+
+    @property
+    def key(self):
+        if isinstance(self.symbol, Indexed):
+            return self.symbol.args[1]
+        elif isinstance(self.symbol, Function):
+            return self.symbol.args[0]
+
+class RandomMatrixSymbol(MatrixSymbol):
+    def __new__(cls, symbol, n, m, pspace=None):
+        n, m = _sympify(n), _sympify(m)
+        symbol = _symbol_converter(symbol)
+        return Basic.__new__(cls, symbol, n, m, pspace)
+
+    symbol = property(lambda self: self.args[0])
+    pspace = property(lambda self: self.args[3])
 
 class ProductPSpace(PSpace):
     """
@@ -369,7 +386,7 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self):
+    def sample(self, size=()):
         return {k: v for space in self.spaces
             for k, v in space.sample().items()}
 
@@ -380,7 +397,6 @@ class IndependentProductPSpace(ProductPSpace):
             cond_inv = True
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
-        z = Dummy('z', real=True, Finite=True)
         dens = self.compute_density(expr)
         if any([pspace(rv).is_Continuous for rv in rvs]):
             from sympy.stats.crv import (ContinuousDistributionHandmade,
@@ -392,23 +408,26 @@ class IndependentProductPSpace(ProductPSpace):
                 pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
                 return Lambda(expr.symbol, pdf)
             dens = ContinuousDistributionHandmade(dens)
+            z = Dummy('z', real=True)
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
         else:
             from sympy.stats.drv import (DiscreteDistributionHandmade,
                 SingleDiscretePSpace)
             dens = DiscreteDistributionHandmade(dens)
+            z = Dummy('z', integer=True)
             space = SingleDiscretePSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
         return result if not cond_inv else S.One - result
 
     def compute_density(self, expr, **kwargs):
-        z = Dummy('z', real=True, finite=True)
         rvs = random_symbols(expr)
         if any(pspace(rv).is_Continuous for rv in rvs):
+            z = Dummy('z', real=True)
             expr = self.compute_expectation(DiracDelta(expr - z),
              **kwargs)
         else:
+            z = Dummy('z', integer=True)
             expr = self.compute_expectation(KroneckerDelta(expr, z),
              **kwargs)
         return Lambda(z, expr)
@@ -436,7 +455,9 @@ class IndependentProductPSpace(ProductPSpace):
             replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
             norm = domain.compute_expectation(self.pdf, **kwargs)
             pdf = self.pdf / norm.xreplace(replacement)
-            density = Lambda(domain.symbols, pdf)
+            # XXX: Converting symbols from set to tuple. The order matters to
+            # Lambda though so we shouldn't be starting with a set here...
+            density = Lambda(tuple(domain.symbols), pdf)
 
         return space(domain, density)
 
@@ -489,7 +510,7 @@ class ProductDomain(RandomDomain):
 
     @property
     def set(self):
-        return ProductSet(domain.set for domain in self.domains)
+        return ProductSet(*(domain.set for domain in self.domains))
 
     def __contains__(self, other):
         # Split event into each subdomain
@@ -539,6 +560,10 @@ def pspace(expr):
     expr = sympify(expr)
     if isinstance(expr, RandomSymbol) and expr.pspace is not None:
         return expr.pspace
+    if expr.has(RandomMatrixSymbol):
+        rm = list(expr.atoms(RandomMatrixSymbol))[0]
+        return rm.pspace
+
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -631,7 +656,15 @@ def given(expr, condition=None, **kwargs):
             if temp == True:
                 return True
             if temp != False:
-                sums += expr.subs(rv, res)
+                # XXX: This seems nonsensical but preserves existing behaviour
+                # after the change that Relational is no longer a subclass of
+                # Expr. Here expr is sometimes Relational and sometimes Expr
+                # but we are trying to add them with +=. This needs to be
+                # fixed somehow.
+                if sums == 0 and isinstance(expr, Relational):
+                    sums = expr.subs(rv, res)
+                else:
+                    sums += expr.subs(rv, res)
         if sums == 0:
             return False
         return sums
@@ -796,7 +829,12 @@ class Density(Basic):
 
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
+        if _sympify(expr).has(RandomMatrixSymbol):
+            return pspace(expr).compute_density(expr)
+        if isinstance(expr, SingleFiniteDistribution):
+            return expr.dict
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
@@ -979,22 +1017,30 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, **kwargs):
+def sample(expr, condition=None, size=(), **kwargs):
     """
     A realization of the random expression
 
     Examples
     ========
 
-    >>> from sympy.stats import Die, sample
+    >>> from sympy.stats import Die, sample, Normal
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
     >>> die_roll = sample(X + Y + Z) # A random realization of three dice
+    >>> N = Normal('N', 3, 4)
+    >>> samp = sample(N)
+    >>> samp in N.pspace.domain.set
+    True
+    >>> samp_list = sample(N, size=4)
+    >>> [sam in N.pspace.domain.set for sam in samp_list]
+    [True, True, True, True]
+
     """
-    return next(sample_iter(expr, condition, numsamples=1))
+    return next(sample_iter(expr, condition, size=size, numsamples=1))
 
 
-def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
+def sample_iter(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
     """
     Returns an iterator of realizations from the expression given a condition
 
@@ -1030,10 +1076,10 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
     # lambdify is much faster but not as robust
     try:
-        return sample_iter_lambdify(expr, condition, numsamples, **kwargs)
+        return sample_iter_lambdify(expr, condition, size=size, numsamples=numsamples, **kwargs)
     # use subs when lambdify fails
     except TypeError:
-        return sample_iter_subs(expr, condition, numsamples, **kwargs)
+        return sample_iter_subs(expr, condition, size=size, numsamples=numsamples, **kwargs)
 
 def quantile(expr, evaluate=True, **kwargs):
     r"""
@@ -1081,11 +1127,15 @@ def quantile(expr, evaluate=True, **kwargs):
     else:
         return result
 
-def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
+def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses lambdify for computation. This is fast but does not always work.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition:
         ps = pspace(Tuple(expr, condition))
@@ -1099,19 +1149,16 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
-    try:
-        d = ps.sample()  # a dictionary that maps RVs to values
-        args = [d[rv] for rv in rvs]
-        fn(*args)
-        if condition:
-            given_fn(*args)
-    except Exception:
-        raise TypeError("Expr/condition too complex for lambdify")
+    d = ps.sample(size)  # a dictionary that maps RVs to values
+    args = [d[rv] for rv in rvs]
+    fn(*args)
+    if condition:
+        given_fn(*args)
 
     def return_generator():
         count = 0
         while count < numsamples:
-            d = ps.sample()  # a dictionary that maps RVs to values
+            d = ps.sample(size)  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
             if condition:  # Check that these values satisfy the condition
@@ -1127,11 +1174,15 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     return return_generator()
 
 
-def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
+def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
     """
-    See sample_iter
-
     Uses subs for computation. This is slow but almost always works.
+
+    See Also
+    ========
+
+    sample_iter
+
     """
     if condition is not None:
         ps = pspace(Tuple(expr, condition))
@@ -1140,7 +1191,7 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     count = 0
     while count < numsamples:
-        d = ps.sample()  # a dictionary that maps RVs to values
+        d = ps.sample(size)  # a dictionary that maps RVs to values
 
         if condition is not None:  # Check that these values satisfy the condition
             gd = condition.xreplace(d)
@@ -1330,10 +1381,10 @@ def rv_subs(expr, symbols=None):
     if not symbols:
         return expr
     swapdict = {rv: rv.symbol for rv in symbols}
-    return expr.xreplace(swapdict)
+    return expr.subs(swapdict)
 
 class NamedArgsMixin(object):
-    _argnames = ()
+    _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):
         try:
@@ -1403,7 +1454,7 @@ def _value_check(condition, message):
 
 def _symbol_converter(sym):
     """
-    Casts the parameter to Symbol if it is of string_types
+    Casts the parameter to Symbol if it is 'str'
     otherwise no operation is performed on it.
 
     Parameters
@@ -1422,7 +1473,7 @@ def _symbol_converter(sym):
     ======
 
     TypeError
-        If the parameter is not an instance of both string_types and
+        If the parameter is not an instance of both str and
         Symbol.
 
     Examples
@@ -1441,7 +1492,7 @@ def _symbol_converter(sym):
     >>> isinstance(r, Symbol)
     True
     """
-    if isinstance(sym, string_types):
+    if isinstance(sym, str):
             sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))

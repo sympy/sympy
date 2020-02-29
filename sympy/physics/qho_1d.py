@@ -35,7 +35,7 @@ def psi_n(n, x, m, omega):
     n, x, m, omega = map(S, [n, x, m, omega])
     nu = m * omega / hbar
     # normalization coefficient
-    C = (nu/pi)**(S(1)/4) * sqrt(1/(2**n*factorial(n)))
+    C = (nu/pi)**Rational(1, 4) * sqrt(1/(2**n*factorial(n)))
 
     return C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
 
@@ -65,7 +65,7 @@ def E_n(n, omega):
     hbar*omega*(x + 1/2)
     """
 
-    return hbar * omega*(n + Rational(1, 2))
+    return hbar * omega * (n + S.Half)
 
 
 def coherent_state(n, alpha):

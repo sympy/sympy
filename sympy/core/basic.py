@@ -1,13 +1,12 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import (iterable, Iterator, ordered,
-    string_types, with_metaclass, zip_longest, range, PY3, Mapping)
+from .compatibility import iterable, ordered, Mapping
 from .singleton import S
 
 from inspect import getmro
@@ -26,7 +25,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(with_metaclass(ManagedProperties)):
+class Basic(metaclass=ManagedProperties):
     """
     Base class for all objects in SymPy.
 
@@ -56,10 +55,10 @@ class Basic(with_metaclass(ManagedProperties)):
     (x,)
 
     """
-    __slots__ = ['_mhash',              # hash value
+    __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
                  '_assumptions'
-                ]
+                )
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -334,7 +333,7 @@ class Basic(with_metaclass(ManagedProperties)):
             # __cmp__. Until we can remove it
             # (https://github.com/sympy/sympy/issues/4269), we only compare
             # types in Python 2 directly if they actually have __ne__.
-            if PY3 or type(tself).__ne__ is not type.__ne__:
+            if type(tself).__ne__ is not type.__ne__:
                 if tself != tother:
                     return False
             elif tself is not tother:
@@ -504,12 +503,11 @@ class Basic(with_metaclass(ManagedProperties)):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
+        nodes = preorder_traversal(self)
+        if types:
+            result = {node for node in nodes if isinstance(node, types)}
         else:
-            types = (Atom,)
-        result = set()
-        for expr in preorder_traversal(self):
-            if isinstance(expr, types):
-                result.add(expr)
+            result = {node for node in nodes if not node.args}
         return result
 
     @property
@@ -765,35 +763,6 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return self.args
 
-
-    def as_poly(self, *gens, **args):
-        """Converts ``self`` to a polynomial or returns ``None``.
-
-        >>> from sympy import sin
-        >>> from sympy.abc import x, y
-
-        >>> print((x**2 + x*y).as_poly())
-        Poly(x**2 + x*y, x, y, domain='ZZ')
-
-        >>> print((x**2 + x*y).as_poly(x, y))
-        Poly(x**2 + x*y, x, y, domain='ZZ')
-
-        >>> print((x**2 + sin(y)).as_poly(x, y))
-        None
-
-        """
-        from sympy.polys import Poly, PolynomialError
-
-        try:
-            poly = Poly(self, *gens, **args)
-
-            if not poly.is_Poly:
-                return None
-            else:
-                return poly
-        except PolynomialError:
-            return None
-
     def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
@@ -915,11 +884,11 @@ class Basic(with_metaclass(ManagedProperties)):
                  parsing of match, and conditional replacements
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
-        evalf: calculates the given formula to a desired level of precision
+        sympy.core.evalf.EvalfMixin.evalf: calculates the given formula to a desired level of precision
 
         """
         from sympy.core.containers import Dict
-        from sympy.utilities import default_sort_key
+        from sympy.utilities.iterables import sift
         from sympy import Dummy, Symbol
 
         unordered = False
@@ -943,11 +912,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if isinstance(s[0], string_types):
+            if isinstance(s[0], str):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, string_types))
+                s = [sympify(_, strict=not isinstance(_, str))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -959,31 +928,21 @@ class Basic(with_metaclass(ManagedProperties)):
 
         if unordered:
             sequence = dict(sequence)
-            if not all(k.is_Atom for k in sequence):
-                d = {}
-                for o, n in sequence.items():
-                    try:
-                        ops = o.count_ops(), len(o.args)
-                    except TypeError:
-                        ops = (0, 0)
-                    d.setdefault(ops, []).append((o, n))
-                newseq = []
-                for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(
-                        sorted([v[0] for v in d[k]], key=default_sort_key))
-                sequence = [(k, sequence[k]) for k in newseq]
-                del newseq, d
-            else:
-                sequence = sorted([(k, v) for (k, v) in sequence.items()],
-                                  key=default_sort_key)
+            atoms, nonatoms = sift(list(sequence),
+                lambda x: x.is_Atom, binary=True)
+            sequence = [(k, sequence[k]) for k in
+                list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             kwargs['hack2'] = True
-            m = Dummy()
+            m = Dummy('subs_m')
             for old, new in sequence:
-                d = Dummy(commutative=new.is_commutative)
+                com = new.is_commutative
+                if com is None:
+                    com = True
+                d = Dummy('subs_d', commutative=com)
                 # using d*m so Subs will be used on dummy variables
                 # in things like Derivative(f(x, y), x) in which x
                 # is both free and bound
@@ -1518,11 +1477,15 @@ class Basic(with_metaclass(ManagedProperties)):
                 if new is not None and new != expr:
                     mapping[expr] = new
                     if simultaneous:
-                        # don't let this expression be changed during rebuilding
+                        # don't let this change during rebuilding;
+                        # XXX this may fail if the object being replaced
+                        # cannot be represented as a Dummy in the expression
+                        # tree, e.g. an ExprConditionPair in Piecewise
+                        # cannot be represented with a Dummy
                         com = getattr(new, 'is_commutative', True)
                         if com is None:
                             com = True
-                        d = Dummy(commutative=com)
+                        d = Dummy('rec_replace', commutative=com)
                         mask.append((d, new))
                         expr = d
                     else:
@@ -1536,7 +1499,12 @@ class Basic(with_metaclass(ManagedProperties)):
             mask = list(reversed(mask))
             for o, n in mask:
                 r = {o: n}
-                rv = rv.xreplace(r)
+                # if a sub-expression could not be replaced with
+                # a Dummy then this will fail; either filter
+                # against such sub-expressions or figure out a
+                # way to carry out simultaneous replacement
+                # in this situation.
+                rv = rv.xreplace(r)  # if this fails, see above
 
         if not map:
             return rv
@@ -1681,6 +1649,11 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             return self
 
+    def simplify(self, **kwargs):
+        """See the simplify function in sympy.simplify"""
+        from sympy.simplify import simplify
+        return simplify(self, **kwargs)
+
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):
@@ -1780,13 +1753,16 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
         else:
             pattern = args[:-1]
-            if isinstance(args[-1], string_types):
+            if isinstance(args[-1], str):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                try:
-                    rule = '_eval_rewrite_as_' + args[-1].__name__
-                except:
-                    rule = '_eval_rewrite_as_' + args[-1].__class__.__name__
+                # rewrite arg is usually a class but can also be a
+                # singleton (e.g. GoldenRatio) so we check
+                # __name__ or __class__.__name__
+                clsname = getattr(args[-1], "__name__", None)
+                if clsname is None:
+                    clsname = args[-1].__class__.__name__
+                rule = '_eval_rewrite_as_' + clsname
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
@@ -1801,7 +1777,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
-    _constructor_postprocessor_mapping = {}
+    _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
@@ -1846,7 +1822,7 @@ class Atom(Basic):
 
     is_Atom = True
 
-    __slots__ = []
+    __slots__ = ()
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:
@@ -1866,7 +1842,7 @@ class Atom(Basic):
     def sort_key(self, order=None):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         return self
 
     @property
@@ -1963,7 +1939,7 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal(Iterator):
+class preorder_traversal(object):
     """
     Do a pre-order traversal of a tree.
 

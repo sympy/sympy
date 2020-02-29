@@ -1,11 +1,19 @@
 from __future__ import print_function, division
 
+from sympy.core.sympify import _sympify
 from sympy.matrices.expressions import MatrixExpr
 from sympy import S, I, sqrt, exp
 
 class DFT(MatrixExpr):
     """ Discrete Fourier Transform """
-    n = property(lambda self: self.args[0])
+    def __new__(cls, n):
+        n = _sympify(n)
+        cls._check_dim(n)
+
+        obj = super(DFT, cls).__new__(cls, n)
+        return obj
+
+    n = property(lambda self: self.args[0])  # type: ignore
     shape = property(lambda self: (self.n, self.n))
 
     def _entry(self, i, j, **kwargs):

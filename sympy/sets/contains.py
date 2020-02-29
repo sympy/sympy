@@ -48,4 +48,4 @@ class Contains(BooleanFunction):
             isinstance(i, (Eq, Ne))])
 
     def as_set(self):
-        return self
+        raise NotImplementedError()

@@ -7,6 +7,8 @@
 # track a file that is ignored for some reason, you have to use
 # "git add -f". See "git help gitignore" for more information.
 
+# Virtualenv
+/.venv/
 
 # Regular Python bytecode file
 *.pyc
@@ -20,6 +22,9 @@ __pycache__/
 
 # VSCode settings file
 .vscode/
+
+# PyCharm settings file
+/.idea/
 
 # Generated files from Jython
 *$py.class

@@ -25,7 +25,7 @@ hard_dependencies = ['mpmath']
 # These libraries are optional, but are always imported at SymPy import time
 # when they are installed. External libraries should only be added to this
 # list if they are required for core SymPy functionality.
-hard_optional_dependencies = ['gmpy', 'gmpy2', 'fastcache']
+hard_optional_dependencies = ['gmpy', 'gmpy2', 'fastcache', 'pycosat']
 
 import sys
 import os

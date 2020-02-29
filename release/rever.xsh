@@ -96,7 +96,7 @@ def wheel():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib', 'sphinx-math-dollar'],
         envname='sympy-release-docs'):
 
         cd doc
@@ -1035,10 +1035,14 @@ git_whitelist = {
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
+    '.ci/README.rst',
+    '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
+    'coveragerc_travis',
     'codecov.yml',
     'pytest.ini',
+    'MANIFEST.in',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
@@ -1110,8 +1114,6 @@ git_whitelist = {
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
-    # Example on how to use tox to test Sympy. For development.
-    'tox.ini.sample',
     # pytest stuff
     'conftest.py',
     # Encrypted deploy key for deploying dev docs to GitHub
@@ -1132,4 +1134,6 @@ tarball_whitelist = {
     'sympy.egg-info/top_level.txt',
     'sympy.egg-info/not-zip-safe',
     'sympy.egg-info/entry_points.txt',
+    # Not sure where this is generated from...
+    'doc/commit_hash.txt',
     }

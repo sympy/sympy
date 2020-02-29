@@ -6,12 +6,13 @@ from __future__ import print_function, division
 
 import random
 from bisect import bisect
+from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
 
 from sympy import Function, S
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int
 from .primetest import isprime
 
 
@@ -302,12 +303,27 @@ class Sieve:
         a, b = self.search(n)
         return a == b
 
+    def __iter__(self):
+        for n in count(1):
+            yield self[n]
+
     def __getitem__(self, n):
         """Return the nth prime number"""
         if isinstance(n, slice):
             self.extend_to_no(n.stop)
-            return self._list[n.start - 1:n.stop - 1:n.step]
+            # Python 2.7 slices have 0 instead of None for start, so
+            # we can't default to 1.
+            start = n.start if n.start is not None else 0
+            if start < 1:
+                # sieve[:5] would be empty (starting at -1), let's
+                # just be explicit and raise.
+                raise IndexError("Sieve indices start at 1.")
+            return self._list[start - 1:n.stop - 1:n.step]
         else:
+            if n < 1:
+                # offset is one, so forbid explicit access to sieve[0]
+                # (would surprisingly return the last one).
+                raise IndexError("Sieve indices start at 1.")
             n = as_int(n)
             self.extend_to_no(n)
             return self._list[n - 1]

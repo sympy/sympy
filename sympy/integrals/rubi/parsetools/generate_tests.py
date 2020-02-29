@@ -52,5 +52,5 @@ def generate_test_file():
             t += '\n    assert rubi_test({}, {}, {}, expand=True, _diff=True, _numerical=True)'.format(r, rubi_sstr(a[1]), rubi_sstr(a[3]))
     t = header+t+'\n'
     test = open('parsed_tests.py', 'w')
-    test.write((t))
+    test.write(t)
     test.close()

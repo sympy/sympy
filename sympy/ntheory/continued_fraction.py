@@ -1,9 +1,6 @@
 from sympy.core.numbers import Integer, Rational
-from sympy.core.compatibility import as_int
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
-from sympy.utilities.misc import filldedent
-
 
 
 def continued_fraction(a):
@@ -130,7 +127,6 @@ def continued_fraction_periodic(p, q, d=0, s=1):
     """
     from sympy.core.compatibility import as_int
     from sympy.functions import sqrt, floor
-    from sympy.ntheory.primetest import is_square
 
     p, q, d, s = list(map(as_int, [p, q, d, s]))
 

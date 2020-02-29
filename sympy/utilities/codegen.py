@@ -86,7 +86,7 @@ import textwrap
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO, string_types
+from sympy.core.compatibility import is_sequence, StringIO
 from sympy.printing.ccode import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
@@ -252,7 +252,7 @@ default_datatypes = {
     "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
        # complex is only supported in fortran, python, julia, and octave.
        # So to not break c or rust code generation, we stick with double or
-       # float, respecitvely (but actually should raise an exeption for
+       # float, respecitvely (but actually should raise an exception for
        # explicitly complex variables (x.is_complex==True))
 }
 
@@ -512,7 +512,7 @@ class Result(Variable, ResultBase):
             #try to infer data type from the expression
             datatype = get_default_datatype(expr)
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             if isinstance(expr, (MatrixBase, MatrixExpr)):
                 name = MatrixSymbol(name, *expr.shape)
             else:
@@ -1030,7 +1030,7 @@ class CCodeGen(CodeGen):
 
     def dump_c(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
-    dump_c.extension = code_extension
+    dump_c.extension = code_extension  # type: ignore
     dump_c.__doc__ = CodeGen.dump_code.__doc__
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
@@ -1081,7 +1081,7 @@ class CCodeGen(CodeGen):
         print("#endif", file=f)
         if empty:
             print(file=f)
-    dump_h.extension = interface_extension
+    dump_h.extension = interface_extension  # type: ignore
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
@@ -1262,7 +1262,7 @@ class FCodeGen(CodeGen):
                 raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
-    dump_f95.extension = code_extension
+    dump_f95.extension = code_extension  # type: ignore
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
@@ -1301,7 +1301,7 @@ class FCodeGen(CodeGen):
             f.write(prototype)
         if empty:
             print(file=f)
-    dump_h.extension = interface_extension
+    dump_h.extension = interface_extension  # type: ignore
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
@@ -1501,7 +1501,7 @@ class JuliaCodeGen(CodeGen):
     def dump_jl(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
 
-    dump_jl.extension = code_extension
+    dump_jl.extension = code_extension  # type: ignore
     dump_jl.__doc__ = CodeGen.dump_code.__doc__
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -1746,7 +1746,7 @@ class OctaveCodeGen(CodeGen):
         if code_lines:
             f.write(code_lines)
 
-    dump_m.extension = code_extension
+    dump_m.extension = code_extension  # type: ignore
     dump_m.__doc__ = CodeGen.dump_code.__doc__
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -1962,7 +1962,7 @@ class RustCodeGen(CodeGen):
     def dump_rs(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
 
-    dump_rs.extension = code_extension
+    dump_rs.extension = code_extension  # type: ignore
     dump_rs.__doc__ = CodeGen.dump_code.__doc__
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -2132,7 +2132,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
             raise ValueError("You cannot specify both language and code_gen.")
         code_gen = get_code_generator(language, project, standard, printer)
 
-    if isinstance(name_expr[0], string_types):
+    if isinstance(name_expr[0], str):
         # single tuple is given, turn it into a singleton list with a tuple.
         name_expr = [name_expr]
 

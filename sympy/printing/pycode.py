@@ -3,8 +3,6 @@ Python code printers
 
 This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
 """
-
-
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
@@ -94,7 +92,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         inline=True,
         fully_qualified_modules=True,
         contract=False,
-        standard='python3'
+        standard='python3',
     )
 
     def __init__(self, settings=None):
@@ -296,6 +294,14 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_ImaginaryUnit(self, expr):
         return '1j'
 
+    def _print_KroneckerDelta(self, expr):
+        a, b = expr.args
+
+        return '(1 if {a} == {b} else 0)'.format(
+            a = self._print(a),
+            b = self._print(b)
+        )
+
     def _print_MatrixBase(self, expr):
         name = expr.__class__.__name__
         func = self.known_functions.get(name, name)
@@ -449,6 +455,11 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_Half(self, expr):
         return self._print_Rational(expr)
 
+    _print_lowergamma = CodePrinter._print_not_supported
+    _print_uppergamma = CodePrinter._print_not_supported
+    _print_fresnelc = CodePrinter._print_not_supported
+    _print_fresnels = CodePrinter._print_not_supported
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -490,10 +501,20 @@ def pycode(expr, **settings):
 _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
+    'beta': 'beta',
+    'fresnelc': 'fresnelc',
+    'fresnels': 'fresnels',
     'sign': 'sign',
 })
 _known_constants_mpmath = {
-    'Pi': 'pi'
+    'Exp1': 'e',
+    'Pi': 'pi',
+    'GoldenRatio': 'phi',
+    'EulerGamma': 'euler',
+    'Catalan': 'catalan',
+    'NaN': 'nan',
+    'Infinity': 'inf',
+    'NegativeInfinity': 'ninf'
 }
 
 
@@ -503,10 +524,13 @@ class MpmathPrinter(PythonCodePrinter):
     """
     printmethod = "_mpmathcode"
 
+    language = "Python with mpmath"
+
     _kf = dict(chain(
         _known_functions.items(),
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
     ))
+    _kc = {k: 'mpmath.'+v for k, v in _known_constants_mpmath.items()}
 
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
@@ -573,6 +597,14 @@ _known_functions_numpy = dict(_in_numpy, **{
     'exp2': 'exp2',
     'sign': 'sign',
 })
+_known_constants_numpy = {
+    'Exp1': 'e',
+    'Pi': 'pi',
+    'EulerGamma': 'euler_gamma',
+    'NaN': 'nan',
+    'Infinity': 'PINF',
+    'NegativeInfinity': 'NINF'
+}
 
 
 class NumPyPrinter(PythonCodePrinter):
@@ -581,12 +613,13 @@ class NumPyPrinter(PythonCodePrinter):
     logical operators, etc.
     """
     printmethod = "_numpycode"
+    language = "Python with NumPy"
 
     _kf = dict(chain(
         PythonCodePrinter._kf.items(),
         [(k, 'numpy.' + v) for k, v in _known_functions_numpy.items()]
     ))
-    _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
+    _kc = {k: 'numpy.'+v for k, v in _known_constants_numpy.items()}
 
 
     def _print_seq(self, seq):
@@ -598,7 +631,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
-        if expr.as_coeff_matrices()[0] is not S(1):
+        if expr.as_coeff_matrices()[0] is not S.One:
             expr_list = expr.as_coeff_matrices()[1]+[(expr.as_coeff_matrices()[0])]
             return '({0})'.format(').dot('.join(self._print(i) for i in expr_list))
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
@@ -631,6 +664,58 @@ class NumPyPrinter(PythonCodePrinter):
                                self._print(expr.matrix),
                                self._print(expr.vector))
 
+    def _print_ZeroMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.zeros'),
+            self._print(expr.shape))
+
+    def _print_OneMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.ones'),
+            self._print(expr.shape))
+
+    def _print_FunctionMatrix(self, expr):
+        from sympy.core.function import Lambda
+        from sympy.abc import i, j
+        lamda = expr.lamda
+        if not isinstance(lamda, Lambda):
+            lamda = Lambda((i, j), lamda(i, j))
+        return '{}(lambda {}: {}, {})'.format(self._module_format('numpy.fromfunction'),
+            ', '.join(self._print(arg) for arg in lamda.args[0]),
+            self._print(lamda.args[1]), self._print(expr.shape))
+
+    def _print_HadamardProduct(self, expr):
+        func = self._module_format('numpy.multiply')
+        return ''.join('{}({}, '.format(func, self._print(arg)) \
+            for arg in expr.args[:-1]) + "{}{}".format(self._print(expr.args[-1]),
+            ')' * (len(expr.args) - 1))
+
+    def _print_KroneckerProduct(self, expr):
+        func = self._module_format('numpy.kron')
+        return ''.join('{}({}, '.format(func, self._print(arg)) \
+            for arg in expr.args[:-1]) + "{}{}".format(self._print(expr.args[-1]),
+            ')' * (len(expr.args) - 1))
+
+    def _print_Adjoint(self, expr):
+        return '{}({}({}))'.format(
+            self._module_format('numpy.conjugate'),
+            self._module_format('numpy.transpose'),
+            self._print(expr.args[0]))
+
+    def _print_DiagonalOf(self, expr):
+        vect = '{}({})'.format(
+            self._module_format('numpy.diag'),
+            self._print(expr.arg))
+        return '{}({}, (-1, 1))'.format(
+            self._module_format('numpy.reshape'), vect)
+
+    def _print_DiagMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.diagflat'),
+            self._print(expr.args[0]))
+
+    def _print_DiagonalMatrix(self, expr):
+        return '{}({}, {}({}, {}))'.format(self._module_format('numpy.multiply'),
+            self._print(expr.arg), self._module_format('numpy.eye'),
+            self._print(expr.shape[0]), self._print(expr.shape[1]))
+
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
         exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
@@ -639,7 +724,9 @@ class NumPyPrinter(PythonCodePrinter):
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
-        return '{0}({1}, {2}, default=numpy.nan)'.format(self._module_format('numpy.select'), conds, exprs)
+        return '{0}({1}, {2}, default={3})'.format(
+            self._module_format('numpy.select'), conds, exprs,
+            self._print(S.NaN))
 
     def _print_Relational(self, expr):
         "Relational printer for Equality and Unequality"
@@ -714,6 +801,13 @@ class NumPyPrinter(PythonCodePrinter):
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
+    def _print_Identity(self, expr):
+        shape = expr.shape
+        if all([dim.is_Integer for dim in shape]):
+            return "%s(%s)" % (self._module_format('numpy.eye'), self._print(expr.shape[0]))
+        else:
+            raise NotImplementedError("Symbolic matrix dimensions are not yet supported for identity matrices")
+
     def _print_BlockMatrix(self, expr):
         return '{0}({1})'.format(self._module_format('numpy.block'),
                                  self._print(expr.args[0].tolist()))
@@ -770,11 +864,16 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s, %s)" % (
             self._module_format("numpy.transpose"),
             self._print(expr.expr),
-            self._print(expr.permutation.args[0]),
+            self._print(expr.permutation.array_form),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
+
+    _print_lowergamma = CodePrinter._print_not_supported
+    _print_uppergamma = CodePrinter._print_not_supported
+    _print_fresnelc = CodePrinter._print_not_supported
+    _print_fresnels = CodePrinter._print_not_supported
 
 
 for k in NumPyPrinter._kf:
@@ -804,21 +903,27 @@ _known_functions_scipy_special = {
     'hermite': 'eval_hermite',
     'laguerre': 'eval_laguerre',
     'assoc_laguerre': 'eval_genlaguerre',
+    'beta': 'beta',
+    'LambertW' : 'lambertw',
 }
 
 _known_constants_scipy_constants = {
     'GoldenRatio': 'golden_ratio',
     'Pi': 'pi',
-    'E': 'e'
 }
 
 class SciPyPrinter(NumPyPrinter):
+
+    language = "Python with SciPy"
 
     _kf = dict(chain(
         NumPyPrinter._kf.items(),
         [(k, 'scipy.special.' + v) for k, v in _known_functions_scipy_special.items()]
     ))
-    _kc = {k: 'scipy.constants.' + v for k, v in _known_constants_scipy_constants.items()}
+    _kc =dict(chain(
+        NumPyPrinter._kc.items(),
+        [(k, 'scipy.constants.' + v) for k, v in _known_constants_scipy_constants.items()]
+    ))
 
     def _print_SparseMatrix(self, expr):
         i, j, data = [], [], []
@@ -842,6 +947,31 @@ class SciPyPrinter(NumPyPrinter):
             self._print(expr.args[1]),
             self._print(expr.args[2]))
 
+    def _print_lowergamma(self, expr):
+        return "{0}({2})*{1}({2}, {3})".format(
+            self._module_format('scipy.special.gamma'),
+            self._module_format('scipy.special.gammainc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]))
+
+    def _print_uppergamma(self, expr):
+        return "{0}({2})*{1}({2}, {3})".format(
+            self._module_format('scipy.special.gamma'),
+            self._module_format('scipy.special.gammaincc'),
+            self._print(expr.args[0]),
+            self._print(expr.args[1]))
+
+    def _print_fresnels(self, expr):
+        return "{0}({1})[0]".format(
+                self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
+    def _print_fresnelc(self, expr):
+        return "{0}({1})[1]".format(
+                self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
+
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)
 
@@ -850,6 +980,8 @@ for k in SciPyPrinter._kc:
 
 
 class SymPyPrinter(PythonCodePrinter):
+
+    language = "Python with SymPy"
 
     _kf = {k: 'sympy.' + v for k, v in chain(
         _known_functions.items(),

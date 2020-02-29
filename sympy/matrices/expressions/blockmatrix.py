@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy import ask, Q
 from sympy.core import Basic, Add
-from sympy.core.compatibility import range
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
@@ -78,8 +77,6 @@ class BlockMatrix(MatrixExpr):
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
-        from sympy.matrices import zeros
-        from sympy.matrices.matrices import MatrixBase
         from sympy.utilities.iterables import is_sequence
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
@@ -288,7 +285,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     See Also
     ========
-    sympy.matrices.common.diag
+    sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
         return Basic.__new__(BlockDiagMatrix, *mats)
@@ -304,7 +301,7 @@ class BlockDiagMatrix(BlockMatrix):
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
                         for j in range(len(mats))]
                         for i in range(len(mats))]
-        return ImmutableDenseMatrix(data)
+        return ImmutableDenseMatrix(data, evaluate=False)
 
     @property
     def shape(self):
@@ -326,6 +323,9 @@ class BlockDiagMatrix(BlockMatrix):
 
     def _eval_inverse(self, expand='ignored'):
         return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
+
+    def _eval_transpose(self):
+        return BlockDiagMatrix(*[mat.transpose() for mat in self.args])
 
     def _blockmul(self, other):
         if (isinstance(other, BlockDiagMatrix) and
@@ -366,15 +366,29 @@ def block_collapse(expr):
     >>> print(block_collapse(C*B))
     Matrix([[X, Z + Z*Y]])
     """
+    from sympy.strategies.util import expr_fns
+
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
-    rule = exhaust(
-        bottom_up(exhaust(condition(hasbm, typed(
+
+    conditioned_rl = condition(
+        hasbm,
+        typed(
             {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
              MatMul: do_one(bc_matmul, bc_dist),
              MatPow: bc_matmul,
              Transpose: bc_transpose,
              Inverse: bc_inverse,
-             BlockMatrix: do_one(bc_unpack, deblock)})))))
+             BlockMatrix: do_one(bc_unpack, deblock)}
+        )
+    )
+
+    rule = exhaust(
+        bottom_up(
+            exhaust(conditioned_rl),
+            fns=expr_fns
+        )
+    )
+
     result = rule(expr)
     doit = getattr(result, 'doit', None)
     if doit is not None:
@@ -419,11 +433,21 @@ def bc_block_plus_ident(expr):
 def bc_dist(expr):
     """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
-    if factor != 1 and isinstance(unpack(mat), BlockMatrix):
-        B = unpack(mat).blocks
-        return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
-                                              for i in range(B.rows)])
-    return expr
+    if factor == 1:
+        return expr
+
+    unpacked = unpack(mat)
+
+    if isinstance(unpacked, BlockDiagMatrix):
+        B = unpacked.diag
+        new_B = [factor * mat for mat in B]
+        return BlockDiagMatrix(*new_B)
+    elif isinstance(unpacked, BlockMatrix):
+        B = unpacked.blocks
+        new_B = [
+            [factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
+        return BlockMatrix(new_B)
+    return unpacked
 
 
 def bc_matmul(expr):
@@ -452,10 +476,14 @@ def bc_matmul(expr):
     return MatMul(factor, *matrices).doit()
 
 def bc_transpose(expr):
-    return BlockMatrix(block_collapse(expr.arg).blocks.applyfunc(transpose).T)
+    collapse = block_collapse(expr.arg)
+    return collapse._eval_transpose()
 
 
 def bc_inverse(expr):
+    if isinstance(expr.arg, BlockDiagMatrix):
+        return expr._eval_inverse()
+
     expr2 = blockinverse_1x1(expr)
     if expr != expr2:
         return expr2

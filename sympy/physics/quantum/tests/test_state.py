@@ -1,12 +1,13 @@
 from sympy import (Add, conjugate, diff, I, Integer, Mul, oo, pi, Pow,
-                   Rational, sin, sqrt, Symbol, symbols, sympify)
-from sympy.utilities.pytest import raises
+                   Rational, sin, sqrt, Symbol, symbols, sympify, S)
+from sympy.testing.pytest import raises
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.state import (
     Ket, Bra, TimeDepKet, TimeDepBra,
-    KetBase, BraBase, StateBase, Wavefunction
+    KetBase, BraBase, StateBase, Wavefunction,
+    OrthogonalKet, OrthogonalBra
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
 
@@ -104,7 +105,7 @@ def test_ops():
     k1 = Ket(1)
     k = 2*I*k0 - (x/sqrt(2))*k1
     assert k == Add(Mul(2, I, k0),
-        Mul(Rational(-1, 2), x, Pow(2, Rational(1, 2)), k1))
+        Mul(Rational(-1, 2), x, Pow(2, S.Half), k1))
 
 
 def test_time_dep_ket():
@@ -186,7 +187,7 @@ def test_wavefunction():
     lims = f.limits
 
     assert f.is_normalized is False
-    assert f.norm == oo
+    assert f.norm is oo
     assert f(10) == 100
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
@@ -226,3 +227,13 @@ def test_wavefunction():
 
     k = Wavefunction(x**2, 'x')
     assert type(k.variables[0]) == Symbol
+
+def test_orthogonal_states():
+    braket = OrthogonalBra(x) * OrthogonalKet(x)
+    assert braket.doit() == 1
+
+    braket = OrthogonalBra(x) * OrthogonalKet(x+1)
+    assert braket.doit() == 0
+
+    braket = OrthogonalBra(x) * OrthogonalKet(y)
+    assert braket.doit() == braket
