@@ -57,6 +57,7 @@ class SchurNumber(Function):
 class SchurSubsetsNumber(Function):
     """
     This function returns a lower bound to Schur's Number
+    using the formula log(2n+1, 3)
     """
 
     @classmethod
