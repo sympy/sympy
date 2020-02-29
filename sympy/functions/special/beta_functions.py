@@ -3,6 +3,9 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.special.hyper import hyper
+from sympy.functions.elementary.exponential import log
+from sympy import Symbol, S
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
