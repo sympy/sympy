@@ -442,7 +442,7 @@ class AlmostLinear(SinglePatternODESolver):
 
     This can be solved by substituting `g(f(x)) = u`.  Making the given
     substitution reduces it to a linear differential equation of the form
-    `a(x) u' + b(x) u + c(x) = 0` which can now be solved for `u(x)`.
+    `a(x) u' + b(x) u + c(x) = 0` which can now be solved for `f(x)`.
 
     The general solution is
 
