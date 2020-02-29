@@ -238,7 +238,7 @@ class SinglePatternODESolver(SingleODESolver):
 
         pattern = self._equation(f(x), x, 1)
 
-        if not isinstance(pattern.coeff(df), Wild):
+        if not pattern.coeff(df).has(Wild):
             eq = expand(eq / eq.coeff(df))
         eq = eq.collect(f(x), func = cancel)
 
@@ -438,34 +438,37 @@ class AlmostLinear(SinglePatternODESolver):
 
     The general form of an almost linear differential equation is
 
-    .. math:: a(x) g'(f(y)) f'(y) + b(x) g(f(y)) + c(x) = 0
+    .. math:: a(x) g'(f(x)) f'(x) + b(x) g(f(x)) + c(x)
 
-    This can be solved by substituting `g(f(y)) = l(y)`.  Making the given
-    substitution reduces it to a linear differential equation of the form 
-    `a(x) (l(y))' + b(x) l(y) + c(x) = 0`.
+    This can be solved by substituting `g(f(x)) = u`.  Making the given
+    substitution reduces it to a linear differential equation of the form
+    `a(x) u' + b(x) u + c(x) = 0` which can now be solved for `u(x)`.
 
     The general solution is
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, y, n
-        >>> a, b, c, l = map(Function, ['a', 'b', 'c', 'l'])
-        >>> genform = Eq(a(x)*(l(y).diff(y)) + b(x)*l(y) + c(x), 0)
+        >>> a, b, c, u = map(Function, ['a', 'b', 'c', 'u'])
+        >>> genform = Eq(a(x)*(u(x).diff(x)) + b(x)*u(x) + c(x), 0)
         >>> pprint(genform)
             d
-        a(x)*--(l(y)) + b(x)*l(y) + c(x) = 0
-            dy
+        a(x)*--(u(x)) + b(x)*u(x) + c(x) = 0
+            dx
         >>> pprint(dsolve(genform, hint = 'almost_linear'))
-               /     //       y*b(x)                \\          
-               |     ||       ------                ||          
-               |     ||        a(x)                 ||  -y*b(x) 
-               |     ||-c(x)*e                      ||  --------
-               |     ||--------------  for b(x) != 0||    a(x)  
-        l(y) = |C1 + |<     b(x)                    ||*e        
-               |     ||                             ||          
-               |     ||   -y*c(x)                   ||          
-               |     ||   --------       otherwise  ||          
-               |     ||     a(x)                    ||          
-               \     \\                             //          
+               /       /                   \
+               |      |                    |
+               |      |         /          |
+               |      |        |           |     /
+               |      |        | b(x)      |    |
+               |      |        | ---- dx   |    | b(x)
+               |      |        | a(x)      |  - | ---- dx
+               |      |        |           |    | a(x)
+               |      |       /            |    |
+               |      | c(x)*e             |   /
+        u(x) = |C1 -  | ---------------- dx|*e
+               |      |       a(x)         |
+               |      |                    |
+               \     /                     /
 
 
     See Also
