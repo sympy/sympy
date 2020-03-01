@@ -338,6 +338,7 @@ def refine_matrixelement(expr, assumptions):
     """
     Examples
     ========
+
     >>> from sympy.assumptions.refine import refine_matrixelement
     >>> from sympy import Q
     >>> from sympy.matrices.expressions.matexpr import MatrixElement, MatrixSymbol
