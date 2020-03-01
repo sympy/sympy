@@ -352,8 +352,7 @@ def refine_matrixelement(expr, assumptions):
     if ask(Q.symmetric(arg), assumptions):
         if (expr.args[1] > expr.args[2]):
             return(MatrixElement(expr.args[0],expr.args[2],expr.args[1])) 
-        else:
-            return(expr)
+        return(expr)
 
 handlers_dict = {
     'Abs': refine_abs,
