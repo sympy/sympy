@@ -719,7 +719,7 @@ class LatexPrinter(Printer):
         tex = ""
         dim = 0
         for x, num in reversed(expr.variable_count):
-            dim = dim + num
+            dim += num
             if num == 1:
                 tex += r"%s %s" % (diff_symbol, self._print(x))
             else:
