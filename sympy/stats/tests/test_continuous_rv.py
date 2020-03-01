@@ -1497,3 +1497,96 @@ def test_ContinuousDistributionHandmade():
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)
+
+
+def test_sampling_methods():
+    distribs_python = [
+        Beta("B", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        Uniform("U", 0, 1),
+        Weibull("W", 1, 1)
+    ]
+    distribs_numpy = [
+        Beta("B", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    distribs_scipy = [
+        Beta("B", 1, 1),
+        BetaPrime("BP", 1, 1),
+        Cauchy("C", 1, 1),
+        Chi("C", 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        GammaInverse("GI", 1, 1),
+        GaussianInverse("GUI", 1, 1),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    distribs_pymc3 = [
+        Beta("B", 1, 1),
+        Cauchy("C", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        GaussianInverse("GI", 1, 1),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    # test without passing the size parameter
+    for X in set(distribs_python + distribs_numpy + distribs_scipy + distribs_pymc3):
+        assert float(str(sample(X))) in X.pspace.domain.set
+
+    size = 3
+
+    for X in distribs_python:
+        samps = sample(X, size=size)
+        for sam in samps:
+            assert sam in X.pspace.domain.set
+
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        for X in distribs_numpy:
+            samps = sample(X, size=size)
+            samps2 = X.pspace.distribution._sample_numpy(size)
+            for sam in range(size):
+                assert samps[sam] in X.pspace.domain.set
+                assert samps2[sam] in X.pspace.domain.set
+
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            samps = sample(X, size=size)
+            samps2 = X.pspace.distribution._sample_scipy(size)
+            for sam in range(size):
+                assert samps[sam] in X.pspace.domain.set
+                assert samps2[sam] in X.pspace.domain.set
+
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            samps = sample(X, size=size)
+            samps2 = X.pspace.distribution._sample_pymc3(size)
+            for sam in range(size):
+                assert samps[sam] in X.pspace.domain.set
+                assert samps2[sam] in X.pspace.domain.set

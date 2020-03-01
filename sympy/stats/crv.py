@@ -19,6 +19,7 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.core.sympify import _sympify
+from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
@@ -173,6 +174,14 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def sample(self, size=()):
         """ A random realization from the distribution """
+        if getattr(self,'_sample_python', None):
+            return self._sample_python(size)
+        if getattr(self,'_sample_numpy', None) and import_module('numpy'):
+            return self._sample_numpy(size)
+        if getattr(self,'_sample_scipy', None) and import_module('scipy'):
+            return self._sample_scipy(size)
+        if getattr(self,'_sample_pymc3', None) and import_module('pymc3'):
+            return self._sample_pymc3(size)
         icdf = self._inverse_cdf_expression()
         if not size:
             return icdf(random.uniform(0, 1))
