@@ -1,8 +1,10 @@
 from __future__ import print_function, division
+
 from typing import Dict, Callable
+
 from sympy.core import S, Add, Expr, Basic, Mul
-from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.logic.boolalg import Boolean
+
 from sympy.assumptions import Q, ask  # type: ignore
 
 def refine(expr, assumptions=True):
@@ -350,6 +352,7 @@ def refine_matrixelement(expr, assumptions):
     >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
     X[0,1]
     """ 
+    from sympy.matrices.expressions.matexpr import MatrixElement
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
         if (expr.args[1] > expr.args[2]):
