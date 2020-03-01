@@ -5,7 +5,6 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.logic.boolalg import Boolean
 from sympy.assumptions import Q, ask  # type: ignore
 
-
 def refine(expr, assumptions=True):
     """
     Simplify an expression using assumptions.
