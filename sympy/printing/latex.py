@@ -740,7 +740,7 @@ class LatexPrinter(Printer):
         if any(_coeff_isneg(i) for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
-                                                  diff = True,
+                                                  diff=True,
                                                   strict=True))
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
