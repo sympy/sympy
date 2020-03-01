@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
-from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
@@ -18,6 +17,9 @@ __all__ = [
     'TimeDepState',
     'TimeDepBra',
     'TimeDepKet',
+    'OrthogonalKet',
+    'OrthogonalBra',
+    'OrthogonalState',
     'Wavefunction'
 ]
 
@@ -286,7 +288,7 @@ class BraBase(StateBase):
 
     @classmethod
     def _operators_to_state(self, ops, **options):
-        state = self.dual_class().operators_to_state(ops, **options)
+        state = self.dual_class()._operators_to_state(ops, **options)
         return state.dual
 
     def _state_to_operators(self, op_classes, **options):
@@ -617,6 +619,57 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet
 
 
+class OrthogonalState(State, StateBase):
+    """General abstract quantum state used as a base class for Ket and Bra."""
+    pass
+
+class OrthogonalKet(OrthogonalState, KetBase):
+    """Orthogonal Ket in quantum mechanics.
+
+    The inner product of two states with different labels will give zero,
+    states with the same label will give one.
+
+        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet, qapply
+        >>> from sympy.abc import m, n
+        >>> (OrthogonalBra(n)*OrthogonalKet(n)).doit()
+        1
+        >>> (OrthogonalBra(n)*OrthogonalKet(n+1)).doit()
+        0
+        >>> (OrthogonalBra(n)*OrthogonalKet(m)).doit()
+        <n|m>
+    """
+
+    @classmethod
+    def dual_class(self):
+        return OrthogonalBra
+
+    def _eval_innerproduct(self, bra, **hints):
+
+        if len(self.args) != len(bra.args):
+            raise ValueError('Cannot multiply a ket that has a different number of labels.')
+
+        for i in range(len(self.args)):
+            diff = self.args[i] - bra.args[i]
+            diff = diff.expand()
+
+            if diff.is_zero is False:
+                return 0
+
+            if diff.is_zero is None:
+                return None
+
+        return 1
+
+
+class OrthogonalBra(OrthogonalState, BraBase):
+    """Orthogonal Bra in quantum mechanics.
+    """
+
+    @classmethod
+    def dual_class(self):
+        return OrthogonalKet
+
+
 class Wavefunction(Function):
     """Class for representations in continuous bases
 
@@ -869,7 +922,7 @@ class Wavefunction(Function):
 
         return (self.norm == 1.0)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def norm(self):
         """
@@ -928,7 +981,7 @@ class Wavefunction(Function):
         """
         const = self.norm
 
-        if const == oo:
+        if const is oo:
             raise NotImplementedError("The function is not normalizable!")
         else:
             return Wavefunction((const)**(-1)*self.expr, *self.args[1:])

@@ -1,7 +1,8 @@
 from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
-from sympy.stats import Normal, Poisson, variance
+from sympy.core.expr import unchanged
+from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
+                         Probability, Expectation)
 from sympy.stats.rv import probability, expectation
-from sympy.stats import Covariance, Variance, Probability, Expectation
 
 
 def test_literal_probability():
@@ -40,7 +41,7 @@ def test_literal_probability():
                                        2 * Covariance(X, Y) + 2 * Covariance(X, Z) + 2 * Covariance(X, W) +
                                        2 * Covariance(Y, Z) + 2 * Covariance(Y, W) + 2 * Covariance(W, Z))
     assert Variance(X**2).evaluate_integral() == variance(X**2)
-    assert Variance(X**2) == Variance(X**2)
+    assert unchanged(Variance, X**2)
     assert Variance(x*X**2).doit() == x**2*Variance(X**2)
     assert Variance(sin(X)).args == (sin(X),)
     assert Variance(sin(X)).doit() == Variance(sin(X))
@@ -65,6 +66,7 @@ def test_literal_probability():
     assert Covariance(X, X**2).doit() == Covariance(X, X**2)
     assert Covariance(X, sin(X)).doit() == Covariance(sin(X), X)
     assert Covariance(X**2, sin(X)*Y).doit() == Covariance(sin(X)*Y, X**2)
+    assert Covariance(w, X).evaluate_integral() == 0
 
 
 def test_probability_rewrite():
@@ -93,6 +95,16 @@ def test_probability_rewrite():
     assert Expectation(Z).rewrite(Probability) == Sum(z*pz, (z, 0, oo))
     assert Variance(X).rewrite(Probability) == Integral(x**2*px, (x, -oo, oo)) - Integral(x*px, (x, -oo, oo))**2
     assert Variance(Z).rewrite(Probability) == Sum(z**2*pz, (z, 0, oo)) - Sum(z*pz, (z, 0, oo))**2
+    assert Covariance(w, X).rewrite(Probability) == \
+           -w*Integral(x*Probability(Eq(X, x)), (x, -oo, oo)) + Integral(w*x*Probability(Eq(X, x)), (x, -oo, oo))
+
+    # To test rewrite as sum function
+    assert Variance(X).rewrite(Sum) == Variance(X).rewrite(Integral)
+    assert Expectation(X).rewrite(Sum) == Expectation(X).rewrite(Integral)
+
+    assert Covariance(w, X).rewrite(Sum) == 0
+
+    assert Covariance(w, X).rewrite(Integral) == 0
 
     assert Variance(X, condition=Y).rewrite(Probability) == Integral(x**2*Probability(Eq(X, x), Y), (x, -oo, oo)) - \
                                                             Integral(x*Probability(Eq(X, x), Y), (x, -oo, oo))**2

@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy import solve_linear_system_LU
-from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -126,7 +125,7 @@ class KanesMethod(object):
             kd_eqs = [dynamicsymbols('dummy_kd')]
 
         if not isinstance(frame, ReferenceFrame):
-            raise TypeError('An intertial ReferenceFrame must be supplied')
+            raise TypeError('An inertial ReferenceFrame must be supplied')
         self._inertial = frame
 
         self._fr = None
@@ -210,8 +209,11 @@ class KanesMethod(object):
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
             if not acc:
-                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                               self._f_nh.diff(dynamicsymbols._t))
+                _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
+                          self._f_nh.diff(dynamicsymbols._t))
+                if self._qdot_u_map is not None:
+                    _f_dnh = msubs(_f_dnh, self._qdot_u_map)
+                self._f_dnh = _f_dnh
                 self._k_dnh = self._k_nh
             else:
                 if self._qdot_u_map is not None:
@@ -279,6 +281,7 @@ class KanesMethod(object):
         # pull out relevant velocities for constructing partial velocities
         vel_list, f_list = _f_list_parser(fl, N)
         vel_list = [msubs(i, self._qdot_u_map) for i in vel_list]
+        f_list = [msubs(i, self._qdot_u_map) for i in f_list]
 
         # Fill Fr with dot product of partial velocities and forces
         o = len(self.u)

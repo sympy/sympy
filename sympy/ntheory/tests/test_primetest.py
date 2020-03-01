@@ -1,10 +1,10 @@
-from sympy.core.compatibility import range
 from sympy.ntheory.generate import Sieve, sieve
 from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
-                                     is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime)
+                                     is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime,
+                                     is_gaussian_prime)
 
-from sympy.utilities.pytest import slow
-
+from sympy.testing.pytest import slow
+from sympy import I
 
 def test_euler_pseudoprimes():
     assert is_euler_pseudoprime(9, 1) == True
@@ -137,3 +137,16 @@ def test_isprime():
 
 def test_is_square():
     assert [i for i in range(25) if is_square(i)] == [0, 1, 4, 9, 16]
+
+    # issue #17044
+    assert not is_square(60 ** 3)
+    assert not is_square(60 ** 5)
+    assert not is_square(84 ** 7)
+    assert not is_square(105 ** 9)
+    assert not is_square(120 ** 3)
+
+def test_is_gaussianprime():
+    assert is_gaussian_prime(7*I)
+    assert is_gaussian_prime(7)
+    assert is_gaussian_prime(2 + 3*I)
+    assert not is_gaussian_prime(2 + 2*I)

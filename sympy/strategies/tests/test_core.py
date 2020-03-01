@@ -1,3 +1,4 @@
+from sympy import S
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
 from sympy.core.compatibility import get_function_name
@@ -41,8 +42,8 @@ def test_chain():
 def test_tryit():
     def rl(expr):
         assert False
-    safe_rl = tryit(rl)
-    assert safe_rl(1) == 1
+    safe_rl = tryit(rl, AssertionError)
+    assert safe_rl(S(1)) == 1
 
 def test_do_one():
     rl = do_one(posdec, posdec)

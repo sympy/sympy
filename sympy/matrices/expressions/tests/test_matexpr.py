@@ -1,16 +1,16 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
-                   expand, zeros, gcd_terms, Eq)
+                   expand, zeros, gcd_terms, Eq, Symbol)
 
-from sympy.core import S, symbols, Add, Mul
-from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt, cbrt
+from sympy.core import S, symbols, Add, Mul, SympifyError, Rational
+from sympy.core.expr import unchanged
+from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
-    GenericZeroMatrix, GenericIdentity)
-from sympy.utilities.pytest import raises, XFAIL
+                                                GenericZeroMatrix, GenericIdentity, OneMatrix)
+from sympy.testing.pytest import raises, XFAIL
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -21,6 +21,75 @@ C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 w = MatrixSymbol('w', n, 1)
+
+
+def test_matrix_symbol_creation():
+    assert MatrixSymbol('A', 2, 2)
+    assert MatrixSymbol('A', 0, 0)
+    raises(ValueError, lambda: MatrixSymbol('A', -1, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2.0, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2j, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, -1))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, 2.0))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, 2j))
+
+    n = symbols('n')
+    assert MatrixSymbol('A', n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: MatrixSymbol('A', n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: MatrixSymbol('A', n, n))
+
+
+def test_zero_matrix_creation():
+    assert unchanged(ZeroMatrix, 2, 2)
+    assert unchanged(ZeroMatrix, 0, 0)
+    raises(ValueError, lambda: ZeroMatrix(-1, 2))
+    raises(ValueError, lambda: ZeroMatrix(2.0, 2))
+    raises(ValueError, lambda: ZeroMatrix(2j, 2))
+    raises(ValueError, lambda: ZeroMatrix(2, -1))
+    raises(ValueError, lambda: ZeroMatrix(2, 2.0))
+    raises(ValueError, lambda: ZeroMatrix(2, 2j))
+
+    n = symbols('n')
+    assert unchanged(ZeroMatrix, n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: ZeroMatrix(n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: ZeroMatrix(n, n))
+
+
+def test_one_matrix_creation():
+    assert OneMatrix(2, 2)
+    assert OneMatrix(0, 0)
+    raises(ValueError, lambda: OneMatrix(-1, 2))
+    raises(ValueError, lambda: OneMatrix(2.0, 2))
+    raises(ValueError, lambda: OneMatrix(2j, 2))
+    raises(ValueError, lambda: OneMatrix(2, -1))
+    raises(ValueError, lambda: OneMatrix(2, 2.0))
+    raises(ValueError, lambda: OneMatrix(2, 2j))
+
+    n = symbols('n')
+    assert OneMatrix(n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: OneMatrix(n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: OneMatrix(n, n))
+
+
+def test_identity_matrix_creation():
+    assert Identity(2)
+    assert Identity(0)
+    raises(ValueError, lambda: Identity(-1))
+    raises(ValueError, lambda: Identity(2.0))
+    raises(ValueError, lambda: Identity(2j))
+
+    n = symbols('n')
+    assert Identity(n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: Identity(n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: Identity(n))
 
 
 def test_shape():
@@ -76,6 +145,38 @@ def test_ZeroMatrix_doit():
     assert isinstance(Znn.doit().rows, Mul)
 
 
+def test_OneMatrix():
+    A = MatrixSymbol('A', n, m)
+    a = MatrixSymbol('a', n, 1)
+    U = OneMatrix(n, m)
+
+    assert U.shape == (n, m)
+    assert isinstance(A + U, Add)
+    assert transpose(U) == OneMatrix(m, n)
+    assert U.conjugate() == U
+
+    assert OneMatrix(n, n) ** 0 == Identity(n)
+    with raises(ShapeError):
+        U ** 0
+    with raises(ShapeError):
+        U ** 2
+    with raises(ShapeError):
+        a + U
+
+    U = OneMatrix(n, n)
+    assert U[1, 2] == 1
+
+    U = OneMatrix(2, 3)
+    assert U.as_explicit() == ImmutableMatrix.ones(2, 3)
+
+
+def test_OneMatrix_doit():
+    Unn = OneMatrix(Add(n, n, evaluate=False), n)
+    assert isinstance(Unn.rows, Add)
+    assert Unn.doit() == OneMatrix(2 * n, n)
+    assert isinstance(Unn.doit().rows, Mul)
+
+
 def test_Identity():
     A = MatrixSymbol('A', n, m)
     i, j = symbols('i j')
@@ -93,6 +194,24 @@ def test_Identity():
     assert In[i, j] != 0
     assert Sum(In[i, j], (i, 0, n-1), (j, 0, n-1)).subs(n,3).doit() == 3
     assert Sum(Sum(In[i, j], (i, 0, n-1)), (j, 0, n-1)).subs(n,3).doit() == 3
+
+    # If range exceeds the limit `(0, n-1)`, do not remove `Piecewise`:
+    expr = Sum(In[i, j], (i, 0, n-1))
+    assert expr.doit() == 1
+    expr = Sum(In[i, j], (i, 0, n-2))
+    assert expr.doit().dummy_eq(
+        Piecewise(
+            (1, (j >= 0) & (j <= n-2)),
+            (0, True)
+        )
+    )
+    expr = Sum(In[i, j], (i, 1, n-1))
+    assert expr.doit().dummy_eq(
+        Piecewise(
+            (1, (j >= 1) & (j <= n-1)),
+            (0, True)
+        )
+    )
 
 
 def test_Identity_doit():
@@ -117,7 +236,7 @@ def test_addition():
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
     with raises(TypeError):
-        ZeroMatrix(n,m) + S(0)
+        ZeroMatrix(n,m) + S.Zero
 
 
 def test_multiplication():
@@ -163,7 +282,7 @@ def test_MatPow():
     assert (A**-1)**-1 == A
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
-    assert A**(S(1)/3) == cbrt(A)
+    assert A**Rational(1, 3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
@@ -192,13 +311,13 @@ def test_zero_matmul():
 def test_matadd_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatAdd(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
-        MatAdd(A, ImmutableMatrix([[1]]))
+        MatAdd(A, Matrix([[1]]))
 
 
 def test_matmul_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
-        MatMul(A, ImmutableMatrix([[1]]))
+        MatMul(A, Matrix([[1]]))
 
 
 def test_invariants():
@@ -221,7 +340,7 @@ def test_indexing():
 def test_single_indexing():
     A = MatrixSymbol('A', 2, 3)
     assert A[1] == A[0, 1]
-    assert A[long(1)] == A[0, 1]
+    assert A[int(1)] == A[0, 1]
     assert A[3] == A[1, 0]
     assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
     raises(IndexError, lambda: A[6])
@@ -296,14 +415,10 @@ def test_matrixelement_diff():
     dexpr = diff((D*w)[k,0], w[p,0])
 
     assert w[k, p].diff(w[k, p]) == 1
-    assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
-    assert str(dexpr) == "Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1))"
-    assert str(dexpr.doit()) == 'Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True))'
-    # TODO: bug with .dummy_eq( ), the previous 2 lines should be replaced by:
-    return  # stop eval
+    assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k, (0, n-1))*KroneckerDelta(0, p, (0, 0))
     _i_1 = Dummy("_i_1")
-    assert dexpr.dummy_eq(Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1)))
-    assert dexpr.doit().dummy_eq(Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True)))
+    assert dexpr.dummy_eq(Sum(KroneckerDelta(_i_1, p, (0, n-1))*D[k, _i_1], (_i_1, 0, n - 1)))
+    assert dexpr.doit() == D[k, p]
 
 
 def test_MatrixElement_with_values():
@@ -515,3 +630,25 @@ def test_assumptions():
 
     M = MatrixSymbol('M', n, n, antihermitian=True)
     assert M.is_antihermitian
+def test_exp():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    expr1 = exp(A)*exp(B)
+    expr2 = exp(B)*exp(A)
+    assert expr1 != expr2
+    assert expr1 - expr2 != 0
+    assert not isinstance(expr1, exp)
+    assert not isinstance(expr2, exp)
+
+def test_invalid_args():
+    raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))
+
+def test_matrixsymbol_from_symbol():
+    # The label should be preserved during doit and subs
+    A_label = Symbol('A', complex=True)
+    A = MatrixSymbol(A_label, 2, 2)
+
+    A_1 = A.doit()
+    A_2 = A.subs(2, 3)
+    assert A_1.args == A.args
+    assert A_2.args[0] == A.args[0]

@@ -1,27 +1,25 @@
 from __future__ import (absolute_import, division, print_function)
 
+import glob
 import os
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import warnings
-from distutils.sysconfig import get_config_var, get_config_vars
-
-from .util import (
-    get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
-    glob_at_depth, CompileError,
-    import_module_from_file, pyx_is_cplus,
-    sha256_of_string, sha256_of_file
-)
+from distutils.errors import CompileError
+from distutils.sysconfig import get_config_var
 
 from .runners import (
     CCompilerRunner,
     CppCompilerRunner,
     FortranCompilerRunner
 )
-
+from .util import (
+    get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
+    glob_at_depth, import_module_from_file, pyx_is_cplus,
+    sha256_of_string, sha256_of_file
+)
 
 sharedext = get_config_var('EXT_SUFFIX' if sys.version_info >= (3, 3) else 'SO')
 
@@ -30,7 +28,7 @@ if os.name == 'posix':
 elif os.name == 'nt':
     objext = '.obj'
 else:
-    warning.warng("Unknown os.name: {}".format(os.name))
+    warnings.warn("Unknown os.name: {}".format(os.name))
     objext = '.o'
 
 
@@ -349,7 +347,7 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
             objpath = objpath or '.'  # avoid objpath == ''
 
     if os.path.isdir(objpath):
-        objpath = os.path.join(objpath, name+objext)
+        objpath = os.path.join(objpath, name + objext)
 
     include_dirs = kwargs.pop('include_dirs', [])
     if inc_py:
@@ -431,7 +429,7 @@ def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
     if os.path.isdir(abs_objpath):
         pyx_fname = os.path.basename(pyxpath)
         name, ext = os.path.splitext(pyx_fname)
-        objpath = os.path.join(objpath, name+objext)
+        objpath = os.path.join(objpath, name + objext)
 
     cy_kwargs = cy_kwargs or {}
     cy_kwargs['output_dir'] = cwd
@@ -533,6 +531,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
         mod = import_module_from_file(so)
     return mod
 
+
 def _write_sources_to_build_dir(sources, build_dir):
     build_dir = build_dir or tempfile.mkdtemp()
     if not os.path.isdir(build_dir):
@@ -544,8 +543,8 @@ def _write_sources_to_build_dir(sources, build_dir):
         differs = True
         sha256_in_mem = sha256_of_string(src.encode('utf-8')).hexdigest()
         if os.path.exists(dest):
-            if os.path.exists(dest+'.sha256'):
-                sha256_on_disk = open(dest+'.sha256', 'rt').read()
+            if os.path.exists(dest + '.sha256'):
+                sha256_on_disk = open(dest + '.sha256', 'rt').read()
             else:
                 sha256_on_disk = sha256_of_file(dest).hexdigest()
 
@@ -553,7 +552,7 @@ def _write_sources_to_build_dir(sources, build_dir):
         if differs:
             with open(dest, 'wt') as fh:
                 fh.write(src)
-                open(dest+'.sha256', 'wt').write(sha256_in_mem)
+                open(dest + '.sha256', 'wt').write(sha256_in_mem)
         source_files.append(dest)
     return source_files, build_dir
 

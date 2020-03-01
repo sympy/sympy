@@ -2,7 +2,7 @@ import itertools
 
 from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
 from sympy.core.compatibility import default_sort_key
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
@@ -47,8 +47,7 @@ class Probability(Expr):
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return probability(arg, condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return probability(arg, condition, evaluate=False)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -161,8 +160,7 @@ class Expectation(Expr):
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return expectation(arg, condition=condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -271,8 +269,7 @@ class Variance(Expr):
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return variance(self.args[0], self._condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None, **kwargs):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -327,7 +324,7 @@ class Covariance(Expr):
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
-        if kwargs.pop('evaluate', global_evaluate[0]):
+        if kwargs.pop('evaluate', global_parameters.evaluate):
             arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
 
         if condition is None:
@@ -404,8 +401,7 @@ class Covariance(Expr):
     def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None, **kwargs):
         return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg1, arg2, condition=None, **kwargs):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()

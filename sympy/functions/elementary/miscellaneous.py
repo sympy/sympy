@@ -6,7 +6,6 @@ from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
-from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
@@ -16,7 +15,6 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.logic.boolalg import And, Or
 
@@ -32,7 +30,7 @@ def _minmax_as_Piecewise(op, *args):
     return Piecewise(*ec)
 
 
-class IdentityFunction(with_metaclass(Singleton, Lambda)):
+class IdentityFunction(Lambda, metaclass=Singleton):
     """
     The identity function
 
@@ -47,12 +45,16 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
 
     def __new__(cls):
-        from sympy.sets.sets import FiniteSet
         x = Dummy('x')
         #construct "by hand" to avoid infinite loop
-        obj = Expr.__new__(cls, Tuple(x), x)
-        obj.nargs = FiniteSet(1)
-        return obj
+        return Expr.__new__(cls, Tuple(x), x)
+
+    @property
+    def args(self):
+        return ()
+
+    def __getnewargs__(self):
+        return ()
 
 Id = S.IdentityFunction
 
@@ -62,17 +64,20 @@ Id = S.IdentityFunction
 
 
 def sqrt(arg, evaluate=None):
-    """The square root function
+    """Returns the principal square root.
 
-    sqrt(x) -> Returns the principal square root of x.
+    Parameters
+    ==========
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
 
-    >>> from sympy import sqrt, Symbol
+    >>> from sympy import sqrt, Symbol, S
     >>> x = Symbol('x')
 
     >>> sqrt(x)
@@ -117,6 +122,25 @@ def sqrt(arg, evaluate=None):
     >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
 
+    Although ``sqrt`` is printed, there is no ``sqrt`` function so looking for
+    ``sqrt`` in an expression will fail:
+
+    >>> from sympy.utilities.misc import func_name
+    >>> func_name(sqrt(x))
+    'Pow'
+    >>> sqrt(x).has(sqrt)
+    Traceback (most recent call last):
+      ...
+    sympy.core.sympify.SympifyError: Sympify of expression 'could not parse
+    '<function sqrt at 0x7f79ad860f80>'' failed, because of exception being
+    raised:
+    SyntaxError: invalid syntax
+
+    To find ``sqrt`` look for ``Pow`` with an exponent of ``1/2``:
+
+    >>> (x + 1/sqrt(x)).find(lambda i: i.is_Pow and abs(i.exp) is S.Half)
+    {1/sqrt(x)}
+
     See Also
     ========
 
@@ -133,11 +157,15 @@ def sqrt(arg, evaluate=None):
 
 
 def cbrt(arg, evaluate=None):
-    """This function computes the principal cube root of `arg`, so
-    it's just a shortcut for `arg**Rational(1, 3)`.
+    """Returns the principal cube root.
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate.
+    Parameters
+    ==========
+
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -186,11 +214,19 @@ def cbrt(arg, evaluate=None):
 
 
 def root(arg, n, k=0, evaluate=None):
-    """root(x, n, k) -> Returns the k-th n-th root of x, defaulting to the
-    principal root (k=0).
+    r"""Returns the *k*-th *n*-th root of ``arg``.
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate.
+    Parameters
+    ==========
+
+    k : int, optional
+        Should be an integer in $\{0, 1, ..., n-1\}$.
+        Defaults to the principal root if $0$.
+
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -278,13 +314,22 @@ def root(arg, n, k=0, evaluate=None):
 
 
 def real_root(arg, n=None, evaluate=None):
-    """Return the real nth-root of arg if possible. If n is omitted then
-    all instances of (-n)**(1/odd) will be changed to -n**(1/odd); this
-    will only create a real root of a principal root -- the presence of
-    other factors may cause the result to not be real.
+    """Return the real *n*'th-root of *arg* if possible.
 
-    The parameter evaluate determines if the expression should be evaluated.
-    If None, its value is taken from global_evaluate.
+    Parameters
+    ==========
+
+    n : int or None, optional
+        If *n* is ``None``, then all instances of
+        ``(-n)**(1/odd)`` will be changed to ``-n**(1/odd)``.
+        This will only create a real root of a principal root.
+        The presence of other factors may cause the result to not be
+        real.
+
+    evaluate : bool, optional
+        The parameter determines if the expression should be evaluated.
+        If ``None``, its value is taken from
+        ``global_parameters.evaluate``.
 
     Examples
     ========
@@ -306,7 +351,6 @@ def real_root(arg, n=None, evaluate=None):
     -2*(-1)**(2/3)
     >>> real_root(_)
     -2*(-1)**(2/3)
-
 
     See Also
     ========
@@ -517,7 +561,7 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if not isinstance(arg, Expr) or arg.is_real is False or (
+            if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
                     not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
@@ -597,7 +641,7 @@ class MinMaxBase(Expr, LatticeOp):
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if da is S.Zero:
+            if da.is_zero:
                 continue
             try:
                 df = self.fdiff(i)
@@ -612,9 +656,11 @@ class MinMaxBase(Expr, LatticeOp):
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
-    def evalf(self, prec=None, **options):
-        return self.func(*[a.evalf(prec, **options) for a in self.args])
-    n = evalf
+    def evalf(self, n=15, **options):
+        return self.func(*[a.evalf(n, **options) for a in self.args])
+
+    def n(self, *args, **kwargs):
+        return self.evalf(*args, **kwargs)
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
     _eval_is_antihermitian = lambda s: _torf(i.is_antihermitian for i in s.args)
@@ -639,6 +685,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_prime = lambda s: _torf(i.is_prime for i in s.args)
     _eval_is_rational = lambda s: _torf(i.is_rational for i in s.args)
     _eval_is_real = lambda s: _torf(i.is_real for i in s.args)
+    _eval_is_extended_real = lambda s: _torf(i.is_extended_real for i in s.args)
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
@@ -671,12 +718,12 @@ class Max(MinMaxBase, Application):
     ========
 
     >>> from sympy import Max, Symbol, oo
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
     >>> p = Symbol('p', positive=True)
     >>> n = Symbol('n', negative=True)
 
-    >>> Max(x, -2)                  #doctest: +SKIP
-    Max(x, -2)
+    >>> Max(x, -2)
+    Max(-2, x)
     >>> Max(x, -2).subs(x, 3)
     3
     >>> Max(p, -2)
@@ -685,9 +732,9 @@ class Max(MinMaxBase, Application):
     Max(x, y)
     >>> Max(x, y) == Max(y, x)
     True
-    >>> Max(x, Max(y, z))           #doctest: +SKIP
+    >>> Max(x, Max(y, z))
     Max(x, y, z)
-    >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
+    >>> Max(n, 8, p, 7, -oo)
     Max(8, p)
     >>> Max (1, x, oo)
     oo
@@ -774,16 +821,16 @@ class Min(MinMaxBase, Application):
     >>> p = Symbol('p', positive=True)
     >>> n = Symbol('n', negative=True)
 
-    >>> Min(x, -2)                  #doctest: +SKIP
-    Min(x, -2)
+    >>> Min(x, -2)
+    Min(-2, x)
     >>> Min(x, -2).subs(x, 3)
     -2
     >>> Min(p, -3)
     -3
-    >>> Min(x, y)                   #doctest: +SKIP
+    >>> Min(x, y)
     Min(x, y)
-    >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
-    Min(n, -7)
+    >>> Min(n, 8, p, -7, p, oo)
+    Min(-7, n)
 
     See Also
     ========

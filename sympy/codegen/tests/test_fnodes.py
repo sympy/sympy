@@ -2,19 +2,20 @@ import os
 from sympy import Symbol, symbols
 from sympy.codegen.ast import (
     Assignment, Print, Declaration, FunctionDefinition, Return, real,
-    FunctionCall, Variable, Element, integer, value_const
+    FunctionCall, Variable, Element, integer
 )
 from sympy.codegen.fnodes import (
-    allocatable, ArrayConstructor, isign, dsign, cmplx, kind, literal_dp, Program, Module, use, Subroutine,
-    dimension, assumed_extent, ImpliedDoLoop, intent_out, size, Do, SubroutineCall, sum_,
-    array, sum_, size, bind_C
+    allocatable, ArrayConstructor, isign, dsign, cmplx, kind, literal_dp,
+    Program, Module, use, Subroutine, dimension, assumed_extent, ImpliedDoLoop,
+    intent_out, size, Do, SubroutineCall, sum_, array, bind_C
 )
 from sympy.codegen.futils import render_as_module
+from sympy.core.expr import unchanged
 from sympy.external import import_module
 from sympy.printing.fcode import fcode
 from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
 from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 cython = import_module('cython')
 np = import_module('numpy')
@@ -34,7 +35,7 @@ def test_size_assumed_shape():
     body = [Return((sum_(a**2)/size(a))**.5)]
     arr = array(a, dim=[':'], intent='in')
     fd = FunctionDefinition(real, 'rms', [arr], body)
-    f_mod = render_as_module([fd], 'mod_rms')
+    render_as_module([fd], 'mod_rms')
 
     (stdout, stderr), info = compile_run_strings([
         ('rms.f90', render_as_module([fd], 'mod_rms')),
@@ -156,24 +157,24 @@ def test_Subroutine():
 
 def test_isign():
     x = Symbol('x', integer=True)
-    assert isign(1, x) == isign(1, x)
+    assert unchanged(isign, 1, x)
     assert fcode(isign(1, x), standard=95, source_format='free') == 'isign(1, x)'
 
 
 def test_dsign():
     x = Symbol('x')
-    assert dsign(1, x) == dsign(1, x)
+    assert unchanged(dsign, 1, x)
     assert fcode(dsign(literal_dp(1), x), standard=95, source_format='free') == 'dsign(1d0, x)'
 
 
 def test_cmplx():
     x = Symbol('x')
-    assert cmplx(1, x) == cmplx(1, x)
+    assert unchanged(cmplx, 1, x)
 
 
 def test_kind():
     x = Symbol('x')
-    assert kind(x) == kind(x)
+    assert unchanged(kind, x)
 
 
 def test_literal_dp():
@@ -200,6 +201,7 @@ def test_bind_C():
         mod, info = compile_link_import_strings([
             ('rms.f90', f_mod),
             ('_rms.pyx', (
+                "#cython: language_level={}\n".format("3") +
                 "cdef extern double rms(double*, int*)\n"
                 "def py_rms(double[::1] x):\n"
                 "    cdef int s = x.size\n"

@@ -92,12 +92,12 @@ def dominant(expr, n):
     for t in terms[:-1]:
         e = (term0 / t).gammasimp()
         l = limit_seq(e, n)
-        if l is S.Zero:
+        if l is None:
+            return None
+        elif l.is_zero:
             term0 = t
             comp = [term0]
-        elif l is None:
-            return None
-        elif l not in [S.Infinity, -S.Infinity]:
+        elif l not in [S.Infinity, S.NegativeInfinity]:
             comp.append(t)
     if len(comp) > 1:
         return None
@@ -242,5 +242,5 @@ def limit_seq(expr, n=None, trials=5):
         # Maybe the absolute value is easier to deal with (though not if
         # it has a Sum). If it tends to 0, the limit is 0.
         elif not expr.has(Sum):
-            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials) is S.Zero:
+            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials).is_zero:
                 return S.Zero

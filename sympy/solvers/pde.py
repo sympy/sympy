@@ -35,9 +35,9 @@ more information on each (run help(pde)):
 from __future__ import print_function, division
 
 from itertools import combinations_with_replacement
-from sympy.simplify import simplify
+from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
-from sympy.core.compatibility import (reduce, is_sequence, range)
+from sympy.core.compatibility import reduce, is_sequence
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
@@ -157,13 +157,11 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     >>> u = f(x, y)
     >>> ux = u.diff(x)
     >>> uy = u.diff(y)
-    >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
+    >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)), 0)
     >>> pdsolve(eq)
     Eq(f(x, y), F(3*x - 2*y)*exp(-2*x/13 - 3*y/13))
 
     """
-
-    given_hint = hint  # hint given by the user.
 
     if not solvefun:
         solvefun = Function('F')
@@ -264,7 +262,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     >>> u = f(x, y)
     >>> ux = u.diff(x)
     >>> uy = u.diff(y)
-    >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
+    >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)), 0)
     >>> classify_pde(eq)
     ('1st_linear_constant_coeff_homogeneous',)
     """
@@ -819,9 +817,7 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
         final = sol.subs(sym, func(funcarg))
 
     else:
-        fname = func.__name__
         for key, sym in enumerate(syms):
-            tempfun = Function(fname + str(key))
             final = sol.subs(sym, func(funcarg))
 
     return simplify(final.subs(eta, funcarg))
@@ -873,7 +869,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return pde_separate(Eq(eq.lhs - eq.rhs), fun, sep, strategy)
+            return pde_separate(Eq(eq.lhs - eq.rhs, 0), fun, sep, strategy)
     else:
         return pde_separate(Eq(eq, 0), fun, sep, strategy)
 

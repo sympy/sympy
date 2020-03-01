@@ -1,5 +1,3 @@
-from sympy.core.compatibility import range
-
 from sympy.series import approximants
 from sympy import lucas, fibonacci, symbols, binomial
 

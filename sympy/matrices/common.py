@@ -6,24 +6,28 @@ etc.).
 
 from __future__ import division, print_function
 
+from sympy.core.logic import FuzzyBool
+
 from collections import defaultdict
 from inspect import isfunction
 
 from sympy.assumptions.refine import refine
+from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
-    Iterable, as_int, is_sequence, range, reduce)
+    Iterable, as_int, is_sequence, reduce)
 from sympy.core.decorators import call_highest_priority
-from sympy.core.expr import Expr
-from sympy.core.function import count_ops
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
+
+from .utilities import _get_intermediate_simp_bool
 
 
 class MatrixError(Exception):
@@ -39,12 +43,21 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
+class NonInvertibleMatrixError(ValueError, MatrixError):
+    """The matrix in not invertible (division by multidimensional zero error)."""
+    pass
+
+
+class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
+    """The matrix is not a positive-definite matrix."""
+    pass
+
+
 class MatrixRequired(object):
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
-    rows = None
-    cols = None
-    shape = None
+    rows = None  # type: int
+    cols = None  # type: int
     _simplify = None
 
     @classmethod
@@ -68,6 +81,10 @@ class MatrixRequired(object):
         """The total number of entries in the matrix."""
         raise NotImplementedError("Subclasses must implement this.")
 
+    @property
+    def shape(self):
+        raise NotImplementedError("Subclasses must implement this.")
+
 
 class MatrixShaping(MatrixRequired):
     """Provides basic matrix shaping and extracting of submatrices"""
@@ -78,7 +95,6 @@ class MatrixShaping(MatrixRequired):
         return self._new(self.rows, self.cols - 1, entry)
 
     def _eval_col_insert(self, pos, other):
-        cols = self.cols
 
         def entry(i, j):
             if j < pos:
@@ -265,8 +281,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         row
-        col_op
-        col_swap
+        sympy.matrices.dense.MutableDenseMatrix.col_op
+        sympy.matrices.dense.MutableDenseMatrix.col_swap
         col_del
         col_join
         col_insert
@@ -486,6 +502,55 @@ class MatrixShaping(MatrixRequired):
                 "`self` and `rhs` must have the same number of rows.")
         return self._eval_row_join(other)
 
+    def diagonal(self, k=0):
+        """Returns the kth diagonal of self. The main diagonal
+        corresponds to `k=0`; diagonals above and below correspond to
+        `k > 0` and `k < 0`, respectively. The values of `self[i, j]`
+        for which `j - i = k`, are returned in order of increasing
+        `i + j`, starting with `i + j = |k|`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, SparseMatrix
+        >>> m = Matrix(3, 3, lambda i, j: j - i); m
+        Matrix([
+        [ 0,  1, 2],
+        [-1,  0, 1],
+        [-2, -1, 0]])
+        >>> _.diagonal()
+        Matrix([[0, 0, 0]])
+        >>> m.diagonal(1)
+        Matrix([[1, 1]])
+        >>> m.diagonal(-2)
+        Matrix([[-2]])
+
+        Even though the diagonal is returned as a Matrix, the element
+        retrieval can be done with a single index:
+
+        >>> Matrix.diag(1, 2, 3).diagonal()[1]  # instead of [0, 1]
+        2
+
+        See Also
+        ========
+        diag - to create a diagonal matrix
+        """
+        rv = []
+        k = as_int(k)
+        r = 0 if k > 0 else -k
+        c = 0 if r else k
+        while True:
+            if r == self.rows or c == self.cols:
+                break
+            rv.append(self[r, c])
+            r += 1
+            c += 1
+        if not rv:
+            raise ValueError(filldedent('''
+            The %s diagonal is out of range [%s, %s]''' % (
+            k, 1 - self.rows, self.cols - 1)))
+        return self._new(1, len(rv), rv)
+
     def row(self, i):
         """Elementary row selector.
 
@@ -500,8 +565,8 @@ class MatrixShaping(MatrixRequired):
         ========
 
         col
-        row_op
-        row_swap
+        sympy.matrices.dense.MutableDenseMatrix.row_op
+        sympy.matrices.dense.MutableDenseMatrix.row_swap
         row_del
         row_join
         row_insert
@@ -620,7 +685,7 @@ class MatrixSpecial(MatrixRequired):
     @classmethod
     def _eval_eye(cls, rows, cols):
         def entry(i, j):
-            return S.One if i == j else S.Zero
+            return cls.one if i == j else cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -630,27 +695,27 @@ class MatrixSpecial(MatrixRequired):
                 if i == j:
                     return eigenvalue
                 elif j + 1 == i:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         else:
             def entry(i, j):
                 if i == j:
                     return eigenvalue
                 elif i + 1 == j:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_ones(cls, rows, cols):
         def entry(i, j):
-            return S.One
+            return cls.one
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
         def entry(i, j):
-            return S.Zero
+            return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -709,8 +774,9 @@ class MatrixSpecial(MatrixRequired):
         [3, 0, 0],
         [0, 4, 5]])
 
-        Elements within a list need not all be of the same length unless
-        `strict` is set to True:
+        When `unpack` is False, elements within a list need not all be
+        of the same length. Setting `strict` to True would raise a
+        ValueError for the following:
 
         >>> Matrix.diag([[1, 2, 3], [4, 5], [6]], unpack=False)
         Matrix([
@@ -735,9 +801,17 @@ class MatrixSpecial(MatrixRequired):
         Matrix([
         [0, 0, 1, 0],
         [0, 0, 0, 2]])
-        """
+
+        See Also
+        ========
+        eye
+        diagonal - to extract a diagonal
+        .dense.diag
+        .expressions.blockmatrix.BlockMatrix
+       """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
+        from sympy.matrices.sparse import SparseMatrix
         klass = kwargs.get('cls', kls)
         strict = kwargs.get('strict', False) # lists -> Matrices
         unpack = kwargs.get('unpack', True)  # unpack single sequence
@@ -747,49 +821,47 @@ class MatrixSpecial(MatrixRequired):
 
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(int)
-        R = C = 0  # keep track of the biggest index seen
+        rmax = cmax = 0  # keep track of the biggest index seen
         for m in args:
-            if hasattr(m, 'rows') or isinstance(m, list):
-                # in this case, we're a matrix or list
-                if hasattr(m, 'rows'):
-                    # convert to list of lists
-                    r, c = m.shape
-                    m = m.tolist()
+            if isinstance(m, list):
+                if strict:
+                    # if malformed, Matrix will raise an error
+                    _ = Matrix(m)
+                    r, c = _.shape
+                    m = _.tolist()
                 else:
-                    # make sure all list elements are lists
-                    r = len(m)
-                    if strict:
-                        # let Matrix raise the error
-                        m = Matrix(m)
-                        c = m.cols
-                        m = m.tolist()
-                    else:
-                        m = [mi if isinstance(mi, list) else [mi]
-                            for mi in m]
-                        c = max(map(len, m))
-                # process list of lists
-                for i in range(len(m)):
-                    for j, mij in enumerate(m[i]):
-                        diag_entries[(i + R, j + C)] = mij
-                R += r
-                C += c
-            else:
-                # in this case, we're a single value
-                diag_entries[(R, C)] = m
-                R += 1
-                C += 1
+                    m = SparseMatrix(m)
+                    for (i, j), _ in m._smat.items():
+                        diag_entries[(i + rmax, j + cmax)] = _
+                    r, c = m.shape
+                    m = []  # to skip process below
+            elif hasattr(m, 'shape'):  # a Matrix
+                # convert to list of lists
+                r, c = m.shape
+                m = m.tolist()
+            else:  # in this case, we're a single value
+                diag_entries[(rmax, cmax)] = m
+                rmax += 1
+                cmax += 1
+                continue
+            # process list of lists
+            for i in range(len(m)):
+                for j, _ in enumerate(m[i]):
+                    diag_entries[(i + rmax, j + cmax)] = _
+            rmax += r
+            cmax += c
         rows = kwargs.get('rows', None)
         cols = kwargs.get('cols', None)
         if rows is None:
             rows, cols = cols, rows
         if rows is None:
-            rows, cols = R, C
+            rows, cols = rmax, cmax
         else:
             cols = rows if cols is None else cols
-        if rows < R or cols < C:
+        if rows < rmax or cols < cmax:
             raise ValueError(filldedent('''
                 The constructed matrix is {} x {} but a size of {} x {}
-                was specified.'''.format(R, C, rows, cols)))
+                was specified.'''.format(rmax, cmax, rows, cols)))
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
@@ -1044,16 +1116,17 @@ class MatrixProperties(MatrixRequired):
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
-        return mat.is_zero
+        return mat.is_zero_matrix
 
-    def _eval_is_Identity(self):
+    def _eval_is_Identity(self) -> FuzzyBool:
         def dirac(i, j):
             if i == j:
                 return 1
             return 0
 
-        return all(self[i, j] == dirac(i, j) for i in range(self.rows) for j in
-                   range(self.cols))
+        return all(self[i, j] == dirac(i, j)
+                for i in range(self.rows)
+                for j in range(self.cols))
 
     def _eval_is_lower_hessenberg(self):
         return all(self[i, j].is_zero
@@ -1070,9 +1143,9 @@ class MatrixProperties(MatrixRequired):
 
     def _eval_is_symmetric(self, simpfunc):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i]))
-        return mat.is_zero
+        return mat.is_zero_matrix
 
-    def _eval_is_zero(self):
+    def _eval_is_zero_matrix(self):
         if any(i.is_zero == False for i in self):
             return False
         if any(i.is_zero is None for i in self):
@@ -1254,13 +1327,13 @@ class MatrixProperties(MatrixRequired):
 
         is_lower
         is_upper
-        is_diagonalizable
+        sympy.matrices.matrices.MatrixEigen.is_diagonalizable
         diagonalize
         """
         return self._eval_is_diagonal()
 
     @property
-    def is_hermitian(self, simplify=True):
+    def is_hermitian(self):
         """Checks if the matrix is Hermitian.
 
         In a Hermitian matrix element i,j is the complex conjugate of
@@ -1291,14 +1364,10 @@ class MatrixProperties(MatrixRequired):
         if not self.is_square:
             return False
 
-        simpfunc = simplify
-        if not isfunction(simplify):
-            simpfunc = _simplify if simplify else lambda x: x
-
-        return self._eval_is_matrix_hermitian(simpfunc)
+        return self._eval_is_matrix_hermitian(_simplify)
 
     @property
-    def is_Identity(self):
+    def is_Identity(self) -> FuzzyBool:
         if not self.is_square:
             return False
         return self._eval_is_Identity()
@@ -1556,7 +1625,7 @@ class MatrixProperties(MatrixRequired):
                    for j in range(min(i, self.cols)))
 
     @property
-    def is_zero(self):
+    def is_zero_matrix(self):
         """Checks if a matrix is a zero matrix.
 
         A matrix is zero if every element is zero.  A matrix need not be square
@@ -1574,17 +1643,17 @@ class MatrixProperties(MatrixRequired):
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
         >>> e = Matrix([[x, 0], [0, 0]])
-        >>> a.is_zero
+        >>> a.is_zero_matrix
         True
-        >>> b.is_zero
+        >>> b.is_zero_matrix
         True
-        >>> c.is_zero
+        >>> c.is_zero_matrix
         False
-        >>> d.is_zero
+        >>> d.is_zero_matrix
         True
-        >>> e.is_zero
+        >>> e.is_zero_matrix
         """
-        return self._eval_is_zero()
+        return self._eval_is_zero_matrix()
 
     def values(self):
         """Return non-zero values of self."""
@@ -1602,7 +1671,7 @@ class MatrixOperations(MatrixRequired):
         out = self._new(self.rows, self.cols, [f(x) for x in self])
         return out
 
-    def _eval_as_real_imag(self):
+    def _eval_as_real_imag(self):  # type: ignore
         from sympy.functions.elementary.complexes import re, im
 
         return (self.applyfunc(re), self.applyfunc(im))
@@ -1661,8 +1730,9 @@ class MatrixOperations(MatrixRequired):
 
         return self._eval_applyfunc(f)
 
-    def as_real_imag(self):
+    def as_real_imag(self, deep=True, **hints):
         """Returns a tuple containing the (real, imaginary) part of matrix."""
+        # XXX: Ignoring deep and hints...
         return self._eval_as_real_imag()
 
     def conjugate(self):
@@ -1690,16 +1760,18 @@ class MatrixOperations(MatrixRequired):
 
         transpose: Matrix transposition
         H: Hermite conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self._eval_conjugate()
 
     def doit(self, **kwargs):
         return self.applyfunc(lambda x: x.doit())
 
-    def evalf(self, prec=None, **options):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """Apply evalf() to each element of self."""
-        return self.applyfunc(lambda i: i.evalf(prec, **options))
+        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
+                'quad':quad, 'verbose':verbose}
+        return self.applyfunc(lambda i: i.evalf(n, **options))
 
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
                mul=True, log=True, multinomial=True, basic=True, **hints):
@@ -1742,23 +1814,52 @@ class MatrixOperations(MatrixRequired):
         ========
 
         conjugate: By-element conjugation
-        D: Dirac conjugation
+        sympy.matrices.matrices.MatrixBase.D: Dirac conjugation
         """
         return self.T.C
 
     def permute(self, perm, orientation='rows', direction='forward'):
-        """Permute the rows or columns of a matrix by the given list of swaps.
+        r"""Permute the rows or columns of a matrix by the given list of
+        swaps.
 
         Parameters
         ==========
 
-        perm : a permutation.  This may be a list swaps (e.g., `[[1, 2], [0, 3]]`),
-            or any valid input to the `Permutation` constructor, including a `Permutation()`
-            itself.  If `perm` is given explicitly as a list of indices or a `Permutation`,
-            `direction` has no effect.
-        orientation : ('rows' or 'cols') whether to permute the rows or the columns
-        direction : ('forward', 'backward') whether to apply the permutations from
-            the start of the list first, or from the back of the list first
+        perm : Permutation, list, or list of lists
+            A representation for the permutation.
+
+            If it is ``Permutation``, it is used directly with some
+            resizing with respect to the matrix size.
+
+            If it is specified as list of lists,
+            (e.g., ``[[0, 1], [0, 2]]``), then the permutation is formed
+            from applying the product of cycles. The direction how the
+            cyclic product is applied is described in below.
+
+            If it is specified as a list, the list should represent
+            an array form of a permutation. (e.g., ``[1, 2, 0]``) which
+            would would form the swapping function
+            `0 \mapsto 1, 1 \mapsto 2, 2\mapsto 0`.
+
+        orientation : 'rows', 'cols'
+            A flag to control whether to permute the rows or the columns
+
+        direction : 'forward', 'backward'
+            A flag to control whether to apply the permutations from
+            the start of the list first, or from the back of the list
+            first.
+
+            For example, if the permutation specification is
+            ``[[0, 1], [0, 2]]``,
+
+            If the flag is set to ``'forward'``, the cycle would be
+            formed as `0 \mapsto 2, 2 \mapsto 1, 1 \mapsto 0`.
+
+            If the flag is set to ``'backward'``, the cycle would be
+            formed as `0 \mapsto 1, 1 \mapsto 2, 2 \mapsto 0`.
+
+            If the argument ``perm`` is not in a form of list of lists,
+            this flag takes no effect.
 
         Examples
         ========
@@ -1779,7 +1880,42 @@ class MatrixOperations(MatrixRequired):
         [0, 0, 1],
         [1, 0, 0]])
 
+        Notes
+        =====
+
+        If a bijective function
+        `\sigma : \mathbb{N}_0 \rightarrow \mathbb{N}_0` denotes the
+        permutation.
+
+        If the matrix `A` is the matrix to permute, represented as
+        a horizontal or a vertical stack of vectors:
+
+        .. math::
+            A =
+            \begin{bmatrix}
+            a_0 \\ a_1 \\ \vdots \\ a_{n-1}
+            \end{bmatrix} =
+            \begin{bmatrix}
+            \alpha_0 & \alpha_1 & \cdots & \alpha_{n-1}
+            \end{bmatrix}
+
+        If the matrix `B` is the result, the permutation of matrix rows
+        is defined as:
+
+        .. math::
+            B := \begin{bmatrix}
+            a_{\sigma(0)} \\ a_{\sigma(1)} \\ \vdots \\ a_{\sigma(n-1)}
+            \end{bmatrix}
+
+        And the permutation of matrix columns is defined as:
+
+        .. math::
+            B := \begin{bmatrix}
+            \alpha_{\sigma(0)} & \alpha_{\sigma(1)} &
+            \cdots & \alpha_{\sigma(n-1)}
+            \end{bmatrix}
         """
+        from sympy.combinatorics import Permutation
 
         # allow british variants and `columns`
         if direction == 'forwards':
@@ -1796,29 +1932,23 @@ class MatrixOperations(MatrixRequired):
             raise TypeError("orientation='{}' is an invalid kwarg. "
                             "Try 'rows' or 'cols'".format(orientation))
 
+        if not isinstance(perm, (Permutation, Iterable)):
+            raise ValueError(
+                "{} must be a list, a list of lists, "
+                "or a SymPy permutation object.".format(perm))
+
         # ensure all swaps are in range
         max_index = self.rows if orientation == 'rows' else self.cols
         if not all(0 <= t <= max_index for t in flatten(list(perm))):
             raise IndexError("`swap` indices out of range.")
 
-        # see if we are a list of pairs
-        try:
-            assert len(perm[0]) == 2
-            # we are a list of swaps, so `direction` matters
-            if direction == 'backward':
-                perm = reversed(perm)
-
-            # since Permutation doesn't let us have non-disjoint cycles,
-            # we'll construct the explicit mapping ourselves XXX Bug #12479
-            mapping = list(range(max_index))
-            for (i, j) in perm:
-                mapping[i], mapping[j] = mapping[j], mapping[i]
-            perm = mapping
-        except (TypeError, AssertionError, IndexError):
-            pass
-
-        from sympy.combinatorics import Permutation
-        perm = Permutation(perm, size=max_index)
+        if perm and not isinstance(perm, Permutation) and \
+            isinstance(perm[0], Iterable):
+            if direction == 'forward':
+                perm = list(reversed(perm))
+            perm = Permutation(perm, size=max_index+1)
+        else:
+            perm = Permutation(perm, size=max_index+1)
 
         if orientation == 'rows':
             return self._eval_permute_rows(perm)
@@ -1826,7 +1956,8 @@ class MatrixOperations(MatrixRequired):
             return self._eval_permute_cols(perm)
 
     def permute_cols(self, swaps, direction='forward'):
-        """Alias for `self.permute(swaps, orientation='cols', direction=direction)`
+        """Alias for
+        ``self.permute(swaps, orientation='cols', direction=direction)``
 
         See Also
         ========
@@ -1836,7 +1967,8 @@ class MatrixOperations(MatrixRequired):
         return self.permute(swaps, orientation='cols', direction=direction)
 
     def permute_rows(self, swaps, direction='forward'):
-        """Alias for `self.permute(swaps, orientation='rows', direction=direction)`
+        """Alias for
+        ``self.permute(swaps, orientation='rows', direction=direction)``
 
         See Also
         ========
@@ -1865,7 +1997,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map=False):
+    def replace(self, F, G, map=False, simultaneous=True, exact=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -1883,9 +2015,10 @@ class MatrixOperations(MatrixRequired):
         [G(0), G(1)],
         [G(1), G(2)]])
         """
-        return self.applyfunc(lambda x: x.replace(F, G, map))
+        return self.applyfunc(
+            lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
 
         Examples
@@ -1899,8 +2032,7 @@ class MatrixOperations(MatrixRequired):
         >>> _.simplify()
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.simplify(ratio=ratio, measure=measure,
-                                                   rational=rational, inverse=inverse))
+        return self.applyfunc(lambda x: x.simplify(**kwargs))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1972,11 +2104,19 @@ class MatrixOperations(MatrixRequired):
         """
         return self._eval_transpose()
 
-    T = property(transpose, None, None, "Matrix transposition.")
+    @property
+    def T(self):
+        '''Matrix transposition'''
+        return self.transpose()
 
-    C = property(conjugate, None, None, "By-element conjugation.")
+    @property
+    def C(self):
+        '''By-element conjugation'''
+        return self.conjugate()
 
-    n = evalf
+    def n(self, *args, **kwargs):
+        """Apply evalf() to each element of self."""
+        return self.evalf(*args, **kwargs)
 
     def xreplace(self, rule):  # should mirror core.basic.xreplace
         """Return a new matrix with xreplace applied to each entry.
@@ -1995,7 +2135,10 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.xreplace(rule))
 
-    _eval_simplify = simplify
+    def _eval_simplify(self, **kwargs):
+        # XXX: We can't use self.simplify here as mutable subclasses will
+        # override simplify and have it return None
+        return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
         from sympy.simplify import trigsimp
@@ -2017,18 +2160,14 @@ class MatrixArithmetic(MatrixRequired):
 
     def _eval_matrix_mul(self, other):
         def entry(i, j):
+            vec = [self[i,k]*other[k,j] for k in range(self.cols)]
             try:
-                return sum(self[i,k]*other[k,j] for k in range(self.cols))
-            except TypeError:
-                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                return Add(*vec)
+            except (TypeError, SympifyError):
+                # Some matrices don't work with `sum` or `Add`
                 # They don't work with `sum` because `sum` tries to add `0`
-                # initially, and for a matrix, that is a mix of a scalar and
-                # a matrix, which raises a TypeError. Fall back to a
-                # block-matrix-safe way to multiply if the `sum` fails.
-                ret = self[i, 0]*other[0, j]
-                for k in range(1, self.cols):
-                    ret += self[i, k]*other[k, j]
-                return ret
+                # Fall back to a safe way to multiply if the `Add` fails.
+                return reduce(lambda a, b: a + b, vec)
 
         return self._new(self.rows, other.cols, entry)
 
@@ -2043,10 +2182,55 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_pow_by_recursion(self, num):
         if num == 1:
             return self
+
         if num % 2 == 1:
-            return self * self._eval_pow_by_recursion(num - 1)
-        ret = self._eval_pow_by_recursion(num // 2)
-        return ret * ret
+            a, b = self, self._eval_pow_by_recursion(num - 1)
+        else:
+            a = b = self._eval_pow_by_recursion(num // 2)
+
+        return a.multiply(b)
+
+    def _eval_pow_by_cayley(self, exp):
+        from sympy.discrete.recurrences import linrec_coeffs
+        row = self.shape[0]
+        p = self.charpoly()
+
+        coeffs = (-p).all_coeffs()[1:]
+        coeffs = linrec_coeffs(coeffs, exp)
+        new_mat = self.eye(row)
+        ans = self.zeros(row)
+
+        for i in range(row):
+            ans += coeffs[i]*new_mat
+            new_mat *= self
+
+        return ans
+
+    def _eval_pow_by_recursion_dotprodsimp(self, num, prevsimp=None):
+        if prevsimp is None:
+            prevsimp = [True]*len(self)
+
+        if num == 1:
+            return self
+
+        if num % 2 == 1:
+            a, b = self, self._eval_pow_by_recursion_dotprodsimp(num - 1,
+                    prevsimp=prevsimp)
+        else:
+            a = b = self._eval_pow_by_recursion_dotprodsimp(num // 2,
+                    prevsimp=prevsimp)
+
+        m     = a.multiply(b, dotprodsimp=False)
+        lenm  = len(m)
+        elems = [None]*lenm
+
+        for i in range(lenm):
+            if prevsimp[i]:
+                elems[i], prevsimp[i] = _dotprodsimp(m[i], withsimp=True)
+            else:
+                elems[i] = m[i]
+
+        return m._new(m.rows, m.cols, elems)
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2089,7 +2273,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return self * (S.One / other)
+        return self * (self.one / other)
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
@@ -2098,6 +2282,9 @@ class MatrixArithmetic(MatrixRequired):
             return NotImplemented
 
         return self.__mul__(other)
+
+    def __mod__(self, other):
+        return self.applyfunc(lambda x: x % other)
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
@@ -2127,6 +2314,22 @@ class MatrixArithmetic(MatrixRequired):
 
         matrix_multiply_elementwise
         """
+
+        return self.multiply(other)
+
+    def multiply(self, other, dotprodsimp=None):
+        """Same as __mul__() but with optional simplification.
+
+        Parameters
+        ==========
+
+        dotprodsimp : bool, optional
+            Specifies whether intermediate term algebraic simplification is used
+            during matrix multiplications to control expression blowup and thus
+            speed up calculation. Default is off.
+        """
+
+        isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2137,7 +2340,11 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other)
+            m = self._eval_matrix_mul(other)
+            if isimpbool:
+                return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
+            return m
+
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
@@ -2151,41 +2358,133 @@ class MatrixArithmetic(MatrixRequired):
 
         return NotImplemented
 
+    def multiply_elementwise(self, other):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
+        Matrix([
+        [  0, 10, 200],
+        [300, 40,   5]])
+
+        See Also
+        ========
+
+        sympy.matrices.matrices.MatrixBase.cross
+        sympy.matrices.matrices.MatrixBase.dot
+        multiply
+        """
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
+
+        return self._eval_matrix_mul_elementwise(other)
+
     def __neg__(self):
         return self._eval_scalar_mul(-1)
 
     @call_highest_priority('__rpow__')
-    def __pow__(self, num):
+    def __pow__(self, exp):
+        """Return self**exp a scalar or symbol."""
+
+        return self.pow(exp)
+
+
+    def pow(self, exp, method=None):
+        r"""Return self**exp a scalar or symbol.
+
+        Parameters
+        ==========
+
+        method : multiply, mulsimp, jordan, cayley
+            If multiply then it returns exponentiation using recursion.
+            If jordan then Jordan form exponentiation will be used.
+            If cayley then the exponentiation is done using Cayley-Hamilton
+            theorem.
+            If mulsimp then the exponentiation is done using recursion
+            with dotprodsimp. This specifies whether intermediate term
+            algebraic simplification is used during naive matrix power to
+            control expression blowup and thus speed up calculation.
+            If None, then it heuristically decides which method to use.
+
+        """
+
+        if method is not None and method not in ['multiply', 'mulsimp', 'jordan', 'cayley']:
+            raise TypeError('No such method')
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
         jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
-        num = sympify(num)
-        if num.is_Number and num % 1 == 0:
+        exp = sympify(exp)
+
+        if exp.is_zero:
+            return a._new(a.rows, a.cols, lambda i, j: int(i == j))
+        if exp == 1:
+            return a
+
+        diagonal = getattr(a, 'is_diagonal', None)
+        if diagonal is not None and diagonal():
+            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
+
+        if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
-                return a._new([[a[0]**num]])
-            if num == 0:
-                return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-            if num < 0:
-                num = -num
+                return a._new([[a[0]**exp]])
+            if exp < 0:
+                exp = -exp
                 a = a.inv()
-            # When certain conditions are met,
-            # Jordan block algorithm is faster than
-            # computation by recursion.
-            elif a.rows == 2 and num > 100000 and jordan_pow is not None:
-                try:
-                    return jordan_pow(num)
-                except MatrixError:
-                    pass
-            return a._eval_pow_by_recursion(num)
-        elif not num.is_Number and num.is_negative is None and a.det() == 0:
-            from sympy.matrices.expressions import MatPow
-            return MatPow(a, num)
-        elif isinstance(num, (Expr, float)):
-            return jordan_pow(num)
-        else:
-            raise TypeError(
-                "Only SymPy expressions or integers are supported as exponent for matrices")
+        # When certain conditions are met,
+        # Jordan block algorithm is faster than
+        # computation by recursion.
+        if method == 'jordan':
+            try:
+                return jordan_pow(exp)
+            except MatrixError:
+                if method == 'jordan':
+                    raise
+
+        elif method == 'cayley':
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("cayley method is only valid for integer powers")
+            return a._eval_pow_by_cayley(exp)
+
+        elif method == "mulsimp":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("mulsimp method is only valid for integer powers")
+            return a._eval_pow_by_recursion_dotprodsimp(exp)
+
+        elif method == "multiply":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("multiply method is only valid for integer powers")
+            return a._eval_pow_by_recursion(exp)
+
+        elif method is None and exp.is_Number and exp % 1 == 0:
+            # Decide heuristically which method to apply
+            if a.rows == 2 and exp > 100000:
+                return jordan_pow(exp)
+            elif _get_intermediate_simp_bool(True, None):
+                return a._eval_pow_by_recursion_dotprodsimp(exp)
+            elif exp > 10000:
+                return a._eval_pow_by_cayley(exp)
+            else:
+                return a._eval_pow_by_recursion(exp)
+
+        if jordan_pow:
+            try:
+                return jordan_pow(exp)
+            except NonInvertibleMatrixError:
+                # Raised by jordan_pow on zero determinant matrix unless exp is
+                # definitely known to be a non-negative integer.
+                # Here we raise if n is definitely not a non-negative integer
+                # but otherwise we can leave this as an unevaluated MatPow.
+                if exp.is_integer is False or exp.is_nonnegative is False:
+                    raise
+
+        from sympy.matrices.expressions import MatPow
+        return MatPow(a, exp)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -2236,38 +2535,12 @@ class MatrixArithmetic(MatrixRequired):
     def __truediv__(self, other):
         return self.__div__(other)
 
-    def multiply_elementwise(self, other):
-        """Return the Hadamard product (elementwise product) of A and B
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> A.multiply_elementwise(B)
-        Matrix([
-        [  0, 10, 200],
-        [300, 40,   5]])
-
-        See Also
-        ========
-
-        cross
-        dot
-        multiply
-        """
-        if self.shape != other.shape:
-            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
-
-        return self._eval_matrix_mul_elementwise(other)
-
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    _diff_wrt = True
+    _diff_wrt = True  # type: bool
 
 
 class _MinimalMatrix(object):
@@ -2283,6 +2556,8 @@ class _MinimalMatrix(object):
     is_MatrixLike = True
     _sympify = staticmethod(sympify)
     _class_priority = 3
+    zero = S.Zero
+    one = S.One
 
     is_Matrix = True
     is_MatrixExpr = False
@@ -2371,37 +2646,62 @@ class _MinimalMatrix(object):
         return (self.rows, self.cols)
 
 
+class _CastableMatrix: # this is needed here ONLY FOR TESTS.
+    def as_mutable(self):
+        return self
+
+    def as_immutable(self):
+        return self
+
+
 class _MatrixWrapper(object):
-    """Wrapper class providing the minimum functionality
-    for a matrix-like object: .rows, .cols, .shape, indexability,
-    and iterability.  CommonMatrix math operations should work
-    on matrix-like objects.  For example, wrapping a numpy
-    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
+    """Wrapper class providing the minimum functionality for a matrix-like
+    object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
+    math operations should work on matrix-like objects. This one is intended for
+    matrix-like objects which use the same indexing format as SymPy with respect
+    to returning matrix elements instead of rows for non-tuple indexes.
     """
+
+    is_Matrix     = False # needs to be here because of __getattr__
     is_MatrixLike = True
 
-    def __init__(self, mat, shape=None):
+    def __init__(self, mat, shape):
         self.mat = mat
-        self.rows, self.cols = mat.shape if shape is None else shape
-
-    def __getattr__(self, attr):
-        """Most attribute access is passed straight through
-        to the stored matrix"""
-        return getattr(self.mat, attr)
+        self.shape = shape
+        self.rows, self.cols = shape
 
     def __getitem__(self, key):
-        return self.mat.__getitem__(key)
+        if isinstance(key, tuple):
+            return sympify(self.mat.__getitem__(key))
+
+        return sympify(self.mat.__getitem__((key // self.rows, key % self.cols)))
+
+    def __iter__(self): # supports numpy.matrix and numpy.array
+        mat = self.mat
+        cols = self.cols
+
+        return iter(sympify(mat[r, c]) for r in range(self.rows) for c in range(cols))
 
 
 def _matrixify(mat):
     """If `mat` is a Matrix or is matrix-like,
     return a Matrix or MatrixWrapper object.  Otherwise
     `mat` is passed through without modification."""
-    if getattr(mat, 'is_Matrix', False):
+
+    if getattr(mat, 'is_Matrix', False) or getattr(mat, 'is_MatrixLike', False):
         return mat
-    if hasattr(mat, 'shape'):
+
+    shape = None
+
+    if hasattr(mat, 'shape'): # numpy, scipy.sparse
         if len(mat.shape) == 2:
-            return _MatrixWrapper(mat)
+            shape = mat.shape
+    elif hasattr(mat, 'rows') and hasattr(mat, 'cols'): # mpmath
+        shape = (mat.rows, mat.cols)
+
+    if shape:
+        return _MatrixWrapper(mat, shape)
+
     return mat
 
 

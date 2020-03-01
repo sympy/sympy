@@ -7,7 +7,7 @@ Plane
 """
 from __future__ import division, print_function
 
-from sympy import simplify
+from sympy import simplify  # type:ignore
 from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.symbol import _symbol
 from sympy.core.compatibility import is_sequence
@@ -16,7 +16,7 @@ from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve, linsolve
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent, func_name
+from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
@@ -278,31 +278,25 @@ class Plane(GeometryEntity):
         0
 
         """
-        from sympy.geometry.line import LinearEntity3D
         if self.intersection(o) != []:
             return S.Zero
 
-        if isinstance(o, Point3D):
-           x, y, z = map(Dummy, 'xyz')
-           k = self.equation(x, y, z)
-           a, b, c = [k.coeff(i) for i in (x, y, z)]
-           d = k.xreplace({x: o.args[0], y: o.args[1], z: o.args[2]})
-           t = abs(d/sqrt(a**2 + b**2 + c**2))
-           return t
-        if isinstance(o, LinearEntity3D):
-            a, b = o.p1, self.p1
-            c = Matrix(a.direction_ratio(b))
-            d = Matrix(self.normal_vector)
-            e = c.dot(d)
-            f = sqrt(sum([i**2 for i in self.normal_vector]))
-            return abs(e / f)
-        if isinstance(o, Plane):
-            a, b = o.p1, self.p1
-            c = Matrix(a.direction_ratio(b))
-            d = Matrix(self.normal_vector)
-            e = c.dot(d)
-            f = sqrt(sum([i**2 for i in self.normal_vector]))
-            return abs(e / f)
+        if isinstance(o, (Segment3D, Ray3D)):
+            a, b = o.p1, o.p2
+            pi, = self.intersection(Line3D(a, b))
+            if pi in o:
+                return self.distance(pi)
+            elif a in Segment3D(pi, b):
+                return self.distance(a)
+            else:
+                assert isinstance(o, Segment3D) is True
+                return self.distance(b)
+
+        # following code handles `Point3D`, `LinearEntity3D`, `Plane`
+        a = o if isinstance(o, Point3D) else o.p1
+        n = Point3D(self.normal_vector).unit
+        d = (a - self.p1).dot(n)
+        return abs(d)
 
 
     def equals(self, o):
@@ -392,30 +386,35 @@ class Plane(GeometryEntity):
             else:
                 return []
         if isinstance(o, (LinearEntity, LinearEntity3D)):
+            # recast to 3D
+            p1, p2 = o.p1, o.p2
+            if isinstance(o, Segment):
+                o = Segment3D(p1, p2)
+            elif isinstance(o, Ray):
+                o = Ray3D(p1, p2)
+            elif isinstance(o, Line):
+                o = Line3D(p1, p2)
+            else:
+                raise ValueError('unhandled linear entity: %s' % o.func)
             if o in self:
-                p1, p2 = o.p1, o.p2
-                if isinstance(o, Segment):
-                    o = Segment3D(p1, p2)
-                elif isinstance(o, Ray):
-                    o = Ray3D(p1, p2)
-                elif isinstance(o, Line):
-                    o = Line3D(p1, p2)
-                else:
-                    raise ValueError('unhandled linear entity: %s' % o.func)
                 return [o]
             else:
-                x, y, z = map(Dummy, 'xyz')
                 t = Dummy()  # unnamed else it may clash with a symbol in o
                 a = Point3D(o.arbitrary_point(t))
-                b = self.equation(x, y, z)
+                p1, n = self.p1, Point3D(self.normal_vector)
 
                 # TODO: Replace solve with solveset, when this line is tested
-                c = solve(b.subs(list(zip((x, y, z), a.args))), t)
+                c = solve((a - p1).dot(n), t)
                 if not c:
                     return []
                 else:
+                    c = [i for i in c if i.is_real is not False]
+                    if len(c) > 1:
+                        c = [i for i in c if i.is_real]
+                    if len(c) != 1:
+                        raise Undecidable("not sure which point is real")
                     p = a.subs(t, c[0])
-                    if p not in self:
+                    if p not in o:
                         return []  # e.g. a segment might not intersect a plane
                     return [p]
         if isinstance(o, Plane):
@@ -495,7 +494,7 @@ class Plane(GeometryEntity):
         elif isinstance(l, Plane):
             a = Matrix(l.normal_vector)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero:
+            if a.cross(b).is_zero_matrix:
                 return True
             else:
                 return False
@@ -528,7 +527,7 @@ class Plane(GeometryEntity):
         if isinstance(l, LinearEntity3D):
             a = Matrix(l.direction_ratio)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero:
+            if a.cross(b).is_zero_matrix:
                 return True
             else:
                 return False
@@ -863,7 +862,6 @@ class Plane(GeometryEntity):
         {u: sqrt(10)/5, v: sqrt(10)/15}
         """
         from sympy.geometry.point import Point
-        from sympy.core.symbol import Dummy
         from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)

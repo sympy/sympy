@@ -49,6 +49,11 @@ def author_name(line):
     assert line.endswith(">")
     return line.split("<", 1)[0].strip()
 
+def author_email(line):
+    assert line.count("<") == line.count(">") == 1
+    assert line.endswith(">")
+    return line.split("<", 1)[1][:-1].strip()
+
 sysexit = 0
 print(blue("checking git authors..."))
 
@@ -114,6 +119,41 @@ if multi:
         print()
         for e in sorted(dups[k]):
             print('\t%s' % e)
+
+bad_names = []
+bad_emails = []
+for i in git_people:
+    name = author_name(i)
+    email = author_email(i)
+    if '@' in name:
+        bad_names.append(i)
+    elif '@' not in email:
+        bad_emails.append(i)
+if bad_names:
+    print()
+    print(yellow(filldedent("""
+        The following people appear to have an email address
+        listed for their name. Entries should be added to
+        .mailmap so that names are formatted like
+        "Name <email address>".
+        """)))
+    for i in bad_names:
+        print("\t%s" % i)
+
+# TODO: Should we check for bad emails as well? Some people have empty email
+# addresses. The above check seems to catch people who get the name and email
+# backwards, so let's leave this alone for now.
+
+# if bad_emails:
+#     print()
+#     print(yellow(filldedent("""
+#         The following names do not appear to have valid
+#         emails. Entries should be added to .mailmap that
+#         use a proper email address. If there is no email
+#         address for a person, use "none@example.com".
+#         """)))
+#     for i in bad_emails:
+#         print("\t%s" % i)
 
 print()
 print(blue("checking .mailmap..."))

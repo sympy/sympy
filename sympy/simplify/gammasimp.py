@@ -278,7 +278,7 @@ def _gammasimp(expr, as_comb):
                     elif n < 0:
                         for k in range(-n):
                             do.append(2*y - 1 - k)
-                    ng.append(y + S(1)/2)
+                    ng.append(y + S.Half)
                     no.append(2**(2*y - 1))
                     do.append(sqrt(S.Pi))
 
@@ -362,7 +362,7 @@ def _gammasimp(expr, as_comb):
 
                         # (2)
                         numer.append((2*S.Pi)**(S(n - 1)/2)*
-                                     n**(S(1)/2 - con))
+                                     n**(S.Half - con))
                         # (3)
                         new.append(con)
 

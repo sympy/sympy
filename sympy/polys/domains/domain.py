@@ -2,23 +2,24 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, integer_types, is_sequence
+from sympy.core.compatibility import HAS_GMPY, is_sequence
 from sympy.core.decorators import deprecated
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
-from sympy.polys.polyutils import _unify_gens
+from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
 class Domain(object):
     """Represents an abstract domain. """
 
-    dtype = None
-    zero = None
-    one = None
+    dtype = None  # type: Optional[Type]
+    zero = None  # type: Optional[Any]
+    one = None  # type: Optional[Any]
 
     is_Ring = False
     is_Field = False
@@ -45,15 +46,15 @@ class Domain(object):
 
     has_CharacteristicZero = False
 
-    rep = None
-    alias = None
+    rep = None  # type: Optional[str]
+    alias = None  # type: Optional[str]
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
     def has_Field(self):
         return self.is_Field
 
-    @property
+    @property  # type: ignore
     @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
     def has_Ring(self):
         return self.is_Ring
@@ -103,6 +104,9 @@ class Domain(object):
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
+
         if base is not None:
             return self.convert_from(element, base)
 
@@ -111,7 +115,7 @@ class Domain(object):
 
         from sympy.polys.domains import PythonIntegerRing, GMPYIntegerRing, GMPYRationalField, RealField, ComplexField
 
-        if isinstance(element, integer_types):
+        if isinstance(element, int):
             return self.convert_from(element, PythonIntegerRing())
 
         if HAS_GMPY:
@@ -162,7 +166,9 @@ class Domain(object):
     def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """
         try:
-            self.convert(a)
+            if _not_a_coeff(a):
+                raise CoercionFailed
+            self.convert(a)  # this might raise, too
         except CoercionFailed:
             return False
 
@@ -537,3 +543,6 @@ class Domain(object):
     def characteristic(self):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')
+
+
+__all__ = ['Domain']

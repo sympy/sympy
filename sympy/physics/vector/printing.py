@@ -150,7 +150,7 @@ class VectorLatexPrinter(LatexPrinter):
             base = r"\ddddot{%s}" % base
         else: # Fallback to standard printing
             return LatexPrinter().doprint(der_expr)
-        if len(base_split) is not 1:
+        if len(base_split) != 1:
             base += '_' + base_split[1]
         return base
 
@@ -227,7 +227,7 @@ def vprint(expr, **settings):
     sympy.physics vector package.
 
     Extends SymPy's StrPrinter, takes the same setting accepted by SymPy's
-    `sstr()`, and is equivalent to `print(sstr(foo))`.
+    :func:`~.sstr`, and is equivalent to ``print(sstr(foo))``.
 
     Parameters
     ==========
@@ -311,7 +311,7 @@ def vpprint(expr, **settings):
 
     Mainly used for expressions not inside a vector; the output of running
     scripts and generating equations of motion. Takes the same options as
-    SymPy's pretty_print(); see that function for more information.
+    SymPy's :func:`~.pretty_print`; see that function for more information.
 
     Parameters
     ==========
@@ -344,7 +344,7 @@ def vlatex(expr, **settings):
     objects.
 
     For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
-    same options as SymPy's latex(); see that function for more information;
+    same options as SymPy's :func:`~.latex`; see that function for more information;
 
     Parameters
     ==========
@@ -386,7 +386,7 @@ def init_vprinting(**kwargs):
     displaying as ``Derivative(f(t),t)``, it will display ``f'``. This is
     only actually needed for when derivatives are present and are not in a
     physics.vector.Vector or physics.vector.Dyadic object. This function is a
-    light wrapper to `sympy.interactive.init_printing`. Any keyword
+    light wrapper to :func:`~.init_printing`. Any keyword
     arguments for it are valid here.
 
     {0}
@@ -417,5 +417,5 @@ def init_vprinting(**kwargs):
     kwargs['latex_printer'] = vlatex
     init_printing(**kwargs)
 
-params = init_printing.__doc__.split('Examples\n    ========')[0]
-init_vprinting.__doc__ = init_vprinting.__doc__.format(params)
+params = init_printing.__doc__.split('Examples\n    ========')[0]  # type: ignore
+init_vprinting.__doc__ = init_vprinting.__doc__.format(params)  # type: ignore

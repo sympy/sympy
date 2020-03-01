@@ -1,6 +1,6 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
     count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
-    Equivalent, MatrixSymbol, Symbol, ITE, Rel
+    Equivalent, MatrixSymbol, Symbol, ITE, Rel, Rational
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -45,6 +45,7 @@ def test_count_ops_visual():
     assert count(-1) == NEG
     assert count(-2) == NEG
     assert count(S(2)/3) == DIV
+    assert count(Rational(2, 3)) == DIV
     assert count(pi/3) == DIV
     assert count(-pi/3) == DIV + NEG
     assert count(I - 1) == SUB
@@ -54,6 +55,7 @@ def test_count_ops_visual():
     assert count(x) is S.Zero
     assert count(-x) == NEG
     assert count(-2*x/3) == NEG + DIV + MUL
+    assert count(Rational(-2, 3)*x) == NEG + DIV + MUL
     assert count(1/x) == DIV
     assert count(1/(x*y)) == DIV + MUL
     assert count(-1/x) == NEG + DIV
@@ -66,7 +68,8 @@ def test_count_ops_visual():
     assert count(-2*x**2) == POW + MUL + NEG
 
     assert count(x + pi/3) == ADD + DIV
-    assert count(x + S(1)/3) == ADD + DIV
+    assert count(x + S.One/3) == ADD + DIV
+    assert count(x + Rational(1, 3)) == ADD + DIV
     assert count(x + y) == ADD
     assert count(x - y) == SUB
     assert count(y - x) == SUB

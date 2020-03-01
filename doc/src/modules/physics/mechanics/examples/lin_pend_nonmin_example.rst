@@ -3,7 +3,7 @@ Nonminimal Coordinates Pendulum
 ===============================
 
 In this example we demonstrate the use of the functionality provided in
-:mod:`mechanics` for deriving the equations of motion (EOM) for a pendulum
+:mod:`sympy.physics.mechanics` for deriving the equations of motion (EOM) for a pendulum
 with a nonminimal set of coordinates. As the pendulum is a one degree of
 freedom system, it can be described using one coordinate and one speed (the
 pendulum angle, and the angular velocity respectively). Choosing instead to

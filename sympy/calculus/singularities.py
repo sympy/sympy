@@ -15,10 +15,10 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy.core.sympify import sympify
-from sympy.solvers.solveset import solveset
-from sympy.simplify import simplify
 from sympy import S, Symbol
+from sympy.core.sympify import sympify
+from sympy.simplify import simplify
+from sympy.solvers.solveset import solveset
 
 
 def singularities(expression, symbol):
@@ -71,13 +71,13 @@ def singularities(expression, symbol):
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
-    EmptySet()
+    EmptySet
     >>> singularities(1/(x + 1), x)
-    {-1}
+    FiniteSet(-1)
     >>> singularities(1/(y**2 + 1), y)
-    {-I, I}
+    FiniteSet(I, -I)
     >>> singularities(1/(y**3 + 1), y)
-    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+    FiniteSet(-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2)
 
     """
     if not expression.is_rational_function(symbol):

@@ -50,6 +50,13 @@ class FractionField(Field, CompositeDomain):
     def order(self):
         return self.field.order
 
+    @property
+    def is_Exact(self):
+        return self.domain.is_Exact
+
+    def get_exact(self):
+        return FractionField(self.domain.get_exact(), self.symbols)
+
     def __str__(self):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 

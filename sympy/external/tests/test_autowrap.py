@@ -5,11 +5,11 @@ from sympy import symbols, Eq, Mod
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
 Cython = import_module('Cython', min_module_version='0.15.1')
-f2py = import_module('numpy.f2py', __import__kwargs={'fromlist': ['f2py']})
+f2py = import_module('numpy.f2py', import_kwargs={'fromlist': ['f2py']})
 
 f2pyworks = False
 if f2py:
@@ -143,6 +143,7 @@ def runtest_issue_10274(language, backend):
 
 
 def runtest_issue_15337(language, backend):
+    has_module('numpy')
     # NOTE : autowrap was originally designed to only accept an iterable for
     # the kwarg "helpers", but in issue 10274 the user mistakenly thought that
     # if there was only a single helper it did not need to be passed via an
@@ -256,7 +257,6 @@ def test_autowrap_custom_printer():
     from sympy import pi
     from sympy.utilities.codegen import C99CodeGen
     from sympy.printing.ccode import C99CodePrinter
-    from sympy.functions.elementary.exponential import exp
 
     class PiPrinter(C99CodePrinter):
         def _print_Pi(self, expr):

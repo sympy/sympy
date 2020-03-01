@@ -1,11 +1,10 @@
 from sympy import (
-    symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
-    cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
+    symbols, sin, simplify, cos, trigsimp, tan, exptrigsimp,sinh,
+    cosh, diff, cot, Subs, exp, tanh, S, integrate, I,Matrix,
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
     )
 
-from sympy.core.compatibility import long
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
 
@@ -25,7 +24,7 @@ def test_trigsimp1():
     assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
 
     assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
-    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x)/2 + S(7)/2
+    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x)/2 + Rational(7, 2)
 
     assert trigsimp(sin(x)/cos(x)) == tan(x)
     assert trigsimp(2*tan(x)*cos(x)) == 2*sin(x)
@@ -268,7 +267,7 @@ def test_hyperbolic_simp():
     assert trigsimp(coth(x)**2 - 1/sinh(x)**2) == 1
 
     assert trigsimp(5*cosh(x)**2 - 5*sinh(x)**2) == 5
-    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*cosh(x)/2 + S(7)/2
+    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*cosh(x)/2 + Rational(7, 2)
 
     assert trigsimp(sinh(x)/cosh(x)) == tanh(x)
     assert trigsimp(tanh(x)) == trigsimp(sinh(x)/cosh(x))
@@ -330,7 +329,7 @@ def test_trigsimp_groebner():
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
-    assert trigsimp_groebner(ex, hints=[long(2)]) in results
+    assert trigsimp_groebner(ex, hints=[int(2)]) in results
 
     # test "I"
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
@@ -364,12 +363,12 @@ def test_issue_15129_trigsimp_methods():
     t3 = Matrix([cos(Rational(1, 25)), sin(Rational(1, 25)), 0])
     r1 = t1.dot(t2)
     r2 = t1.dot(t3)
-    assert trigsimp(r1) == cos(S(1)/50)
-    assert trigsimp(r2) == sin(S(3)/50)
+    assert trigsimp(r1) == cos(Rational(1, 50))
+    assert trigsimp(r2) == sin(Rational(3, 50))
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.utilities.randtest import verify_numerically as tn
+        from sympy.testing.randtest import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True
@@ -418,7 +417,7 @@ def test_exptrigsimp_noncommutative():
     assert p == exptrigsimp(p) != 0
 
 def test_powsimp_on_numbers():
-    assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
+    assert 2**(Rational(1, 3) - 2) == 2**Rational(1, 3)/4
 
 
 @XFAIL
@@ -436,9 +435,9 @@ def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
     e2 = sin(x)**2 + cos(x)**2
     e3 = expand((x + y)*y/x)
-    s1 = simplify(e1)
+    # s1 = simplify(e1)
     s2 = simplify(e2)
-    s3 = simplify(e3)
+    # s3 = simplify(e3)
 
     # trigsimp tries not to touch non-trig containing args
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \

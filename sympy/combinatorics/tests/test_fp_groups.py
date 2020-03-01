@@ -4,7 +4,7 @@ from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                            simplify_presentation)
 from sympy.combinatorics.free_groups import (free_group, FreeGroup)
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 """
 References
@@ -155,7 +155,7 @@ def test_order():
     assert f.order() == 8
 
     f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
-    assert f.order() == S.Infinity
+    assert f.order() is S.Infinity
 
     F, a, b, c = free_group("a, b, c")
     f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
@@ -163,7 +163,7 @@ def test_order():
 
     F, x = free_group("x")
     f = FpGroup(F, [])
-    assert f.order() == S.Infinity
+    assert f.order() is S.Infinity
 
     f = FpGroup(free_group('')[0], [])
     assert f.order() == 1
@@ -225,8 +225,29 @@ def test_permutation_methods():
     S = FpSubgroup(G, G.derived_subgroup())
     assert S.order() == 4
 
+
 def test_simplify_presentation():
     # ref #16083
     G = simplify_presentation(FpGroup(FreeGroup([]), []))
     assert not G.generators
     assert not G.relators
+
+
+def test_cyclic():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x*y, x**-1*y**-1*x*y*x])
+    assert f.is_cyclic
+    f = FpGroup(F, [x*y, x*y**-1])
+    assert f.is_cyclic
+    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    assert not f.is_cyclic
+
+
+def test_abelian_invariants():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x*y, x**-1*y**-1*x*y*x])
+    assert f.abelian_invariants() == []
+    f = FpGroup(F, [x*y, x*y**-1])
+    assert f.abelian_invariants() == [2]
+    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    assert f.abelian_invariants() == [2, 4]

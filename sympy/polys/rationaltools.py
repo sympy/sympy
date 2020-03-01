@@ -16,7 +16,7 @@ def together(expr, deep=False, fraction=True):
     and puts it (them) together by denesting and combining rational
     subexpressions. No heroic measures are taken to minimize degree
     of the resulting numerator and denominator. To obtain completely
-    reduced expression use :func:`cancel`. However, :func:`together`
+    reduced expression use :func:`~.cancel`. However, :func:`~.together`
     can preserve as much as possible of the structure of the input
     expression in the output (no expansion is performed).
 
@@ -25,10 +25,10 @@ def together(expr, deep=False, fraction=True):
     also possible to transform interior of function applications,
     by setting ``deep`` flag to ``True``.
 
-    By definition, :func:`together` is a complement to :func:`apart`,
+    By definition, :func:`~.together` is a complement to :func:`~.apart`,
     so ``apart(together(expr))`` should return expr unchanged. Note
-    however, that :func:`together` uses only symbolic methods, so
-    it might be necessary to use :func:`cancel` to perform algebraic
+    however, that :func:`~.together` uses only symbolic methods, so
+    it might be necessary to use :func:`~.cancel` to perform algebraic
     simplification and minimize degree of the numerator and denominator.
 
     Examples

@@ -76,9 +76,10 @@ class MatrixSlice(MatrixExpr):
         cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
         return rows, cols
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return self.parent._entry(i*self.rowslice[2] + self.rowslice[0],
-                                  j*self.colslice[2] + self.colslice[0])
+                                  j*self.colslice[2] + self.colslice[0],
+                                  **kwargs)
 
     @property
     def on_diag(self):
