@@ -1,5 +1,5 @@
 from sympy.core.containers import Tuple
-from sympy.core.function import (Function, Lambda, nfloat)
+from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Gt,
@@ -9,7 +9,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
-    atanh, sinh, tanh)
+    sinh, tanh, cosh, sech, coth)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -30,8 +30,9 @@ from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import (XFAIL, raises, skip, slow, SKIP,
+    nocache_fail)
+from sympy.testing.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
 from sympy.solvers.solveset import (
@@ -178,23 +179,39 @@ def test_issue_11536():
 
 
 def test_issue_17479():
-    import sympy as sb
-    from sympy.solvers.solveset import nonlinsolve
-    x, y, z = sb.symbols("x, y, z")
+    x, y, z = symbols("x, y, z")
     f = (x**2 + y**2)**2 + (x**2 + z**2)**2 - 2*(2*x**2 + y**2 + z**2)
-    fx = sb.diff(f, x)
-    fy = sb.diff(f, y)
-    fz = sb.diff(f, z)
+    fx = diff(f, x)
+    fy = diff(f, y)
+    fz = diff(f, z)
     sol = nonlinsolve([fx, fy, fz], [x, y, z])
-    # FIXME: This previously gave 18 solutions and now gives 20 due to fixes
-    # in the handling of intersection of FiniteSets or possibly a small change
-    # to ImageSet._contains. However Using expand I can turn this into 16
-    # solutions either way:
-    #
-    #    >>> len(FiniteSet(*(Tuple(*(expand(w) for w in s)) for s in sol)))
-    #    16
-    #
-    assert len(sol) == 20
+    assert len(sol) >= 4 and len(sol) <= 20
+    # nonlinsolve has been giving a varying number of solutions
+    # (originally 18, then 20, now 19) due to various internal changes.
+    # Unfortunately not all the solutions are actually valid and some are
+    # redundant. Since the original issue was that an exception was raised,
+    # this first test only checks that nonlinsolve returns a "plausible"
+    # solution set. The next test checks the result for correctness.
+
+
+@XFAIL
+def test_issue_18449():
+    x, y, z = symbols("x, y, z")
+    f = (x**2 + y**2)**2 + (x**2 + z**2)**2 - 2*(2*x**2 + y**2 + z**2)
+    fx = diff(f, x)
+    fy = diff(f, y)
+    fz = diff(f, z)
+    sol = nonlinsolve([fx, fy, fz], [x, y, z])
+    for (xs, ys, zs) in sol:
+        d = {x: xs, y: ys, z: zs}
+        assert tuple(_.subs(d).simplify() for _ in (fx, fy, fz)) == (0, 0, 0)
+    # After simplification and removal of duplicate elements, there should
+    # only be 4 parametric solutions left:
+    # simplifiedsolutions = FiniteSet((sqrt(1 - z**2), z, z),
+    #                                 (-sqrt(1 - z**2), z, z),
+    #                                 (sqrt(1 - z**2), -z, z),
+    #                                 (-sqrt(1 - z**2), -z, z))
+    # TODO: Is the above solution set definitely complete?
 
 
 def test_is_function_class_equation():
@@ -615,6 +632,9 @@ def test_solve_abs():
             ImageSet(Lambda(n, n*pi - (-1)**(-n)*pi/2), S.Integers)))
 
 
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x) == ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    assert solveset(cos(x)**2 - 2*cos(x) + 1, x) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
 
 def test_issue_9565():
     assert solveset_real(Abs((x - 1)/(x - 5)) <= Rational(1, 3), x) == Interval(-1, 2)
@@ -624,17 +644,6 @@ def test_issue_10069():
     eq = abs(1/(x - 1)) - 1 > 0
     u = Union(Interval.open(0, 1), Interval.open(1, 2))
     assert solveset_real(eq, x) == u
-
-
-@XFAIL
-def test_rewrite_trigh():
-    # if this import passes then the test below should also pass
-    from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
-        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
 
 
 def test_real_imag_splitting():
@@ -772,6 +781,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers)
 
 
+@nocache_fail
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -791,6 +801,7 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    # This fails when running with the cache off:
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(imageset(Lambda(n, 2*n*pi + pi*Rational(5, 3)), S.Integers),
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
@@ -823,6 +834,41 @@ def test_solve_trig():
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
+
+
+def test_solve_hyperbolic():
+    # actual solver: _solve_trig1
+    n = Dummy('n')
+    assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
+    assert solveset(sinh(x) + cos(x), x) == ConditionSet(x,
+        Eq(cos(x) + sinh(x), 0), S.Complexes)
+    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
+        log(sqrt(sqrt(5) - 2)))
+    assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
+        log(sqrt(3)/3), log(sqrt(3)))
+    assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
+        log((2 + sqrt(5))*exp(3)))
+    assert solveset_real(cosh(2*x) + 2*sinh(x) - 5, x) == FiniteSet(
+        log(-2 + sqrt(5)), log(1 + sqrt(2)))
+    assert solveset_real((coth(x) + sinh(2*x))/cosh(x) - 3, x) == FiniteSet(
+        log(S.Half + sqrt(5)/2), log(1 + sqrt(2)))
+    assert solveset_real(cosh(x)*sinh(x) - 2, x) == FiniteSet(
+        log(sqrt(4 + sqrt(17))))
+    assert solveset_real(sinh(x) + tanh(x) - 1, x) == FiniteSet(
+        log(sqrt(2)/2 + sqrt(-S(1)/2 + sqrt(2))))
+    assert solveset_complex(sinh(x) - I/2, x) == Union(
+        ImageSet(Lambda(n, I*(2*n*pi + 5*pi/6)), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi/6)), S.Integers))
+    assert solveset_complex(sinh(x) + sech(x), x) == Union(
+        ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers))
+    # issues #9606 / #9531:
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+    assert solveset(sinh(x), x, S.Complexes) == Union(
+        ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi), S.Integers))
 
 
 def test_solve_invalid_sol():
@@ -1870,6 +1916,11 @@ def test_issue_14454():
     assert invert_real(x**2, number, x, S.Reals)  # no error
 
 
+def test_issue_17882():
+    assert solveset(-8*x**2/(9*(x**2 - 1)**(S(4)/3)) + 4/(3*(x**2 - 1)**(S(1)/3)), x, S.Complexes) == \
+        FiniteSet(sqrt(3), -sqrt(3))
+
+
 def test_term_factors():
     assert list(_term_factors(3**x - 2)) == [-2, 3**x]
     expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
@@ -2158,6 +2209,7 @@ def test_invert_modular():
             (x, ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
     assert invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x) == \
             (x**2 + x + 1, ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
+    assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, EmptySet())
 
 
 def test_solve_modular():
@@ -2215,11 +2267,13 @@ def test_solve_modular():
     assert solveset(Mod(3**(3**x), 4) - 3, x, S.Integers) == \
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers)
-    # Not Implemented for m without primitive root
+    # Implemented for m without primitive root
+    assert solveset(Mod(x**3, 7) - 2, x, S.Integers) == EmptySet()
     assert solveset(Mod(x**3, 8) - 1, x, S.Integers) == \
-            ConditionSet(x, Eq(Mod(x**3, 8) - 1, 0), S.Integers)
+            ImageSet(Lambda(n, 8*n + 1), S.Integers)
     assert solveset(Mod(x**4, 9) - 4, x, S.Integers) == \
-            ConditionSet(x, Eq(Mod(x**4, 9) - 4, 0), S.Integers)
+            Union(ImageSet(Lambda(n, 9*n + 4), S.Integers),
+            ImageSet(Lambda(n, 9*n + 5), S.Integers))
     # domain intersection
     assert solveset(3 - Mod(5*x - 8, 7), x, S.Naturals0) == \
             Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0)

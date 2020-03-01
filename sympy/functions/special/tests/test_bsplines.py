@@ -1,8 +1,7 @@
 from sympy.functions import bspline_basis_set, interpolating_spline
-from sympy.core.compatibility import range
 from sympy import Piecewise, Interval, And
 from sympy import symbols, Rational, S
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 x, y = symbols('x,y')
 

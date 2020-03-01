@@ -58,13 +58,13 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core import sympify
 
-from sympy.simplify import simplify, hypersimp, hypersimilar
+from sympy.simplify import simplify, hypersimp, hypersimilar  # type: ignore
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -136,7 +136,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in range(r + 1):
         for j in range(i, r + 1):
-            polys[i] += coeffs[j]*binomial(j, i)
+            polys[i] += coeffs[j]*(binomial(j, i).as_poly(n))
 
         if not polys[i].is_zero:
             (exp,), coeff = polys[i].LT()
@@ -620,7 +620,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i]*z**i for i in range(r + 1)], 0, n, symbols=True)
+            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, symbols=True)
 
             if C is not None and C is not S.Zero:
                 symbols |= set(s)
@@ -813,10 +813,10 @@ def rsolve(f, y, init=None):
                     i = int(k.args[0])
                 else:
                     raise ValueError("Integer or term expected, got '%s'" % k)
-            try:
+
+            eq = solution.subs(n, i) - v
+            if eq.has(S.NaN):
                 eq = solution.limit(n, i) - v
-            except NotImplementedError:
-                eq = solution.subs(n, i) - v
             equations.append(eq)
 
         result = solve(equations, *symbols)

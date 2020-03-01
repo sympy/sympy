@@ -7,7 +7,7 @@ from sympy import (
     FunctionMatrix, Lambda, Derivative)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 
 
 def N_equals(a, b):

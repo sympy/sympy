@@ -2,7 +2,7 @@ from sympy import Abs, S, Symbol, symbols, I, Rational, PurePoly, Float
 from sympy.matrices import \
     Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
     ones, zeros, ShapeError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_sparse_matrix():
     def sparse_eye(n):
@@ -222,6 +222,22 @@ def test_sparse_matrix():
                           ( 1,  2, -3,  4,  5),
                           ( 1,  2,  3, -2,  5),
                           ( 1,  2,  3,  4, -1) )).det() == 11664
+
+    assert SparseMatrix(( ( 3,  0,  0, 0),
+                          (-2,  1,  0, 0),
+                          ( 0, -2,  5, 0),
+                          ( 5,  0,  3, 4) )).det() == 60
+
+    assert SparseMatrix(( ( 1,  0,  0,  0),
+                          ( 5,  0,  0,  0),
+                          ( 9, 10, 11, 0),
+                          (13, 14, 15, 16) )).det() == 0
+
+    assert SparseMatrix(( (3, 2, 0, 0, 0),
+                          (0, 3, 2, 0, 0),
+                          (0, 0, 3, 2, 0),
+                          (0, 0, 0, 3, 2),
+                          (0, 0, 0, 0, 3) )).det() == 243
 
     assert SparseMatrix(( ( 2,  7, -1, 3, 2),
                           ( 0,  0,  1, 0, 1),

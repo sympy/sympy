@@ -17,14 +17,14 @@
 
 from sympy.external import import_module
 
-sage = import_module('sage.all', __import__kwargs={'fromlist': ['all']})
+sage = import_module('sage.all', import_kwargs={'fromlist': ['all']})
 if not sage:
     #bin/test will not execute any tests now
     disabled = True
 
 import sympy
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 def is_trivially_equal(lhs, rhs):
     """
@@ -195,10 +195,10 @@ def test_functions():
 def test_issue_4023():
     sage.var("a x")
     log = sage.log
-    i = sympy.integrate(log(x)/a, (x, a, a + 1))
+    i = sympy.integrate(log(x)/a, (x, a, a + 1)) # noqa:F821
     i2 = sympy.simplify(i)
     s = sage.SR(i2)
-    is_trivially_equal(s, -log(a) + log(a + 1) + log(a + 1)/a - 1/a)
+    is_trivially_equal(s, -log(a) + log(a + 1) + log(a + 1)/a - 1/a) # noqa:F821
 
 def test_integral():
     #test Sympy-->Sage

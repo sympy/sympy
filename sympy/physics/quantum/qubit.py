@@ -12,7 +12,7 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
-from sympy.core.compatibility import string_types, range, SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -60,7 +60,7 @@ class QubitState(State):
             return args[0].qubit_values
 
         # Turn strings into tuple of strings
-        if len(args) == 1 and isinstance(args[0], string_types):
+        if len(args) == 1 and isinstance(args[0], str):
             args = tuple(args[0])
 
         args = sympify(args)
@@ -191,7 +191,7 @@ class Qubit(QubitState, Ket):
     def _represent_ZGate(self, basis, **options):
         """Represent this qubits in the computational basis (ZGate).
         """
-        format = options.get('format', 'sympy')
+        _format = options.get('format', 'sympy')
         n = 1
         definite_state = 0
         for it in reversed(self.qubit_values):
@@ -199,12 +199,12 @@ class Qubit(QubitState, Ket):
             n = n*2
         result = [0]*(2**self.dimension)
         result[int(definite_state)] = 1
-        if format == 'sympy':
+        if _format == 'sympy':
             return Matrix(result)
-        elif format == 'numpy':
+        elif _format == 'numpy':
             import numpy as np
             return np.matrix(result, dtype='complex').transpose()
-        elif format == 'scipy.sparse':
+        elif _format == 'scipy.sparse':
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()
 

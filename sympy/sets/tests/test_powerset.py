@@ -5,7 +5,7 @@ from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Interval
 from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import FiniteSet
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_powerset_creation():
@@ -46,17 +46,12 @@ def test_powerset__contains__():
     l = len(subset_series)
     for i in range(l):
         for j in range(l):
-            try:
-                if i <= j:
-                    assert subset_series[i] in \
-                        PowerSet(subset_series[j], evaluate=False)
-                else:
-                    assert subset_series[i] not in \
-                        PowerSet(subset_series[j], evaluate=False)
-            except:
-                raise AssertionError(
-                    'Powerset membership test failed between '
-                    '{} and {}.'.format(subset_series[i], subset_series[j]))
+            if i <= j:
+                assert subset_series[i] in \
+                    PowerSet(subset_series[j], evaluate=False)
+            else:
+                assert subset_series[i] not in \
+                    PowerSet(subset_series[j], evaluate=False)
 
 
 @XFAIL

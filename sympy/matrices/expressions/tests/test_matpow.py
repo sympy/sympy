@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core import symbols, pi, S
 from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix
 from sympy.matrices.expressions import MatPow, MatAdd, MatMul

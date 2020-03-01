@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Expr, Basic, Mul
-from sympy.assumptions import Q, ask
-from sympy.matrices.expressions.matexpr import MatrixElement
+from typing import Dict, Callable
 
+from sympy.core import S, Add, Expr, Basic, Mul
+from sympy.logic.boolalg import Boolean
+
+from sympy.assumptions import Q, ask  # type: ignore
 
 def refine(expr, assumptions=True):
     """
@@ -336,8 +338,11 @@ def refine_sign(expr, assumptions):
 
 def refine_matrixelement(expr, assumptions):
     """
+    Handler for symmetric part
+    
     Examples
     ========
+
     >>> from sympy.assumptions.refine import refine_matrixelement
     >>> from sympy import Q
     >>> from sympy.matrices.expressions.matexpr import MatrixElement, MatrixSymbol
@@ -347,12 +352,12 @@ def refine_matrixelement(expr, assumptions):
     >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
     X[0,1]
     """ 
+    from sympy.matrices.expressions.matexpr import MatrixElement
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
         if (expr.args[1] > expr.args[2]):
             return(MatrixElement(expr.args[0],expr.args[2],expr.args[1])) 
-        else:
-            return(expr)
+        return(expr)
 
 handlers_dict = {
     'Abs': refine_abs,
@@ -368,4 +373,4 @@ handlers_dict = {
     'im': refine_im,
     'sign': refine_sign,
     'matrixelement': refine_matrixelement
-}
+} # type: Dict[str, Callable[[Expr, Boolean], Expr]]

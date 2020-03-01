@@ -6,8 +6,8 @@ from sympy import (
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import (test_derivative_numerically as td,
+from sympy.testing.pytest import raises
+from sympy.testing.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 
@@ -230,6 +230,10 @@ def test_polygamma():
     assert polygamma(3, 1) == pi**4 / 15
     assert polygamma(3, 5) == 6*(Rational(-22369, 20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
+
+    assert polygamma(1, S.Half) == pi**2 / 2
+    assert polygamma(2, S.Half) == -14*zeta(3)
+    assert polygamma(11, S.Half) == 176896*pi**12
 
     def t(m, n):
         x = S(m)/n

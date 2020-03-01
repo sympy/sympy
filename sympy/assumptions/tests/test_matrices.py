@@ -2,7 +2,7 @@ from sympy import Q, ask, Symbol, DiagMatrix, DiagonalMatrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
 from sympy.matrices.expressions.factorizations import LofLU
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)

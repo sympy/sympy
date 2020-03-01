@@ -5,10 +5,9 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
-from sympy.utilities.pytest import slow
-from sympy.utilities.randtest import (verify_numerically,
+from sympy.testing.pytest import slow
+from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)
-from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
 

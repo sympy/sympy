@@ -1,18 +1,17 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta, Rational, symbols,
                    simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
                    cancel, exp, I, Piecewise, Sum, Dummy)
-from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
                          Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
                          sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
                          cmoment, smoment, characteristic_function, moment_generating_function,
-                         quantile,  kurtosis)
+                         quantile,  kurtosis, median)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.utilities.pytest import raises, skip
+from sympy.testing.pytest import raises, skip
 
 
 def BayesTest(A, B):
@@ -35,6 +34,7 @@ def test_discreteuniform():
     # Numeric
     assert E(Y) == S('-1/2')
     assert variance(Y) == S('33/4')
+    assert median(Y) == FiniteSet(-1, 0)
 
     for x in range(-5, 5):
         assert P(Eq(Y, x)) == S('1/10')
@@ -46,6 +46,8 @@ def test_discreteuniform():
 
     assert characteristic_function(X)(t) == exp(I*a*t)/3 + exp(I*b*t)/3 + exp(I*c*t)/3
     assert moment_generating_function(X)(t) == exp(a*t)/3 + exp(b*t)/3 + exp(c*t)/3
+    # issue 18611
+    raises(ValueError, lambda: DiscreteUniform('Z', [a, a, a, b, b, c]))
 
 def test_dice():
     # TODO: Make iid method!
@@ -99,7 +101,9 @@ def test_dice():
 
     assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
     assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
-
+    assert median(X) == FiniteSet(3, 4)
+    D = Die('D', 7)
+    assert median(D) == FiniteSet(4)
     # Bayes test for die
     BayesTest(X > 3, X + Y < 5)
     BayesTest(Eq(X - Y, Z), Z > Y)
@@ -189,9 +193,15 @@ def test_bernoulli():
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
     assert quantile(X)(z) == Piecewise((nan, (z > 1) | (z < 0)), (0, z <= 1 - p), (1, z <= 1))
-
+    Y = Bernoulli('Y', Rational(1, 2))
+    assert median(Y) == FiniteSet(0, 1)
+    Z = Bernoulli('Z', Rational(2, 3))
+    assert median(Z) == FiniteSet(1)
     raises(ValueError, lambda: Bernoulli('B', 1.5))
     raises(ValueError, lambda: Bernoulli('B', -0.5))
+
+    #issue 8248
+    assert X.pspace.compute_expectation(1) == 1
 
 def test_cdf():
     D = Die('D', 6)
@@ -240,13 +250,14 @@ def test_binomial_numeric():
 def test_binomial_quantile():
     X = Binomial('X', 50, S.Half)
     assert quantile(X)(0.95) == S(31)
+    assert median(X) == FiniteSet(25)
 
     X = Binomial('X', 5, S.Half)
     p = Symbol("p", positive=True)
     assert quantile(X)(p) == Piecewise((nan, p > S.One), (S.Zero, p <= Rational(1, 32)),\
         (S.One, p <= Rational(3, 16)), (S(2), p <= S.Half), (S(3), p <= Rational(13, 16)),\
         (S(4), p <= Rational(31, 32)), (S(5), p <= S.One))
-
+    assert median(X) == FiniteSet(2, 3)
 
 
 def test_binomial_symbolic():

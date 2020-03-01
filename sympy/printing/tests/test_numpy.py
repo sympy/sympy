@@ -1,18 +1,18 @@
 from sympy import (
-    Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt,
+    Piecewise, lambdify, Equality, Unequality, Sum, Mod, sqrt,
     MatrixSymbol, BlockMatrix, Identity
 )
 from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
+from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd)
 from sympy.printing.lambdarepr import NumPyPrinter
 
-from sympy.utilities.pytest import warns_deprecated_sympy
-from sympy.utilities.pytest import skip, raises
+from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')

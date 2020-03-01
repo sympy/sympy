@@ -15,9 +15,8 @@ from sympy import (
     solve, legendre_poly, Integral
 )
 
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 from sympy.core.expr import unchanged
-from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
 
