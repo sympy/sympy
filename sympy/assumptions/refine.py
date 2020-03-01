@@ -336,6 +336,8 @@ def refine_sign(expr, assumptions):
 
 def refine_matrixelement(expr, assumptions):
     """
+    Handler for symmetric part
+    
     Examples
     ========
 
