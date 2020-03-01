@@ -195,7 +195,8 @@ class betainc(Function):
     def _eval_is_real(self):
         #return true if a and b > 0 and 1 >= z >= 0 else None
         z, a, b = self.args
-        return a.is_positive and b.is_positive and z.is_nonnegative and (1-z).is_nonnegative
+        return (a.is_positive and b.is_positive and
+                z.is_nonnegative and (1-z).is_nonnegative)
 
 
     def _eval_conjugate(self):
