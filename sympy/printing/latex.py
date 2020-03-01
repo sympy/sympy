@@ -744,7 +744,7 @@ class LatexPrinter(Printer):
                                                   strict=True))
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
-                                                  diff = False,
+                                                  diff=False,
                                                   strict=True))
 
     def _print_Subs(self, subs):
