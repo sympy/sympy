@@ -3,7 +3,7 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.special.hyper import hyper
 from sympy.functions.elementary.exponential import log
-from sympy import Symbol, S
+from sympy import S, Dummy
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
@@ -184,7 +184,7 @@ class betainc(Function):
     def _eval_rewrite_as_Integral(self,*args, **kwargs):
         z, a, b = self.args
         from sympy import Integral
-        t = Dummy('t')
+        t = Dummy("t")
         integrand = t**(a - 1)*(1 - t)**(b - 1)
         return Integral(integrand,(t, 0, z))
 
@@ -193,10 +193,9 @@ class betainc(Function):
         return gamma(a)*z**a*hyper([a, 1-b], [a+1], z)
 
     def _eval_is_real(self):
-        #return true if a and b > 0 and 1 >= z >= 0 else None
         z, a, b = self.args
-        return (a.is_positive and b.is_positive and
-                z.is_nonnegative and (1-z).is_nonnegative)
+        return (a.is_positive and b.is_positive
+            and z.is_nonnegative and (1-z).is_nonnegative)
 
 
     def _eval_conjugate(self):
