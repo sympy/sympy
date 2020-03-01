@@ -184,7 +184,7 @@ class betainc(Function):
     def _eval_rewrite_as_Integral(self,*args, **kwargs):
         z, a, b = self.args
         from sympy import Integral
-        t = Symbol('t')
+        t = Dummy('t')
         integrand = t**(a - 1)*(1 - t)**(b - 1)
         return Integral(integrand,(t, 0, z))
 
