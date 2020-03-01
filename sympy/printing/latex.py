@@ -719,32 +719,27 @@ class LatexPrinter(Printer):
         tex = ""
         dim = 0
         for x, num in reversed(expr.variable_count):
-            dim = dim + num
+            dim += num
             if num == 1:
                 tex += r"%s %s" % (diff_symbol, self._print(x))
             else:
                 tex += r"%s %s^{%s}" % (diff_symbol,
                                         self.parenthesize_super(self._print(x)),
                                         self._print(num))
-        neg = False
-        terms = expr.args
-        for i,term in enumerate(terms):
-            if _coeff_isneg(term):
-                neg = True
 
         if dim == 1:
             tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
-        if neg == True:
+        if any(_coeff_isneg(i) for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
-                                                  diff = True,
+                                                  diff=True,
                                                   strict=True))
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
-                                                  diff = False,
+                                                  diff=False,
                                                   strict=True))
 
     def _print_Subs(self, subs):
