@@ -11,9 +11,10 @@ sympy.stats.frv
 from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
-        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
+        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda, Symbol,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.core.function import PoleError
+from sympy.tensor.array import ArrayComprehensionMap
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -174,14 +175,20 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def sample(self, size=()):
         """ A random realization from the distribution """
+        if not size:
+            size = 1
         if getattr(self,'_sample_python', None):
-            return self._sample_python(size)
+            samp = self._sample_python(size)
+            return samp if size != 1 else samp[0]
         if getattr(self,'_sample_numpy', None) and import_module('numpy'):
-            return self._sample_numpy(size)
+            samp = self._sample_numpy(size)
+            return samp if size != 1 else samp[0]
         if getattr(self,'_sample_scipy', None) and import_module('scipy'):
-            return self._sample_scipy(size)
+            samp = self._sample_scipy(size)
+            return samp if size != 1 else samp[0]
         if getattr(self,'_sample_pymc3', None) and import_module('pymc3'):
-            return self._sample_pymc3(size)
+            samp = self._sample_pymc3(size)
+            return samp if size != 1 else samp[0]
         icdf = self._inverse_cdf_expression()
         if not size:
             return icdf(random.uniform(0, 1))
@@ -335,6 +342,23 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
 
+    def _sample_scipy(self, size):
+        handmade_pdf = self.pdf
+        scipy = import_module('scipy')
+        from scipy.stats import rv_continuous
+        class scipy_pdf(rv_continuous):
+            def _pdf(self, z):
+                return handmade_pdf(z)
+
+        scipy_rv = scipy_pdf(a=self.set._inf, b=self.set._sup, name='scipy_pdf')
+
+    def _sample_python(self, size):
+        x = Symbol('x')
+        icdf = self._inverse_cdf_expression()
+        if isinstance(size, int):
+            return ArrayComprehensionMap(lambda: icdf(random.uniform(0, 1)), (x, 0, size)).doit()
+        return ArrayComprehensionMap(lambda: icdf(random.uniform(0, 1)),
+                                     *[(x, 0, i) for i in size]).doit()
 
 class ContinuousPSpace(PSpace):
     """ Continuous Probability Space

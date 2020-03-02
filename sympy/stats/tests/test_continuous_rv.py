@@ -841,7 +841,7 @@ def test_lognormal():
 
     for i in range(3):
         X = LogNormal('x', i, 1)
-        assert float(str(sample(X))) in X.pspace.domain.set
+        assert sample(X)in X.pspace.domain.set
 
     size = 5
     samps = sample(X, size=size)
@@ -1249,7 +1249,7 @@ def test_prefab_sampling():
     size = 5
     for var in variables:
         for i in range(niter):
-            assert float(str(sample(var))) in var.pspace.domain.set
+            assert sample(var) in var.pspace.domain.set
             samps = sample(var, size=size)
             for samp in samps:
                 assert samp in var.pspace.domain.set
@@ -1547,8 +1547,8 @@ def test_sampling_methods():
         Uniform("U", 0, 1)
     ]
     # test without passing the size parameter
-    for X in set(distribs_python + distribs_numpy + distribs_scipy + distribs_pymc3):
-        assert float(str(sample(X))) in X.pspace.domain.set
+    for X in distribs_python:
+        assert sample(X) in X.pspace.domain.set
 
     size = 3
 

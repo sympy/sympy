@@ -374,7 +374,7 @@ class BetaDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         a, b = float(self.alpha), float(self.beta)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.betavariate(a, b), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.betavariate(a, b), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.betavariate(a, b),
                                      *[(x, 0, i) for i in size]).doit()
 
@@ -2847,7 +2847,7 @@ class NormalDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         mean, std = float(self.mean), float(self.std)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.normalvariate(mean, std), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.normalvariate(mean, std), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.normalvariate(mean, std),
                                      *[(x, 0, i) for i in size]).doit()
 
