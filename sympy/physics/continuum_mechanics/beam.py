@@ -760,7 +760,6 @@ class Beam(object):
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
-
         slope_eqs = []
         deflection_eqs = []
 
@@ -776,6 +775,7 @@ class Beam(object):
 
         solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
                             + deflection_eqs, (C3, C4) + reactions).args)[0])
+        print(solution)
         solution = solution[2:]
 
         self._reaction_loads = dict(zip(reactions, solution))
@@ -1626,9 +1626,9 @@ class Beam(object):
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
-                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
-                else:
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+                else:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
             # higher order loads
             elif load[2] >= 0:
                 higher_order = True
