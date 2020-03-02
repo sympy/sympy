@@ -3,11 +3,7 @@ from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
-
-from sympy.core import S
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-
-
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 
 def test_Abs():

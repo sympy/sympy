@@ -350,7 +350,7 @@ def refine_matrixelement(expr, assumptions):
     >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
     X[0, 1]
     >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
-    X[0,1]
+    X[0, 1]
     """ 
     from sympy.matrices.expressions.matexpr import MatrixElement
     arg = expr.args[0]
