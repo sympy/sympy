@@ -8,8 +8,7 @@ from sympy.solvers.ode import (classify_ode,
 
 from sympy.solvers.ode.subscheck import checkodesol, checksysodesol
 from sympy.solvers.ode.ode import (_linear_coeff_match,
-    _ode_factorable_match, _remove_redundant_solutions,
-    _undetermined_coefficients_match, classify_sysode,
+    _ode_factorable_match, _undetermined_coefficients_match, classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
 from sympy.functions import airyai, airybi, besselj, bessely

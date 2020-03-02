@@ -3,7 +3,7 @@
 # sympy/solvers/tests/test_ode.py
 #
 from sympy import (Derivative, diff,
-    Eq, exp, Function, Integral, log, Rational, sin, Symbol,
+    Eq, exp, log, Rational, sin,
     symbols, Ei)
 
 from sympy.core import Function, Symbol
