@@ -25,6 +25,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
 
+scipy = import_module('scipy')
 
 class ContinuousDomain(RandomDomain):
     """
@@ -180,20 +181,21 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if getattr(self,'_sample_python', None):
             samp = self._sample_python(size)
             return samp if size != 1 else samp[0]
-        if getattr(self,'_sample_numpy', None) and import_module('numpy'):
+        elif getattr(self,'_sample_numpy', None) and import_module('numpy'):
             samp = self._sample_numpy(size)
             return samp if size != 1 else samp[0]
-        if getattr(self,'_sample_scipy', None) and import_module('scipy'):
+        elif getattr(self,'_sample_scipy', None) and import_module('scipy'):
             samp = self._sample_scipy(size)
             return samp if size != 1 else samp[0]
-        if getattr(self,'_sample_pymc3', None) and import_module('pymc3'):
+        elif getattr(self,'_sample_pymc3', None) and import_module('pymc3'):
             samp = self._sample_pymc3(size)
             return samp if size != 1 else samp[0]
-        icdf = self._inverse_cdf_expression()
-        if not size:
-            return icdf(random.uniform(0, 1))
         else:
-            return [icdf(random.uniform(0, 1))]*size
+            icdf = self._inverse_cdf_expression()
+            if not size:
+                return icdf(random.uniform(0, 1))
+            else:
+                return [icdf(random.uniform(0, 1))]*size
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -344,13 +346,13 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
     def _sample_scipy(self, size):
         handmade_pdf = self.pdf
-        scipy = import_module('scipy')
         from scipy.stats import rv_continuous
         class scipy_pdf(rv_continuous):
             def _pdf(self, z):
                 return handmade_pdf(z)
 
         scipy_rv = scipy_pdf(a=self.set._inf, b=self.set._sup, name='scipy_pdf')
+        return scipy_rv.rvs(size=size)
 
     def _sample_python(self, size):
         x = Symbol('x')
