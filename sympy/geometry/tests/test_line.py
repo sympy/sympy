@@ -749,11 +749,18 @@ def test_parameter_value():
     raises(ValueError, lambda: l.parameter_value((0, 0), t))
 
 
-def test_bisections():
+def test_bisectors():
     r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
     r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
     bisections = r1.bisectors(r2)
-    assert bisections == [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 0)), Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
+    assert bisections == [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 0)),
+        Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
+    ans = [Line3D(Point3D(0, 0, 0), Point3D(1, 0, 1)),
+        Line3D(Point3D(0, 0, 0), Point3D(-1, 0, 1))]
+    l1 = (0, 0, 0), (0, 0, 1)
+    l2 = (0, 0), (1, 0)
+    for a, b in cartes((Line, Segment, Ray), repeat=2):
+        assert a(*l1).bisectors(b(*l2)) == ans
 
 
 def test_issue_8615():

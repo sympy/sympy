@@ -67,7 +67,6 @@ class LinearEntity(GeometrySet):
     sympy.geometry.entity.GeometryEntity
 
     """
-
     def __new__(cls, p1, p2=None, **kwargs):
         p1, p2 = Point._normalize_dimension(p1, p2)
         if p1 == p2:
@@ -97,7 +96,6 @@ class LinearEntity(GeometrySet):
         A point x is 'in front' of a point y if x.dot(y) >= 0.  Return
         -1 if `other` is behind `self.p1`, 0 if `other` is `self.p1` and
         and 1 if `other` is in front of `self.p1`."""
-
         if self.p1 == other:
             return 0
 
@@ -342,7 +340,6 @@ class LinearEntity(GeometrySet):
         False
 
         """
-
         common_points = Intersection(*lines)
         if common_points.is_FiniteSet and len(common_points) == 1:
             return True
@@ -437,7 +434,6 @@ class LinearEntity(GeometrySet):
         []
 
         """
-
         def intersect_parallel_rays(ray1, ray2):
             if ray1.direction.dot(ray2.direction) > 0:
                 # rays point in the same direction
@@ -591,7 +587,6 @@ class LinearEntity(GeometrySet):
         False
 
         """
-
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
@@ -953,7 +948,6 @@ class LinearEntity(GeometrySet):
         Segment3D(Point3D(10/3, 10/3, 13/3), Point3D(5, 5, 6))
 
         """
-
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
 
@@ -1031,6 +1025,64 @@ class LinearEntity(GeometrySet):
             raise NotImplementedError('unhandled line type')
         return pt.subs(t, Rational(v))
 
+    def bisectors(self, other):
+        """Returns the perpendicular lines which pass through the intersections
+        of self and other that are in the same plane.
+
+        Parameters
+        ==========
+
+        line : Line3D
+
+        Returns
+        =======
+
+        list: two Line instances
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point3D, Line3D
+        >>> r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+        >>> r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
+        >>> r1.bisectors(r2)
+        [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 0)), Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
+
+        """
+        if not isinstance(other, LinearEntity):
+            raise GeometryError("Expecting LinearEntity, not %s" % other)
+
+        l1, l2 = self, other
+
+        # make sure dimensions match or else a warning will rise from
+        # intersection calculation
+        if l1.p1.ambient_dimension != l2.p1.ambient_dimension:
+            if isinstance(l1, Line2D):
+                l1, l2 = l2, l1
+            _, p1 = Point._normalize_dimension(l1.p1, l2.p1, on_morph='ignore')
+            _, p2 = Point._normalize_dimension(l1.p2, l2.p2, on_morph='ignore')
+            l2 = Line(p1, p2)
+
+        point = intersection(l1, l2)
+
+        # Three cases: Lines may intersect in a point, may be equal or may not intersect.
+        if not point:
+            raise GeometryError("The lines do not intersect")
+        else:
+            pt = point[0]
+            if isinstance(pt, Line):
+                # Intersection is a line because both lines are coincident
+                return [self]
+
+
+        d1 = l1.direction.unit
+        d2 = l2.direction.unit
+
+        bis1 = Line(pt, pt + d1 + d2)
+        bis2 = Line(pt, pt + d1 - d2)
+
+        return [bis1, bis2]
+
 
 class Line(LinearEntity):
     """An infinite line in space.
@@ -1102,7 +1154,6 @@ class Line(LinearEntity):
     >>> Line(Eq(3*a + b, -18), x='a', y=b)
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
-
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
 
@@ -1311,7 +1362,6 @@ class Ray(LinearEntity):
     1
 
     """
-
     def __new__(cls, p1, p2=None, **kwargs):
         p1 = Point(p1)
         if p2 is not None:
@@ -1335,7 +1385,6 @@ class Ray(LinearEntity):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
         from sympy.core.evalf import N
 
         verts = (N(self.p1), N(self.p2))
@@ -1554,7 +1603,6 @@ class Segment(LinearEntity):
     Point3D(5/2, 2, 8)
 
     """
-
     def __new__(cls, p1, p2, **kwargs):
         p1, p2 = Point._normalize_dimension(Point(p1), Point(p2))
         dim = len(p1)
@@ -1587,7 +1635,6 @@ class Segment(LinearEntity):
         >>> s.contains((p1 + p2)/2)
         True
         """
-
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
@@ -1818,14 +1865,12 @@ class LinearEntity2D(LinearEntity):
     sympy.geometry.entity.GeometryEntity
 
     """
-
     @property
     def bounds(self):
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
         rectangle for the geometric figure.
 
         """
-
         verts = self.points
         xs = [p.x for p in verts]
         ys = [p.y for p in verts]
@@ -1948,7 +1993,6 @@ class Line2D(LinearEntity2D, Line):
     >>> Line(s).equation()
     x
     """
-
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
         if isinstance(p1, LinearEntity):
             if pt is not None:
@@ -1991,7 +2035,6 @@ class Line2D(LinearEntity2D, Line):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
         from sympy.core.evalf import N
 
         verts = (N(self.p1), N(self.p2))
@@ -2081,48 +2124,6 @@ class Line2D(LinearEntity2D, Line):
         a, b, c = self.coefficients
         return a*x + b*y + c
 
-    def bisectors(self, line):
-        """Returns the lines which are the bisections between the self line and another one.
-
-        Parameters
-        ==========
-
-        line : Line2D
-
-        Returns
-        =======
-
-        list: two Line2D instances
-
-        Examples
-        ========
-
-        >>> from sympy.geometry import Point2D, Line2D
-        >>> r1 = Line2D(Point2D(0, 0), Point2D(1, 0))
-        >>> r2 = Line2D(Point2D(0, 0), Point2D(0, 1))
-        >>> r1.bisectors(r2)
-        [Line2D(Point2D(0, 0), Point2D(1, 1)), Line2D(Point2D(0, 0), Point2D(1, -1))]
-
-        """
-
-        point = intersection(self, line)
-
-        # Three cases: Lines may intersect in a point, may be equal or may not intersect.
-        if not point:
-            return GeometryError("The lines do not intersect")
-        else:
-            if isinstance(point[0], Line):
-                # Intersection is a line because both lines are coincident
-                return [self]
-
-        d1 = Point(self.direction).unit
-        d2 = Point(line.direction).unit
-
-        bis1 = Line(point[0], d1 + d2)
-        bis2 = Line(point[0], d1 - d2)
-
-        return [bis1, bis2]
-
 
 class Ray2D(LinearEntity2D, Ray):
     """
@@ -2172,7 +2173,6 @@ class Ray2D(LinearEntity2D, Ray):
     1
 
     """
-
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
         p1 = Point(p1, dim=2)
         if pt is not None and angle is None:
@@ -2367,7 +2367,6 @@ class Segment2D(LinearEntity2D, Segment):
     Point2D(5/2, 2)
 
     """
-
     def __new__(cls, p1, p2, **kwargs):
         p1 = Point(p1, dim=2)
         p2 = Point(p2, dim=2)
@@ -2388,7 +2387,6 @@ class Segment2D(LinearEntity2D, Segment):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
         from sympy.core.evalf import N
 
         verts = (N(self.p1), N(self.p2))
@@ -2418,7 +2416,6 @@ class LinearEntity3D(LinearEntity):
 
     This is a base class and is not meant to be instantiated.
     """
-
     def __new__(cls, p1, p2, **kwargs):
         p1 = Point3D(p1, dim=3)
         p2 = Point3D(p2, dim=3)
@@ -2507,7 +2504,6 @@ class Line3D(LinearEntity3D, Line):
     >>> L.points
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
     """
-
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
@@ -2576,48 +2572,6 @@ class Line3D(LinearEntity3D, Line):
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
-    def bisectors(self, line):
-        """Returns the lines which are the bisections between the self line and another one.
-
-        Parameters
-        ==========
-
-        line : Line3D
-
-        Returns
-        =======
-
-        list: two Line3D instances
-
-        Examples
-        ========
-
-        >>> from sympy.geometry import Point3D, Line3D
-        >>> r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
-        >>> r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
-        >>> r1.bisectors(r2)
-        [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 0)), Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
-
-        """
-
-        point = intersection(self, line)
-
-        # Three cases: Lines may intersect in a point, may be equal or may not intersect.
-        if not point:
-            return GeometryError("The lines do not intersect")
-        else:
-            if isinstance(point[0], Line):
-                # Intersection is a line because both lines are coincident
-                return [self]
-
-        d1 = Point(self.direction_ratio).unit
-        d2 = Point(line.direction_ratio).unit
-
-        bis1 = Line(point[0], direction_ratio=d1 + d2)
-        bis2 = Line(point[0], direction_ratio=d1 - d2)
-
-        return [bis1, bis2]
-
 
 class Ray3D(LinearEntity3D, Ray):
     """
@@ -2666,7 +2620,6 @@ class Ray3D(LinearEntity3D, Ray):
     [1, 2, -4]
 
     """
-
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
         from sympy.utilities.misc import filldedent
         if isinstance(p1, LinearEntity3D):
@@ -2823,7 +2776,6 @@ class Segment3D(LinearEntity3D, Segment):
     Point3D(5/2, 2, 8)
 
     """
-
     def __new__(cls, p1, p2, **kwargs):
         p1 = Point(p1, dim=3)
         p2 = Point(p2, dim=3)
