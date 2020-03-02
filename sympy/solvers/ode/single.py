@@ -241,10 +241,10 @@ class SinglePatternODESolver(SingleODESolver):
         self._wilds_match = match = eq.match(pattern)
 
         if match is not None:
-            return self._verify()
+            return self._verify(f(x))
         return False
 
-    def _verify(self) -> bool:
+    def _verify(self, fx) -> bool:
         return True
 
     def _wilds(self, f, x, order):
@@ -497,9 +497,8 @@ class AlmostLinear(SinglePatternODESolver):
         P, Q = self.wilds()
         return P*fx.diff(x) + Q
 
-    def _verify(self):
+    def _verify(self, fx):
         a, b = self.wilds_match()
-        fx = self.ode_problem.func
         c, b = b.as_independent(fx) if b.is_Add else (S.Zero, b)
         # a, b and c are the function a(x), b(x) and c(x) respectively.
         # c(x) is obtained by separating out b as terms with and without fx i.e, l(y)
