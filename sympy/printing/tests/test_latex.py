@@ -667,8 +667,8 @@ def test_latex_derivatives():
     # for negative nested Derivative
     assert latex(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'\frac{d}{d x} \left(- \frac{d}{d x} y^{2}\right)'
     assert latex(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
-     r'\frac{d^{2}}{d x^{2}} \left(- \frac{d^{2}}{d x^{2}} y\right)'
-     
+        r'\frac{d^{2}}{d x^{2}} \left(- \frac{d^{2}}{d x^{2}} y\right)'
+
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int\limits_{0}^{\infty} e^{- x y}\, dx"
