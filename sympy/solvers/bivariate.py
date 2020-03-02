@@ -16,7 +16,7 @@ from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
-
+from sympy.sets.sets import Complement, EmptySet, FiniteSet
 
 
 def _filtered_gens(poly, symbol):
@@ -179,8 +179,23 @@ def _lambert(eq, x):
     p, den = den.as_coeff_Mul()
     e = exp(num/den)
     t = Dummy('t')
-    args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
-
+    if p == 1 :
+        t = e
+        args = [d/(a*b)*t]
+    else:
+        args1 = [d/(a*b)*t for t in roots(t**p - e, t).keys() ]
+        args = []
+        j = -1
+        ind_ls = []
+        for i in args1:
+            j += 1 
+            de = "{}".format(i)
+            if 'I' not in de:
+                ind_ls.append(j)
+        for i in ind_ls:
+            args.append(args1[i])
+        if len(args) == 0:
+            return S.EmptySet
     # calculating solutions from args
     for arg in args:
         for k in lambert_real_branches:
@@ -268,11 +283,12 @@ def _solve_lambert(f, symbol, gens):
         ``-x``. So the role of the ``t`` in the expression received by
         this function is to mark where ``+/-x`` should be inserted
         before obtaining the Lambert solutions.
-
         """
         nlhs, plhs = [
             expr.xreplace({t: sgn*symbol}) for sgn in (-1, 1)]
         sols = _solve_lambert(nlhs, symbol, gens)
+        if sols == S.EmptySet:
+            return S.EmptySet
         if plhs != nlhs:
             sols.extend(_solve_lambert(plhs, symbol, gens))
         # uniq is needed for a case like
@@ -360,6 +376,8 @@ def _solve_lambert(f, symbol, gens):
                 else:
                     #it's ready to go
                     soln = _lambert(lhs - rhs, symbol)
+                    if soln == S.EmptySet :
+                            return S.EmptySet
 
     # For the next forms,
     #
@@ -406,8 +424,8 @@ def _solve_lambert(f, symbol, gens):
             elif lhs.is_Add:
                 # move all but mainpow-containing term to rhs
                 other = lhs.subs(mainpow, 0)
-                mainterm = lhs - other
-                rhs = rhs - other
+                mainterm = other - lhs
+                rhs = other - rhs
                 diff = log(mainterm) - log(rhs)
                 soln = _lambert(expand_log(diff), symbol)
 
