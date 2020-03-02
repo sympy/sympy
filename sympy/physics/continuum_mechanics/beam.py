@@ -773,11 +773,9 @@ class Beam(object):
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions).args))[0]
-        
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs + deflection_eqs, (C3, C4) + reactions).args))[0]
         solution = solution[2:]
-
+        
         self._reaction_loads = dict(zip(reactions, solution))
         self._load = self._load.subs(self._reaction_loads)
 
