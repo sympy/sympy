@@ -295,7 +295,7 @@ def _invert_real(f, g_ys, symbol):
 
     if isinstance(f, LambertW):
         return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
-    
+
     return (f, g_ys)
 
 
@@ -352,7 +352,6 @@ def _invert_abs(f, g_ys, symbol):
     satisfied, an `EmptySet` is returned. Otherwise, a `ConditionSet`
     of the solutions, with all the required conditions specified, is
     returned.
-
     """
     if not g_ys.is_FiniteSet:
         # this could be used for FiniteSet, but the
@@ -1668,7 +1667,6 @@ def _is_bivariate(f, symbol):
     """
     poly = f.as_poly()
     gens = _filtered_gens(poly, symbol)
-
     return len(gens) == 2
 
 
@@ -1921,15 +1919,14 @@ def _transolve(f, symbol, domain):
         ``a*f(x) + b*g(x) + .... = c``.
         For example: 4**x + 8**x = 0
         """
-
         result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
+
         # check if it is exponential type equation
         if _is_exponential(lhs, symbol):
             result = _solve_exponential(lhs, rhs, symbol, domain)
         # check if it is logarithmic type equation
         elif _is_logarithmic(lhs, symbol):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
-
         elif _is_lambert(lhs, symbol):
             # print('here is the twist 99')
             # try to get solutions in form of Lambert
@@ -1941,6 +1938,7 @@ def _transolve(f, symbol, domain):
         return result
 
     result = ConditionSet(symbol, Eq(f, 0), domain)
+
     # invert_complex handles the call to the desired inverter based
     # on the domain specified.
     lhs, rhs_s = invert_complex(f, 0, symbol, domain)
