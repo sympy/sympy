@@ -1290,10 +1290,10 @@ def _solve_modular(f, symbol, domain):
     n = Dummy('n', integer=True)
     f_x, g_n = _invert_modular(modterm, rhs, n, symbol)
 
-    if f_x is modterm and g_n is rhs:
+    if f_x == modterm and g_n == rhs:
         return unsolved_result
 
-    if f_x is symbol:
+    if f_x == symbol:
         if domain is not S.Integers:
             return domain.intersect(g_n)
         return g_n

@@ -142,17 +142,25 @@ def test_linear_2eq_order1_type2_noninvertible():
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
-@XFAIL
 def test_linear_2eq_order1_type2_fixme():
     # There is a FIXME comment about this in the code that handles this case.
     # The answer returned is currently incorrect as reported by checksysodesol
-    # below...
+    # below in the XFAIL test below...
 
     # a*d - b*c == 0 and a + b*c/a = 0
     eqs = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
            Eq(diff(g(x), x), -f(x) - g(x) + 7)]
     sol = [Eq(f(x), C1 + C2*(x + 1) + 12*x**2 + 5*x), Eq(g(x), -C1 - C2*x - 12*x**2 + 7*x)]
     assert dsolve(eqs) == sol
+    # FIXME: checked in XFAIL test_linear_2eq_order1_type2_fixme_check below
+
+
+@XFAIL
+def test_linear_2eq_order1_type2_fixme_check():
+    # See test_linear_2eq_order1_type2_fixme above
+    eqs = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
+           Eq(diff(g(x), x), -f(x) - g(x) + 7)]
+    sol = [Eq(f(x), C1 + C2*(x + 1) + 12*x**2 + 5*x), Eq(g(x), -C1 - C2*x - 12*x**2 + 7*x)]
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
@@ -161,14 +169,13 @@ def test_linear_2eq_order1_type4():
            Eq(diff(g(x), x),-x*f(x) + g(x))]
     sol = [Eq(f(x), (C1*cos(x**2/2) + C2*sin(x**2/2))*exp(x)),
            Eq(g(x), (-C1*sin(x**2/2) + C2*cos(x**2/2))*exp(x))]
-    # FIXME: This should probably be fixed so that this happens in the solver:
     dsolve_sol = dsolve(eqs)
+    # FIXME: This should probably be fixed so that this happens in the solver:
     dsolve_sol = [s.doit() for s in sol]
     assert dsolve_sol == sol
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
-@XFAIL
 def test_linear_2eq_order1_type4_broken():
     eqs = [Eq(f(x).diff(x), f(x) + x*g(x)),
            Eq(g(x).diff(x), x*f(x) - g(x))]
@@ -176,8 +183,20 @@ def test_linear_2eq_order1_type4_broken():
     sol = [Eq(f(x), (C1*sin(x) + C2*cos(x))*exp(x**2/2)),
            Eq(g(x), (C1*cos(x) - C2*sin(x))*exp(x**2/2))]
     dsolve_sol = dsolve(eqs)
+    # FIXME: This should probably be fixed so that this happens in the solver:
     dsolve_sol = [s.doit() for s in sol]
     assert dsolve_sol == sol
+    # FIXME: Checked in XFAIL test_linear_2eq_order1_type4_broken_check below
+
+
+@XFAIL
+def test_linear_2eq_order1_type4_broken_check():
+    # see test_linear_2eq_order1_type4_broken above
+    eqs = [Eq(f(x).diff(x), f(x) + x*g(x)),
+           Eq(g(x).diff(x), x*f(x) - g(x))]
+    # FIXME: This is not the correct solution:
+    sol = [Eq(f(x), (C1*sin(x) + C2*cos(x))*exp(x**2/2)),
+           Eq(g(x), (C1*cos(x) - C2*sin(x))*exp(x**2/2))]
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
@@ -197,38 +216,64 @@ def test_linear_2eq_order1_type5():
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
-@XFAIL
-def test_linear_2eq_order1_type6_path1():
+def test_linear_2eq_order1_type6_path1_broken():
     eqs = [Eq(diff(f(x), x), f(x) + x*g(x)),
            Eq(diff(g(x), x), 2*(1 + 2/x)*f(x) + 2*(x - 1/x) * g(x))]
-    # This solution is currently returned but is incorrect:
+    # FIXME: This is not the correct solution:
     sol = [
         Eq(f(x), (C1 + Integral(C2*x*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x))),
         Eq(g(x), C1*exp(-2*Integral(1/x, x))
             + 2*(C1 + Integral(C2*x*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x)))
         ]
     dsolve_sol = dsolve(eqs)
-    # Comparing solutions with == doesn't work in this case...
+    # FIXME: Comparing solutions with == doesn't work in this case...
     assert [ds.lhs for ds in dsolve_sol] == [f(x), g(x)]
     assert [ds.rhs.equals(ss.rhs) for ds, ss in zip(dsolve_sol, sol)]
-    assert checksysodesol(eqs, sol) == (True, [0, 0])  # XFAIL
+    # FIXME: checked in XFAIL test_linear_2eq_order1_type6_path1_broken_check below
 
 
 @XFAIL
-def test_linear_2eq_order1_type6_path2():
+def test_linear_2eq_order1_type6_path1_broken_check():
+    # See test_linear_2eq_order1_type6_path1_broken above
+    eqs = [Eq(diff(f(x), x), f(x) + x*g(x)),
+           Eq(diff(g(x), x), 2*(1 + 2/x)*f(x) + 2*(x - 1/x) * g(x))]
+    # FIXME: This is not the correct solution:
+    sol = [
+        Eq(f(x), (C1 + Integral(C2*x*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x))),
+        Eq(g(x), C1*exp(-2*Integral(1/x, x))
+            + 2*(C1 + Integral(C2*x*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x)))
+        ]
+    assert checksysodesol(eqs, sol) == (True, [0, 0])  # XFAIL
+
+
+def test_linear_2eq_order1_type6_path2_broken():
     # This is the reverse of the equations above and should also be handled by
     # type6.
     eqs = [Eq(diff(g(x), x), 2*(1 + 2/x)*g(x) + 2*(x - 1/x) * f(x)),
            Eq(diff(f(x), x), g(x) + x*f(x))]
-    # This solution is currently returned but is incorrect:
+    # FIXME: This is not the correct solution:
     sol = [
-        Eq(g(x), C1*exp(-2*Integral(1/x, x)) + 2*(C1 + Integral(-C2*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x))),
+        Eq(g(x), C1*exp(-2*Integral(1/x, x))
+             + 2*(C1 + Integral(-C2*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x))),
         Eq(f(x), (C1 + Integral(-C2*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x)))
     ]
     dsolve_sol = dsolve(eqs)
     # Comparing solutions with == doesn't work in this case...
     assert [ds.lhs for ds in dsolve_sol] == [g(x), f(x)]
     assert [ds.rhs.equals(ss.rhs) for ds, ss in zip(dsolve_sol, sol)]
+    # FIXME: checked in XFAIL test_linear_2eq_order1_type6_path2_broken_check below
+
+
+@XFAIL
+def test_linear_2eq_order1_type6_path2_broken_check():
+    # See test_linear_2eq_order1_type6_path2_broken above
+    eqs = [Eq(diff(g(x), x), 2*(1 + 2/x)*g(x) + 2*(x - 1/x) * f(x)),
+           Eq(diff(f(x), x), g(x) + x*f(x))]
+    sol = [
+        Eq(g(x), C1*exp(-2*Integral(1/x, x))
+             + 2*(C1 + Integral(-C2*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x))),
+        Eq(f(x), (C1 + Integral(-C2*exp(-2*Integral(1/x, x))*exp(Integral(-2*x - 1, x)), x))*exp(-Integral(-2*x - 1, x)))
+    ]
     assert checksysodesol(eqs, sol) == (True, [0, 0])  # XFAIL
 
 
@@ -247,8 +292,21 @@ def test_constant_coeff_circular_atan2():
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
+def test_linear_2eq_order2_type1_broken1():
+    eqs = [Eq(f(x).diff(x, 2), 2*f(x) + g(x)),
+           Eq(g(x).diff(x, 2), -f(x))]
+    # FIXME: This is not the correct solution:
+    sol = [
+        Eq(f(x), 2*C1*(x + 2)*exp(x) + 2*C2*(x + 2)*exp(-x) + 2*C3*x*exp(x) + 2*C4*x*exp(-x)),
+        Eq(g(x), -2*C1*x*exp(x) - 2*C2*x*exp(-x) + C3*(-2*x + 4)*exp(x) + C4*(-2*x - 4)*exp(-x))
+    ]
+    assert dsolve(eqs) == sol
+    # FIXME: checked in XFAIL test_linear_2eq_order2_type1_broken1_check below
+
+
 @XFAIL
-def test_linear_2eq_order2_type1_fail1():
+def test_linear_2eq_order2_type1_broken1_check():
+    # See test_linear_2eq_order2_type1_broken1 above
     eqs = [Eq(f(x).diff(x, 2), 2*f(x) + g(x)),
            Eq(g(x).diff(x, 2), -f(x))]
     # This is the returned solution but it isn't correct:
@@ -256,12 +314,11 @@ def test_linear_2eq_order2_type1_fail1():
         Eq(f(x), 2*C1*(x + 2)*exp(x) + 2*C2*(x + 2)*exp(-x) + 2*C3*x*exp(x) + 2*C4*x*exp(-x)),
         Eq(g(x), -2*C1*x*exp(x) - 2*C2*x*exp(-x) + C3*(-2*x + 4)*exp(x) + C4*(-2*x - 4)*exp(-x))
     ]
-    assert dsolve(eqs) == sol
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
 @XFAIL
-def test_linear_2eq_order2_type1_fail2():
+def test_linear_2eq_order2_type1_broken2():
     eqs = [Eq(f(x).diff(x, 2), 0),
             Eq(g(x).diff(x, 2), f(x))]
     sol = [
@@ -269,6 +326,15 @@ def test_linear_2eq_order2_type1_fail2():
         Eq(g(x), C4 + C3*x + C2*x**3/6 + C1*x**2/2)
     ]
     assert dsolve(eqs) == sol # UnboundLocalError
+
+
+def test_linear_2eq_order2_type1_broken2_check():
+    eqs = [Eq(f(x).diff(x, 2), 0),
+            Eq(g(x).diff(x, 2), f(x))]
+    sol = [
+        Eq(f(x), C1 + C2*x),
+        Eq(g(x), C4 + C3*x + C2*x**3/6 + C1*x**2/2)
+    ]
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
@@ -322,19 +388,34 @@ def test_linear_2eq_order2_type2():
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
-@XFAIL
-def test_linear_2eq_order2_type4():
+def test_linear_2eq_order2_type4_broken():
     Ca, Cb, Ra, Rb = symbols('Ca, Cb, Ra, Rb')
     eq = [f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) + g(x) - 2*exp(I*x),
           g(x).diff(x, 2) + 2*g(x).diff(x) + f(x) + g(x) - 2*exp(I*x)]
-    dsolve_sol = dsolve(eq)
+    # FIXME: This is not the correct solution:
     # Solution returned with Ca, Ra etc symbols is clearly incorrect:
     sol = [
         Eq(f(x), C1 + C2*exp(2*x) + C3*exp(x*(1 + sqrt(3))) + C4*exp(x*(-sqrt(3) + 1)) + (I*Ca + Ra)*exp(I*x)),
         Eq(g(x), -C1 - 3*C2*exp(2*x) + C3*(-3*sqrt(3) - 4 + (1 + sqrt(3))**2)*exp(x*(1 + sqrt(3)))
             + C4*(-4 + (-sqrt(3) + 1)**2 + 3*sqrt(3))*exp(x*(-sqrt(3) + 1)) + (I*Cb + Rb)*exp(I*x))
     ]
+    dsolve_sol = dsolve(eq)
     assert dsolve_sol == sol
+    # FIXME: checked in XFAIL test_linear_2eq_order2_type4_broken_check below
+
+
+@XFAIL
+def test_linear_2eq_order2_type4_broken_check():
+    # See test_linear_2eq_order2_type4_broken above
+    Ca, Cb, Ra, Rb = symbols('Ca, Cb, Ra, Rb')
+    eq = [f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) + g(x) - 2*exp(I*x),
+          g(x).diff(x, 2) + 2*g(x).diff(x) + f(x) + g(x) - 2*exp(I*x)]
+    # Solution returned with Ca, Ra etc symbols is clearly incorrect:
+    sol = [
+        Eq(f(x), C1 + C2*exp(2*x) + C3*exp(x*(1 + sqrt(3))) + C4*exp(x*(-sqrt(3) + 1)) + (I*Ca + Ra)*exp(I*x)),
+        Eq(g(x), -C1 - 3*C2*exp(2*x) + C3*(-3*sqrt(3) - 4 + (1 + sqrt(3))**2)*exp(x*(1 + sqrt(3)))
+            + C4*(-4 + (-sqrt(3) + 1)**2 + 3*sqrt(3))*exp(x*(-sqrt(3) + 1)) + (I*Cb + Rb)*exp(I*x))
+    ]
     assert checksysodesol(eq, sol) == (True, [0, 0]) # Fails here
 
 
@@ -344,8 +425,7 @@ def test_linear_2eq_order2_type5():
     sol = [Eq(f(x), C3*x + x*Integral((2*C1*cos(x**2) + 2*C2*sin(x**2))/x**2, x)),
            Eq(g(x), C4*x + x*Integral((-2*C1*sin(x**2) + 2*C2*cos(x**2))/x**2, x))]
     assert dsolve(eqs) == sol
-    # FIXME: checksysodesol not working:
-    #assert checksysodesol(eqs, sol) == (True, [0, 0])
+    assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
 def test_linear_2eq_order2_type8():
@@ -395,10 +475,10 @@ def test_nonlinear_3eq_order1_type4():
         Eq(g(x).diff(x), (4*f(x)*h(x) - 2*h(x)*f(x))),
         Eq(h(x).diff(x), (3*g(x)*f(x) - 4*f(x)*g(x))),
     ]
-    dsolve_sol = dsolve(eqs)  # KeyError when matching
+    dsolve(eqs)  # KeyError when matching
     # sol = ?
     # assert dsolve_sol == sol
-    assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
+    # assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
 
 
 @slow
@@ -411,10 +491,10 @@ def test_nonlinear_3eq_order1_type3():
         Eq(g(x).diff(x), (4         - 2*h(x)   )),
         Eq(h(x).diff(x), (3*h(x)    - 4*f(x)**2)),
     ]
-    dsolve_sol = dsolve(eqs)  # Not sure if this finishes...
+    dsolve(eqs)  # Not sure if this finishes...
     # sol = ?
     # assert dsolve_sol == sol
-    assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
+    # assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
 
 
 @XFAIL
@@ -424,10 +504,10 @@ def test_nonlinear_3eq_order1_type5():
         Eq(g(x).diff(x), g(x)*(4*g(x) - 2*h(x))),
         Eq(h(x).diff(x), h(x)*(3*h(x) - 4*f(x))),
     ]
-    dsolve_sol = dsolve(eqs)  # KeyError
+    dsolve(eqs)  # KeyError
     # sol = ?
     # assert dsolve_sol == sol
-    assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
+    # assert checksysodesol(eqs, dsolve_sol) == (True, [0, 0, 0])
 
 
 def test_linear_2eq_order1():
@@ -814,15 +894,23 @@ def test_linear_3eq_order1_nonhomog():
 
 
 @XFAIL
-def test_linear_3eq_order1_diagonal():
+def test_linear_3eq_order1_diagonal_broken():
     # code makes assumptions about coefficients being nonzero, breaks when assumptions are not true
-    e = [Eq(diff(f(x), x), f(x)),
+    eqs = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x)),
          Eq(diff(h(x), x), h(x))]
-    s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x)), Eq(h(x), C3*exp(x))]
-    s = dsolve(e)
-    assert s == s1
-    assert checksysodesol(e, s1) == (True, [0, 0, 0])
+    sol = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x)), Eq(h(x), C3*exp(x))]
+    assert dsolve(eqs) == sol
+    # FIXME: Checked in test_linear_3eq_order1_diagonal_broken_checked below
+
+
+def test_linear_3eq_order1_diagonal_broken_checked():
+    # See test_linear_3eq_order1_diagonal_broken above
+    eqs = [Eq(diff(f(x), x), f(x)),
+         Eq(diff(g(x), x), g(x)),
+         Eq(diff(h(x), x), h(x))]
+    sol = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x)), Eq(h(x), C3*exp(x))]
+    assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
 def test_nonlinear_2eq_order1():
@@ -1579,7 +1667,7 @@ def test_1st_exact1():
 
 @slow
 @XFAIL
-def test_1st_exact2():
+def test_1st_exact2_broken():
     """
     This is an exact equation that fails under the exact engine. It is caught
     by first order homogeneous albeit with a much contorted solution.  The
@@ -1593,8 +1681,24 @@ def test_1st_exact2():
         skip("Too slow for travis.")
     eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
           sqrt(x**2 + f(x)**2)))*f(x).diff(x))
-    sol = dsolve(eq)
-    assert sol == Eq(log(x),
+    sol = Eq(log(x),
+        C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x +
+        27*sqrt(1 + f(x)**2/x**2)) - 9*sqrt(1 + f(x)**2/x**2)*
+        log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
+        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) +
+        9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) +
+        9*f(x)*log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
+        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
+    assert dsolve(eq) == sol # Slow
+    # FIXME: Checked in test_1st_exact2_broken_check below
+
+
+@slow
+def test_1st_exact2_broken_check():
+    # See test_1st_exact2_broken above
+    eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
+          sqrt(x**2 + f(x)**2)))*f(x).diff(x))
+    sol = Eq(log(x),
         C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x +
         27*sqrt(1 + f(x)**2/x**2)) - 9*sqrt(1 + f(x)**2/x**2)*
         log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
@@ -1807,30 +1911,31 @@ def test_1st_homogeneous_coeff_ode_check2():
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
 
 
-@XFAIL
 def test_1st_homogeneous_coeff_ode_check3():
-    skip('This is a known issue.')
-    # checker cannot determine that the following expression is zero:
-    # (False,
-    #   x*(log(exp(-LambertW(C1*x))) +
-    #   LambertW(C1*x))*exp(-LambertW(C1*x) + 1))
-    # This is blocked by issue 5080.
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
+    # This solution is correct:
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1)))
+    assert dsolve(eq3) == sol3
+    # FIXME: Checked in test_1st_homogeneous_coeff_ode_check3_check below
+
+    # Alternate form:
     sol3a = Eq(f(x), x*exp(1 - LambertW(C1*x)))
     assert checkodesol(eq3, sol3a, solve_for_func=True)[0]
-    # Checker can't verify this form either
-    # (False,
-    #   C1*(log(C1*LambertW(C2*x)/x) + LambertW(C2*x) - 1)*LambertW(C2*x))
-    # It is because a = W(a)*exp(W(a)), so log(a) == log(W(a)) + W(a) and C2 =
-    # -E/C1 (which can be verified by solving with simplify=False).
-    sol3b = Eq(f(x), C1*LambertW(C2*x))
-    assert checkodesol(eq3, sol3b, solve_for_func=True)[0]
+
+
+@XFAIL
+def test_1st_homogeneous_coeff_ode_check3_check():
+    # See test_1st_homogeneous_coeff_ode_check3 above
+    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1)))
+    assert checkodesol(eq3, sol3) == (True, 0)  # XFAIL
 
 
 def test_1st_homogeneous_coeff_ode_check7():
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
-    sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
-    assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
+    sol7 = Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))
+    assert dsolve(eq7) == sol7
+    assert checkodesol(eq7, sol7, order=1, solve_for_func=False) == (True, 0)
 
 
 def test_1st_homogeneous_coeff_ode2():
@@ -2162,6 +2267,7 @@ def test_nth_linear_constant_coeff_homogeneous_irrational():
 @XFAIL
 @slow
 def test_nth_linear_constant_coeff_homogeneous_rootof_sol():
+    # See https://github.com/sympy/sympy/issues/15753
     if ON_TRAVIS:
         skip("Too slow for travis.")
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
@@ -2469,19 +2575,17 @@ def test_issue_5787():
     assert our_hint in classify_ode(eq)
 
 
-@XFAIL
 def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     # Equivalent to eq26 in
-    # test_nth_linear_constant_coeff_undetermined_coefficients above.
-    # This fails because the algorithm for undetermined coefficients
-    # doesn't know to multiply exp(I*x) by sufficient x because it is linearly
+    # test_nth_linear_constant_coeff_undetermined_coefficients above. This
+    # previously failed because the algorithm for undetermined coefficients
+    # didn't know to multiply exp(I*x) by sufficient x because it is linearly
     # dependent on sin(x) and cos(x).
     hint = 'nth_linear_constant_coeff_undetermined_coefficients'
     eq26a = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
-    sol26 = Eq(f(x),
-        C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
+    sol26 = Eq(f(x), C1 + x**2*(I*exp(I*x)/8 + 1) + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
     assert dsolve(eq26a, hint=hint) == sol26
-    assert checkodesol(eq26a, sol26, order=5, solve_for_func=False)[0]
+    assert checkodesol(eq26a, sol26) == (True, 0)
 
 
 @slow
@@ -3168,7 +3272,7 @@ def test_heuristic_linear():
 def test_kamke():
     a, b, alpha, c = symbols("a b alpha c")
     eq = x**2*(a*f(x)**2+(f(x).diff(x))) + b*x**alpha + c
-    i = infinitesimals(eq, hint='sum_function')
+    i = infinitesimals(eq, hint='sum_function')  # XFAIL
     assert checkinfsol(eq, i)[0]
 
 
@@ -3195,21 +3299,30 @@ def test_series():
 
 @XFAIL
 @SKIP
-def test_lie_group_issue17322():
+def test_lie_group_issue17322_1():
     eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
-    sol = dsolve(eq, f(x))
+    sol = dsolve(eq, f(x))  # Hangs
     assert checkodesol(eq, sol) == (True, 0)
 
+@XFAIL
+@SKIP
+def test_lie_group_issue17322_2():
     eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
-    sol = dsolve(eq)
+    sol = dsolve(eq)  # Hangs
     assert checkodesol(eq, sol) == (True, 0)
 
+@XFAIL
+@SKIP
+def test_lie_group_issue17322_3():
     eq=Eq(x**7*Derivative(f(x), x) + 5*x**3*f(x)**2 - (2*x**2 + 2)*f(x)**3, 0)
-    sol = dsolve(eq)
+    sol = dsolve(eq)  # Hangs
     assert checkodesol(eq, sol) == (True, 0)
 
+
+@XFAIL
+def test_lie_group_issue17322_4():
     eq=f(x).diff(x) - (f(x) - x*log(x))**2/x**2 + log(x)
-    sol = dsolve(eq)
+    sol = dsolve(eq)  # NotImplementedError
     assert checkodesol(eq, sol) == (True, 0)
 
 
