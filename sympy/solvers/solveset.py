@@ -29,7 +29,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold, Piecewise)
+                             piecewise_fold, Piecewise, LambertW))
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -45,6 +45,7 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
+from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -269,7 +270,8 @@ def _invert_real(f, g_ys, symbol):
                     return _invert_real(expo, FiniteSet(0), symbol)
                 elif one == S.false:
                     return _invert_real(expo, S.EmptySet, symbol)
-
+        else:
+            return _invert_real(expo*log(base), imageset(Lambda(n, log(n)), g_ys), symbol)
 
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
@@ -291,6 +293,9 @@ def _invert_real(f, g_ys, symbol):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
 
+    if isinstance(f, LambertW):
+        return _invert_real(f.args[0], imageset(Lambda(n, n*exp(n)), g_ys), symbol)
+    
     return (f, g_ys)
 
 
@@ -987,7 +992,7 @@ def _solveset(f, symbol, domain, _check=False):
                         result_rational = _solve_as_rational(equation, symbol, domain)
                         if isinstance(result_rational, ConditionSet):
                             # may be a transcendental type equation
-                            result += _transolve(equation, symbol, domain)
+                            result = _transolve(equation, symbol, domain)
                         else:
                             result += result_rational
                 else:
@@ -1026,6 +1031,11 @@ def _solveset(f, symbol, domain, _check=False):
             result = FiniteSet(*[s for s in result
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
+        elif type(result) is list:
+            for _ in range(len(result)-1):
+                result = result[_] + result[_+1]
+            if len(result) == 1:
+                return result[0]
 
     return result
 
@@ -1652,6 +1662,78 @@ def _is_logarithmic(f, symbol):
     return rv
 
 
+def _is_bivariate(f, symbol):
+    r"""
+    Return True if the equation has two generators, else False.
+    """
+    poly = f.as_poly()
+    gens = _filtered_gens(poly, symbol)
+
+    return len(gens) == 2
+
+
+def _solve_as_bivariate(lhs, rhs, symbol, domain):
+    r"""
+    Helper solver to solve equations of bivariate form.
+    """
+    result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
+
+    poly = lhs.as_poly()
+    gens = _filtered_gens(poly, symbol)
+    gpu = bivariate_type(lhs - rhs, *gens)
+    if gpu is not None:
+        g, p, u = gpu
+        if g != lhs:
+            usol = _solveset(p, u, domain)
+            if not isinstance(usol, ConditionSet):
+                result = [_solveset(g - us, symbol, domain) for us in usol]
+    return result
+
+
+def _is_lambert(f, symbol):
+    r"""
+    Return True if the equation is of Lambert type, else False.
+    Equations containing `Pow`, `log` or `exp` terms are currently
+    treated as Lambert types.
+    """
+    return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
+
+
+def _compute_lambert_solutions(lhs, rhs, symbol):
+    """
+    Computes the Lambert solutions. Returns `None` if it
+    fails doing so.
+    """
+    try:
+        poly = lhs.as_poly()
+        gens = _filtered_gens(poly, symbol)
+        return _solve_lambert(lhs - rhs, symbol, gens)
+    except NotImplementedError:
+        pass
+
+
+def _solve_as_lambert(lhs, rhs, symbol, domain):
+    r"""
+    Helper solver to handle equations having Lambert solutions.
+    First tries to solve equation directly. If unsuccessful
+    attempts to find the solutions by making the `symbol` positive.
+    """
+    result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
+
+    soln = _compute_lambert_solutions(lhs, rhs, symbol)
+    if soln is None:
+        # try with positive `symbol`
+        u = Dummy('u', positive=True)
+        pos_lhs = lhs.subs({symbol: u})
+        soln = _compute_lambert_solutions(pos_lhs, rhs, u)
+        if soln:
+            result = FiniteSet(*soln)
+    else:
+        result = FiniteSet(*soln)
+
+    return result
+
+
 def _transolve(f, symbol, domain):
     r"""
     Function to solve transcendental equations. It is a helper to
@@ -1660,6 +1742,7 @@ def _transolve(f, symbol, domain):
 
         - Exponential equations
         - Logarithmic equations
+        - Lambert type equations
 
     Parameters
     ==========
@@ -1838,8 +1921,8 @@ def _transolve(f, symbol, domain):
         ``a*f(x) + b*g(x) + .... = c``.
         For example: 4**x + 8**x = 0
         """
-        result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
+        result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
         # check if it is exponential type equation
         if _is_exponential(lhs, symbol):
             result = _solve_exponential(lhs, rhs, symbol, domain)
@@ -1847,10 +1930,17 @@ def _transolve(f, symbol, domain):
         elif _is_logarithmic(lhs, symbol):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
 
+        elif _is_lambert(lhs, symbol):
+            # print('here is the twist 99')
+            # try to get solutions in form of Lambert
+            result = _solve_as_lambert(lhs, rhs, symbol, domain)
+            if isinstance(result, ConditionSet):
+                if _is_bivariate(lhs, symbol):
+                    result = _solve_as_bivariate(lhs, rhs, symbol, domain)
+
         return result
 
     result = ConditionSet(symbol, Eq(f, 0), domain)
-
     # invert_complex handles the call to the desired inverter based
     # on the domain specified.
     lhs, rhs_s = invert_complex(f, 0, symbol, domain)
@@ -1861,6 +1951,14 @@ def _transolve(f, symbol, domain):
 
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
+        elif _is_lambert(lhs, symbol):
+            # print('here is the twist')
+            # try to get solutions in form of Lambert
+            result = _solve_as_lambert(lhs, rhs, symbol, domain)
+            if isinstance(result, ConditionSet):
+                if _is_bivariate(lhs, symbol):
+                    result = _solve_as_bivariate(lhs, rhs, symbol, domain)
+
     else:
         result = rhs_s
 
