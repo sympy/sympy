@@ -196,6 +196,7 @@ def _lambert(eq, x):
             args.append(args1[i])
         if len(args) == 0:
             return S.EmptySet
+
     # calculating solutions from args
     for arg in args:
         for k in lambert_real_branches:
