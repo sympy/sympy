@@ -774,7 +774,7 @@ def test_MatMul_MatAdd():
     assert str(I*X) == "I*X"
     assert str(-I*X) == "-I*X"
     assert str((1 + I)*X) == '(1 + I)*X'
-    assert str(-(1 + I)*X) == '-(1 + I)*X'
+    assert str(-(1 + I)*X) == '(-1 - I)*X'
 
 def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
