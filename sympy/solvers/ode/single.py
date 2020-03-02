@@ -185,7 +185,6 @@ class SingleODESolver:
     # Cache whether or not the equation has matched the method
     _matched = None  # type: Optional[bool]
 
-
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
 
@@ -193,9 +192,6 @@ class SingleODESolver:
         if self._matched is None:
             self._matched = self._matches()
         return self._matched
-
-    def _verify(self) -> bool:
-        return True
 
     def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         if not self.matches():
@@ -247,6 +243,9 @@ class SinglePatternODESolver(SingleODESolver):
         if match is not None:
             return self._verify()
         return False
+
+    def _verify(self) -> bool:
+        return True
 
     def _wilds(self, f, x, order):
         msg = "Subclasses of SingleODESolver should implement _wilds"
@@ -440,35 +439,25 @@ class AlmostLinear(SinglePatternODESolver):
 
     .. math:: a(x) g'(f(x)) f'(x) + b(x) g(f(x)) + c(x)
 
-    This can be solved by substituting `g(f(x)) = u`.  Making the given
-    substitution reduces it to a linear differential equation of the form
-    `a(x) u' + b(x) u + c(x) = 0` which can now be solved for `f(x)`.
+    Here `f(x)` is the function to be solved for (the dependent variable).
+    The substitution `g(f(x)) = u(x)` leads to a linear differential equation
+    for `u(x)` of the form `a(x) u' + b(x) u + c(x) = 0`. This can be solved
+    for `u(x)` by the `first_linear` hint and then `f(x)` is found by solving
+    `g(f(x)) = u(x)`.
 
     The general solution is
 
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, y, n
-        >>> a, b, c, u = map(Function, ['a', 'b', 'c', 'u'])
-        >>> genform = Eq(a(x)*(u(x).diff(x)) + b(x)*u(x) + c(x), 0)
-        >>> pprint(genform)
-            d
-        a(x)*--(u(x)) + b(x)*u(x) + c(x) = 0
-            dx
-        >>> pprint(dsolve(genform, hint = 'almost_linear'))
-               /       /                   \
-               |      |                    |
-               |      |         /          |
-               |      |        |           |     /
-               |      |        | b(x)      |    |
-               |      |        | ---- dx   |    | b(x)
-               |      |        | a(x)      |  - | ---- dx
-               |      |        |           |    | a(x)
-               |      |       /            |    |
-               |      | c(x)*e             |   /
-        u(x) = |C1 -  | ---------------- dx|*e
-               |      |       a(x)         |
-               |      |                    |
-               \     /                     /
+        >>> from sympy import Function, dsolve, pprint, sin, cos
+        >>> from sympy.abc import x
+        >>> f = Function('f')
+        >>> example = cos(f(x))*f(x).diff(x) + sin(f(x)) + 1
+        >>> pprint(example)
+                              d
+        sin(f(x)) + cos(f(x))*--(f(x)) + 1
+                              dx
+        >>> pprint(dsolve(example, f(x), hint='almost_linear'))
+                         /    -x    \             /    -x    \
+        [f(x) = pi - asin\C1*e   - 1/, f(x) = asin\C1*e   - 1/]
 
 
     See Also
