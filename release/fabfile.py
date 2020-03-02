@@ -62,7 +62,16 @@ import stat
 import sys
 
 import time
-import ConfigParser
+
+try:
+    from configparser import SafeConfigParser
+except ImportError
+    from ConfigParser import SafeConfigParser
+
+try:
+    raw_input  # Python 2
+except NameError:
+    raw_input = input  # Python 3
 
 try:
     # https://pypi.python.org/pypi/fabric-virtualenv/
@@ -776,7 +785,7 @@ def get_location(location):
     Read/save a location from the configuration file.
     """
     locations_file = os.path.expanduser('~/.sympy/sympy-locations')
-    config = ConfigParser.SafeConfigParser()
+    config = SafeConfigParser()
     config.read(locations_file)
     the_location = config.has_option("Locations", location) and config.get("Locations", location)
     if not the_location:
