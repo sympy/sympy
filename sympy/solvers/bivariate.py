@@ -16,7 +16,7 @@ from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
-from sympy.sets.sets import Complement, EmptySet, FiniteSet
+from sympy.sets.sets import EmptySet
 
 
 def _filtered_gens(poly, symbol):
@@ -424,8 +424,8 @@ def _solve_lambert(f, symbol, gens):
             elif lhs.is_Add:
                 # move all but mainpow-containing term to rhs
                 other = lhs.subs(mainpow, 0)
-                mainterm = other - lhs
-                rhs = other - rhs
+                mainterm = lhs - other
+                rhs = rhs - other
                 diff = log(mainterm) - log(rhs)
                 soln = _lambert(expand_log(diff), symbol)
 
