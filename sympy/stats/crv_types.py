@@ -4260,8 +4260,8 @@ class WeibullDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         alpha, beta = float(self.alpha), float(self.beta)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.weibullvariate(self.alpha, self.beta), (x, 0, size)).doit()
-        return ArrayComprehensionMap(lambda: random.weibullvariate(self.alpha, self.beta),
+            return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta), (x, 0, size)).doit()
+        return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta),
                                      *[(x, 0, i) for i in size]).doit()
 
 def Weibull(name, alpha, beta):
