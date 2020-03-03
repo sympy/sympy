@@ -31,6 +31,11 @@ class AssocOp(Basic):
     def __new__(cls, *args, **options):
         from sympy import Order
         args = list(map(_sympify, args))
+
+        obj = cls._exec_constructor_preprocessors(*args, **options)
+        if obj is not None:
+            return obj
+
         args = [a for a in args if a is not cls.identity]
 
         # XXX: Maybe only Expr should be allowed here...

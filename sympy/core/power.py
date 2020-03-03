@@ -267,18 +267,24 @@ class Pow(Expr):
     __slots__ = ('is_commutative',)
 
     @cacheit
-    def __new__(cls, b, e, evaluate=None):
-        if evaluate is None:
-            evaluate = global_parameters.evaluate
+    def __new__(cls, b, e, **options):
         from sympy.functions.elementary.exponential import exp_polar
 
         b = _sympify(b)
         e = _sympify(e)
 
+        obj = cls._exec_constructor_preprocessors(b,e, **options)
+        if obj is not None:
+            return obj
+
         # XXX: Maybe only Expr should be allowed...
         from sympy.core.relational import Relational
         if isinstance(b, Relational) or isinstance(e, Relational):
             raise TypeError('Relational can not be used in Pow')
+
+        evaluate = options.get('evaluate')
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
 
         if evaluate:
             if e is S.ComplexInfinity:

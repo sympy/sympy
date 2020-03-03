@@ -1796,7 +1796,10 @@ class Basic(metaclass=ManagedProperties):
                     processor = preprocessor_map[cls]
                     break
             preprocessors.append((priority, processor))
-        _, _, processor = max(preprocessors, key=lambda x:x[0])
+        if not preprocessors:
+            processor = None
+        else:
+            _, processor = max(preprocessors, key=lambda x:x[0])
 
         if processor is None:
             result = None
