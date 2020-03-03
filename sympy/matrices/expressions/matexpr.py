@@ -601,20 +601,20 @@ class MatrixExpr(Expr):
         return Eq(self, other, evaluate=False)
 
 
-def get_postprocessor(cls):
-    def _postprocessor(expr):
+def get_preprocessor(cls):
+    def _preprocessor(*args, **options):
         # To avoid circular imports, we can't have MatMul/MatAdd on the top level
         mat_class = {Mul: MatMul, Add: MatAdd}[cls]
         nonmatrices = []
         matrices = []
-        for term in expr.args:
+        for term in args:
             if isinstance(term, MatrixExpr):
                 matrices.append(term)
             else:
                 nonmatrices.append(term)
 
         if not matrices:
-            return cls._from_args(nonmatrices)
+            return cls(*nonmatrices, **options)
 
         if nonmatrices:
             if cls == Mul:
@@ -632,17 +632,18 @@ def get_postprocessor(cls):
                 # raising an exception. That way different algorithms can
                 # replace matrix expressions with non-commutative symbols to
                 # manipulate them like non-commutative scalars.
-                return cls._from_args(nonmatrices + [mat_class(*matrices).doit(deep=False)])
+                args = nonmatrices + [mat_class(*matrices).doit(deep=False)]
+                return cls(*args, **options)
 
         if mat_class == MatAdd:
-            return mat_class(*matrices).doit(deep=False)
-        return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
-    return _postprocessor
+            return mat_class(*matrices, **options)
+        return mat_class(cls._from_args(nonmatrices), *matrices, **options)
+    return _preprocessor
 
 
-Basic._constructor_postprocessor_mapping[MatrixExpr] = {
-    "Mul": [get_postprocessor(Mul)],
-    "Add": [get_postprocessor(Add)],
+Basic._constructor_preprocessor_mapping[MatrixExpr] = {
+    Mul: get_preprocessor(Mul),
+    Add: get_preprocessor(Add),
 }
 
 
