@@ -633,11 +633,11 @@ def get_preprocessor(cls):
                 # replace matrix expressions with non-commutative symbols to
                 # manipulate them like non-commutative scalars.
                 args = nonmatrices + [mat_class(*matrices).doit(deep=False)]
-                return cls(*args, **options)
+                return cls(*args, preprocess=False, **options)
 
         if mat_class == MatAdd:
-            return mat_class(*matrices, **options)
-        return mat_class(cls._from_args(nonmatrices), *matrices, **options)
+            return mat_class(*matrices, **options).doit(deep=False)
+        return mat_class(cls._from_args(nonmatrices), *matrices, **options).doit(deep=False)
     return _preprocessor
 
 

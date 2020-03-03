@@ -1786,6 +1786,10 @@ class Basic(metaclass=ManagedProperties):
         Compare the `_op_priority` of the elements of args.
         Use the registered class of element with highest `_op_priority`.
         """
+        skip = not options.get('preprocess', True)
+        if skip:
+            return None
+
         preprocessors = []
         for a in args:
             if hasattr(a, '_op_priority'):
@@ -1794,8 +1798,9 @@ class Basic(metaclass=ManagedProperties):
                 for func in type(a).__mro__:
                     if func in Basic._constructor_preprocessor_mapping:
                         preprocessor_map = Basic._constructor_preprocessor_mapping[func]
-                        processor = preprocessor_map[cls]
-                        break
+                        if cls in preprocessor_map:
+                            processor = preprocessor_map[cls]
+                            break
                 preprocessors.append((priority, processor))
             else:
                 continue
