@@ -1626,9 +1626,9 @@ class Beam(object):
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
-                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
-                else:
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+                else:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
             # higher order loads
             elif load[2] >= 0:
                 higher_order = True
