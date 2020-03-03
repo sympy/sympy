@@ -445,21 +445,6 @@ class AlmostLinear(SinglePatternODESolver):
     for `u(x)` by the `first_linear` hint and then `f(x)` is found by solving
     `g(f(x)) = u(x)`.
 
-    The general solution is
-
-        >>> from sympy import Function, dsolve, pprint, sin, cos
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> example = cos(f(x))*f(x).diff(x) + sin(f(x)) + 1
-        >>> pprint(example)
-                              d
-        sin(f(x)) + cos(f(x))*--(f(x)) + 1
-                              dx
-        >>> pprint(dsolve(example, f(x), hint='almost_linear'))
-                         /    -x    \             /    -x    \
-        [f(x) = pi - asin\C1*e   - 1/, f(x) = asin\C1*e   - 1/]
-
-
     See Also
     ========
     :meth:`sympy.solvers.ode.single.FirstLinear`
@@ -467,7 +452,7 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy import Function, Derivative, pprint, sin, cos
     >>> from sympy.solvers.ode import dsolve, classify_ode
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -478,6 +463,15 @@ class AlmostLinear(SinglePatternODESolver):
     >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                         -x
     f(x) = (C1 - Ei(x))*e
+    >>> example = cos(f(x))*f(x).diff(x) + sin(f(x)) + 1
+    >>> pprint(example)
+                        d
+    sin(f(x)) + cos(f(x))*--(f(x)) + 1
+                        dx
+    >>> pprint(dsolve(example, f(x), hint='almost_linear'))
+                    /    -x    \             /    -x    \
+    [f(x) = pi - asin\C1*e   - 1/, f(x) = asin\C1*e   - 1/]
+
 
     References
     ==========
@@ -669,7 +663,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     has_integral = False
 
     def _wilds(self, f, x, order):
-        a = Wild('a', exclude=[x, f(x), f(x).diff(x)])
+        a = Wild('a', exclude=[x, f(x), f(x).diff(x), 0])
         b = Wild('b', exclude=[x, f(x), f(x).diff(x), 0])
         c = Wild('c', exclude=[x, f(x), f(x).diff(x)])
         d = Wild('d', exclude=[x, f(x), f(x).diff(x)])
