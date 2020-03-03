@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper, Float
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -25,6 +25,15 @@ f = Function('f')
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
+
+def test_poly_deprecated():
+    p = Poly(2*x, x)
+    assert p.integrate(x) == Poly(x**2, x, domain='QQ')
+    with warns_deprecated_sympy():
+        integrate(p, x)
+    with warns_deprecated_sympy():
+        Integral(p, (x,))
 
 
 def test_principal_value():
@@ -222,8 +231,10 @@ def test_issue_18038():
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
-    qx = integrate(p, x)
-    qy = integrate(p, y)
+    with warns_deprecated_sympy():
+        qx = integrate(p, x)
+    with warns_deprecated_sympy():
+        qy = integrate(p, y)
 
     assert isinstance(qx, Poly) is True
     assert isinstance(qy, Poly) is True
@@ -238,8 +249,10 @@ def test_integrate_poly():
 def test_integrate_poly_defined():
     p = Poly(x + x**2*y + y**3, x, y)
 
-    Qx = integrate(p, (x, 0, 1))
-    Qy = integrate(p, (y, 0, pi))
+    with warns_deprecated_sympy():
+        Qx = integrate(p, (x, 0, 1))
+    with warns_deprecated_sympy():
+        Qy = integrate(p, (y, 0, pi))
 
     assert isinstance(Qx, Poly) is True
     assert isinstance(Qy, Poly) is True
@@ -1350,7 +1363,7 @@ def test_issue_8368():
 
 def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
-    assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
+    assert Eq(integrate(tanh(1.0*x)), 1.0*x - 1.0*log(tanh(1.0*x) + 1))
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
 
@@ -1388,8 +1401,8 @@ def test_issue_11876():
 
 
 def test_issue_4950():
-    assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
-        -2.4*exp(8*x) - 12.0*exp(5*x)
+    assert Eq(integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x),
+        -2.4*exp(8*x) - 12.0*exp(5*x))
 
 
 def test_issue_4968():
@@ -1656,6 +1669,15 @@ def test_issue_2975():
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+
+
+
+def test_issue_17119():
+    assert integrate(x**(0.5)*(1+x)) == Float(2/3)*x**Float(3/2)+Float(2/5)*x**Float(5/2)
+
+
+def test_issue_14431():
+    assert integrate((x-t)**(-1/2)*t, (t,0,x)) == Float(4/3)*x**Float(3/2)
 
 
 def test_issue_7827():

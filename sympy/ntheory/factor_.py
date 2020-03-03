@@ -3,6 +3,7 @@ Integer factorization
 """
 from __future__ import print_function, division
 
+from collections import defaultdict
 import random
 import math
 
@@ -257,7 +258,23 @@ def multiplicity(p, n):
     >>> multiplicity(3, R(1, 9))
     -2
 
+    Note: when checking for the multiplicity of a number in a
+    large factorial it is most efficient to send it as an unevaluated
+    factorial or to call ``multiplicity_in_factorial`` directly:
+
+    >>> from sympy.ntheory import multiplicity_in_factorial
+    >>> from sympy import factorial
+    >>> p = factorial(25)
+    >>> n = 2**100
+    >>> nfac = factorial(n, evaluate=False)
+    >>> multiplicity(p, nfac)
+    52818775009509558395695966887
+    >>> _ == multiplicity_in_factorial(p, n)
+    True
+
     """
+    from sympy.functions.combinatorial.factorials import factorial
+
     try:
         p, n = as_int(p), as_int(n)
     except ValueError:
@@ -278,6 +295,11 @@ def multiplicity(p, n):
                     multiplicity(p.q, n.p),
                     multiplicity(p.p, n.q))
                 return like - cross
+        elif (isinstance(p, (SYMPY_INTS, Integer)) and
+                isinstance(n, factorial) and
+                isinstance(n.args[0], Integer) and
+                n.args[0] >= 0):
+            return multiplicity_in_factorial(p, n.args[0])
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
@@ -309,6 +331,71 @@ def multiplicity(p, n):
                 return m + multiplicity(p, n)
         n, rem = divmod(n, p)
     return m
+
+
+def multiplicity_in_factorial(p, n):
+    """return the largest integer ``m`` such that ``p**m`` divides ``n!``
+    without calculating the factorial of ``n``.
+
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import multiplicity_in_factorial
+    >>> from sympy import factorial
+
+    >>> multiplicity_in_factorial(2, 3)
+    1
+
+    An instructive use of this is to tell how many trailing zeros
+    a given factorial has. For example, there are 6 in 25!:
+
+    >>> factorial(25)
+    15511210043330985984000000
+    >>> multiplicity_in_factorial(10, 25)
+    6
+
+    For large factorials, it is much faster/feasible to use
+    this function rather than computing the actual factorial:
+
+    >>> multiplicity_in_factorial(factorial(25), 2**100)
+    52818775009509558395695966887
+
+    """
+
+    p, n = as_int(p), as_int(n)
+
+    if p <= 0:
+        raise ValueError('expecting positive integer got %s' % p )
+
+    if n < 0:
+        raise ValueError('expecting non-negative integer got %s' % n )
+
+    factors = factorint(p)
+
+    # keep only the largest of a given multiplicity since those
+    # of a given multiplicity will be goverened by the behavior
+    # of the largest factor
+    test = defaultdict(int)
+    for k, v in factors.items():
+        test[v] = max(k, test[v])
+    keep = set(test.values())
+    # remove others from factors
+    for k in list(factors.keys()):
+        if k not in keep:
+            factors.pop(k)
+
+    mp = S.Infinity
+    for i in factors:
+        # multiplicity of i in n! is
+        mi = (n - (sum(digits(n, i)) - i))//(i - 1)
+        # multiplicity of p in n! depends on multiplicity
+        # of prime `i` in p, so we floor divide by factors[i]
+        # and keep it if smaller than the multiplicity of p
+        # seen so far
+        mp = min(mp, mi//factors[i])
+
+    return mp
 
 
 def perfect_power(n, candidates=None, big=True, factor=True):
@@ -1952,8 +2039,10 @@ class divisor_sigma(Function):
     def eval(cls, n, k=1):
         n = sympify(n)
         k = sympify(k)
+
         if n.is_prime:
             return 1 + n**k
+
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
@@ -1965,6 +2054,17 @@ class divisor_sigma(Function):
             else:
                 return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
                            else e + 1 for p, e in factorint(n).items()])
+
+        if n.is_integer:  # symbolic case
+            args = []
+            for p, e in (_.as_base_exp() for _ in Mul.make_args(n)):
+                if p.is_prime and e.is_positive:
+                    args.append((p**(k*(e + 1)) - 1)/(p**k - 1) if
+                                k != 0 else e + 1)
+                else:
+                    return
+            return Mul(*args)
+
 
 def core(n, t=2):
     r"""
