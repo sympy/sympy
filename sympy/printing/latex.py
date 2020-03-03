@@ -865,7 +865,9 @@ class LatexPrinter(Printer):
                 else:
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                name = r'%s^{%s}' % (self._hprint_Function(func), exp)
+                func_tex = self._hprint_Function(func)
+                func_tex = self.parenthesize_super(func_tex)
+                name = r'%s^{%s}' % (func_tex, exp)
             else:
                 name = self._hprint_Function(func)
 
