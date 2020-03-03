@@ -1788,14 +1788,17 @@ class Basic(metaclass=ManagedProperties):
         """
         preprocessors = []
         for a in args:
-            priority = a._op_priority
-            processor = None
-            for func in type(a).__mro__:
-                if func in Basic._constructor_preprocessor_mapping:
-                    preprocessor_map = Basic._constructor_preprocessor_mapping[func]
-                    processor = preprocessor_map[cls]
-                    break
-            preprocessors.append((priority, processor))
+            if hasattr(a, '_op_priority'):
+                priority = a._op_priority
+                processor = None
+                for func in type(a).__mro__:
+                    if func in Basic._constructor_preprocessor_mapping:
+                        preprocessor_map = Basic._constructor_preprocessor_mapping[func]
+                        processor = preprocessor_map[cls]
+                        break
+                preprocessors.append((priority, processor))
+            else:
+                continue
         if not preprocessors:
             processor = None
         else:
