@@ -16,7 +16,6 @@ from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
-from sympy.sets.sets import EmptySet
 
 
 def _filtered_gens(poly, symbol):
