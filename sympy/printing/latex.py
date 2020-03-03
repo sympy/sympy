@@ -209,7 +209,7 @@ class LatexPrinter(Printer):
         prec_val = precedence_traditional(item)
         if is_neg and strict:
             return r"\left({}\right)".format(self._print(item))
-        
+
         if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left({}\right)".format(self._print(item))
         else:
@@ -719,7 +719,7 @@ class LatexPrinter(Printer):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
-        
+
         tex = ""
         dim = 0
         for x, num in reversed(expr.variable_count):
