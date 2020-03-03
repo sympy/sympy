@@ -452,14 +452,14 @@ def test_AccumBounds_pow():
     assert AccumBounds(-1, 2)**oo == AccumBounds(-oo, oo)
     assert AccumBounds(-2, S.Half)**oo == AccumBounds(-oo, oo)
 
-    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x, evaluate=False)
+    assert AccumBounds(1, 2)**x == Pow(AccumBounds(1, 2), x)
 
     assert AccumBounds(2, 3)**(-oo) is S.Zero
     assert AccumBounds(0, 2)**(-oo) == AccumBounds(0, oo)
     assert AccumBounds(-1, 2)**(-oo) == AccumBounds(-oo, oo)
 
     assert (tan(x)**sin(2*x)).subs(x, AccumBounds(0, pi/2)) == \
-        Pow(AccumBounds(-oo, oo), AccumBounds(0, 1), evaluate=False)
+        Pow(AccumBounds(-oo, oo), AccumBounds(0, 1))
 
 
 def test_comparison_AccumBounds():
@@ -533,3 +533,6 @@ def test_issue_16469():
     x = Symbol("x", real=True)
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
+
+def test_issue_18747():
+    assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8

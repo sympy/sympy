@@ -516,3 +516,7 @@ def test_issue_5925():
     sx = sqrt(x + z).series(z, 0, 1)
     sxy = sqrt(x + y + z).series(z, 0, 1)
     assert sxy.subs({x:1, y:2}) == sx.subs(x, 3)
+
+
+def test_exp_2():
+    assert exp(x**3).nseries(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 + x**12/24 + O(x**14)

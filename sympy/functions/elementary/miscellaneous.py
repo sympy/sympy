@@ -49,6 +49,13 @@ class IdentityFunction(Lambda, metaclass=Singleton):
         #construct "by hand" to avoid infinite loop
         return Expr.__new__(cls, Tuple(x), x)
 
+    @property
+    def args(self):
+        return ()
+
+    def __getnewargs__(self):
+        return ()
+
 Id = S.IdentityFunction
 
 ###############################################################################
@@ -70,7 +77,7 @@ def sqrt(arg, evaluate=None):
     Examples
     ========
 
-    >>> from sympy import sqrt, Symbol
+    >>> from sympy import sqrt, Symbol, S
     >>> x = Symbol('x')
 
     >>> sqrt(x)
@@ -114,6 +121,25 @@ def sqrt(arg, evaluate=None):
 
     >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
+
+    Although ``sqrt`` is printed, there is no ``sqrt`` function so looking for
+    ``sqrt`` in an expression will fail:
+
+    >>> from sympy.utilities.misc import func_name
+    >>> func_name(sqrt(x))
+    'Pow'
+    >>> sqrt(x).has(sqrt)
+    Traceback (most recent call last):
+      ...
+    sympy.core.sympify.SympifyError: Sympify of expression 'could not parse
+    '<function sqrt at 0x7f79ad860f80>'' failed, because of exception being
+    raised:
+    SyntaxError: invalid syntax
+
+    To find ``sqrt`` look for ``Pow`` with an exponent of ``1/2``:
+
+    >>> (x + 1/sqrt(x)).find(lambda i: i.is_Pow and abs(i.exp) is S.Half)
+    {1/sqrt(x)}
 
     See Also
     ========

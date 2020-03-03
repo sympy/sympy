@@ -221,6 +221,14 @@ def test_latex_Float():
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
     assert latex(Float(1.0e-100), mul_symbol="times") == \
         r"1.0 \times 10^{-100}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=2) == \
+        r"1.0 \cdot 10^{4}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=4) == \
+        r"1.0 \cdot 10^{4}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=5) == \
+        r"10000.0"
+    assert latex(Float('0.099999'), full_prec=True,  min=-2, max=5) == \
+        r"9.99990000000000 \cdot 10^{-2}"
 
 
 def test_latex_vector_expressions():
@@ -745,22 +753,23 @@ def test_latex_SetExpr():
 
 
 def test_latex_Range():
-    assert latex(Range(1, 51)) == \
-        r'\left\{1, 2, \ldots, 50\right\}'
+    assert latex(Range(1, 51)) == r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
-
     assert latex(Range(0, 3, 1)) == r'\left\{0, 1, 2\right\}'
-
     assert latex(Range(0, 30, 1)) == r'\left\{0, 1, \ldots, 29\right\}'
-
     assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
-
     assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots\right\}'
-
     assert latex(Range(oo, -2, -2)) == r'\left\{\ldots, 2, 0\right\}'
+    assert latex(Range(-2, -oo, -1)) == r'\left\{-2, -3, \ldots\right\}'
+    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
+    assert latex(Range(oo, -oo, -1)) == \
+        r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
-    assert latex(Range(-2, -oo, -1)) == \
-        r'\left\{-2, -3, \ldots\right\}'
+    a, b, c = symbols('a:c')
+    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
+    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
+    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
 
 
 def test_latex_sequences():
@@ -2552,8 +2561,3 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
-
-
-def test_issue_17857():
-    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
-    assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'

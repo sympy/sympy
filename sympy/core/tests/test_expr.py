@@ -8,7 +8,6 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
@@ -16,10 +15,6 @@ from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
-
-# replace 3 instances with int when PY2 is dropped and
-# delete this line
-_rint = int if PY3 else float
 
 class DummyNumber(object):
     """
@@ -337,16 +332,14 @@ def test_cooperative_operations():
             raises(TypeError, lambda : divmod(na, e))
             raises(TypeError, lambda : e ** na)
             raises(TypeError, lambda : na ** e)
-            # XXX: Remove the if when PY2 support is dropped:
-            if PY3:
-                raises(TypeError, lambda : e > na)
-                raises(TypeError, lambda : na > e)
-                raises(TypeError, lambda : e < na)
-                raises(TypeError, lambda : na < e)
-                raises(TypeError, lambda : e >= na)
-                raises(TypeError, lambda : na >= e)
-                raises(TypeError, lambda : e <= na)
-                raises(TypeError, lambda : na <= e)
+            raises(TypeError, lambda : e > na)
+            raises(TypeError, lambda : na > e)
+            raises(TypeError, lambda : e < na)
+            raises(TypeError, lambda : na < e)
+            raises(TypeError, lambda : e >= na)
+            raises(TypeError, lambda : na >= e)
+            raises(TypeError, lambda : e <= na)
+            raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
@@ -519,14 +512,14 @@ def test_atoms():
 
     assert sin(oo).atoms(oo) == set()
 
-    assert Poly(0, x).atoms() == {S.Zero}
-    assert Poly(1, x).atoms() == {S.One}
+    assert Poly(0, x).atoms() == {S.Zero, x}
+    assert Poly(1, x).atoms() == {S.One, x}
 
     assert Poly(x, x).atoms() == {x}
-    assert Poly(x, x, y).atoms() == {x}
+    assert Poly(x, x, y).atoms() == {x, y}
     assert Poly(x + y, x, y).atoms() == {x, y}
-    assert Poly(x + y, x, y, z).atoms() == {x, y}
-    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y}
+    assert Poly(x + y, x, y, z).atoms() == {x, y, z}
+    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y, z}
 
     assert (I*pi).atoms(NumberSymbol) == {pi}
     assert (I*pi).atoms(NumberSymbol, I) == \
@@ -1766,8 +1759,6 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-    assert Poly(3, x).is_constant() is True
-
 
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
@@ -1954,14 +1945,14 @@ def test_round():
     for i in range(2):
         f = float(i)
         # 2 args
-        assert all(type(round(i, p)) is _rint for p in (-1, 0, 1))
+        assert all(type(round(i, p)) is int for p in (-1, 0, 1))
         assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
         assert all(type(round(f, p)) is float for p in (-1, 0, 1))
         assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
         # 1 arg (p is None)
-        assert type(round(i)) is _rint
+        assert type(round(i)) is int
         assert S(i).round().is_Integer
-        assert type(round(f)) is _rint
+        assert type(round(f)) is int
         assert S(f).round().is_Integer
 
 

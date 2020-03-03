@@ -92,7 +92,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         inline=True,
         fully_qualified_modules=True,
         contract=False,
-        standard='python3'
+        standard='python3',
     )
 
     def __init__(self, settings=None):
@@ -293,6 +293,14 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_ImaginaryUnit(self, expr):
         return '1j'
+
+    def _print_KroneckerDelta(self, expr):
+        a, b = expr.args
+
+        return '(1 if {a} == {b} else 0)'.format(
+            a = self._print(a),
+            b = self._print(b)
+        )
 
     def _print_MatrixBase(self, expr):
         name = expr.__class__.__name__

@@ -14,7 +14,6 @@ except ImportError:
 
 from sympy.core.compatibility import unicode, u_decode
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from .latex import latex
 
@@ -137,16 +136,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
     else:
-        if viewer == "file":
-            if filename is None:
-                SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename", deprecated_since_version="0.7.3",
-                    useinstead="viewer=\"file\" and filename=\"desiredname\"",
-                    issue=7018).warn()
-        elif viewer == "StringIO":
-            SymPyDeprecationWarning(feature="The preview() viewer StringIO",
-                useinstead="BytesIO", deprecated_since_version="0.7.4",
-                issue=7083).warn()
+        if viewer == "StringIO":
             viewer = "BytesIO"
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "

@@ -450,6 +450,10 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+    #checking for other point
+    t1 = e.second_moment_of_area(Point(6,5))
+    t2 = (580*pi, 845*pi, 600*pi)
+    assert t1==t2
 
 
 def test_section_modulus_and_polar_second_moment_of_area():
@@ -526,3 +530,20 @@ def test_director_circle():
     assert e.director_circle() == Circle((x, y), sqrt(a**2 + b**2))
     # a special case where Ellipse is a Circle
     assert Circle((3, 4), 8).director_circle() == Circle((3, 4), 8*sqrt(2))
+
+
+def test_evolute():
+    #ellipse centered at h,k
+    x, y, h, k = symbols('x y h k',real = True)
+    a, b = symbols('a b')
+    e = Ellipse(Point(h, k), a, b)
+    t1 = (e.hradius*(x - e.center.x))**Rational(2, 3)
+    t2 = (e.vradius*(y - e.center.y))**Rational(2, 3)
+    E = t1 + t2 - (e.hradius**2 - e.vradius**2)**Rational(2, 3)
+    assert e.evolute() == E
+    #Numerical Example
+    e = Ellipse(Point(1, 1), 6, 3)
+    t1 = (6*(x - 1))**Rational(2, 3)
+    t2 = (3*(y - 1))**Rational(2, 3)
+    E = t1 + t2 - (27)**Rational(2, 3)
+    assert e.evolute() == E

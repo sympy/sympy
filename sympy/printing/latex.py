@@ -125,6 +125,7 @@ class LatexPrinter(Printer):
     printmethod = "_latex"
 
     _default_settings = {
+        "full_prec": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
@@ -144,7 +145,9 @@ class LatexPrinter(Printer):
         "gothic_re_im": False,
         "decimal_separator": "period",
         "perm_cyclic": True,
-        "parenthesize_super": True
+        "parenthesize_super": True,
+        "min": None,
+        "max": None,
     }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
@@ -417,7 +420,10 @@ class LatexPrinter(Printer):
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+        strip = False if self._settings['full_prec'] else True
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator
@@ -1958,6 +1964,9 @@ class LatexPrinter(Printer):
     def _print_Range(self, s):
         dots = r'\ldots'
 
+        if s.has(Symbol):
+            return self._print_Basic(s)
+
         if s.start.is_infinite and s.stop.is_infinite:
             if s.step.is_positive:
                 printset = dots, -1, 0, 1, dots
@@ -2550,8 +2559,8 @@ def translate(s):
         return s
 
 
-def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
-          fold_short_frac=None, inv_trig_style="abbreviated",
+def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
+          fold_func_brackets=False, fold_short_frac=None, inv_trig_style="abbreviated",
           itex=False, ln_notation=False, long_frac_ratio=None,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
@@ -2561,6 +2570,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
 
     Parameters
     ==========
+    full_prec: boolean, optional
+        If set to True, a floating point number is printed with full precision.
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
@@ -2631,6 +2642,12 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     parenthesize_super : boolean, optional
         If set to ``False``, superscripted expressions will not be parenthesized when
         powered. Default is ``True``, which parenthesizes the expression when powered.
+    min: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
 
     Notes
     =====
@@ -2742,6 +2759,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         symbol_names = {}
 
     settings = {
+        'full_prec': full_prec,
         'fold_frac_powers': fold_frac_powers,
         'fold_func_brackets': fold_func_brackets,
         'fold_short_frac': fold_short_frac,
@@ -2761,7 +2779,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
         'perm_cyclic' : perm_cyclic,
-        'parenthesize_super' : parenthesize_super
+        'parenthesize_super' : parenthesize_super,
+        'min': min,
+        'max': max,
     }
 
     return LatexPrinter(settings).doprint(expr)

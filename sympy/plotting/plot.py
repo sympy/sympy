@@ -117,6 +117,7 @@ class Plot(object):
     - aspect_ratio : tuple of two floats or {'auto'}
     - autoscale : bool
     - margin : float in [0, 1]
+    - backend : {'default', 'matplotlib', 'text'}
 
     The per data series options and aesthetics are:
     There are none in the base series. See below for options for subclasses.
@@ -175,7 +176,7 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = DefaultBackend
+        self.backend = plot_backends[kwargs.pop('backend', 'default')]
 
 
         # The keyword arguments should only contain options for the plot.
@@ -1033,6 +1034,9 @@ class MatplotlibBackend(BaseBackend):
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
+        aspect = getattr(self.parent, 'aspect_ratio', 'auto')
+        if aspect != 'auto':
+            aspect = float(aspect[1]) / aspect[0]
 
         if isinstance(self.parent, Plot):
             nrows, ncolumns = 1, 1
@@ -1054,10 +1058,10 @@ class MatplotlibBackend(BaseBackend):
                 # projection='3d'
                 mpl_toolkits = import_module('mpl_toolkits', # noqa
                                      import_kwargs={'fromlist': ['mplot3d']})
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d', aspect=aspect))
 
             elif not any(are_3D):
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, aspect=aspect))
                 self.ax[i].spines['left'].set_position('zero')
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')

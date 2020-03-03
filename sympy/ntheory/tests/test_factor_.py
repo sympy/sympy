@@ -1,11 +1,10 @@
 from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
-from sympy.core.compatibility import long
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
-    primerange, pollard_rho, perfect_power, multiplicity,
+    primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
@@ -102,6 +101,12 @@ def test_multiplicity():
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
     assert multiplicity(3, Rational(1, 9)) == -2
+
+
+def test_multiplicity_in_factorial():
+    n = fac(1000)
+    for i in (2, 4, 6, 12, 30, 36, 48, 60, 72, 96):
+        assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
 
 
 def test_perfect_power():
@@ -226,7 +231,7 @@ def test_factorint():
     assert factorint(13*17*19, limit=15) == {13: 1, 17*19: 1}
     assert factorint(1951*15013*15053, limit=2000) == {225990689: 1, 1951: 1}
     assert factorint(primorial(17) + 1, use_pm1=0) == \
-        {long(19026377261): 1, 3467: 1, 277: 1, 105229: 1}
+        {int(19026377261): 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization
     a = nextprime(2**2**8)  # 78 digits
@@ -396,6 +401,14 @@ def test_divisor_sigma():
     assert divisor_sigma(23450, 1) == 50592
     assert divisor_sigma(23450, 2) == 730747500
     assert divisor_sigma(23450, 3) == 14666785333344
+
+    a = Symbol("a", prime=True)
+    b = Symbol("b", prime=True)
+    j = Symbol("j", integer=True, positive=True)
+    k = Symbol("k", integer=True, positive=True)
+    assert divisor_sigma(a**j*b**k) == (a**(j + 1) - 1)*(b**(k + 1) - 1)/((a - 1)*(b - 1))
+    assert divisor_sigma(a**j*b**k, 2) == (a**(2*j + 2) - 1)*(b**(2*k + 2) - 1)/((a**2 - 1)*(b**2 - 1))
+    assert divisor_sigma(a**j*b**k, 0) == (j + 1)*(k + 1)
 
     m = Symbol("m", integer=True)
     k = Symbol("k", integer=True)
