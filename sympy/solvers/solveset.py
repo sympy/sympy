@@ -1697,7 +1697,7 @@ def _is_lambert(f, symbol):
     return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
 
 
-def _compute_lambert_solutions(lhs, rhs, symbol):
+def _compute_lambert_solutions(lhs, rhs, symbol,domain=S.Complexes):
     """
     Computes the Lambert solutions. Returns `None` if it
     fails doing so.
@@ -1705,7 +1705,7 @@ def _compute_lambert_solutions(lhs, rhs, symbol):
     try:
         poly = lhs.as_poly()
         gens = _filtered_gens(poly, symbol)
-        return _solve_lambert(lhs - rhs, symbol, gens)
+        return _solve_lambert(lhs - rhs, symbol, gens,domain)
     except NotImplementedError:
         pass
 
@@ -1718,12 +1718,12 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     """
     result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
-    soln = _compute_lambert_solutions(lhs, rhs, symbol)
+    soln = _compute_lambert_solutions(lhs, rhs, symbol,domain)
     if soln is None:
         # try with positive `symbol`
         u = Dummy('u', positive=True)
         pos_lhs = lhs.subs({symbol: u})
-        soln = _compute_lambert_solutions(pos_lhs, rhs, u)
+        soln = _compute_lambert_solutions(pos_lhs, rhs, u,domain)
         if soln:
             result = FiniteSet(*soln)
     else:
