@@ -560,6 +560,10 @@ def test_MatMul_preprocessor():
 
     assert Mul(A, x, M, M, x) == MatMul(A, Mx**2)
 
+    B = MatrixSymbol("B", 3,3)
+    with raises(ShapeError):
+        Mul(A,B, check=True)
+
 def test_MatAdd_preprocessor():
     # Some of these are nonsensical, but we do not raise errors for Add
     # because that breaks algorithms that want to replace matrices with dummy
@@ -605,6 +609,10 @@ def test_MatAdd_preprocessor():
     a = Add(A, x, M, M, x)
     assert isinstance(a, Add)
     assert a.args == (2*x, A + 2*M)
+
+    B = MatrixSymbol("B", 3,3)
+    with raises(ShapeError):
+        Add(A,B, check=True)
 
 def test_simplify_matrix_expressions():
     # Various simplification functions
