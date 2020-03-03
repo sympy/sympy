@@ -1891,7 +1891,7 @@ def test_expo_conditionset():
     assert solveset(f2, x, S.Reals) == ConditionSet(
         x, Eq(x*(x + 2)**y - 3, 0), S.Reals)
     assert solveset(f3, x, S.Reals) == ConditionSet(
-        x, Eq(x*log(exp(x) + 1) - log(2), 0), S.Reals)
+        x, Eq(2**x - exp(x) - 3, 0), S.Reals)
     assert solveset(f4, x, S.Reals) == ConditionSet(
         x, Eq(-exp(x) + log(x), 0), S.Reals)
     assert solveset(f5, x, S.Reals) == ConditionSet(
