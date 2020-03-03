@@ -14,7 +14,7 @@ from sympy.integrals import Integral
 from sympy.polys.polytools import cancel
 from sympy.simplify import simplify
 from sympy.utilities import numbered_symbols
-from sympy.functions import exp
+from sympy.functions import exp, sqrt, tan, log
 
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
@@ -232,14 +232,20 @@ class SinglePatternODESolver(SingleODESolver):
         if order != 1:
             return False
 
-        eq = expand(eq / eq.coeff(df))
-        eq = eq.collect(f(x), func = cancel)
-
         pattern = self._equation(f(x), x, 1)
+
+        if not pattern.coeff(df).has(Wild):
+            eq = expand(eq / eq.coeff(df))
+        eq = eq.collect(f(x), func = cancel)
 
         self._wilds_match = match = eq.match(pattern)
 
-        return match is not None
+        if match is not None:
+            return self._verify(f(x))
+        return False
+
+    def _verify(self, fx) -> bool:
+        return True
 
     def _wilds(self, f, x, order):
         msg = "Subclasses of SingleODESolver should implement _wilds"
@@ -425,43 +431,19 @@ class FirstLinear(SinglePatternODESolver):
         return [gensol]
 
 
-
 class AlmostLinear(SinglePatternODESolver):
     r"""
     Solves an almost-linear differential equation.
 
     The general form of an almost linear differential equation is
 
-    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
-                \text{where} l'(y) = g(y)\text{.}
+    .. math:: a(x) g'(f(x)) f'(x) + b(x) g(f(x)) + c(x)
 
-    This can be solved by substituting `l(y) = u(y)`.  Making the given
-    substitution reduces it to a linear differential equation of the form `u'
-    + P(x) u + Q(x) = 0`.
-
-    The general solution is
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x, y, n
-        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
-        >>> pprint(genform)
-            d
-        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
-            dy
-        >>> pprint(dsolve(genform, hint = 'almost_linear'))
-                /     //       y*k(x)                \\
-                |     ||       ------                ||
-                |     ||        f(x)                 ||  -y*k(x)
-                |     ||-g(x)*e                      ||  --------
-                |     ||--------------  for k(x) != 0||    f(x)
-        l(y) = |C1 + |<     k(x)                    ||*e
-                |     ||                             ||
-                |     ||   -y*g(x)                   ||
-                |     ||   --------       otherwise  ||
-                |     ||     f(x)                    ||
-                \     \\                             //
-
+    Here `f(x)` is the function to be solved for (the dependent variable).
+    The substitution `g(f(x)) = u(x)` leads to a linear differential equation
+    for `u(x)` of the form `a(x) u' + b(x) u + c(x) = 0`. This can be solved
+    for `u(x)` by the `first_linear` hint and then `f(x)` is found by solving
+    `g(f(x)) = u(x)`.
 
     See Also
     ========
@@ -470,7 +452,7 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy import Function, Derivative, pprint, sin, cos
     >>> from sympy.solvers.ode import dsolve, classify_ode
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -481,6 +463,15 @@ class AlmostLinear(SinglePatternODESolver):
     >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                         -x
     f(x) = (C1 - Ei(x))*e
+    >>> example = cos(f(x))*f(x).diff(x) + sin(f(x)) + 1
+    >>> pprint(example)
+                        d
+    sin(f(x)) + cos(f(x))*--(f(x)) + 1
+                        dx
+    >>> pprint(dsolve(example, f(x), hint='almost_linear'))
+                    /    -x    \             /    -x    \
+    [f(x) = pi - asin\C1*e   - 1/, f(x) = asin\C1*e   - 1/]
+
 
     References
     ==========
@@ -492,60 +483,36 @@ class AlmostLinear(SinglePatternODESolver):
     has_integral = True
 
     def _wilds(self, f, x, order):
-        P = Wild('P', exclude=[f(x)])
+        P = Wild('P', exclude=[f(x).diff(x)])
         Q = Wild('Q', exclude=[f(x).diff(x)])
         return P, Q
 
     def _equation(self, fx, x, order):
-        P,Q = self.wilds()
-        df = fx.diff(x)
-        eq = self.ode_problem.eq_expanded
-        c = Wild('c', exclude=[fx])
-        d = Wild('d', exclude=[df, fx.diff(x, 2)])
-        e = Wild('e', exclude=[df])
-        eq = expand(eq)
-        eq = eq.collect(fx)
-        r = eq.match(e*df+d)
-        self.fxx = None
-        self.gx = None
-        self.kx = None
-        if r:
-            r2 = r.copy()
-            r2[c] = S.Zero
-            if r2[d].is_Add:
-                # Separate the terms having f(x) to r[d] and
-                # remaining to r[c]
-                no_f, r2[d] = r2[d].as_independent(fx)
-                r2[c] += no_f
-            factor = simplify(r2[d].diff(fx)/r[e])
-            if factor and not factor.has(fx):
-                r2[d] = factor_terms(r2[d])
-                u = r2[d].as_independent(fx, as_Add=False)[1]
-                r2.update({'a': e, 'b': d, 'c': c, 'u': u})
-                r2[d] /= u
-                r2[e] /= u.diff(fx)
-                self.coeffs = r2
-                du = u.diff(x)
-                temp = du + (r2[r2['b']]/r2[r2['a']])*u - r2[r2['c']]/r2[r2['a']]
-                temp = expand(temp/ temp.coeff(fx.diff(x)))
-                self.fxx = r2[e]
-                self.kx = r2[d]
-                self.gx = -r2[c]
-                self.substituting = u
-                return fx.diff(x) + P*fx - Q
-        return S.Zero
+        P, Q = self.wilds()
+        return P*fx.diff(x) + Q
+
+    def _verify(self, fx):
+        a, b = self.wilds_match()
+        c, b = b.as_independent(fx) if b.is_Add else (S.Zero, b)
+        # a, b and c are the function a(x), b(x) and c(x) respectively.
+        # c(x) is obtained by separating out b as terms with and without fx i.e, l(y)
+        # The following conditions checks if the given equation is an almost-linear differential equation using the fact that
+        # a(x)*(l(y))' / l(y)' is independent of l(y)
+
+        if b.diff(fx) != 0 and not simplify(b.diff(fx)/a).has(fx):
+            self.ly = factor_terms(b).as_independent(fx, as_Add=False)[1] # Gives the term containing fx i.e., l(y)
+            self.ax = a / self.ly.diff(fx)
+            self.cx = -c  # cx is taken as -c(x) to simplify expression in the solution integral
+            self.bx = factor_terms(b) / self.ly
+            return True
+
+        return False
 
     def _get_general_solution(self, *, simplify: bool = True):
-        P, Q = self.wilds_match()
-        fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        if self.fxx is None or self.gx is None or self.kx is None:
-            gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
-            * exp(-Integral(P, x)))))
-        else:
-            gensol = Eq(self.substituting, (((C1 + Integral((self.gx/self.fxx)*exp(Integral(self.kx/self.fxx, x)),x))
-                * exp(-Integral(self.kx/self.fxx, x)))))
+        gensol = Eq(self.ly, (((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+                * exp(-Integral(self.bx/self.ax, x)))))
 
         return [gensol]
 
@@ -650,4 +617,68 @@ class Bernoulli(SinglePatternODESolver):
                           * exp(Integral(P, x)), x)
             ) * exp(-(1 - n)*Integral(P, x)))**(1/(1 - n))
         )
+        return [gensol]
+
+
+class RiccatiSpecial(SinglePatternODESolver):
+    r"""
+    The general Riccati equation has the form
+
+    .. math:: dy/dx = f(x) y^2 + g(x) y + h(x)\text{.}
+
+    While it does not have a general solution [1], the "special" form, `dy/dx
+    = a y^2 - b x^c`, does have solutions in many cases [2].  This routine
+    returns a solution for `a(dy/dx) = b y^2 + c y/x + d/x^2` that is obtained
+    by using a suitable change of variables to reduce it to the special form
+    and is valid when neither `a` nor `b` are zero and either `c` or `d` is
+    zero.
+
+    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.solvers.ode import dsolve, checkodesol
+    >>> from sympy import pprint, Function
+    >>> f = Function('f')
+    >>> y = f(x)
+    >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
+    >>> sol = dsolve(genform, y)
+    >>> pprint(sol, wrap_line=False)
+            /                                 /        __________________       \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = ------------------------------------------------------------------------
+                                            2*b*x
+
+    >>> checkodesol(genform, sol, order=1)[0]
+    True
+
+    References
+    ==========
+
+    1. http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    2. http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+       http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    """
+    hint = "Riccati_special_minus2"
+    has_integral = False
+
+    def _wilds(self, f, x, order):
+        a = Wild('a', exclude=[x, f(x), f(x).diff(x), 0])
+        b = Wild('b', exclude=[x, f(x), f(x).diff(x), 0])
+        c = Wild('c', exclude=[x, f(x), f(x).diff(x)])
+        d = Wild('d', exclude=[x, f(x), f(x).diff(x)])
+        return a, b, c, d
+
+    def _equation(self, fx, x, order):
+        a, b, c, d = self.wilds()
+        return a*fx.diff(x) + b*fx**2 + c*fx/x + d/x**2
+
+    def _get_general_solution(self, *, simplify: bool = True):
+        a, b, c, d = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        mu = sqrt(4*d*b - (a - c)**2)
+
+        gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
         return [gensol]
