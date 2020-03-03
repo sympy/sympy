@@ -828,7 +828,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     funcstr = funcprinter.doprint(funcname, args, expr)
 
     from sympy import Min, Max
-    if type(expr)== Min or type(expr)== Max:
+    if (type(expr)== Min or type(expr)== Max) and modules == 'numpy':
         length = len(funcstr)
         funcstr = funcstr[0:length-3]+", axis=0))"
 
