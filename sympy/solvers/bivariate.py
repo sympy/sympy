@@ -18,6 +18,7 @@ from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
 
 
+
 def _filtered_gens(poly, symbol):
     """process the generators of ``poly``, returning the set of generators that
     have ``symbol``.  If there are two generators that are inverses of each other,
