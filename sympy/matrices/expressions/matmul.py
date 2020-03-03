@@ -36,7 +36,7 @@ class MatMul(MatrixExpr, Mul):
 
     def __new__(cls, *args, evaluate=False, **kwargs):
         check = kwargs.get('check', True)
-    
+
         if not args:
             return cls.identity
 
