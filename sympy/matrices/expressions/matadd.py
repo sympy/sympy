@@ -49,7 +49,7 @@ class MatAdd(MatrixExpr, Add):
             if all(not isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
-        
+
         if evaluate:
             if all(not isinstance(i, MatrixExpr) for i in args):
                 return Add(*args, evaluate=True)
