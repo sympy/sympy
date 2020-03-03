@@ -188,7 +188,7 @@ def _lambert(eq, x):
         j = -1
         ind_ls = []
         for i in args1:
-            j += 1 
+            j += 1
             de = "{}".format(i)
             if 'I' not in de:
                 ind_ls.append(j)
