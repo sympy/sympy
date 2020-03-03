@@ -49,7 +49,7 @@ class MatMul(MatrixExpr, Mul):
 
         if check:
             validate(*matrices)
-    
+
         if not matrices:
             # Should it be
             #
