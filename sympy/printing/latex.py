@@ -786,16 +786,9 @@ class LatexPrinter(Printer):
 
                 symbols.insert(0, r"\, d%s" % self._print(symbol))
 
-        if any(_coeff_isneg(i) for i in expr.args):
-            return r"%s %s%s" % (tex, self.parenthesize(expr.function,
-                                                    PRECEDENCE["Mul"],
-                                                    is_neg=True,
-                                                    strict=True),
-                             "".join(symbols))
-
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
-                                                    is_neg=False,
+                                                    is_neg=any(_coeff_isneg(i) for i in expr.args),
                                                     strict=True),
                              "".join(symbols))
 
