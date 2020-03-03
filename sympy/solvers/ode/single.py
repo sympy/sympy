@@ -10,18 +10,15 @@ from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
+from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel
+from sympy.polys.polytools import cancel, factor, factor_list
 from sympy.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
-from sympy.functions import exp
-from sympy.polys.polytools import factor,factor_list
-from sympy.functions import exp, sqrt, tan, log
 
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
-from .ode import dsolve
 
 
 class ODEMatchError(NotImplementedError):
@@ -759,3 +756,7 @@ class RiccatiSpecial(SinglePatternODESolver):
 
         gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
         return [gensol]
+
+
+# Avoid circular import:
+from .ode import dsolve

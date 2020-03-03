@@ -273,7 +273,6 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 from .subscheck import sub_func_doit
-from .single import NthAlgebraic, FirstLinear, AlmostLinear, Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -8454,5 +8453,7 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     sol3 = dsolve(diff(fw(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))).rhs
     return [sol1, sol2, sol3]
 
-from .single import NthAlgebraic, Factorable, FirstLinear, AlmostLinear, Bernoulli, SingleODEProblem, SingleODESolver
+
 #This import is written at the bottom to avoid circular imports.
+from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial)
