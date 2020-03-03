@@ -560,13 +560,6 @@ def test_MatMul_preprocessor():
 
     assert Mul(A, x, M, M, x) == MatMul(A, Mx**2)
 
-@XFAIL
-def test_MatAdd_preprocessor_xfail():
-    # This is difficult to get working because of the way that Add processes
-    # its args.
-    z = zeros(2)
-    assert Add(z, S.NaN) == Add(S.NaN, z)
-
 def test_MatAdd_preprocessor():
     # Some of these are nonsensical, but we do not raise errors for Add
     # because that breaks algorithms that want to replace matrices with dummy
@@ -587,8 +580,8 @@ def test_MatAdd_preprocessor():
     assert a.args == (S.ComplexInfinity, z)
 
     a = Add(z, S.NaN)
-    # assert a == Add(S.NaN, z) # See the XFAIL above
-    assert isinstance(a, Add)
+    assert a == Add(S.NaN, z)
+    assert a.func == Add
     assert a.args == (S.NaN, z)
 
     M = Matrix([[1, 2], [3, 4]])

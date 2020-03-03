@@ -633,6 +633,12 @@ def get_preprocessor(cls):
                 # replace matrix expressions with non-commutative symbols to
                 # manipulate them like non-commutative scalars.
                 args = nonmatrices + [mat_class(*matrices).doit(deep=False)]
+
+                # Hack to make matrix + S.NaN always return Add instance
+                if cls == Add and S.NaN in args:
+                    options['evaluate'] = False
+                    return cls._from_args(args, is_commutative=False)
+
                 return cls(*args, preprocess=False, **options)
 
         if mat_class == MatAdd:
