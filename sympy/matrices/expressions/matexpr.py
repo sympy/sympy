@@ -623,7 +623,7 @@ def get_preprocessor(cls):
                         # If one of the matrices explicit, absorb the scalar into it
                         # (doit will combine all explicit matrices into one, so it
                         # doesn't matter which)
-                        matrices[i] = matrices[i].__mul__(cls._from_args(nonmatrices))
+                        matrices[i] = matrices[i].__mul__(cls(*nonmatrices, **options))
                         nonmatrices = []
                         break
 
