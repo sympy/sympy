@@ -207,7 +207,10 @@ class LatexPrinter(Printer):
 
     def parenthesize(self, item, level, is_neg=False, strict=False):
         prec_val = precedence_traditional(item)
-        if (((prec_val < level) or ((not strict) and prec_val <= level)) or (is_neg and strict)):
+        if is_neg and strict:
+            return r"\left({}\right)".format(self._print(item))
+        
+        if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left({}\right)".format(self._print(item))
         else:
             return self._print(item)
@@ -716,6 +719,7 @@ class LatexPrinter(Printer):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'
+        
         tex = ""
         dim = 0
         for x, num in reversed(expr.variable_count):
@@ -737,6 +741,7 @@ class LatexPrinter(Printer):
                                                   PRECEDENCE["Mul"],
                                                   is_neg=True,
                                                   strict=True))
+
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
                                                   is_neg=False,
