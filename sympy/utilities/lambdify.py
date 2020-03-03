@@ -827,6 +827,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
     funcstr = funcprinter.doprint(funcname, args, expr)
 
+    from sympy import Min, Max
+    if type(expr)== Min or type(expr)== Max:
+        length = len(funcstr);  
+        funcstr = funcstr[0:length-3]+", axis=0))"
+
     # Collect the module imports from the code printers.
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
