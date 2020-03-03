@@ -29,7 +29,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold, Piecewise, LambertW))
+                             piecewise_fold, Piecewise, LambertW)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
