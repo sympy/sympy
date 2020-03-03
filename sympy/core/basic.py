@@ -1777,7 +1777,32 @@ class Basic(metaclass=ManagedProperties):
                 else:
                     return self
 
+    _constructor_preprocessor_mapping = {}  # type: ignore
     _constructor_postprocessor_mapping = {}  # type: ignore
+
+    @classmethod
+    def _exec_constructor_preprocessors(cls, *args, **options):
+        """
+        Compare the `_op_priority` of the elements of args.
+        Use the registered class of element with highest `_op_priority`.
+        """
+        preprocessors = []
+        for a in args:
+            priority = a._op_priority
+            processor = None
+            for func in type(a).__mro__:
+                if func in Basic._constructor_preprocessor_mapping:
+                    preprocessor_map = Basic._constructor_preprocessor_mapping[func]
+                    processor = preprocessor_map[cls]
+                    break
+            preprocessors.append((priority, processor))
+        _, _, processor = max(preprocessors, key=lambda x:x[0])
+
+        if processor is None:
+            result = None
+        else:
+            result = processor(*args, **options)
+        return result
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
