@@ -792,6 +792,7 @@ class LatexPrinter(Printer):
                                                     is_neg=True,
                                                     strict=True),
                              "".join(symbols))
+
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
                                                     is_neg=False,
