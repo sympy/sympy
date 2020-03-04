@@ -1546,16 +1546,18 @@ def test_sampling_methods():
         ChiSquared("CS", 2),
         Uniform("U", 0, 1)
     ]
-    # test without passing the size parameter
-    for X in distribs_python:
-        assert sample(X) in X.pspace.domain.set
 
     size = 3
 
     for X in distribs_python:
+        assert sample(X) in X.pspace.domain.set
         samps = sample(X, size=size)
+        samps2 = sample(X, size=[2, 2])
         for sam in samps:
             assert sam in X.pspace.domain.set
+        for i in range(2):
+            for j in range(2):
+                assert samps2[i][j] in X.pspace.domain.set
 
     numpy = import_module('numpy')
     if not numpy:

@@ -376,7 +376,7 @@ class BetaDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.betavariate(a, b), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.betavariate(a, b),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         a, b = float(self.alpha), float(self.beta)
@@ -1242,7 +1242,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.expovariate(rate), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.expovariate(rate),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         rate = float(self.rate)
@@ -1694,7 +1694,7 @@ class GammaDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.gammavariate(k, theta), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.gammavariate(k, theta),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         k, theta = float(self.k), float(self.theta)
@@ -2496,7 +2496,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         mean, std = float(self.mean), float(self.std)
@@ -2849,7 +2849,7 @@ class NormalDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.normalvariate(mean, std), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.normalvariate(mean, std),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         mean, std = float(self.mean), float(self.std)
@@ -3115,7 +3115,7 @@ class ParetoDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.paretovariate(alpha), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.paretovariate(alpha),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         xm, alpha = float(self.xm), float(self.alpha)
@@ -3987,7 +3987,7 @@ class UniformDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.uniform(left, right), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.uniform(left, right),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_numpy(self, size):
         left, right = float(self.left), float(self.right)
@@ -4262,7 +4262,7 @@ class WeibullDistribution(SingleContinuousDistribution):
         if isinstance(size, int):
             return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta),
-                                     *[(x, 0, i) for i in size]).doit()
+                                     *[(x, 0, i-1) for i in size]).doit()
 
 def Weibull(name, alpha, beta):
     r"""

@@ -178,16 +178,16 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ A random realization from the distribution """
         if not size:
             size = 1
-        if getattr(self,'_sample_python', None):
+        if hasattr(self,'_sample_python'):
             samp = self._sample_python(size)
             return samp if size != 1 else samp[0]
-        elif getattr(self,'_sample_numpy', None) and import_module('numpy'):
+        elif hasattr(self,'_sample_numpy') and import_module('numpy'):
             samp = self._sample_numpy(size)
             return samp if size != 1 else samp[0]
-        elif getattr(self,'_sample_scipy', None) and import_module('scipy'):
+        elif hasattr(self,'_sample_scipy') and import_module('scipy'):
             samp = self._sample_scipy(size)
             return samp if size != 1 else samp[0]
-        elif getattr(self,'_sample_pymc3', None) and import_module('pymc3'):
+        elif hasattr(self,'_sample_pymc3') and import_module('pymc3'):
             samp = self._sample_pymc3(size)
             return samp if size != 1 else samp[0]
         else:

@@ -49,7 +49,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     def sample(self, size=()):
         """ A random realization from the distribution"""
-        if getattr(self,'_sample_scipy', None) and import_module('scipy'):
+        if hasattr(self,'_sample_scipy') and import_module('scipy'):
             return self._sample_scipy(size)
         icdf = self._inverse_cdf_expression()
         samp_list = []
