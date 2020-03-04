@@ -12,6 +12,7 @@ PRECEDENCE = {
     "And": 30,
     "Relational": 35,
     "Add": 40,
+    "Mod": 45,
     "Mul": 50,
     "Pow": 60,
     "Func": 70,
@@ -33,6 +34,7 @@ PRECEDENCE_VALUES = {
     "Or": PRECEDENCE["Or"],
     "And": PRECEDENCE["And"],
     "Add": PRECEDENCE["Add"],
+    "Mod": PRECEDENCE["Mod"],
     "Pow": PRECEDENCE["Pow"],
     "Relational": PRECEDENCE["Relational"],
     "Sub": PRECEDENCE["Add"],
@@ -62,7 +64,7 @@ PRECEDENCE_VALUES = {
 
 def precedence_Mul(item):
     if _coeff_isneg(item):
-        return PRECEDENCE["Add"]
+        return PRECEDENCE["Mul"]
     return PRECEDENCE["Mul"]
 
 
