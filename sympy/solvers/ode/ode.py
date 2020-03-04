@@ -1812,6 +1812,67 @@ def _get_func_order(eqs, funcs):
     return funcs, order
 
 
+def _get_independent_variable(eq):
+    return list(list(eq.atoms(Derivative))[0].atoms(Symbol))[0]
+
+
+def get_linear_coeffs(eq, funcs):
+    '''
+    This function returns the coefficients of the equation if it is linear
+    else it returns None.
+
+    Paramters
+    =========
+
+    eq: Equation
+        ODE for which the check of linearity is to be done.
+    funcs: List of variables
+        List of dependent variables for which the linearity of the eq has to
+        be checked
+
+    Returns
+    =======
+
+    Dict or None
+        If the eq is linear ODE, then it returns a dictionary where the keys
+        are the terms of ODE and values are its coefficients.
+        If the eq is not linear, then None is returned
+    '''
+    coeffs = dict()
+    t = _get_independent_variable(eq)
+    is_linear_ = True
+    for func in funcs:
+        order_func = ode_order(eq, func)
+        for k in range(order_func + 1):
+            coeffs[diff(func, t, k)] = collect(eq.expand(), [diff(func, t, k)])\
+                                        .coeff(diff(func, t, k))
+            if is_linear_ == True:
+                if coeffs[diff(func, t, k)] == 0:
+                    if k == 0:
+                        coef = eq.as_independent(func, as_Add=True)[1]
+                        for xr in range(1, ode_order(eq, func) + 1):
+                            coef -= eq.as_independent(diff(func, t, xr), as_Add=True)[1]
+                        if coef != 0:
+                            is_linear_ = False
+                    else:
+                        if eq.as_independent(diff(func, t, k), as_Add=True)[1]:
+                            is_linear_ = False
+                else:
+                    for func_ in funcs:
+                        if isinstance(func_, list):
+                            for elem_func_ in func_:
+                                dep = coeffs[diff(func, t, k)].as_independent(elem_func_, as_Add=True)[1]
+                                if dep != 0:
+                                    is_linear_ = False
+                        else:
+                            dep = coeffs[diff(func, t, k)].as_independent(func_, as_Add=True)[1]
+                            if dep != 0:
+                                is_linear_ = False
+    if is_linear_:
+        return coeffs
+    return None
+
+
 def neq_nth_linear_constant_coeff_match(eqs, funcs):
     match = dict()
     match["no_of_equation"] = len(eqs)
@@ -1838,12 +1899,14 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs):
     func_coef = {}
     is_linear = True
     for j, eq in enumerate(eqs):
-        for func in funcs:
-            if isinstance(func, list):
-                for func_elem in func:
-                    is_linear = linearity_check(eq, j, func_elem, funcs, func_coef, order, t, is_linear)
+        if is_linear == True:
+            eq_coeffs = get_linear_coeffs(eq, funcs)
+            if eq_coeffs:
+                for term in eq_coeffs:
+                    func_coef[j, term] = eq_coeffs[term]
             else:
-                is_linear = linearity_check(eq, j, func, funcs, func_coef, order, t, is_linear)
+                is_linear = False
+
     match['func_coeff'] = func_coef
     match['is_linear'] = is_linear
 
@@ -1853,7 +1916,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs):
         if is_constant == True:
             if func_coef[key].as_independent(t, as_Add=True)[1] != 0:
                 is_constant = False
-                print(func_coef[key])
+
     match['is_constant'] = is_constant
 
     if match['is_linear'] and match['is_constant']:
