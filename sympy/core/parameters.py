@@ -66,9 +66,9 @@ class _global_parameters(local):
         return super(_global_parameters, self).__setattr__(name, value)
 
 global_parameters = _global_parameters(
-    evaluate=True, 
-    distribute=True,
-    evaluate_matrix=False
+evaluate=True, 
+distribute=True,
+evaluate_matrix=False
 )
 
 @contextmanager
