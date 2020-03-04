@@ -903,7 +903,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         by substituting the expression given after the word ``subs`` for a
         single dummy variable.  This is usually in terms of ``indep`` and
         ``dep`` as above.  The substituted expression will be written only in
-        characters allowed for names of Python objects, mdef classify_odeeaning operators will
+        characters allowed for names of Python objects, meaning operators will
         be spelled out.  For example, ``indep``/``dep`` will be written as
         ``indep_div_dep``.
 
@@ -928,7 +928,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     >>> from sympy import Function, classify_ode, Eq
     >>> from sympy.abc import x
-        >>> f = Function('f')
+    >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
     ('nth_algebraic',
     'separable',
