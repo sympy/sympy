@@ -1240,7 +1240,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         rate = float(self.rate)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.expovariate(rate), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.expovariate(rate), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.expovariate(rate),
                                      *[(x, 0, i) for i in size]).doit()
 
@@ -1692,7 +1692,7 @@ class GammaDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         k, theta = self.k, self.theta
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.gammavariate(k, theta), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.gammavariate(k, theta), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.gammavariate(k, theta),
                                      *[(x, 0, i) for i in size]).doit()
 
@@ -2494,7 +2494,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         mean, std = float(self.mean), float(self.std)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std),
                                      *[(x, 0, i) for i in size]).doit()
 
@@ -3113,7 +3113,7 @@ class ParetoDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         alpha = float(self.alpha)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.paretovariate(alpha), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.paretovariate(alpha), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.paretovariate(alpha),
                                      *[(x, 0, i) for i in size]).doit()
 
@@ -3985,7 +3985,7 @@ class UniformDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         left, right = float(self.left), float(self.right)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.uniform(left, right), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.uniform(left, right), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.uniform(left, right),
                                      *[(x, 0, i) for i in size]).doit()
 
@@ -4260,7 +4260,7 @@ class WeibullDistribution(SingleContinuousDistribution):
         x = Symbol('x')
         alpha, beta = float(self.alpha), float(self.beta)
         if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta), (x, 0, size)).doit()
+            return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta), (x, 0, size-1)).doit()
         return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta),
                                      *[(x, 0, i) for i in size]).doit()
 
