@@ -765,6 +765,11 @@ def test_sympy__algebras__quaternion__Quaternion():
     assert _test_args(Quaternion(x, 1, 2, 3))
 
 
+def test_sympy__algebras__quaternion__UnitQuaternion():
+    from sympy.algebras.quaternion import UnitQuaternion
+    assert _test_args(UnitQuaternion(S.Half, S.Half, S.Half, S.Half))
+
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
