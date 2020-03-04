@@ -1,7 +1,7 @@
 from sympy.abc import x, y
-from sympy.core.parameters import evaluate
+from sympy.core.parameters import evaluate, evaluate_matrix
 from sympy.core import Mul, Add, Pow, S
-from sympy import sqrt, oo
+from sympy import sqrt, oo, MatrixSymbol, MatAdd
 
 def test_add():
     with evaluate(False):
@@ -82,3 +82,10 @@ def test_nested():
         expr = (x + x) + (y + y)
         assert expr.args == ((x + x), (y + y))
         assert expr.args[0].args == (x, x)
+
+def test_MatAdd():
+    A = MatrixSymbol('A', 2,2)
+    assert MatAdd(A,A).args == (A, A)
+    with evaluate_matrix(True):
+        expr = MatAdd(A,A)
+        assert expr.args == (2, A)

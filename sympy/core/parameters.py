@@ -137,6 +137,18 @@ def evaluate_matrix(x):
     """ Control automatic evaluation of MatExpr
 
     Classes in matrices module are designed to prefer unevaluated result.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol, MatAdd
+    >>> from sympy.core.parameters import evaluate_matrix
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> print(MatAdd(A,-A))
+    -A + A
+    >>> with evaluate_matrix(True):
+    ...     print(MatAdd(A,-A))
+    0
     """
     old = global_parameters.evaluate_matrix
 
