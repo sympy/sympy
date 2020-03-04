@@ -841,7 +841,7 @@ def test_lognormal():
 
     for i in range(3):
         X = LogNormal('x', i, 1)
-        assert sample(X)in X.pspace.domain.set
+        assert sample(X) in X.pspace.domain.set
 
     size = 5
     samps = sample(X, size=size)
