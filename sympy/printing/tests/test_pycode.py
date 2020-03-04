@@ -15,6 +15,8 @@ from sympy.printing.pycode import (
 )
 from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
+from sympy.testing.pytest import skip
+from sympy.external import import_module
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -119,6 +121,10 @@ def test_NumPyPrinter():
 
 
 def test_issue_18770():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+
     import numpy as np
     from sympy import lambdify, Min, Max
 
@@ -131,6 +137,7 @@ def test_issue_18770():
     func = lambdify(x,expr1, "numpy")
     assert (func(np.linspace(-1 , 2, 4)) == [1, 0, 1, 8] ).all()
     assert func(4) == 64
+
 
 def test_SciPyPrinter():
     p = SciPyPrinter()
