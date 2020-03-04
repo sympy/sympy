@@ -65,7 +65,11 @@ class _global_parameters(local):
             clear_cache()
         return super(_global_parameters, self).__setattr__(name, value)
 
-global_parameters = _global_parameters(evaluate=True, distribute=True)
+global_parameters = _global_parameters(
+    evaluate=True, 
+    distribute=True,
+    evaluate_matrix=False
+)
 
 @contextmanager
 def evaluate(x):
@@ -126,3 +130,18 @@ def distribute(x):
         yield
     finally:
         global_parameters.distribute = old
+
+
+@contextmanager
+def evaluate_matrix(x):
+    """ Control automatic evaluation of MatExpr
+
+    Classes in matrices module are designed to prefer unevaluated result.
+    """
+    old = global_parameters.evaluate_matrix
+
+    try:
+        global_parameters.evaluate_matrix = x
+        yield
+    finally:
+        global_parameters.evaluate_matrix = old
