@@ -778,7 +778,6 @@ class NumPyPrinter(PythonCodePrinter):
     def _print_Max(self, expr):
         return '{0}(({1}))'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
-
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
 
