@@ -722,6 +722,12 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int\limits_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+    # for negative nested Integral
+    assert latex(Integral(-Integral(y**2,x),x)) == \
+        r'\int \left(- \int y^{2}\, dx\right)\, dx'
+    assert latex(Integral(-Integral(-Integral(y,x),x),x)) == \
+        r'\int \left(- \int \left(- \int y\, dx\right)\, dx\right)\, dx'
+
     # fix issue #10806
     assert latex(Integral(z, z)**2) == r"\left(\int z\, dz\right)^{2}"
     assert latex(Integral(x + z, z)) == r"\int \left(x + z\right)\, dz"
