@@ -265,7 +265,7 @@ from sympy.series.series import series
 from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
     separatevars, simplify, trigsimp, posify, cse)
 from sympy.simplify.powsimp import powdenest
-from sympy.simplify.radsimp import collect_const, fraction
+from sympy.simplify.radsimp import collect_const
 from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
@@ -273,7 +273,6 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 from .subscheck import sub_func_doit
-from .single import NthAlgebraic, FirstLinear, AlmostLinear, Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -1034,11 +1033,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
-    # Factorable method
-    r = _ode_factorable_match(eq, func, kwargs.get('x0', 0))
-    if r:
-        matching_hints['factorable'] = r
-
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
     # d^3/dx^3(x y) = F(x)
@@ -1048,9 +1042,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         FirstLinear: ('1st_linear',),
         AlmostLinear: ('almost_linear',),
         Bernoulli: ('Bernoulli',),
-        RiccatiSpecial: ('Riccati_special_minus2',)
-        }
-
+        Factorable: ('factorable',),
+        RiccatiSpecial: ('Riccati_special_minus2',),
+    }
     for solvercls in solvers:
         solver = solvercls(ode)
         if solver.matches():
@@ -1150,12 +1144,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
-        if r is None and 'factorable' not in matching_hints:
-            roots = solve(reduced_eq, df)
-            if roots:
-                meq = Mul(*[(df - i) for i in roots])*Dummy()
-                m = _ode_factorable_match(meq, func, kwargs.get('x0', 0))
-                matching_hints['factorable'] = m
+
         if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
@@ -2988,33 +2977,6 @@ def _handle_Integral(expr, func, hint):
         sol = expr
     return sol
 
-def _ode_factorable_match(eq, func, x0):
-
-    from sympy.polys.polytools import factor
-    eqs = factor(eq)
-    eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
-    eqns = []
-    r = None
-    if isinstance(eqs, Pow):
-        # if f(x)**p=0 then f(x)=0 (p>0)
-        if eqs.exp.is_positive:
-            eq = eqs.base
-        if isinstance(eq, Pow):
-            return None
-        else:
-            r = _ode_factorable_match(eq, func, x0)
-            if r is None:
-                r = {'eqns' : [eq], 'x0': x0}
-            return r
-
-    if isinstance(eqs, Mul):
-        fac = eqs.args
-        for i in fac:
-            if i.has(func):
-                eqns.append(i)
-        if len(eqns)>0:
-            r = {'eqns' : eqns, 'x0' : x0}
-    return r
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
@@ -5285,45 +5247,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
 
-def ode_factorable(eq, func, order, match):
-    r"""
-    Solves equations having a solvable factor.
-
-    This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
-    will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
-    list of solutions.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq, pprint, Derivative
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
-    >>> pprint(dsolve(eq, f(x)))
-                                     -x
-    [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
-
-
-    """
-    eqns = match['eqns']
-    x0 = match['x0']
-    sols = []
-    for eq in eqns:
-        try:
-            sol = dsolve(eq, func, x0=x0)
-        except NotImplementedError:
-            continue
-        else:
-            if isinstance(sol, list):
-                sols.extend(sol)
-            else:
-                sols.append(sol)
-
-    if sols == []:
-       raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-            + " the factorable group method")
-    return sols
 
 def ode_separable(eq, func, order, match):
     r"""
@@ -8529,3 +8452,8 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     sol2 = dsolve(diff(fv(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))).rhs
     sol3 = dsolve(diff(fw(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))).rhs
     return [sol1, sol2, sol3]
+
+
+#This import is written at the bottom to avoid circular imports.
+from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial)
