@@ -150,10 +150,10 @@ def mr(n, bases):
     s = trailing(n - 1)
     t = n >> s
     for base in bases:
-        # Bases >= n are wrapped, bases < 2 are invalid
-        if base >= n:
-            base %= n
+        # Bases < 2 are invalid, bases >= n are wrapped
         if base >= 2:
+            if base >= n:
+                base %= n
             base = ZZ(base)
             if not _test(n, base, s, t):
                 return False
