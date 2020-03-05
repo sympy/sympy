@@ -4,7 +4,6 @@ from sympy.core.compatibility import reduce
 from operator import add
 
 from sympy.core import Add, Basic, sympify
-from sympy.core.parameters import global_parameters
 from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
@@ -34,7 +33,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=None, **kwargs):
+    def __new__(cls, *args, evaluate=False, **kwargs):
         if not args:
             return cls.identity
 
@@ -50,9 +49,6 @@ class MatAdd(MatrixExpr, Add):
             if all(not isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
-
-        if evaluate is None:
-            evaluate = global_parameters.evaluate_matrix
 
         if evaluate:
             if all(not isinstance(i, MatrixExpr) for i in args):

@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
-from sympy.core.parameters import global_parameters
 from sympy.matrices.expressions.matexpr import (
     MatrixExpr, ShapeError, OneMatrix, ZeroMatrix
 )
@@ -61,17 +60,13 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=None, **kwargs):
+    def __new__(cls, *args, evaluate=False, **kwargs):
         args = list(map(sympify, args))
         check = kwargs.get('check', True)
         if check:
             validate(*args)
 
         obj = super(HadamardProduct, cls).__new__(cls, *args)
-
-        if evaluate is None:
-            evaluate = global_parameters.evaluate_matrix
-
         if evaluate:
             obj = obj.doit(deep=False)
         return obj
@@ -88,7 +83,7 @@ class HadamardProduct(MatrixExpr):
         return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
-        expr = self.func(*[i.doit(**ignored) for i in self.args], evaluate=False)
+        expr = self.func(*[i.doit(**ignored) for i in self.args])
         # Check for explicit matrices:
         from sympy import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
@@ -287,7 +282,7 @@ def canonicalize(x):
             else:
                 new_arg.append(HadamardPower(base, exp))
 
-        x = HadamardProduct(*new_arg, evaluate=False)
+        x = HadamardProduct(*new_arg)
 
     # Commutativity
     fun = condition(

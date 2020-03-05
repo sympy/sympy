@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
-from sympy.core.parameters import global_parameters
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -35,7 +34,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=None, **kwargs):
+    def __new__(cls, *args, evaluate=False, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
@@ -56,9 +55,6 @@ class MatMul(MatrixExpr, Mul):
             #
             # return Basic.__neq__(cls, factor, GenericIdentity()) ?
             return factor
-
-        if evaluate is None:
-            evaluate = global_parameters.evaluate_matrix
 
         if evaluate:
             return canonicalize(obj)
@@ -121,7 +117,7 @@ class MatMul(MatrixExpr, Mul):
 
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
-        return coeff, MatMul(*matrices, evaluate=False)
+        return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
@@ -365,7 +361,7 @@ def combine_permutations(mul):
         else:
             result.append(B)
 
-    return MatMul(*result, evaluate=False)
+    return MatMul(*result)
 
 rules = (
     any_zeros, remove_ids, combine_powers, unpack, rm_id(lambda x: x == 1),

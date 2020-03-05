@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import S
-from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 
@@ -11,17 +10,13 @@ from .permutation import PermutationMatrix
 
 class MatPow(MatrixExpr):
 
-    def __new__(cls, base, exp, evaluate=None, **options):
+    def __new__(cls, base, exp, evaluate=False, **options):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("Function parameter should be a matrix")
         exp = _sympify(exp)
 
         obj = super(MatPow, cls).__new__(cls, base, exp)
-
-        if evaluate is None:
-            evaluate = global_parameters.evaluate_matrix
-
         if evaluate:
             obj = obj.doit(deep=False)
 
@@ -94,7 +89,7 @@ class MatPow(MatrixExpr):
             return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base
-        return MatPow(base, exp, evaluate=False)
+        return MatPow(base, exp)
 
     def _eval_transpose(self):
         base, exp = self.args
