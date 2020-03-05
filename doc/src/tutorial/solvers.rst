@@ -232,7 +232,7 @@ solutions to differential equations cannot be solved explicitly for the
 function.
 
     >>> dsolve(f(x).diff(x)*(1 - sin(f(x))) - 1, f(x))
-    -x + f(x) + cos(f(x)) = C₁
+    x - f(x) - cos(f(x)) = C₁
 
 The arbitrary constants in the solutions from dsolve are symbols of the form
 ``C1``, ``C2``, ``C3``, and so on.

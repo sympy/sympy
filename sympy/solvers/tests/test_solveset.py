@@ -2242,6 +2242,14 @@ def test_solve_modular():
             ConditionSet(x, Eq(Mod(I*x, 3) - 2, 0), S.Integers)
     assert solveset(Mod(I + x, 3) - 2, x, S.Integers) == \
             ConditionSet(x, Eq(Mod(x + I, 3) - 2, 0), S.Integers)
+
+    # issue 17373 (https://github.com/sympy/sympy/issues/17373)
+    assert solveset(Mod(x**4, 14) - 11, x, S.Integers) == \
+            Union(ImageSet(Lambda(n, 14*n + 3), S.Integers),
+            ImageSet(Lambda(n, 14*n + 11), S.Integers))
+    assert solveset(Mod(x**31, 74) - 43, x, S.Integers) == \
+            ImageSet(Lambda(n, 74*n + 31), S.Integers)
+
     # issue 13178
     n = symbols('n', integer=True)
     a = 742938285
@@ -2261,13 +2269,8 @@ def test_solve_modular():
             Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
             S.Integers)
 
-@XFAIL
-def test_solve_modular_fail():
-    # issue 17373 (https://github.com/sympy/sympy/issues/17373)
-    assert solveset(Mod(x**4, 14) - 11, x, S.Integers) == \
-            Union(ImageSet(Lambda(n, 14*n + 3), S.Integers),
-            ImageSet(Lambda(n, 14*n + 11), S.Integers))
-    assert solveset(Mod(x**31, 74) - 43, x, S.Integers) == \
-            ImageSet(Lambda(n, 74*n + 31), S.Integers)
-
 # end of modular tests
+
+def test_issue_17276():
+    assert nonlinsolve([Eq(x, 5**(S(1)/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
+     FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))
