@@ -8,20 +8,18 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.numbers import mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
+from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
-from sympy.simplify.simplify import (
-    simplify as _simplify, dotprodsimp as _dotprodsimp)
+from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
 from .common import (
@@ -44,6 +42,20 @@ from .eigen import (
     _is_positive_definite, _is_positive_semidefinite,
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
     _jordan_form, _left_eigenvects, _singular_values)
+
+from .decompositions import (
+    _rank_decomposition, _cholesky, _LDLdecomposition,
+    _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
+    _QRdecomposition)
+
+from .solvers import (
+    _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
+    _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
+    _pinv_solve, _solve, _solve_least_squares)
+
+from .inverse import (
+    _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
+    _inv, _inv_block)
 
 
 class DeferredVector(Symbol, NotIterable):
@@ -81,39 +93,35 @@ class MatrixDeterminant(MatrixCommon):
     """Provides basic matrix determinant operations. Should not be instantiated
     directly. See ``determinant.py`` for their implementations."""
 
-    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul,
-            dotprodsimp=None):
-        return _det_bareiss(self, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
+        return _det_bareiss(self, iszerofunc=iszerofunc)
 
-    def _eval_det_berkowitz(self, dotprodsimp=None):
-        return _det_berkowitz(self, dotprodsimp=dotprodsimp)
+    def _eval_det_berkowitz(self):
+        return _det_berkowitz(self)
 
-    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None, dotprodsimp=None):
-        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
-                dotprodsimp=dotprodsimp)
+    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
+        return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
     def _eval_determinant(self): # for expressions.determinant.Determinant
         return _det(self)
 
-    def adjugate(self, method="berkowitz", dotprodsimp=None):
-        return _adjugate(self, method=method, dotprodsimp=dotprodsimp)
+    def adjugate(self, method="berkowitz"):
+        return _adjugate(self, method=method)
 
-    def charpoly(self, x='lambda', simplify=_simplify, dotprodsimp=None):
-        return _charpoly(self, x=x, simplify=simplify, dotprodsimp=dotprodsimp)
+    def charpoly(self, x='lambda', simplify=_simplify):
+        return _charpoly(self, x=x, simplify=simplify)
 
-    def cofactor(self, i, j, method="berkowitz", dotprodsimp=None):
-        return _cofactor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+    def cofactor(self, i, j, method="berkowitz"):
+        return _cofactor(self, i, j, method=method)
 
-    def cofactor_matrix(self, method="berkowitz", dotprodsimp=None):
-        return _cofactor_matrix(self, method=method, dotprodsimp=dotprodsimp)
+    def cofactor_matrix(self, method="berkowitz"):
+        return _cofactor_matrix(self, method=method)
 
-    def det(self, method="bareiss", iszerofunc=None, dotprodsimp=None):
-        return _det(self, method=method, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def det(self, method="bareiss", iszerofunc=None):
+        return _det(self, method=method, iszerofunc=iszerofunc)
 
-    def minor(self, i, j, method="berkowitz", dotprodsimp=None):
-        return _minor(self, i, j, method=method, dotprodsimp=dotprodsimp)
+    def minor(self, i, j, method="berkowitz"):
+        return _minor(self, i, j, method=method)
 
     def minor_submatrix(self, i, j):
         return _minor_submatrix(self, i, j)
@@ -137,23 +145,21 @@ class MatrixReductions(MatrixDeterminant):
     """Provides basic matrix row/column operations. Should not be instantiated
     directly. See ``reductions.py`` for some of their implementations."""
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False,
-            dotprodsimp=None):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         return _echelon_form(self, iszerofunc=iszerofunc, simplify=simplify,
-                with_pivots=with_pivots, dotprodsimp=dotprodsimp)
+                with_pivots=with_pivots)
 
     @property
     def is_echelon(self):
         return _is_echelon(self)
 
-    def rank(self, iszerofunc=_iszero, simplify=False, dotprodsimp=None):
-        return _rank(self, iszerofunc=iszerofunc, simplify=simplify,
-                dotprodsimp=dotprodsimp)
+    def rank(self, iszerofunc=_iszero, simplify=False):
+        return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True, dotprodsimp=None):
+            normalize_last=True):
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
-            pivots=pivots, normalize_last=normalize_last, dotprodsimp=dotprodsimp)
+            pivots=pivots, normalize_last=normalize_last)
 
     echelon_form.__doc__ = _echelon_form.__doc__
     is_echelon.__doc__   = _is_echelon.__doc__
@@ -327,15 +333,14 @@ class MatrixSubspaces(MatrixReductions):
     Should not be instantiated directly. See ``subspaces.py`` for their
     implementations."""
 
-    def columnspace(self, simplify=False, dotprodsimp=None):
-        return _columnspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+    def columnspace(self, simplify=False):
+        return _columnspace(self, simplify=simplify)
 
-    def nullspace(self, simplify=False, iszerofunc=_iszero, dotprodsimp=None):
-        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc,
-                dotprodsimp=dotprodsimp)
+    def nullspace(self, simplify=False, iszerofunc=_iszero):
+        return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc)
 
-    def rowspace(self, simplify=False, dotprodsimp=None):
-        return _rowspace(self, simplify=simplify, dotprodsimp=dotprodsimp)
+    def rowspace(self, simplify=False):
+        return _rowspace(self, simplify=simplify)
 
     # This is a classmethod but is converted to such later in order to allow
     # assignment of __doc__ since that does not work for already wrapped
@@ -356,27 +361,22 @@ class MatrixEigen(MatrixSubspaces):
     Should not be instantiated directly. See ``eigen.py`` for their
     implementations."""
 
-    def _eval_is_positive_definite(self, method="eigen", dotprodsimp=None):
-        return _eval_is_positive_definite(self, method=method,
-                dotprodsimp=dotprodsimp)
+    def _eval_is_positive_definite(self, method="eigen"):
+        return _eval_is_positive_definite(self, method=method)
 
-    def eigenvals(self, error_when_incomplete=True, dotprodsimp=None, **flags):
-        return _eigenvals(self, error_when_incomplete=error_when_incomplete,
-                dotprodsimp=dotprodsimp, **flags)
+    def eigenvals(self, error_when_incomplete=True, **flags):
+        return _eigenvals(self, error_when_incomplete=error_when_incomplete, **flags)
 
-    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero,
-            dotprodsimp=None, **flags):
+    def eigenvects(self, error_when_incomplete=True, iszerofunc=_iszero, **flags):
         return _eigenvects(self, error_when_incomplete=error_when_incomplete,
-                iszerofunc=iszerofunc, dotprodsimp=dotprodsimp, **flags)
+                iszerofunc=iszerofunc, **flags)
 
-    def is_diagonalizable(self, reals_only=False, dotprodsimp=None, **kwargs):
-        return _is_diagonalizable(self, reals_only=reals_only,
-                dotprodsimp=dotprodsimp, **kwargs)
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        return _is_diagonalizable(self, reals_only=reals_only, **kwargs)
 
-    def diagonalize(self, reals_only=False, sort=False, normalize=False,
-            dotprodsimp=None):
+    def diagonalize(self, reals_only=False, sort=False, normalize=False):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
-                normalize=normalize, dotprodsimp=dotprodsimp)
+                normalize=normalize)
 
     @property
     def is_positive_definite(self):
@@ -398,15 +398,14 @@ class MatrixEigen(MatrixSubspaces):
     def is_indefinite(self):
         return _is_indefinite(self)
 
-    def jordan_form(self, calc_transform=True, dotprodsimp=None, **kwargs):
-        return _jordan_form(self, calc_transform=calc_transform,
-                dotprodsimp=dotprodsimp, **kwargs)
+    def jordan_form(self, calc_transform=True, **kwargs):
+        return _jordan_form(self, calc_transform=calc_transform, **kwargs)
 
     def left_eigenvects(self, **flags):
         return _left_eigenvects(self, **flags)
 
-    def singular_values(self, dotprodsimp=None):
-        return _singular_values(self, dotprodsimp=dotprodsimp)
+    def singular_values(self):
+        return _singular_values(self)
 
     _eval_is_positive_definite.__doc__ = _eval_is_positive_definite.__doc__
     eigenvals.__doc__                  = _eigenvals.__doc__
@@ -786,17 +785,6 @@ class MatrixBase(MatrixDeprecated,
         from .dense import matrix2numpy
         return matrix2numpy(self, dtype=dtype)
 
-    def __getattr__(self, attr):
-        if attr in ('diff', 'integrate', 'limit'):
-            def doit(*args):
-                item_doit = lambda item: getattr(item, attr)(*args)
-                return self.applyfunc(item_doit)
-
-            return doit
-        else:
-            raise AttributeError(
-                "%s has no attribute %s." % (self.__class__.__name__, attr))
-
     def __len__(self):
         """Return the number of elements of ``self``.
 
@@ -813,15 +801,7 @@ class MatrixBase(MatrixDeprecated,
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve, without the error
-        checks, to be used privately.
-        """
-        return self._new(
-            rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
-
-    def _matrix_pow_by_jordan_blocks(self, num, dotprodsimp=None):
+    def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
@@ -846,14 +826,14 @@ class MatrixBase(MatrixDeprecated,
                 for j in range(1, N-i):
                     jc[j,i+j] = jc [j-1,i+j-1]
 
-        P, J = self.jordan_form(dotprodsimp=dotprodsimp)
+        P, J = self.jordan_form()
         jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new(P.multiply(diag(*jordan_cells), dotprodsimp=dotprodsimp)
-                .multiply(P.inv(dotprodsimp=dotprodsimp), dotprodsimp=dotprodsimp))
+        return self._new(P.multiply(diag(*jordan_cells))
+                .multiply(P.inv()))
 
     def __repr__(self):
         return sstr(self)
@@ -1212,135 +1192,10 @@ class MatrixBase(MatrixDeprecated,
         """Return self + b """
         return self + b
 
-    def cholesky_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B`` using Cholesky decomposition,
-        for a general square non-singular matrix.
-        For a non-square matrix with rows > cols,
-        the least squares solution is returned.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        hermitian = True
-        if self.is_symmetric():
-            hermitian = False
-            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.is_hermitian:
-            L = self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.rows >= self.cols:
-            L = (self.H * self)._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-            rhs = self.H * rhs
-        else:
-            raise NotImplementedError('Under-determined System. '
-                                      'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        if hermitian:
-            return (L.H)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-        else:
-            return (L.T)._upper_triangular_solve(Y, dotprodsimp=dotprodsimp)
-
-    def cholesky(self, hermitian=True, dotprodsimp=None):
-        """Returns the Cholesky-type decomposition L of a matrix A
-        such that L * L.H == A if hermitian flag is True,
-        or L * L.T == A if hermitian is False.
-
-        A must be a Hermitian positive-definite matrix if hermitian is True,
-        or a symmetric matrix if it is False.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> A.cholesky()
-        Matrix([
-        [ 5, 0, 0],
-        [ 3, 3, 0],
-        [-1, 1, 3]])
-        >>> A.cholesky() * A.cholesky().T
-        Matrix([
-        [25, 15, -5],
-        [15, 18,  0],
-        [-5,  0, 11]])
-
-        The matrix can have complex entries:
-
-        >>> from sympy import I
-        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
-        >>> A.cholesky()
-        Matrix([
-        [ 3, 0],
-        [-I, 2]])
-        >>> A.cholesky() * A.cholesky().H
-        Matrix([
-        [   9, 3*I],
-        [-3*I,   5]])
-
-        Non-hermitian Cholesky-type decomposition may be useful when the
-        matrix is not positive-definite.
-
-        >>> A = Matrix([[1, 2], [2, 1]])
-        >>> L = A.cholesky(hermitian=False)
-        >>> L
-        Matrix([
-        [1,         0],
-        [2, sqrt(3)*I]])
-        >>> L*L.T == A
-        True
-
-        See Also
-        ========
-
-        LDLdecomposition
-        LUdecomposition
-        QRdecomposition
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
-            raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
-        return self._cholesky(hermitian=hermitian, dotprodsimp=dotprodsimp)
-
-    def condition_number(self, dotprodsimp=None):
+    def condition_number(self):
         """Returns the condition number of a matrix.
 
         This is the maximum singular value divided by the minimum singular value
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         Examples
         ========
@@ -1358,7 +1213,7 @@ class MatrixBase(MatrixDeprecated,
 
         if not self:
             return self.zero
-        singularvalues = self.singular_values(dotprodsimp=dotprodsimp)
+        singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
     def copy(self):
@@ -1452,37 +1307,6 @@ class MatrixBase(MatrixDeprecated,
             # for a message since MatrixBase will raise the AttributeError
             raise AttributeError
         return self.H * mgamma(0)
-
-    def diagonal_solve(self, rhs):
-        """Solves ``Ax = B`` efficiently, where A is a diagonal Matrix,
-        with non-zero diagonal entries.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = eye(2)*2
-        >>> B = Matrix([[1, 2], [3, 4]])
-        >>> A.diagonal_solve(B) == B/2
-        True
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        if not self.is_diagonal():
-            raise TypeError("Matrix should be diagonal")
-        if rhs.rows != self.rows:
-            raise TypeError("Size mis-match")
-        return self._diagonal_solve(rhs)
 
     def dot(self, b, hermitian=None, conjugate_convention=None):
         """Return the dot or inner product of two vectors of equal length.
@@ -1667,7 +1491,99 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def exp(self, dotprodsimp=None):
+
+    def analytic_func(self, f, x):
+        """
+        Computes f(A) where A is a Square Matrix
+        and f is an analytic function.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix, exp, S, log
+
+        >>> x = Symbol('x')
+        >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])
+        >>> f = log(x)
+        >>> m.analytic_func(f, x)
+        Matrix([
+        [     0, log(2)],
+        [log(2),      0]])
+
+        Parameters
+        ==========
+
+        f : Expr
+            Analytic Function
+        x : Symbol
+            parameter of f
+
+        """
+        from sympy import diff
+
+        if not self.is_square:
+            raise NonSquareMatrixError(
+                "Valid only for square matrices")
+        if not x.is_symbol:
+            raise ValueError("The parameter for f should be a symbol")
+        if x not in f.free_symbols:
+            raise ValueError("x should be a parameter in Function")
+        if x in self.free_symbols:
+            raise ValueError("x should be a parameter in Matrix")
+        eigen = self.eigenvals()
+
+        max_mul = max(eigen.values())
+        derivative = {}
+        dd = f
+        for i in range(max_mul - 1):
+            dd = diff(dd, x)
+            derivative[i + 1] = dd
+        n = self.shape[0]
+        r = self.zeros(n)
+        f_val = self.zeros(n, 1)
+        row = 0
+
+        for i in eigen:
+            mul = eigen[i]
+            f_val[row] = f.subs(x, i)
+            if not f.subs(x, i).free_symbols and not f.subs(x, i).is_complex:
+                raise ValueError("Cannot Evaluate the function is not"
+                                 " analytic at some eigen value")
+            val = 1
+            for a in range(n):
+                r[row, a] = val
+                val *= i
+            if mul > 1:
+                coe = [1 for ii in range(n)]
+                deri = 1
+                while mul > 1:
+                    row = row + 1
+                    mul -= 1
+                    d_i = derivative[deri].subs(x, i)
+                    if not d_i.free_symbols and not d_i.is_complex:
+                        raise ValueError("Cannot Evaluate the function is not"
+                                 " analytic at some eigen value")
+                    f_val[row] = d_i
+                    for a in range(n):
+                        if a - deri + 1 <= 0:
+                            r[row, a] = 0
+                            coe[a] = 0
+                            continue
+                        coe[a] = coe[a]*(a - deri + 1)
+                        r[row, a] = coe[a]*pow(i, a - deri)
+                    deri += 1
+            row += 1
+        c = r.solve(f_val)
+        ans = self.zeros(n)
+        pre = self.eye(n)
+        for i in range(n):
+            ans = ans + c[i]*pre
+            pre *= self
+        return ans
+
+
+    def exp(self):
+
         """Return the exponential of a square matrix
 
         Examples
@@ -1681,14 +1597,6 @@ class MatrixBase(MatrixDeprecated,
         Matrix([
         [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
         [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
         """
         if not self.is_square:
             raise NonSquareMatrixError(
@@ -1705,7 +1613,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P.multiply(eJ, dotprodsimp=dotprodsimp).multiply(P.inv(), dotprodsimp=dotprodsimp)
+        ret = P.multiply(eJ, dotprodsimp=True).multiply(P.inv(), dotprodsimp=True)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
@@ -1832,385 +1740,11 @@ class MatrixBase(MatrixDeprecated,
 
         return ret
 
-    def gauss_jordan_solve(self, B, freevar=False, dotprodsimp=None):
-        """
-        Solves ``Ax = B`` using Gauss Jordan elimination.
-
-        There may be zero, one, or infinite solutions.  If one solution
-        exists, it will be returned. If infinite solutions exist, it will
-        be returned parametrically. If no solutions exist, It will throw
-        ValueError.
-
-        Parameters
-        ==========
-
-        B : Matrix
-            The right hand side of the equation to be solved for.  Must have
-            the same number of rows as matrix A.
-
-        freevar : List
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of arbitrary
-            values of free variables. Then the index of the free variables
-            in the solutions (column Matrix) will be returned by freevar, if
-            the flag `freevar` is set to `True`.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Returns
-        =======
-
-        x : Matrix
-            The matrix that will satisfy ``Ax = B``.  Will have as many rows as
-            matrix A has columns, and as many columns as matrix B.
-
-        params : Matrix
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of arbitrary
-            parameters. These arbitrary parameters are returned as params
-            Matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
-        >>> B = Matrix([7, 12, 4])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [-2*tau0 - 3*tau1 + 2],
-        [                 tau0],
-        [           2*tau1 + 5],
-        [                 tau1]])
-        >>> params
-        Matrix([
-        [tau0],
-        [tau1]])
-        >>> taus_zeroes = { tau:0 for tau in params }
-        >>> sol_unique = sol.xreplace(taus_zeroes)
-        >>> sol_unique
-         Matrix([
-        [2],
-        [0],
-        [5],
-        [0]])
-
-
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
-        >>> B = Matrix([3, 6, 9])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [-1],
-        [ 2],
-        [ 0]])
-        >>> params
-        Matrix(0, 1, [])
-
-        >>> A = Matrix([[2, -7], [-1, 4]])
-        >>> B = Matrix([[-21, 3], [12, -2]])
-        >>> sol, params = A.gauss_jordan_solve(B)
-        >>> sol
-        Matrix([
-        [0, -2],
-        [3, -1]])
-        >>> params
-        Matrix(0, 2, [])
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
-
-        """
-        from sympy.matrices import Matrix, zeros
-
-        cls = self.__class__
-
-        aug = self.hstack(self.copy(), B.copy())
-        B_cols = B.cols
-        row, col = aug[:, :-B_cols].shape
-
-        # solve by reduced row echelon form
-        A, pivots = aug.rref(simplify=True, dotprodsimp=dotprodsimp)
-        A, v = A[:, :-B_cols], A[:, -B_cols:]
-        pivots = list(filter(lambda p: p < col, pivots))
-        rank = len(pivots)
-
-        # Bring to block form
-        permutation = Matrix(range(col)).T
-
-        for i, c in enumerate(pivots):
-            permutation.col_swap(i, c)
-
-
-        # check for existence of solutions
-        # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, :].is_zero_matrix:
-            raise ValueError("Linear system has no solution")
-
-        # Get index of free symbols (free parameters)
-        free_var_index = permutation[
-                         len(pivots):]  # non-pivots columns are free variables
-
-        # Free parameters
-        # what are current unnumbered free symbol names?
-        name = _uniquely_named_symbol('tau', aug,
-            compare=lambda i: str(i).rstrip('1234567890')).name
-        gen = numbered_symbols(name)
-        tau = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
-            col - rank, B_cols)
-
-        # Full parametric solution
-        V = A[:rank, [c for c in range(A.cols) if c not in pivots]]
-        vt = v[:rank, :]
-        free_sol = tau.vstack(vt - V * tau, tau)
-
-        # Undo permutation
-        sol = zeros(col, B_cols)
-        for k in range(col):
-            sol[permutation[k], :] = free_sol[k,:]
-
-        sol, tau = cls(sol), cls(tau)
-        if freevar:
-            return sol, tau, free_var_index
-        else:
-            return sol, tau
-
-    def inv_mod(self, m):
-        r"""
-        Returns the inverse of the matrix `K` (mod `m`), if it exists.
-
-        Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
-
-        * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
-
-        * Compute `r = 1/\mathrm{det}(K) \pmod m`.
-
-        * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> A = Matrix(2, 2, [1, 2, 3, 4])
-        >>> A.inv_mod(5)
-        Matrix([
-        [3, 1],
-        [4, 2]])
-        >>> A.inv_mod(3)
-        Matrix([
-        [1, 1],
-        [0, 1]])
-
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        N = self.cols
-        det_K = self.det()
-        det_inv = None
-
-        try:
-            det_inv = mod_inverse(det_K, m)
-        except ValueError:
-            raise NonInvertibleMatrixError('Matrix is not invertible (mod %d)' % m)
-
-        K_adj = self.adjugate()
-        K_inv = self.__class__(N, N,
-                               [det_inv * K_adj[i, j] % m for i in range(N) for
-                                j in range(N)])
-        return K_inv
-
-    def inverse_ADJ(self, iszerofunc=_iszero, dotprodsimp=None):
-        """Calculates the inverse using the adjugate matrix and a determinant.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        inv
-        inverse_LU
-        inverse_GE
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to invert.")
-
-        d = self.det(method='berkowitz', dotprodsimp=dotprodsimp)
-        zero = d.equals(0)
-        if zero is None:
-            # if equals() can't decide, will rref be able to?
-            ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-            zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
-        if zero:
-            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
-
-        return self.adjugate(dotprodsimp=dotprodsimp) / d
-
-    def inverse_GE(self, iszerofunc=_iszero, dotprodsimp=None):
-        """Calculates the inverse using Gaussian elimination.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        inv
-        inverse_LU
-        inverse_ADJ
-        """
-        from .dense import Matrix
-        if not self.is_square:
-            raise NonSquareMatrixError("A Matrix must be square to invert.")
-
-        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True, dotprodsimp=dotprodsimp)[0]
-        if any(iszerofunc(red[j, j]) for j in range(red.rows)):
-            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
-
-        return self._new(red[:, big.rows:])
-
-    def inverse_LU(self, iszerofunc=_iszero, dotprodsimp=None):
-        """Calculates the inverse using LU decomposition.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        inv
-        inverse_GE
-        inverse_ADJ
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-
-        ok = self.rref(simplify=True, dotprodsimp=dotprodsimp)[0]
-        if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
-            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
-
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero,
-                dotprodsimp=dotprodsimp)
-
-    def inv(self, method=None, dotprodsimp=None, **kwargs):
-        """
-        Return the inverse of a matrix.
-
-        CASE 1: If the matrix is a dense matrix.
-
-        Return the matrix inverse using the method indicated (default
-        is Gauss elimination).
-
-        Parameters
-        ==========
-
-        method : ('GE', 'LU', or 'ADJ') for dense matrices,
-                 ('LDL', 'CH') for sparse
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Notes
-        =====
-
-        According to the ``method`` keyword, it calls the appropriate method:
-
-          GE .... inverse_GE(); default
-          LU .... inverse_LU()
-          ADJ ... inverse_ADJ()
-
-        See Also
-        ========
-
-        inverse_LU
-        inverse_GE
-        inverse_ADJ
-
-        Raises
-        ------
-        ValueError
-            If the determinant of the matrix is zero.
-
-        CASE 2: If the matrix is a sparse matrix.
-
-        Return the matrix inverse using Cholesky or LDL (default).
-
-        kwargs
-        ======
-
-        method : ('CH', 'LDL')
-
-        Notes
-        =====
-
-        According to the ``method`` keyword, it calls the appropriate method:
-
-          LDL ... inverse_LDL(); default
-          CH .... inverse_CH()
-
-        Raises
-        ------
-        ValueError
-            If the determinant of the matrix is zero.
-
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if method is not None:
-            kwargs['method'] = method
-        if dotprodsimp is not None:
-            kwargs['dotprodsimp'] = dotprodsimp
-        return self._eval_inverse(**kwargs)
-
-    def is_nilpotent(self, dotprodsimp=None):
+    def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
 
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
 
         Examples
         ========
@@ -2230,7 +1764,7 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = _uniquely_named_symbol('x', self)
-        p = self.charpoly(x, dotprodsimp=dotprodsimp)
+        p = self.charpoly(x)
         if p.args[0] == x ** self.rows:
             return True
         return False
@@ -2287,735 +1821,6 @@ class MatrixBase(MatrixDeprecated,
             return key.indices(len(self))[:2]
         else:
             return divmod(a2idx_(key, len(self)), self.cols)
-
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        """Returns the LDL Decomposition (L, D) of matrix A,
-        such that L * D * L.H == A if hermitian flag is True, or
-        L * D * L.T == A if hermitian is False.
-        This method eliminates the use of square root.
-        Further this ensures that all the diagonal entries of L are 1.
-        A must be a Hermitian positive-definite matrix if hermitian is True,
-        or a symmetric matrix otherwise.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1,   0, 0],
-        [ 3/5,   1, 0],
-        [-1/5, 1/3, 1]])
-        >>> D
-        Matrix([
-        [25, 0, 0],
-        [ 0, 9, 0],
-        [ 0, 0, 9]])
-        >>> L * D * L.T * A.inv() == eye(A.rows)
-        True
-
-        The matrix can have complex entries:
-
-        >>> from sympy import I
-        >>> A = Matrix(((9, 3*I), (-3*I, 5)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1, 0],
-        [-I/3, 1]])
-        >>> D
-        Matrix([
-        [9, 0],
-        [0, 4]])
-        >>> L*D*L.H == A
-        True
-
-        See Also
-        ========
-
-        cholesky
-        LUdecomposition
-        QRdecomposition
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if hermitian and not self.is_hermitian:
-            raise ValueError("Matrix must be Hermitian.")
-        if not hermitian and not self.is_symmetric():
-            raise ValueError("Matrix must be symmetric.")
-        return self._LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-
-    def LDLsolve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B`` using LDL decomposition,
-        for a general square and non-singular matrix.
-
-        For a non-square matrix with rows > cols,
-        the least squares solution is returned.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> A = eye(2)*2
-        >>> B = Matrix([[1, 2], [3, 4]])
-        >>> A.LDLsolve(B) == B/2
-        True
-
-        See Also
-        ========
-
-        LDLdecomposition
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        hermitian = True
-        if self.is_symmetric():
-            hermitian = False
-            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.is_hermitian:
-            L, D = self.LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-        elif self.rows >= self.cols:
-            L, D = self.H.multiply(self, dotprodsimp=dotprodsimp) \
-                    .LDLdecomposition(hermitian=hermitian, dotprodsimp=dotprodsimp)
-            rhs = self.H.multiply(rhs, dotprodsimp=dotprodsimp)
-        else:
-            raise NotImplementedError('Under-determined System. '
-                                      'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-        Z = D._diagonal_solve(Y)
-        if hermitian:
-            return (L.H)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
-        else:
-            return (L.T)._upper_triangular_solve(Z, dotprodsimp=dotprodsimp)
-
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B``, where A is a lower triangular matrix.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if rhs.rows != self.rows:
-            raise ShapeError("Matrices size mismatch.")
-        if not self.is_lower:
-            raise ValueError("Matrix must be lower triangular.")
-        return self._lower_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-
-    def LUdecomposition(self,
-                        iszerofunc=_iszero,
-                        simpfunc=None,
-                        rankcheck=False):
-        """Returns (L, U, perm) where L is a lower triangular matrix with unit
-        diagonal, U is an upper triangular matrix, and perm is a list of row
-        swap index pairs. If A is the original matrix, then
-        A = (L*U).permuteBkwd(perm), and the row permutation matrix P such
-        that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
-
-        See documentation for LUCombined for details about the keyword argument
-        rankcheck, iszerofunc, and simpfunc.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> a = Matrix([[4, 3], [6, 3]])
-        >>> L, U, _ = a.LUdecomposition()
-        >>> L
-        Matrix([
-        [  1, 0],
-        [3/2, 1]])
-        >>> U
-        Matrix([
-        [4,    3],
-        [0, -3/2]])
-
-        See Also
-        ========
-
-        cholesky
-        LDLdecomposition
-        QRdecomposition
-        LUdecomposition_Simple
-        LUdecompositionFF
-        LUsolve
-        """
-
-        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
-                                                  simpfunc=simpfunc,
-                                                  rankcheck=rankcheck)
-
-        # L is lower triangular ``self.rows x self.rows``
-        # U is upper triangular ``self.rows x self.cols``
-        # L has unit diagonal. For each column in combined, the subcolumn
-        # below the diagonal of combined is shared by L.
-        # If L has more columns than combined, then the remaining subcolumns
-        # below the diagonal of L are zero.
-        # The upper triangular portion of L and combined are equal.
-        def entry_L(i, j):
-            if i < j:
-                # Super diagonal entry
-                return self.zero
-            elif i == j:
-                return self.one
-            elif j < combined.cols:
-                return combined[i, j]
-            # Subdiagonal entry of L with no corresponding
-            # entry in combined
-            return self.zero
-
-        def entry_U(i, j):
-            return self.zero if i > j else combined[i, j]
-
-        L = self._new(combined.rows, combined.rows, entry_L)
-        U = self._new(combined.rows, combined.cols, entry_U)
-
-        return L, U, p
-
-
-    def LUdecomposition_Simple(
-        self, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
-        dotprodsimp=None):
-        r"""Compute the PLU decomposition of the matrix.
-
-        Parameters
-        ==========
-
-        rankcheck : bool, optional
-            Determines if this function should detect the rank
-            deficiency of the matrixis and should raise a
-            ``ValueError``.
-
-        iszerofunc : function, optional
-            A function which determines if a given expression is zero.
-
-            The function should be a callable that takes a single
-            sympy expression and returns a 3-valued boolean value
-            ``True``, ``False``, or ``None``.
-
-            It is internally used by the pivot searching algorithm.
-            See the notes section for a more information about the
-            pivot searching algorithm.
-
-        simpfunc : function or None, optional
-            A function that simplifies the input.
-
-            If this is specified as a function, this function should be
-            a callable that takes a single sympy expression and returns
-            an another sympy expression that is algebraically
-            equivalent.
-
-            If ``None``, it indicates that the pivot search algorithm
-            should not attempt to simplify any candidate pivots.
-
-            It is internally used by the pivot searching algorithm.
-            See the notes section for a more information about the
-            pivot searching algorithm.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification
-            is used during matrix multiplications to control expression
-            blowup and thus speed up calculation.
-
-        Returns
-        =======
-
-        (lu, row_swaps) : (Matrix, list)
-            If the original matrix is a $m, n$ matrix:
-
-            *lu* is a $m, n$ matrix, which contains result of the
-            decomposition in a compresed form. See the notes section
-            to see how the matrix is compressed.
-
-            *row_swaps* is a $m$-element list where each element is a
-            pair of row exchange indices.
-
-            ``A = (L*U).permute_backward(perm)``, and the row
-            permutation matrix $P$ from the formula $P A = L U$ can be
-            computed by ``P=eye(A.row).permute_forward(perm)``.
-
-        Raises
-        ======
-
-        ValueError
-            Raised if ``rankcheck=True`` and the matrix is found to
-            be rank deficient during the computation.
-
-        Notes
-        =====
-
-        About the PLU decomposition:
-
-        PLU decomposition is a generalization of a LU decomposition
-        which can be extended for rank-deficient matrices.
-
-        It can further be generalized for non-square matrices, and this
-        is the notation that SymPy is using.
-
-        PLU decomposition is a decomposition of a $m, n$ matrix $A$ in
-        the form of $P A = L U$ where
-
-        * $L$ is a $m, m$ lower triangular matrix with unit diagonal
-          entries.
-        * $U$ is a $m, n$ upper triangular matrix.
-        * $P$ is a $m, m$ permutation matrix.
-
-        So, for a square matrix, the decomposition would look like:
-
-        .. math::
-            L = \begin{bmatrix}
-            1 & 0 & 0 & \cdots & 0 \\
-            L_{1, 0} & 1 & 0 & \cdots & 0 \\
-            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1
-            \end{bmatrix}
-
-        .. math::
-            U = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            0 & 0 & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            0 & 0 & 0 & \cdots & U_{n-1, n-1}
-            \end{bmatrix}
-
-        And for a matrix with more rows than the columns,
-        the decomposition would look like:
-
-        .. math::
-            L = \begin{bmatrix}
-            1 & 0 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
-            L_{1, 0} & 1 & 0 & \cdots & 0 & 0 & \cdots & 0 \\
-            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 & 0 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \ddots
-            & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & 1 & 0
-            & \cdots & 0 \\
-            L_{n, 0} & L_{n, 1} & L_{n, 2} & \cdots & L_{n, n-1} & 1
-            & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots & \vdots
-            & \ddots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & L_{m-1, n-1}
-            & 0 & \cdots & 1 \\
-            \end{bmatrix}
-
-        .. math::
-            U = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            0 & 0 & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            0 & 0 & 0 & \cdots & U_{n-1, n-1} \\
-            0 & 0 & 0 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            0 & 0 & 0 & \cdots & 0
-            \end{bmatrix}
-
-        Finally, for a matrix with more columns than the rows, the
-        decomposition would look like:
-
-        .. math::
-            L = \begin{bmatrix}
-            1 & 0 & 0 & \cdots & 0 \\
-            L_{1, 0} & 1 & 0 & \cdots & 0 \\
-            L_{2, 0} & L_{2, 1} & 1 & \cdots & 0 \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & 1
-            \end{bmatrix}
-
-        .. math::
-            U = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, m-1}
-            & \cdots & U_{0, n-1} \\
-            0 & U_{1, 1} & U_{1, 2} & \cdots & U_{1, m-1}
-            & \cdots & U_{1, n-1} \\
-            0 & 0 & U_{2, 2} & \cdots & U_{2, m-1}
-            & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots
-            & \cdots & \vdots \\
-            0 & 0 & 0 & \cdots & U_{m-1, m-1}
-            & \cdots & U_{m-1, n-1} \\
-            \end{bmatrix}
-
-        About the compressed LU storage:
-
-        The results of the decomposition are often stored in compressed
-        forms rather than returning $L$ and $U$ matrices individually.
-
-        It may be less intiuitive, but it is commonly used for a lot of
-        numeric libraries because of the efficiency.
-
-        The storage matrix is defined as following for this specific
-        method:
-
-        * The subdiagonal elements of $L$ are stored in the subdiagonal
-          portion of $LU$, that is $LU_{i, j} = L_{i, j}$ whenever
-          $i > j$.
-        * The elements on the diagonal of $L$ are all 1, and are not
-          explicitly stored.
-        * $U$ is stored in the upper triangular portion of $LU$, that is
-          $LU_{i, j} = U_{i, j}$ whenever $i <= j$.
-        * For a case of $m > n$, the right side of the $L$ matrix is
-          trivial to store.
-        * For a case of $m < n$, the below side of the $U$ matrix is
-          trivial to store.
-
-        So, for a square matrix, the compressed output matrix would be:
-
-        .. math::
-            LU = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots & U_{n-1, n-1}
-            \end{bmatrix}
-
-        For a matrix with more rows than the columns, the compressed
-        output matrix would be:
-
-        .. math::
-            LU = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, n-1} \\
-            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, n-1} \\
-            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{n-1, 0} & L_{n-1, 1} & L_{n-1, 2} & \cdots
-            & U_{n-1, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots
-            & L_{m-1, n-1} \\
-            \end{bmatrix}
-
-        For a matrix with more columns than the rows, the compressed
-        output matrix would be:
-
-        .. math::
-            LU = \begin{bmatrix}
-            U_{0, 0} & U_{0, 1} & U_{0, 2} & \cdots & U_{0, m-1}
-            & \cdots & U_{0, n-1} \\
-            L_{1, 0} & U_{1, 1} & U_{1, 2} & \cdots & U_{1, m-1}
-            & \cdots & U_{1, n-1} \\
-            L_{2, 0} & L_{2, 1} & U_{2, 2} & \cdots & U_{2, m-1}
-            & \cdots & U_{2, n-1} \\
-            \vdots & \vdots & \vdots & \ddots & \vdots
-            & \cdots & \vdots \\
-            L_{m-1, 0} & L_{m-1, 1} & L_{m-1, 2} & \cdots & U_{m-1, m-1}
-            & \cdots & U_{m-1, n-1} \\
-            \end{bmatrix}
-
-        About the pivot searching algorithm:
-
-        When a matrix contains symbolic entries, the pivot search algorithm
-        differs from the case where every entry can be categorized as zero or
-        nonzero.
-        The algorithm searches column by column through the submatrix whose
-        top left entry coincides with the pivot position.
-        If it exists, the pivot is the first entry in the current search
-        column that iszerofunc guarantees is nonzero.
-        If no such candidate exists, then each candidate pivot is simplified
-        if simpfunc is not None.
-        The search is repeated, with the difference that a candidate may be
-        the pivot if ``iszerofunc()`` cannot guarantee that it is nonzero.
-        In the second search the pivot is the first candidate that
-        iszerofunc can guarantee is nonzero.
-        If no such candidate exists, then the pivot is the first candidate
-        for which iszerofunc returns None.
-        If no such candidate exists, then the search is repeated in the next
-        column to the right.
-        The pivot search algorithm differs from the one in ``rref()``, which
-        relies on ``_find_reasonable_pivot()``.
-        Future versions of ``LUdecomposition_simple()`` may use
-        ``_find_reasonable_pivot()``.
-
-        See Also
-        ========
-
-        LUdecomposition
-        LUdecompositionFF
-        LUsolve
-        """
-
-        if rankcheck:
-            # https://github.com/sympy/sympy/issues/9796
-            pass
-
-        if self.rows == 0 or self.cols == 0:
-            # Define LU decomposition of a matrix with no entries as a matrix
-            # of the same dimensions with all zero entries.
-            return self.zeros(self.rows, self.cols), []
-
-        dps = _dotprodsimp if dotprodsimp else lambda e: e
-        lu = self.as_mutable()
-        row_swaps = []
-
-        pivot_col = 0
-        for pivot_row in range(0, lu.rows - 1):
-            # Search for pivot. Prefer entry that iszeropivot determines
-            # is nonzero, over entry that iszeropivot cannot guarantee
-            # is  zero.
-            # XXX ``_find_reasonable_pivot`` uses slow zero testing. Blocked by bug #10279
-            # Future versions of LUdecomposition_simple can pass iszerofunc and simpfunc
-            # to _find_reasonable_pivot().
-            # In pass 3 of _find_reasonable_pivot(), the predicate in ``if x.equals(S.Zero):``
-            # calls sympy.simplify(), and not the simplification function passed in via
-            # the keyword argument simpfunc.
-
-            iszeropivot = True
-            while pivot_col != self.cols and iszeropivot:
-                sub_col = (lu[r, pivot_col] for r in range(pivot_row, self.rows))
-                pivot_row_offset, pivot_value, is_assumed_non_zero, ind_simplified_pairs =\
-                    _find_reasonable_pivot_naive(sub_col, iszerofunc, simpfunc)
-                iszeropivot = pivot_value is None
-                if iszeropivot:
-                    # All candidate pivots in this column are zero.
-                    # Proceed to next column.
-                    pivot_col += 1
-
-            if rankcheck and pivot_col != pivot_row:
-                # All entries including and below the pivot position are
-                # zero, which indicates that the rank of the matrix is
-                # strictly less than min(num rows, num cols)
-                # Mimic behavior of previous implementation, by throwing a
-                # ValueError.
-                raise ValueError("Rank of matrix is strictly less than"
-                                 " number of rows or columns."
-                                 " Pass keyword argument"
-                                 " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
-
-            candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset
-
-            if candidate_pivot_row is None and iszeropivot:
-                # If candidate_pivot_row is None and iszeropivot is True
-                # after pivot search has completed, then the submatrix
-                # below and to the right of (pivot_row, pivot_col) is
-                # all zeros, indicating that Gaussian elimination is
-                # complete.
-                return lu, row_swaps
-
-            # Update entries simplified during pivot search.
-            for offset, val in ind_simplified_pairs:
-                lu[pivot_row + offset, pivot_col] = val
-
-            if pivot_row != candidate_pivot_row:
-                # Row swap book keeping:
-                # Record which rows were swapped.
-                # Update stored portion of L factor by multiplying L on the
-                # left and right with the current permutation.
-                # Swap rows of U.
-                row_swaps.append([pivot_row, candidate_pivot_row])
-
-                # Update L.
-                lu[pivot_row, 0:pivot_row], lu[candidate_pivot_row, 0:pivot_row] = \
-                    lu[candidate_pivot_row, 0:pivot_row], lu[pivot_row, 0:pivot_row]
-
-                # Swap pivot row of U with candidate pivot row.
-                lu[pivot_row, pivot_col:lu.cols], lu[candidate_pivot_row, pivot_col:lu.cols] = \
-                    lu[candidate_pivot_row, pivot_col:lu.cols], lu[pivot_row, pivot_col:lu.cols]
-
-            # Introduce zeros below the pivot by adding a multiple of the
-            # pivot row to a row under it, and store the result in the
-            # row under it.
-            # Only entries in the target row whose index is greater than
-            # start_col may be nonzero.
-            start_col = pivot_col + 1
-            for row in range(pivot_row + 1, lu.rows):
-                # Store factors of L in the subcolumn below
-                # (pivot_row, pivot_row).
-                lu[row, pivot_row] = \
-                    dps(lu[row, pivot_col]/lu[pivot_row, pivot_col])
-
-                # Form the linear combination of the pivot row and the current
-                # row below the pivot row that zeros the entries below the pivot.
-                # Employing slicing instead of a loop here raises
-                # NotImplementedError: Cannot add Zero to MutableSparseMatrix
-                # in sympy/matrices/tests/test_sparse.py.
-                # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
-                for c in range(start_col, lu.cols):
-                    lu[row, c] = dps(lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c])
-
-            if pivot_row != pivot_col:
-                # matrix rank < min(num rows, num cols),
-                # so factors of L are not stored directly below the pivot.
-                # These entries are zero by construction, so don't bother
-                # computing them.
-                for row in range(pivot_row + 1, lu.rows):
-                    lu[row, pivot_col] = self.zero
-
-            pivot_col += 1
-            if pivot_col == lu.cols:
-                # All candidate pivots are zero implies that Gaussian
-                # elimination is complete.
-                return lu, row_swaps
-
-        if rankcheck:
-            if iszerofunc(
-            lu[Min(lu.rows, lu.cols) - 1, Min(lu.rows, lu.cols) - 1]):
-                raise ValueError("Rank of matrix is strictly less than"
-                                 " number of rows or columns."
-                                 " Pass keyword argument"
-                                 " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
-
-        return lu, row_swaps
-
-    def LUdecompositionFF(self):
-        """Compute a fraction-free LU decomposition.
-
-        Returns 4 matrices P, L, D, U such that PA = L D**-1 U.
-        If the elements of the matrix belong to some integral domain I, then all
-        elements of L, D and U are guaranteed to belong to I.
-
-        **Reference**
-            - W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
-              for LU and QR factors". Frontiers in Computer Science in China,
-              Vol 2, no. 1, pp. 67-80, 2008.
-
-        See Also
-        ========
-
-        LUdecomposition
-        LUdecomposition_Simple
-        LUsolve
-        """
-        from sympy.matrices import SparseMatrix
-        zeros = SparseMatrix.zeros
-        eye = SparseMatrix.eye
-
-        n, m = self.rows, self.cols
-        U, L, P = self.as_mutable(), eye(n), eye(n)
-        DD = zeros(n, n)
-        oldpivot = 1
-
-        for k in range(n - 1):
-            if U[k, k] == 0:
-                for kpivot in range(k + 1, n):
-                    if U[kpivot, k]:
-                        break
-                else:
-                    raise ValueError("Matrix is not full rank")
-                U[k, k:], U[kpivot, k:] = U[kpivot, k:], U[k, k:]
-                L[k, :k], L[kpivot, :k] = L[kpivot, :k], L[k, :k]
-                P[k, :], P[kpivot, :] = P[kpivot, :], P[k, :]
-            L[k, k] = Ukk = U[k, k]
-            DD[k, k] = oldpivot * Ukk
-            for i in range(k + 1, n):
-                L[i, k] = Uik = U[i, k]
-                for j in range(k + 1, m):
-                    U[i, j] = (Ukk * U[i, j] - U[k, j] * Uik) / oldpivot
-                U[i, k] = 0
-            oldpivot = Ukk
-        DD[n - 1, n - 1] = oldpivot
-        return P, L, DD, U
-
-    def LUsolve(self, rhs, iszerofunc=_iszero, dotprodsimp=None):
-        """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = self``.
-
-        This is for symbolic matrices, for real or complex ones use
-        mpmath.lu_solve or mpmath.qr_solve.
-
-        Parameters
-        ==========
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        QRsolve
-        pinv_solve
-        LUdecomposition
-        """
-        if rhs.rows != self.rows:
-            raise ShapeError(
-                "``self`` and ``rhs`` must have the same number of rows.")
-
-        m = self.rows
-        n = self.cols
-        if m < n:
-            raise NotImplementedError("Underdetermined systems not supported.")
-
-        try:
-            A, perm = self.LUdecomposition_Simple(
-                iszerofunc=_iszero, rankcheck=True, dotprodsimp=dotprodsimp)
-        except ValueError:
-            raise NotImplementedError("Underdetermined systems not supported.")
-
-        dps = _dotprodsimp if dotprodsimp else lambda e: e
-        b = rhs.permute_rows(perm).as_mutable()
-        # forward substitution, all diag entries are scaled to 1
-        for i in range(m):
-            for j in range(min(i, n)):
-                scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
-        # consistency check for overdetermined systems
-        if m > n:
-            for i in range(n, m):
-                for j in range(b.cols):
-                    if not iszerofunc(b[i, j]):
-                        raise ValueError("The system is inconsistent.")
-            b = b[0:n, :]   # truncate zero rows if consistent
-        # backward substitution
-        for i in range(n - 1, -1, -1):
-            for j in range(i + 1, n):
-                scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
-            scale = A[i, i]
-            b.row_op(i, lambda x, _: dps(x / scale))
-        return rhs.__class__(b)
 
     def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
@@ -3156,216 +1961,6 @@ class MatrixBase(MatrixDeprecated,
             else:
                 raise NotImplementedError("Matrix Norms under development")
 
-    def pinv_solve(self, B, arbitrary_matrix=None):
-        """Solve ``Ax = B`` using the Moore-Penrose pseudoinverse.
-
-        There may be zero, one, or infinite solutions.  If one solution
-        exists, it will be returned.  If infinite solutions exist, one will
-        be returned based on the value of arbitrary_matrix.  If no solutions
-        exist, the least-squares solution is returned.
-
-        Parameters
-        ==========
-
-        B : Matrix
-            The right hand side of the equation to be solved for.  Must have
-            the same number of rows as matrix A.
-        arbitrary_matrix : Matrix
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of an arbitrary
-            matrix.  This parameter may be set to a specific matrix to use
-            for that purpose; if so, it must be the same shape as x, with as
-            many rows as matrix A has columns, and as many columns as matrix
-            B.  If left as None, an appropriate matrix containing dummy
-            symbols in the form of ``wn_m`` will be used, with n and m being
-            row and column position of each symbol.
-
-        Returns
-        =======
-
-        x : Matrix
-            The matrix that will satisfy ``Ax = B``.  Will have as many rows as
-            matrix A has columns, and as many columns as matrix B.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
-        >>> B = Matrix([7, 8])
-        >>> A.pinv_solve(B)
-        Matrix([
-        [ _w0_0/6 - _w1_0/3 + _w2_0/6 - 55/18],
-        [-_w0_0/3 + 2*_w1_0/3 - _w2_0/3 + 1/9],
-        [ _w0_0/6 - _w1_0/3 + _w2_0/6 + 59/18]])
-        >>> A.pinv_solve(B, arbitrary_matrix=Matrix([0, 0, 0]))
-        Matrix([
-        [-55/18],
-        [   1/9],
-        [ 59/18]])
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv
-
-        Notes
-        =====
-
-        This may return either exact solutions or least squares solutions.
-        To determine which, check ``A * A.pinv() * B == B``.  It will be
-        True if exact solutions exist, and False if only a least-squares
-        solution exists.  Be aware that the left hand side of that equation
-        may need to be simplified to correctly compare to the right hand
-        side.
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse#Obtaining_all_solutions_of_a_linear_system
-
-        """
-        from sympy.matrices import eye
-        A = self
-        A_pinv = self.pinv()
-        if arbitrary_matrix is None:
-            rows, cols = A.cols, B.cols
-            w = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
-            arbitrary_matrix = self.__class__(cols, rows, w).T
-        return A_pinv * B + (eye(A.cols) - A_pinv * A) * arbitrary_matrix
-
-    def _eval_pinv_full_rank(self):
-        """Subroutine for full row or column rank matrices.
-
-        For full row rank matrices, inverse of ``A * A.H`` Exists.
-        For full column rank matrices, inverse of ``A.H * A`` Exists.
-
-        This routine can apply for both cases by checking the shape
-        and have small decision.
-        """
-        if self.is_zero_matrix:
-            return self.H
-
-        if self.rows >= self.cols:
-            return (self.H * self).inv() * self.H
-        else:
-            return self.H * (self * self.H).inv()
-
-    def _eval_pinv_rank_decomposition(self):
-        """Subroutine for rank decomposition
-
-        With rank decompositions, `A` can be decomposed into two full-
-        rank matrices, and each matrix can take pseudoinverse
-        individually.
-        """
-        if self.is_zero_matrix:
-            return self.H
-
-        B, C = self.rank_decomposition()
-
-        Bp = B._eval_pinv_full_rank()
-        Cp = C._eval_pinv_full_rank()
-
-        return Cp * Bp
-
-    def _eval_pinv_diagonalization(self):
-        """Subroutine using diagonalization
-
-        This routine can sometimes fail if SymPy's eigenvalue
-        computation is not reliable.
-        """
-        if self.is_zero_matrix:
-            return self.H
-
-        A = self
-        AH = self.H
-
-        try:
-            if self.rows >= self.cols:
-                P, D = (AH * A).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-                return P * D_pinv * P.H * AH
-            else:
-                P, D = (A * AH).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-                return AH * P * D_pinv * P.H
-        except MatrixError:
-            raise NotImplementedError(
-                'pinv for rank-deficient matrices where '
-                'diagonalization of A.H*A fails is not supported yet.')
-
-
-    def pinv(self, method='RD'):
-        """Calculate the Moore-Penrose pseudoinverse of the matrix.
-
-        The Moore-Penrose pseudoinverse exists and is unique for any matrix.
-        If the matrix is invertible, the pseudoinverse is the same as the
-        inverse.
-
-        Parameters
-        ==========
-
-        method : String, optional
-            Specifies the method for computing the pseudoinverse.
-
-            If ``'RD'``, Rank-Decomposition will be used.
-
-            If ``'ED'``, Diagonalization will be used.
-
-        Examples
-        ========
-
-        Computing pseudoinverse by rank decomposition :
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
-        >>> A.pinv()
-        Matrix([
-        [-17/18,  4/9],
-        [  -1/9,  1/9],
-        [ 13/18, -2/9]])
-
-        Computing pseudoinverse by diagonalization :
-
-        >>> B = A.pinv(method='ED')
-        >>> B.simplify()
-        >>> B
-        Matrix([
-        [-17/18,  4/9],
-        [  -1/9,  1/9],
-        [ 13/18, -2/9]])
-
-        See Also
-        ========
-
-        inv
-        pinv_solve
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
-
-        """
-        # Trivial case: pseudoinverse of all-zero matrix is its transpose.
-        if self.is_zero_matrix:
-            return self.H
-
-        if method == 'RD':
-            return self._eval_pinv_rank_decomposition()
-        elif method == 'ED':
-            return self._eval_pinv_diagonalization()
-        else:
-            raise ValueError()
-
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
 
@@ -3415,400 +2010,6 @@ class MatrixBase(MatrixDeprecated,
         Matrix([[sqrt(3)/2, 0]])
         """
         return v * (self.dot(v) / v.dot(v))
-
-    def QRdecomposition(self):
-        """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
-
-        Examples
-        ========
-
-        This is the example from wikipedia:
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        Matrix([
-        [ 6/7, -69/175, -58/175],
-        [ 3/7, 158/175,   6/175],
-        [-2/7,    6/35,  -33/35]])
-        >>> R
-        Matrix([
-        [14,  21, -14],
-        [ 0, 175, -70],
-        [ 0,   0,  35]])
-        >>> A == Q*R
-        True
-
-        QR factorization of an identity matrix:
-
-        >>> A = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-        >>> R
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-
-        cholesky
-        LDLdecomposition
-        LUdecomposition
-        QRsolve
-        """
-        cls = self.__class__
-        mat = self.as_mutable()
-
-        n = mat.rows
-        m = mat.cols
-        ranked = list()
-
-        # Pad with additional rows to make wide matrices square
-        # nOrig keeps track of original size so zeros can be trimmed from Q
-        if n < m:
-            nOrig = n
-            n = m
-            mat = mat.col_join(mat.zeros(n - nOrig, m))
-        else:
-            nOrig = n
-
-        Q, R = mat.zeros(n, m), mat.zeros(m)
-        for j in range(m):  # for each column vector
-            tmp = mat[:, j]  # take original v
-            for i in range(j):
-                # subtract the project of mat on new vector
-                R[i, j] = Q[:, i].dot(mat[:, j], hermitian=True)
-                tmp -= Q[:, i] * R[i, j]
-                tmp.expand()
-            # normalize it
-            R[j, j] = tmp.norm()
-            if not R[j, j].is_zero:
-                ranked.append(j)
-                Q[:, j] = tmp / R[j, j]
-
-
-        if len(ranked) != 0:
-            return (
-            cls(Q.extract(range(nOrig), ranked)),
-            cls(R.extract(ranked, range(R.cols)))
-            )
-        else:
-            # Trivial case handling for zero-rank matrix
-            # Force Q as matrix containing standard basis vectors
-            for i in range(Min(nOrig, m)):
-                Q[i, i] = 1
-            return (
-            cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
-            cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
-            )
-
-    def QRsolve(self, b):
-        """Solve the linear system ``Ax = b``.
-
-        ``self`` is the matrix ``A``, the method argument is the vector
-        ``b``.  The method returns the solution vector ``x``.  If ``b`` is a
-        matrix, the system is solved for each column of ``b`` and the
-        return value is a matrix of the same shape as ``b``.
-
-        This method is slower (approximately by a factor of 2) but
-        more stable for floating-point arithmetic than the LUsolve method.
-        However, LUsolve usually uses an exact arithmetic, so you don't need
-        to use QRsolve.
-
-        This is mainly for educational purposes and symbolic matrices, for real
-        (or complex) matrices use mpmath.qr_solve.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        pinv_solve
-        QRdecomposition
-        """
-
-        Q, R = self.as_mutable().QRdecomposition()
-        y = Q.T * b
-
-        # back substitution to solve R*x = y:
-        # We build up the result "backwards" in the vector 'x' and reverse it
-        # only in the end.
-        x = []
-        n = R.rows
-        for j in range(n - 1, -1, -1):
-            tmp = y[j, :]
-            for k in range(j + 1, n):
-                tmp -= R[j, k] * x[n - 1 - k]
-            x.append(tmp / R[j, j])
-        return self._new([row._mat for row in reversed(x)])
-
-    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
-        r"""Returns a pair of matrices (`C`, `F`) with matching rank
-        such that `A = C F`.
-
-        Parameters
-        ==========
-
-        iszerofunc : Function, optional
-            A function used for detecting whether an element can
-            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
-
-        simplify : Bool or Function, optional
-            A function used to simplify elements when looking for a
-            pivot. By default SymPy's ``simplify`` is used.
-
-        Returns
-        =======
-
-        (C, F) : Matrices
-            `C` and `F` are full-rank matrices with rank as same as `A`,
-            whose product gives `A`.
-
-            See Notes for additional mathematical details.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([
-        ...     [1, 3, 1, 4],
-        ...     [2, 7, 3, 9],
-        ...     [1, 5, 3, 1],
-        ...     [1, 2, 0, 8]
-        ... ])
-        >>> C, F = A.rank_decomposition()
-        >>> C
-        Matrix([
-        [1, 3, 4],
-        [2, 7, 9],
-        [1, 5, 1],
-        [1, 2, 8]])
-        >>> F
-        Matrix([
-        [1, 0, -2, 0],
-        [0, 1,  1, 0],
-        [0, 0,  0, 1]])
-        >>> C * F == A
-        True
-
-        Notes
-        =====
-
-        Obtaining `F`, an RREF of `A`, is equivalent to creating a
-        product
-
-        .. math::
-            E_n E_{n-1} ... E_1 A = F
-
-        where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
-        permutation matrices equivalent to each row-reduction step.
-
-        The inverse of the same product of elimination matrices gives
-        `C`:
-
-        .. math::
-            C = (E_n E_{n-1} ... E_1)^{-1}
-
-        It is not necessary, however, to actually compute the inverse:
-        the columns of `C` are those from the original matrix with the
-        same column indices as the indices of the pivot columns of `F`.
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Rank_factorization
-
-        .. [2] Piziak, R.; Odell, P. L. (1 June 1999).
-            "Full Rank Factorization of Matrices".
-            Mathematics Magazine. 72 (3): 193. doi:10.2307/2690882
-
-        See Also
-        ========
-
-        rref
-        """
-        (F, pivot_cols) = self.rref(
-            simplify=simplify, iszerofunc=iszerofunc, pivots=True)
-        rank = len(pivot_cols)
-
-        C = self.extract(range(self.rows), pivot_cols)
-        F = F[:rank, :]
-
-        return (C, F)
-
-    def solve_least_squares(self, rhs, method='CH'):
-        """Return the least-square fit to the data.
-
-        Parameters
-        ==========
-
-        rhs : Matrix
-            Vector representing the right hand side of the linear equation.
-
-        method : string or boolean, optional
-            If set to ``'CH'``, ``cholesky_solve`` routine will be used.
-
-            If set to ``'LDL'``, ``LDLsolve`` routine will be used.
-
-            If set to ``'QR'``, ``QRsolve`` routine will be used.
-
-            If set to ``'PINV'``, ``pinv_solve`` routine will be used.
-
-            Otherwise, the conjugate of ``self`` will be used to create a system
-            of equations that is passed to ``solve`` along with the hint
-            defined by ``method``.
-
-        Returns
-        =======
-
-        solutions : Matrix
-            Vector representing the solution.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, ones
-        >>> A = Matrix([1, 2, 3])
-        >>> B = Matrix([2, 3, 4])
-        >>> S = Matrix(A.row_join(B))
-        >>> S
-        Matrix([
-        [1, 2],
-        [2, 3],
-        [3, 4]])
-
-        If each line of S represent coefficients of Ax + By
-        and x and y are [2, 3] then S*xy is:
-
-        >>> r = S*Matrix([2, 3]); r
-        Matrix([
-        [ 8],
-        [13],
-        [18]])
-
-        But let's add 1 to the middle value and then solve for the
-        least-squares value of xy:
-
-        >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
-        Matrix([
-        [ 5/3],
-        [10/3]])
-
-        The error is given by S*xy - r:
-
-        >>> S*xy - r
-        Matrix([
-        [1/3],
-        [1/3],
-        [1/3]])
-        >>> _.norm().n(2)
-        0.58
-
-        If a different xy is used, the norm will be higher:
-
-        >>> xy += ones(2, 1)/10
-        >>> (S*xy - r).norm().n(2)
-        1.5
-
-        """
-        if method == 'CH':
-            return self.cholesky_solve(rhs)
-        elif method == 'QR':
-            return self.QRsolve(rhs)
-        elif method == 'LDL':
-            return self.LDLsolve(rhs)
-        elif method == 'PINV':
-            return self.pinv_solve(rhs)
-        else:
-            t = self.H
-            return (t * self).solve(t * rhs, method=method)
-
-    def solve(self, rhs, method='GJ', dotprodsimp=None):
-        """Solves linear equation where the unique solution exists.
-
-        Parameters
-        ==========
-
-        rhs : Matrix
-            Vector representing the right hand side of the linear equation.
-
-        method : string, optional
-           If set to ``'GJ'``, the Gauss-Jordan elimination will be used, which
-           is implemented in the routine ``gauss_jordan_solve``.
-
-           If set to ``'LU'``, ``LUsolve`` routine will be used.
-
-           If set to ``'QR'``, ``QRsolve`` routine will be used.
-
-           If set to ``'PINV'``, ``pinv_solve`` routine will be used.
-
-           It also supports the methods available for special linear systems
-
-           For positive definite systems:
-
-           If set to ``'CH'``, ``cholesky_solve`` routine will be used.
-
-           If set to ``'LDL'``, ``LDLsolve`` routine will be used.
-
-           To use a different method and to compute the solution via the
-           inverse, use a method defined in the .inv() docstring.
-
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
-
-        Returns
-        =======
-
-        solutions : Matrix
-            Vector representing the solution.
-
-        Raises
-        ======
-
-        ValueError
-            If there is not a unique solution then a ``ValueError`` will be
-            raised.
-
-            If ``self`` is not square, a ``ValueError`` and a different routine
-            for solving the system will be suggested.
-        """
-
-        if method == 'GJ':
-            try:
-                soln, param = self.gauss_jordan_solve(rhs, dotprodsimp=dotprodsimp)
-                if param:
-                    raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
-                    "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
-            except ValueError:
-                raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
-            return soln
-        elif method == 'LU':
-            return self.LUsolve(rhs, dotprodsimp=dotprodsimp)
-        elif method == 'CH':
-            return self.cholesky_solve(rhs, dotprodsimp=dotprodsimp)
-        elif method == 'QR':
-            return self.QRsolve(rhs)
-        elif method == 'LDL':
-            return self.LDLsolve(rhs, dotprodsimp=dotprodsimp)
-        elif method == 'PINV':
-            return self.pinv_solve(rhs)
-        else:
-            return self.inv(method=method, dotprodsimp=dotprodsimp) \
-                    .multiply(rhs, dotprodsimp=dotprodsimp)
 
     def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
               colsep=', ', align='right'):
@@ -3888,29 +2089,6 @@ class MatrixBase(MatrixDeprecated,
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
-        """Solves ``Ax = B``, where A is an upper triangular matrix.
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        gauss_jordan_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv_solve
-        """
-        if not self.is_square:
-            raise NonSquareMatrixError("Matrix must be square.")
-        if rhs.rows != self.rows:
-            raise TypeError("Matrix size mismatch.")
-        if not self.is_upper:
-            raise TypeError("Matrix is not upper triangular.")
-        return self._upper_triangular_solve(rhs, dotprodsimp=dotprodsimp)
-
     def vech(self, diagonal=True, check_symmetry=True):
         """Return the unique elements of a symmetric Matrix as a one column matrix
         by stacking the elements in the lower triangle.
@@ -3965,6 +2143,128 @@ class MatrixBase(MatrixDeprecated,
                     v[count] = self[i, j]
                     count += 1
         return v
+
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
+        return _rank_decomposition(self, iszerofunc=iszerofunc,
+                simplify=simplify)
+
+    def cholesky(self, hermitian=True):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def LDLdecomposition(self, hermitian=True):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def LUdecomposition(self, iszerofunc=_iszero, simpfunc=None,
+            rankcheck=False):
+        return _LUdecomposition(self, iszerofunc=iszerofunc, simpfunc=simpfunc,
+                rankcheck=rankcheck)
+
+    def LUdecomposition_Simple(self, iszerofunc=_iszero, simpfunc=None,
+            rankcheck=False):
+        return _LUdecomposition_Simple(self, iszerofunc=iszerofunc,
+                simpfunc=simpfunc, rankcheck=rankcheck)
+
+    def LUdecompositionFF(self):
+        return _LUdecompositionFF(self)
+
+    def QRdecomposition(self):
+        return _QRdecomposition(self)
+
+    def diagonal_solve(self, rhs):
+        return _diagonal_solve(self, rhs)
+
+    def lower_triangular_solve(self, rhs):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def upper_triangular_solve(self, rhs):
+        raise NotImplementedError('This function is implemented in DenseMatrix or SparseMatrix')
+
+    def cholesky_solve(self, rhs):
+        return _cholesky_solve(self, rhs)
+
+    def LDLsolve(self, rhs):
+        return _LDLsolve(self, rhs)
+
+    def LUsolve(self, rhs, iszerofunc=_iszero):
+        return _LUsolve(self, rhs, iszerofunc=iszerofunc)
+
+    def QRsolve(self, b):
+        return _QRsolve(self, b)
+
+    def gauss_jordan_solve(self, B, freevar=False):
+        return _gauss_jordan_solve(self, B, freevar=freevar)
+
+    def pinv_solve(self, B, arbitrary_matrix=None):
+        return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
+
+    def solve(self, rhs, method='GJ'):
+        return _solve(self, rhs, method=method)
+
+    def solve_least_squares(self, rhs, method='CH'):
+        return _solve_least_squares(self, rhs, method=method)
+
+    def pinv(self, method='RD'):
+        return _pinv(self, method=method)
+
+    def inv_mod(self, m):
+        return _inv_mod(self, m)
+
+    def inverse_ADJ(self, iszerofunc=_iszero):
+        return _inv_ADJ(self, iszerofunc=iszerofunc)
+
+    def inverse_BLOCK(self, iszerofunc=_iszero):
+        return _inv_block(self, iszerofunc=iszerofunc)
+
+    def inverse_GE(self, iszerofunc=_iszero):
+        return _inv_GE(self, iszerofunc=iszerofunc)
+
+    def inverse_LU(self, iszerofunc=_iszero):
+        return _inv_LU(self, iszerofunc=iszerofunc)
+
+    def inverse_CH(self, iszerofunc=_iszero):
+        return _inv_CH(self, iszerofunc=iszerofunc)
+
+    def inverse_LDL(self, iszerofunc=_iszero):
+        return _inv_LDL(self, iszerofunc=iszerofunc)
+
+    def inverse_QR(self, iszerofunc=_iszero):
+        return _inv_QR(self, iszerofunc=iszerofunc)
+
+    def inv(self, method=None, iszerofunc=_iszero, try_block_diag=False):
+        return _inv(self, method=method, iszerofunc=iszerofunc,
+                try_block_diag=try_block_diag)
+
+    rank_decomposition.__doc__     = _rank_decomposition.__doc__
+    cholesky.__doc__               = _cholesky.__doc__
+    LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
+    LUdecomposition.__doc__        = _LUdecomposition.__doc__
+    LUdecomposition_Simple.__doc__ = _LUdecomposition_Simple.__doc__
+    LUdecompositionFF.__doc__      = _LUdecompositionFF.__doc__
+    QRdecomposition.__doc__        = _QRdecomposition.__doc__
+
+    diagonal_solve.__doc__         = _diagonal_solve.__doc__
+    lower_triangular_solve.__doc__ = _lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
+    cholesky_solve.__doc__         = _cholesky_solve.__doc__
+    LDLsolve.__doc__               = _LDLsolve.__doc__
+    LUsolve.__doc__                = _LUsolve.__doc__
+    QRsolve.__doc__                = _QRsolve.__doc__
+    gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
+    pinv_solve.__doc__             = _pinv_solve.__doc__
+    solve.__doc__                  = _solve.__doc__
+    solve_least_squares.__doc__    = _solve_least_squares.__doc__
+
+    pinv.__doc__                   = _pinv.__doc__
+    inv_mod.__doc__                = _inv_mod.__doc__
+    inverse_ADJ.__doc__            = _inv_ADJ.__doc__
+    inverse_GE.__doc__             = _inv_GE.__doc__
+    inverse_LU.__doc__             = _inv_LU.__doc__
+    inverse_CH.__doc__             = _inv_CH.__doc__
+    inverse_LDL.__doc__            = _inv_LDL.__doc__
+    inverse_QR.__doc__             = _inv_QR.__doc__
+    inverse_BLOCK.__doc__          = _inv_block.__doc__
+    inv.__doc__                    = _inv.__doc__
+
 
 @deprecated(
     issue=15109,

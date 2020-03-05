@@ -570,3 +570,7 @@ def test_argmin_real():
     assert argmin_real(exp(y), y, Interval(-10, 10)) == FiniteSet(-10)
     assert argmin_real(-x**2 + 4, x, Interval(-2, 2)) == FiniteSet(-2, 2)
     assert argmin_real(exp(y)) == S.EmptySet
+
+
+def test_issue_18747():
+    assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8

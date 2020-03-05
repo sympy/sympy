@@ -1192,6 +1192,8 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
+    if not isinstance(expr, Piecewise):
+        return expr
     args = list(expr.args)
 
     _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (

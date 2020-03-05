@@ -7,14 +7,15 @@ import math
 import re as regex
 
 from .containers import Tuple
-from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
+from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
+                      _is_numpy_instance)
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
-from sympy.core.compatibility import (as_int, long, HAS_GMPY, SYMPY_INTS,
+from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
     int_info, gmpy)
 from sympy.core.cache import lru_cache
 
@@ -1086,7 +1087,7 @@ class Float(Number):
             return num
         elif num is S.NaN:
             return num
-        elif type(num).__module__ == 'numpy': # support for numpy datatypes
+        elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
         elif isinstance(num, mpmath.mpf):
             if precision is None:
@@ -1175,7 +1176,7 @@ class Float(Number):
                     if not all((
                             num[0] in (0, 1),
                             num[1] >= 0,
-                            all(type(i) in (long, int) for i in num)
+                            all(type(i) in (int, int) for i in num)
                             )):
                         raise ValueError('malformed mpf: %s' % (num,))
                     # don't compute number or else it may
@@ -2605,6 +2606,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.Zero
@@ -2667,6 +2671,9 @@ class One(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.One
@@ -2719,6 +2726,9 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
     q = 1
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
@@ -2774,6 +2784,9 @@ class Half(RationalConstant, metaclass=Singleton):
     q = 2
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
@@ -3885,13 +3898,13 @@ converter[fractions.Fraction] = sympify_fractions
 
 if HAS_GMPY:
     def sympify_mpz(x):
-        return Integer(long(x))
+        return Integer(int(x))
 
     # XXX: The sympify_mpq function here was never used because it is
     # overridden by the other sympify_mpq function below. Maybe it should just
     # be removed or maybe it should be used for something...
     def sympify_mpq(x):
-        return Rational(long(x.numerator), long(x.denominator))
+        return Rational(int(x.numerator), int(x.denominator))
 
     converter[type(gmpy.mpz(1))] = sympify_mpz
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq

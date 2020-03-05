@@ -3,6 +3,7 @@ from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -481,6 +482,7 @@ def periodicity(f, symbol, check=False):
             # checked below
 
     if isinstance(f, exp):
+        f = f.func(expand_mul(f.args[0]))
         if im(f) != 0:
             period_real = periodicity(re(f), symbol)
             period_imag = periodicity(im(f), symbol)
@@ -728,6 +730,13 @@ def stationary_points(f, symbol, domain=S.Reals):
         The domain over which the stationary points have to be checked.
         If unspecified, S.Reals will be the default domain.
 
+    Returns
+    =======
+
+    Set
+        A set of stationary points for the function. If there are no
+        stationary point, an EmptySet is returned.
+
     Examples
     ========
 
@@ -773,6 +782,12 @@ def maximum(f, symbol, domain=S.Reals):
         The domain over which the maximum have to be checked.
         If unspecified, then Global maximum is returned.
 
+    Returns
+    =======
+
+    number
+        Maximum value of the function in given domain.
+
     Examples
     ========
 
@@ -816,6 +831,12 @@ def minimum(f, symbol, domain=S.Reals):
     domain : Interval
         The domain over which the minimum have to be checked.
         If unspecified, then Global minimum is returned.
+
+    Returns
+    =======
+
+    number
+        Minimum value of the function in the given domain.
 
     Examples
     ========
@@ -1539,6 +1560,19 @@ class AccumulationBounds(AtomicExpr):
         """
         Returns the intersection of 'self' and 'other'.
         Here other can be an instance of FiniteSet or AccumulationBounds.
+
+        Parameters
+        ==========
+
+        other: AccumulationBounds
+             Another AccumulationBounds object with which the intersection
+             has to be computed.
+
+        Returns
+        =======
+
+        AccumulationBounds
+            Intersection of 'self' and 'other'.
 
         Examples
         ========

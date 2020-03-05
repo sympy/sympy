@@ -156,10 +156,6 @@ class StrPrinter(Printer):
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
-        return str(expr)
-
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
@@ -336,11 +332,16 @@ class StrPrinter(Printer):
 
     def _print_MatMul(self, expr):
         c, m = expr.as_coeff_mmul()
-        if c.is_number and c < 0:
-            expr = _keep_coeff(-c, m)
-            sign = "-"
-        else:
-            sign = ""
+
+        sign = ""
+        if c.is_number:
+            re, im = c.as_real_imag()
+            if im.is_zero and re.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+            elif re.is_zero and im.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
 
         return sign + '*'.join(
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]

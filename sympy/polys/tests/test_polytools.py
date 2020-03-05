@@ -58,10 +58,11 @@ from sympy import (
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol, Matrix
+
 
 def _epsilon_eq(a, b):
     for u, v in zip(a, b):
@@ -81,6 +82,16 @@ def _strict_eq(a, b):
             return isinstance(a, Poly) and a.eq(b, strict=True)
     else:
         return False
+
+
+def test_Poly_mixed_operations():
+    p = Poly(x, x)
+    with warns_deprecated_sympy():
+        p * exp(x)
+    with warns_deprecated_sympy():
+        p + exp(x)
+    with warns_deprecated_sympy():
+        p - exp(x)
 
 
 def test_Poly_from_dict():
@@ -352,7 +363,7 @@ def test_Poly__new__():
 
 
 def test_Poly__args():
-    assert Poly(x**2 + 1).args == (x**2 + 1,)
+    assert Poly(x**2 + 1).args == (x**2 + 1, x)
 
 
 def test_Poly__gens():
@@ -483,11 +494,11 @@ def test_PurePoly_free_symbols():
 
 def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x)) is True
-    assert (Poly(x, x, domain=QQ) == Poly(x, x)) is True
-    assert (Poly(x, x) == Poly(x, x, domain=QQ)) is True
+    assert (Poly(x, x, domain=QQ) == Poly(x, x)) is False
+    assert (Poly(x, x) == Poly(x, x, domain=QQ)) is False
 
-    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) is True
-    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) is True
+    assert (Poly(x, x, domain=ZZ[a]) == Poly(x, x)) is False
+    assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) is False
 
     assert (Poly(x*y, x, y) == Poly(x, x)) is False
 
@@ -500,8 +511,8 @@ def test_Poly__eq__():
     f = Poly(x, x, domain=ZZ)
     g = Poly(x, x, domain=QQ)
 
-    assert f.eq(g) is True
-    assert f.ne(g) is False
+    assert f.eq(g) is False
+    assert f.ne(g) is True
 
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
@@ -511,7 +522,7 @@ def test_Poly__eq__():
     f =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='QQ[x,t0]')
     g =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='ZZ(x,t0)')
 
-    assert (f == g) is True
+    assert (f == g) is False
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True
@@ -639,7 +650,8 @@ def test_Poly_add():
     assert Poly(0, x, y) + Poly(1, x, y) == Poly(1, x, y)
 
     assert Poly(1, x) + x == Poly(x + 1, x)
-    assert Poly(1, x) + sin(x) == 1 + sin(x)
+    with warns_deprecated_sympy():
+        Poly(1, x) + sin(x)
 
     assert Poly(x, x) + 1 == Poly(x + 1, x)
     assert 1 + Poly(x, x) == Poly(x + 1, x)
@@ -655,7 +667,8 @@ def test_Poly_sub():
     assert Poly(0, x, y) - Poly(1, x, y) == Poly(-1, x, y)
 
     assert Poly(1, x) - x == Poly(1 - x, x)
-    assert Poly(1, x) - sin(x) == 1 - sin(x)
+    with warns_deprecated_sympy():
+        Poly(1, x) - sin(x)
 
     assert Poly(x, x) - 1 == Poly(x - 1, x)
     assert 1 - Poly(x, x) == Poly(1 - x, x)
@@ -671,7 +684,8 @@ def test_Poly_mul():
     assert Poly(4, x, y) * Poly(2, x, y) == Poly(8, x, y)
 
     assert Poly(1, x) * x == Poly(x, x)
-    assert Poly(1, x) * sin(x) == sin(x)
+    with warns_deprecated_sympy():
+        Poly(1, x) * sin(x)
 
     assert Poly(x, x) * 2 == Poly(2*x, x)
     assert 2 * Poly(x, x) == Poly(2*x, x)
@@ -696,8 +710,8 @@ def test_Poly_pow():
 
     assert Poly(7*x*y, x, y)**3 == Poly(343*x**3*y**3, x, y)
 
-    assert Poly(x*y + 1, x, y)**(-1) == (x*y + 1)**(-1)
-    assert Poly(x*y + 1, x, y)**x == (x*y + 1)**x
+    raises(TypeError, lambda: Poly(x*y + 1, x, y)**(-1))
+    raises(TypeError, lambda: Poly(x*y + 1, x, y)**x)
 
 
 def test_Poly_divmod():
@@ -1099,8 +1113,8 @@ def test_Poly_eject():
     assert g.eject(x, y) == Poly(ex, z, t, w, domain='ZZ[x, y]')
     assert g.eject(x, y, z) == Poly(ex, t, w, domain='ZZ[x, y, z]')
     assert g.eject(w) == Poly(ex, x, y, z, t, domain='ZZ[w]')
-    assert g.eject(t, w) == Poly(ex, x, y, z, domain='ZZ[w, t]')
-    assert g.eject(z, t, w) == Poly(ex, x, y, domain='ZZ[w, t, z]')
+    assert g.eject(t, w) == Poly(ex, x, y, z, domain='ZZ[t, w]')
+    assert g.eject(z, t, w) == Poly(ex, x, y, domain='ZZ[z, t, w]')
 
     raises(DomainError, lambda: Poly(x*y, x, y, domain=ZZ[z]).eject(y))
     raises(NotImplementedError, lambda: Poly(x*y, x, y, z).eject(y))
@@ -2177,7 +2191,7 @@ def test_transform():
 
     # Unify ZZ, QQ, and RR
     assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1.0), Poly(x - S.Half)) == \
-        Poly(Rational(9, 4), x) == \
+        Poly(Rational(9, 4), x, domain='RR') == \
         cancel((x - S.Half)**2*(x**2 - 2*x + 1).subs(x, (x + 1.0)/(x - S.Half)))
 
     raises(ValueError, lambda: Poly(x*y).transform(Poly(x + 1), Poly(x - 1)))
@@ -2920,8 +2934,8 @@ def test_cancel():
     f = Poly(x**2 - a**2, x)
     g = Poly(x - a, x)
 
-    F = Poly(x + a, x)
-    G = Poly(1, x)
+    F = Poly(x + a, x, domain='ZZ[a]')
+    G = Poly(1, x, domain='ZZ[a]')
 
     assert cancel((f, g)) == (1, F, G)
 
@@ -3259,7 +3273,7 @@ def test_to_rational_coeffs():
 def test_factor_terms():
     # issue 7067
     assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
-    assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+    assert sqf_list(x*(x + y)) == (1, [(x**2 + x*y, 1)])
 
 
 def test_as_list():
@@ -3319,3 +3333,8 @@ def test_issue_17988():
 def test_issue_18205():
     assert cancel((2 + I)*(3 - I)) == 7 + I
     assert cancel((2 + I)*(2 - I)) == 5
+
+def test_issue_8695():
+    p = (x**2 + 1) * (x - 1)**2 * (x - 2)**3 * (x - 3)**3
+    result = (1, [(x**2 + 1, 1), (x - 1, 2), (x**2 - 5*x + 6, 3)])
+    assert sqf_list(p) == result

@@ -6,7 +6,7 @@ from itertools import chain, zip_longest
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, Iterator, ordered, Mapping
+from .compatibility import iterable, ordered, Mapping
 from .singleton import S
 
 from inspect import getmro
@@ -503,12 +503,11 @@ class Basic(metaclass=ManagedProperties):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
+        nodes = preorder_traversal(self)
+        if types:
+            result = {node for node in nodes if isinstance(node, types)}
         else:
-            types = (Atom,)
-        result = set()
-        for expr in preorder_traversal(self):
-            if isinstance(expr, types):
-                result.add(expr)
+            result = {node for node in nodes if not node.args}
         return result
 
     @property
@@ -889,7 +888,7 @@ class Basic(metaclass=ManagedProperties):
 
         """
         from sympy.core.containers import Dict
-        from sympy.utilities import default_sort_key
+        from sympy.utilities.iterables import sift
         from sympy import Dummy, Symbol
 
         unordered = False
@@ -929,23 +928,10 @@ class Basic(metaclass=ManagedProperties):
 
         if unordered:
             sequence = dict(sequence)
-            if not all(k.is_Atom for k in sequence):
-                d = {}
-                for o, n in sequence.items():
-                    try:
-                        ops = o.count_ops(), len(o.args)
-                    except TypeError:
-                        ops = (0, 0)
-                    d.setdefault(ops, []).append((o, n))
-                newseq = []
-                for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(
-                        sorted([v[0] for v in d[k]], key=default_sort_key))
-                sequence = [(k, sequence[k]) for k in newseq]
-                del newseq, d
-            else:
-                sequence = sorted([(k, v) for (k, v) in sequence.items()],
-                                  key=default_sort_key)
+            atoms, nonatoms = sift(list(sequence),
+                lambda x: x.is_Atom, binary=True)
+            sequence = [(k, sequence[k]) for k in
+                list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
@@ -1953,7 +1939,7 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal(Iterator):
+class preorder_traversal(object):
     """
     Do a pre-order traversal of a tree.
 

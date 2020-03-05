@@ -18,6 +18,7 @@ from sympy import (Basic, Symbol, cacheit, sympify, Mul,
 from sympy.core.containers import Dict
 from sympy.core.logic import Logic
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
@@ -338,7 +339,7 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 
@@ -453,6 +454,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             func = self.pmf(k) * k if cond != True else self.pmf(k) * expr
             return Sum(Piecewise((func, cond), (S.Zero, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
+
+        expr = _sympify(expr)
         expr = rv_subs(expr, rvs)
         return FinitePSpace(self.domain, self.distribution).compute_expectation(expr, rvs, **kwargs)
 

@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi
+from sympy.core.numbers import oo, pi, Float
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -29,6 +29,7 @@ from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 from sympy.utilities.misc import filldedent
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class Integral(AddWithLimits):
@@ -77,6 +78,13 @@ class Integral(AddWithLimits):
         #of behaviour with Integral.
         if hasattr(function, '_eval_Integral'):
             return function._eval_Integral(*symbols, **assumptions)
+
+        if isinstance(function, Poly):
+            SymPyDeprecationWarning(
+                feature="Using integrate/Integral with Poly",
+                issue=18613,
+                deprecated_since_version="1.6",
+                useinstead="the as_expr or integrate methods of Poly").warn()
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
@@ -384,8 +392,15 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
+        from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
+
+        if self.has(Float):
+            fvals = self.atoms(Float)
+            fsubs = {f: Dummy() for f in fvals}
+            rsubs = {s: f for f, s in fsubs.items()}
+            return self.subs(fsubs).doit(**hints).subs(rsubs)
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
@@ -416,6 +431,17 @@ class Integral(AddWithLimits):
         # check for the trivial zero
         if self.is_zero:
             return S.Zero
+
+        # hacks to handle integrals of
+        # nested summations
+        if isinstance(self.function, Sum):
+            if any(v in self.function.limits[0] for v in self.variables):
+                raise ValueError('Limit of the sum cannot be an integration variable.')
+            if any(l.is_infinite for l in self.function.limits[0][1:]):
+                return self
+            _i = self
+            _sum = self.function
+            return _sum.func(_i.func(_sum.function, *_i.limits).doit(), *_sum.limits).doit()
 
         # now compute and check the function
         function = self.function
@@ -885,6 +911,11 @@ class Integral(AddWithLimits):
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
+            SymPyDeprecationWarning(
+                feature="Using integrate/Integral with Poly",
+                issue=18613,
+                deprecated_since_version="1.6",
+                useinstead="the as_expr or integrate methods of Poly").warn()
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.

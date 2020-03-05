@@ -27,6 +27,8 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 
+from .utilities import _get_intermediate_simp_bool
+
 
 class MatrixError(Exception):
     pass
@@ -1944,9 +1946,9 @@ class MatrixOperations(MatrixRequired):
             isinstance(perm[0], Iterable):
             if direction == 'forward':
                 perm = list(reversed(perm))
-            perm = Permutation(perm, size=max_index)
+            perm = Permutation(perm, size=max_index+1)
         else:
-            perm = Permutation(perm, size=max_index)
+            perm = Permutation(perm, size=max_index+1)
 
         if orientation == 'rows':
             return self._eval_permute_rows(perm)
@@ -2188,25 +2190,37 @@ class MatrixArithmetic(MatrixRequired):
 
         return a.multiply(b)
 
-    def _eval_pow_by_recursion_mulsimp(self, num, dotprodsimp=None, prevsimp=None):
-        if dotprodsimp and prevsimp is None:
+    def _eval_pow_by_cayley(self, exp):
+        from sympy.discrete.recurrences import linrec_coeffs
+        row = self.shape[0]
+        p = self.charpoly()
+
+        coeffs = (-p).all_coeffs()[1:]
+        coeffs = linrec_coeffs(coeffs, exp)
+        new_mat = self.eye(row)
+        ans = self.zeros(row)
+
+        for i in range(row):
+            ans += coeffs[i]*new_mat
+            new_mat *= self
+
+        return ans
+
+    def _eval_pow_by_recursion_dotprodsimp(self, num, prevsimp=None):
+        if prevsimp is None:
             prevsimp = [True]*len(self)
 
         if num == 1:
             return self
 
         if num % 2 == 1:
-            a, b = self, self._eval_pow_by_recursion_mulsimp(num - 1,
-                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+            a, b = self, self._eval_pow_by_recursion_dotprodsimp(num - 1,
+                    prevsimp=prevsimp)
         else:
-            a = b = self._eval_pow_by_recursion_mulsimp(num // 2,
-                    dotprodsimp=dotprodsimp, prevsimp=prevsimp)
+            a = b = self._eval_pow_by_recursion_dotprodsimp(num // 2,
+                    prevsimp=prevsimp)
 
-        m = a.multiply(b, dotprodsimp=False)
-
-        if not dotprodsimp:
-            return m
-
+        m     = a.multiply(b, dotprodsimp=False)
         lenm  = len(m)
         elems = [None]*lenm
 
@@ -2312,9 +2326,10 @@ class MatrixArithmetic(MatrixRequired):
         dotprodsimp : bool, optional
             Specifies whether intermediate term algebraic simplification is used
             during matrix multiplications to control expression blowup and thus
-            speed up calculation.
+            speed up calculation. Default is off.
         """
 
+        isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
@@ -2326,8 +2341,8 @@ class MatrixArithmetic(MatrixRequired):
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
-            if dotprodsimp:
-                return m.applyfunc(_dotprodsimp)
+            if isimpbool:
+                return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m])
             return m
 
         # Matrix-like objects can be passed to CommonMatrix routines directly.
@@ -2378,24 +2393,28 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
-    def pow(self, exp, dotprodsimp=None, jordan=None):
-        """Return self**exp a scalar or symbol.
+
+    def pow(self, exp, method=None):
+        r"""Return self**exp a scalar or symbol.
 
         Parameters
         ==========
 
-        dotprodsimp : bool, optional
-            Specifies whether intermediate term algebraic simplification is used
-            during matrix multiplications to control expression blowup and thus
-            speed up calculation.
+        method : multiply, mulsimp, jordan, cayley
+            If multiply then it returns exponentiation using recursion.
+            If jordan then Jordan form exponentiation will be used.
+            If cayley then the exponentiation is done using Cayley-Hamilton
+            theorem.
+            If mulsimp then the exponentiation is done using recursion
+            with dotprodsimp. This specifies whether intermediate term
+            algebraic simplification is used during naive matrix power to
+            control expression blowup and thus speed up calculation.
+            If None, then it heuristically decides which method to use.
 
-        jordan : bool, optional
-            If left as None then Jordan form exponentiation will be used under
-            certain conditions, True specifies that jordan_pow should always
-            be used if possible and False means it should not be used unless
-            it is the only way to calculate the power.
         """
 
+        if method is not None and method not in ['multiply', 'mulsimp', 'jordan', 'cayley']:
+            raise TypeError('No such method')
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
@@ -2417,25 +2436,45 @@ class MatrixArithmetic(MatrixRequired):
             if exp < 0:
                 exp = -exp
                 a = a.inv()
-            # When certain conditions are met,
-            # Jordan block algorithm is faster than
-            # computation by recursion.
-            elif jordan_pow is not None and (jordan or \
-                    (jordan is not False and a.rows == 2 and exp > 100000)):
-                try:
-                    return jordan_pow(exp, dotprodsimp=dotprodsimp)
-                except MatrixError:
-                    if jordan:
-                        raise
+        # When certain conditions are met,
+        # Jordan block algorithm is faster than
+        # computation by recursion.
+        if method == 'jordan':
+            try:
+                return jordan_pow(exp)
+            except MatrixError:
+                if method == 'jordan':
+                    raise
 
-            if dotprodsimp is not None:
-                return a._eval_pow_by_recursion_mulsimp(exp, dotprodsimp=dotprodsimp)
+        elif method == 'cayley':
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("cayley method is only valid for integer powers")
+            return a._eval_pow_by_cayley(exp)
+
+        elif method == "mulsimp":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("mulsimp method is only valid for integer powers")
+            return a._eval_pow_by_recursion_dotprodsimp(exp)
+
+        elif method == "multiply":
+            if not exp.is_Number or exp % 1 != 0:
+                raise ValueError("multiply method is only valid for integer powers")
+            return a._eval_pow_by_recursion(exp)
+
+        elif method is None and exp.is_Number and exp % 1 == 0:
+            # Decide heuristically which method to apply
+            if a.rows == 2 and exp > 100000:
+                return jordan_pow(exp)
+            elif _get_intermediate_simp_bool(True, None):
+                return a._eval_pow_by_recursion_dotprodsimp(exp)
+            elif exp > 10000:
+                return a._eval_pow_by_cayley(exp)
             else:
                 return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
-                return jordan_pow(exp, dotprodsimp=dotprodsimp)
+                return jordan_pow(exp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.

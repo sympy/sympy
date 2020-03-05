@@ -19,7 +19,7 @@ def mplot3d(f, var1, var2, show=True):
     """
 
     import warnings
-    warnings.filterwarnings("ignore", "Could not match \S")
+    warnings.filterwarnings("ignore", r"Could not match \S")
 
     p = import_module('pylab')
     # Try newer version first
