@@ -611,3 +611,8 @@ def test_cut_section():
     p3, p4 = p.cut_section(Line((0, 0), slope=0))
     assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
     assert p4 == None
+
+    # case where the line does not intersect with a polygon at all
+    raises(ValueError, lambda: p.cut_section(Line((0, a), slope=0)))
+
+    
