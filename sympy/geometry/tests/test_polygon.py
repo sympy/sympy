@@ -380,7 +380,9 @@ def test_transform():
     assert Triangle(*pts).scale(2, 3, (4, 5)) == Triangle(*pts_out)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
         Polygon(Point(-2, -10), Point(-4, -7), Point(-6, -10), Point(-4, -13))
-
+    # Checks for symmetric scaling
+    assert RegularPolygon((0, 0), 1, 4).scale(2, 2) == \
+        RegularPolygon(Point2D(0,0), 2, 4, 0)
 
 def test_reflect():
     x = Symbol('x', real=True)
