@@ -629,7 +629,7 @@ class LatexPrinter(Printer):
                 exp = r"{%s}" % exp
             else:
                 exp = r"\left({%s}\right)" % exp
-            if '\left' not in base:
+            if "left(" not in base:
                 base = r"\left(%s\right)" % base
         elif expr.base.is_Symbol or expr.base.is_Integer or expr.exp.is_Integer or expr.exp.is_Symbol:
             exp = r"{%s}" % exp
