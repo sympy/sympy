@@ -631,16 +631,16 @@ class LatexPrinter(Printer):
                 exp = r"\left({%s}\right)" % exp
             if "left(" not in base:
                 base = r"\left(%s\right)" % base
-        elif expr.base.is_Symbol or expr.base.is_Integer or \
-        expr.exp.is_Integer or expr.exp.is_Symbol or expr.exp.is_Rational or  \
-        expr.exp.is_Function:
-            exp = r"{%s}" % exp
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
             base = base[6: -7]  # remove outermost added parens
+            exp = r"{%s}" % exp
+        elif expr.base.is_Symbol or expr.base.is_Integer or \
+        expr.exp.is_Integer or expr.exp.is_Symbol or expr.exp.is_Rational or  \
+        expr.exp.is_Function:
             exp = r"{%s}" % exp
         return template % (base, exp)
 
