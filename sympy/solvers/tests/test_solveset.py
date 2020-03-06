@@ -2031,7 +2031,10 @@ def test_solve_lambert():
     ans = solveset_real(3*x + 5 + 2**(-5*x + 3), x)
     assert ans == FiniteSet(-Rational(5,3) +
         LambertW(-10240*2**(S(1)/3)*log(2)/3)/(5*log(2)))
+
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
+    assert solveset_real(3**cos(x) - cos(x)**3,x) == FiniteSet(acos(3), acos(-3*LambertW(-log(3)/3)/log(3)))
+    
     assert solveset_real(LambertW(2*x) - y, x) == Intersection(FiniteSet(y*exp(y)/2), S.Reals)
     # check collection
     b = Symbol('b')
@@ -2080,15 +2083,15 @@ def test_solve_lambert():
 
     assert solveset_real(log(log(x - 3)) + log(x-3), x) == FiniteSet(
         exp(LambertW(1)) + 3)
-
-
-@XFAIL
-def test_other_solve_lambert_():
-    a = Symbol('a')
-
     assert solveset_real(-a*x + 2*x*log(x), x) == \
-        Union(FiniteSet(0), Intersection(S.Reals, FiniteSet(exp(a/2))))
+        FiniteSet(0, exp(a/2))
 
+    assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
+        FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
+    
+    a = S(6)/5
+    assert solveset_real(x**a - a**x, x) == \
+        FiniteSet(6/5, 6*LambertW(log(5**(5/6)*6**(1/6)/6), -1)/(5*log(5/6)))
 
 def test_solve_bivariate():
 
@@ -2100,27 +2103,13 @@ def test_solve_bivariate():
 
     assert solveset_real((x**2 - 2*x - 2).subs(x, log(x) + 3*x), x) == \
         FiniteSet(LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(1 - sqrt(3)))/3)
-
-
-@XFAIL
-def test_other_solve_bivariate():
+    
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solveset_real(eq, x)
     ans = FiniteSet((log(2401) +
                      5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(3*log(7))/-1)
     assert result == ans
-
     assert solveset_real(eq.expand(), x) == result
-    assert solveset_real(3**cos(x) - cos(x)**3,x) == FiniteSet(
-        acos(-3*LambertW(-log(3)/3)/log(3)))
-
-@XFAIL
-def test_other_lambert():
-    a = S(6)/5
-    assert solveset_real(x**a - a**x, x) == FiniteSet(
-        a, -a*LambertW(-log(a)/a)/log(a))
-    assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
-        FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
 
 
 # end of transolve's tests
