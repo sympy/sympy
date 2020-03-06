@@ -636,7 +636,7 @@ class LatexPrinter(Printer):
             and re.match(r'\\left\(\\d?d?dot', base)
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
-            base = base[6: -7]  # remove outermost added parens
+            base = base[6: -7]  #  remove outermost added parens
             exp = r"{%s}" % exp
         else:
             exp = r"{%s}" % exp
