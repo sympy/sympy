@@ -2120,6 +2120,12 @@ def test_issue_15439():
     assert latex((x * y).subs(y, -2*y)) == r"x \left(- 2 y\right)"
     assert latex((x * y).subs(x, -x)) == r"- x y"
 
+def test_issue_6975():
+    x = symbols('x')
+    assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
+    assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)\right)^\left({\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)}\right)"
 
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'

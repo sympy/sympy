@@ -616,7 +616,7 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, exp=self._print(expr.exp))
             else:
-                tex = r"%s^{%s}"
+                tex = r"%s^%s"
                 return self._helper_print_standard_power(expr, tex)
 
     def _helper_print_standard_power(self, expr, template):
@@ -624,8 +624,13 @@ class LatexPrinter(Printer):
         # issue #12886: add parentheses around superscripts raised
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-        if '^' in base and expr.base.is_Symbol:
-            base = r"\left(%s\right)" % base
+        if '^' in base :
+            if expr.exp.is_Integer:
+                exp = r"{%s}" % exp
+            else:
+                exp = r"\left({%s}\right)" % exp
+        elif expr.base.is_Symbol:
+            exp = r"{%s}" % exp
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
