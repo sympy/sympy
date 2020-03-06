@@ -625,13 +625,15 @@ class LatexPrinter(Printer):
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if '^' in base :
-            if expr.exp.is_Integer :
+            if expr.exp.is_Integer or expr.exp.is_Rational:
                 exp = r"{%s}" % exp
             else:
                 exp = r"\left({%s}\right)" % exp
             if "left(" not in base:
                 base = r"\left(%s\right)" % base
-        elif expr.base.is_Symbol or expr.base.is_Integer or expr.exp.is_Integer or expr.exp.is_Symbol:
+        elif expr.base.is_Symbol or expr.base.is_Integer or \
+        expr.exp.is_Integer or expr.exp.is_Symbol or expr.exp.is_Rational or  \
+        expr.exp.is_Function:
             exp = r"{%s}" % exp
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
@@ -1677,7 +1679,7 @@ class LatexPrinter(Printer):
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
-            template = r"%s^{\circ \left(%s\right)}"
+            template = r"%s^{\circ \left({%s}\right)}"
         else:
             template = r"%s^{\circ %s}"
         return self._helper_print_standard_power(expr, template)
