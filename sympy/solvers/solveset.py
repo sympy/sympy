@@ -1020,7 +1020,7 @@ def _solveset(f, symbol, domain, _check=False):
             if _is_lambert(f,x):
                 if result.has(cos,sin):
                     if (result.has(exp)) or (f.has(sqrt(x))):
-                        return result        
+                        return result
                     elif not domain.is_subset(S.Integers) and \
                         ((result.has(cos) and not result.has(sin)) or \
                             (result.has(sin) and not result.has(cos))) :
