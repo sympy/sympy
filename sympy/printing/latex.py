@@ -625,11 +625,13 @@ class LatexPrinter(Printer):
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if '^' in base :
-            if expr.exp.is_Integer:
+            if expr.exp.is_Integer :
                 exp = r"{%s}" % exp
             else:
                 exp = r"\left({%s}\right)" % exp
-        elif expr.base.is_Symbol:
+            if '\left' not in base:
+                base = r"\left(%s\right)" % base
+        elif expr.base.is_Symbol or expr.base.is_Integer or expr.exp.is_Integer or expr.exp.is_Symbol:
             exp = r"{%s}" % exp
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
@@ -637,6 +639,7 @@ class LatexPrinter(Printer):
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
             base = base[6: -7]  # remove outermost added parens
+            exp = r"{%s}" % exp
         return template % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):
@@ -1674,9 +1677,9 @@ class LatexPrinter(Printer):
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
-            template = r"%s^{\circ \left({%s}\right)}"
+            template = r"%s^{\circ \left(%s\right)}"
         else:
-            template = r"%s^{\circ {%s}}"
+            template = r"%s^{\circ %s}"
         return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
