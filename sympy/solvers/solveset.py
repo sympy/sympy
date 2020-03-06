@@ -47,7 +47,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.solvers.bivariate import _solve_lambert, _filtered_gens, bivariate_type
 from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols)
+    _simple_dens, recast_to_symbols, solve, _tsolve)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -57,7 +57,7 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
-
+from sympy import sqrt
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
@@ -1012,7 +1012,40 @@ def _solveset(f, symbol, domain, _check=False):
                 result = _result - singularities
 
     if _check:
-        if isinstance(result, ConditionSet):
+        if (isinstance(result,ConditionSet)) and \
+                (domain.is_subset(S.Reals) and \
+                    (type(result) is not list)):
+            x = Symbol('x')
+            f = f.subs({symbol: x})
+            if _is_lambert(f,x):
+                if result.has(cos,sin):
+                    if (result.has(exp)) or (f.has(sqrt(x))):
+                        return result        
+                    elif not domain.is_subset(S.Integers) and \
+                        ((result.has(cos) and not result.has(sin)) or \
+                            (result.has(sin) and not result.has(cos))) :
+                        f = solve(f,x)
+                        f = FiniteSet(*f)
+                        return f
+                elif domain.is_subset(S.Reals):
+                    indls = _tsolve(f,x)
+                    if indls is None or indls == []:
+                        return result
+                    elif indls is not None:
+                        if len(indls) == 1:
+                            if indls[0] == 0:
+                                return result
+                    if indls is not None:
+                        args = []
+                        j = -1
+                        for _ in indls:
+                            j += 1
+                            de = "{}".format(_)
+                            if 'I' not in de:
+                                args.append(indls[j])
+                        f = FiniteSet(*args)
+                        return f
+        else:
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
             return result
