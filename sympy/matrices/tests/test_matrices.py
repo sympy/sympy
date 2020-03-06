@@ -2,7 +2,7 @@ import random
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, expand_mul, oo, pi, signsimp, simplify, sin,
+    S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
     sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
