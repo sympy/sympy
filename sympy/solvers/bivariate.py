@@ -179,25 +179,24 @@ def _lambert(eq, x,domain = S.Complexes):
     p, den = den.as_coeff_Mul()
     e = exp(num/den)
     t = Dummy('t')
+    # Differentiating between real and complex
     if p == 1 :
         t = e
         args = [d/(a*b)*t]
     elif domain.is_subset(S.Reals):
-        args1 = [d/(a*b)*t for t in roots(t**p - e, t).keys() ]
+        ind_ls = [d/(a*b)*t for t in roots(t**p - e, t).keys() ]
         args = []
         j = -1
-        ind_ls = []
-        for i in args1:
+        for i in ind_ls:
             j += 1
             de = "{}".format(i)
             if 'I' not in de:
-                ind_ls.append(j)
-        for i in ind_ls:
-            args.append(args1[i])
+                args.append(ind_ls[j])
     else:
         args = [d/(a*b)*t for t in roots(t**p - e, t).keys() ]
     if len(args) == 0:
         return S.EmptySet
+
     # calculating solutions from args
     for arg in args:
         for k in lambert_real_branches:
