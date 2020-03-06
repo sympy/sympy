@@ -54,10 +54,10 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-
+from sympy import sqrt
 from types import GeneratorType
 from collections import defaultdict
-from sympy import sqrt
+
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
