@@ -533,6 +533,3 @@ def test_issue_16469():
     x = Symbol("x", real=True)
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
-
-def test_issue_18747():
-    assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8

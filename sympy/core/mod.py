@@ -38,7 +38,7 @@ class Mod(Function):
 
             if q.is_zero:
                 raise ZeroDivisionError("Modulo by zero")
-            if p.is_finite is False or q.is_finite is False or p is nan or q is nan:
+            if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
             if p is S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero

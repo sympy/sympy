@@ -1290,10 +1290,10 @@ def _solve_modular(f, symbol, domain):
     n = Dummy('n', integer=True)
     f_x, g_n = _invert_modular(modterm, rhs, n, symbol)
 
-    if f_x == modterm and g_n == rhs:
+    if f_x is modterm and g_n is rhs:
         return unsolved_result
 
-    if f_x == symbol:
+    if f_x is symbol:
         if domain is not S.Integers:
             return domain.intersect(g_n)
         return g_n
@@ -2991,7 +2991,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
-                depen = (eq2.rewrite(Add)).as_independent(unsolved_syms)[0]
+                depen = eq2.as_independent(unsolved_syms)[0]
                 if depen.has(Abs) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain

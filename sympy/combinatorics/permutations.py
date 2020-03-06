@@ -611,7 +611,7 @@ class Permutation(Atom):
     trigger an error. For this reason, it is better to start the cycle
     with the singleton:
 
-    The following fails because there is no element 3:
+    The following fails because there is is no element 3:
 
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):

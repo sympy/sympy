@@ -7,9 +7,6 @@ from sympy.testing.pytest import XFAIL, raises
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)
 
-def test_evaluate():
-    assert MatAdd(X, X, evaluate=True) == MatAdd(X, X).doit()
-
 def test_sort_key():
     assert MatAdd(Y, X).doit().args == (X, Y)
 

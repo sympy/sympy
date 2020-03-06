@@ -1836,8 +1836,3 @@ def test_as_real_imag():
     # please open up the issue again.
     expr = atan(I/(I + I*tan(1)))
     assert expr.as_real_imag() == (expr, 0)
-
-
-def test_issue_18746():
-    e3 = cos(S.Pi*(x/4 + 1/4))
-    assert e3.period() == 8

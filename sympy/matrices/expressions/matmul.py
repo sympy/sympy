@@ -34,7 +34,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
@@ -46,19 +46,13 @@ class MatMul(MatrixExpr, Mul):
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
-
         if check:
             validate(*matrices)
-
         if not matrices:
             # Should it be
             #
             # return Basic.__neq__(cls, factor, GenericIdentity()) ?
             return factor
-
-        if evaluate:
-            return canonicalize(obj)
-
         return obj
 
     @property

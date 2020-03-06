@@ -3,7 +3,6 @@ from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -482,7 +481,6 @@ def periodicity(f, symbol, check=False):
             # checked below
 
     if isinstance(f, exp):
-        f = f.func(expand_mul(f.args[0]))
         if im(f) != 0:
             period_real = periodicity(re(f), symbol)
             period_imag = periodicity(im(f), symbol)
