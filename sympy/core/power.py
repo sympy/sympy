@@ -1590,6 +1590,7 @@ class Pow(Expr):
                 # (lt + rest + O(x**m))**e =
                 # lt**e*(1 + rest/lt + O(x**m)/lt)**e =
                 # lt**e + ... + O(x**m)*lt**(e - 1) = ... + O(x**n)
+
                 try:
                     cf = Order(lt, x).getn()
                     nuse = ceiling(n - cf*(e - 1))
@@ -1628,7 +1629,7 @@ class Pow(Expr):
         # either b0 is bounded but neither 1 nor 0 or e is infinite
         # b -> b0 + (b - b0) -> b0 * (1 + (b/b0 - 1))
         o2 = order*(b0**-e)
-        z = (b/b0 - 1)
+        z = (b/b0 - 1).simplify()
         o = O(z, x)
         if o is S.Zero or o2 is S.Zero:
             infinite = True
