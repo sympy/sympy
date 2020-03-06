@@ -2034,7 +2034,7 @@ def test_solve_lambert():
 
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
     assert solveset_real(3**cos(x) - cos(x)**3,x) == FiniteSet(acos(3), acos(-3*LambertW(-log(3)/3)/log(3)))
-    
+
     assert solveset_real(LambertW(2*x) - y, x) == Intersection(FiniteSet(y*exp(y)/2), S.Reals)
     # check collection
     b = Symbol('b')
