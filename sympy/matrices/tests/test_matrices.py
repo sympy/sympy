@@ -20,7 +20,6 @@ from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
-from sympy.matrices.common import NonInvertibleMatrixError
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
