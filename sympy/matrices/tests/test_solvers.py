@@ -1,10 +1,10 @@
 from sympy import (
-    E, I, Rational, S, Symbol, simplify, symbols, sympify)
+    I, Rational, S, Symbol, simplify, symbols, sympify, expand_mul)
 from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
-    ImmutableMatrix, Matrix, eye, ones, zeros, ImmutableDenseMatrix)
+    ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix)
 from sympy.testing.pytest import raises, XFAIL
-from sympy.abc import a, b, c, d, x, y, z, t
+from sympy.abc import x, y
 
 def test_issue_17247_expression_blowup_29():
     M = Matrix(S('''[
