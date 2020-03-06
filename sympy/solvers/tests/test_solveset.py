@@ -2088,7 +2088,7 @@ def test_solve_lambert():
 
     assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
         FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
-    
+
     a = S(6)/5
     assert solveset_real(x**a - a**x, x) == \
         FiniteSet(6/5, 6*LambertW(log(5**(5/6)*6**(1/6)/6), -1)/(5*log(5/6)))
@@ -2103,7 +2103,7 @@ def test_solve_bivariate():
 
     assert solveset_real((x**2 - 2*x - 2).subs(x, log(x) + 3*x), x) == \
         FiniteSet(LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(1 - sqrt(3)))/3)
-    
+
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solveset_real(eq, x)
     ans = FiniteSet((log(2401) +
