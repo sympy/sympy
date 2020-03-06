@@ -346,10 +346,7 @@ class LatexPrinter(Printer):
         return r"\text{%s}" % e
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
 
         tex = ""
         for i, term in enumerate(terms):

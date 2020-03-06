@@ -49,10 +49,7 @@ class ReprPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            args = list(expr.args)
-        else:
-            args = self._as_ordered_terms(expr, order=order)
+        args = self._as_ordered_terms(expr, order=order)
         nargs = len(args)
         args = map(self._print, args)
         clsname = type(expr).__name__
