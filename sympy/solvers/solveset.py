@@ -2143,6 +2143,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             assumptions = symbol.assumptions0
             assumptions['real'] = True
             try:
+                if type(f) != list:
                 r = Dummy('r', **assumptions)
                 return solveset(f.xreplace({symbol: r}), r, domain
                     ).xreplace({r: symbol})
