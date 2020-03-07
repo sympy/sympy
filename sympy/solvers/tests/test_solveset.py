@@ -2083,8 +2083,7 @@ def test_solve_lambert():
 
     assert solveset_real(log(log(x - 3)) + log(x-3), x) == FiniteSet(
         exp(LambertW(1)) + 3)
-    assert solveset_real(-a*x + 2*x*log(x), x) == \
-        FiniteSet(0, exp(a/2))
+    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(0, exp(a/2))
 
     assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
         FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
