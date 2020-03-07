@@ -244,8 +244,8 @@ def test_bidiagonalize():
                 [7, 8, 9],
                 [10, 11, 12]])
     assert M.bidiagonalize(precision=3) == Matrix([[12.884, 21.876, 0],
-                                            [0, 2.46, -0.613]
-                                            [0, 0, 0]
+                                            [0, 2.46, -0.613],
+                                            [0, 0, 0],
                                             [0, 0, 0]])
 
 
