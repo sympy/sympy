@@ -630,8 +630,8 @@ class LatexPrinter(Printer):
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
             base = base[6: -7]  # remove outermost added parens
-            exp = r"{%s}" % exp 
-        elif expr.base.is_Pow :
+            exp = r"{%s}" % exp
+        elif expr.base.is_Pow:
             if isinstance(expr.exp,Add) or expr.exp.is_Integer or expr.exp.is_Rational :
                 exp = r"{%s}" % exp
             else:
