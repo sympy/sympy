@@ -985,7 +985,7 @@ def test_conditionset():
         ) == ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals)
 
     assert solveset(y**x-z, x, S.Reals) == \
-        ConditionSet(x, Eq(y**x - z, 0), S.Reals)
+        FiniteSet(log(z)/log(y))
 
 
 @XFAIL
