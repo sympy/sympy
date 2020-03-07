@@ -2109,7 +2109,7 @@ def test_solve_bivariate():
 
 
 @XFAIL
-def test_solve_lambert():
+def test_other_solve_lambert():
     assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(S.Zero, exp(a/2))
 
 
