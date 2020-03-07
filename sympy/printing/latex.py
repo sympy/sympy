@@ -639,10 +639,10 @@ class LatexPrinter(Printer):
         else:
             exp = r"{%s}" % exp
 
-        ''' checks if base expression contains '^' and it is not considered 
+        ''' checks if base expression contains '^' and it is not considered
             in previous if statement and it doesnt already enclosed in bracket'''
-        if ('^' in base and (not expr.base.is_Pow) 
-            and ('left(' not in base)):     
+        if ('^' in base and (not expr.base.is_Pow)
+            and ('left(' not in base)):
             base = r'\left(%s\right)' % base
 
         return template % (base, exp)
