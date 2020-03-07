@@ -376,7 +376,6 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
 def _householder_vector(x):
     if not x.cols == 1:
         raise ValueError("Input must be a column matrix")
-    m = x.rows
     alp = x[1:, 0].T * x[1:, 0]
     sig = alp[0, 0]
     v = x.copy()
@@ -434,7 +433,7 @@ def _bidiagonalize(M, precision=12, upper=True):
 
 
     if not upper:
-        return M.T.bidiagonalize(method=method, precision=precision, upper=True).T
+        return M.T.bidiagonalize(precision=precision, upper=True).T
 
     if type(precision) is not int:
         raise ValueError("Precision must be a positive integer, default is 12")
