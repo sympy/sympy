@@ -14,24 +14,13 @@ class betabase(Function):
 
     """
     unbranched = True
-
-    @property
-    def a(self):
-        return self.args[0]
-
-    @property
-    def b(self):
-        return self.args[1]
-
-    @property
-    def z(self):
-        return self.args[2]
-
     def _eval_conjugate(self):
-        try:
-            return self.func(self.a.conjugate(), self.b.conjugate(), self.z.conjugate())
-        except:
-            return self.func(self.a.conjugate(), self.b.conjugate())
+        if len(self.args) > 2 :
+            a, b, z = self.args
+            return self.func(a.conjugate(), b.conjugate(), self.args[2].conjugate())
+        else :
+            a, b = self.args
+            return self.func(a.conjugate(), b.conjugate())
 
 
 ###############################################################################
