@@ -2144,9 +2144,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
             assumptions['real'] = True
             try:
                 if type(f) != list:
-                r = Dummy('r', **assumptions)
-                return solveset(f.xreplace({symbol: r}), r, domain
-                    ).xreplace({r: symbol})
+                    r = Dummy('r', **assumptions)
+                    return solveset(f.xreplace({symbol: r}), r, domain
+                        ).xreplace({r: symbol})
             except InconsistentAssumptions:
                 pass
     # Abs has its own handling method which avoids the
