@@ -1045,7 +1045,9 @@ def _solveset(f, symbol, domain, _check=False):
                                 args.append(indls[j])
                         f = FiniteSet(*args)
                         return f
-        else:
+            else:
+                return result
+        elif isinstance(result,ConditionSet):
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
             return result
