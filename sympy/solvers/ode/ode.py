@@ -1929,7 +1929,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs):
                 if rhs != 0:
                     is_homogeneous = False
 
-    except:
+    except ValueError:
         is_linear = False
         is_constant = None
         is_homogeneous = None
