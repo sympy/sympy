@@ -55,6 +55,16 @@ class CantSympify(object):
     pass
 
 
+def _is_numpy_instance(a):
+    """
+    Checks if an object is an instance of a type from the numpy module.
+    """
+    # This check avoids unnecessarily importing NumPy.  We check the whole
+    # __mro__ in case any base type is a numpy type.
+    return any(type_.__module__ == 'numpy'
+               for type_ in type(a).__mro__)
+
+
 def _convert_numpy_types(a, **sympify_args):
     """
     Converts a numpy datatype input to an appropriate SymPy type.
@@ -295,8 +305,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate = global_parameters.evaluate
 
     # Support for basic numpy datatypes
-    # Note that this check exists to avoid importing NumPy when not necessary
-    if type(a).__module__ == 'numpy':
+    if _is_numpy_instance(a):
         import numpy as np
         if np.isscalar(a):
             return _convert_numpy_types(a, locals=locals,
@@ -324,15 +333,30 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, str):
-        for coerce in (float, int):
-            try:
-                coerced = coerce(a)
-            except (TypeError, ValueError):
-                continue
-            try:
-                return sympify(coerced)
-            except SympifyError:
-                continue
+        if _is_numpy_instance(a):
+            import numpy as np
+            assert not isinstance(a, np.number)
+            if isinstance(a, np.ndarray):
+                # Scalar arrays (those with zero dimensions) have sympify
+                # called on the scalar element.
+                if a.ndim == 0:
+                    try:
+                        return sympify(a.item(),
+                                       locals=locals,
+                                       convert_xor=convert_xor,
+                                       strict=strict,
+                                       rational=rational,
+                                       evaluate=evaluate)
+                    except SympifyError:
+                        pass
+        else:
+            # float and int can coerce size-one numpy arrays to their lone
+            # element.  See issue https://github.com/numpy/numpy/issues/10404.
+            for coerce in (float, int):
+                try:
+                    return sympify(coerce(a))
+                except (TypeError, ValueError, AttributeError, SympifyError):
+                    continue
 
     if strict:
         raise SympifyError(a)

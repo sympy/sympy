@@ -294,6 +294,14 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_ImaginaryUnit(self, expr):
         return '1j'
 
+    def _print_KroneckerDelta(self, expr):
+        a, b = expr.args
+
+        return '(1 if {a} == {b} else 0)'.format(
+            a = self._print(a),
+            b = self._print(b)
+        )
+
     def _print_MatrixBase(self, expr):
         name = expr.__class__.__name__
         func = self.known_functions.get(name, name)
@@ -765,11 +773,10 @@ class NumPyPrinter(PythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
 
     def _print_Min(self, expr):
-        return '{0}(({1}))'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
+        return '{0}(({1}), axis=0)'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{0}(({1}))'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
-
+        return '{0}(({1}), axis=0)'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))

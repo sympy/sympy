@@ -117,6 +117,7 @@ class Plot(object):
     - aspect_ratio : tuple of two floats or {'auto'}
     - autoscale : bool
     - margin : float in [0, 1]
+    - backend : {'default', 'matplotlib', 'text'}
 
     The per data series options and aesthetics are:
     There are none in the base series. See below for options for subclasses.
@@ -175,7 +176,7 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = DefaultBackend
+        self.backend = plot_backends[kwargs.pop('backend', 'default')]
 
 
         # The keyword arguments should only contain options for the plot.

@@ -561,18 +561,20 @@ class Pow(Expr):
             elif self.exp.is_extended_nonpositive:
                 return False
         elif self.base.is_zero is False:
-            if self.exp.is_negative:
+            if self.base.is_finite and self.exp.is_finite:
+                return False
+            elif self.exp.is_negative:
                 return self.base.is_infinite
             elif self.exp.is_nonnegative:
                 return False
-            elif self.exp.is_infinite:
+            elif self.exp.is_infinite and self.exp.is_extended_real:
                 if (1 - abs(self.base)).is_extended_positive:
                     return self.exp.is_extended_positive
                 elif (1 - abs(self.base)).is_extended_negative:
                     return self.exp.is_extended_negative
-        else:
-            # when self.base.is_zero is None
-            return None
+        else: # when self.base.is_zero is None
+            if self.base.is_finite and self.exp.is_negative:
+                return False
 
     def _eval_is_integer(self):
         b, e = self.args
@@ -647,7 +649,8 @@ class Pow(Expr):
 
         if real_b is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
-            return i.is_integer
+            if i.is_complex: # finite
+                return i.is_integer
 
     def _eval_is_complex(self):
 
@@ -1037,6 +1040,11 @@ class Pow(Expr):
 
         rv = S.One
         if cargs:
+            if e.is_Rational:
+                npow, cargs = sift(cargs, lambda x: x.is_Pow and
+                    x.exp.is_Rational and x.base.is_number,
+                    binary=True)
+                rv = Mul(*[self.func(b.func(*b.args), e) for b in npow])
             rv *= Mul(*[self.func(b, e, evaluate=False) for b in cargs])
         if other:
             rv *= self.func(Mul(*other), e, evaluate=False)

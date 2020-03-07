@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi
+from sympy.core.numbers import oo, pi, Float
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -29,6 +29,7 @@ from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 from sympy.utilities.misc import filldedent
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class Integral(AddWithLimits):
@@ -77,6 +78,13 @@ class Integral(AddWithLimits):
         #of behaviour with Integral.
         if hasattr(function, '_eval_Integral'):
             return function._eval_Integral(*symbols, **assumptions)
+
+        if isinstance(function, Poly):
+            SymPyDeprecationWarning(
+                feature="Using integrate/Integral with Poly",
+                issue=18613,
+                deprecated_since_version="1.6",
+                useinstead="the as_expr or integrate methods of Poly").warn()
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
@@ -387,6 +395,12 @@ class Integral(AddWithLimits):
         from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
+
+        if self.has(Float):
+            fvals = self.atoms(Float)
+            fsubs = {f: Dummy() for f in fvals}
+            rsubs = {s: f for f, s in fsubs.items()}
+            return self.subs(fsubs).doit(**hints).subs(rsubs)
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
@@ -897,6 +911,11 @@ class Integral(AddWithLimits):
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
+            SymPyDeprecationWarning(
+                feature="Using integrate/Integral with Poly",
+                issue=18613,
+                deprecated_since_version="1.6",
+                useinstead="the as_expr or integrate methods of Poly").warn()
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
