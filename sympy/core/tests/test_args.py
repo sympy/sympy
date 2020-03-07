@@ -2359,13 +2359,19 @@ def test_sympy__functions__special__gamma_functions__multigamma():
     assert _test_args(multigamma(x, 1))
 
 
+def test_sympy__functions__special__beta_functions__betabase():
+    pass
+
+
 def test_sympy__functions__special__beta_functions__beta():
     from sympy.functions.special.beta_functions import beta
     assert _test_args(beta(x, x))
 
+
 def test_sympy__functions__special__beta_functions__betainc():
     from sympy.functions.special.beta_functions import betainc
     assert _test_args(betainc(x, x, x))
+
 
 def test_sympy__functions__special__mathieu_functions__MathieuBase():
     pass

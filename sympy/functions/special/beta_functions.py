@@ -4,12 +4,41 @@ from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.special.hyper import hyper
 from sympy.functions.elementary.exponential import log
 from sympy import S, Dummy
+from sympy.core.logic import fuzzy_and
+
+class betabase(Function):
+    """
+    Abstract base class for beta functions.
+
+    This class is meant to reduce code duplication.
+
+    """
+    unbranched = True
+
+    @property
+    def a(self):
+        return self.args[0]
+
+    @property
+    def b(self):
+        return self.args[1]
+
+    @property
+    def z(self):
+        return self.args[2]
+
+    def _eval_conjugate(self):
+        try:
+            return self.func(self.a.conjugate(), self.b.conjugate(), self.z.conjugate())
+        except:
+            return self.func(self.a.conjugate(), self.b.conjugate())
+
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
 ###############################################################################
 
-class beta(Function):
+class beta(betabase):
     r"""
     The beta integral is called the Eulerian integral of the first kind by
     Legendre:
@@ -88,7 +117,6 @@ class beta(Function):
     .. [3] http://dlmf.nist.gov/5.12
 
     """
-    nargs = 2
     unbranched = True
 
     def fdiff(self, argindex):
@@ -116,9 +144,6 @@ class beta(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
-
     def _eval_rewrite_as_gamma(self, x, y, **kwargs):
         return self._eval_expand_func(**kwargs)
 
@@ -127,9 +152,7 @@ class beta(Function):
 ########################### INCOMPLETE BETA  FUNCTION #########################
 ###############################################################################
 
-
-
-class betainc(Function):
+class betainc(betabase):
     r"""
     The incomplete beta function is a generalization of the beta function,
 
@@ -143,8 +166,14 @@ class betainc(Function):
 
     See Also
     ========
-    Gamma function, Upper incomplete gamma function, Lower incomplete gamma function,
-    Polygamma function, Log Gamma function, Digamma function, Trigamma function.
+
+    gamma: Gamma function.
+    uppergamma: Upper incomplete gamma function.
+    lowergamma: Lower incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
 
     References
     ==========
@@ -152,12 +181,11 @@ class betainc(Function):
     .. [1] https://en.wikipedia.org/wiki/Beta_function#Incomplete_beta_function
     .. [2] http://mathworld.wolfram.com/IncompleteBetaFunction.html
     """
-    nargs = 3
 
     def fdiff(self, argindex):
         z, a, b = self.args
-        if argindex not in (1,2,3):
-            raise ArgumentIndexError(self,argindex)
+        if argindex not in (1, 2, 3):
+            raise ArgumentIndexError(self, argindex)
         elif argindex == 1:
             # Diff wrt z
             return (1 - z)**(b - 1)*z**(a - 1)
@@ -179,25 +207,20 @@ class betainc(Function):
             return S.Zero
         #Beta function is special case of Incomplete beta function for z=1
         if z == 1:
-            return beta(a,b)
+            return beta(a, b)
 
-    def _eval_rewrite_as_Integral(self,*args, **kwargs):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         z, a, b = self.args
         from sympy import Integral
         t = Dummy("t")
         integrand = t**(a - 1)*(1 - t)**(b - 1)
         return Integral(integrand,(t, 0, z))
 
-    def _eval_rewrite_as_hyper(self,*args, **kwargs):
+    def _eval_rewrite_as_hyper(self, *args, **kwargs):
         z, a, b = self.args
         return gamma(a)*z**a*hyper([a, 1-b], [a+1], z)
 
     def _eval_is_real(self):
         z, a, b = self.args
-        return (a.is_positive and b.is_positive
-            and z.is_nonnegative and (1-z).is_nonnegative)
-
-
-    def _eval_conjugate(self):
-        z, a, b = self.args
-        return self.func(z.conjugate(), a.conjugate(), b.conjugate())
+        return fuzzy_and((a.is_positive, b.is_positive
+            , z.is_nonnegative, (1-z).is_nonnegative))
