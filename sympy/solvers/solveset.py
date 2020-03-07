@@ -1028,23 +1028,24 @@ def _solveset(f, symbol, domain, _check=False):
                         f = FiniteSet(*f)
                         return f
                 elif domain.is_subset(S.Reals):
-                    indls = _tsolve(f,x)
-                    if indls is None or indls == []:
-                        return result
-                    elif indls is not None:
-                        if len(indls) == 1:
-                            if indls[0] == 0:
-                                return result
-                    if indls is not None:
-                        args = []
-                        j = -1
-                        for _ in indls:
-                            j += 1
-                            de = "{}".format(_)
-                            if 'I' not in de:
-                                args.append(indls[j])
-                        f = FiniteSet(*args)
-                        return f
+                    if not 'sqrt' in str(f) and len(str(f)) < 120:
+                        indls = _tsolve(f,x)
+                        if indls is None or indls == []:
+                            return result
+                        elif indls is not None:
+                            if len(indls) == 1:
+                                if indls[0] == 0:
+                                    return result
+                        if indls is not None:
+                            args = []
+                            j = -1
+                            for _ in indls:
+                                j += 1
+                                de = "{}".format(_)
+                                if 'I' not in de:
+                                    args.append(indls[j])
+                            f = FiniteSet(*args)
+                            return f
             else:
                 return result
         elif isinstance(result,ConditionSet):
