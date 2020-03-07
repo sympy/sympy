@@ -1874,6 +1874,8 @@ def get_linear_coeffs(eq, funcs):
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs):
+    from sympy.solvers.solveset import linear_eq_to_matrix
+
     match = dict()
     match["no_of_equation"] = len(eqs)
     match["eq"] = eqs
@@ -1895,33 +1897,62 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs):
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
 
+    # Getting coefficient matrix and rhs matrix(A and
+    # b)
+    terms = []
+    rep = {}
+    for func in funcs:
+        temp_terms = []
+        for k in range(order[func] + 1):
+            globals()["{}{}".format(type(func), k)] = symbols("{}{}".format(type(func), k))
+            rep[diff(func, t, k)] = globals()["{}{}".format(type(func), k)]
+            temp_terms += [globals()["{}{}".format(type(func), k)]]
+        terms += temp_terms
+    eqs_sub = [eq.subs(rep) for eq in eqs]
+
     # Linearity check
-    func_coef = {}
-    is_linear = True
-    for j, eq in enumerate(eqs):
-        if is_linear == True:
-            eq_coeffs = get_linear_coeffs(eq, funcs)
-            if eq_coeffs:
-                for term in eq_coeffs:
-                    func_coef[j, term] = eq_coeffs[term]
-            else:
-                is_linear = False
+    try:
+        A, b = linear_eq_to_matrix(eqs_sub, terms)
+        is_linear = True
 
-    match['func_coeff'] = func_coef
+        # Constant coefficient check
+        is_constant = True
+        for coef in A:
+            if is_constant == True:
+                if coef.as_independent(t, as_Add=True)[1] != 0:
+                    is_constant = False
+
+        # Homogeneous check
+        is_homogeneous = True
+        for rhs in b:
+            if is_homogeneous == True:
+                if rhs != 0:
+                    is_homogeneous = False
+
+    except:
+        is_linear = False
+        is_constant = None
+        is_homogeneous = None
+
+    # Old Linearity check
+    # func_coef = {}
+    # is_linear = True
+    # for j, eq in enumerate(eqs):
+    #     if is_linear == True:
+    #         eq_coeffs = get_linear_coeffs(eq, funcs)
+    #         if eq_coeffs:
+    #             for term in eq_coeffs:
+    #                 func_coef[j, term] = eq_coeffs[term]
+    #         else:
+    #             is_linear = False
+
     match['is_linear'] = is_linear
-
-    # Constant coefficient check
-    is_constant = True
-    for key in func_coef:
-        if is_constant == True:
-            if func_coef[key].as_independent(t, as_Add=True)[1] != 0:
-                is_constant = False
-
     match['is_constant'] = is_constant
+    match['is_homogeneous'] = is_homogeneous
 
     if match['is_linear'] and match['is_constant']:
         return match
-    return None
+    return match
 
 
 def classify_sysode(eq, funcs=None, **kwargs):
