@@ -410,6 +410,8 @@ def _bidiag_hholder(M, precision):
         for row in range(A.rows):
             for col in range(A.cols):
                 A[row, col] = round(A[row, col], precision)
+                if A[row, col] == 0.0:
+                    A[row, col] = 0
 
     return A
 
