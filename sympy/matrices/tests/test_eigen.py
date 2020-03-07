@@ -225,6 +225,30 @@ def test_left_eigenvects():
         assert vec_list[0]*M == val*vec_list[0]
 
 
+def test_bidiagonalize():
+    M = EigenOnlyMatrix([[1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]])
+    assert M.bidiagonalize() == M
+    assert M.bidiagonalize(upper=False) == M
+    assert M.bidiagonalize(precision=5) == M
+    assert M.bidiagonalize(precision=100) == M
+    M = EigenOnlyMatrix([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]])
+    assert M.bidiagonalize(precision=3) == Matrix([[8.124, 14.66, 0],
+                                            [0, 1.959, -0.501],
+                                            [0, 0, 0]])
+    M = EigenOnlyMatrix([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+                [10, 11, 12]])
+    assert M.bidiagonalize(precision=3) == Matrix([[12.884, 21.876, 0],
+                                            [0, 2.46, -0.613]
+                                            [0, 0, 0]
+                                            [0, 0, 0]])
+
+
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
     raises(MatrixError, lambda: m.diagonalize(reals_only=True))

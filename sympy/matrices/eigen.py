@@ -17,6 +17,7 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
+from sympy.core.evalf import N
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -370,6 +371,75 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
         return True
 
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
+
+
+def _householder_vector(x):
+    if not x.cols == 1:
+        raise ValueError("Input must be a column matrix")
+    m = x.rows
+    alp = x[1:, 0].T * x[1:, 0]
+    sig = alp[0, 0]
+    v = x.copy()
+    v[0, 0] = 1
+    sig = N(sig)
+    if sig == 0 and x[0] >= 0:
+        bet = 0
+    elif sig == 0 and x[0] < 0:
+        bet = -2
+    else:
+        mu = sqrt(x[0]*x[0] + sig)
+        if x[0] <= 0:
+            v[0] = x[0] - mu
+        else:
+            v[0] = -sig/(x[0]+mu)
+        bet = 2 * v[0] * v[0] /( sig + v[0]*v[0] )
+        v = v/v[0]
+    return v, bet
+
+
+def _bidiag_hholder(M, precision):
+    m = M.rows
+    n = M.cols
+    A = M.copy()
+    for i in range(min(m, n)):
+        v, bet = _householder_vector(A[i:, i])
+        A[i:, i:] = (M.eye(m-i) - bet * v * v.T)*A[i:, i:]
+        if i + 1 <= n - 2:
+            v, bet = _householder_vector(A[i, i+1:].T)
+            A[i:, i+1:] = A[i:, i+1:]*(M.eye(n-i-1)- bet*v*v.T)
+    if precision is not None:
+        for row in range(A.rows):
+            for col in range(A.cols):
+                A[row, col] = round(A[row, col], precision)
+
+    return A
+
+
+def _bidiagonalize(M, precision=12, upper=True):
+    """
+    Returns bidiagonalized form of the input Matrix.
+
+    Parameters
+    ==========
+
+    precision : int. Number of digits beside decimal point. (Default: 12)
+
+    upper : bool. Whether to do upper bidiagnalization or lower.True for upper
+                and False for lower.
+
+    """
+
+    if type(upper) is not bool:
+        raise ValueError("upper must be a boolean")
+
+
+    if not upper:
+        return M.T.bidiagonalize(method=method, precision=precision, upper=True).T
+
+    if type(precision) is not int:
+        raise ValueError("Precision must be a positive integer, default is 12")
+
+    return M._eval_bidiag_hholder(precision)
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):

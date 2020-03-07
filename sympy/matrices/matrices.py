@@ -37,7 +37,9 @@ from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
 
 from .eigen import (
-    _eigenvals, _eigenvects, _is_diagonalizable, _diagonalize,
+    _eigenvals, _eigenvects,
+    _bidiagonalize, _bidiag_hholder, _householder_vector,
+    _is_diagonalizable, _diagonalize,
     _eval_is_positive_definite,
     _is_positive_definite, _is_positive_semidefinite,
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
@@ -378,6 +380,15 @@ class MatrixEigen(MatrixSubspaces):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
                 normalize=normalize)
 
+    def _eval_bidiag_hholder(self, precision=12):
+        return _bidiag_hholder(self, precision=precision)
+
+    def bidiagonalize(self, precision=12, upper=True):
+        return _bidiagonalize(self, precision=precision, upper=upper)
+
+    def householder_vector(self):
+        return _householder_vector(self)
+
     @property
     def is_positive_definite(self):
         return _is_positive_definite(self)
@@ -420,6 +431,7 @@ class MatrixEigen(MatrixSubspaces):
     jordan_form.__doc__                = _jordan_form.__doc__
     left_eigenvects.__doc__            = _left_eigenvects.__doc__
     singular_values.__doc__            = _singular_values.__doc__
+    bidiagonalize.__doc__              = _bidiagonalize.__doc__
 
 
 class MatrixCalculus(MatrixCommon):
