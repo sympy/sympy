@@ -2108,8 +2108,6 @@ def test_solve_bivariate():
 @XFAIL
 def test_other_solve_lambert():
     assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(S.Zero, exp(a/2))
-
-    a = S(6)/5
     assert solveset_real(x**a - a**x, x) == \
         FiniteSet(6/5, 6*LambertW(log(5**(5/6)*6**(1/6)/6), -1)/(5*log(5/6)))
 
