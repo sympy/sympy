@@ -2103,11 +2103,11 @@ def test_solve_bivariate():
                      5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(3*log(7))/-1)
     assert result == ans
     assert solveset_real(eq.expand(), x) == result
+    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(S.Zero, exp(a/2))
 
 
 @XFAIL
 def test_other_solve_lambert():
-    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(S.Zero, exp(a/2))
     assert solveset_real(x**a - a**x, x) == \
         FiniteSet(a, -a*LambertW(-log(a)/a)/log(a))
 
