@@ -624,22 +624,26 @@ class LatexPrinter(Printer):
         # issue #12886: add parentheses around superscripts raised
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-        if '^' in base :
-            if expr.exp.is_Integer or expr.exp.is_Rational :
-                exp = r"{%s}" % exp
-            else:
-                exp = r"\left({%s}\right)" % exp
-            if "left(" not in base:
-                base = r"\left(%s\right)" % base
-        elif (isinstance(expr.base, Derivative)
+        if (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
-            base = base[6: -7]  #  remove outermost added parens
-            exp = r"{%s}" % exp
+            base = base[6: -7]  # remove outermost added parens
+            exp = r"{%s}" % exp 
+        elif expr.base.is_Pow :
+            if isinstance(expr.exp,Add) or expr.exp.is_Integer or expr.exp.is_Rational :
+                exp = r"{%s}" % exp
+            else:
+                exp = r"\left({%s}\right)" % exp
         else:
             exp = r"{%s}" % exp
+
+        ''' checks if base expression contains '^' and it is not considered 
+            in previous if statement and it doesnt already enclosed in bracket'''
+        if ('^' in base and (not expr.base.is_Pow) 
+            and ('left(' not in base)):     
+            base = r'\left(%s\right)' % base
 
         return template % (base, exp)
 
