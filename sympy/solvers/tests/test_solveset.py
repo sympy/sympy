@@ -1922,15 +1922,13 @@ def test_exponential_symbols():
         x, Ne(a, 0) & Ne(b, 0), FiniteSet(0))
 
 
-@XFAIL
 def test_issue_10864():
     assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)
 
 
-@XFAIL
 def test_solve_only_exp_2():
     assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
-        FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
+        FiniteSet(log(7 - 4*sqrt(3)), log(4*sqrt(3) + 7))
 
 
 def test_is_exponential():
@@ -2083,7 +2081,7 @@ def test_solve_lambert():
 
     assert solveset_real(log(log(x - 3)) + log(x-3), x) == FiniteSet(
         exp(LambertW(1)) + 3)
-    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(0, exp(a/2))
+    assert solveset_real(-a*x + 2*x*log(x), x) == FiniteSet(S.Zero, exp(a/2))
 
     assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
         FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
