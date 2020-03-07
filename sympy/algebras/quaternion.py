@@ -124,7 +124,7 @@ class Quaternion(Expr):
 
     def diff(self, *symbols, **kwargs):
         kwargs.setdefault('evaluate', True)
-        return self.func(*[a.diff(*symbols, **kwargs) for a  in self.args])
+        return Quaternion(*[a.diff(*symbols, **kwargs) for a  in self.args])
 
     def add(self, other):
         """Adds quaternions.
