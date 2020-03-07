@@ -1019,7 +1019,8 @@ def _solveset(f, symbol, domain, _check=False):
             f = f.subs({symbol: x})
             if _is_lambert(f,x):
                 if result.has(cos,sin):
-                    if (result.has(exp)) or (f.has(sqrt(x))):
+                    if (result.has(exp)) or (f.has(sqrt(x))) or\
+                        'Abs' in str(f):
                         return result
                     elif not domain.is_subset(S.Integers) and \
                         ((result.has(cos) and not result.has(sin)) or \
