@@ -178,24 +178,22 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ A random realization from the distribution """
         if not size:
             size = 1
-        if hasattr(self,'_sample_python'):
+        if hasattr(self, '_sample_python'):
             samp = self._sample_python(size)
             return samp if size != 1 else samp[0]
-        elif hasattr(self,'_sample_numpy') and import_module('numpy'):
-            samp = self._sample_numpy(size)
-            return samp if size != 1 else samp[0]
-        elif hasattr(self,'_sample_scipy') and import_module('scipy'):
-            samp = self._sample_scipy(size)
-            return samp if size != 1 else samp[0]
-        elif hasattr(self,'_sample_pymc3') and import_module('pymc3'):
-            samp = self._sample_pymc3(size)
-            return samp if size != 1 else samp[0]
+
+        libraries = ['numpy', 'scipy', 'pymc3']
+        for lib in libraries:
+            if hasattr(self, '_sample_' + lib ) and import_module(lib):
+                samp_method = getattr(self, '_sample_' + lib)
+                samp = samp_method(size)
+                return samp if size != 1 else samp[0]
+
+        icdf = self._inverse_cdf_expression()
+        if not size:
+            return icdf(random.uniform(0, 1))
         else:
-            icdf = self._inverse_cdf_expression()
-            if not size:
-                return icdf(random.uniform(0, 1))
-            else:
-                return [icdf(random.uniform(0, 1))]*size
+            return [icdf(random.uniform(0, 1))]*size
 
     @cacheit
     def _inverse_cdf_expression(self):
