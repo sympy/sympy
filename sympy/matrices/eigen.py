@@ -425,8 +425,8 @@ def _bidiagonalize(M, precision=None, upper=True):
     precision : int. Number of digits beside decimal point.
                 Default: None, which makes all the computation to be done symbollically
 
-    upper : bool. Whether to do upper bidiagnalization or lower.True for upper
-                and False for lower.
+    upper : bool. Whether to do upper bidiagnalization or lower.
+                True for upper and False for lower.
 
     """
 

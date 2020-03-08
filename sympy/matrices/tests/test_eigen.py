@@ -234,15 +234,15 @@ def test_bidiagonalize():
     assert M.bidiagonalize(precision=5) == M
     assert M.bidiagonalize(precision=100) == M
 
-    M = Matrix(5,10,[0]*50)
+    M = Matrix(5, 10, [0]*50)
     assert M.bidiagonalize() == M
 
-    M = Matrix([1,2])
+    M = Matrix([1, 2])
     N = M.bidiagonalize()
     N.simplify()
     assert N == Matrix([[sqrt(5)], [0]])
 
-    M = Matrix(2,2,range(1,5))
+    M = Matrix(2, 2, range(1, 5))
     N = M.bidiagonalize()
     N.simplify()
     assert N == Matrix([[sqrt(10), 7*sqrt(10)/5], [0, sqrt(10)/5]])
