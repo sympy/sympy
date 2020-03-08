@@ -24,7 +24,7 @@ from sympy.matrices.expressions import MatPow
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
-# don't re-order this list
+# don't re-order this tuple
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 
 def test_issue_17247_expression_blowup_29():
