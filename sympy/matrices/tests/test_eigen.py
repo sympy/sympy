@@ -247,7 +247,7 @@ def test_bidiagonalize():
     N.simplify()
     assert N == Matrix([[sqrt(10), 7*sqrt(10)/5], [0, sqrt(10)/5]])
 
-        
+
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
     raises(MatrixError, lambda: m.diagonalize(reals_only=True))

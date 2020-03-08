@@ -38,7 +38,7 @@ from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
 
 from .eigen import (
     _eigenvals, _eigenvects,
-    _bidiagonalize, _bidiag_hholder, _householder_vector,
+    _bidiagonalize, _bidiag_hholder,
     _is_diagonalizable, _diagonalize,
     _eval_is_positive_definite,
     _is_positive_definite, _is_positive_semidefinite,
