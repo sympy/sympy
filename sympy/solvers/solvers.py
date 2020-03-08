@@ -14,7 +14,7 @@ This module contain solvers for all kinds of equations:
 
 from __future__ import print_function, division
 
-from sympy import divisors
+from sympy import divisors, binomial, Eq, expand_func
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
@@ -927,10 +927,6 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
 
-    from sympy import binomial, Eq, expand_func
-    if type(f) == binomial or (type(f) == Eq and type(f.lhs) == binomial):
-        f = expand_func(f)
-
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
@@ -977,6 +973,9 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
+        if isinstance(fi, binomial) or (isinstance(fi, Eq) and isinstance(fi.lhs, binomial)):
+            fi = expand_func(fi)
+           
         if isinstance(fi, (Equality, Unequality)):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
                 fi = fi.lhs - fi.rhs
