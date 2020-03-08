@@ -529,8 +529,6 @@ def test_issue_18509():
 
 
 def test_issue_18762():
-    from sympy.abc import psi, epsilon
-    g0 = Symbol('g')
-    g0 = sqrt(1 + (epsilon)**2 - 2*(epsilon)*cos(psi))
-    assert str(g0.series(x = epsilon, x0 = 1, n = 3)) == '(epsilon - 1)*(-cos(psi)/sqrt(2 - 2*cos(psi)) + 1/sqrt(2 - 2*cos(psi))) + (epsilon - 1)**2*(-sqrt(2 - 2*cos(psi))*cos(psi)**2/(2*(4*cos(psi)**2 - 8*cos(psi) + 4)) + sqrt(2 - 2*cos(psi))*cos(psi)/(4*cos(psi)**2 - 8*cos(psi) + 4) - sqrt(2 - 2*cos(psi))/(2*(4*cos(psi)**2 - 8*cos(psi) + 4)) + 1/(2*sqrt(2 - 2*cos(psi)))) + sqrt(2 - 2*cos(psi)) + O((epsilon - 1)**3, (epsilon, 1))'
-    assert str(g0.series(x = epsilon, x0 = 0.5, n = 3)) == '(epsilon - 0.5)*(-1.11803398874989*sqrt(1 - 0.8*cos(psi))*cos(psi)/(1.25 - 1.0*cos(psi)) + 0.559016994374947*sqrt(1 - 0.8*cos(psi))/(1.25 - 1.0*cos(psi))) + (epsilon - 0.5)**2*(-0.357770876399966*sqrt(1 - 0.8*cos(psi))*cos(psi)**2/(0.64*cos(psi)**2 - 1.6*cos(psi) + 1) + 0.357770876399966*sqrt(1 - 0.8*cos(psi))*cos(psi)/(0.64*cos(psi)**2 - 1.6*cos(psi) + 1) - 0.0894427190999916*sqrt(1 - 0.8*cos(psi))/(0.64*cos(psi)**2 - 1.6*cos(psi) + 1) + 0.559016994374947*sqrt(1 - 0.8*cos(psi))/(1.25 - 1.0*cos(psi))) + 1.11803398874989*sqrt(1 - 0.8*cos(psi)) + O((epsilon - 0.5)**3, (epsilon, 0.5))'
+    e, p = symbols('e p')
+    g0 = sqrt(1 + e**2 - 2*e*cos(p))
+    assert len(g0.series(e, 1, 3).args) == 4
