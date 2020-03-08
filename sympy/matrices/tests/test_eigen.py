@@ -233,22 +233,21 @@ def test_bidiagonalize():
     assert M.bidiagonalize(upper=False) == M
     assert M.bidiagonalize(precision=5) == M
     assert M.bidiagonalize(precision=100) == M
-    M = Matrix([[1, 2, 3],
-                [4, 5, 6],
-                [7, 8, 9]])
-    assert M.bidiagonalize(precision=3) == Matrix([[8.124, 14.66, 0],
-                                            [0, 1.959, -0.501],
-                                            [0, 0, 0]])
-    M = Matrix([[1, 2, 3],
-                [4, 5, 6],
-                [7, 8, 9],
-                [10, 11, 12]])
-    assert M.bidiagonalize(precision=3) == Matrix([[12.884, 21.876, 0],
-                                            [0, 2.46, -0.613],
-                                            [0, 0, 0],
-                                            [0, 0, 0]])
 
+    M = Matrix(5,10,[0]*50)
+    assert M.bidiagonalize() == M
 
+    M = Matrix([1,2])
+    N = M.bidiagonalize()
+    N.simplify()
+    assert N == Matrix([[sqrt(5)], [0]])
+
+    M = Matrix(2,2,range(1,5))
+    N = M.bidiagonalize()
+    N.simplify()
+    assert N == Matrix([[sqrt(10), 7*sqrt(10)/5], [0, sqrt(10)/5]])
+
+        
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
     raises(MatrixError, lambda: m.diagonalize(reals_only=True))
