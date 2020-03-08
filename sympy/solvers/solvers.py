@@ -928,8 +928,8 @@ def solve(f, *symbols, **flags):
     ###########################################################################
 
     from sympy import binomial, Eq, expand_func
-        if type(f) == binomial or (type(f) == Eq and type(f.lhs) == binomial):
-            f = expand_func(f)
+    if type(f) == binomial or (type(f) == Eq and type(f.lhs) == binomial):
+        f = expand_func(f)
 
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
