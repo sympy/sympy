@@ -1062,8 +1062,8 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
                 self.ax[i].spines['top'].set_color('none')
-                self.ax[i].spines['left'].set_smart_bounds(True)
-                self.ax[i].spines['bottom'].set_smart_bounds(False)
+                # self.ax[i].spines['left'].set_smart_bounds(True)
+                # self.ax[i].spines['bottom'].set_smart_bounds(False)
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
@@ -1536,6 +1536,10 @@ def plot(*args, **kwargs):
     Plot, LineOver1DRangeSeries
 
     """
+    from sympy import fraction
+    from sympy.solvers import solve
+    from sympy import real_roots
+
     args = list(map(sympify, args))
     free = set()
     for a in args:
@@ -1553,6 +1557,25 @@ def plot(*args, **kwargs):
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
+    new_plot = []
+    for arg in plot_expr:
+        expr = arg[0]
+        limit = arg[1]
+        frac = fraction(expr) #to find the denominator
+        if not frac[1].is_integer:
+            root_deno = real_roots(frac[1])   #to find the points of discontinuity
+            new_limit = []
+            for root in root_deno:
+                left_limit = (limit[0], limit[1] , root)
+                new_limit.append(left_limit)
+                limit = list(limit)
+                limit[1]= root
+                limit = tuple(limit)
+            if root_deno:
+                new_limit.append(limit)
+                for lim in new_limit:
+                    new_plot.append((expr, lim))
+                series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in new_plot]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
