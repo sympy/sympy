@@ -60,7 +60,8 @@ def test_And():
     e = A > 1
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
-    assert And(g, l, ge, le) == And(l, le)
+    assert And(g, l, ge, le) == And(ge, g)
+    assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
 
 
 def test_Or():
