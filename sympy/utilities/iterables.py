@@ -19,9 +19,10 @@ from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
 
-def is_palindromic(s):
+def is_palindromic(s, i=0, j=None):
     """return True if the sequence is the same from left to right as it
-    is from right to left.
+    is from right to left in the whole sequence (default) or in the
+    Python slice ``s[i: j]``; else False.
 
     EXAMPLES
     ========
@@ -29,16 +30,27 @@ def is_palindromic(s):
     >>> from sympy.utilities.iterables import is_palindromic
     >>> is_palindromic([1, 0, 1])
     True
-    >>> is_palindromic('abc')
+    >>> is_palindromic('abcbb')
     False
+    >>> is_palindromic('abcbb', 1)
+    False
+
+    Normal Python slicing is performed in place so there is no need to
+    create a slice of the sequence for testing:
+
+    >>> is_palindromic('abcbb', 1, -1)
+    True
+    >>> is_palindromic('abcbb', -4, -1)
+    True
 
     See Also
     ========
     sympy.ntheory.digits.is_palindromic
     """
-    m = len(s)//2
+    i, j, _ = slice(i, j).indices(len(s))
+    m = (j - i)//2
     # if length is odd, middle element will be ignored
-    return all(s[i] == s[-i - 1] for i in range(m))
+    return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
 def flatten(iterable, levels=None, cls=None):

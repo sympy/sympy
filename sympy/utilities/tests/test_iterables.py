@@ -36,6 +36,13 @@ def test_is_palindromic():
     assert is_palindromic('xyx')
     assert not is_palindromic('xy')
     assert not is_palindromic('xyzx')
+    assert is_palindromic('xxyzzyx', 1)
+    assert not is_palindromic('xxyzzyx', 2)
+    assert is_palindromic('xxyzzyx', 2, -1)
+    assert is_palindromic('xxyzzyx', 2, 6)
+    assert is_palindromic('xxyzyx', 1)
+    assert not is_palindromic('xxyzyx', 2)
+    assert is_palindromic('xxyzyx', 2, 2 + 3)
 
 
 def test_postorder_traversal():

@@ -75,7 +75,9 @@ def count_digits(n, base=10):
     >>> [i for i in range(10) if c77[i] == 7]
     [1, 3, 7, 9]
     """
-    return defaultdict(int, multiset(digits(n, base)[1:]).items())
+    rv = defaultdict(int, multiset(digits(n, base)).items())
+    rv.pop(base) if base in rv else rv.pop(-base)
+    return rv
 
 
 def is_palindromic(n, base=10):
@@ -113,21 +115,4 @@ def is_palindromic(n, base=10):
     True
 
     """
-    try:
-        n = as_int(n)
-    except ValueError:
-        n = int(n)
-    base = as_int(base)
-
-    if base < 2:
-        raise ValueError('The base must be at least 2')
-
-    if n < 0:
-        n = -n
-
-    _str = {2: bin, 8: oct, 16: hex}.get(base, '')
-    if _str:
-        s = _str(n)[2:]  # ignore sign and 2 char base indicator
-    else:
-        s = str(n)
-    return _palindromic(s)
+    return _palindromic(digits(n, base), 1)
