@@ -1000,7 +1000,7 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if fi.has(binomial):
-            f[i] = fi.replace(lambda expr: binomial, lambda expr: expand_func(expr))
+            f[i] = fi.replace(lambda exp: binomial, lambda exp: expand_func(exp))
 
         if fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
