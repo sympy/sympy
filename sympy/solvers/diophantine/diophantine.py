@@ -180,6 +180,7 @@ class DiophantineEquationType:
         self.homogeneous = 1 not in self.coeff
         self.homogeneous_order = not (set(self.coeff) & set(self.free_symbols))
         self.dimension = len(self.free_symbols)
+        self._parameters = None
 
     def matches(self):
         """
@@ -187,11 +188,28 @@ class DiophantineEquationType:
         """
         return False
 
-    def get_parameters(self):
-        return symbols('t_:%i' % (self.dimension + 1,), integer=True)
+    @property
+    def n_parameters(self):
+        return self.dimension
+
+    @property
+    def parameters(self):
+        if self._parameters is None:
+            self._parameters = symbols('t_:%i' % (self.n_parameters,), integer=True)
+        return self._parameters
 
     def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
         raise NotImplementedError('No solver has been written for %s.' % self.name)
+
+    def pre_solve(self, parameters=None):
+        if not self.matches():
+            raise ValueError("This equation does not match the %s equation type." % self.name)
+
+        if parameters is not None:
+            if len(parameters) != self.n_parameters:
+                raise ValueError("Expected %s parameter(s) but got %s" % (self.n_parameters, len(parameters)))
+
+        self._parameters = parameters
 
 
 class Univariate(DiophantineEquationType):
@@ -218,12 +236,9 @@ class Univariate(DiophantineEquationType):
         return self.dimension == 1
 
     def solve(self, parameters=None, limit=None):
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
-        result = DiophantineSolutionSet(self.free_symbols, parameters=parameters)
+        result = DiophantineSolutionSet(self.free_symbols, parameters=self.parameters)
         for i in solveset_real(self.equation, self.free_symbols[0]).intersect(S.Integers):
             result.add((i,))
         return result
@@ -260,14 +275,8 @@ class Linear(DiophantineEquationType):
     def matches(self):
         return self.total_degree == 1
 
-    def get_parameters(self):
-        return symbols('t_:%i' % (self.dimension,), integer=True)
-
     def solve(self, parameters=None, limit=None):
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         coeff = self.coeff
         var = self.free_symbols
@@ -279,7 +288,7 @@ class Linear(DiophantineEquationType):
         else:
             c = 0
 
-        result = DiophantineSolutionSet(var, parameters=parameters)
+        result = DiophantineSolutionSet(var, parameters=self.parameters)
         params = result.parameters
 
         if len(var) == 1:
@@ -472,14 +481,8 @@ class BinaryQuadratic(DiophantineEquationType):
     def matches(self):
         return self.total_degree == 2 and self.dimension == 2
 
-    def get_parameters(self):
-        return symbols('%s1:%i' % ("t", 3), integer=True)
-
     def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         var = self.free_symbols
         coeff = self.coeff
@@ -500,7 +503,7 @@ class BinaryQuadratic(DiophantineEquationType):
         # We consider two cases; DE - BF = 0 and DE - BF != 0
         # More details, http://www.alpertron.com.ar/METHODS.HTM#SHyperb
 
-        result = DiophantineSolutionSet(var, parameters)
+        result = DiophantineSolutionSet(var, self.parameters)
         t, u = result.parameters
 
         discr = B**2 - 4*A*C
@@ -711,10 +714,7 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
         return len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols)
 
     def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         var = self.free_symbols
         coeff = self.coeff
@@ -731,7 +731,7 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
         A = -a_2*c_2
         B = -b_2*c_2
 
-        result = DiophantineSolutionSet(var, parameters=parameters)
+        result = DiophantineSolutionSet(var, parameters=self.parameters)
 
         # If following two conditions are satisfied then there are no solutions
         if A < 0 and B < 0:
@@ -803,10 +803,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         return not (len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols))
 
     def solve(self, parameters=None, limit=None):
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         _var = self.free_symbols
         coeff = self.coeff
@@ -823,7 +820,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
         # using methods for binary quadratic diophantine equations. Let's select the
         # solution which minimizes |x| + |z|
 
-        result = DiophantineSolutionSet(var, parameters=parameters)
+        result = DiophantineSolutionSet(var, parameters=self.parameters)
 
         def unpack_sol(sol):
             if len(sol) > 0:
@@ -1012,16 +1009,13 @@ class GeneralSumOfSquares(DiophantineEquationType):
         return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
 
     def solve(self, parameters=None, limit=1):
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         var = self.free_symbols
         k = -int(self.coeff[1])
         n = self.dimension
 
-        result = DiophantineSolutionSet(var, parameters=parameters)
+        result = DiophantineSolutionSet(var, parameters=self.parameters)
 
         if k < 0 or limit < 1:
             return result
@@ -1052,7 +1046,7 @@ class GeneralPythagorean(DiophantineEquationType):
     >>> from sympy.solvers.diophantine.diophantine import GeneralPythagorean
     >>> from sympy.abc import a, b, c, d, e, x, y, z, t, u
     >>> GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve()
-    {(t1**2 + t2**2 - t3**2, 2*t1*t3, 2*t2*t3, t1**2 + t2**2 + t3**2)}
+    {(t_0**2 + t_1**2 - t_2**2, 2*t_0*t_2, 2*t_1*t_2, t_0**2 + t_1**2 + t_2**2)}
     >>> GeneralPythagorean(9*a**2 - 4*b**2 + 16*c**2 + 25*d**2 + e**2).solve(parameters=[x, y, z, t])
     {(-10*t**2 + 10*x**2 + 10*y**2 + 10*z**2, 15*t**2 + 15*x**2 + 15*y**2 + 15*z**2, 15*t*x, 12*t*y, 60*t*z)}
     """
@@ -1074,14 +1068,12 @@ class GeneralPythagorean(DiophantineEquationType):
         # e.g. 4*x**2 + y**2 - 4*z**2
         return abs(sum(sign(self.coeff[k]) for k in self.coeff)) == self.dimension - 2
 
-    def get_parameters(self):
-        return symbols('%s1:%i' % ("t", self.dimension), integer=True)
+    @property
+    def n_parameters(self):
+        return self.dimension - 1
 
     def solve(self, parameters=None, limit=1):
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         coeff = self.coeff
         var = self.free_symbols
@@ -1091,7 +1083,7 @@ class GeneralPythagorean(DiophantineEquationType):
             for key in coeff.keys():
                 coeff[key] = -coeff[key]
 
-        result = DiophantineSolutionSet(var, parameters=parameters)
+        result = DiophantineSolutionSet(var, parameters=self.parameters)
 
         index = 0
 
@@ -1178,10 +1170,7 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
         return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
 
     def solve(self, parameters=None, limit=1):
-        if not self.matches():
-            raise ValueError("This equation does not match the %s equation type." % self.name)
-        if parameters is None:
-            parameters = self.get_parameters()
+        self.pre_solve(parameters)
 
         var = self.free_symbols
         coeff = self.coeff
@@ -1194,7 +1183,7 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
         k = len(var)
         n = -coeff[1]
 
-        result = DiophantineSolutionSet(var, parameters=parameters)
+        result = DiophantineSolutionSet(var, parameters=self.parameters)
 
         if n < 0 or limit < 1:
             return result
