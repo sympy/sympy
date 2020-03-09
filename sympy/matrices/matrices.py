@@ -380,11 +380,11 @@ class MatrixEigen(MatrixSubspaces):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
                 normalize=normalize)
 
-    def _eval_bidiag_hholder(self, precision=None):
-        return _bidiag_hholder(self, precision=precision)
+    def _eval_bidiag_hholder(self):
+        return _bidiag_hholder(self)
 
-    def bidiagonalize(self, precision=None, upper=True):
-        return _bidiagonalize(self, precision=precision, upper=upper)
+    def bidiagonalize(self, upper=True):
+        return _bidiagonalize(self, upper=upper)
 
     @property
     def is_positive_definite(self):

@@ -373,74 +373,71 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
 
 
-def _householder_vector(x, precision):
+def _householder_vector(x):
     if not x.cols == 1:
         raise ValueError("Input must be a column matrix")
     alp = x[1:, 0].T * x[1:, 0]
     sig = alp[0, 0]
     v = x.copy()
     v[0, 0] = 1
-    if precision is not None:
-        sig = N(sig)
-    if N(sig) == 0 and x[0] >= 0:
+    if sig == 0:
         bet = 0
-    elif N(sig) == 0 and x[0] < 0:
-        bet = -2
     else:
         mu = sqrt(x[0]*x[0] + sig)
         if x[0] <= 0:
             v[0] = x[0] - mu
         else:
             v[0] = -sig/(x[0]+mu)
-        bet = 2 * v[0] * v[0] /( sig + v[0]*v[0] )
-        v = v/v[0]
+        bet = 2 /( sig + v[0]*v[0] )
     return v, bet
 
 
-def _bidiag_hholder(M, precision):
+def _bidiag_hholder(M):
     m = M.rows
     n = M.cols
-    A = M.copy()
+    A = M.applyfunc(Float)
+    U, V = M.eye(m), M.eye(n)
     for i in range(min(m, n)):
-        v, bet = _householder_vector(A[i:, i], precision)
-        A[i:, i:] = (M.eye(m-i) - bet * v * v.T)*A[i:, i:]
+        v, bet = _householder_vector(A[i:, i])
+        hh_mat = M.eye(m-i) - bet * v * v.T
+        A[i:, i:] = hh_mat * A[i:, i:]
+        temp = M.eye(m)
+        temp[i:, i:] = hh_mat
+        U = U * temp
         if i + 1 <= n - 2:
-            v, bet = _householder_vector(A[i, i+1:].T, precision)
-            A[i:, i+1:] = A[i:, i+1:]*(M.eye(n-i-1)- bet*v*v.T)
-    if precision is not None:
-        for row in range(A.rows):
-            for col in range(A.cols):
-                A[row, col] = round(A[row, col], precision)
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = (M.eye(n-i-1)- bet*v*v.T)
+            A[i:, i+1:] = A[i:, i+1:]* hh_mat
+            temp = M.eye(n)
+            temp[i+1:, i+1:] = hh_mat
+            V = temp * V
+    return U, A, V
 
-    return A
 
-
-def _bidiagonalize(M, precision=None, upper=True):
+def _bidiagonalize(M, upper=True):
     """
-    Returns bidiagonalized form of the input Matrix.
+    Returns (U,B,V)
+
+    A = U * B * V
+
+    where A is the input matrix, and B is its Bidiagonalized form.
+
 
     Parameters
     ==========
-
-    precision : int. Number of digits beside decimal point.
-                Default: None, which makes all the computation to be done symbollically
 
     upper : bool. Whether to do upper bidiagnalization or lower.
                 True for upper and False for lower.
 
     """
-
+    M.evalf()
     if type(upper) is not bool:
         raise ValueError("upper must be a boolean")
 
-
     if not upper:
-        return M.T.bidiagonalize(precision=precision, upper=True).T
+        return M.T.bidiagonalize().T
 
-    if type(precision) is not int and precision is not None:
-        raise ValueError("Precision must be a positive integer or None, default is None")
-
-    return M._eval_bidiag_hholder(precision)
+    return M._eval_bidiag_hholder()
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
