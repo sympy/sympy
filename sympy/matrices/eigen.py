@@ -435,7 +435,8 @@ def _bidiagonalize(M, upper=True):
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        return M.T.bidiagonalize().T
+        X = M.T.bidiagonalize()
+        return X[0].T, X[1].T, X[2].T
 
     return M._eval_bidiag_hholder()
 
