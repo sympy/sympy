@@ -2251,12 +2251,9 @@ def generate_derangements(perm):
     ========
     sympy.functions.combinatorial.factorials.subfactorial
     """
-    p = multiset_permutations(perm)
-    indices = range(len(perm))
-    p0 = next(p)
-    for pi in p:
-        if all(pi[i] != p0[i] for i in indices):
-            yield pi
+    for p in multiset_permutations(perm):
+        if not any(i == j for i, j in zip(perm, p)):
+            yield p
 
 
 def necklaces(n, k, free=False):
