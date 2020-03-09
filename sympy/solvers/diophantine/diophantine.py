@@ -1758,7 +1758,11 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == Linear.name:
-        result = Linear(eq).solve()
+        parameters = None
+        if param is not None:
+            parameters = symbols('%s_0:%i' % (param, len(var)), integer=True)
+
+        result = Linear(eq).solve(parameters=parameters)
 
         if param is None:
             result = result(*[0]*len(result.parameters))
