@@ -543,6 +543,7 @@ def test_derangements():
         [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
     assert list(generate_derangements([0, 1, 2, 2])) == [
         [2, 2, 0, 1], [2, 2, 1, 0]]
+    assert list(generate_derangements('ba')) == [list('ab')]
 
 
 def test_necklaces():
