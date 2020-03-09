@@ -19,6 +19,28 @@ from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
 
+def is_palindromic(s):
+    """return True if the sequence is the same from left to right as it
+    is from right to left.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.utilities.iterables import is_palindromic
+    >>> is_palindromic([1, 0, 1])
+    True
+    >>> is_palindromic('abc')
+    False
+
+    See Also
+    ========
+    sympy.ntheory.digits.is_palindromic
+    """
+    m = len(s)//2
+    # if length is odd, middle element will be ignored
+    return all(s[i] == s[-i - 1] for i in range(m))
+
+
 def flatten(iterable, levels=None, cls=None):
     """
     Recursively denest iterable containers.
