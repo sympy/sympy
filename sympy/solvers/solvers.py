@@ -1029,6 +1029,7 @@ def solve(f, *symbols, **flags):
                 if bare_f:
                     bare_f = False
                 f[i: i + 1] = [fr, fi]
+
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
         if flags.get('set', False):
