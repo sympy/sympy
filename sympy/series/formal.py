@@ -1222,10 +1222,10 @@ class FormalPowerSeries(SeriesBase):
         .. math::
             B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
                 \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
-                    \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
-                        \left(\frac{x_1}{1!} \right)^{j_1}
-                            \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
-                                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
+                \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                \left(\frac{x_1}{1!} \right)^{j_1}
+                \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
 
         * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
           `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
