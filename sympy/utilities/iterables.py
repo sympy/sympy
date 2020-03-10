@@ -45,7 +45,9 @@ def is_palindromic(s, i=0, j=None):
 
     See Also
     ========
-    sympy.ntheory.digits.is_palindromic
+
+    sympy.ntheory.digits.is_palindromic: tests integers
+
     """
     i, j, _ = slice(i, j).indices(len(s))
     m = (j - i)//2
@@ -204,7 +206,9 @@ def group(seq, multiple=True):
 
     See Also
     ========
+
     multiset
+
     """
     if not seq:
         return []
@@ -311,7 +315,9 @@ def multiset(seq):
 
     See Also
     ========
+
     group
+
     """
     rv = defaultdict(int)
     for s in seq:
@@ -795,6 +801,7 @@ def sift(seq, keyfunc, binary=False):
     ========
 
     ordered
+
     """
     if not binary:
         m = defaultdict(list)
@@ -1101,7 +1108,7 @@ def strongly_connected_components(G):
     See Also
     ========
 
-    sympy.utilities.iterables.connected_components()
+    sympy.utilities.iterables.connected_components
 
     """
     # Map from a vertex to its neighbours
@@ -1215,7 +1222,7 @@ def connected_components(G):
     See Also
     ========
 
-    sympy.utilities.iterables.strongly_connected_components()
+    sympy.utilities.iterables.strongly_connected_components
 
     """
     # Duplicate edges both ways so that the graph is effectively undirected
@@ -1435,7 +1442,7 @@ def _partition(seq, vector, m=None):
     See Also
     ========
 
-    combinatorics.partitions.Partition.from_rgs()
+    combinatorics.partitions.Partition.from_rgs
 
     """
     if m is None:
@@ -1600,8 +1607,8 @@ def multiset_partitions(multiset, m=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     sympy.functions.combinatorial.numbers.nT
-    """
 
+    """
     # This function looks at the supplied input and dispatches to
     # several special-case routines as they apply.
     if type(multiset) is int:
@@ -1752,6 +1759,7 @@ def partitions(n, m=None, k=None, size=False):
 
     See Also
     ========
+
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
 
@@ -2163,6 +2171,7 @@ def generate_bell(n):
 
     See Also
     ========
+
     sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
@@ -2283,7 +2292,9 @@ def generate_derangements(perm):
 
     See Also
     ========
+
     sympy.functions.combinatorial.factorials.subfactorial
+
     """
     p = multiset_permutations(perm)
     indices = range(len(perm))
@@ -2580,6 +2591,7 @@ def kbins(l, k, ordered=None):
 
     See Also
     ========
+
     partitions, multiset_partitions
 
     """
