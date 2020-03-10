@@ -2413,7 +2413,6 @@ class MatrixArithmetic(MatrixRequired):
             log_X = log_X*exp
         else:
             ValueError("Invalid input for side")
-        print(log_X)
         return log_X.exp()
 
     def pow(self, exp, method=None):
