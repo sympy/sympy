@@ -372,22 +372,27 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
 
 
+#G&VL, Matrix Computations, Algo 5.4.2
 def _householder_vector(x):
     if not x.cols == 1:
         raise ValueError("Input must be a column matrix")
-    alp = x[1:, 0].T * x[1:, 0]
-    sig = alp[0, 0]
     v = x.copy()
-    v[0, 0] = 1
-    if sig == 0:
+    v_plus = x.copy()
+    v_minus = x.copy()
+    q = x[0, 0]/abs(x[0, 0])
+    norm_x = x.norm()
+    v_plus[0, 0] = x[0, 0] + q * norm_x
+    v_minus[0, 0] = x[0,0] - q * norm_x
+    if x[1:, 0].norm() == 0:
         bet = 0
+        v[0, 0] = 1
     else:
-        mu = sqrt(x[0]*x[0] + sig)
-        if x[0] <= 0:
-            v[0] = x[0] - mu
+        if v_plus.norm() <= v_minus.norm():
+            v = v_plus
         else:
-            v[0] = -sig/( x[0] + mu )
-        bet = 2 /( sig + v[0]*v[0] )
+            v = v_minus
+        v = v/v[0]    
+        bet = 2 /(v.norm()**2)
     return v, bet
 
 
@@ -398,14 +403,15 @@ def _bidiagonal_decmp_hholder(M):
     U, V = M.eye(m), M.eye(n)
     for i in range(min(m, n)):
         v, bet = _householder_vector(A[i:, i])
-        hh_mat = M.eye(m - i) - bet * v * v.T
+        hh_mat = M.eye(m - i) - bet * v * v.H
         A[i:, i:] = hh_mat * A[i:, i:]
         temp = M.eye(m)
         temp[i:, i:] = hh_mat
         U = U * temp
+        return U, A, V
         if i + 1 <= n - 2:
             v, bet = _householder_vector( A[i, i+1:].T )
-            hh_mat = M.eye(n - i - 1)- bet * v * v.T 
+            hh_mat = M.eye(n - i - 1)- bet * v * v.H 
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
             temp = M.eye(n)
             temp[i+1:, i+1:] = hh_mat
@@ -419,11 +425,11 @@ def _eval_bidiag_hholder(M):
     A = M.copy()
     for i in range(min(m, n)):
         v, bet = _householder_vector(A[i:, i])
-        hh_mat = M.eye(m-i) - bet * v * v.T
+        hh_mat = M.eye(m-i) - bet * v * v.H
         A[i:, i:] = hh_mat * A[i:, i:]
         if i + 1 <= n - 2:
             v, bet = _householder_vector(A[i, i+1:].T)
-            hh_mat = M.eye(n-i-1)- bet * v * v.T
+            hh_mat = M.eye(n-i-1)- bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
     return A
 
@@ -449,8 +455,8 @@ def _bidiagonal_decomposition(M, upper=True):
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        X = M.T.bidiagonal_decmp_hholder()
-        return X[2].T, X[1].T, X[0].T
+        X = M.H.bidiagonal_decmp_hholder()
+        return X[2].H, X[1].H, X[0].H
 
     return M.bidiagonal_decmp_hholder()
 
@@ -476,7 +482,7 @@ def _bidiagonalize(M, upper=True):
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        return M.T.bidiagonalize().T
+        return M.H.bidiagonalize().H
 
     return M._bidiag_hholder()
 
