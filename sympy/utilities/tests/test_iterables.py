@@ -18,7 +18,7 @@ from sympy.utilities.iterables import (
     ordered, partitions, permutations, postfixes, postorder_traversal,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
-    uniq, variations, ordered_partitions, rotations)
+    uniq, variations, ordered_partitions, rotations, is_palindromic)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -27,6 +27,22 @@ from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
+
+
+def test_is_palindromic():
+    assert is_palindromic('')
+    assert is_palindromic('x')
+    assert is_palindromic('xx')
+    assert is_palindromic('xyx')
+    assert not is_palindromic('xy')
+    assert not is_palindromic('xyzx')
+    assert is_palindromic('xxyzzyx', 1)
+    assert not is_palindromic('xxyzzyx', 2)
+    assert is_palindromic('xxyzzyx', 2, -1)
+    assert is_palindromic('xxyzzyx', 2, 6)
+    assert is_palindromic('xxyzyx', 1)
+    assert not is_palindromic('xxyzyx', 2)
+    assert is_palindromic('xxyzyx', 2, 2 + 3)
 
 
 def test_postorder_traversal():
