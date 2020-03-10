@@ -24,7 +24,7 @@ def is_palindromic(s, i=0, j=None):
     is from right to left in the whole sequence (default) or in the
     Python slice ``s[i: j]``; else False.
 
-    EXAMPLES
+    Examples
     ========
 
     >>> from sympy.utilities.iterables import is_palindromic
