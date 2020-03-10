@@ -1753,39 +1753,6 @@ def match_2nd_linear_bessel(r, func):
     return rn
 
 
-# find coefficients of terms f(t), diff(f(t),t) and higher derivatives
-# and similarly for other functions g(t), diff(g(t),t) in all equations.
-# Here j denotes the equation number, funcs[l] denotes the function about
-# which we are talking about and k denotes the order of function funcs[l]
-# whose coefficient we are calculating.
-def linearity_check(eqs, j, func, funcs, func_coef, order, t, is_linear_):
-    for k in range(order[func] + 1):
-        func_coef[j, func, k] = collect(eqs.expand(), [diff(func, t, k)]).coeff(diff(func, t, k))
-        if is_linear_ == True:
-            if func_coef[j, func, k] == 0:
-                if k == 0:
-                    coef = eqs.as_independent(func, as_Add=True)[1]
-                    for xr in range(1, ode_order(eqs, func) + 1):
-                        coef -= eqs.as_independent(diff(func, t, xr), as_Add=True)[1]
-                    if coef != 0:
-                        is_linear_ = False
-                else:
-                    if eqs.as_independent(diff(func, t, k), as_Add=True)[1]:
-                        is_linear_ = False
-            else:
-                for func_ in funcs:
-                    if isinstance(func_, list):
-                        for elem_func_ in func_:
-                            dep = func_coef[j, func, k].as_independent(elem_func_, as_Add=True)[1]
-                            if dep != 0:
-                                is_linear_ = False
-                    else:
-                        dep = func_coef[j, func, k].as_independent(func_, as_Add=True)[1]
-                        if dep != 0:
-                            is_linear_ = False
-    return is_linear_
-
-
 def _get_func_order(eqs, funcs):
     order = dict()
     func_dict = dict()
@@ -1873,17 +1840,10 @@ def get_linear_coeffs(eq, funcs):
     return None
 
 
-def neq_nth_linear_constant_coeff_match(eqs, funcs):
+def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     from sympy.solvers.solveset import linear_eq_to_matrix
 
-    match = dict()
-    match["no_of_equation"] = len(eqs)
-    match["eq"] = eqs
-
     # Error for i == 0 can be added but isn't for now
-
-    # Getting the independent variable
-    t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     # Assuming funcs has all the funcs mentioned and
     # len(funcs) == len(eqs)
@@ -1891,64 +1851,41 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs):
     # Getting the func_dict and order using the helper
     # function
     funcs, order = _get_func_order(eqs, funcs)
-    match['func'] = funcs
-    match['order'] = order
 
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
 
-    # Getting coefficient matrix and rhs matrix(A and
-    # b)
-    terms = []
-    rep = {}
-    for func in funcs:
-        temp_terms = []
-        for k in range(order[func] + 1):
-            globals()["{}{}".format(type(func), k)] = symbols("{}{}".format(type(func), k))
-            rep[diff(func, t, k)] = globals()["{}{}".format(type(func), k)]
-            temp_terms += [globals()["{}{}".format(type(func), k)]]
-        terms += temp_terms
+    rep = {func.diff(t, n): Dummy() for func in funcs for n in range(order[func] + 1)}
     eqs_sub = [eq.subs(rep) for eq in eqs]
 
     # Linearity check
     try:
-        A, b = linear_eq_to_matrix(eqs_sub, terms)
-        is_linear = True
-
-        # Constant coefficient check
-        is_constant = True
-        for coef in A:
-            if is_constant == True:
-                if coef.as_independent(t, as_Add=True)[1] != 0:
-                    is_constant = False
-
-        # Homogeneous check
-        is_homogeneous = True
-        for rhs in b:
-            if is_homogeneous == True:
-                if rhs != 0:
-                    is_homogeneous = False
+        A, b = linear_eq_to_matrix(eqs_sub, rep.values())
 
     except ValueError:
-        is_linear = False
-        is_constant = None
-        is_homogeneous = None
+        return None
 
-    # Old Linearity check
-    # func_coef = {}
-    # is_linear = True
-    # for j, eq in enumerate(eqs):
-    #     if is_linear == True:
-    #         eq_coeffs = get_linear_coeffs(eq, funcs)
-    #         if eq_coeffs:
-    #             for term in eq_coeffs:
-    #                 func_coef[j, term] = eq_coeffs[term]
-    #         else:
-    #             is_linear = False
+    is_linear = True
 
-    match['is_linear'] = is_linear
-    match['is_constant'] = is_constant
-    match['is_homogeneous'] = is_homogeneous
+    # Constant coefficient check
+    is_constant = True
+    for coef in A:
+        if is_constant == True:
+            if coef.as_independent(t, as_Add=True)[1] != 0:
+                is_constant = False
+
+    # Homogeneous check
+    is_homogeneous = True if b.is_zero_matrix else False
+
+    match = {
+        'no_of_equation': len(eqs),
+        'eq': eqs,
+        'func': funcs,
+        'order': order,
+        'is_linear': is_linear,
+        'is_constant': is_constant,
+        'is_homogeneous': is_homogeneous,
+    }
 
     if match['is_linear'] and match['is_constant']:
         return match
@@ -2066,6 +2003,38 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     # find the order of all equation in system of odes
     matching_hints["order"] = order
+
+    # find coefficients of terms f(t), diff(f(t),t) and higher derivatives
+    # and similarly for other functions g(t), diff(g(t),t) in all equations.
+    # Here j denotes the equation number, funcs[l] denotes the function about
+    # which we are talking about and k denotes the order of function funcs[l]
+    # whose coefficient we are calculating.
+    def linearity_check(eqs, j, func, funcs, func_coef, order, t, is_linear_):
+        for k in range(order[func] + 1):
+            func_coef[j, func, k] = collect(eqs.expand(), [diff(func, t, k)]).coeff(diff(func, t, k))
+            if is_linear_ == True:
+                if func_coef[j, func, k] == 0:
+                    if k == 0:
+                        coef = eqs.as_independent(func, as_Add=True)[1]
+                        for xr in range(1, ode_order(eqs, func) + 1):
+                            coef -= eqs.as_independent(diff(func, t, xr), as_Add=True)[1]
+                        if coef != 0:
+                            is_linear_ = False
+                    else:
+                        if eqs.as_independent(diff(func, t, k), as_Add=True)[1]:
+                            is_linear_ = False
+                else:
+                    for func_ in funcs:
+                        if isinstance(func_, list):
+                            for elem_func_ in func_:
+                                dep = func_coef[j, func, k].as_independent(elem_func_, as_Add=True)[1]
+                                if dep != 0:
+                                    is_linear_ = False
+                        else:
+                            dep = func_coef[j, func, k].as_independent(func_, as_Add=True)[1]
+                            if dep != 0:
+                                is_linear_ = False
+        return is_linear_
 
     func_coef = {}
     is_linear = True
