@@ -8,8 +8,8 @@ from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 
 def digits(n, b=10):
     """
-    Return a list of the digits of n in base b. The first element in the list
-    is b (or -b if n is negative).
+    Return a list of the digits of ``n`` in base ``b``. The first
+    element in the list is ``b`` (or ``-b`` if ``n`` is negative).
 
     Examples
     ========
@@ -40,10 +40,10 @@ def digits(n, b=10):
         return y
 
 
-def count_digits(n, base=10):
+def count_digits(n, b=10):
     """
     Return a dictionary whose keys are the digits of ``n`` in the
-    given base, with keys indicating the digits appearing in the
+    given base, ``b``, with keys indicating the digits appearing in the
     number and values indicating how many times that digit appeared.
 
     Examples
@@ -75,14 +75,14 @@ def count_digits(n, base=10):
     >>> [i for i in range(10) if c77[i] == 7]
     [1, 3, 7, 9]
     """
-    rv = defaultdict(int, multiset(digits(n, base)).items())
-    rv.pop(base) if base in rv else rv.pop(-base)
+    rv = defaultdict(int, multiset(digits(n, b)).items())
+    rv.pop(b) if b in rv else rv.pop(-b)  # b or -b is there
     return rv
 
 
-def is_palindromic(n, base=10):
+def is_palindromic(n, b=10):
     """return True if ``n`` is the same when read from left to right
-    or right to left in the given base.
+    or right to left in the given base, ``b``.
 
     Examples
     ========
@@ -92,7 +92,7 @@ def is_palindromic(n, base=10):
     >>> all(is_palindromic(i) for i in (-11, 1, 22, 121))
     True
 
-    The ``base`` argument allows you to test numbers in other
+    The second argument allows you to test numbers in other
     bases. For example, 88 is palindromic in base-10 but not
     in base-8:
 
@@ -102,17 +102,13 @@ def is_palindromic(n, base=10):
     On the other hand, a number can be palindromic in base-8 but
     not in base-10:
 
-    >>> is_palindromic(0o121)
-    False
-    >>> 0o121
-    81
+    >>> 0o121, is_palindromic(0o121)
+    (81, False)
 
     Or it might be palindromic in both bases:
 
-    >>> is_palindromic(121, 8) and is_palindromic(121)
-    True
-    >>> 0o171 == 121
-    True
+    >>> oct(121), is_palindromic(121, 8) and is_palindromic(121)
+    ('0o171', True)
 
     """
-    return _palindromic(digits(n, base), 1)
+    return _palindromic(digits(n, b), 1)
