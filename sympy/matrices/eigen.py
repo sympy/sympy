@@ -438,7 +438,7 @@ def _bidiagonal_decomposition(M, upper=True):
     """
     Returns (U,B,V)
 
-    A = U * B * V.H
+    `A = UBV^{H}`
 
     where A is the input matrix, and B is its Bidiagonalized form
 
