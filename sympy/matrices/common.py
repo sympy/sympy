@@ -2393,6 +2393,28 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.pow(exp)
 
+    def matrix_exp(self, exp, side = "left"):
+        r"""
+        Returns matrix-matrix exponential.
+
+        Parameters
+        ==========
+
+        exp : The exponent
+        side : 'Left' denotes left exponential and 'Right'
+            denotes right exponential
+        """
+        from sympy import log
+        x = Symbol('x')
+        log_X = self.analytic_func(log(x), x)
+        if side == "left":
+            log_X = exp*log_X
+        elif side == "right":
+            log_X = log_X*exp
+        else:
+            ValueError("Invalid input for side")
+        print(log_X)
+        return log_X.exp()
 
     def pow(self, exp, method=None):
         r"""Return self**exp a scalar or symbol.

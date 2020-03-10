@@ -5,7 +5,7 @@ from sympy.core.numbers import I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
@@ -725,6 +725,11 @@ def test_power():
     A = Matrix([[1,2],[4,5]])
     assert A.pow(20, method='cayley') == A.pow(20, method='multiply')
 
+def test_matrix_exp():
+    a =  Matrix([[0 ,2],[1, 0]])
+    b = Matrix([[1,0],[0,0]])
+    assert a.matrix_exp(b, side = "left") == Matrix([[sqrt(2)*I, (2*pi + sqrt(2)*I*pi)/
+                 (2*log(sqrt(2)) + I*pi)], [0, 1]])
 def test_neg():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
     assert -n == ArithmeticOnlyMatrix(1, 2, [-1, -2])
