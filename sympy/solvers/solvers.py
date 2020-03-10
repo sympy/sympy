@@ -1028,9 +1028,8 @@ def solve(f, *symbols, **flags):
                 f[i: i + 1] = [fr, fi]
 
     #expand binomial terms
-    for i, fi in enumerate(f):
-        if fi.has(binomial):
-            f[i] = fi.replace(lambda exp: type(exp) == binomial, lambda exp: expand_func(exp))
+    expand_binomial = lambda f: f.replace(binomial, lambda n, k: expand_func(binomial(n, k)))
+    f = [expand_binomial(fi) for fi in f]
 
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
