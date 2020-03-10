@@ -9,6 +9,7 @@ from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
+from sympy.matrices.immutable import ImmutableMatrix
 class EigenOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixEigen):
     pass
 
@@ -237,56 +238,129 @@ def test_bidiagonalize():
     assert M.bidiagonalize() == M
 
     import random
-    for test in range(2):
+    #Real Tests
+    for real_test in range(2):
         test_values = []
         row = 2
         col = 2
         for _ in range(row * col):
             value = random.randint(-1000000000, 1000000000)
             test_values = test_values + [value]
-        x = Matrix(row, col, test_values)
-        a, b, c = x.bidiagonal_decomposition()
-        d = a * b * c
-        d.simplify()
-        y = x.bidiagonalize()
-        y.simplify()
-        b.simplify()
-        w = x.bidiagonalize(upper=False)
-        i, j, k = x.bidiagonal_decomposition(upper=False)
-        l = i * j * k
-        w.simplify()
-        j.simplify()
-        l.simplify()
-        assert w == j
-        assert l == x
-        assert y == b
-        assert x == d
+        # L     -> Lower Bidiagonalization
+        # M     -> Mutable Matrix
+        # N     -> Immutable Matrix
+        # 0     -> Bidiagonalized form
+        # 1,2,3 -> Bidiagonal_decomposition matrices
+        # 4     -> Product of 1 2 3
+        M = Matrix(row, col, test_values)
+        N = ImmutableMatrix(M)
 
+        N1, N2, N3 = N.bidiagonal_decomposition()
+        M1, M2, M3 = M.bidiagonal_decomposition()
+        M0 = M.bidiagonalize()
+        N0 = N.bidiagonalize()
+
+        N4 = N1 * N2 * N3
+        M4 = M1 * M2 * M3
+
+        N2.simplify()
+        N4.simplify()
+        N0.simplify()
+
+        M0.simplify()
+        M2.simplify()
+        M4.simplify()
+
+        LM0 = M.bidiagonalize(upper=False)
+        LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
+        LN0 = N.bidiagonalize(upper=False)
+        LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
+
+        LN4 = LN1 * LN2 * LN3
+        LM4 = LM1 * LM2 * LM3
+
+        LN2.simplify()
+        LN4.simplify()
+        LN0.simplify()
+
+        LM0.simplify()
+        LM2.simplify()
+        LM4.simplify()
+
+        assert M == M4
+        assert M2 == M0
+        assert N == N4
+        assert N2 == N0
+        assert M == LM4
+        assert LM2 == LM0
+        assert N == LN4
+        assert LN2 == LN0
+
+    #Complex Tests
     for complex_test in range(2):
         test_values = []
         size = 2
         for _ in range(row * col):
-            real = random.randint(0, 1000)
-            comp = random.randint(0, 1000)
+            real = random.randint(-1000000000, 1000000000)
+            comp = random.randint(-1000000000, 1000000000)
             value = real + comp * I
             test_values = test_values + [value]
-        x = Matrix(size, size, test_values)
-        a, b, c = x.bidiagonal_decomposition()
-        d = a * b * c
-        d.simplify()
-        y = x.bidiagonalize()
-        y.simplify()
-        b.simplify()
-        w = x.bidiagonalize(upper=False)
-        i, j, k = x.bidiagonal_decomposition(upper=False)
-        l = i * j * k
-        w.simplify()
-        j.simplify()
-        l.simplify()
-        assert w == j
-        assert l == x
-        assert x == d
-        assert y == b
+        M = Matrix(row, col, test_values)
+        N = ImmutableMatrix(M)
+        # L     -> Lower Bidiagonalization
+        # M     -> Mutable Matrix
+        # N     -> Immutable Matrix
+        # 0     -> Bidiagonalized form
+        # 1,2,3 -> Bidiagonal_decomposition matrices
+        # 4     -> Product of 1 2 3
+        N1, N2, N3 = N.bidiagonal_decomposition()
+        M1, M2, M3 = M.bidiagonal_decomposition()
+        M0 = M.bidiagonalize()
+        N0 = N.bidiagonalize()
+
+        N4 = N1 * N2 * N3
+        M4 = M1 * M2 * M3
+
+        N2.simplify()
+        N4.simplify()
+        N0.simplify()
+
+        M0.simplify()
+        M2.simplify()
+        M4.simplify()
+
+        LM0 = M.bidiagonalize(upper=False)
+        LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
+        LN0 = N.bidiagonalize(upper=False)
+        LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
+
+        LN4 = LN1 * LN2 * LN3
+        LM4 = LM1 * LM2 * LM3
+
+        LN2.simplify()
+        LN4.simplify()
+        LN0.simplify()
+
+        LM0.simplify()
+        LM2.simplify()
+        LM4.simplify()
+
+        assert M == M4
+        assert M2 == M0
+        assert N == N4
+        assert N2 == N0
+        assert M == LM4
+        assert LM2 == LM0
+        assert N == LN4
+        assert LN2 == LN0
+
+    M = Matrix(18, 8, range(1, 145))
+    M = M.applyfunc(lambda i: Float(i))
+    assert M.bidiagonal_decomposition()[1] == M.bidiagonalize()
+    assert M.bidiagonal_decomposition(upper=False)[1] == M.bidiagonalize(upper=False)
+    a, b, c = M.bidiagonal_decomposition()
+    diff = a * b * c - M
+    assert abs(max(diff)) < 10**-12
 
 
 def test_diagonalize():
