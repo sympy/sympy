@@ -1,7 +1,7 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
+    Wild, acos, asin, atan, atanh, binomial, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
@@ -2136,6 +2136,11 @@ def test_issue_17949():
     assert solve(exp(-x+x**2), x) == []
     assert solve(exp(+x-x**2), x) == []
     assert solve(exp(-x-x**2), x) == []
+
+def test_issue_10993():
+    assert solve(Eq(binomial(x, 2), 3)) == [-2, 3]
+    assert solve(Eq(pow(x,2) + binomial(x, 3), x)) == [-4, 0, 1]
+    assert solve(Eq(binomial(x,2),0)) == [0, 1]
 
 
 def test_issue_11553():

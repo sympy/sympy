@@ -999,9 +999,6 @@ def solve(f, *symbols, **flags):
                     fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
-        if fi.has(binomial):
-            f[i] = fi.replace(lambda exp: type(exp) == binomial, lambda exp: expand_func(exp))
-
         if fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
 
@@ -1029,6 +1026,11 @@ def solve(f, *symbols, **flags):
                 if bare_f:
                     bare_f = False
                 f[i: i + 1] = [fr, fi]
+
+    #expand binomial terms
+    for i, fi in enumerate(f):
+        if fi.has(binomial):
+            f[i] = fi.replace(lambda exp: binomial, lambda exp: expand_func(exp))
 
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
