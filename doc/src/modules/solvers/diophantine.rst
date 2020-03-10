@@ -482,3 +482,64 @@ sqf_normal
 reconstruct
 ^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diophantine.reconstruct
+
+Internal Classes
+------------------
+
+These classes are intended for internal use in the Diophantine module.
+
+DiophantineSolutionSet
+^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineSolutionSet
+
+DiophantineEquationType
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.DiophantineEquationType
+
+Univariate
+^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.Univariate
+
+Linear
+^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.Linear
+
+BinaryQuadratic
+^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.BinaryQuadratic
+
+InhomogeneousTernaryQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousTernaryQuadratic
+
+HomogeneousTernaryQuadraticNormal
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadraticNormal
+
+HomogeneousTernaryQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousTernaryQuadratic
+
+InhomogeneousGeneralQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.InhomogeneousGeneralQuadratic
+
+HomogeneousGeneralQuadratic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.HomogeneousGeneralQuadratic
+
+GeneralSumOfSquares
+^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfSquares
+
+GeneralPythagorean
+^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.GeneralPythagorean
+
+CubicThue
+^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.CubicThue
+
+GeneralSumOfEvenPowers
+^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.diophantine.diophantine.GeneralSumOfEvenPowers
