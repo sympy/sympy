@@ -1030,7 +1030,7 @@ def solve(f, *symbols, **flags):
     #expand binomial terms
     for i, fi in enumerate(f):
         if fi.has(binomial):
-            f[i] = fi.replace(lambda exp: binomial, lambda exp: expand_func(exp))
+            f[i] = fi.replace(lambda exp: type(exp) == binomial, lambda exp: expand_func(exp))
 
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
