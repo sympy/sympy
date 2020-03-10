@@ -379,10 +379,10 @@ def _householder_vector(x):
     v = x.copy()
     v_plus = x.copy()
     v_minus = x.copy()
-    q = x[0, 0]/abs(x[0, 0])
+    q = x[0, 0] / abs(x[0, 0])
     norm_x = x.norm()
     v_plus[0, 0] = x[0, 0] + q * norm_x
-    v_minus[0, 0] = x[0,0] - q * norm_x
+    v_minus[0, 0] = x[0, 0] - q * norm_x
     if x[1:, 0].norm() == 0:
         bet = 0
         v[0, 0] = 1
@@ -391,8 +391,8 @@ def _householder_vector(x):
             v = v_plus
         else:
             v = v_minus
-        v = v/v[0]
-        bet = 2 /(v.norm()**2)
+        v = v / v[0]
+        bet = 2 / (v.norm() ** 2)
     return v, bet
 
 
@@ -409,8 +409,8 @@ def _bidiagonal_decmp_hholder(M):
         temp[i:, i:] = hh_mat
         U = U * temp
         if i + 1 <= n - 2:
-            v, bet = _householder_vector( A[i, i+1:].T )
-            hh_mat = A.eye(n - i - 1)- bet * v * v.H
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = A.eye(n - i - 1) - bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
             temp = A.eye(n)
             temp[i+1:, i+1:] = hh_mat
@@ -428,14 +428,14 @@ def _eval_bidiag_hholder(M):
         A[i:, i:] = hh_mat * A[i:, i:]
         if i + 1 <= n - 2:
             v, bet = _householder_vector(A[i, i+1:].T)
-            hh_mat = A.eye(n-i-1)- bet * v * v.H
+            hh_mat = A.eye(n - i - 1) - bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
     return A
 
 
 def _bidiagonal_decomposition(M, upper=True):
     """
-    Returns (U,B,V)
+    Returns (U,B,V.H)
 
     `A = UBV^{H}`
 
@@ -449,16 +449,22 @@ def _bidiagonal_decomposition(M, upper=True):
     upper : bool. Whether to do upper bidiagnalization or lower.
                 True for upper and False for lower.
 
+    References
+    ==========
+
+    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+
     """
 
     if type(upper) is not bool:
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        X = M.H.bidiagonal_decmp_hholder()
+        X = _bidiagonal_decmp_hholder(M.H)
         return X[2].H, X[1].H, X[0].H
 
-    return M.bidiagonal_decmp_hholder()
+    return _bidiagonal_decmp_hholder(M)
 
 
 def _bidiagonalize(M, upper=True):
@@ -475,15 +481,21 @@ def _bidiagonalize(M, upper=True):
     upper : bool. Whether to do upper bidiagnalization or lower.
                 True for upper and False for lower.
 
+    References
+    ==========
+
+    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+
     """
 
     if type(upper) is not bool:
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        return M.H.bidiagonalize().H
+        return _eval_bidiag_hholder(M.H).H
 
-    return M._bidiag_hholder()
+    return _eval_bidiag_hholder(M)
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):

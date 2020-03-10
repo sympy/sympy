@@ -300,12 +300,12 @@ def test_bidiagonalize():
     for complex_test in range(2):
         test_values = []
         size = 2
-        for _ in range(row * col):
+        for _ in range(size * size):
             real = random.randint(-1000000000, 1000000000)
             comp = random.randint(-1000000000, 1000000000)
             value = real + comp * I
             test_values = test_values + [value]
-        M = Matrix(row, col, test_values)
+        M = Matrix(size, size, test_values)
         N = ImmutableMatrix(M)
         # L     -> Lower Bidiagonalization
         # M     -> Mutable Matrix
