@@ -1634,7 +1634,13 @@ class Pow(Expr):
         # either b0 is bounded but neither 1 nor 0 or e is infinite
         # b -> b0 + (b - b0) -> b0 * (1 + (b/b0 - 1))
         o2 = order*(b0**-e)
-        z = (b/b0 - 1)
+        from sympy import AccumBounds
+        # Issue: #18795 -"XXX This can be removed and simply "z = (b - b0)/b0"
+        # would be enough when the operations on AccumBounds have been fixed."
+        if isinstance(b0, AccumBounds):
+            z = (b/b0 - 1)
+        else:
+            z = (b - b0)/b0
         o = O(z, x)
         if o is S.Zero or o2 is S.Zero:
             infinite = True

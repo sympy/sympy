@@ -8,7 +8,7 @@ from sympy.solvers.ode import (classify_ode,
 
 from sympy.solvers.ode.subscheck import checkodesol, checksysodesol
 from sympy.solvers.ode.ode import (_linear_coeff_match,
-    _ode_factorable_match, _undetermined_coefficients_match, classify_sysode,
+    _undetermined_coefficients_match, classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
 from sympy.functions import airyai, airybi, besselj, bessely
@@ -1095,7 +1095,8 @@ def test_classify_ode():
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == ('nth_algebraic',
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ('factorable',
+         'nth_algebraic',
          'separable',
          '1st_linear',
          'Bernoulli',
@@ -2720,7 +2721,7 @@ def test_unexpanded_Liouville_ODE():
     # This is the same as eq1 from test_Liouville_ODE() above.
     eq1 = diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
-    sol2 = Eq(f(x), log(x/(C1 + C2*x)))
+    sol2 = Eq(f(x), C1 + log(x) - log(C2 + x))
     sol2s = constant_renumber(sol2)
     assert dsolve(eq2) in (sol2, sol2s)
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
@@ -3857,80 +3858,6 @@ def test_dsolve_remove_redundant_solutions():
     assert dsolve(eq) == sol
 
 
-def test_factorable():
-    # Unable to get coverage on this without explicit testing because _desolve
-    # already handles Pow before we get there but that should be disabled in
-    # future so that factorable gets the raw ODE.
-    eq = f(x).diff(x)-1
-    assert _ode_factorable_match(eq**3, f(x), 1) == {'eqns':[eq], 'x0': 1}
-
-    eq = f(x) + f(x)*f(x).diff(x)
-    sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = f(x)*(f(x).diff(x)+f(x)*x+2)
-    sols = [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))
-            *exp(-x**2/2)), Eq(f(x), 0)]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + x*f(x))
-    sols = [Eq(f(x), C1*airyai(-x) + C2*airybi(-x)),
-            Eq(f(x), C1*exp(-x**3/3))]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols[1]) == (True, 0)
-
-    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + f(x))
-    sols = [Eq(f(x), C1*exp(-x**3/3)), Eq(f(x), C1*sin(x) + C2*cos(x))]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = (f(x).diff(x)**2-1)*(f(x).diff(x)**2-4)
-    sols = [Eq(f(x), C1 - x), Eq(f(x), C1 + x), Eq(f(x), C1 + 2*x), Eq(f(x), C1 - 2*x)]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 4*[(True, 0)]
-
-    eq = (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x)
-    sol = Eq(f(x), C1)
-    assert sol == dsolve(eq, f(x), hint='factorable')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = (f(x).diff(x)**2-1)*(f(x)*f(x).diff(x)-1)
-    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
-           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 4*[(True, 0)]
-
-    eq = Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
-    sol = [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-    eq = f(x)**2*Derivative(f(x), x)**6 - 2*f(x)**2*Derivative(f(x),
-         x)**4 + f(x)**2*Derivative(f(x), x)**2 - 2*f(x)*Derivative(f(x),
-         x)**5 + 4*f(x)*Derivative(f(x), x)**3 - 2*f(x)*Derivative(f(x),
-         x) + Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
-    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
-           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 4*[(True, 0)]
-
-    eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
-    raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
-
-    eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),
-         (x, 2))**2  + 2*x**3*f(x)*Derivative(f(x), x) + 2*x**3*Derivative(f(x),
-         x)*Derivative(f(x), (x, 2)) - 7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x),
-         (x, 2)) + x**2*Derivative(f(x), x)**2 - 7*x*f(x)*Derivative(f(x), x) + 12*f(x)**2
-
-    sol = [Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x)), Eq(f(x), C1*besselj(sqrt(3),
-           x) + C2*bessely(sqrt(3), x))]
-
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-
 def test_issue_17322():
     eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
     sol = [Eq(f(x), C1*exp(-x)), Eq(f(x), C1*exp(x))]
@@ -3975,34 +3902,6 @@ def test_2nd_2F1_hypergeometric():
           C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702
-
-
-def test_issue_15889():
-    eq = exp(f(x).diff(x))-f(x)**2
-    sol = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
-    assert str(sol.as_dummy()) == str(dsolve(eq).as_dummy())
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-    eq = f(x).diff(x)**2 - f(x)
-    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**2
-    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
 
 
 def test_issue_5096():
@@ -4069,6 +3968,6 @@ def test_issue_18408():
 def test_issue_9446():
     f = Function('f')
     assert dsolve(Eq(f(2 * x), sin(Derivative(f(x)))), f(x)) == \
-    [Eq(f(x), C1 + Integral(asin(f(2*x)), x)), Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x))]
+    [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))]
 
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
