@@ -1125,34 +1125,6 @@ class AccumulationBounds(AtomicExpr):
         return AccumBounds(-self.max, -self.min)
 
     @_sympifyit('other', NotImplemented)
-    def __sub__(self, other):
-        if isinstance(other, Expr):
-            if isinstance(other, AccumBounds):
-                return AccumBounds(
-                    Add(self.min, -other.max),
-                    Add(self.max, -other.min))
-            if other is S.NegativeInfinity and self.min is S.NegativeInfinity or \
-                    other is S.Infinity and self.max is S.Infinity:
-                return AccumBounds(-oo, oo)
-            elif other.is_extended_real:
-                if self.min is S.NegativeInfinity and self.max is S.Infinity:
-                    return AccumBounds(-oo, oo)
-                elif self.min is S.NegativeInfinity:
-                    return AccumBounds(-oo, self.max - other)
-                elif self.max is S.Infinity:
-                    return AccumBounds(self.min - other, oo)
-                else:
-                    return AccumBounds(
-                        Add(self.min, -other),
-                        Add(self.max, -other))
-            return Add(self, -other, evaluate=False)
-        return NotImplemented
-
-    @_sympifyit('other', NotImplemented)
-    def __rsub__(self, other):
-        return self.__neg__() + other
-
-    @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
