@@ -218,7 +218,7 @@ class Token(Basic):
         # Process keyword arguments
         for attrname in cls.__slots__[num_args:]:
             try:
-                argval = kwargs.get(attrname, cls.defaults[attrname])
+                argval = kwargs.pop(attrname, cls.defaults[attrname])
             except KeyError:
                 raise TypeError(f'No value for {attrname} given and attribute has no default')
 
@@ -275,7 +275,7 @@ class Token(Basic):
         from sympy.printing.printer import printer_context
         exclude = kwargs.get('exclude', ())
         indent_level = printer._context.get('indent_level', 0)
-        joiner = kwargs.get('joiner', ', ')
+        joiner = kwargs.pop('joiner', ', ')
 
         arg_reprs = []
 
