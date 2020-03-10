@@ -44,7 +44,7 @@ def test_ratsimpmodprime():
     b = x - y
     F = [x*y**5 - x - y]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (x**2 + x*y + x + y) / (x**2 - x*y)
+        (-x**2 - x*y - x - y) / (-x**2 + x*y)
 
     a = x + y**2 - 2
     b = x + y**2 - y - 1
