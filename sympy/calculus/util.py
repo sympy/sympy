@@ -5,6 +5,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
+from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
@@ -1120,30 +1121,6 @@ class AccumulationBounds(AtomicExpr):
     def _eval_power(self, other):
         return self.__pow__(other)
 
-    @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        if isinstance(other, Expr):
-            if isinstance(other, AccumBounds):
-                return AccumBounds(
-                    Add(self.min, other.min),
-                    Add(self.max, other.max))
-            if other is S.Infinity and self.min is S.NegativeInfinity or \
-                    other is S.NegativeInfinity and self.max is S.Infinity:
-                return AccumBounds(-oo, oo)
-            elif other.is_extended_real:
-                if self.min is S.NegativeInfinity and self.max is S.Infinity:
-                    return AccumBounds(-oo, oo)
-                elif self.min is S.NegativeInfinity:
-                    return AccumBounds(-oo, self.max + other)
-                elif self.max is S.Infinity:
-                    return AccumBounds(self.min + other, oo)
-                else:
-                    return AccumBounds(Add(self.min, other), Add(self.max, other))
-            return Add(self, other, evaluate=False)
-        return NotImplemented
-
-    __radd__ = __add__
-
     def __neg__(self):
         return AccumBounds(-self.max, -self.min)
 
@@ -1174,52 +1151,6 @@ class AccumulationBounds(AtomicExpr):
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
         return self.__neg__() + other
-
-    @_sympifyit('other', NotImplemented)
-    def __mul__(self, other):
-        if isinstance(other, Expr):
-            if isinstance(other, AccumBounds):
-                return AccumBounds(Min(Mul(self.min, other.min),
-                                       Mul(self.min, other.max),
-                                       Mul(self.max, other.min),
-                                       Mul(self.max, other.max)),
-                                   Max(Mul(self.min, other.min),
-                                       Mul(self.min, other.max),
-                                       Mul(self.max, other.min),
-                                       Mul(self.max, other.max)))
-            if other is S.Infinity:
-                if self.min.is_zero:
-                    return AccumBounds(0, oo)
-                if self.max.is_zero:
-                    return AccumBounds(-oo, 0)
-            if other is S.NegativeInfinity:
-                if self.min.is_zero:
-                    return AccumBounds(-oo, 0)
-                if self.max.is_zero:
-                    return AccumBounds(0, oo)
-            if other.is_extended_real:
-                if other.is_zero:
-                    if self == AccumBounds(-oo, oo):
-                        return AccumBounds(-oo, oo)
-                    if self.max is S.Infinity:
-                        return AccumBounds(0, oo)
-                    if self.min is S.NegativeInfinity:
-                        return AccumBounds(-oo, 0)
-                    return S.Zero
-                if other.is_extended_positive:
-                    return AccumBounds(
-                        Mul(self.min, other),
-                        Mul(self.max, other))
-                elif other.is_extended_negative:
-                    return AccumBounds(
-                        Mul(self.max, other),
-                        Mul(self.min, other))
-            if isinstance(other, Order):
-                return other
-            return Mul(self, other, evaluate=False)
-        return NotImplemented
-
-    __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
@@ -1649,3 +1580,129 @@ class AccumulationBounds(AtomicExpr):
 
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
+
+def get_preprocessor(cls):
+    def _preprocessor(*args, **options):
+        from sympy.matrices.expressions import MatrixExpr
+
+        evaluate = options.get('evalaute', global_parameters.evaluate)
+        if not evaluate:
+            return None
+
+        if cls == Add:
+            extras, accbnds, others = [], [], []
+            for a in args:
+                if isinstance(a, MatrixExpr):
+                    extras.append(a)
+                elif isinstance(a, AccumBounds):
+                    accbnds.append(a)
+                else:
+                    others.append(a)
+            extra = Add(*extras, evaluate=True)
+            coeff = Add(*others, evaluate=True)
+
+            if coeff is S.NaN:
+                return S.NaN
+
+            # Combine the AccumBounds
+            for i,a in enumerate(accbnds):
+                if i == 0:
+                    accbnd = a
+                else:
+                    accbnd = AccumBounds(
+                        Add(accbnd.min, a.min, evaluate=True),
+                        Add(accbnd.max, a.max, evaluate=True))
+
+            # Combine coeff and accbnd
+            def _add_combine(self, other):
+                if other is S.Infinity and self.min is S.NegativeInfinity or \
+                        other is S.NegativeInfinity and self.max is S.Infinity:
+                    return AccumBounds(-oo, oo)
+                elif other.is_extended_real:
+                    if self.min is S.NegativeInfinity and self.max is S.Infinity:
+                        return AccumBounds(-oo, oo)
+                    elif self.min is S.NegativeInfinity:
+                        return AccumBounds(-oo, self.max + other)
+                    elif self.max is S.Infinity:
+                        return AccumBounds(self.min + other, oo)
+                    else:
+                        return AccumBounds(Add(self.min, other), Add(self.max, other))
+                return Add(self, other, preprocess=False, evaluate=False)
+            result = _add_combine(accbnd, coeff)
+
+            # All combinable are combined.
+            return Add(result, extra, preprocess=False, evaluate=False)
+
+        elif cls == Mul:
+            extras, accbnds, others = [], [], []
+            for a in args:
+                if isinstance(a, MatrixExpr):
+                    extras.append(a)
+                elif isinstance(a, AccumBounds):
+                    accbnds.append(a)
+                else:
+                    others.append(a)
+            extra = Mul(*extras, evaluate=True)
+            coeff = Mul(*others, evaluate=True)
+
+            if coeff is S.NaN:
+                return S.NaN
+
+            # Combine the AccumBounds
+            for i,a in enumerate(accbnds):
+                if i == 0:
+                    accbnd = a
+                else:
+                    accbnd = AccumBounds(
+                                    Min(Mul(accbnd.min, a.min, evaluate=True),
+                                        Mul(accbnd.min, a.max, evaluate=True),
+                                        Mul(accbnd.max, a.min, evaluate=True),
+                                        Mul(accbnd.max, a.max, evaluate=True)),
+                                    Max(Mul(accbnd.min, a.min, evaluate=True),
+                                        Mul(accbnd.min, a.max, evaluate=True),
+                                        Mul(accbnd.max, a.min, evaluate=True),
+                                        Mul(accbnd.max, a.max, evaluate=True)))
+
+            # Combine coeff and accbnd
+            def _mul_combine(self, other):
+                if other is S.Infinity:
+                    if self.min.is_zero:
+                        return AccumBounds(0, oo)
+                    if self.max.is_zero:
+                        return AccumBounds(-oo, 0)
+                if other is S.NegativeInfinity:
+                    if self.min.is_zero:
+                        return AccumBounds(-oo, 0)
+                    if self.max.is_zero:
+                        return AccumBounds(0, oo)
+                if other.is_extended_real:
+                    if other.is_zero:
+                        if self == AccumBounds(-oo, oo):
+                            return AccumBounds(-oo, oo)
+                        if self.max is S.Infinity:
+                            return AccumBounds(0, oo)
+                        if self.min is S.NegativeInfinity:
+                            return AccumBounds(-oo, 0)
+                        return S.Zero
+                    if other.is_extended_positive:
+                        return AccumBounds(
+                            Mul(self.min, other),
+                            Mul(self.max, other))
+                    elif other.is_extended_negative:
+                        return AccumBounds(
+                            Mul(self.max, other),
+                            Mul(self.min, other))
+                if isinstance(other, Order):
+                    return other
+                return Mul(self, other, preprocess=False, evaluate=False)
+            result = _mul_combine(accbnd, coeff)
+
+            # All combinable are combined.
+            return Mul(result, extra, preprocess=False, evaluate=False)
+
+    return _preprocessor
+
+Basic._constructor_preprocessor_mapping[AccumulationBounds] = {
+    Add: get_preprocessor(Add),
+    Mul: get_preprocessor(Mul)
+}

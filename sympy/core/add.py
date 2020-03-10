@@ -94,7 +94,6 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
-        from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr
         rv = None
@@ -141,15 +140,11 @@ class Add(Expr, AssocOp):
                         o.is_finite is False) and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                if coeff.is_Number or isinstance(coeff, AccumBounds):
+                if coeff.is_Number:
                     coeff += o
                     if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
-                continue
-
-            elif isinstance(o, AccumBounds):
-                coeff = o.__add__(coeff)
                 continue
 
             elif isinstance(o, MatrixExpr):
