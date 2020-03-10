@@ -153,8 +153,7 @@ def _mk_Tuple(args):
 
     sympy.Tuple
     """
-    args = [String(arg) if isinstance(arg, str) else arg for arg in args]
-    return Tuple(*args)
+    return Tuple(*[String(arg) if isinstance(arg, str) else arg for arg in args])
 
 
 class Token(Basic):
@@ -190,7 +189,7 @@ class Token(Basic):
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
         # arg may be ``NoneToken()``, so comparation is done using == instead of ``is`` operator
-        if arg == None:
+        if arg == none:
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
@@ -200,11 +199,12 @@ class Token(Basic):
 
     def __new__(cls, *args, **kwargs):
         # Pass through existing instances when given as sole argument
-        if len(args) == 1 and not kwargs and isinstance(args[0], cls):
+        num_args = len(args)
+        if num_args == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
 
-        if len(args) > len(cls.__slots__):
-            raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls.__slots__)))
+        if num_args > len(cls.__slots__):
+            raise ValueError(f"Too many arguments ({num_args}), expected at most {len(cls.__slots__)}")
 
         attrvals = []
 
@@ -216,15 +216,11 @@ class Token(Basic):
             attrvals.append(cls._construct(attrname, argval))
 
         # Process keyword arguments
-        for attrname in cls.__slots__[len(args):]:
-            if attrname in kwargs:
-                argval = kwargs.pop(attrname)
-
-            elif attrname in cls.defaults:
-                argval = cls.defaults[attrname]
-
-            else:
-                raise TypeError('No value for %r given and attribute has no default' % attrname)
+        for attrname in cls.__slots__[num_args:]:
+            try:
+                argval = kwargs.get(attrname, cls.defaults[attrname])
+            except KeyError:
+                raise TypeError(f'No value for {attrname} given and attribute has no default')
 
             attrvals.append(cls._construct(attrname, argval))
 
@@ -247,10 +243,7 @@ class Token(Basic):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        for attr in self.__slots__:
-            if getattr(self, attr) != getattr(other, attr):
-                return False
-        return True
+        return all(getattr(self, attr) == getattr(other, attr) for attr in self.__slots__)
 
     def _hashable_content(self):
         return tuple([getattr(self, attr) for attr in self.__slots__])
@@ -281,24 +274,27 @@ class Token(Basic):
     def _sympyrepr(self, printer, *args, **kwargs):
         from sympy.printing.printer import printer_context
         exclude = kwargs.get('exclude', ())
-        values = [getattr(self, k) for k in self.__slots__]
         indent_level = printer._context.get('indent_level', 0)
-        joiner = kwargs.pop('joiner', ', ')
+        joiner = kwargs.get('joiner', ', ')
 
         arg_reprs = []
 
-        for i, (attr, value) in enumerate(zip(self.__slots__, values)):
+        for i, attr in enumerate(self.__slots__):
             if attr in exclude:
                 continue
 
             # Skip attributes which have the default value
+            value = getattr(self, attr)
+
             if attr in self.defaults and value == self.defaults[attr]:
                 continue
 
             ilvl = indent_level + 4 if attr in self.indented_args else 0
+
             with printer_context(printer, indent_level=ilvl):
                 indented = self._indented(printer, attr, value, *args, **kwargs)
-            arg_reprs.append(('{1}' if i == 0 else '{0}={1}').format(attr, indented.lstrip()))
+
+            arg_reprs.append(("{0}" if i == 0 else "{0}={1}").format(attr, indented.lstrip()))
 
         return "{0}({1})".format(self.__class__.__name__, joiner.join(arg_reprs))
 
@@ -321,10 +317,10 @@ class Token(Basic):
             Function to apply to all values.
         """
         kwargs = {k: getattr(self, k) for k in self.__slots__ if k not in exclude}
-        if apply is not None:
-            return {k: apply(v) for k, v in kwargs.items()}
-        else:
+        if apply is None:
             return kwargs
+        else:
+            return {k: apply(v) for k, v in kwargs.items()}
 
 
 class BreakToken(Token):
@@ -439,12 +435,12 @@ class AssignmentBase(Basic):
         rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
 
         # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
+        if lhs_is_mat and rhs_is_mat:
+            if lhs.shape != rhs.shape:
                 raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
+        elif not lhs_is_mat:
+            raise ValueError("Cannot assign a scalar to a matrix.")
+        elif not rhs_is_mat:
             raise ValueError("Cannot assign a matrix to a scalar.")
 
 
@@ -634,7 +630,7 @@ class CodeBlock(Basic):
     def _sympyrepr(self, printer, *args, **kwargs):
         il = printer._context.get('indent_level', 0)
         joiner = ',\n' + ' '*il
-        joined = joiner.join(map(printer._print, self.args))
+        joined = joiner.join([printer._print(arg) for arg in self.args])
         return ('{0}(\n'.format(' '*(il-4) + self.__class__.__name__,) +
                 ' '*il + joined + '\n' + ' '*(il - 4) + ')')
 
@@ -923,9 +919,10 @@ class Node(Token):
     _construct_attrs = staticmethod(_mk_Tuple)
 
     def attr_params(self, looking_for):
+        looking_for = str(looking_for)
         """ Returns the parameters of the Attribute with name ``looking_for`` in self.attrs """
         for attr in self.attrs:
-            if str(attr.name) == str(looking_for):
+            if str(attr.name) == looking_for:
                 return attr.parameters
 
 
@@ -1349,8 +1346,8 @@ class Attribute(Token):
     def _sympystr(self, printer, *args, **kwargs):
         result = str(self.name)
         if self.parameters:
-            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
-                arg, *args, **kwargs), self.parameters))
+            result += '(%s)' % ', '.join([printer._print(
+                arg, *args, **kwargs) for arg in self.parameters])
         return result
 
 value_const = Attribute('value_const')
@@ -1738,7 +1735,7 @@ class FunctionPrototype(Node):
                 return arg
             else:
                 return Variable.deduced(arg)
-        return Tuple(*map(_var, args))
+        return Tuple(*[_var(arg) for arg in args])
 
     @classmethod
     def from_FunctionDefinition(cls, func_def):
