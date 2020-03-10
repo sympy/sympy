@@ -38,7 +38,7 @@ from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
 
 from .eigen import (
     _eigenvals, _eigenvects,
-    _bidiagonalize, _bidiag_hholder,
+    _bidiagonalize, _eval_bidiag_hholder, _bidiagonal_decmp_hholder, _bidiagonal_decomposition,
     _is_diagonalizable, _diagonalize,
     _eval_is_positive_definite,
     _is_positive_definite, _is_positive_semidefinite,
@@ -380,11 +380,17 @@ class MatrixEigen(MatrixSubspaces):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
                 normalize=normalize)
 
-    def _eval_bidiag_hholder(self):
-        return _bidiag_hholder(self)
+    def _bidiag_hholder(self):
+        return _eval_bidiag_hholder(self)
 
     def bidiagonalize(self, upper=True):
         return _bidiagonalize(self, upper=upper)
+
+    def bidiagonal_decomposition(self,upper=True):
+        return _bidiagonal_decomposition(self,upper=upper)
+
+    def bidiagonal_decmp_hholder(self):
+        return _bidiagonal_decmp_hholder(self)
 
     @property
     def is_positive_definite(self):

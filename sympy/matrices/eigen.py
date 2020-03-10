@@ -17,7 +17,6 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
-from sympy.core.evalf import N
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -387,40 +386,55 @@ def _householder_vector(x):
         if x[0] <= 0:
             v[0] = x[0] - mu
         else:
-            v[0] = -sig/(x[0]+mu)
+            v[0] = -sig/( x[0] + mu )
         bet = 2 /( sig + v[0]*v[0] )
     return v, bet
 
 
-def _bidiag_hholder(M):
+def _bidiagonal_decmp_hholder(M):
     m = M.rows
     n = M.cols
-    A = M.applyfunc(Float)
+    A = M.copy()
     U, V = M.eye(m), M.eye(n)
     for i in range(min(m, n)):
         v, bet = _householder_vector(A[i:, i])
-        hh_mat = M.eye(m-i) - bet * v * v.T
+        hh_mat = M.eye(m - i) - bet * v * v.T
         A[i:, i:] = hh_mat * A[i:, i:]
         temp = M.eye(m)
         temp[i:, i:] = hh_mat
         U = U * temp
         if i + 1 <= n - 2:
-            v, bet = _householder_vector(A[i, i+1:].T)
-            hh_mat = (M.eye(n-i-1)- bet*v*v.T)
-            A[i:, i+1:] = A[i:, i+1:]* hh_mat
+            v, bet = _householder_vector( A[i, i+1:].T )
+            hh_mat = M.eye(n - i - 1)- bet * v * v.T 
+            A[i:, i+1:] = A[i:, i+1:] * hh_mat
             temp = M.eye(n)
             temp[i+1:, i+1:] = hh_mat
             V = temp * V
     return U, A, V
 
 
-def _bidiagonalize(M, upper=True):
+def _eval_bidiag_hholder(M):
+    m = M.rows
+    n = M.cols
+    A = M.copy()
+    for i in range(min(m, n)):
+        v, bet = _householder_vector(A[i:, i])
+        hh_mat = M.eye(m-i) - bet * v * v.T
+        A[i:, i:] = hh_mat * A[i:, i:]
+        if i + 1 <= n - 2:
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = M.eye(n-i-1)- bet * v * v.T
+            A[i:, i+1:] = A[i:, i+1:] * hh_mat
+    return A
+
+
+def _bidiagonal_decomposition(M, upper=True):
     """
     Returns (U,B,V)
 
-    A = U * B * V
+    A = U * B * V.H
 
-    where A is the input matrix, and B is its Bidiagonalized form.
+    where A is the input matrix, and B is its Bidiagonalized form
 
 
     Parameters
@@ -430,15 +444,41 @@ def _bidiagonalize(M, upper=True):
                 True for upper and False for lower.
 
     """
-    M.evalf()
+
     if type(upper) is not bool:
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        X = M.T.bidiagonalize()
-        return X[0].T, X[1].T, X[2].T
+        X = M.T.bidiagonal_decmp_hholder()
+        return X[2].T, X[1].T, X[0].T
 
-    return M._eval_bidiag_hholder()
+    return M.bidiagonal_decmp_hholder()
+
+
+def _bidiagonalize(M, upper=True):
+    """
+    
+    Returns `B`
+
+    where B is the Bidiagonalized form of the input matrix.
+
+    Note: Bidiagonal Computation can hang for symbolic matrices.
+
+    Parameters
+    ==========
+
+    upper : bool. Whether to do upper bidiagnalization or lower.
+                True for upper and False for lower.
+
+    """
+
+    if type(upper) is not bool:
+        raise ValueError("upper must be a boolean")
+
+    if not upper:
+        return M.T.bidiagonalize().T
+
+    return M._bidiag_hholder()
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
