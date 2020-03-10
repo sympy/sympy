@@ -435,6 +435,7 @@ class MatrixEigen(MatrixSubspaces):
     left_eigenvects.__doc__            = _left_eigenvects.__doc__
     singular_values.__doc__            = _singular_values.__doc__
     bidiagonalize.__doc__              = _bidiagonalize.__doc__
+    bidiagonal_decomposition.__doc__   = _bidiagonal_decomposition.__doc__
 
 
 class MatrixCalculus(MatrixCommon):

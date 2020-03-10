@@ -229,131 +229,65 @@ def test_bidiagonalize():
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
                 [0, 0, 1]])
-    assert M.bidiagonalize()[1] == M
-    assert M.bidiagonalize(upper=False)[1] == M
-    assert M.bidiagonalize()[1] == M
-    assert M.bidiagonalize()[1] == M
-
-    M = Matrix(5, 10, [0]*50)
-    assert M.bidiagonalize() == (M.eye(5), M, M.eye(10))
+    assert M.bidiagonalize() == M
+    assert M.bidiagonalize(upper=False) == M
+    assert M.bidiagonalize() == M
+    assert M.bidiagonal_decomposition() == (M, M, M)
+    assert M.bidiagonal_decomposition(upper=False) == (M, M, M)
+    assert M.bidiagonalize() == M
 
     import random
-    test_values = []
-    row = 2
-    col = 4
-    for _ in range(row*col):
-        value = random.randint(0, 100000000)
-        b = b + [value]
-    x = Matrix(row,col, b)
-    a, b, c = x.bidiagonal_decomposition()
-    d = a * b * c
-    d.simplify()
-    y = x.bidiagonalize()
-    y.simplify()
-    b.simplify()
-    w = x.bidiagonalize(upper=True)
-    i, j, k = x.bidiagonal_decomposition(upper=True)
-    l = i * j * k
-    w.simplify()
-    j.simplify()
-    l.simplify()
-    assert w == j
-    assert l == x
-    assert y == b
-    assert x == d
+    for test in range(2):
+        test_values = []
+        row = 2
+        col = 2
+        for _ in range(row * col):
+            value = random.randint(-1000000000, 1000000000)
+            test_values = test_values + [value]
+        x = Matrix(row, col, test_values)
+        a, b, c = x.bidiagonal_decomposition()
+        d = a * b * c
+        d.simplify()
+        y = x.bidiagonalize()
+        y.simplify()
+        b.simplify()
+        w = x.bidiagonalize(upper=False)
+        i, j, k = x.bidiagonal_decomposition(upper=False)
+        l = i * j * k
+        w.simplify()
+        j.simplify()
+        l.simplify()
+        assert w == j
+        assert l == x
+        assert y == b
+        assert x == d
 
-    test_values = []
-    row = 4
-    col = 2
-    for _ in range(col*row):
-        value = random.randint(0, 100000000)
-        b = b + [value]
-    x = Matrix(row, col, b)
-    a, b, c = x.bidiagonal_decomposition()
-    y = x.bidiagonalize()
-    y.simplify()
-    b.simplify()
-    d = a * b * c
-    d.simplify()
-    w = x.bidiagonalize(upper=True)
-    i, j, k = x.bidiagonal_decomposition(upper=True)
-    l = i * j * k
-    w.simplify()
-    j.simplify()
-    l.simplify()
-    assert w == j
-    assert l == x
-    assert x == d
-    assert y == b
+    for complex_test in range(2):
+        test_values = []
+        size = 2
+        for _ in range(row * col):
+            real = random.randint(0, 1000)
+            comp = random.randint(0, 1000)
+            value = real + comp * I
+            test_values = test_values + [value]
+        x = Matrix(size, size, test_values)
+        a, b, c = x.bidiagonal_decomposition()
+        d = a * b * c
+        d.simplify()
+        y = x.bidiagonalize()
+        y.simplify()
+        b.simplify()
+        w = x.bidiagonalize(upper=False)
+        i, j, k = x.bidiagonal_decomposition(upper=False)
+        l = i * j * k
+        w.simplify()
+        j.simplify()
+        l.simplify()
+        assert w == j
+        assert l == x
+        assert x == d
+        assert y == b
 
-
-    test_values = []
-    size = 2
-    for _ in range(row * col):
-        value = random.randint(0, 100000000)
-        b = b + [value]
-    x = Matrix(size, size, b)
-    a, b, c = x.bidiagonal_decomposition()
-    d = a * b * c
-    d.simplify()
-    y = x.bidiagonalize()
-    y.simplify()
-    b.simplify()
-    w = x.bidiagonalize(upper=True)
-    i, j, k = x.bidiagonal_decomposition(upper=True)
-    l = i * j * k
-    w.simplify()
-    j.simplify()
-    l.simplify()
-    assert w == j
-    assert l == x
-    assert x == d
-    assert y == b
-
-    x = Matrix([[1 + 2*I, 3 + 4*I ],
-                [5 + 6*I, 7 + 8*I ]])
-    a, b, c = x.bidiagonal_decomposition()
-    d = a * b * c
-    d.simplify()
-    y = x.bidiagonalize()
-    y.simplify()
-    b.simplify()
-    w = x.bidiagonalize(upper=True)
-    i, j, k = x.bidiagonal_decomposition(upper=True)
-    l = i * j * k
-    w.simplify()
-    j.simplify()
-    l.simplify()
-    assert w == j
-    assert l == x
-    assert x == d
-    assert b == y
-
-    test_values = []
-    size = 2
-    for _ in range(row * col):
-        real = random.randint(0, 100000000)
-        comp = random.randint(0, 100000000)
-        value = real + comp * I
-        b = b + [value]
-    x = Matrix(size, size, b)
-    a, b, c = x.bidiagonal_decomposition()
-    d = a * b * c
-    d.simplify()
-    y = x.bidiagonalize()
-    y.simplify()
-    b.simplify()
-    w = x.bidiagonalize(upper=True)
-    i, j, k = x.bidiagonal_decomposition(upper=True)
-    l = i * j * k
-    w.simplify()
-    j.simplify()
-    l.simplify()
-    assert w == j
-    assert l == x
-    assert x == d
-    assert y == b
-    
 
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])

@@ -391,7 +391,7 @@ def _householder_vector(x):
             v = v_plus
         else:
             v = v_minus
-        v = v/v[0]    
+        v = v/v[0]
         bet = 2 /(v.norm()**2)
     return v, bet
 
@@ -408,10 +408,9 @@ def _bidiagonal_decmp_hholder(M):
         temp = M.eye(m)
         temp[i:, i:] = hh_mat
         U = U * temp
-        return U, A, V
         if i + 1 <= n - 2:
             v, bet = _householder_vector( A[i, i+1:].T )
-            hh_mat = M.eye(n - i - 1)- bet * v * v.H 
+            hh_mat = M.eye(n - i - 1)- bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
             temp = M.eye(n)
             temp[i+1:, i+1:] = hh_mat
@@ -442,6 +441,7 @@ def _bidiagonal_decomposition(M, upper=True):
 
     where A is the input matrix, and B is its Bidiagonalized form
 
+    Note: Bidiagonal Computation can hang for symbolic matrices.
 
     Parameters
     ==========
@@ -463,7 +463,6 @@ def _bidiagonal_decomposition(M, upper=True):
 
 def _bidiagonalize(M, upper=True):
     """
-    
     Returns `B`
 
     where B is the Bidiagonalized form of the input matrix.
