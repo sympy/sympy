@@ -28,19 +28,27 @@ class AssocOp(Basic):
     __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
     @cacheit
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, evaluate=None, strict=False, **options):
+        """
+        evaluate: If `True`, arguments are flattened and identity argmuent
+        is removed. If `False`, arguments are not flattened.
+
+        strict: If `False`, identity argument is removed when `evaluate`
+        is `False`. Ignored if `evaluate=True`.
+        """
         from sympy import Order
+        options.update(evaluate=evaluate, strict=strict)
         args = list(map(_sympify, args))
-        args = [a for a in args if a is not cls.identity]
 
         # XXX: Maybe only Expr should be allowed here...
         from sympy.core.relational import Relational
         if any(isinstance(arg, Relational) for arg in args):
             raise TypeError("Relational can not be used in %s" % cls.__name__)
 
-        evaluate = options.get('evaluate')
         if evaluate is None:
             evaluate = global_parameters.evaluate
+        if evaluate or not strict:
+            args = [a for a in args if a is not cls.identity]
         if not evaluate:
             obj = cls._from_args(args)
             obj = cls._exec_constructor_postprocessors(obj)
