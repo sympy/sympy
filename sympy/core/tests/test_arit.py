@@ -1535,6 +1535,15 @@ def test_suppressed_evaluation():
     assert c.func is Pow
     assert c.args == (3, 2)
 
+def test_suppressed_evaluation_strict():
+    a = Add(0, 3, 2, evaluate=False, strict=True)
+    b = Mul(1, 3, 2, evaluate=False, strict=True)
+    assert a != 6
+    assert a.func is Add
+    assert a.args == (0, 3, 2)
+    assert b != 6
+    assert b.func is Mul
+    assert b.args == (1, 3, 2)
 
 def test_Add_as_coeff_mul():
     # issue 5524.  These should all be (1, self)
