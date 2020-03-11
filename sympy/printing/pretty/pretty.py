@@ -1800,6 +1800,8 @@ class PrettyPrinter(Printer):
                     a.append( Rational(item.p) )
                 if item.q != 1:
                     b.append( Rational(item.q) )
+                if item == 1:
+                    a.append( item )
             else:
                 a.append(item)
 
