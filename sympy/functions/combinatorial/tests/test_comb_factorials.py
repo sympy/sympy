@@ -432,7 +432,7 @@ def test_binomial():
     assert isinstance(binomial(x, x), binomial)
     assert isinstance(binomial(x, x - 1), binomial)
 
-    #issue
+    #issue #18802
     assert expand_func(binomial(x + 1, x)) == x + 1
     assert expand_func(binomial(x, x - 1)) == x
     assert expand_func(binomial(x + 1, x - 1)) == x*(x + 1)/2
