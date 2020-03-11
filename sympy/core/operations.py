@@ -377,8 +377,7 @@ class AssocOp(Basic):
 
     def doit(self, **hints):
         if hints.get('deep', True):
-            terms = [term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args]
+            terms = [term.doit(**hints) for term in self.args]
         else:
             terms = self.args
         return self.func(*terms, evaluate=True)
