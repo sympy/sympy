@@ -61,9 +61,7 @@ from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
-                   hyper, uppergamma, sinh, Ne, expint, Rational, Symbol)
-from sympy.external import import_module
-from sympy.tensor.array import ArrayComprehensionMap
+                   hyper, uppergamma, sinh, Ne, expint, Rational)
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
                              ContinuousDistributionHandmade)
@@ -71,10 +69,6 @@ from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, RandomSymbol
 
-
-numpy = import_module('numpy')
-scipy = import_module('scipy')
-pymc3 = import_module('pymc3')
 
 oo = S.Infinity
 
@@ -370,29 +364,6 @@ class BetaDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
-    def _sample_python(self, size):
-        x = Symbol('x')
-        a, b = float(self.alpha), float(self.beta)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.betavariate(a, b), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.betavariate(a, b),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        a, b = float(self.alpha), float(self.beta)
-        return numpy.random.beta(a=a, b=b, size=size)
-
-    def _sample_scipy(self, size):
-        a, b = float(self.alpha), float(self.beta)
-        from scipy.stats import beta
-        return beta.rvs(a=a, b=b, size=size)
-
-    def _sample_pymc3(self, size):
-        a, b = float(self.alpha), float(self.beta)
-        with pymc3.Model():
-            pymc3.Beta('X', alpha=a, beta=b)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
 
@@ -565,11 +536,6 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
-    def _sample_scipy(self, size):
-        alpha, beta = float(self.alpha), float(self.beta)
-        from scipy.stats import betaprime
-        return betaprime.rvs(a=alpha, b=beta, size=size)
-
 def BetaPrime(name, alpha, beta):
     r"""
     Create a continuous random variable with a Beta prime distribution.
@@ -650,17 +616,6 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
-    def _sample_scipy(self, size):
-        x0, gamma = float(self.x0), float(self.gamma)
-        from scipy.stats import cauchy
-        return cauchy.rvs(loc=x0, scale=gamma, size=size)
-
-    def _sample_pymc3(self, size):
-        x0, gamma = float(self.x0), float(self.gamma)
-        with pymc3.Model():
-            pymc3.Cauchy('X', alpha=x0, beta=gamma)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -740,10 +695,6 @@ class ChiDistribution(SingleContinuousDistribution):
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
 
-    def _sample_scipy(self, size):
-        k = float(self.k)
-        from scipy.stats import chi
-        return chi.rvs(df=k, size=size)
 
 def Chi(name, k):
     r"""
@@ -890,20 +841,6 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     def  _moment_generating_function(self, t):
         return (1 - 2*t)**(-self.k/2)
 
-    def _sample_numpy(self, size):
-        k = float(self.k)
-        return numpy.random.chisquare(df=k, size=size)
-
-    def _sample_scipy(self, size):
-        k = float(self.k)
-        from scipy.stats import chi2
-        return chi2.rvs(df=k, size=size)
-
-    def _sample_pymc3(self, size):
-        k = float(self.k)
-        with pymc3.Model():
-            pymc3.ChiSquared('X', nu=k)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 def ChiSquared(name, k):
     r"""
@@ -1235,29 +1172,6 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         return self.rate * exp(-self.rate*x)
-
-    def _sample_python(self, size):
-        x = Symbol('x')
-        rate = float(self.rate)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.expovariate(rate), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.expovariate(rate),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        rate = float(self.rate)
-        return numpy.random.exponential(1/rate, size)
-
-    def _sample_scipy(self, size):
-        rate = float(self.rate)
-        from scipy.stats import expon
-        return expon.rvs(loc=0, scale=1/rate, size=size)
-
-    def _sample_pymc3(self, size):
-        rate = float(self.rate)
-        with pymc3.Model():
-            pymc3.Exponential('X', lam=rate)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         return Piecewise(
@@ -1688,29 +1602,6 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-    def _sample_python(self, size):
-        x = Symbol('x')
-        k, theta = self.k, self.theta
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.gammavariate(k, theta), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.gammavariate(k, theta),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        k, theta = float(self.k), float(self.theta)
-        return numpy.random.gamma(k, theta, size)
-
-    def _sample_scipy(self, size):
-        k, theta = float(self.k), float(self.theta)
-        from scipy.stats import gamma
-        return gamma.rvs(a=k, loc=0, scale=theta, size=size)
-
-    def _sample_pymc3(self, size):
-        k, theta = float(self.k), float(self.theta)
-        with pymc3.Model():
-            pymc3.Gamma('X', alpha=k, beta=1/theta)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
     def _cdf(self, x):
         k, theta = self.k, self.theta
         return Piecewise(
@@ -1817,11 +1708,6 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
-
-    def _sample_scipy(self, size):
-        a, b = float(self.a), float(self.b)
-        from scipy.stats import invgamma
-        return invgamma.rvs(a=a, loc=0, scale=b, size=size)
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
@@ -2490,29 +2376,6 @@ class LogNormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
-    def _sample_python(self, size):
-        x = Symbol('x')
-        mean, std = float(self.mean), float(self.std)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.lognormvariate(mean, std),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        mean, std = float(self.mean), float(self.std)
-        return numpy.random.lognormal(mean, std, size)
-
-    def _sample_scipy(self, size):
-        mean, std = float(self.mean), float(self.std)
-        from scipy.stats import lognorm
-        return lognorm.rvs(s=std, loc=0, scale=exp(mean), size=size)
-
-    def _sample_pymc3(self, size):
-        mean, std = float(self.mean), float(self.std)
-        with pymc3.Model():
-            pymc3.Lognormal('X', mu=mean, sigma=std)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
     def _cdf(self, x):
         mean, std = self.mean, self.std
         return Piecewise(
@@ -2843,29 +2706,6 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def _sample_python(self, size):
-        x = Symbol('x')
-        mean, std = float(self.mean), float(self.std)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.normalvariate(mean, std), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.normalvariate(mean, std),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        mean, std = float(self.mean), float(self.std)
-        return numpy.random.normal(mean, std, size)
-
-    def _sample_scipy(self, size):
-        mean, std = float(self.mean), float(self.std)
-        from scipy.stats import norm
-        return norm.rvs(mean, std, size)
-
-    def _sample_pymc3(self, size):
-        mean, std = float(self.mean), float(self.std)
-        with pymc3.Model():
-            pymc3.Normal('X', mean, std)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
     def _cdf(self, x):
         mean, std = self.mean, self.std
         return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
@@ -2994,17 +2834,6 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
         mu, s = self.mean, self.shape
         return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
 
-    def _sample_scipy(self, size):
-        mu, s = float(self.mean), float(self.shape)
-        from scipy.stats import invgauss
-        return invgauss.rvs(mu=mu/s, scale=s, size=size)
-
-    def _sample_pymc3(self, size):
-        mu, s = float(self.mean), float(self.shape)
-        with pymc3.Model():
-            pymc3.Wald('X', mu=mu, lam=s)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
     def _cdf(self, x):
         from sympy.stats import cdf
         mu, s = self.mean, self.shape
@@ -3108,29 +2937,6 @@ class ParetoDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
-
-    def _sample_python(self, size):
-        x = Symbol('x')
-        alpha = float(self.alpha)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.paretovariate(alpha), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.paretovariate(alpha),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        xm, alpha = float(self.xm), float(self.alpha)
-        return (numpy.random.pareto(a=alpha, size=1000) + 1) * xm
-
-    def _sample_scipy(self, size):
-        xm, alpha = float(self.xm), float(self.alpha)
-        from scipy.stats import pareto
-        return pareto.rvs(b=alpha, scale=xm, size=size)
-
-    def _sample_pymc3(self, size):
-        xm, alpha = float(self.xm), float(self.alpha)
-        with pymc3.Model():
-            pymc3.Pareto('X', alpha=alpha, m=xm)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha
@@ -3981,29 +3787,6 @@ class UniformDistribution(SingleContinuousDistribution):
                               Min(self.left, self.right): self.left})
         return result
 
-    def _sample_python(self, size):
-        x = Symbol('x')
-        left, right = float(self.left), float(self.right)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.uniform(left, right), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.uniform(left, right),
-                                     *[(x, 0, i-1) for i in size]).doit()
-
-    def _sample_numpy(self, size):
-        left, right = float(self.left), float(self.right)
-        return numpy.random.uniform(low=left, high=right, size=size)
-
-    def _sample_scipy(self, size):
-        left, right = float(self.left), float(self.right)
-        from scipy.stats import uniform
-        return uniform.rvs(loc=left, scale=right-left, size=size)
-
-    def _sample_pymc3(self, size):
-        left, right = float(self.left), float(self.right)
-        with pymc3.Model():
-            pymc3.Uniform('X', lower=left, upper=right)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
 
 def Uniform(name, left, right):
     r"""
@@ -4256,13 +4039,6 @@ class WeibullDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
-    def _sample_python(self, size):
-        x = Symbol('x')
-        alpha, beta = float(self.alpha), float(self.beta)
-        if isinstance(size, int):
-            return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta), (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: random.weibullvariate(alpha, beta),
-                                     *[(x, 0, i-1) for i in size]).doit()
 
 def Weibull(name, alpha, beta):
     r"""

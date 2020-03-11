@@ -1565,10 +1565,8 @@ def test_sampling_methods():
     else:
         for X in distribs_numpy:
             samps = sample(X, size=size)
-            samps2 = X.pspace.distribution._sample_numpy(size)
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
-                assert samps2[sam] in X.pspace.domain.set
 
     scipy = import_module('scipy')
     if not scipy:
@@ -1576,10 +1574,8 @@ def test_sampling_methods():
     else:
         for X in distribs_scipy:
             samps = sample(X, size=size)
-            samps2 = X.pspace.distribution._sample_scipy(size)
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
-                assert samps2[sam] in X.pspace.domain.set
 
     pymc3 = import_module('pymc3')
     if not pymc3:
@@ -1587,7 +1583,5 @@ def test_sampling_methods():
     else:
         for X in distribs_pymc3:
             samps = sample(X, size=size)
-            samps2 = X.pspace.distribution._sample_pymc3(size)
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
-                assert samps2[sam] in X.pspace.domain.set
