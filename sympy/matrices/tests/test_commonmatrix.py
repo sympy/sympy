@@ -5,7 +5,7 @@ from sympy.core.numbers import I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.exponential import exp,log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
