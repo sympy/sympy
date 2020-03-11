@@ -66,6 +66,7 @@ from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.basic import preorder_traversal
 
 
 def rsolve_poly(coeffs, f, n, **hints):
@@ -727,20 +728,19 @@ def rsolve(f, y, init=None):
         coeff = S.One
         kspec = None
         for h in Mul.make_args(g):
-            if h.is_Function:
-                if h.func == y.func:
-                    result = h.args[0].match(n + k)
+            if y.func not in map(lambda x: x.func, preorder_traversal(h)):
+                coeff *= h
+            elif h.is_Function and h.func == y.func:
+                result = h.args[0].match(n + k)
 
-                    if result is not None:
-                        kspec = int(result[k])
-                    else:
-                        raise ValueError(
-                            "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
+                if result is not None:
+                    kspec = int(result[k])
                 else:
                     raise ValueError(
-                        "'%s' expected, got '%s'" % (y.func, h.func))
+                        "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
             else:
-                coeff *= h
+                raise ValueError(
+                    "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
 
         if kspec is not None:
             h_part[kspec] += coeff
@@ -751,6 +751,10 @@ def rsolve(f, y, init=None):
         h_part[k] = simplify(coeff)
 
     common = S.One
+
+    if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
+       not (i_part.is_Add and all(map(lambda x: i_part.is_hypergeometric(n), f.expand().args))):
+        raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():
         if coeff.is_rational_function(n):

@@ -1,5 +1,5 @@
 from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, \
-    expand_func, binomial, gamma, Rational
+    expand_func, binomial, gamma, Rational, Symbol, cos, sin, Abs
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b
@@ -202,6 +202,16 @@ def test_issue_6844():
     f = y(n + 2) - y(n + 1) + y(n)/4
     assert rsolve(f, y(n)) == 2**(-n)*(C0 + C1*n)
     assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2*2**(-n)*n
+
+
+def test_issue_18751():
+    n = Symbol('n', integer=True)
+    y = Function('y')
+    r = Symbol('r', real=True, positive=True)
+    theta = Symbol('theta', real=True)
+    f = y(n) - 2 * r * cos(theta) * y(n - 1) + r**2 * y(n - 2)
+    assert rsolve(f, y(n)) == \
+        C0*(r*(cos(theta) - I*Abs(sin(theta))))**n + C1*(r*(cos(theta) + I*Abs(sin(theta))))**n
 
 
 @slow
