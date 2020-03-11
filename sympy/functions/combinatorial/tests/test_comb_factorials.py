@@ -436,7 +436,7 @@ def test_binomial():
     assert expand_func(binomial(x + 1, x)) == x + 1
     assert expand_func(binomial(x, x - 1)) == x
     assert expand_func(binomial(x + 1, x - 1)) == x*(x + 1)/2
-    assert expand_func(binomial(x**2 + 1, x**2), x) == x**2 + 1
+    assert expand_func(binomial(x**2 + 1, x**2)) == x**2 + 1
 
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
