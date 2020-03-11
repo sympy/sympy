@@ -2232,25 +2232,15 @@ def test_issue_12623():
     R, L, C, E_0, alpha = symbols("R L C E_0 alpha",positive=True) 
     omega = Symbol('omega')  
 
-    eqRLC_1 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t),E_0) 
-    sol_1 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0)
+    eqRLC_1 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha)
+    sol_1 = Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))
     assert dsolve(eqRLC_1) == sol_1
     assert checkodesol(eqRLC_1, sol_1) == (True, 0)
 
-    eqRLC_2 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t),E_0/(L*C))
-    sol_2 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0)
-    assert dsolve(eqRLC_2) == sol_2
-    assert checkodesol(eqRLC_2, sol_2) == (True, 0)
-
-    eqRLC_3 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha)
-    sol_3 = Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))
-    assert dsolve(eqRLC_3) == sol_3
-    assert checkodesol(eqRLC_3, sol_3) == (True, 0)
-
-    eqRLC_4 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
-    sol_4 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
-    assert dsolve(eqRLC_4) == sol_4 
-    assert checkodesol(eqRLC_4, sol_4) == (True, 0)     
+    eqRLC_2 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
+    sol_2 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
+    assert dsolve(eqRLC_2) == sol_2 
+    assert checkodesol(eqRLC_2, sol_2) == (True, 0)     
     #issue-https://github.com/sympy/sympy/issues/12623
 
 def test_issue_5787():
