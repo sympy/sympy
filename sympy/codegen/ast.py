@@ -217,10 +217,12 @@ class Token(Basic):
 
         # Process keyword arguments
         for attrname in cls.__slots__[num_args:]:
-            try:
-                argval = kwargs.pop(attrname, cls.defaults[attrname])
-            except KeyError:
-                raise TypeError(f'No value for {attrname} given and attribute has no default')
+            if attrname in kwargs:
+                argval = kwargs.pop(attrname)
+            elif attrname in cls.defaults:
+                argval = cls.defaults[attrname]
+            else:
+                raise TypeError(f"No value for {attrname} given and attribute has no default")
 
             attrvals.append(cls._construct(attrname, argval))
 
