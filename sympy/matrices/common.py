@@ -2485,7 +2485,6 @@ class MatrixArithmetic(MatrixRequired):
 
         from sympy.matrices.expressions import MatPow
         return MatPow(a, exp)
-    
     def exp_by_matrix(self, exp, side="l"):
         """
         Returns Matrix exponential of input exp.
