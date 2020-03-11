@@ -1027,10 +1027,6 @@ def solve(f, *symbols, **flags):
                     bare_f = False
                 f[i: i + 1] = [fr, fi]
 
-    #expand binomial terms
-    expand_binomial = lambda f: f.replace(binomial, lambda n, k: expand_func(binomial(n, k)))
-    f = [expand_binomial(fi) for fi in f]
-
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
         if flags.get('set', False):
@@ -1463,6 +1459,9 @@ def _solve(f, *symbols, **flags):
         else:
             raise NotImplementedError(not_impl_msg % f)
     symbol = symbols[0]
+
+    #expand binomials only if it has the unknown symbol
+    f = f.replace(binomial, lambda n, k: expand_func(binomial(n, k)) if n == symbol else binomial(n,k))
 
     # /!\ capture this flag then set it to False so that no checking in
     # recursive calls will be done; only the final answer is checked
