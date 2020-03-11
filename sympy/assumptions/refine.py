@@ -339,7 +339,7 @@ def refine_sign(expr, assumptions):
 def refine_matrixelement(expr, assumptions):
     """
     Handler for symmetric part
-    
+
     Examples
     ========
 
@@ -351,12 +351,12 @@ def refine_matrixelement(expr, assumptions):
     X[0, 1]
     >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
     X[0, 1]
-    """ 
+    """
     from sympy.matrices.expressions.matexpr import MatrixElement
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
         if (expr.args[1] > expr.args[2]):
-            return(MatrixElement(expr.args[0],expr.args[2],expr.args[1])) 
+            return(MatrixElement(expr.args[0],expr.args[2],expr.args[1]))
         return(expr)
 
 handlers_dict = {
