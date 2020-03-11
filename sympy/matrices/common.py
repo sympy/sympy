@@ -2485,6 +2485,27 @@ class MatrixArithmetic(MatrixRequired):
 
         from sympy.matrices.expressions import MatPow
         return MatPow(a, exp)
+    
+    def exp_by_matrix(self, exp, side="l"):
+        """
+        Returns Matrix exponential of input exp.
+
+        Parameters:-
+
+        exp : The exponent
+        side : 'l' denotes left exponential and 'r' denotes right exponential
+        """
+        from sympy import log
+        x = Symbol('x')
+        log_X = self.analytic_func(log(x), x)
+        if side == "l":
+            log_X = exp * log_X
+        elif side == "r":
+            log_X = log_X * exp
+        else:
+            ValueError(side+" is not a valid input for side")
+        print(log_X)
+        return log_X.exp()
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
