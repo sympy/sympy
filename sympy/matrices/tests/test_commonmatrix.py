@@ -747,6 +747,10 @@ def test_eye():
     assert type(SpecialOnlyMatrix.eye(2)) == SpecialOnlyMatrix
     assert type(SpecialOnlyMatrix.eye(2, cls=Matrix)) == Matrix
 
+def test_matrix_exp():
+    a =  Matrix([[0 ,2],[1, 0]])
+    b = Matrix([[1,0],[0,0]])
+    assert a.exp_by_matrix(b, side = "l") == Matrix([[sqrt(2)*I, (2*pi + sqrt(2)*I*pi)/(2*log(sqrt(2)) + I*pi)], [0, 1]])
 
 def test_ones():
     assert list(SpecialOnlyMatrix.ones(2, 2)) == [1, 1, 1, 1]
