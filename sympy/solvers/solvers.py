@@ -1461,7 +1461,8 @@ def _solve(f, *symbols, **flags):
     symbol = symbols[0]
 
     #expand binomials only if it has the unknown symbol
-    f = f.replace(lambda e: isinstance(e, binomial) and e.has(symbol), lambda e: expand_func(e))
+    f = f.replace(lambda e: isinstance(e, binomial) and e.has(symbol),
+        lambda e: expand_func(e))
 
     # /!\ capture this flag then set it to False so that no checking in
     # recursive calls will be done; only the final answer is checked
