@@ -69,7 +69,6 @@ from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, RandomSymbol
 
-
 oo = S.Infinity
 
 __all__ = ['ContinuousRV',
@@ -616,7 +615,6 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
-
 def Cauchy(name, x0, gamma):
     r"""
     Create a continuous random variable with a Cauchy distribution.
@@ -694,7 +692,6 @@ class ChiDistribution(SingleContinuousDistribution):
         part_2 = t * sqrt(2) * gamma((k + 1) / 2) / gamma(k / 2)
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
-
 
 def Chi(name, k):
     r"""
@@ -840,7 +837,6 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
     def  _moment_generating_function(self, t):
         return (1 - 2*t)**(-self.k/2)
-
 
 def ChiSquared(name, k):
     r"""

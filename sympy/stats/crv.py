@@ -25,7 +25,6 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
 
-scipy = import_module('scipy')
 
 class ContinuousDomain(RandomDomain):
     """
@@ -260,7 +259,6 @@ class SampleExternal(Basic):
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        import random
         python_rv_map = {
             'BetaDistribution': lambda dist:
                 random.betavariate(float(dist.alpha), float(dist.beta)),
@@ -524,23 +522,6 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
 
-#    def _sample_scipy(self, size):
-#        handmade_pdf = self.pdf
-#        from scipy.stats import rv_continuous
-#        class scipy_pdf(rv_continuous):
-#            def _pdf(self, z):
-#                return handmade_pdf(z)
-
-#        scipy_rv = scipy_pdf(a=self.set._inf, b=self.set._sup, name='scipy_pdf')
-#        return scipy_rv.rvs(size=size)
-
-#    def _sample_python(self, size):
-#        x = Symbol('x')
-#        icdf = self._inverse_cdf_expression()
-#        if isinstance(size, int):
-#            return ArrayComprehensionMap(lambda: icdf(random.uniform(0, 1)), (x, 0, size)).doit()
-#        return ArrayComprehensionMap(lambda: icdf(random.uniform(0, 1)),
-#                                     *[(x, 0, i) for i in size]).doit()
 
 class ContinuousPSpace(PSpace):
     """ Continuous Probability Space
