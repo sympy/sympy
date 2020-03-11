@@ -105,11 +105,11 @@ class AssocOp(Basic):
            all. This is best used when you are rebuilding an Add or Mul after
            simply removing one or more args. If, for example, modifications,
            result in extra 1s being inserted (as when collecting an
-           expression's numerators and denominators) they will not show up in
-           the result but a Mul will be returned nonetheless:
+           expression's numerators and denominators) Mul instance with its
+           identity not removed will be returned:
 
                >>> m = (x*y)._new_rawargs(S.One, x); m
-               x
+               1*x
                >>> m == x
                False
                >>> m.is_Mul
