@@ -375,29 +375,20 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
 #G&VL, Matrix Computations, Algo 5.4.2
 def _householder_vector(x):
     if not x.cols == 1:
-        raise ValueError("Input must be a column matrix")
+            raise ValueError("Input must be a column matrix")
     v = x.copy()
-    v_plus = x.copy()
-    v_minus = x.copy()
     if x[0, 0] != 0:
         q = x[0, 0] / abs(x[0, 0])
     else:
         q = 1
-    norm_x = x.norm()
-    v_plus[0, 0] = x[0, 0] + q * norm_x
-    v_minus[0, 0] = x[0, 0] - q * norm_x
     if x[1:, 0].norm() == 0:
         bet = 0
         v[0, 0] = 1
     else:
-        if v_plus.norm() <= v_minus.norm():
-            v = v_plus
-        else:
-            v = v_minus
+        v[0, 0] = x[0, 0] + q * x.norm()
         v = v / v[0]
         bet = 2 / (v.norm() ** 2)
     return v, bet
-
 
 def _bidiagonal_decmp_hholder(M):
     m = M.rows
