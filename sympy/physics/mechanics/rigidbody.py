@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.backend import sympify
-from sympy.physics.vector import Point, ReferenceFrame, Dyadic
+from sympy.physics.vector import Point, ReferenceFrame, Dyadic, dot
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -241,7 +241,7 @@ class RigidBody(object):
 
         """
 
-        rotational_KE = (self.frame.ang_vel_in(frame) & (self.central_inertia &
+        rotational_KE = dot(self.frame.ang_vel_in(frame), dot(self.central_inertia,
                 self.frame.ang_vel_in(frame)) / sympify(2))
 
         translational_KE = (self.mass * (self.masscenter.vel(frame) &

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.backend import sympify
-from sympy.physics.vector import Point
+from sympy.physics.vector import Point, dot
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -180,7 +180,7 @@ class Particle(object):
 
         """
 
-        return (self.mass / sympify(2) * self.point.vel(frame) &
+        return dot(self.mass / sympify(2) * self.point.vel(frame),
                 self.point.vel(frame))
 
     @property
