@@ -619,6 +619,8 @@ def _solve_trig2(f, symbol, domain):
     # ilcm() and igcd() require more than one argument
     if len(numerators) > 1:
         mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
+    elif len(numerators) == 0:
+        mu = 1
     else:
         assert len(numerators) == 1
         mu = Rational(2)*denominators[0]/numerators[0]
