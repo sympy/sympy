@@ -46,6 +46,7 @@ from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, degree
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.polys.polymatrix import DomainMatrixDomainError, linsolve_domain
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -2233,6 +2234,16 @@ def solve_linear_system(system, *symbols, **flags):
     from sympy.sets import FiniteSet
 
     assert system.shape[1] == len(symbols) + 1
+
+    # Try to use DomainMatrix
+    try:
+        sol = linsolve_domain(system, symbols)
+    except DomainMatrixDomainError:
+        pass
+    else:
+        if sol is not None:
+            sol = {sym:val for sym, val in sol.items() if sym != val}
+        return sol
 
     # This is just a wrapper for linsolve:
     sol = linsolve(system, *symbols)
