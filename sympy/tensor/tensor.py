@@ -41,7 +41,7 @@ from sympy import Rational, prod, Integer, default_sort_key
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core import Basic, Expr, sympify, Add, Mul, S
+from sympy.core import Basic, Expr, sympify, Add, Mul, Pow, S
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.compatibility import reduce, SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
@@ -49,6 +49,7 @@ from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
+from sympy.core.parameters import global_parameters
 from sympy.matrices import eye
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import memoize_property
@@ -1732,6 +1733,9 @@ class TensorHead(Basic):
     def rank(self):
         return len(self.index_types)
 
+    def _hashable_content(self):
+        return super()._hashable_content() + (self.comm,)
+
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
 
@@ -1884,78 +1888,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
     def __abs__(self):
         raise NotImplementedError
-
-    def __add__(self, other):
-        return TensAdd(self, other).doit()
-
-    def __radd__(self, other):
-        return TensAdd(other, self).doit()
-
-    def __sub__(self, other):
-        return TensAdd(self, -other).doit()
-
-    def __rsub__(self, other):
-        return TensAdd(other, -self).doit()
-
-    def __mul__(self, other):
-        """
-        Multiply two tensors using Einstein summation convention.
-
-        If the two tensors have an index in common, one contravariant
-        and the other covariant, in their product the indices are summed
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_name='L')
-        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> g = Lorentz.metric
-        >>> p, q = tensor_heads('p,q', [Lorentz])
-        >>> t1 = p(m0)
-        >>> t2 = q(-m0)
-        >>> t1*t2
-        p(L_0)*q(-L_0)
-        """
-        return TensMul(self, other).doit()
-
-    def __rmul__(self, other):
-        return TensMul(other, self).doit()
-
-    def __div__(self, other):
-        other = _sympify(other)
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        return TensMul(self, S.One/other).doit()
-
-    def __rdiv__(self, other):
-        raise ValueError('cannot divide by a tensor')
-
-    def __pow__(self, other):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-            if self.data is None:
-                raise ValueError("No power without ndarray data.")
-        deprecate_data()
-        from .array import tensorproduct, tensorcontraction
-        free = self.free
-        marray = self.data
-        mdim = marray.rank()
-        for metric in free:
-            marray = tensorcontraction(
-                tensorproduct(
-                marray,
-                metric[0].tensor_index_type.data,
-                marray),
-                (0, mdim), (mdim+1, mdim+2)
-            )
-        return marray ** (other * S.Half)
-
-    def __rpow__(self, other):
-        raise NotImplementedError
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @property
     @abstractmethod
@@ -3068,6 +3000,10 @@ class TensMul(TensExpr, AssocOp):
     """
     Product of tensors
 
+    Multiply two tensors using Einstein summation convention.
+    If the two tensors have an index in common, one contravariant
+    and the other covariant, in their product the indices are summed
+
     Parameters
     ==========
 
@@ -3086,6 +3022,19 @@ class TensMul(TensExpr, AssocOp):
     ``coeff`` : SymPy coefficient of the tensor
     ``free_args`` : list of the free indices in sorted order
     ``is_canon_bp`` : ``True`` if the tensor in in canonical form
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
+    >>> g = Lorentz.metric
+    >>> p, q = tensor_heads('p,q', [Lorentz])
+    >>> t1 = p(m0)
+    >>> t2 = q(-m0)
+    >>> t1*t2
+    p(L_0)*q(-L_0)
 
     Notes
     =====
@@ -4199,3 +4148,76 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+def Add_preprocessor(*args, **options):
+    evaluate = options.get('evaluate', global_parameters.evaluate)
+    if not evaluate:
+        return None
+
+    extras, tensors, others = [], [], []
+    for a in args:
+        if isinstance(a, MatrixExpr):
+            extras.append(a)
+        elif isinstance(a, TensExpr):
+            tensors.append(a)
+        else:
+            others.append(a)
+    extra = Add(*extras, evaluate=True)
+    coeff = Add(*others, evaluate=True)
+
+    for i,a in enumerate(tensors):
+        if i == 0:
+            tensor = a
+        else:
+            tensor = TensAdd(tensor, a).doit()
+
+    return TensAdd(tensor, coeff, extra).doit()
+
+def Mul_preprocessor(*args, **options):
+    evaluate = options.get('evaluate', global_parameters.evaluate)
+    if not evaluate:
+        return None
+
+    for i,a in enumerate(args):
+        if i == 0:
+            result = a
+        else:
+            result = TensMul(result, a).doit()
+
+    return result
+
+def Pow_preprocessor(b, e, **options):
+    evaluate = options.get('evaluate', global_parameters.evaluate)
+    if not evaluate:
+        return None
+    if isinstance(e, TensExpr):
+        raise NotImplementedError
+    if e.is_negative:
+        raise ValueError('Cannot divide by a tensor')
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        if b.data is None:
+            raise ValueError("No power without ndarray data.")
+    deprecate_data()
+    from .array import tensorproduct, tensorcontraction
+    free = b.free
+    marray = b.data
+    mdim = marray.rank()
+    for metric in free:
+        marray = tensorcontraction(
+            tensorproduct(
+            marray,
+            metric[0].tensor_index_type.data,
+            marray),
+            (0, mdim), (mdim+1, mdim+2)
+        )
+    return marray ** (e * S.Half)
+
+Basic._constructor_preprocessor_mapping[TensExpr] = {
+    Add: Add_preprocessor,
+    Mul: Mul_preprocessor,
+    Pow: Pow_preprocessor
+}
+
+from sympy.matrices.expressions import MatrixExpr
