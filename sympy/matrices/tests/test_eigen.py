@@ -231,18 +231,11 @@ def test_left_eigenvects():
 def test_bidiagonalize():
     def test_matrix(M):
         def test_orthogonal(M):
-            assert simplify(M.T * M) == M.eye(M.cols)
-            assert simplify(M * M.T) == M.eye(M.rows)
-        # L     -> Lower Bidiagonalization
-        # M     -> Mutable Matrix
-        # N     -> Immutable Matrix
-        # 0     -> Bidiagonalized form
-        # 1,2,3 -> Bidiagonal_decomposition matrices
-        # 4     -> Product of 1 2 3
+            assert simplify(M.H * M) == M.eye(M.cols)
+            assert simplify(M * M.H) == M.eye(M.rows)
         M1, M2, M3 = M.bidiagonal_decomposition()
         M0 = M.bidiagonalize()
-        M4 = M1 * M2 * M3
-        assert M == simplify(M4)
+        assert M == simplify(M1 * M2 * M3)
         assert simplify(M2) == simplify(M0)
         test_orthogonal(M1)
         test_orthogonal(M3)
@@ -250,28 +243,25 @@ def test_bidiagonalize():
         N = ImmutableMatrix(M)
         N1, N2, N3 = N.bidiagonal_decomposition()
         N0 = N.bidiagonalize()
-        N4 = N1 * N2 * N3
-        assert N == simplify(N4)
+        assert N == simplify(N1 * N2 * N3)
         assert simplify(N2) == simplify(N0)
         test_orthogonal(N1)
         test_orthogonal(N3)
 
         LM0 = M.bidiagonalize(upper=False)
         LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
-        LM4 = LM1 * LM2 * LM3
-        assert M == simplify(LM4)
+        assert M == simplify(LM1 * LM2 * LM3)
         assert simplify(LM2) == simplify(LM0)
         test_orthogonal(LM1)
         test_orthogonal(LM3)
 
         LN0 = N.bidiagonalize(upper=False)
         LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
-        LN4 = LN1 * LN2 * LN3
-        assert N == simplify(LN4)
+        assert N == simplify(LN1 * LN2 * LN3)
         assert simplify(LN2) == simplify(LN0)
         test_orthogonal(LN1)
         test_orthogonal(LN3)
-        
+
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
                 [0, 0, 1]])
@@ -288,29 +278,31 @@ def test_bidiagonalize():
     M = Matrix(4, 3, range(1, 13)).applyfunc(lambda i: Float(i, 100))
     a, b, c = M.bidiagonal_decomposition()
     diff = a * b * c - M
-    assert abs(max(diff)) < 10**-90
-    assert b.applyfunc(lambda i : round(i, 5)) == Matrix([[-12.88410, 21.87643, 0.0],
-                                                          [0.0, 2.24624, -0.61328],
-                                                          [0.0, 0, 0.0],
-                                                          [0.0, 0.0, 0.0]])
+    assert max(abs(diff)) < 10**-90
+    res = Matrix([[-12.88410, 21.87643, 0.0],
+                  [0.0, 2.24624, -0.61328],
+                  [0.0, 0, 0.0],
+                  [0.0, 0.0, 0.0]])
+    assert max(abs(b.applyfunc(lambda i : round(i, 5)) - res)) < 10**-6
 
 
     M = Matrix(10, 8, range(1, 81)).applyfunc(lambda i: Float(i, 100))
     a, b, c = M.bidiagonal_decomposition()
     diff = a * b * c - M
-    assert abs(max(diff)) < 10**-90
-    assert b.applyfunc(lambda i : round(i, 5)) == Matrix([[-137.73162, 393.09074, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0, 17.96369, -8.18375, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                                          [0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0]])
+    assert max(abs(diff)) < 10**-90
+    res = Matrix([[-137.73162, 393.09074, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0, 17.96369, -8.18375, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0]])
+    assert max(abs(b.applyfunc(lambda i : round(i, 5)) - res)) < 10**-6
 
-    x,y,z,w = symbols('x y z w', real=True, zero=False)
+    x, y, z, w = symbols('x y z w', real=True, zero=False)
     M = Matrix([[x, y], [z, w]])
     test_matrix(M)
 
@@ -323,12 +315,10 @@ def test_bidiagonalize():
     assert simplify(N) == Matrix([[-sqrt(10), -7*sqrt(10)/5], [0, -sqrt(10)/5]])
     assert P[2] == M.eye(2)
     assert simplify(P[1]) == Matrix([[-sqrt(10), -7*sqrt(10)/5], [0, -sqrt(10)/5]])
-    test_matrix(M)
 
-    Matrix([[14, 51], [68, 87]])
+    M = Matrix([[14, 51], [68, 87]])
     assert simplify(M.bidiagonalize()) == Matrix([[-2*sqrt(1205), -663*sqrt(1205)/241], [0, -225*sqrt(1205)/241]])
-    assert simplify(M.bidiagonalize(upper=False)) == Matrix([[-2*sqrt(1205), -663*sqrt(1205)/241], [0, -225*sqrt(1205)/241]])
-    test_matrix(M)
+    assert simplify(M.bidiagonalize(upper=False)) == Matrix([[-sqrt(2797), 0], [-5389*sqrt(2797)/2797, -2250*sqrt(2797)/2797]])
 
 
 def test_diagonalize():
