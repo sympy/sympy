@@ -23,7 +23,6 @@ from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
-import random
 
 
 class ContinuousDomain(RandomDomain):
@@ -202,8 +201,8 @@ class SampleExternal(Basic):
                 scale=float(dist.theta), size=size),
             'GammaInverseDistribution': lambda dist, size: invgamma.rvs(a=float(dist.a),
                 loc=0, scale=float(dist.b), size=size),
-            'LogNormalDistribution': lambda dist, size: lognorm.rvs(s=std, loc=0,
-                scale=exp(float(dist.mean), size=size)),
+            'LogNormalDistribution': lambda dist, size: lognorm.rvs(s=float(dist.std),
+                loc=0, scale=exp(float(dist.mean), size=size)),
             'NormalDistribution': lambda dist, size: norm.rvs(float(dist.mean),
                 float(dist.std), size=size),
             'GaussianInverseDistribution': lambda dist, size: invgauss.rvs(
@@ -259,6 +258,7 @@ class SampleExternal(Basic):
         if dist.__class__.__name__ not in dist_list:
             return None
 
+        import random
         python_rv_map = {
             'BetaDistribution': lambda dist:
                 random.betavariate(float(dist.alpha), float(dist.beta)),
