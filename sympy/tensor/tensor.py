@@ -1889,6 +1889,59 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def __abs__(self):
         raise NotImplementedError
 
+    def __add__(self, other):
+        return TensAdd(self, other).doit()
+
+    def __radd__(self, other):
+        return TensAdd(other, self).doit()
+
+    def __sub__(self, other):
+        return TensAdd(self, -other).doit()
+
+    def __rsub__(self, other):
+        return TensAdd(other, -self).doit()
+
+    def __mul__(self, other):
+        return TensMul(self, other).doit()
+
+    def __rmul__(self, other):
+        return TensMul(other, self).doit()
+
+    def __div__(self, other):
+        other = _sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        return TensMul(self, S.One/other).doit()
+
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
+
+    def __pow__(self, other):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+            if self.data is None:
+                raise ValueError("No power without ndarray data.")
+        deprecate_data()
+        from .array import tensorproduct, tensorcontraction
+        free = self.free
+        marray = self.data
+        mdim = marray.rank()
+        for metric in free:
+            marray = tensorcontraction(
+                tensorproduct(
+                marray,
+                metric[0].tensor_index_type.data,
+                marray),
+                (0, mdim), (mdim+1, mdim+2)
+            )
+        return marray ** (other * S.Half)
+
+    def __rpow__(self, other):
+        raise NotImplementedError
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
     @property
     @abstractmethod
     def nocoeff(self):
