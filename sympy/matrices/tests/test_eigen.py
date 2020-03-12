@@ -280,7 +280,7 @@ def test_bidiagonalize():
     assert M.bidiagonal_decomposition() == (M, M, M)
     assert M.bidiagonalize(upper=False) == M
     assert M.bidiagonal_decomposition(upper=False) == (M, M, M)
-    
+
     #Real Random Tests
     for real_test in range(2):
         M = randMatrix(2, 2, min=-1000000000, max=1000000000)
@@ -292,13 +292,16 @@ def test_bidiagonalize():
         test_matrix(M)
 
     M = Matrix(18, 8, range(1, 145))
-    M = M.applyfunc(lambda i: Float(i))
+    M = M.applyfunc(lambda i: Float(i, 100))
     assert M.bidiagonal_decomposition()[1] == M.bidiagonalize()
     assert M.bidiagonal_decomposition(upper=False)[1] == M.bidiagonalize(upper=False)
     a, b, c = M.bidiagonal_decomposition()
     diff = a * b * c - M
-    assert abs(max(diff)) < 10**-12
+    assert abs(max(diff)) < 10**-40
 
+    x,y,z,w = symbols('x y z w', real=True, zero=False)
+    L = Matrix([[x, y], [z, w]])
+    test_matrix(L)
 
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
