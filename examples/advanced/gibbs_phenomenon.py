@@ -10,7 +10,7 @@ first maximum.
 2) evaluating the integral for si(pi).
 
 See:
- * http://en.wikipedia.org/wiki/Gibbs_phenomena
+ * https://en.wikipedia.org/wiki/Gibbs_phenomena
 """
 
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\

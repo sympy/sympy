@@ -75,7 +75,7 @@ Third product rule for Del operator
 See
 ---
 
-.. [WikiDel] http://en.wikipedia.org/wiki/Del
+.. [WikiDel] https://en.wikipedia.org/wiki/Del
 
 The Problem
 -----------

@@ -28,7 +28,7 @@ def test_disc_on_an_incline_plane():
     # is created. Finally, we create the disc.
     Do = Point('Do')
     Do.set_vel(N, yd * A.x)
-    I = m * R**2 / 2 * B.z | B.z
+    I = m * R**2/2 * B.z | B.z
     D = RigidBody('D', Do, B, m, (I, Do))
 
     # To construct the Lagrangian, 'L', of the disc, we determine its kinetic
@@ -203,7 +203,7 @@ def test_rolling_disc():
     Dmc.v2pt_theory(C, N, R)
 
     # Forming the inertia dyadic.
-    I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+    I = inertia(L, m/4 * r**2, m/2 * r**2, m/4 * r**2)
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
 
     # Finally we form the equations of motion, using the same steps we did
@@ -216,11 +216,11 @@ def test_rolling_disc():
     q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
-    RHS = l.rhs().as_mutable()
+    RHS = l.rhs()
     RHS.simplify()
     t = symbols('t')
 
-    assert tuple(l.mass_matrix[3:6]) == (0, 5*m*r**2/4, 0)
+    assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
     assert RHS[4].simplify() == (
         (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
         12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))

@@ -82,7 +82,7 @@ The parser can be used as follows::
     >>> sympy_code = parse_autolev(open('double_pendulum.al'), include_numeric=True)
 
     # The include_pydy flag is False by default. Setting it to True will
-    # enable PyDy simulation code to be outputed if applicable.
+    # enable PyDy simulation code to be outputted if applicable.
 
     >>> print(sympy_code)
     import sympy.physics.mechanics as me
@@ -148,7 +148,7 @@ If you are completely new to SymPy mechanics, the :ref:`SymPy Mechanics for Auto
 guide should help. You might also have to use basic SymPy simplifications
 and manipulations like ``trigsimp()``, ``expand()``, ``evalf()`` etc for 
 getting outputs similar to Autolev.
-Refer to the `SymPy Tutorial <http://docs.sympy.org/latest/tutorial/index.html>`_
+Refer to the `SymPy Tutorial <https://docs.sympy.org/latest/tutorial/index.html>`_
 to know more about these.
 
 .. _gotchas_autolev:

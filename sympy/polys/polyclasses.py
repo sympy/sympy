@@ -2,12 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import CantSympify
-
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.polyerrors import CoercionFailed, NotReversible
-
 from sympy import oo
+from sympy.core.sympify import CantSympify
+from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
+from sympy.polys.polyutils import PicklableWithSlots
+
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -146,7 +145,7 @@ def init_normal_DMP(rep, lev, dom):
 class DMP(PicklableWithSlots, CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ['rep', 'lev', 'dom', 'ring']
+    __slots__ = ('rep', 'lev', 'dom', 'ring')
 
     def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
@@ -1069,7 +1068,7 @@ def init_normal_DMF(num, den, lev, dom):
 class DMF(PicklableWithSlots, CantSympify):
     """Dense Multivariate Fractions over `K`. """
 
-    __slots__ = ['num', 'den', 'lev', 'dom', 'ring']
+    __slots__ = ('num', 'den', 'lev', 'dom', 'ring')
 
     def __init__(self, rep, dom, lev=None, ring=None):
         num, den, lev = self._parse(rep, dom, lev)
@@ -1516,7 +1515,7 @@ def init_normal_ANP(rep, mod, dom):
 class ANP(PicklableWithSlots, CantSympify):
     """Dense Algebraic Number Polynomials over a field. """
 
-    __slots__ = ['rep', 'mod', 'dom']
+    __slots__ = ('rep', 'mod', 'dom')
 
     def __init__(self, rep, mod, dom):
         if type(rep) is dict:
@@ -1641,11 +1640,17 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def div(f, g):
         dom, per, F, G, mod = f.unify(g)
-        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), self.zero(mod, dom))
+        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), f.zero(mod, dom))
 
     def rem(f, g):
-        dom, _, _, _, mod = f.unify(g)
-        return self.zero(mod, dom)
+        dom, _, _, G, mod = f.unify(g)
+
+        s, h = dup_half_gcdex(G, mod, dom)
+
+        if h == [dom.one]:
+            return f.zero(mod, dom)
+        else:
+            raise NotInvertible("zero divisor")
 
     def quo(f, g):
         dom, per, F, G, mod = f.unify(g)

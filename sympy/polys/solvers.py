@@ -2,14 +2,10 @@
 
 from __future__ import print_function, division
 
-from sympy.matrices import Matrix, zeros
+from sympy.matrices import MutableDenseMatrix, zeros
 
-class RawMatrix(Matrix):
+class RawMatrix(MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)
-
-    def is_zero():
-        from sympy.matrices import MatrixShaping
-        return MatrixShaping.is_zero(self)
 
 def eqs_to_matrix(eqs, ring):
     """Transform from equations to matrix form. """

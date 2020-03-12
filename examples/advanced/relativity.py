@@ -6,15 +6,15 @@ on the example of Schwarzschild solution.
 
 If you want to derive this by hand, follow the wiki page here:
 
-http://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
+https://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
 
 Also read the above wiki and follow the references from there if
 something is not clear, like what the Ricci tensor is, etc.
 
 """
 
-from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
-                  Matrix, Eq, pprint, Pow, classify_ode, solve)
+from sympy import (exp, Symbol, sin, dsolve, Function,
+                  Matrix, Eq, pprint, solve)
 
 
 def grad(f, X):
@@ -28,7 +28,7 @@ def d(m, x):
     return grad(m[0, 0], x)
 
 
-class MT(object):
+class MT:
     def __init__(self, m):
         self.gdd = m
         self.guu = m.inv()
@@ -43,7 +43,7 @@ class MT(object):
         return self.guu[i, j]
 
 
-class G(object):
+class G:
     def __init__(self, g, x):
         self.g = g
         self.x = x
@@ -58,7 +58,7 @@ class G(object):
         return r
 
 
-class Riemann(object):
+class Riemann:
     def __init__(self, G, x):
         self.G = G
         self.x = x
@@ -73,7 +73,7 @@ class Riemann(object):
         return r
 
 
-class Ricci(object):
+class Ricci:
     def __init__(self, R, x):
         self.R = R
         self.x = x

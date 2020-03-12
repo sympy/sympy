@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Symbol, Poly
 from sympy.polys.solvers import RawMatrix as Matrix
 from sympy.matrices.normalforms import invariant_factors, smith_normal_form
@@ -16,5 +14,10 @@ def test_smith_normal():
                 [0, Poly(x), Poly(-1,x)],
                 [Poly(0,x),Poly(-1,x),Poly(x)]])
     setattr(m, 'ring', QQ[x])
-    invs = (Poly(1, x), Poly(x - 1), Poly(x**2 - 1))
+    invs = (Poly(1, x, domain='QQ'), Poly(x - 1, domain='QQ'), Poly(x**2 - 1, domain='QQ'))
     assert invariant_factors(m) == invs
+
+    m = Matrix([[2, 4]])
+    setattr(m, 'ring', ZZ)
+    smf = Matrix([[2, 0]])
+    assert smith_normal_form(m) == smf

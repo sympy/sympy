@@ -5,37 +5,27 @@ from __future__ import print_function, division
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
-from sympy.core.function import AppliedUndef
-from sympy.functions.elementary.miscellaneous import root as _root
-
-from sympy.polys.polytools import Poly, PurePoly, factor
-from sympy.polys.rationaltools import together
-from sympy.polys.polyfuncs import symmetrize, viete
-
-from sympy.polys.rootisolation import (
-    dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf)
-
-from sympy.polys.polyroots import (
-    roots_linear, roots_quadratic, roots_binomial,
-    preprocess_roots, roots)
-
+from sympy.core.compatibility import ordered
+from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
     DomainError)
-
-from sympy.polys.domains import QQ
+from sympy.polys.polyfuncs import symmetrize, viete
+from sympy.polys.polyroots import (
+    roots_linear, roots_quadratic, roots_binomial,
+    preprocess_roots, roots)
+from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import (
+    dup_isolate_complex_roots_sqf,
+    dup_isolate_real_roots_sqf)
+from sympy.utilities import lambdify, public, sift
 
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 
-from sympy.utilities import lambdify, public, sift
-
-from sympy.core.compatibility import range, ordered
-
-from math import log as mathlog
 
 __all__ = ['CRootOf']
 
@@ -136,7 +126,7 @@ def _imag_count_of_factor(f):
 def rootof(f, x, index=None, radicals=True, expand=True):
     """An indexed root of a univariate polynomial.
 
-    Returns either a ``ComplexRootOf`` object or an explicit
+    Returns either a :obj:`ComplexRootOf` object or an explicit
     expression involving radicals.
 
     Parameters
@@ -163,7 +153,7 @@ class RootOf(Expr):
     Only complex roots are currently supported.
     """
 
-    __slots__ = ['poly']
+    __slots__ = ('poly',)
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``CRootOf`` object for ``k``-th root of ``f``."""
@@ -231,17 +221,17 @@ class ComplexRootOf(RootOf):
 
     After evaluation it is now
 
-    >>. r._get_interval()
+    >>> r._get_interval() # doctest: +SKIP
     (-165/169, -206/211)
 
-    To reset all intervals for a given polynomial, the `_reset` method
+    To reset all intervals for a given polynomial, the :meth:`_reset` method
     can be called from any CRootOf instance of the polynomial:
 
     >>> r._reset()
     >>> r._get_interval()
     (-1, 0)
 
-    The `eval_approx` method will also find the root to a given
+    The :meth:`eval_approx` method will also find the root to a given
     precision but the interval is not modified unless the search
     for the root fails to converge within the root bounds. And
     the secant method is used to find the root. (The ``evalf``
@@ -290,14 +280,16 @@ class ComplexRootOf(RootOf):
 
     See Also
     ========
+
     eval_approx
     eval_rational
-    _eval_evalf
+
     """
 
-    __slots__ = ['index']
+    __slots__ = ('index',)
     is_complex = True
     is_number = True
+    is_finite = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.
@@ -415,26 +407,26 @@ class ComplexRootOf(RootOf):
         return cls._get_roots("_all_roots", poly, radicals)
 
     @classmethod
-    def _get_reals_sqf(cls, factor, use_cache=True):
+    def _get_reals_sqf(cls, currentfactor, use_cache=True):
         """Get real root isolating intervals for a square-free factor."""
-        if use_cache and factor in _reals_cache:
-            real_part = _reals_cache[factor]
+        if use_cache and currentfactor in _reals_cache:
+            real_part = _reals_cache[currentfactor]
         else:
-            _reals_cache[factor] = real_part = \
+            _reals_cache[currentfactor] = real_part = \
                 dup_isolate_real_roots_sqf(
-                    factor.rep.rep, factor.rep.dom, blackbox=True)
+                    currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
 
         return real_part
 
     @classmethod
-    def _get_complexes_sqf(cls, factor, use_cache=True):
+    def _get_complexes_sqf(cls, currentfactor, use_cache=True):
         """Get complex root isolating intervals for a square-free factor."""
-        if use_cache and factor in _complexes_cache:
-            complex_part = _complexes_cache[factor]
+        if use_cache and currentfactor in _complexes_cache:
+            complex_part = _complexes_cache[currentfactor]
         else:
-            _complexes_cache[factor] = complex_part = \
+            _complexes_cache[currentfactor] = complex_part = \
                 dup_isolate_complex_roots_sqf(
-                factor.rep.rep, factor.rep.dom, blackbox=True)
+                currentfactor.rep.rep, currentfactor.rep.dom, blackbox=True)
         return complex_part
 
     @classmethod
@@ -442,15 +434,15 @@ class ComplexRootOf(RootOf):
         """Compute real root isolating intervals for a list of factors. """
         reals = []
 
-        for factor, k in factors:
+        for currentfactor, k in factors:
             try:
                 if not use_cache:
                     raise KeyError
-                r = _reals_cache[factor]
-                reals.extend([(i, factor, k) for i in r])
+                r = _reals_cache[currentfactor]
+                reals.extend([(i, currentfactor, k) for i in r])
             except KeyError:
-                real_part = cls._get_reals_sqf(factor, use_cache)
-                new = [(root, factor, k) for root in real_part]
+                real_part = cls._get_reals_sqf(currentfactor, use_cache)
+                new = [(root, currentfactor, k) for root in real_part]
                 reals.extend(new)
 
         reals = cls._reals_sorted(reals)
@@ -461,15 +453,15 @@ class ComplexRootOf(RootOf):
         """Compute complex root isolating intervals for a list of factors. """
         complexes = []
 
-        for factor, k in ordered(factors):
+        for currentfactor, k in ordered(factors):
             try:
                 if not use_cache:
                     raise KeyError
-                c = _complexes_cache[factor]
-                complexes.extend([(i, factor, k) for i in c])
+                c = _complexes_cache[currentfactor]
+                complexes.extend([(i, currentfactor, k) for i in c])
             except KeyError:
-                complex_part = cls._get_complexes_sqf(factor, use_cache)
-                new = [(root, factor, k) for root in complex_part]
+                complex_part = cls._get_complexes_sqf(currentfactor, use_cache)
+                new = [(root, currentfactor, k) for root in complex_part]
                 complexes.extend(new)
 
         complexes = cls._complexes_sorted(complexes)
@@ -489,14 +481,14 @@ class ComplexRootOf(RootOf):
 
         reals = sorted(reals, key=lambda r: r[0].a)
 
-        for root, factor, _ in reals:
-            if factor in cache:
-                cache[factor].append(root)
+        for root, currentfactor, _ in reals:
+            if currentfactor in cache:
+                cache[currentfactor].append(root)
             else:
-                cache[factor] = [root]
+                cache[currentfactor] = [root]
 
-        for factor, roots in cache.items():
-            _reals_cache[factor] = roots
+        for currentfactor, root in cache.items():
+            _reals_cache[currentfactor] = root
 
         return reals
 
@@ -581,11 +573,11 @@ class ComplexRootOf(RootOf):
         # update cache
         cache = {}
         # -- collate
-        for root, factor, _ in complexes:
-            cache.setdefault(factor, []).append(root)
+        for root, currentfactor, _ in complexes:
+            cache.setdefault(currentfactor, []).append(root)
         # -- store
-        for factor, roots in cache.items():
-            _complexes_cache[factor] = roots
+        for currentfactor, root in cache.items():
+            _complexes_cache[currentfactor] = root
 
         return complexes
 
@@ -597,12 +589,12 @@ class ComplexRootOf(RootOf):
         """
         i = 0
 
-        for j, (_, factor, k) in enumerate(reals):
+        for j, (_, currentfactor, k) in enumerate(reals):
             if index < i + k:
-                poly, index = factor, 0
+                poly, index = currentfactor, 0
 
-                for _, factor, _ in reals[:j]:
-                    if factor == poly:
+                for _, currentfactor, _ in reals[:j]:
+                    if currentfactor == poly:
                         index += 1
 
                 return poly, index
@@ -616,12 +608,12 @@ class ComplexRootOf(RootOf):
         the root belongs.
         """
         i = 0
-        for j, (_, factor, k) in enumerate(complexes):
+        for j, (_, currentfactor, k) in enumerate(complexes):
             if index < i + k:
-                poly, index = factor, 0
+                poly, index = currentfactor, 0
 
-                for _, factor, _ in complexes[:j]:
-                    if factor == poly:
+                for _, currentfactor, _ in complexes[:j]:
+                    if currentfactor == poly:
                         index += 1
 
                 index += len(_reals_cache[poly])
@@ -665,6 +657,9 @@ class ComplexRootOf(RootOf):
         return roots
 
     def _reset(self):
+        """
+        Reset all intervals
+        """
         self._all_roots(self.poly, use_cache=False)
 
     @classmethod
@@ -758,6 +753,7 @@ class ComplexRootOf(RootOf):
 
         See Also
         ========
+
         _reset
         """
         global _reals_cache, _complexes_cache
@@ -970,8 +966,8 @@ class ComplexRootOf(RootOf):
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
             return sympify(self == other)
-        if not (other.is_number and not other.has(AppliedUndef)):
-            return S.false
+        if not other.is_number:
+            return None
         if not other.is_finite:
             return S.false
         z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
@@ -1003,7 +999,7 @@ CRootOf = ComplexRootOf
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'fun', 'auto']
+    __slots__ = ('poly', 'fun', 'auto')
 
     def __new__(cls, expr, func=None, x=None, auto=True, quadratic=False):
         """Construct a new ``RootSum`` instance of roots of a polynomial."""
@@ -1016,10 +1012,7 @@ class RootSum(Expr):
         if func is None:
             func = Lambda(poly.gen, poly.gen)
         else:
-            try:
-                is_func = func.is_Function
-            except AttributeError:
-                is_func = False
+            is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
                 if not isinstance(func, Lambda):

@@ -2,13 +2,11 @@
 
 from __future__ import print_function, division
 
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
-
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
-
 from sympy.utilities import public
 
 @public
@@ -28,8 +26,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             raise DomainError("ground domain must be a rational field")
 
         from sympy.polys.numberfields import to_number_field
-
-        self.orig_ext = ext
+        if len(ext) == 1 and isinstance(ext[0], tuple):
+            self.orig_ext = ext[0][1:]
+        else:
+            self.orig_ext = ext
         self.ext = to_number_field(ext)
         self.mod = self.ext.minpoly.rep
         self.domain = self.dom = dom
@@ -126,3 +126,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def denom(self, a):
         """Returns denominator of ``a``. """
         return self.one
+
+    def from_AlgebraicField(K1, a, K0):
+        """Convert AlgebraicField element 'a' to another AlgebraicField """
+        return K1.from_sympy(K0.to_sympy(a))

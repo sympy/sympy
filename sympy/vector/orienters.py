@@ -105,6 +105,9 @@ class ThreeAngleOrienter(Orienter):
     """
 
     def __new__(cls, angle1, angle2, angle3, rot_order):
+        if isinstance(rot_order, Symbol):
+            rot_order = rot_order.name
+
         approved_orders = ('123', '231', '312', '132', '213',
                            '321', '121', '131', '212', '232',
                            '313', '323', '')
@@ -135,7 +138,7 @@ class ThreeAngleOrienter(Orienter):
         parent_orient = parent_orient.T
 
         obj = super(ThreeAngleOrienter, cls).__new__(
-            cls, angle1, angle2, angle3, Symbol(original_rot_order))
+            cls, angle1, angle2, angle3, Symbol(rot_order))
         obj._angle1 = angle1
         obj._angle2 = angle2
         obj._angle3 = angle3
@@ -179,7 +182,7 @@ class BodyOrienter(ThreeAngleOrienter):
         successive simple rotations.
 
         Body fixed rotations include both Euler Angles and
-        Tait-Bryan Angles, see http://en.wikipedia.org/wiki/Euler_angles.
+        Tait-Bryan Angles, see https://en.wikipedia.org/wiki/Euler_angles.
 
         Parameters
         ==========

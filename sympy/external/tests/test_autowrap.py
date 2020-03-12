@@ -1,17 +1,15 @@
 import sympy
 import tempfile
 import os
-import warnings
 from sympy import symbols, Eq, Mod
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
 Cython = import_module('Cython', min_module_version='0.15.1')
-f2py = import_module('numpy.f2py', __import__kwargs={'fromlist': ['f2py']})
+f2py = import_module('numpy.f2py', import_kwargs={'fromlist': ['f2py']})
 
 f2pyworks = False
 if f2py:
@@ -107,7 +105,8 @@ def runtest_ufuncify(language, backend):
 def runtest_issue_10274(language, backend):
     expr = (a - b + c)**(13)
     tmp = tempfile.mkdtemp()
-    f = autowrap(expr, language, backend, tempdir=tmp, helpers=('helper', a - b + c, (a, b, c)))
+    f = autowrap(expr, language, backend, tempdir=tmp,
+                 helpers=('helper', a - b + c, (a, b, c)))
     assert f(1, 1, 1) == 1
 
     for file in os.listdir(tmp):
@@ -141,6 +140,27 @@ def runtest_issue_10274(language, backend):
                 "\n",
                 "}\n",
                 ]
+
+
+def runtest_issue_15337(language, backend):
+    has_module('numpy')
+    # NOTE : autowrap was originally designed to only accept an iterable for
+    # the kwarg "helpers", but in issue 10274 the user mistakenly thought that
+    # if there was only a single helper it did not need to be passed via an
+    # iterable that wrapped the helper tuple. There were no tests for this
+    # behavior so when the code was changed to accept a single tuple it broke
+    # the original behavior. These tests below ensure that both now work.
+    a, b, c, d, e = symbols('a, b, c, d, e')
+    expr = (a - b + c - d + e)**13
+    exp_res = (1. - 2. + 3. - 4. + 5.)**13
+
+    f = autowrap(expr, language, backend, args=(a, b, c, d, e),
+                 helpers=('f1', a - b + c, (a, b, c)))
+    numpy.testing.assert_allclose(f(1, 2, 3, 4, 5), exp_res)
+
+    f = autowrap(expr, language, backend, args=(a, b, c, d, e),
+                 helpers=(('f1', a - b, (a, b)), ('f2', c - d, (c, d))))
+    numpy.testing.assert_allclose(f(1, 2, 3, 4, 5), exp_res)
 
 
 def test_issue_15230():
@@ -189,13 +209,16 @@ def test_ufuncify_f95_f2py():
     runtest_ufuncify('f95', 'f2py')
 
 
+def test_issue_15337_f95_f2py():
+    has_module('f2py')
+    runtest_issue_15337('f95', 'f2py')
+
 # Cython
+
 
 def test_wrap_twice_c_cython():
     has_module('Cython')
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        runtest_autowrap_twice('C', 'cython')
+    runtest_autowrap_twice('C', 'cython')
 
 
 def test_autowrap_trace_C_Cython():
@@ -215,13 +238,17 @@ def test_autowrap_matrix_matrix_C_cython():
 
 def test_ufuncify_C_Cython():
     has_module('Cython')
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        runtest_ufuncify('C99', 'cython')
+    runtest_ufuncify('C99', 'cython')
+
 
 def test_issue_10274_C_cython():
     has_module('Cython')
     runtest_issue_10274('C89', 'cython')
+
+
+def test_issue_15337_C_cython():
+    has_module('Cython')
+    runtest_issue_15337('C89', 'cython')
 
 
 def test_autowrap_custom_printer():
@@ -230,7 +257,6 @@ def test_autowrap_custom_printer():
     from sympy import pi
     from sympy.utilities.codegen import C99CodeGen
     from sympy.printing.ccode import C99CodePrinter
-    from sympy.functions.elementary.exponential import exp
 
     class PiPrinter(C99CodePrinter):
         def _print_Pi(self, expr):
@@ -279,6 +305,4 @@ def test_ufuncify_numpy():
     # This test doesn't use Cython, but if Cython works, then there is a valid
     # C compiler, which is needed.
     has_module('Cython')
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        runtest_ufuncify('C99', 'numpy')
+    runtest_ufuncify('C99', 'numpy')

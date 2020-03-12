@@ -1,14 +1,10 @@
 """Tests for OO layer of several polynomial representations. """
 
-from sympy.polys.polyclasses import DMP, DMF, ANP
-
 from sympy.polys.domains import ZZ, QQ
+from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible
 from sympy.polys.specialpolys import f_polys
-
-from sympy.polys.polyerrors import ExactQuotientFailed
-
-from sympy.core.compatibility import long
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
@@ -500,6 +496,21 @@ def test_ANP_arithmetics():
 
     assert a.quo(a) == a.mul(a.pow(-1)) == a*a**(-1) == ANP(1, mod, QQ)
 
+    c = ANP([], [1, 0, 0, -2], QQ)
+    r1 = a.rem(b)
+
+    (q, r2) = a.div(b)
+
+    assert r1 == r2 == c == a % b
+
+    raises(NotInvertible, lambda: a.div(c))
+    raises(NotInvertible, lambda: a.rem(c))
+
+    # Comparison with "hard-coded" value fails despite looking identical
+    # from sympy import Rational
+    # c = ANP([Rational(11, 10), Rational(-1, 5), Rational(-3, 5)], [1, 0, 0, -2], QQ)
+
+    assert q == a/b # == c
 
 def test_ANP_unify():
     mod = [QQ(1), QQ(0), QQ(-2)]
@@ -516,12 +527,12 @@ def test_ANP_unify():
 def test___hash__():
     # issue 5571
     # Make sure int vs. long doesn't affect hashing with Python ground types
-    assert DMP([[1, 2], [3]], ZZ) == DMP([[long(1), long(2)], [long(3)]], ZZ)
-    assert hash(DMP([[1, 2], [3]], ZZ)) == hash(DMP([[long(1), long(2)], [long(3)]], ZZ))
+    assert DMP([[1, 2], [3]], ZZ) == DMP([[int(1), int(2)], [int(3)]], ZZ)
+    assert hash(DMP([[1, 2], [3]], ZZ)) == hash(DMP([[int(1), int(2)], [int(3)]], ZZ))
     assert DMF(
-        ([[1, 2], [3]], [[1]]), ZZ) == DMF(([[long(1), long(2)], [long(3)]], [[long(1)]]), ZZ)
-    assert hash(DMF(([[1, 2], [3]], [[1]]), ZZ)) == hash(DMF(([[long(1),
-                long(2)], [long(3)]], [[long(1)]]), ZZ))
-    assert ANP([1, 1], [1, 0, 1], ZZ) == ANP([long(1), long(1)], [long(1), long(0), long(1)], ZZ)
+        ([[1, 2], [3]], [[1]]), ZZ) == DMF(([[int(1), int(2)], [int(3)]], [[int(1)]]), ZZ)
+    assert hash(DMF(([[1, 2], [3]], [[1]]), ZZ)) == hash(DMF(([[int(1),
+                int(2)], [int(3)]], [[int(1)]]), ZZ))
+    assert ANP([1, 1], [1, 0, 1], ZZ) == ANP([int(1), int(1)], [int(1), int(0), int(1)], ZZ)
     assert hash(
-        ANP([1, 1], [1, 0, 1], ZZ)) == hash(ANP([long(1), long(1)], [long(1), long(0), long(1)], ZZ))
+        ANP([1, 1], [1, 0, 1], ZZ)) == hash(ANP([int(1), int(1)], [int(1), int(0), int(1)], ZZ))

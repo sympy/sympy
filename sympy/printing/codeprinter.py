@@ -1,11 +1,12 @@
 from __future__ import print_function, division
 
+from typing import Any, Dict, Set, Tuple
+
 from functools import wraps
 
-from sympy.core import Add, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
-from sympy.core.compatibility import default_sort_key, string_types
+from sympy.core.compatibility import default_sort_key
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
@@ -55,6 +56,14 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+    }  # type: Dict[str, Any]
+
+    # Functions which are "simple" to rewrite to other functions that
+    # may be supported
+    _rewriteable_functions = {
+            'erf2': 'erf',
+            'Li': 'li',
+            'beta': 'gamma'
     }
 
     def __init__(self, settings=None):
@@ -78,7 +87,7 @@ class CodePrinter(StrPrinter):
         """
         from sympy.matrices.expressions.matexpr import MatrixSymbol
 
-        if isinstance(assign_to, string_types):
+        if isinstance(assign_to, str):
             if expr.is_Matrix:
                 assign_to = MatrixSymbol(assign_to, *expr.shape)
             else:
@@ -96,14 +105,14 @@ class CodePrinter(StrPrinter):
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()
-        self._number_symbols = set()
+        self._number_symbols = set()  # type: Set[Tuple[Expr, Float]]
 
         lines = self._print(expr).splitlines()
 
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_supported) > 0:
+            if self._not_supported:
                 frontlines.append(self._get_comment(
                         "Not supported in {0}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
@@ -373,15 +382,16 @@ class CodePrinter(StrPrinter):
                         break
             if func is not None:
                 try:
-                    return func(self, *[self.parenthesize(item, 0) for item in expr.args])
+                    return func(*[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
-                    try:
-                        return func(*[self.parenthesize(item, 0) for item in expr.args])
-                    except TypeError:
-                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
@@ -484,7 +494,7 @@ class CodePrinter(StrPrinter):
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
-        if len(b) == 0:
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]
@@ -514,15 +524,15 @@ class CodePrinter(StrPrinter):
     _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
     _print_NegativeInfinity = _print_not_supported
-    _print_Normal = _print_not_supported
     _print_Order = _print_not_supported
-    _print_PDF = _print_not_supported
     _print_RootOf = _print_not_supported
     _print_RootsOf = _print_not_supported
     _print_RootSum = _print_not_supported
-    _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_MutableSparseMatrix = _print_not_supported
+    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported
     _print_WildFunction = _print_not_supported
+    _print_Relational = _print_not_supported

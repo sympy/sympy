@@ -2,8 +2,7 @@
 
 from __future__ import division, print_function
 
-from sympy.core import Add, Mul, Pow, prod, sympify
-from sympy.core.compatibility import range
+from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity
 from sympy.matrices.expressions.transpose import transpose
@@ -126,7 +125,7 @@ class KroneckerProduct(MatrixExpr):
             cols *= mat.cols
         return (rows, cols)
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         result = 1
         for mat in reversed(self.args):
             i, m = divmod(i, mat.rows)
@@ -255,7 +254,49 @@ def extract_commutative(kron):
 
 
 def matrix_kronecker_product(*matrices):
+    """Compute the Kronecker product of a sequence of SymPy Matrices.
 
+    This is the standard Kronecker product of matrices [1].
+
+    Parameters
+    ==========
+
+    matrices : tuple of MatrixBase instances
+        The matrices to take the Kronecker product of.
+
+    Returns
+    =======
+
+    matrix : MatrixBase
+        The Kronecker product matrix.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.expressions.kronecker import (
+    ... matrix_kronecker_product)
+
+    >>> m1 = Matrix([[1,2],[3,4]])
+    >>> m2 = Matrix([[1,0],[0,1]])
+    >>> matrix_kronecker_product(m1, m2)
+    Matrix([
+    [1, 0, 2, 0],
+    [0, 1, 0, 2],
+    [3, 0, 4, 0],
+    [0, 3, 0, 4]])
+    >>> matrix_kronecker_product(m2, m1)
+    Matrix([
+    [1, 2, 0, 0],
+    [3, 4, 0, 0],
+    [0, 0, 1, 2],
+    [0, 0, 3, 4]])
+
+    References
+    ==========
+
+    [1] https://en.wikipedia.org/wiki/Kronecker_product
+    """
     # Make sure we have a sequence of Matrices
     if not all(isinstance(m, MatrixBase) for m in matrices):
         raise TypeError(
@@ -385,7 +426,8 @@ def combine_kronecker(expr):
              MatMul: kronecker_mat_mul,
              MatPow: kronecker_mat_pow})))))
     result = rule(expr)
-    try:
-        return result.doit()
-    except AttributeError:
+    doit = getattr(result, 'doit', None)
+    if doit is not None:
+        return doit()
+    else:
         return result

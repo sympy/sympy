@@ -1,10 +1,10 @@
 from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
     PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
-    Derivative)
+    Derivative, S)
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_simple_1():
@@ -146,7 +146,7 @@ def test_series2x():
     assert (1/(1 + 1/x**2)).nseries(x, 0, 6) == x**2 - x**4 + O(x**6, x)
 
 
-def test_bug2():  # 1/log(0) * log(0) problem
+def test_bug2():  # 1/log(0)*log(0) problem
     w = Symbol("w")
     e = (w**(-1) + w**(
         -log(3)*log(2)**(-1)))**(-1)*(3*w**(-log(3)*log(2)**(-1)) + 2*w**(-1))
@@ -176,7 +176,7 @@ def test_generalexponent():
     p = 2
     e = (2/x + 3/x**p)/(1/x + 1/x**p)
     assert e.nseries(x, 0, 3) == 3 + O(x)
-    p = Rational(1, 2)
+    p = S.Half
     e = (2/x + 3/x**p)/(1/x + 1/x**p)
     assert e.nseries(x, 0, 2) == 2 + sqrt(x) + O(x)
 
@@ -227,7 +227,7 @@ def test_seriesbug2c():
     e = (sin(2*w)/w)**(1 + w)
     assert e.series(w, 0, 1) == 2 + O(w)
     assert e.series(w, 0, 3) == 2 + 2*w*log(2) + \
-        w**2*(-Rational(4, 3) + log(2)**2) + O(w**3)
+        w**2*(Rational(-4, 3) + log(2)**2) + O(w**3)
     assert e.series(w, 0, 2).subs(w, 0) == 2
 
 
@@ -298,7 +298,7 @@ def test_issue_3515():
 def test_issue_3505():
     e = sin(x)**(-4)*(sqrt(cos(x))*sin(x)**2 -
         cos(x)**Rational(1, 3)*sin(x)**2)
-    assert e.nseries(x, n=9) == -Rational(1)/12 - 7*x**2/288 - \
+    assert e.nseries(x, n=9) == Rational(-1, 12) - 7*x**2/288 - \
         43*x**4/10368 + O(x**5)
 
 
@@ -327,7 +327,7 @@ def test_issue_3503():
 def test_issue_3506():
     e = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
     assert e.nseries(x, n=7) == \
-        -Rational(1, 4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
+        Rational(-1, 4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
 
 
 def test_issue_3508():
@@ -366,12 +366,11 @@ def test_series2():
     w = Symbol("w", real=True)
     x = Symbol("x", real=True)
     e = w**(-2)*(w*exp(1/x - w) - w*exp(1/x))
-    assert e.nseries(w, n=4) == -exp(1/x) + w * exp(1/x) / 2 + O(w**2)
+    assert e.nseries(w, n=4) == -exp(1/x) + w*exp(1/x) / 2 + O(w**2)
 
 
 def test_series3():
     w = Symbol("w", real=True)
-    x = Symbol("x", real=True)
     e = w**(-6)*(w**3*tan(w) - w**3*sin(w))
     assert e.nseries(w, n=8) == Integer(1)/2 + O(w**2)
 
@@ -517,3 +516,7 @@ def test_issue_5925():
     sx = sqrt(x + z).series(z, 0, 1)
     sxy = sqrt(x + y + z).series(z, 0, 1)
     assert sxy.subs({x:1, y:2}) == sx.subs(x, 3)
+
+
+def test_exp_2():
+    assert exp(x**3).nseries(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 + x**12/24 + O(x**14)

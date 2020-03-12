@@ -1,15 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.functions import assoc_legendre
-from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 
 _x = Dummy("x")
 
@@ -22,16 +22,19 @@ class Ynm(Function):
                                   \exp(i m \varphi)
                                   \mathrm{P}_n^m\left(\cos(\theta)\right)
 
-    Ynm() gives the spherical harmonic function of order `n` and `m`
-    in `\theta` and `\varphi`, `Y_n^m(\theta, \varphi)`. The four
-    parameters are as follows: `n \geq 0` an integer and `m` an integer
-    such that `-n \leq m \leq n` holds. The two angles are real-valued
-    with `\theta \in [0, \pi]` and `\varphi \in [0, 2\pi]`.
+    Explanation
+    ===========
+
+    ``Ynm()`` gives the spherical harmonic function of order $n$ and $m$
+    in $\theta$ and $\varphi$, $Y_n^m(\theta, \varphi)$. The four
+    parameters are as follows: $n \geq 0$ an integer and $m$ an integer
+    such that $-n \leq m \leq n$ holds. The two angles are real-valued
+    with $\theta \in [0, \pi]$ and $\varphi \in [0, 2\pi]$.
 
     Examples
     ========
 
-    >>> from sympy import Ynm, Symbol
+    >>> from sympy import Ynm, Symbol, simplify
     >>> from sympy.abc import n,m
     >>> theta = Symbol("theta")
     >>> phi = Symbol("phi")
@@ -39,22 +42,12 @@ class Ynm(Function):
     >>> Ynm(n, m, theta, phi)
     Ynm(n, m, theta, phi)
 
-    Several symmetries are known, for the order
-
-    >>> from sympy import Ynm, Symbol
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    Several symmetries are known, for the order:
 
     >>> Ynm(n, -m, theta, phi)
     (-1)**m*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
 
-    as well as for the angles
-
-    >>> from sympy import Ynm, Symbol, simplify
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    As well as for the angles:
 
     >>> Ynm(n, m, -theta, phi)
     Ynm(n, m, theta, phi)
@@ -62,8 +55,8 @@ class Ynm(Function):
     >>> Ynm(n, m, theta, -phi)
     exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
 
-    For specific integers n and m we can evaluate the harmonics
-    to more useful expressions
+    For specific integers $n$ and $m$ we can evaluate the harmonics
+    to more useful expressions:
 
     >>> simplify(Ynm(0, 0, theta, phi).expand(func=True))
     1/(2*sqrt(pi))
@@ -93,7 +86,7 @@ class Ynm(Function):
     sqrt(30)*exp(2*I*phi)*sin(theta)**2/(8*sqrt(pi))
 
     We can differentiate the functions with respect
-    to both angles
+    to both angles:
 
     >>> from sympy import Ynm, Symbol, diff
     >>> from sympy.abc import n,m
@@ -106,7 +99,7 @@ class Ynm(Function):
     >>> diff(Ynm(n, m, theta, phi), phi)
     I*m*Ynm(n, m, theta, phi)
 
-    Further we can compute the complex conjugation
+    Further we can compute the complex conjugation:
 
     >>> from sympy import Ynm, Symbol, conjugate
     >>> from sympy.abc import n,m
@@ -117,7 +110,7 @@ class Ynm(Function):
     (-1)**(2*m)*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
 
     To get back the well known expressions in spherical
-    coordinates we use full expansion
+    coordinates, we use full expansion:
 
     >>> from sympy import Ynm, Symbol, expand_func
     >>> from sympy.abc import n,m
@@ -135,10 +128,11 @@ class Ynm(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     .. [4] http://dlmf.nist.gov/14.30
+
     """
 
     @classmethod
@@ -239,10 +233,11 @@ class Ynm(Function):
 
 
 def Ynm_c(n, m, theta, phi):
-    r"""Conjugate spherical harmonics defined as
+    r"""
+    Conjugate spherical harmonics defined as
 
     .. math::
-        \overline{Y_n^m(\theta, \varphi)} := (-1)^m Y_n^{-m}(\theta, \varphi)
+        \overline{Y_n^m(\theta, \varphi)} := (-1)^m Y_n^{-m}(\theta, \varphi).
 
     See Also
     ========
@@ -252,9 +247,10 @@ def Ynm_c(n, m, theta, phi):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+
     """
     from sympy import conjugate
     return conjugate(Ynm(n, m, theta, phi))
@@ -292,9 +288,10 @@ class Znm(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+
     """
 
     @classmethod

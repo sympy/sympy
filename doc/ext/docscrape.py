@@ -7,10 +7,7 @@ import inspect
 import textwrap
 import re
 import pydoc
-try:
-    from collections.abc import Mapping
-except ImportError: # Python 2
-    from collections import Mapping
+from collections.abc import Mapping
 import sys
 
 
@@ -108,10 +105,10 @@ class NumpyDocString(Mapping):
             'Attributes': [],
             'Methods': [],
             'See Also': [],
-            'Notes': [],
+            # 'Notes': [],
             'Warnings': [],
             'References': '',
-            'Examples': '',
+            # 'Examples': '',
             'index': {}
         }
         self._other_keys = []
@@ -228,6 +225,8 @@ class NumpyDocString(Mapping):
             if not name:
                 return
             name, role = parse_item_name(name)
+            if '.' not in name:
+                name = '~.' + name
             items.append((name, list(rest), role))
             del rest[:]
 
@@ -464,10 +463,7 @@ class FunctionDoc(NumpyDocString):
             func, func_name = self.get_func()
             try:
                 # try to read signature
-                if sys.version_info[0] >= 3:
-                    argspec = inspect.getfullargspec(func)
-                else:
-                    argspec = inspect.getargspec(func)
+                argspec = inspect.getfullargspec(func)
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace('*', '\*')
                 signature = '%s%s' % (func_name, argspec)
@@ -538,18 +534,17 @@ class ClassDoc(NumpyDocString):
                 if not self[field]:
                     doc_list = []
                     for name in sorted(items):
-                        try:
-                            doc_item = pydoc.getdoc(getattr(self._cls, name))
+                        clsname = getattr(self._cls, name, None)
+                        if clsname is not None:
+                            doc_item = pydoc.getdoc(clsname)
                             doc_list.append((name, '', splitlines_x(doc_item)))
-                        except AttributeError:
-                            pass  # method doesn't exist
                     self[field] = doc_list
 
     @property
     def methods(self):
         if self._cls is None:
             return []
-        return [name for name, func in inspect_getmembers(self._cls)
+        return [name for name, func in inspect.getmembers(self._cls)
                 if ((not name.startswith('_')
                      or name in self.extra_public_methods)
                     and callable(func))]
@@ -558,33 +553,5 @@ class ClassDoc(NumpyDocString):
     def properties(self):
         if self._cls is None:
             return []
-        return [name for name, func in inspect_getmembers(self._cls)
+        return [name for name, func in inspect.getmembers(self._cls)
                 if not name.startswith('_') and func is None]
-
-
-# This function was taken verbatim from Python 2.7 inspect.getmembers() from
-# the standard library. The difference from Python < 2.7 is that there is the
-# try/except AttributeError clause added, which catches exceptions like this
-# one: https://gist.github.com/1471949
-def inspect_getmembers(object, predicate=None):
-    """
-    Return all members of an object as (name, value) pairs sorted by name.
-    Optionally, only return members that satisfy a given predicate.
-    """
-    results = []
-    for key in dir(object):
-        try:
-            value = getattr(object, key)
-        except AttributeError:
-            continue
-        if not predicate or predicate(value):
-            results.append((key, value))
-    results.sort()
-    return results
-
-    def _is_show_member(self, name):
-        if self.show_inherited_members:
-            return True  # show all class members
-        if name not in self._cls.__dict__:
-            return False  # class member is inherited, we do not show it
-        return True

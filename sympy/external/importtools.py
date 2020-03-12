@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 import sys
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -32,7 +32,7 @@ if __sympy_debug():
 def import_module(module, min_module_version=None, min_python_version=None,
         warn_not_installed=None, warn_old_version=None,
         module_version_attr='__version__', module_version_attr_call_args=None,
-        __import__kwargs={}, catch=()):
+        import_kwargs={}, catch=()):
     """
     Import and return a module if it is installed.
 
@@ -69,7 +69,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
     WARN_OLD_VERSION is True.
 
     This function uses __import__() to import the module.  To pass additional
-    options to __import__(), use the __import__kwargs keyword argument.  For
+    options to __import__(), use the import_kwargs keyword argument.  For
     example, to import a submodule A.B, you must pass a nonempty fromlist option
     to __import__.  See the docstring of __import__().
 
@@ -99,11 +99,11 @@ def import_module(module, min_module_version=None, min_python_version=None,
     >>> # To import a submodule, you must pass a nonempty fromlist to
     >>> # __import__().  The values do not matter.
     >>> p3 = import_module('mpl_toolkits.mplot3d',
-    ... __import__kwargs={'fromlist':['something']})
+    ... import_kwargs={'fromlist':['something']})
 
     >>> # matplotlib.pyplot can raise RuntimeError when the display cannot be opened
     >>> matplotlib = import_module('matplotlib',
-    ... __import__kwargs={'fromlist':['pyplot']}, catch=(RuntimeError,))
+    ... import_kwargs={'fromlist':['pyplot']}, catch=(RuntimeError,))
 
     """
     # keyword argument overrides default, and global variable overrides
@@ -122,7 +122,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                 warnings.warn("Python version is too old to use %s "
                     "(%s or newer required)" % (
                         module, '.'.join(map(str, min_python_version))),
-                    UserWarning)
+                    UserWarning, stacklevel=2)
             return
 
     # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
@@ -130,38 +130,36 @@ def import_module(module, min_module_version=None, min_python_version=None,
         return
 
     try:
-        mod = __import__(module, **__import__kwargs)
+        mod = __import__(module, **import_kwargs)
 
         ## there's something funny about imports with matplotlib and py3k. doing
         ##    from matplotlib import collections
         ## gives python's stdlib collections module. explicitly re-importing
         ## the module fixes this.
-        from_list = __import__kwargs.get('fromlist', tuple())
+        from_list = import_kwargs.get('fromlist', tuple())
         for submod in from_list:
             if submod == 'collections' and mod.__name__ == 'matplotlib':
                 __import__(module + '.' + submod)
     except ImportError:
         if warn_not_installed:
-            warnings.warn("%s module is not installed" % module, UserWarning)
+            warnings.warn("%s module is not installed" % module, UserWarning,
+                    stacklevel=2)
         return
     except catch as e:
         if warn_not_installed:
             warnings.warn(
-                "%s module could not be used (%s)" % (module, repr(e)))
+                "%s module could not be used (%s)" % (module, repr(e)),
+                stacklevel=2)
         return
 
     if min_module_version:
         modversion = getattr(mod, module_version_attr)
         if module_version_attr_call_args is not None:
             modversion = modversion(*module_version_attr_call_args)
-        # NOTE: StrictVersion() is use here to make sure a comparison like
-        # '1.11.2' < '1.6.1' doesn't fail. There is not a straight forward way
-        # to create a unit test for this.
-        if StrictVersion(modversion) < StrictVersion(min_module_version):
+        if LooseVersion(modversion) < LooseVersion(min_module_version):
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
-                from ..core.compatibility import string_types
-                if isinstance(min_module_version, string_types):
+                if isinstance(min_module_version, str):
                     verstr = min_module_version
                 elif isinstance(min_module_version, (tuple, list)):
                     verstr = '.'.join(map(str, min_module_version))
@@ -171,7 +169,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     verstr = str(min_module_version)
                 warnings.warn("%s version is too old to use "
                     "(%s or newer required)" % (module, verstr),
-                    UserWarning)
+                    UserWarning, stacklevel=2)
             return
 
     return mod

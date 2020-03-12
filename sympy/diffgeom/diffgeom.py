@@ -1,16 +1,17 @@
 from __future__ import print_function, division
 
+from typing import Any, Set
+
 from itertools import permutations
 
-from sympy.matrices import Matrix
-from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
-from sympy.core.compatibility import range
-from sympy.core.numbers import Zero
-from sympy.solvers import solve
-from sympy.functions import factorial
-from sympy.simplify import simplify
-from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
+from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core.compatibility import reduce
+from sympy.core.numbers import Zero
+from sympy.functions import factorial
+from sympy.matrices import Matrix
+from sympy.simplify import simplify
+from sympy.solvers import solve
 
 
 # TODO you are a bit excessive in the use of Dummies
@@ -40,7 +41,7 @@ class Manifold(Basic):
         return obj
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}' % self.name
+        return r'\text{%s}' % self.name
 
 
 class Patch(Basic):
@@ -84,7 +85,7 @@ class Patch(Basic):
         return self.manifold.dim
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
+        return r'\text{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
 
 
 class CoordSystem(Basic):
@@ -245,16 +246,11 @@ class CoordSystem(Basic):
 
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
-        # TODO, check for results, get solve to return results in definite
-        # format instead of wondering dict/tuple/whatever.
-        # As it is at the moment this is an ugly hack for changing the format
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
-            [t[0] - t[1] for t in zip(inv_from, to_exprs)], list(from_coords))
-        if isinstance(inv_to, dict):
-            inv_to = [inv_to[fc] for fc in from_coords]
-        else:
-            inv_to = inv_to[0]
+            [t[0] - t[1] for t in zip(inv_from, to_exprs)],
+            list(from_coords), dict=True)[0]
+        inv_to = [inv_to[fc] for fc in from_coords]
         return Matrix(inv_from), Matrix(inv_to)
 
     @staticmethod
@@ -347,7 +343,7 @@ class CoordSystem(Basic):
     ##########################################################################
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
+        return r'\text{%s}^{\text{%s}}_{%s}' % (
             self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
 
 
@@ -407,7 +403,6 @@ class Point(Basic):
 
     @property
     def free_symbols(self):
-        raise NotImplementedError
         return self._coords.free_symbols
 
 
@@ -489,7 +484,7 @@ class BaseScalarField(AtomicExpr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()
+    free_symbols = set()  # type: Set[Any]
 
     def doit(self):
         return self
@@ -541,17 +536,17 @@ class BaseVectorField(AtomicExpr):
 
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
-    /  d              \|
-    |-----(g(x, xi_2))||
-    \dxi_2            /|xi_2=y
+    / d           \|
+    |---(g(x, xi))||
+    \dxi          /|xi=y
     >>> pprint(v(s_field).rcall(point_r).doit())
      d
     ---(g(x0, y0))
     dy0
-    >>> pprint(v(s_field).rcall(point_p).doit())
-    /  d                           \|
-    |-----(g(r0*cos(theta0), xi_2))||
-    \dxi_2                         /|xi_2=r0*sin(theta0)
+    >>> pprint(v(s_field).rcall(point_p))
+    / d                        \|
+    |---(g(r0*cos(theta0), xi))||
+    \dxi                       /|xi=r0*sin(theta0)
 
     """
 
@@ -600,7 +595,7 @@ class BaseVectorField(AtomicExpr):
         # Remove the dummies
         result = d_result.subs(list(zip(d_funcs, base_scalars)))
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
-        return result.doit()  # XXX doit for the Subs instances
+        return result.doit()
 
 
 class Commutator(Expr):
@@ -633,7 +628,7 @@ class Commutator(Expr):
     >>> c_xr
     Commutator(e_x, e_r)
 
-    >>> simplify(c_xr(R2.y**2).doit())
+    >>> simplify(c_xr(R2.y**2))
     -2*y**2*cos(theta)/(x**2 + y**2)
 
     """
@@ -710,13 +705,13 @@ class Differential(Expr):
     >>> dg
     d(g(x, y))
     >>> pprint(dg(e_x))
-    /  d              \|
-    |-----(g(xi_1, y))||
-    \dxi_1            /|xi_1=x
+    / d           \|
+    |---(g(xi, y))||
+    \dxi          /|xi=x
     >>> pprint(dg(e_y))
-    /  d              \|
-    |-----(g(x, xi_2))||
-    \dxi_2            /|xi_2=y
+    / d           \|
+    |---(g(x, xi))||
+    \dxi          /|xi=y
 
     Applying the exterior derivative operator twice always results in:
 
@@ -771,7 +766,7 @@ class Differential(Expr):
         else:
             # For higher form it is more complicated:
             # Invariant formula:
-            # http://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
+            # https://en.wikipedia.org/wiki/Exterior_derivative#Invariant_formula
             # df(v1, ... vn) = +/- vi(f(v1..no i..vn))
             #                  +/- f([vi,vj],v1..no i, no j..vn)
             f = self._form_field
@@ -949,7 +944,7 @@ class LieDerivative(Expr):
     >>> tp = TensorProduct(R2.dx, R2.dy)
     >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
-    >>> LieDerivative(R2.e_x, tp).doit()
+    >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
@@ -1042,9 +1037,13 @@ class BaseCovarDerivativeOp(Expr):
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
         to_subs = [wrt_vector(d) for d in d_funcs]
+        # XXX: This substitution can fail when there are Dummy symbols and the
+        # cache is disabled: https://github.com/sympy/sympy/issues/17794
         result = d_result.subs(list(zip(to_subs, derivs)))
 
-        return result  # TODO .doit() # XXX doit for the Subs instances
+        # Remove the dummies
+        result = result.subs(list(zip(d_funcs, vectors)))
+        return result.doit()
 
 
 class CovarDerivativeOp(Expr):
@@ -1297,7 +1296,8 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    d_exprs = Matrix([sympify(expr).subs(list(zip(args, d_args))) for expr in exprs])
+    reps = dict(zip(args, d_args))
+    d_exprs = Matrix([sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
 

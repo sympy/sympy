@@ -1,8 +1,8 @@
 from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range, ordered
-from sympy.core.symbol import _symbol, Dummy
+from sympy.core.compatibility import as_int, ordered
+from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -11,15 +11,13 @@ from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_dups, has_variety, uniq
+from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
 from sympy.utilities.misc import func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
 from .ellipse import Circle
 from .line import Line, Segment, Ray
-
-from sympy import sqrt
 
 import warnings
 
@@ -34,6 +32,12 @@ class Polygon(GeometrySet):
     ==========
 
     vertices : sequence of Points
+
+    Optional parameters
+    ==========
+
+    n : If > 0, an n-sided RegularPolygon is created. See below.
+        Default value is 0.
 
     Attributes
     ==========
@@ -111,9 +115,8 @@ class Polygon(GeometrySet):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        if kwargs.get('n', 0):
-            n = kwargs.pop('n')
+    def __new__(cls, *args, n = 0, **kwargs):
+        if n:
             args = list(args)
             # return a virtual polygon with n sides
             if len(args) == 2:  # center, radius
@@ -381,7 +384,7 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        point : Point, two-tuple of sympifiable objects, or None(default=None)
+        point : Point, two-tuple of sympifyable objects, or None(default=None)
             point is the point about which second moment of area is to be found.
             If "point=None" it will be calculated about the axis passing through the
             centroid of the polygon.
@@ -413,7 +416,7 @@ class Polygon(GeometrySet):
         """
 
         I_xx, I_yy, I_xy = 0, 0, 0
-        args = self.args
+        args = self.vertices
         for i in range(len(args)):
             x1, y1 = args[i-1].args
             x2, y2 = args[i].args
@@ -436,6 +439,166 @@ class Polygon(GeometrySet):
         I_xy = (I_xy_c + A*((point[0]-c_x)*(point[1]-c_y)))
 
         return I_xx, I_yy, I_xy
+
+
+    def first_moment_of_area(self, point=None):
+        """
+        Returns the first moment of area of a two-dimensional polygon with
+        respect to a certain point of interest.
+
+        First moment of area is a measure of the distribution of the area
+        of a polygon in relation to an axis. The first moment of area of
+        the entire polygon about its own centroid is always zero. Therefore,
+        here it is calculated for an area, above or below a certain point
+        of interest, that makes up a smaller portion of the polygon. This
+        area is bounded by the point of interest and the extreme end
+        (top or bottom) of the polygon. The first moment for this area is
+        is then determined about the centroidal axis of the initial polygon.
+
+        References
+        ==========
+
+        https://skyciv.com/docs/tutorials/section-tutorials/calculating-the-statical-or-first-moment-of-area-of-beam-sections/?cc=BMD
+        https://mechanicalc.com/reference/cross-sections
+
+        Parameters
+        ==========
+
+        point: Point, two-tuple of sympifyable objects, or None (default=None)
+            point is the point above or below which the area of interest lies
+            If ``point=None`` then the centroid acts as the point of interest.
+
+        Returns
+        =======
+
+        Q_x, Q_y: number or sympy expressions
+            Q_x is the first moment of area about the x-axis
+            Q_y is the first moment of area about the y-axis
+            A negetive sign indicates that the section modulus is
+            determined for a section below (or left of) the centroidal axis
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Polygon
+        >>> a, b = 50, 10
+        >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
+        >>> p = Polygon(p1, p2, p3, p4)
+        >>> p.first_moment_of_area()
+        (625, 3125)
+        >>> p.first_moment_of_area(point=Point(30, 7))
+        (525, 3000)
+        """
+        if point:
+            xc, yc = self.centroid
+        else:
+            point = self.centroid
+            xc, yc = point
+
+        h_line = Line(point, slope=0)
+        v_line = Line(point, slope=S.Infinity)
+
+        h_poly = self.cut_section(h_line)
+        v_poly = self.cut_section(v_line)
+
+        x_min, y_min, x_max, y_max = self.bounds
+
+        poly_1 = h_poly[0] if h_poly[0].area <= h_poly[1].area else h_poly[1]
+        poly_2 = v_poly[0] if v_poly[0].area <= v_poly[1].area else v_poly[1]
+
+        Q_x = (poly_1.centroid.y - yc)*poly_1.area
+        Q_y = (poly_2.centroid.x - xc)*poly_2.area
+
+        return Q_x, Q_y
+
+
+    def polar_second_moment_of_area(self):
+        """Returns the polar modulus of a two-dimensional polygon
+
+        It is a constituent of the second moment of area, linked through
+        the perpendicular axis theorem. While the planar second moment of
+        area describes an object's resistance to deflection (bending) when
+        subjected to a force applied to a plane parallel to the central
+        axis, the polar second moment of area describes an object's
+        resistance to deflection when subjected to a moment applied in a
+        plane perpendicular to the object's central axis (i.e. parallel to
+        the cross-section)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
+        Examples
+        ========
+
+        >>> from sympy import Polygon, symbols
+        >>> a, b = symbols('a, b')
+        >>> rectangle = Polygon((0, 0), (a, 0), (a, b), (0, b))
+        >>> rectangle.polar_second_moment_of_area()
+        a**3*b/12 + a*b**3/12
+        """
+        second_moment = self.second_moment_of_area()
+        return second_moment[0] + second_moment[1]
+
+
+    def section_modulus(self, point=None):
+        """Returns a tuple with the section modulus of a two-dimensional
+        polygon.
+
+        Section modulus is a geometric property of a polygon defined as the
+        ratio of second moment of area to the distance of the extreme end of
+        the polygon from the centroidal axis.
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Section_modulus
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifyable objects, or None(default=None)
+            point is the point at which section modulus is to be found.
+            If "point=None" it will be calculated for the point farthest from the
+            centroidal axis of the polygon.
+
+        Returns
+        =======
+
+        S_x, S_y: numbers or SymPy expressions
+                  S_x is the section modulus with respect to the x-axis
+                  S_y is the section modulus with respect to the y-axis
+                  A negetive sign indicates that the section modulus is
+                  determined for a point below the centroidal axis
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Polygon, Point
+        >>> a, b = symbols('a, b', positive=True)
+        >>> rectangle = Polygon((0, 0), (a, 0), (a, b), (0, b))
+        >>> rectangle.section_modulus()
+        (a*b**2/6, a**2*b/6)
+        >>> rectangle.section_modulus(Point(a/4, b/4))
+        (-a*b**2/3, -a**2*b/3)
+        """
+        x_c, y_c = self.centroid
+        if point is None:
+            # taking x and y as maximum distances from centroid
+            x_min, y_min, x_max, y_max = self.bounds
+            y = max(y_c - y_min, y_max - y_c)
+            x = max(x_c - x_min, x_max - x_c)
+        else:
+            # taking x and y as distances of the given point from the centroid
+            y = point.y - y_c
+            x = point.x - x_c
+
+        second_moment= self.second_moment_of_area()
+        S_x = second_moment[0]/y
+        S_y = second_moment[1]/x
+
+        return S_x, S_y
 
 
     @property
@@ -783,12 +946,118 @@ class Polygon(GeometrySet):
             return list(ordered(intersection_result))
 
 
+    def cut_section(self, line):
+        """
+        Returns a tuple of two polygon segments that lie above and below
+        the intersecting line respectively.
+
+        Parameters
+        ==========
+
+        line: Line object of geometry module
+            line which cuts the Polygon. The part of the Polygon that lies
+            above and below this line is returned.
+
+        Returns
+        =======
+
+        upper_polygon, lower_polygon: Polygon objects or None
+            upper_polygon is the polygon that lies above the given line.
+            lower_polygon is the polygon that lies below the given line.
+            upper_polygon and lower polygon are ``None`` when no polygon
+            exists above the line or below the line.
+
+        Raises
+        ======
+
+        ValueError: When the line does not intersect the polygon
+
+        References
+        ==========
+
+        https://github.com/sympy/sympy/wiki/A-method-to-return-a-cut-section-of-any-polygon-geometry
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Symbol, Polygon, Line
+        >>> a, b = 20, 10
+        >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
+        >>> rectangle = Polygon(p1, p2, p3, p4)
+        >>> t = rectangle.cut_section(Line((0, 5), slope=0))
+        >>> t
+        (Polygon(Point2D(0, 10), Point2D(0, 5), Point2D(20, 5), Point2D(20, 10)),
+        Polygon(Point2D(0, 5), Point2D(0, 0), Point2D(20, 0), Point2D(20, 5)))
+        >>> upper_segment, lower_segment = t
+        >>> upper_segment.area
+        100
+        >>> upper_segment.centroid
+        Point2D(10, 15/2)
+        >>> lower_segment.centroid
+        Point2D(10, 5/2)
+        """
+        intersection_points = self.intersection(line)
+        if not intersection_points:
+            raise ValueError("This line does not intersect the polygon")
+
+        points = list(self.vertices)
+        points.append(points[0])
+
+        x, y = symbols('x, y', real=True, cls=Dummy)
+        eq = line.equation(x, y)
+
+        # considering equation of line to be `ax +by + c`
+        a = eq.coeff(x)
+        b = eq.coeff(y)
+
+        upper_vertices = []
+        lower_vertices = []
+        # prev is true when previous point is above the line
+        prev = True
+        prev_point = None
+        for point in points:
+            # when coefficient of y is 0, right side of the line is
+            # considered
+            compare = eq.subs({x: point.x, y: point.y})/b if b \
+                    else eq.subs(x, point.x)/a
+
+            # if point lies above line
+            if compare > 0:
+                if not prev:
+                    # if previous point lies below the line, the intersection
+                    # point of the polygon egde and the line has to be included
+                    edge = Line(point, prev_point)
+                    new_point = edge.intersection(line)
+                    upper_vertices.append(new_point[0])
+                    lower_vertices.append(new_point[0])
+
+                upper_vertices.append(point)
+                prev = True
+            else:
+                if prev and prev_point:
+                    edge = Line(point, prev_point)
+                    new_point = edge.intersection(line)
+                    upper_vertices.append(new_point[0])
+                    lower_vertices.append(new_point[0])
+                lower_vertices.append(point)
+                prev = False
+            prev_point = point
+
+        upper_polygon, lower_polygon = None, None
+        if upper_vertices and isinstance(Polygon(*upper_vertices), Polygon):
+            upper_polygon = Polygon(*upper_vertices)
+        if lower_vertices and isinstance(Polygon(*lower_vertices), Polygon):
+            lower_polygon = Polygon(*lower_vertices)
+
+        return upper_polygon, lower_polygon
+
+
     def distance(self, o):
         """
         Returns the shortest distance between self and o.
 
         If o is a point, then self does not need to be convex.
-        If o is another polygon self and o must be complex.
+        If o is another polygon self and o must be convex.
 
         Examples
         ========
@@ -845,9 +1114,9 @@ class Polygon(GeometrySet):
         Method:
         [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
-        [2] http://en.wikipedia.org/wiki/Rotating_calipers
+        [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
-        [3] http://en.wikipedia.org/wiki/Antipodal_point
+        [3] https://en.wikipedia.org/wiki/Antipodal_point
         """
         e1 = self
 
@@ -1033,26 +1302,26 @@ class Polygon(GeometrySet):
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
             ).format(2. * scale_factor, path, fill_color)
 
-    def __eq__(self, o):
-        if not isinstance(o, Polygon) or len(self.args) != len(o.args):
-            return False
+    def _hashable_content(self):
 
-        # See if self can ever be traversed (cw or ccw) from any of its
-        # vertices to match all points of o
-        args = self.args
-        oargs = o.args
-        n = len(args)
-        o0 = oargs[0]
-        for i0 in range(n):
-            if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
-                    return True
-        return False
+        D = {}
+        def ref_list(point_list):
+            kee = {}
+            for i, p in enumerate(ordered(set(point_list))):
+                kee[p] = i
+                D[i] = p
+            return [kee[p] for p in point_list]
 
-    def __hash__(self):
-        return super(Polygon, self).__hash__()
+        S1 = ref_list(self.args)
+        r_nor = rotate_left(S1, least_rotation(S1))
+        S2 = ref_list(list(reversed(self.args)))
+        r_rev = rotate_left(S2, least_rotation(S2))
+        if r_nor < r_rev:
+            r = r_nor
+        else:
+            r = r_rev
+        canonical_args = [ D[order] for order in r ]
+        return tuple(canonical_args)
 
     def __contains__(self, o):
         """
@@ -1105,6 +1374,40 @@ class Polygon(GeometrySet):
                     return True
 
         return False
+
+    def bisectors(p, prec=None):
+        """Returns angle bisectors of a polygon. If prec is given
+        then approximate the point defining the ray to that precision.
+
+        The distance between the points defining the bisector ray is 1.
+
+        Examples
+        ========
+
+        >>> from sympy import Polygon, Point
+        >>> p = Polygon(Point(0, 0), Point(2, 0), Point(1, 1), Point(0, 3))
+        >>> p.bisectors(2)
+        {Point2D(0, 0): Ray2D(Point2D(0, 0), Point2D(0.71, 0.71)),
+         Point2D(0, 3): Ray2D(Point2D(0, 3), Point2D(0.23, 2.0)),
+         Point2D(1, 1): Ray2D(Point2D(1, 1), Point2D(0.19, 0.42)),
+         Point2D(2, 0): Ray2D(Point2D(2, 0), Point2D(1.1, 0.38))}
+        """
+        b = {}
+        pts = list(p.args)
+        pts.append(pts[0])  # close it
+        cw = Polygon._isright(*pts[:3])
+        if cw:
+            pts = list(reversed(pts))
+        for v, a in p.angles.items():
+            i = pts.index(v)
+            p1, p2 = Point._normalize_dimension(pts[i], pts[i + 1])
+            ray = Ray(p1, p2).rotate(a/2, v)
+            dir = ray.direction
+            ray = Ray(ray.p1, ray.p1 + dir/dir.distance((0, 0)))
+            if prec is not None:
+                ray = Ray(ray.p1, ray.p2.n(prec))
+            b[v] = ray
+        return b
 
 
 class RegularPolygon(Polygon):
@@ -1169,7 +1472,7 @@ class RegularPolygon(Polygon):
 
     """
 
-    __slots__ = ['_n', '_center', '_radius', '_rot']
+    __slots__ = ('_n', '_center', '_radius', '_rot')
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = map(sympify, (r, n, rot))
@@ -2199,7 +2502,10 @@ class Triangle(Polygon):
         True
 
         """
-        s = self.sides
+        # use lines containing sides so containment check during
+        # intersection calculation can be avoided, thus reducing
+        # the processing time for calculating the bisectors
+        s = [Line(l) for l in self.sides]
         v = self.vertices
         c = self.incenter
         l1 = Segment(v[0], Line(v[0], c).intersection(s[1])[0])
@@ -2231,7 +2537,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
-        Point2D(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1)
+        Point2D(1 - sqrt(2)/2, 1 - sqrt(2)/2)
 
         """
         s = self.sides
@@ -2292,7 +2598,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point2D(-sqrt(2) + 2, -sqrt(2) + 2), -sqrt(2) + 2)
+        Circle(Point2D(2 - sqrt(2), 2 - sqrt(2)), 2 - sqrt(2))
 
         """
         return Circle(self.incenter, self.inradius)
@@ -2346,6 +2652,69 @@ class Triangle(Polygon):
                    self.sides[2]: simplify(area/(s-c))}
 
         return exradii
+
+    @property
+    def excenters(self):
+        """Excenters of the triangle.
+
+        An excenter is the center of a circle that is tangent to a side of the
+        triangle and the extensions of the other two sides.
+
+        Returns
+        =======
+
+        excenters : dict
+
+
+        Examples
+        ========
+
+        The excenters are keyed to the side of the triangle to which their corresponding
+        excircle is tangent: The center is keyed, e.g. the excenter of a circle touching
+        side 0 is:
+
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.excenters[t.sides[0]]
+        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+
+        See Also
+        ========
+
+        sympy.geometry.polygon.Triangle.exradii
+
+        References
+        ==========
+
+        .. [1] http://mathworld.wolfram.com/Excircles.html
+
+        """
+
+        s = self.sides
+        v = self.vertices
+        a = s[0].length
+        b = s[1].length
+        c = s[2].length
+        x = [v[0].x, v[1].x, v[2].x]
+        y = [v[0].y, v[1].y, v[2].y]
+
+        exc_coords = {
+            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
+            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
+            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
+            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
+            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
+            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
+        }
+
+        excenters = {
+            s[0]: Point(exc_coords["x1"], exc_coords["y1"]),
+            s[1]: Point(exc_coords["x2"], exc_coords["y2"]),
+            s[2]: Point(exc_coords["x3"], exc_coords["y3"])
+        }
+
+        return excenters
 
     @property
     def medians(self):

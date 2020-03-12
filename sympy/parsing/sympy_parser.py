@@ -3,16 +3,20 @@
 from __future__ import print_function, division
 
 from tokenize import (generate_tokens, untokenize, TokenError,
-    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN)
+    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
 
 from keyword import iskeyword
 
 import ast
 import unicodedata
 
-from sympy.core.compatibility import exec_, StringIO
+from sympy.core.compatibility import exec_, StringIO, iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
+from sympy.core.function import arity
+from sympy.utilities.misc import filldedent, func_name
+
+
 
 def _token_splittable(token):
     """
@@ -262,9 +266,7 @@ def _implicit_application(tokens, local_dict, global_dict):
                           # work with function exponentiation
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
-        if (tok[0] == NAME and
-              nextTok[0] != OP and
-              nextTok[0] != ENDMARKER):
+        if (tok[0] == NAME and nextTok[0] not in [OP, ENDMARKER, NEWLINE]):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -383,41 +385,58 @@ def split_symbols_custom(predicate):
         result = []
         split = False
         split_previous=False
+
         for tok in tokens:
             if split_previous:
                 # throw out closing parenthesis of Symbol that was split
                 split_previous=False
                 continue
             split_previous=False
+
             if tok[0] == NAME and tok[1] in ['Symbol', 'Function']:
                 split = True
+
             elif split and tok[0] == NAME:
                 symbol = tok[1][1:-1]
+
                 if predicate(symbol):
                     tok_type = result[-2][1]  # Symbol or Function
                     del result[-2:]  # Get rid of the call to Symbol
-                    for char in symbol[:-1]:
+
+                    i = 0
+                    while i < len(symbol):
+                        char = symbol[i]
                         if char in local_dict or char in global_dict:
                             result.extend([(NAME, "%s" % char)])
-                        else:
-                            result.extend([(NAME, 'Symbol'), (OP, '('),
+                        elif char.isdigit():
+                            char = [char]
+                            for i in range(i + 1, len(symbol)):
+                                if not symbol[i].isdigit():
+                                  i -= 1
+                                  break
+                                char.append(symbol[i])
+                            char = ''.join(char)
+                            result.extend([(NAME, 'Number'), (OP, '('),
                                            (NAME, "'%s'" % char), (OP, ')')])
-                    char = symbol[-1]
-                    if char in local_dict or char in global_dict:
-                        result.extend([(NAME, "%s" % char)])
-                    else:
-                        result.extend([(NAME, tok_type), (OP, '('),
-                                       (NAME, "'%s'" % char), (OP, ')')])
+                        else:
+                            use = tok_type if i == len(symbol) else 'Symbol'
+                            result.extend([(NAME, use), (OP, '('),
+                                           (NAME, "'%s'" % char), (OP, ')')])
+                        i += 1
 
                     # Set split_previous=True so will skip
                     # the closing parenthesis of the original Symbol
                     split = False
                     split_previous = True
                     continue
+
                 else:
                     split = False
+
             result.append(tok)
+
         return result
+
     return _split_symbols
 
 
@@ -570,8 +589,11 @@ def lambda_notation(tokens, local_dict, global_dict):
     flag = False
     toknum, tokval = tokens[0]
     tokLen = len(tokens)
+
     if toknum == NAME and tokval == 'lambda':
-        if tokLen == 2:
+        if tokLen == 2 or tokLen == 3 and tokens[1][0] == NEWLINE:
+            # In Python 3.6.7+, inputs without a newline get NEWLINE added to
+            # the tokens
             result.extend(tokens)
         elif tokLen > 2:
             result.extend([
@@ -634,6 +656,7 @@ def convert_xor(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
 
 def repeated_decimals(tokens, local_dict, global_dict):
     """
@@ -725,6 +748,7 @@ def repeated_decimals(tokens, local_dict, global_dict):
 
     return result
 
+
 def auto_number(tokens, local_dict, global_dict):
     """
     Converts numeric literals to use SymPy equivalents.
@@ -757,6 +781,7 @@ def auto_number(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
 
 def rationalize(tokens, local_dict, global_dict):
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
@@ -844,7 +869,7 @@ def convert_equals_signs(result, local_dict, global_dict):
 
 
 #: Standard transformations for :func:`parse_expr`.
-#: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
+#: Inserts calls to :class:`~.Symbol`, :class:`~.Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
     factorial_notation)
@@ -952,11 +977,29 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if local_dict is None:
         local_dict = {}
+    elif not isinstance(local_dict, dict):
+        raise TypeError('expecting local_dict to be a dict')
 
     if global_dict is None:
         global_dict = {}
         exec_('from sympy import *', global_dict)
+    elif not isinstance(global_dict, dict):
+        raise TypeError('expecting global_dict to be a dict')
 
+    transformations = transformations or ()
+    if transformations:
+        if not iterable(transformations):
+            raise TypeError(
+                '`transformations` should be a list of functions.')
+        for _ in transformations:
+            if not callable(_):
+                raise TypeError(filldedent('''
+                    expected a function in `transformations`,
+                    not %s''' % func_name(_)))
+            if arity(_) != 3:
+                raise TypeError(filldedent('''
+                    a transformation should be function that
+                    takes 3 arguments'''))
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
@@ -992,8 +1035,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def flatten(self, args, func):
         result = []
         for arg in args:
-            if isinstance(arg, ast.Call) and arg.func.id == func:
-                result.extend(self.flatten(arg.args, func))
+            if isinstance(arg, ast.Call):
+                arg_func = arg.func
+                if isinstance(arg_func, ast.Call):
+                    arg_func = arg_func.func
+                if arg_func.id == func:
+                    result.extend(self.flatten(arg.args, func))
+                else:
+                    result.append(arg)
             else:
                 result.append(arg)
         return result

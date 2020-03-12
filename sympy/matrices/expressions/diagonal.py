@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from sympy.core.sympify import _sympify
+
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core import S, Eq, Ge
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -68,7 +70,7 @@ class DiagonalMatrix(MatrixExpr):
                 m = None
         return m
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         if self.diagonal_length is not None:
             if Ge(i, self.diagonal_length) is S.true:
                 return S.Zero
@@ -149,5 +151,69 @@ class DiagonalOf(MatrixExpr):
     def diagonal_length(self):
         return self.shape[0]
 
-    def _entry(self, i, j):
-        return self.arg[i, i]
+    def _entry(self, i, j, **kwargs):
+        return self.arg._entry(i, i, **kwargs)
+
+
+class DiagMatrix(MatrixExpr):
+    """
+    Turn a vector into a diagonal matrix.
+    """
+    def __new__(cls, vector):
+        vector = _sympify(vector)
+        obj = MatrixExpr.__new__(cls, vector)
+        shape = vector.shape
+        dim = shape[1] if shape[0] == 1 else shape[0]
+        if vector.shape[0] != 1:
+            obj._iscolumn = True
+        else:
+            obj._iscolumn = False
+        obj._shape = (dim, dim)
+        obj._vector = vector
+        return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def _entry(self, i, j, **kwargs):
+        if self._iscolumn:
+            result = self._vector._entry(i, 0, **kwargs)
+        else:
+            result = self._vector._entry(0, j, **kwargs)
+        if i != j:
+            result *= KroneckerDelta(i, j)
+        return result
+
+    def _eval_transpose(self):
+        return self
+
+    def as_explicit(self):
+        from sympy import diag
+        return diag(*list(self._vector.as_explicit()))
+
+    def doit(self, **hints):
+        from sympy.assumptions import ask, Q
+        from sympy import Transpose, Mul, MatMul
+        from sympy import MatrixBase, eye
+        vector = self._vector
+        # This accounts for shape (1, 1) and identity matrices, among others:
+        if ask(Q.diagonal(vector)):
+            return vector
+        if isinstance(vector, MatrixBase):
+            ret = eye(max(vector.shape))
+            for i in range(ret.shape[0]):
+                ret[i, i] = vector[i]
+            return type(vector)(ret)
+        if vector.is_MatMul:
+            matrices = [arg for arg in vector.args if arg.is_Matrix]
+            scalars = [arg for arg in vector.args if arg not in matrices]
+            if scalars:
+                return Mul.fromiter(scalars)*DiagMatrix(MatMul.fromiter(matrices).doit()).doit()
+        if isinstance(vector, Transpose):
+            vector = vector.arg
+        return DiagMatrix(vector)
+
+
+def diagonalize_vector(vector):
+    return DiagMatrix(vector).doit()

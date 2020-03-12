@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict, Type
+
 from .core import Registry
 from .assumptions import ManagedProperties
 from .sympify import sympify
@@ -77,7 +79,7 @@ class SingletonRegistry(Registry):
     ``Integer.__div__``, which knows how to return a ``Rational``.
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     # Also allow things like S(5)
     __call__ = staticmethod(sympify)
@@ -95,11 +97,8 @@ class SingletonRegistry(Registry):
 
     def register(self, cls):
         # Make sure a duplicate class overwrites the old one
-        try:
-            if getattr(self, cls.__name__):
-                delattr(self, cls.__name__)
-        except AttributeError:
-            pass
+        if hasattr(self, cls.__name__):
+            delattr(self, cls.__name__)
         self._classes_to_install[cls.__name__] = cls
 
     def __getattr__(self, name):
@@ -132,7 +131,7 @@ class Singleton(ManagedProperties):
 
     A singleton class has only one instance which is returned every time the
     class is instantiated. Additionally, this instance can be accessed through
-    the global registry object S as S.<class_name>.
+    the global registry object ``S`` as ``S.<class_name>``.
 
     Examples
     ========
@@ -140,7 +139,7 @@ class Singleton(ManagedProperties):
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> from sympy.core.compatibility import with_metaclass
-        >>> class MySingleton(with_metaclass(Singleton, Basic)):
+        >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()
         False
@@ -162,7 +161,7 @@ class Singleton(ManagedProperties):
     subclass may use a subclassed metaclass).
     """
 
-    _instances = {}
+    _instances = {}  # type: Dict[Type[Any], Any]
     "Maps singleton classes to their instances."
 
     def __new__(cls, *args, **kwargs):

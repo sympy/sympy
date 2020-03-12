@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import itertools
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
-from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
+from sympy.combinatorics.free_groups import FreeGroup
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core.numbers import igcd
 from sympy.ntheory.factor_ import totient
@@ -13,7 +13,8 @@ class GroupHomomorphism(object):
 
     References
     ==========
-    [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
+
+    .. [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
 
     '''
 
@@ -115,7 +116,7 @@ class GroupHomomorphism(object):
         from sympy import S
         G = self.domain
         G_order = G.order()
-        if G_order == S.Infinity:
+        if G_order is S.Infinity:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
         gens = []
@@ -198,7 +199,7 @@ class GroupHomomorphism(object):
         from sympy import S
         im = self.image().order()
         oth = self.codomain.order()
-        if im == S.Infinity and oth == S.Infinity:
+        if im is S.Infinity and oth is S.Infinity:
             return None
         else:
             return im == oth
@@ -331,13 +332,13 @@ def _check_homomorphism(domain, codomain, images):
             # both indices
             while i < len(r):
                 power = r_arr[j][1]
-                if isinstance(domain, PermutationGroup):
+                if isinstance(domain, PermutationGroup) and r[i] in gens:
                     s = domain.generators[gens.index(r[i])]
                 else:
                     s = r[i]
                 if s in images:
                     w = w*images[s]**power
-                else:
+                elif s**-1 in images:
                     w = w*images[s**-1]**power
                 i += abs(power)
                 j += 1
@@ -352,7 +353,7 @@ def _check_homomorphism(domain, codomain, images):
                 # truth of equality otherwise
                 success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
-                if s in None and not success:
+                if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
                         "define a homomorphism. Try increasing "
                         "the maximum number of rewriting rules "
@@ -425,27 +426,25 @@ def group_isomorphism(G, H, isomorphism=True):
     '''
     Compute an isomorphism between 2 given groups.
 
-    Arguments:
+    Parameters
+    ==========
+
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
         isomorphism (boolean) -- This is used to avoid the computation of homomorphism
                                  when the user only wants to check if there exists
                                  an isomorphism between the groups.
 
-    Returns:
+    Returns
+    =======
+
     If isomorphism = False -- Returns a boolean.
     If isomorphism = True  -- Returns a boolean and an isomorphism between `G` and `H`.
-
-    Summary:
-    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
-    First, the generators of `G` are mapped to the elements of `H` and
-    we check if the mapping induces an isomorphism.
 
     Examples
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
@@ -466,6 +465,13 @@ def group_isomorphism(G, H, isomorphism=True):
     True
     >>> T(b*a*b**-1*a**-1*b**-1)
     (0 2 3)
+
+    Notes
+    =====
+
+    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
+    First, the generators of `G` are mapped to the elements of `H` and
+    we check if the mapping induces an isomorphism.
 
     '''
     if not isinstance(G, (PermutationGroup, FpGroup)):
@@ -488,11 +494,11 @@ def group_isomorphism(G, H, isomorphism=True):
     g_order = G.order()
     h_order = H.order()
 
-    if g_order == S.Infinity:
+    if g_order is S.Infinity:
         raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
 
     if isinstance(H, FpGroup):
-        if h_order == S.Infinity:
+        if h_order is S.Infinity:
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 
@@ -532,10 +538,15 @@ def is_isomorphic(G, H):
     '''
     Check if the groups are isomorphic to each other
 
-    Arguments:
+    Parameters
+    ==========
+
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
 
-    Returns -- boolean
+    Returns
+    =======
+
+    boolean
     '''
     return group_isomorphism(G, H, isomorphism=False)

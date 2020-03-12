@@ -1,11 +1,24 @@
+import sys
+
 from sympy.utilities.source import get_mod_func, get_class, source
-from sympy.utilities.pytest import raises
-from sympy import point
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.geometry import point
 
 def test_source():
-    with raises(SymPyDeprecationWarning):
-        source(point)
+    # Dummy stdout
+    class StdOut(object):
+        def write(self, x):
+            pass
+
+    # Test SymPyDeprecationWarning from source()
+    with warns_deprecated_sympy():
+        # Redirect stdout temporarily so print out is not seen
+        stdout = sys.stdout
+        try:
+            sys.stdout = StdOut()
+            source(point)
+        finally:
+            sys.stdout = stdout
 
 def test_get_mod_func():
     assert get_mod_func(

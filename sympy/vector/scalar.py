@@ -1,6 +1,5 @@
 from sympy.core import AtomicExpr, Symbol, S
 from sympy.core.sympify import _sympify
-from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.precedence import PRECEDENCE
 
@@ -43,6 +42,7 @@ class BaseScalar(AtomicExpr):
         return obj
 
     is_commutative = True
+    is_symbol = True
 
     @property
     def free_symbols(self):

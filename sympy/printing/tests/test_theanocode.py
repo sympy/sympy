@@ -10,8 +10,7 @@ cache instead.
 import logging
 
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, SKIP
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.testing.pytest import raises, SKIP
 
 theanologger = logging.getLogger('theano.configdefaults')
 theanologger.setLevel(logging.CRITICAL)
@@ -275,7 +274,7 @@ def test_Derivative():
 
 def test_theano_function_simple():
     """ Test theano_function() with single output. """
-    f = theano_function_([x, y], x+y)
+    f = theano_function_([x, y], [x+y])
     assert f(2, 3) == 5
 
 def test_theano_function_multi():
@@ -285,46 +284,30 @@ def test_theano_function_multi():
     assert o1 == 5
     assert o2 == -1
 
-def test_theano_function_squeeze():
-    """ Test theano_function() with list of length one as outputs.
-
-    The "squeeze" argument determines whether the created function will return a
-    single array or a list containing a single array in this condition. Current
-    default is squeeze=True, which is deprecated and will be removed in a future
-    release.
-    """
-    import warnings
-
-    # squeeze=True deprecated
-    raises(SymPyDeprecationWarning, lambda: theano_function_([x, y], [x+y]))
-    raises(SymPyDeprecationWarning, lambda: theano_function_([x, y], [x+y], squeeze=True))
-
-    # Test deprecated behavior
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=SymPyDeprecationWarning)
-
-        assert theano_function_([x, y], [x + y])(2, 3) == 5
-        assert theano_function_([x, y], [x + y], squeeze=True)(2, 3) == 5
-
-    # squeeze=false keeps as list
-    assert theano_function_([x, y], [x+y], squeeze=False)(2, 3) == [5]
-
-    # No deprecation warning when value doesn't actually matter
-    assert theano_function_([x, y], [x+y, x-y])(2, 3) == [5, -1]
-    assert theano_function_([x, y], [x+y, x-y], squeeze=True)(2, 3) == [5, -1]
-    assert theano_function_([x, y], [x+y, x-y], squeeze=False)(2, 3) == [5, -1]
-
 def test_theano_function_numpy():
     """ Test theano_function() vs Numpy implementation. """
-    f = theano_function_([x, y], x+y, dim=1,
+    f = theano_function_([x, y], [x+y], dim=1,
                          dtypes={x: 'float64', y: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
 
-    f = theano_function_([x, y], x+y, dtypes={x: 'float64', y: 'float64'},
-                                     dim=1)
+    f = theano_function_([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
+                         dim=1)
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
+
+def test_theano_function_matrix():
+    m = sy.Matrix([[x, y], [z, x + y + z]])
+    expected = np.array([[1.0, 2.0], [3.0, 1.0 + 2.0 + 3.0]])
+    f = theano_function_([x, y, z], [m])
+    np.testing.assert_allclose(f(1.0, 2.0, 3.0), expected)
+    f = theano_function_([x, y, z], [m], scalar=True)
+    np.testing.assert_allclose(f(1.0, 2.0, 3.0), expected)
+    f = theano_function_([x, y, z], [m, m])
+    assert isinstance(f(1.0, 2.0, 3.0), type([]))
+    np.testing.assert_allclose(f(1.0, 2.0, 3.0)[0], expected)
+    np.testing.assert_allclose(f(1.0, 2.0, 3.0)[1], expected)
 
 def test_dim_handling():
     assert dim_handling([x], dim=2) == {x: (False, False)}
@@ -337,11 +320,11 @@ def test_theano_function_kwargs():
     Test passing additional kwargs from theano_function() to theano.function().
     """
     import numpy as np
-    f = theano_function_([x, y, z], x+y, dim=1, on_unused_input='ignore',
+    f = theano_function_([x, y, z], [x+y], dim=1, on_unused_input='ignore',
             dtypes={x: 'float64', y: 'float64', z: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4], [0, 0]) - np.asarray([4, 6])) < 1e-9
 
-    f = theano_function_([x, y, z], x+y,
+    f = theano_function_([x, y, z], [x+y],
                         dtypes={x: 'float64', y: 'float64', z: 'float64'},
                         dim=1, on_unused_input='ignore')
     xx = np.arange(3).astype('float64')
@@ -353,9 +336,9 @@ def test_theano_function_scalar():
     """ Test the "scalar" argument to theano_function(). """
 
     args = [
-        ([x, y], x + y, None, [0]),  # Single 0d output
-        ([X, Y], X + Y, None, [2]),  # Single 2d output
-        ([x, y], x + y, {x: 0, y: 1}, [1]),  # Single 1d output
+        ([x, y], [x + y], None, [0]),  # Single 0d output
+        ([X, Y], [X + Y], None, [2]),  # Single 2d output
+        ([x, y], [x + y], {x: 0, y: 1}, [1]),  # Single 1d output
         ([x, y], [x + y, x - y], None, [0, 0]),  # Two 0d outputs
         ([x, y, X, Y], [x + y, X + Y], None, [0, 2]),  # One 0d output, one 2d
     ]
@@ -396,7 +379,7 @@ def test_theano_function_bad_kwarg():
     Passing an unknown keyword argument to theano_function() should raise an
     exception.
     """
-    raises(Exception, lambda : theano_function_([x], x+1, foobar=3))
+    raises(Exception, lambda : theano_function_([x], [x+1], foobar=3))
 
 
 def test_slice():
@@ -436,7 +419,7 @@ def test_MatrixSlice():
     assert all(Yt.owner.inputs[i].equals(Constant(s, i)) for i in range(1, 7))
 
     k = sy.Symbol('k')
-    kt = theano_code_(k, dtypes={k: 'int32'})
+    theano_code_(k, dtypes={k: 'int32'})
     start, stop, step = 4, k, 2
     Y = X[start:stop:step]
     Yt = theano_code_(Y, dtypes={n: 'int32', k: 'int32'})
@@ -467,8 +450,8 @@ def test_BlockMatrix_Inverse_execution():
     cutoutput = output.subs(dict(zip(inputs, cutinputs)))
 
     dtypes = dict(zip(inputs, [dtype]*len(inputs)))
-    f = theano_function_(inputs, output, dtypes=dtypes, cache={})
-    fblocked = theano_function_(inputs, sy.block_collapse(cutoutput),
+    f = theano_function_(inputs, [output], dtypes=dtypes, cache={})
+    fblocked = theano_function_(inputs, [sy.block_collapse(cutoutput)],
                                 dtypes=dtypes, cache={})
 
     ninputs = [np.random.rand(*x.shape).astype(dtype) for x in inputs]
@@ -614,3 +597,17 @@ def test_Relationals():
     assert theq(theano_code_(x < y), xt < yt)
     assert theq(theano_code_(x >= y), xt >= yt)
     assert theq(theano_code_(x <= y), xt <= yt)
+
+
+def test_complexfunctions():
+    xt, yt = theano_code(x, dtypes={x:'complex128'}), theano_code(y, dtypes={y: 'complex128'})
+    from sympy import conjugate
+    from theano.tensor import as_tensor_variable as atv
+    from theano.tensor import complex as cplx
+    assert theq(theano_code(y*conjugate(x)), yt*(xt.conj()))
+    assert theq(theano_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
+
+
+def test_constantfunctions():
+    tf = theano_function([],[1+1j])
+    assert(tf()==1+1j)

@@ -56,14 +56,12 @@ accelerations(q double dots) with the ``rhs`` method. ::
   >>> q = [q1, q2, q3]
   >>> l = LagrangesMethod(Lag, q)
   >>> le = l.form_lagranges_equations()
-  >>> le = le.simplify()
-  >>> le
+  >>> le.simplify(); le
   Matrix([
   [m*r**2*(6*sin(q2)*q3'' + 5*sin(2*q2)*q1'*q2' + 6*cos(q2)*q2'*q3' - 5*cos(2*q2)*q1''/2 + 7*q1''/2)/4],
   [                      m*r*(4*g*sin(q2) - 5*r*sin(2*q2)*q1'**2/2 - 6*r*cos(q2)*q1'*q3' + 5*r*q2'')/4],
   [                                                 3*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/2]])
-  >>> lrhs = l.rhs().simplify()
-  >>> lrhs
+  >>> lrhs = l.rhs(); lrhs.simplify(); lrhs
   Matrix([
   [                                                          q1'],
   [                                                          q2'],

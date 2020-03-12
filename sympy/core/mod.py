@@ -36,16 +36,16 @@ class Mod(Function):
             to be less than or equal q.
             """
 
-            if q == S.Zero:
+            if q.is_zero:
                 raise ZeroDivisionError("Modulo by zero")
-            if p.is_infinite or q.is_infinite or p is nan or q is nan:
+            if p.is_finite is False or q.is_finite is False or p is nan or q is nan:
                 return nan
-            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
+            if p is S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
                 if p.is_Number:
-                    return (p % q)
+                    return p%q
                 if q == 2:
                     if p.is_even:
                         return S.Zero
@@ -64,7 +64,7 @@ class Mod(Function):
             except TypeError:
                 pass
             else:
-                if type(d) is int:
+                if isinstance(d, int):
                     rv = p - d*q
                     if (rv*q < 0) == True:
                         rv += q
@@ -139,6 +139,17 @@ class Mod(Function):
                 net = prod_mod1*prod_mod
                 return prod_non_mod*cls(net, q)
 
+            if q.is_Integer and q is not S.One:
+                _ = []
+                for i in non_mod_l:
+                    if i.is_Integer and (i % q is not S.Zero):
+                        _.append(i%q)
+                    else:
+                        _.append(i)
+                non_mod_l = _
+
+            p = Mul(*(non_mod_l + mod_l))
+
         # XXX other possibilities?
 
         # extract gcd; any further simplification should be done by the user
@@ -209,3 +220,7 @@ class Mod(Function):
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
             return True
+
+    def _eval_rewrite_as_floor(self, a, b, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        return a - b*floor(a/b)

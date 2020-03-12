@@ -4,7 +4,7 @@ from sympy.physics.vector import ReferenceFrame, Vector, Point, \
 from sympy.physics.vector.fieldfunctions import divergence, \
      gradient, curl, is_conservative, is_solenoidal, \
      scalar_potential, scalar_potential_difference
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 R = ReferenceFrame('R')
 q = dynamicsymbols('q')
@@ -26,8 +26,8 @@ def test_curl():
 
 
 def test_divergence():
-    assert divergence(Vector(0), R) == S(0)
-    assert divergence(R.x, R) == S(0)
+    assert divergence(Vector(0), R) is S.Zero
+    assert divergence(R.x, R) is S.Zero
     assert divergence(R[0]**2*R.x, R) == 2*R[0]
     assert divergence(R[0]*R[1]*R[2] * (R.x+R.y+R.z), R) == \
            R[0]*R[1] + R[0]*R[2] + R[1]*R[2]
@@ -50,8 +50,8 @@ def test_gradient():
     assert gradient(a*sin(R[1])/R[0], R) == \
            - a*sin(R[1])/R[0]**2*R.x + a*cos(R[1])/R[0]*R.y
     assert gradient(P[0]*P[1], R) == \
-           (-R[0]*sin(2*q) + R[1]*cos(2*q))*R.x + \
-           (R[0]*cos(2*q) + R[1]*sin(2*q))*R.y
+           ((-R[0]*sin(q) + R[1]*cos(q))*cos(q) - (R[0]*cos(q) + R[1]*sin(q))*sin(q))*R.x + \
+           ((-R[0]*sin(q) + R[1]*cos(q))*sin(q) + (R[0]*cos(q) + R[1]*sin(q))*cos(q))*R.y
     assert gradient(P[0]*R[2], P) == P[2]*P.x + P[0]*P.z
 
 
@@ -109,7 +109,7 @@ def test_scalar_potential_difference():
     point2 = origin.locatenew('P2', 4*R.x + 5*R.y + 6*R.z)
     genericpointR = origin.locatenew('RP', R[0]*R.x + R[1]*R.y + R[2]*R.z)
     genericpointP = origin.locatenew('PP', P[0]*P.x + P[1]*P.y + P[2]*P.z)
-    assert scalar_potential_difference(S(0), R, point1, point2, \
+    assert scalar_potential_difference(S.Zero, R, point1, point2, \
                                        origin) == 0
     assert scalar_potential_difference(scalar_field, R, origin, \
                                        genericpointR, origin) == \

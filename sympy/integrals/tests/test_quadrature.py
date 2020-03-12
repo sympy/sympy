@@ -1,4 +1,4 @@
-from sympy.core import S
+from sympy.core import S, Rational
 from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
                                         gauss_hermite, gauss_gen_laguerre,
                                         gauss_chebyshev_t, gauss_chebyshev_u,
@@ -180,11 +180,11 @@ def test_hermite_precise():
 
 
 def test_gen_laguerre():
-    x, w = gauss_gen_laguerre(1, -S.Half, 17)
+    x, w = gauss_gen_laguerre(1, Rational(-1, 2), 17)
     assert [str(r) for r in x] == ['0.50000000000000000']
     assert [str(r) for r in w] == ['1.7724538509055160']
 
-    x, w = gauss_gen_laguerre(2, -S.Half, 17)
+    x, w = gauss_gen_laguerre(2, Rational(-1, 2), 17)
     assert [str(r) for r in x] == [
             '0.27525512860841095',
             '2.7247448713915890']
@@ -192,7 +192,7 @@ def test_gen_laguerre():
             '1.6098281800110257',
             '0.16262567089449035']
 
-    x, w = gauss_gen_laguerre(3, -S.Half, 17)
+    x, w = gauss_gen_laguerre(3, Rational(-1, 2), 17)
     assert [str(r) for r in x] == [
             '0.19016350919348813',
             '1.7844927485432516',
@@ -202,7 +202,7 @@ def test_gen_laguerre():
             '0.31413464064571329',
             '0.0090600198110176913']
 
-    x, w = gauss_gen_laguerre(4, -S.Half, 17)
+    x, w = gauss_gen_laguerre(4, Rational(-1, 2), 17)
     assert [str(r) for r in x] == [
             '0.14530352150331709',
             '1.3390972881263614',
@@ -214,7 +214,7 @@ def test_gen_laguerre():
             '0.034155966014826951',
             '0.00039920814442273524']
 
-    x, w = gauss_gen_laguerre(5, -S.Half, 17)
+    x, w = gauss_gen_laguerre(5, Rational(-1, 2), 17)
     assert [str(r) for r in x] == [
             '0.11758132021177814',
             '1.0745620124369040',
@@ -278,7 +278,7 @@ def test_gen_laguerre():
 
 
 def test_gen_laguerre_precise():
-    x, w = gauss_gen_laguerre(3, -S.Half, 40)
+    x, w = gauss_gen_laguerre(3, Rational(-1, 2), 40)
     assert [str(r) for r in x] == [
             '0.1901635091934881328718554276203028970878',
             '1.784492748543251591186722461957367638500',
@@ -424,11 +424,11 @@ def test_chebyshev_u_precise():
 
 
 def test_jacobi():
-    x, w = gauss_jacobi(1, -S.Half, S.Half, 17)
+    x, w = gauss_jacobi(1, Rational(-1, 2), S.Half, 17)
     assert [str(r) for r in x] == ['0.50000000000000000']
     assert [str(r) for r in w] == ['3.1415926535897932']
 
-    x, w = gauss_jacobi(2, -S.Half, S.Half, 17)
+    x, w = gauss_jacobi(2, Rational(-1, 2), S.Half, 17)
     assert [str(r) for r in x] == [
             '-0.30901699437494742',
             '0.80901699437494742']
@@ -436,7 +436,7 @@ def test_jacobi():
             '0.86831485369082398',
             '2.2732777998989693']
 
-    x, w = gauss_jacobi(3, -S.Half, S.Half, 17)
+    x, w = gauss_jacobi(3, Rational(-1, 2), S.Half, 17)
     assert [str(r) for r in x] == [
             '-0.62348980185873353',
             '0.22252093395631440',
@@ -446,7 +446,7 @@ def test_jacobi():
             '1.0973322242791115',
             '1.7063056657443274']
 
-    x, w = gauss_jacobi(4, -S.Half, S.Half, 17)
+    x, w = gauss_jacobi(4, Rational(-1, 2), S.Half, 17)
     assert [str(r) for r in x] == [
             '-0.76604444311897804',
             '-0.17364817766693035',
@@ -458,7 +458,7 @@ def test_jacobi():
             '1.0471975511965977',
             '1.3541609083740761']
 
-    x, w = gauss_jacobi(5, -S.Half, S.Half, 17)
+    x, w = gauss_jacobi(5, Rational(-1, 2), S.Half, 17)
     assert [str(r) for r in x] == [
             '-0.84125353283118117',
             '-0.41541501300188643',
@@ -522,7 +522,7 @@ def test_jacobi():
 
 
 def test_jacobi_precise():
-    x, w = gauss_jacobi(3, -S.Half, S.Half, 40)
+    x, w = gauss_jacobi(3, Rational(-1, 2), S.Half, 40)
     assert [str(r) for r in x] == [
             '-0.6234898018587335305250048840042398106323',
             '0.2225209339563144042889025644967947594664',

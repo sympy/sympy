@@ -9,6 +9,7 @@ from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import translate
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
@@ -21,7 +22,7 @@ def cross(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
-cross.__doc__ += Vector.cross.__doc__
+cross.__doc__ += Vector.cross.__doc__  # type: ignore
 
 
 def dot(vec1, vec2):
@@ -29,7 +30,7 @@ def dot(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
-dot.__doc__ += Vector.dot.__doc__
+dot.__doc__ += Vector.dot.__doc__  # type: ignore
 
 
 def express(expr, frame, frame2=None, variables=False):
@@ -122,7 +123,7 @@ def express(expr, frame, frame2=None, variables=False):
             #Given expr is a scalar field
             frame_set = set([])
             expr = sympify(expr)
-            #Subsitute all the coordinate variables
+            #Substitute all the coordinate variables
             for x in expr.free_symbols:
                 if isinstance(x, CoordinateSym)and x.frame != frame:
                     frame_set.add(x.frame)
@@ -141,7 +142,7 @@ def time_derivative(expr, frame, order=1):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Rotating_reference_frame#Time_derivatives_in_the_two_frames
+    https://en.wikipedia.org/wiki/Rotating_reference_frame#Time_derivatives_in_the_two_frames
 
     Parameters
     ==========
@@ -216,7 +217,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.outer.__doc__
+outer.__doc__ += Vector.outer.__doc__  # type: ignore
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
@@ -237,7 +238,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     rot_type : str
         The type of rotation used to create the equations. Body, Space, or
         Quaternion only
-    rot_order : str
+    rot_order : str or int
         If applicable, the order of a series of rotations.
 
     Examples
@@ -256,12 +257,9 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     # Code below is checking and sanitizing input
     approved_orders = ('123', '231', '312', '132', '213', '321', '121', '131',
                        '212', '232', '313', '323', '1', '2', '3', '')
-    rot_order = str(rot_order).upper()  # Now we need to make sure XYZ = 123
-    rot_type = rot_type.upper()
-    rot_order = [i.replace('X', '1') for i in rot_order]
-    rot_order = [i.replace('Y', '2') for i in rot_order]
-    rot_order = [i.replace('Z', '3') for i in rot_order]
-    rot_order = ''.join(rot_order)
+    # make sure XYZ => 123 and rot_type is in lower case
+    rot_order = translate(str(rot_order), 'XYZxyz', '123123')
+    rot_type = rot_type.lower()
 
     if not isinstance(speeds, (list, tuple)):
         raise TypeError('Need to supply speeds in a list')
@@ -269,7 +267,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         raise TypeError('Need to supply 3 body-fixed speeds')
     if not isinstance(coords, (list, tuple)):
         raise TypeError('Need to supply coordinates in a list')
-    if rot_type.lower() in ['body', 'space']:
+    if rot_type in ['body', 'space']:
         if rot_order not in approved_orders:
             raise ValueError('Not an acceptable rotation order')
         if len(coords) != 3:
@@ -282,7 +280,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
-        if rot_type.lower() == 'body':
+        if rot_type == 'body':
             if rot_order == '123':
                 return [q1d - (w1 * c3 - w2 * s3) / c2, q2d - w1 * s3 - w2 *
                         c3, q3d - (-w1 * c3 + w2 * s3) * s2 / c2 - w3]
@@ -319,7 +317,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             if rot_order == '323':
                 return [q1d - (-w1 * c3 + w2 * s3) / s2, q2d - w1 * s3 - w2 *
                         c3, q3d - (w1 * c3 - w2 * s3) * c2 / s2 - w3]
-        if rot_type.lower() == 'space':
+        if rot_type == 'space':
             if rot_order == '123':
                 return [q1d - w1 - (w2 * s1 + w3 * c1) * s2 / c2, q2d - w2 *
                         c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / c2]
@@ -356,7 +354,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             if rot_order == '323':
                 return [q1d - (w1 * c1 - w2 * s1) * c2 / s2 - w3, q2d - w1 *
                         s1 - w2 * c1, q3d - (-w1 * c1 + w2 * s1) / s2]
-    elif rot_type.lower() == 'quaternion':
+    elif rot_type == 'quaternion':
         if rot_order != '':
             raise ValueError('Cannot have rotation order for quaternion')
         if len(coords) != 4:
@@ -495,7 +493,7 @@ def get_motion_params(frame, **kwargs):
             if i < 3:
                 kwargs[x] = Vector(0)
             else:
-                kwargs[x] = S(0)
+                kwargs[x] = S.Zero
         elif i < 3:
             _check_vector(kwargs[x])
         else:
@@ -574,7 +572,7 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0):
+def dynamicsymbols(names, level=0,**assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
@@ -589,6 +587,15 @@ def dynamicsymbols(names, level=0):
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    assumptions :
+        - real(bool) : This is used to set the dynamicsymbol as real,
+                    by default is False.
+        - positive(bool) : This is used to set the dynamicsymbol as positive,
+                    by default is False.
+        - commutative(bool) : This is used to set the commutative property of
+                    a dynamicsymbol, by default is True.
+        - integer(bool) : This is used to set the dynamicsymbol as integer,
+                    by default is False.
 
     Examples
     ========
@@ -598,11 +605,23 @@ def dynamicsymbols(names, level=0):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
+    >>> q2 = dynamicsymbols('q2', real=True)
+    >>> q2.is_real
+    True
+    >>> q3 = dynamicsymbols('q3', positive=True)
+    >>> q3.is_positive
+    True
+    >>> q4, q5 = dynamicsymbols('q4,q5', commutative=False)
+    >>> bool(q4*q5 != q5*q4)
+    True
+    >>> q6 = dynamicsymbols('q6', integer=True)
+    >>> q6.is_integer
+    True
     >>> diff(q1, Symbol('t'))
     Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function)
+    esses = symbols(names, cls=Function,**assumptions)
     t = dynamicsymbols._t
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
@@ -611,5 +630,5 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t] * level, esses(t))
 
 
-dynamicsymbols._t = Symbol('t')
-dynamicsymbols._str = '\''
+dynamicsymbols._t = Symbol('t')  # type: ignore
+dynamicsymbols._str = '\''  # type: ignore

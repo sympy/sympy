@@ -5,8 +5,16 @@ set -e
 # Echo each command
 set -x
 
+if [[ "${TEST_FLAKE8}" == "true" ]]; then
+    flake8 sympy;
+fi
+
 if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
+fi
+
+if [[ "${TEST_PY2_IMPORT}" == "true" ]]; then
+    python bin/test_py2_import.py
 fi
 
 if [[ "${TEST_SPHINX}" == "true" ]]; then
@@ -42,9 +50,30 @@ fi
 mkdir empty
 cd empty
 
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    rm -f $TRAVIS_BUILD_DIR/.coverage.* $TRAVIS_BUILD_DIR/.coverage
+    cat << EOF | python
+import distutils.sysconfig
+import os
+
+with open(os.path.join(distutils.sysconfig.get_python_lib(), 'coverage.pth'), 'w') as pth:
+    pth.write('import sys; exec(%r)\n' % '''\
+try:
+    import coverage
+except ImportError:
+    pass
+else:
+    coverage.process_startup()
+''')
+EOF
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/coveragerc_travis
+fi
+
 if [[ "${TEST_ASCII}" == "true" ]]; then
-    export OLD_LC_ALL=$LC_ALL
-    export LC_ALL=C
+    # Force Python to act like pre-3.7 where LC_ALL=C causes
+    # UnicodeEncodeErrors. Once the lowest Python version we support is 3.7,
+    # we can consider dropping this test entirely. See PEP 538.
+    export PYTHONIOENCODING=ascii:strict
     cat <<EOF | python
 print('Testing ASCII')
 try:
@@ -57,7 +86,6 @@ import sympy
 if not (sympy.test('print') and sympy.doctest()):
     raise Exception('Tests failed')
 EOF
-    export LC_ALL=$OLD_LC_ALL
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
@@ -71,8 +99,6 @@ if not sympy.doctest():
 EOF
     cd ..
     bin/doctest doc/
-    # Run full code quality tests here, as they test non-installed files
-    bin/test quality
 fi
 
 if [[ "${TEST_SLOW}" == "true" ]]; then
@@ -84,10 +110,29 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow and numexpr is tested here
 
-# TODO: Generate these tests automatically
-if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+# Test tensorflow 1 support (which is a separate conda environment)
+if [[ "${TEST_TENSORFLOW_1}" == "true" ]]; then
+    cat << EOF | python
+print('Testing optional dependencies')
+
+import sympy
+test_list = [
+    "tensorflow",
+]
+
+doctest_list = [
+    "tensorflow",
+]
+
+if not (sympy.test(*test_list) and sympy.doctest(*doctest_list)):
+    raise Exception('Tests failed')
+EOF
+
+    # lambdify with tensorflow and numexpr is tested here
+
+    # TODO: Generate these tests automatically
+elif [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
 print('Testing optional dependencies')
 
@@ -95,10 +140,9 @@ import sympy
 test_list = [
     # numpy
     '*numpy*',
-    'sympy/core/tests/test_numbers.py',
+    'sympy/core/',
     'sympy/matrices/',
     'sympy/physics/quantum/',
-    'sympy/core/tests/test_sympify.py',
     'sympy/utilities/tests/test_lambdify.py',
 
     # scipy
@@ -119,9 +163,8 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/tests/test_autolev',
-    'sympy/parsing/tests/test_latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
@@ -129,9 +172,15 @@ test_list = [
     # codegen
     'sympy/codegen/',
     'sympy/utilities/tests/test_codegen',
+    'sympy/utilities/_compilation/tests/test_compilation',
 
     # cloudpickle
     'pickling',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
 ]
 
 blacklist = [
@@ -161,15 +210,19 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/autolev',
-    'sympy/parsing/latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
 
     # codegen
     'sympy/codegen/',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
@@ -219,4 +272,12 @@ import sympy
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
 EOF
+fi
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    unset COVERAGE_PROCESS_START
+fi
+
+if [[ "${TEST_EXAMPLES}" == "true" ]]; then
+    # No need to change directory if executed after the rst doctest
+    examples/all.py -q
 fi

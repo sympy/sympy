@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
 from __future__ import print_function, division, absolute_import
 
+from typing import Callable, Dict, Optional, Tuple, Union
+
 from collections import OrderedDict
+from distutils.errors import CompileError
 import os
 import re
 import subprocess
 import sys
 
 from .util import (
-    get_abspath, FileNotFoundError,
-    find_binary_of_command, unique_list,
-    CompileError
+    find_binary_of_command, unique_list
 )
 
 
@@ -53,16 +53,18 @@ class CompilerRunner(object):
 
     """
 
-    compiler_dict = None  # Subclass to vendor/binary dict
+    # Subclass to vendor/binary dict
+    compiler_dict = None  # type: Dict[str, str]
 
     # Standards should be a tuple of supported standards
     # (first one will be the default)
-    standards = None
+    standards = None  # type: Tuple[Union[None, str], ...]
 
-    std_formater = None  # Subclass to dict of binary/formater-callback
+    # Subclass to dict of binary/formater-callback
+    std_formater = None  # type: Dict[str, Callable[[Optional[str]], str]]
 
     # subclass to be e.g. {'gcc': 'gnu', ...}
-    compiler_name_vendor_mapping = None
+    compiler_name_vendor_mapping = None  # type: Dict[str, str]
 
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,

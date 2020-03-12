@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import MatrixBase, I, Expr, Integer
-from sympy.core.compatibility import range
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 
@@ -31,9 +30,9 @@ if not np:
     class numpy_ndarray(object):
         pass
 else:
-    numpy_ndarray = np.ndarray
+    numpy_ndarray = np.ndarray  # type: ignore
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 if not scipy:
     class scipy_sparse_matrix(object):
         pass
@@ -43,10 +42,10 @@ else:
     # Try to find spmatrix.
     if hasattr(sparse, 'base'):
         # Newer versions have it under scipy.sparse.base.
-        scipy_sparse_matrix = sparse.base.spmatrix
+        scipy_sparse_matrix = sparse.base.spmatrix  # type: ignore
     elif hasattr(sparse, 'sparse'):
         # Older versions have it under scipy.sparse.sparse.
-        scipy_sparse_matrix = sparse.sparse.spmatrix
+        scipy_sparse_matrix = sparse.sparse.spmatrix  # type: ignore
 
 
 def sympy_to_numpy(m, **options):
@@ -146,77 +145,11 @@ def matrix_dagger(e):
 
 # TODO: Move this into sympy.matricies.
 def _sympy_tensor_product(*matrices):
-    """Compute the tensor product of a sequence of sympy Matrices.
-
-    This is the standard Kronecker product of matrices [1].
-
-    Parameters
-    ==========
-
-    matrices : tuple of MatrixBase instances
-        The matrices to take the tensor product of.
-
-    Returns
-    =======
-
-    matrix : MatrixBase
-        The tensor product matrix.
-
-    Examples
-    ========
-
-    >>> from sympy import I, Matrix, symbols
-    >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
-
-    >>> m1 = Matrix([[1,2],[3,4]])
-    >>> m2 = Matrix([[1,0],[0,1]])
-    >>> _sympy_tensor_product(m1, m2)
-    Matrix([
-    [1, 0, 2, 0],
-    [0, 1, 0, 2],
-    [3, 0, 4, 0],
-    [0, 3, 0, 4]])
-    >>> _sympy_tensor_product(m2, m1)
-    Matrix([
-    [1, 2, 0, 0],
-    [3, 4, 0, 0],
-    [0, 0, 1, 2],
-    [0, 0, 3, 4]])
-
-    References
-    ==========
-
-    [1] http://en.wikipedia.org/wiki/Kronecker_product
+    """Compute the kronecker product of a sequence of sympy Matrices.
     """
-    # Make sure we have a sequence of Matrices
-    if not all(isinstance(m, MatrixBase) for m in matrices):
-        raise TypeError(
-            'Sequence of Matrices expected, got: %s' % repr(matrices)
-        )
+    from sympy.matrices.expressions.kronecker import matrix_kronecker_product
 
-    # Pull out the first element in the product.
-    matrix_expansion = matrices[-1]
-    # Do the tensor product working from right to left.
-    for mat in reversed(matrices[:-1]):
-        rows = mat.rows
-        cols = mat.cols
-        # Go through each row appending tensor product to.
-        # running matrix_expansion.
-        for i in range(rows):
-            start = matrix_expansion*mat[i*cols]
-            # Go through each column joining each item
-            for j in range(cols - 1):
-                start = start.row_join(
-                    matrix_expansion*mat[i*cols + j + 1]
-                )
-            # If this is the first element, make it the start of the
-            # new row.
-            if i == 0:
-                next = start
-            else:
-                next = next.col_join(start)
-        matrix_expansion = next
-    return matrix_expansion
+    return matrix_kronecker_product(*matrices)
 
 
 def _numpy_tensor_product(*product):
@@ -300,8 +233,6 @@ def _scipy_sparse_zeros(m, n, **options):
 def matrix_zeros(m, n, **options):
     """"Get a zeros matrix for a given format."""
     format = options.get('format', 'sympy')
-    dtype = options.get('dtype', 'float64')
-    spmatrix = options.get('spmatrix', 'csr')
     if format == 'sympy':
         return zeros(m, n)
     elif format == 'numpy':
