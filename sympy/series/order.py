@@ -123,7 +123,7 @@ class Order(Expr):
 
     is_Order = True
 
-    __slots__ = []
+    __slots__ = ()
 
     @cacheit
     def __new__(cls, expr, *args, **kwargs):
@@ -257,13 +257,10 @@ class Order(Expr):
 
             expr = expr.subs(rs)
 
-        if expr.is_zero:
-            return expr
-
         if expr.is_Order:
             expr = expr.expr
 
-        if not expr.has(*variables):
+        if not expr.has(*variables) and not expr.is_zero:
             expr = S.One
 
         # create Order instance:

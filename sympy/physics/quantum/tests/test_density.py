@@ -175,7 +175,7 @@ def test_entropy():
         assert ent.real == 0.69314718055994529
         assert ent.imag == 0
 
-    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+    scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
     if scipy and np:
         #do this test only if numpy and scipy are available
         mat = represent(d, format="scipy.sparse")

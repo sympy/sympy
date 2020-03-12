@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from sympy.core.logic import FuzzyBool
+
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
@@ -821,8 +823,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     #To be defined in class
     _reciprocal_of = None
-    _is_even = None
-    _is_odd = None
+    _is_even = None  # type: FuzzyBool
+    _is_odd = None  # type: FuzzyBool
 
     @classmethod
     def eval(cls, arg):

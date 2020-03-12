@@ -89,7 +89,7 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ['hilbert_space']
+    __slots__ = ('hilbert_space')
 
     is_commutative = False
 

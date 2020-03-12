@@ -12,9 +12,12 @@ question of adding time to length has no meaning.
 
 from __future__ import division
 
+from typing import Dict as tDict
+
 import collections
 
-from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
+from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
+    default_sort_key)
 from sympy.core.compatibility import reduce
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
@@ -23,9 +26,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class _QuantityMapper(object):
 
-    _quantity_scale_factors_global = {}
-    _quantity_dimensional_equivalence_map_global = {}
-    _quantity_dimension_global = {}
+    _quantity_scale_factors_global = {}  # type: tDict[Expr, Expr]
+    _quantity_dimensional_equivalence_map_global = {}  # type: tDict[Expr, Expr]
+    _quantity_dimension_global = {}  # type: tDict[Expr, Expr]
 
     def __init__(self, *args, **kwargs):
         self._quantity_dimension_map = {}
@@ -132,7 +135,8 @@ class Dimension(Expr):
 
     _op_priority = 13.0
 
-    _dimensional_dependencies = dict()
+    # XXX: This doesn't seem to be used anywhere...
+    _dimensional_dependencies = dict()  # type: ignore
 
     is_commutative = True
     is_number = False
@@ -258,7 +262,7 @@ class Dimension(Expr):
 
     @classmethod
     def _get_dimensional_dependencies_for_name(cls, name):
-        from sympy.physics.units.unitsystem.si import dimsys_default
+        from sympy.physics.units.systems.si import dimsys_default
         SymPyDeprecationWarning(
             deprecated_since_version="1.2",
             issue=13336,
@@ -268,7 +272,7 @@ class Dimension(Expr):
         return dimsys_default.get_dimensional_dependencies(name)
 
     @property
-    def is_dimensionless(self, dimensional_dependencies=None):
+    def is_dimensionless(self):
         """
         Check if the dimension object really has a dimension.
 
@@ -276,14 +280,15 @@ class Dimension(Expr):
         """
         if self.name == 1:
             return True
-        if dimensional_dependencies is None:
-            from sympy.physics.units.unitsystem.si import dimsys_default
-            SymPyDeprecationWarning(
-                deprecated_since_version="1.2",
-                issue=13336,
-                feature="wrong class",
-            ).warn()
-            dimensional_dependencies=dimsys_default
+
+        from sympy.physics.units.systems.si import dimsys_default
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.2",
+            issue=13336,
+            feature="wrong class",
+        ).warn()
+        dimensional_dependencies=dimsys_default
+
         return dimensional_dependencies.get_dimensional_dependencies(self) == {}
 
     def has_integer_powers(self, dim_sys):
@@ -382,7 +387,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 raise ValueError("Dimension %s both in base and derived" % dim)
             if dim.name not in dimensional_dependencies:
                 # TODO: should this raise a warning?
-                dimensional_dependencies[dim] = Dict({dim.name: 1})
+                dimensional_dependencies[dim.name] = Dict({dim.name: 1})
 
         base_dims.sort(key=default_sort_key)
         derived_dims.sort(key=default_sort_key)

@@ -1,5 +1,7 @@
+from typing import Any, Dict
+
 from sympy.testing.pytest import raises
-from sympy import (symbols, Function, Integer, Matrix, Abs,
+from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
 from sympy.combinatorics import Cycle, Permutation
@@ -14,7 +16,7 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {}
+ENV = {}  # type: Dict[str, Any]
 exec_("from sympy import *", ENV)
 
 
@@ -46,6 +48,7 @@ def test_Add():
     sT(x + y, "Add(Symbol('x'), Symbol('y'))")
     assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
+    assert srepr(sympify('x + 3 - 2', evaluate=False), order='none') == "Add(Symbol('x'), Integer(3), Mul(Integer(-1), Integer(2)))"
 
 
 def test_more_than_255_args_issue_10259():
@@ -201,6 +204,7 @@ def test_settins():
 def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
+    assert srepr(sympify('(x+4)*2*x*7', evaluate=False), order='none') == "Mul(Add(Symbol('x'), Integer(4)), Integer(2), Symbol('x'), Integer(7))"
 
 def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2))

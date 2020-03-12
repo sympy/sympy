@@ -1,8 +1,12 @@
+from typing import Dict, Any
+
 import inspect
 
 from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
-global_namespace = dict()
+# XXX: This parameter to dispatch isn't documented and isn't used anywhere in
+# sympy. Maybe it should just be removed.
+global_namespace = dict()  # type: Dict[str, Any]
 
 
 def dispatch(*types, **kwargs):
@@ -77,9 +81,5 @@ def ismethod(func):
     Note that this has to work as the method is defined but before the class is
     defined.  At this stage methods look like functions.
     """
-    if hasattr(inspect, "signature"):
-        signature = inspect.signature(func)
-        return signature.parameters.get('self', None) is not None
-    else:
-        spec = inspect.getargspec(func)
-        return spec and spec.args and spec.args[0] == 'self'
+    signature = inspect.signature(func)
+    return signature.parameters.get('self', None) is not None

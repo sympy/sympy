@@ -94,7 +94,7 @@ def _indent(s, indent=4):
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
 
-pdoctest._indent = _indent
+pdoctest._indent = _indent  # type: ignore
 
 # override reporter to maintain windows and python3
 
@@ -109,7 +109,7 @@ def _report_failure(self, out, test, example, got):
 
 
 if PY3 and IS_WINDOWS:
-    DocTestRunner.report_failure = _report_failure
+    DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
 def convert_to_native_paths(lst):
@@ -292,8 +292,8 @@ def run_all_tests(test_args=(), test_kwargs=None,
 
         # Examples
         print()
-        sys.path.append("examples")
-        from all import run_examples  # examples/all.py
+        sys.path.append("examples")   # examples/all.py
+        from all import run_examples  # type: ignore
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
 
@@ -1525,7 +1525,7 @@ class SymPyDocTests(object):
             if module == 'matplotlib':
                 matplotlib = import_module(
                     'matplotlib',
-                    __import__kwargs={'fromlist':
+                    import_kwargs={'fromlist':
                                       ['pyplot', 'cm', 'collections']},
                     min_module_version='1.0.0', catch=(RuntimeError,))
                 if matplotlib is None:
@@ -1838,12 +1838,17 @@ class SymPyDocTestRunner(DocTestRunner):
             if clear_globs:
                 test.globs.clear()
 
+
 # We have to override the name mangled methods.
-SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
-    DocTestRunner._DocTestRunner__patched_linecache_getlines
-SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
-SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
-    DocTestRunner._DocTestRunner__record_outcome
+monkeypatched_methods = [
+    'patched_linecache_getlines',
+    'run',
+    'record_outcome'
+]
+for method in monkeypatched_methods:
+    oldname = '_DocTestRunner__' + method
+    newname = '_SymPyDocTestRunner__' + method
+    setattr(SymPyDocTestRunner, newname, getattr(DocTestRunner, oldname))
 
 
 class SymPyOutputChecker(pdoctest.OutputChecker):

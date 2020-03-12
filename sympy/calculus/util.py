@@ -3,6 +3,7 @@ from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -496,7 +497,7 @@ def periodicity(f, symbol, check=False):
             # checked below
 
     if isinstance(f, exp):
-
+        f = f.func(expand_mul(f.args[0]))
         if re(f).has(f) or im(f).has(f): # Avoid infinite loop
             period = periodicity(f.args[0], symbol)
 
@@ -751,6 +752,13 @@ def stationary_points(f, symbol, domain=S.Reals):
         The domain over which the stationary points have to be checked.
         If unspecified, S.Reals will be the default domain.
 
+    Returns
+    =======
+
+    Set
+        A set of stationary points for the function. If there are no
+        stationary point, an EmptySet is returned.
+
     Examples
     ========
 
@@ -796,6 +804,12 @@ def maximum(f, symbol, domain=S.Reals):
         The domain over which the maximum have to be checked.
         If unspecified, then Global maximum is returned.
 
+    Returns
+    =======
+
+    number
+        Maximum value of the function in given domain.
+
     Examples
     ========
 
@@ -839,6 +853,12 @@ def minimum(f, symbol, domain=S.Reals):
     domain : Interval
         The domain over which the minimum have to be checked.
         If unspecified, then Global minimum is returned.
+
+    Returns
+    =======
+
+    number
+        Minimum value of the function in the given domain.
 
     Examples
     ========
@@ -1133,7 +1153,14 @@ class AccumulationBounds(AtomicExpr):
                     other is S.NegativeInfinity and self.max is S.Infinity:
                 return AccumBounds(-oo, oo)
             elif other.is_extended_real:
-                return AccumBounds(Add(self.min, other), Add(self.max, other))
+                if self.min is S.NegativeInfinity and self.max is S.Infinity:
+                    return AccumBounds(-oo, oo)
+                elif self.min is S.NegativeInfinity:
+                    return AccumBounds(-oo, self.max + other)
+                elif self.max is S.Infinity:
+                    return AccumBounds(self.min + other, oo)
+                else:
+                    return AccumBounds(Add(self.min, other), Add(self.max, other))
             return Add(self, other, evaluate=False)
         return NotImplemented
 
@@ -1153,9 +1180,16 @@ class AccumulationBounds(AtomicExpr):
                     other is S.Infinity and self.max is S.Infinity:
                 return AccumBounds(-oo, oo)
             elif other.is_extended_real:
-                return AccumBounds(
-                    Add(self.min, -other),
-                    Add(self.max, -other))
+                if self.min is S.NegativeInfinity and self.max is S.Infinity:
+                    return AccumBounds(-oo, oo)
+                elif self.min is S.NegativeInfinity:
+                    return AccumBounds(-oo, self.max - other)
+                elif self.max is S.Infinity:
+                    return AccumBounds(self.min - other, oo)
+                else:
+                    return AccumBounds(
+                        Add(self.min, -other),
+                        Add(self.max, -other))
             return Add(self, -other, evaluate=False)
         return NotImplemented
 
@@ -1213,10 +1247,11 @@ class AccumulationBounds(AtomicExpr):
     def __div__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
-                if S.Zero not in other:
+                if other.min.is_positive or other.max.is_negative:
                     return self * AccumBounds(1/other.max, 1/other.min)
 
-                if S.Zero in self and S.Zero in other:
+                if (self.min.is_extended_nonpositive and self.max.is_extended_nonnegative and
+                    other.min.is_extended_nonpositive and other.max.is_extended_nonnegative):
                     if self.min.is_zero and other.min.is_zero:
                         return AccumBounds(0, oo)
                     if self.max.is_zero and other.min.is_zero:
@@ -1261,7 +1296,10 @@ class AccumulationBounds(AtomicExpr):
                     return AccumBounds(self.min / other, self.max / other)
                 elif other.is_extended_negative:
                     return AccumBounds(self.max / other, self.min / other)
-            return Mul(self, 1 / other, evaluate=False)
+            if (1 / other) is S.ComplexInfinity:
+                return Mul(self, 1 / other, evaluate=False)
+            else:
+                return Mul(self, 1 / other)
 
         return NotImplemented
 
@@ -1273,7 +1311,7 @@ class AccumulationBounds(AtomicExpr):
             if other.is_extended_real:
                 if other.is_zero:
                     return S.Zero
-                if S.Zero in self:
+                if (self.min.is_extended_nonpositive and self.max.is_extended_nonnegative):
                     if self.min.is_zero:
                         if other.is_extended_positive:
                             return AccumBounds(Mul(other, 1 / self.max), oo)
@@ -1361,9 +1399,10 @@ class AccumulationBounds(AtomicExpr):
                                 return AccumBounds(0, real_root(self.max, den))
                     return AccumBounds(real_root(self.min, den),
                                        real_root(self.max, den))
-                num_pow = self**num
-                return num_pow**(1 / den)
-            return Pow(self, other, evaluate=False)
+                if den!=1:
+                    num_pow = self**num
+                    return num_pow**(1 / den)
+            return AccumBounds(-oo, oo)
 
         return NotImplemented
 
@@ -1561,6 +1600,19 @@ class AccumulationBounds(AtomicExpr):
         """
         Returns the intersection of 'self' and 'other'.
         Here other can be an instance of FiniteSet or AccumulationBounds.
+
+        Parameters
+        ==========
+
+        other: AccumulationBounds
+             Another AccumulationBounds object with which the intersection
+             has to be computed.
+
+        Returns
+        =======
+
+        AccumulationBounds
+            Intersection of 'self' and 'other'.
 
         Examples
         ========

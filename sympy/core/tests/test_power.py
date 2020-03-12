@@ -9,6 +9,7 @@ from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
 from sympy.series.order import O
+from sympy.core.expr import unchanged
 
 
 def test_rational():
@@ -507,3 +508,27 @@ def test_issue_17450():
 
 def test_issue_18190():
     assert sqrt(1 / tan(1 + I)) == 1 / sqrt(tan(1 + I))
+
+
+def test_issue_14815():
+    x = Symbol('x', real=True)
+    assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', real=False)
+    assert sqrt(x).is_extended_negative is None
+    x = Symbol('x', complex=True)
+    assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', extended_real=True)
+    assert sqrt(x).is_extended_negative is False
+    assert sqrt(zoo, evaluate=False).is_extended_negative is None
+    assert sqrt(nan, evaluate=False).is_extended_negative is None
+
+
+def test_issue_18509():
+    assert unchanged(Mul, oo, 1/pi**oo)
+    assert (1/pi**oo).is_extended_positive == False
+
+
+def test_issue_18762():
+    e, p = symbols('e p')
+    g0 = sqrt(1 + e**2 - 2*e*cos(p))
+    assert len(g0.series(e, 1, 3).args) == 4

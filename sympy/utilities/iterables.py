@@ -12,11 +12,47 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, PY3
+    as_int, default_sort_key, is_sequence, iterable, ordered
 )
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+
+
+def is_palindromic(s, i=0, j=None):
+    """return True if the sequence is the same from left to right as it
+    is from right to left in the whole sequence (default) or in the
+    Python slice ``s[i: j]``; else False.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import is_palindromic
+    >>> is_palindromic([1, 0, 1])
+    True
+    >>> is_palindromic('abcbb')
+    False
+    >>> is_palindromic('abcbb', 1)
+    False
+
+    Normal Python slicing is performed in place so there is no need to
+    create a slice of the sequence for testing:
+
+    >>> is_palindromic('abcbb', 1, -1)
+    True
+    >>> is_palindromic('abcbb', -4, -1)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.digits.is_palindromic: tests integers
+
+    """
+    i, j, _ = slice(i, j).indices(len(s))
+    m = (j - i)//2
+    # if length is odd, middle element will be ignored
+    return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
 def flatten(iterable, levels=None, cls=None):
@@ -170,7 +206,9 @@ def group(seq, multiple=True):
 
     See Also
     ========
+
     multiset
+
     """
     if not seq:
         return []
@@ -277,7 +315,9 @@ def multiset(seq):
 
     See Also
     ========
+
     group
+
     """
     rv = defaultdict(int)
     for s in seq:
@@ -761,6 +801,7 @@ def sift(seq, keyfunc, binary=False):
     ========
 
     ordered
+
     """
     if not binary:
         m = defaultdict(list)
@@ -1067,7 +1108,7 @@ def strongly_connected_components(G):
     See Also
     ========
 
-    sympy.utilities.iterables.connected_components()
+    sympy.utilities.iterables.connected_components
 
     """
     # Map from a vertex to its neighbours
@@ -1181,7 +1222,7 @@ def connected_components(G):
     See Also
     ========
 
-    sympy.utilities.iterables.strongly_connected_components()
+    sympy.utilities.iterables.strongly_connected_components
 
     """
     # Duplicate edges both ways so that the graph is effectively undirected
@@ -1401,7 +1442,7 @@ def _partition(seq, vector, m=None):
     See Also
     ========
 
-    combinatorics.partitions.Partition.from_rgs()
+    combinatorics.partitions.Partition.from_rgs
 
     """
     if m is None:
@@ -1566,8 +1607,8 @@ def multiset_partitions(multiset, m=None):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     sympy.functions.combinatorial.numbers.nT
-    """
 
+    """
     # This function looks at the supplied input and dispatches to
     # several special-case routines as they apply.
     if type(multiset) is int:
@@ -1718,6 +1759,7 @@ def partitions(n, m=None, k=None, size=False):
 
     See Also
     ========
+
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
 
@@ -2129,6 +2171,7 @@ def generate_bell(n):
 
     See Also
     ========
+
     sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
@@ -2249,14 +2292,13 @@ def generate_derangements(perm):
 
     See Also
     ========
+
     sympy.functions.combinatorial.factorials.subfactorial
+
     """
-    p = multiset_permutations(perm)
-    indices = range(len(perm))
-    p0 = next(p)
-    for pi in p:
-        if all(pi[i] != p0[i] for i in indices):
-            yield pi
+    for p in multiset_permutations(perm):
+        if not any(i == j for i, j in zip(perm, p)):
+            yield p
 
 
 def necklaces(n, k, free=False):
@@ -2546,6 +2588,7 @@ def kbins(l, k, ordered=None):
 
     See Also
     ========
+
     partitions, multiset_partitions
 
     """
@@ -2660,10 +2703,7 @@ def roundrobin(*iterables):
     """
     import itertools
 
-    if PY3:
-        nexts = itertools.cycle(iter(it).__next__ for it in iterables)
-    else:
-        nexts = itertools.cycle(iter(it).next for it in iterables)
+    nexts = itertools.cycle(iter(it).__next__ for it in iterables)
 
     pending = len(iterables)
     while pending:

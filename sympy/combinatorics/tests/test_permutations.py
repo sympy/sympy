@@ -222,6 +222,9 @@ def test_Permutation():
     b = Permutation(0, 6, 3)(1, 2)
     assert a.cycle_structure == {1: 4}
     assert b.cycle_structure == {2: 1, 3: 1, 1: 2}
+    # issue 11130
+    raises(ValueError, lambda: Permutation(3, size=3))
+    raises(ValueError, lambda: Permutation([1, 2, 0, 3], size=3))
 
 
 def test_Permutation_subclassing():
@@ -236,7 +239,7 @@ def test_Permutation_subclassing():
             try:
                 perm_obj = i[0]
                 return [self._array_form[j] for j in perm_obj]
-            except Exception:
+            except TypeError:
                 raise TypeError('unrecognized argument')
 
         def __eq__(self, other):

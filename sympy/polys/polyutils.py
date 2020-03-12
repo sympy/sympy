@@ -432,7 +432,7 @@ class PicklableWithSlots(object):
 
         >>> from sympy.polys.polyutils import PicklableWithSlots
         >>> class Some(PicklableWithSlots):
-        ...     __slots__ = ['foo', 'bar']
+        ...     __slots__ = ('foo', 'bar')
         ...
         ...     def __init__(self, foo, bar):
         ...         self.foo = foo
@@ -459,7 +459,7 @@ class PicklableWithSlots(object):
 
     """
 
-    __slots__ = []
+    __slots__ = ()
 
     def __getstate__(self, cls=None):
         if cls is None:

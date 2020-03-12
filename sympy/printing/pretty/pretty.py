@@ -1704,10 +1704,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
 
         def pretty_negative(pform, index):
@@ -2058,7 +2055,8 @@ class PrettyPrinter(Printer):
         else:
             cond = self._print(ts.condition)
             if self._use_unicode:
-                cond = self._print_seq(cond, "(", ")")
+                cond = self._print(cond)
+                cond = prettyForm(*cond.parens())
 
         bar = self._print("|")
 

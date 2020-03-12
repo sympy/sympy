@@ -7,7 +7,6 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
-from sympy.core.compatibility import long
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
@@ -245,9 +244,9 @@ def test_evalf_integer_parts():
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
     assert int(floor(factorial(50)/E, evaluate=False).evalf(70)) == \
-        long(11188719610782480504630258070757734324011354208865721592720336800)
+        int(11188719610782480504630258070757734324011354208865721592720336800)
     assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
-        long(11188719610782480504630258070757734324011354208865721592720336801)
+        int(11188719610782480504630258070757734324011354208865721592720336801)
     assert int(floor((GoldenRatio**999 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(999)
     assert int(floor((GoldenRatio**1000 / sqrt(5) + S.Half))
@@ -450,8 +449,8 @@ def test_infinities():
 
 
 def test_to_mpmath():
-    assert sqrt(3)._to_mpmath(20)._mpf_ == (0, long(908093), -19, 20)
-    assert S(3.2)._to_mpmath(20)._mpf_ == (0, long(838861), -18, 20)
+    assert sqrt(3)._to_mpmath(20)._mpf_ == (0, int(908093), -19, 20)
+    assert S(3.2)._to_mpmath(20)._mpf_ == (0, int(838861), -18, 20)
 
 
 def test_issue_6632_evalf():

@@ -518,7 +518,7 @@ class MonomialOps(object):
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 
-    __slots__ = ['exponents', 'gens']
+    __slots__ = ('exponents', 'gens')
 
     def __init__(self, monom, gens=None):
         if not iterable(monom):

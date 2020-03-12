@@ -15,13 +15,14 @@ from sympy.logic.boolalg import (
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
-    truth_table, as_Boolean)
+    truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
+    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
-from sympy.utilities import cartes
+from sympy.utilities.iterables import cartes
 
-from itertools import combinations
+from itertools import combinations, permutations
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -59,7 +60,9 @@ def test_And():
     e = A > 1
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
-    assert And(g, l, ge, le) == And(l, le)
+    assert And(g, l, ge, le) == And(ge, g)
+    assert set([And(*i) for i in permutations((l,g,le,ge))]) == {And(ge, g)}
+    assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
 
 
 def test_Or():
@@ -458,6 +461,28 @@ def test_disjuncts():
 def test_distribute():
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
     assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
+    assert distribute_xor_over_and(And(A, Xor(B, C))) == Xor(And(A, B), And(A, C))
+
+
+def test_to_anf():
+    x, y, z = symbols('x,y,z')
+    assert to_anf(And(x, y)) == And(x, y)
+    assert to_anf(Or(x, y)) == Xor(x, y, And(x, y))
+    assert to_anf(Or(Implies(x, y), And(x, y), y)) == \
+            Xor(x, True, x & y, remove_true=False)
+    assert to_anf(Or(Nand(x, y), Nor(x, y), Xnor(x, y), Implies(x, y))) == True
+    assert to_anf(Or(x, Not(y), Nor(x,z), And(x, y), Nand(y, z))) == \
+            Xor(True, And(y, z), And(x, y, z), remove_true=False)
+    assert to_anf(Xor(x, y)) == Xor(x, y)
+    assert to_anf(Not(x)) == Xor(x, True, remove_true=False)
+    assert to_anf(Nand(x, y)) == Xor(True, And(x, y), remove_true=False)
+    assert to_anf(Nor(x, y)) == Xor(x, y, True, And(x, y), remove_true=False)
+    assert to_anf(Implies(x, y)) == Xor(x, True, And(x, y), remove_true=False)
+    assert to_anf(Equivalent(x, y)) == Xor(x, y, True, remove_true=False)
+    assert to_anf(Nand(x | y, x >> y), deep=False) == \
+            Xor(True, And(Or(x, y), Implies(x, y)), remove_true=False)
+    assert to_anf(Nor(x ^ y, x & y), deep=False) == \
+            Xor(True, Or(Xor(x, y), And(x, y)), remove_true=False)
 
 
 def test_to_nnf():
@@ -540,6 +565,17 @@ def test_to_int_repr():
         sorted_recursive([[1, 2], [1, 3]])
     assert sorted_recursive(to_int_repr([x | y, z | ~x], [x, y, z])) == \
         sorted_recursive([[1, 2], [3, -1]])
+
+
+def test_is_anf():
+    x, y = symbols('x,y')
+    assert is_anf(true) is True
+    assert is_anf(false) is True
+    assert is_anf(x) is True
+    assert is_anf(And(x, y)) is True
+    assert is_anf(Xor(x, y, And(x, y))) is True
+    assert is_anf(Xor(x, y, Or(x, y))) is False
+    assert is_anf(Xor(Not(x), y)) is False
 
 
 def test_is_nnf():
@@ -1088,3 +1124,40 @@ def test_issue_17530():
     raises(TypeError, lambda: Or(x + y < 0, x - y < 0).subs(r))
     raises(TypeError, lambda: And(x + y > 0, x - y < 0).subs(r))
     raises(TypeError, lambda: And(x + y > 0, x - y < 0).subs(r))
+
+
+def test_anf_coeffs():
+    assert anf_coeffs([1, 0]) == [1, 1]
+    assert anf_coeffs([0, 0, 0, 1]) == [0, 0, 0, 1]
+    assert anf_coeffs([0, 1, 1, 1]) == [0, 1, 1, 1]
+    assert anf_coeffs([1, 1, 1, 0]) == [1, 0, 0, 1]
+    assert anf_coeffs([1, 0, 0, 0]) == [1, 1, 1, 1]
+    assert anf_coeffs([1, 0, 0, 1]) == [1, 1, 1, 0]
+    assert anf_coeffs([1, 1, 0, 1]) == [1, 0, 1, 1]
+
+
+def test_ANFform():
+    x, y = symbols('x,y')
+    assert ANFform([x], [1, 1]) == True
+    assert ANFform([x], [0, 0]) == False
+    assert ANFform([x], [1, 0]) == Xor(x, True, remove_true=False)
+    assert ANFform([x, y], [1, 1, 1, 0]) == \
+        Xor(True, And(x, y), remove_true=False)
+
+
+def test_bool_minterm():
+    x, y = symbols('x,y')
+    assert bool_minterm(3, [x, y]) == And(x, y)
+    assert bool_minterm([1, 0], [x, y]) == And(Not(y), x)
+
+
+def test_bool_maxterm():
+    x, y = symbols('x,y')
+    assert bool_maxterm(2, [x, y]) == Or(Not(x), y)
+    assert bool_maxterm([0, 1], [x, y]) == Or(Not(y), x)
+
+
+def test_bool_monomial():
+    x, y = symbols('x,y')
+    assert bool_monomial(1, [x, y]) == y
+    assert bool_monomial([1, 1], [x, y]) == And(x, y)

@@ -33,6 +33,8 @@ complete source code files.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from sympy.core import S, Rational, Float, Lambda
 from sympy.printing.codeprinter import CodePrinter
 
@@ -229,7 +231,7 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-    }
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -448,12 +450,11 @@ class RustCodePrinter(CodePrinter):
     # FIXME: Str/CodePrinter could define each of these to call the _print
     # method from higher up the class hierarchy (see _print_NumberSymbol).
     # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+    _print_Matrix = _print_MatrixBase
+    _print_DenseMatrix = _print_MatrixBase
+    _print_MutableDenseMatrix = _print_MatrixBase
+    _print_ImmutableMatrix = _print_MatrixBase
+    _print_ImmutableDenseMatrix = _print_MatrixBase
 
     def _print_Symbol(self, expr):
 

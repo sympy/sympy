@@ -15,7 +15,6 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import with_metaclass
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.logic.boolalg import And, Or
 
@@ -31,7 +30,7 @@ def _minmax_as_Piecewise(op, *args):
     return Piecewise(*ec)
 
 
-class IdentityFunction(with_metaclass(Singleton, Lambda)):
+class IdentityFunction(Lambda, metaclass=Singleton):
     """
     The identity function
 
@@ -49,6 +48,13 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
         x = Dummy('x')
         #construct "by hand" to avoid infinite loop
         return Expr.__new__(cls, Tuple(x), x)
+
+    @property
+    def args(self):
+        return ()
+
+    def __getnewargs__(self):
+        return ()
 
 Id = S.IdentityFunction
 
@@ -71,7 +77,7 @@ def sqrt(arg, evaluate=None):
     Examples
     ========
 
-    >>> from sympy import sqrt, Symbol
+    >>> from sympy import sqrt, Symbol, S
     >>> x = Symbol('x')
 
     >>> sqrt(x)
@@ -115,6 +121,25 @@ def sqrt(arg, evaluate=None):
 
     >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
+
+    Although ``sqrt`` is printed, there is no ``sqrt`` function so looking for
+    ``sqrt`` in an expression will fail:
+
+    >>> from sympy.utilities.misc import func_name
+    >>> func_name(sqrt(x))
+    'Pow'
+    >>> sqrt(x).has(sqrt)
+    Traceback (most recent call last):
+      ...
+    sympy.core.sympify.SympifyError: Sympify of expression 'could not parse
+    '<function sqrt at 0x7f79ad860f80>'' failed, because of exception being
+    raised:
+    SyntaxError: invalid syntax
+
+    To find ``sqrt`` look for ``Pow`` with an exponent of ``1/2``:
+
+    >>> (x + 1/sqrt(x)).find(lambda i: i.is_Pow and abs(i.exp) is S.Half)
+    {1/sqrt(x)}
 
     See Also
     ========
@@ -631,9 +656,11 @@ class MinMaxBase(Expr, LatticeOp):
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
-    def evalf(self, prec=None, **options):
-        return self.func(*[a.evalf(prec, **options) for a in self.args])
-    n = evalf
+    def evalf(self, n=15, **options):
+        return self.func(*[a.evalf(n, **options) for a in self.args])
+
+    def n(self, *args, **kwargs):
+        return self.evalf(*args, **kwargs)
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
     _eval_is_antihermitian = lambda s: _torf(i.is_antihermitian for i in s.args)

@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
+from typing import Any, Dict, Set, Tuple
+
 from functools import wraps
 
-from sympy.core import Add, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
 from sympy.core.function import Lambda
@@ -54,7 +56,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-    }
+    }  # type: Dict[str, Any]
 
     # Functions which are "simple" to rewrite to other functions that
     # may be supported
@@ -103,7 +105,7 @@ class CodePrinter(StrPrinter):
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()
-        self._number_symbols = set()
+        self._number_symbols = set()  # type: Set[Tuple[Expr, Float]]
 
         lines = self._print(expr).splitlines()
 

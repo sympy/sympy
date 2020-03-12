@@ -1,3 +1,5 @@
+from typing import Type
+
 from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
@@ -18,6 +20,13 @@ class Vector(BasisDependent):
 
     is_Vector = True
     _op_priority = 12.0
+
+    _expr_type = None  # type: Type[Vector]
+    _mul_func = None  # type: Type[Vector]
+    _add_func = None  # type: Type[Vector]
+    _zero_func = None  # type: Type[Vector]
+    _base_func = None  # type: Type[Vector]
+    zero = None  # type: VectorZero
 
     @property
     def components(self):
@@ -321,6 +330,17 @@ class Vector(BasisDependent):
                                   vect * measure)
         return parts
 
+    def _div_helper(one, other):
+        """ Helper for division involving vectors. """
+        if isinstance(one, Vector) and isinstance(other, Vector):
+            raise TypeError("Cannot divide two vectors")
+        elif isinstance(one, Vector):
+            if other == S.Zero:
+                raise ValueError("Cannot divide a vector by zero")
+            return VectorMul(one, Pow(other, S.NegativeOne))
+        else:
+            raise TypeError("Invalid division involving a vector")
+
 
 class BaseVector(Vector, AtomicExpr):
     """
@@ -596,22 +616,9 @@ def dot(vect1, vect2):
     return Dot(vect1, vect2)
 
 
-def _vect_div(one, other):
-    """ Helper for division involving vectors. """
-    if isinstance(one, Vector) and isinstance(other, Vector):
-        raise TypeError("Cannot divide two vectors")
-    elif isinstance(one, Vector):
-        if other == S.Zero:
-            raise ValueError("Cannot divide a vector by zero")
-        return VectorMul(one, Pow(other, S.NegativeOne))
-    else:
-        raise TypeError("Invalid division involving a vector")
-
-
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
 Vector._add_func = VectorAdd
 Vector._zero_func = VectorZero
 Vector._base_func = BaseVector
-Vector._div_helper = _vect_div
 Vector.zero = VectorZero()

@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Dict, Type, Callable, Any
+
 from inspect import getmro
 
 from .compatibility import iterable
@@ -21,7 +23,10 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {}  # See sympify docstring.
+
+# See sympify docstring.
+converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
+
 
 class CantSympify(object):
     """
@@ -48,6 +53,16 @@ class CantSympify(object):
 
     """
     pass
+
+
+def _is_numpy_instance(a):
+    """
+    Checks if an object is an instance of a type from the numpy module.
+    """
+    # This check avoids unnecessarily importing NumPy.  We check the whole
+    # __mro__ in case any base type is a numpy type.
+    return any(type_.__module__ == 'numpy'
+               for type_ in type(a).__mro__)
 
 
 def _convert_numpy_types(a, **sympify_args):
@@ -290,8 +305,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate = global_parameters.evaluate
 
     # Support for basic numpy datatypes
-    # Note that this check exists to avoid importing NumPy when not necessary
-    if type(a).__module__ == 'numpy':
+    if _is_numpy_instance(a):
         import numpy as np
         if np.isscalar(a):
             return _convert_numpy_types(a, locals=locals,
@@ -319,18 +333,30 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, str):
-        for coerce in (float, int):
-            try:
-                coerced = coerce(a)
-            except (TypeError, ValueError):
-                continue
-            # XXX: AttributeError only needed here for Py2
-            except AttributeError:
-                continue
-            try:
-                return sympify(coerced)
-            except SympifyError:
-                continue
+        if _is_numpy_instance(a):
+            import numpy as np
+            assert not isinstance(a, np.number)
+            if isinstance(a, np.ndarray):
+                # Scalar arrays (those with zero dimensions) have sympify
+                # called on the scalar element.
+                if a.ndim == 0:
+                    try:
+                        return sympify(a.item(),
+                                       locals=locals,
+                                       convert_xor=convert_xor,
+                                       strict=strict,
+                                       rational=rational,
+                                       evaluate=evaluate)
+                    except SympifyError:
+                        pass
+        else:
+            # float and int can coerce size-one numpy arrays to their lone
+            # element.  See issue https://github.com/numpy/numpy/issues/10404.
+            for coerce in (float, int):
+                try:
+                    return sympify(coerce(a))
+                except (TypeError, ValueError, AttributeError, SympifyError):
+                    continue
 
     if strict:
         raise SympifyError(a)
@@ -494,9 +520,6 @@ def kernS(s):
         try:
             expr = sympify(s)
             break
-        # XXX: What exception can be caught here? Broad except should not be
-        # used without a clear reason. Running the test suite does not lead to
-        # any errors at this point...
         except TypeError:  # the kern might cause unknown errors...
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s
@@ -517,3 +540,7 @@ def kernS(s):
     expr = _clear(expr)
     # hope that kern is not there anymore
     return expr
+
+
+# Avoid circular import
+from .basic import Basic

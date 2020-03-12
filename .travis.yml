@@ -1,5 +1,4 @@
 language: python
-sudo: false
 stages:
 - quality
 - baseline
@@ -27,6 +26,7 @@ matrix:
       sudo: true
       script: bin/test quality
       env:
+        - TEST_QUALITY="true"
     - python: 3.8
       dist: xenial
       sudo: true
@@ -76,17 +76,14 @@ matrix:
         - TEST_PY2_IMPORT="true"
     - python: 3.7
       dist: xenial
-      sudo: true
       env:
         - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.7
       dist: xenial
-      sudo: true
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.7
       dist: xenial
-      sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
 
@@ -98,7 +95,6 @@ matrix:
 
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SPHINX="true"
         - FASTCACHE="false"
@@ -119,13 +115,11 @@ matrix:
 
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="1/2"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="2/2"
@@ -133,28 +127,24 @@ matrix:
     # Code coverage tests
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="1/4"
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="2/4"
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="3/4"
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
@@ -198,7 +188,6 @@ matrix:
     - stage: allowed_failures
       python: 3.6
       dist: xenial
-      sudo: true
       env:
         - BENCHMARK="true"
 
@@ -218,7 +207,6 @@ before_install:
     fi
   - if [[ "${TEST_FLAKE8}" == "true" ]]; then
       pip install flake8;
-      flake8 sympy;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
         pip uninstall -y Cython;
@@ -274,19 +262,23 @@ install:
   # SyntaxWarning flag for catching errors in Python3.8
   # Issue -  #16973. -We:invalid can be dropped from 3.8 onwards, but
   # it needs to be there for earlier versions.
+  #
+  # This would fail due to invalid Python 2.7 syntax so we disable it while
+  # testing import under Python 2.
   - |
-    if [[ "${TEST_SETUP}" == "true" ]]; then
-      # The install cycle below is to test installation on systems without
-      # setuptools.
-      virtualenv ~/.venv-no-setuptools;
-      ~/.venv-no-setuptools/bin/pip install mpmath;
-      ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
-      ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
+    if [[ -z "${TEST_PY2_IMPORT}" ]]; then
+        if [[ "${TEST_SETUP}" == "true" ]]; then
+          # The install cycle below is to test installation on systems without
+          # setuptools.
+          virtualenv ~/.venv-no-setuptools;
+          ~/.venv-no-setuptools/bin/pip install mpmath;
+          ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
+          ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
+        fi
+        python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/;
+        python -We:invalid setup.py -q install;
+        pip list --format=columns;
     fi
-    python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/;
-    python -We:invalid setup.py -q install;
-    pip list --format=columns;
-
 script:
   # Don't run doctr if the build fails
   - set -e

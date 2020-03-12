@@ -669,8 +669,8 @@ def test_diff_wrt():
     assert diff(f(g(x), h(y)), x) == \
         Derivative(g(x), x)*Derivative(f(g(x), h(y)), g(x))
     assert diff(f(g(x), h(x)), x) == (
-        Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
-        Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x))
     assert f(
         sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), x, sin(x))
 
@@ -1350,3 +1350,8 @@ def test_Derivative_free_symbols():
     f = Function('f')
     n = Symbol('n', integer=True, positive=True)
     assert diff(f(x), (x, n)).free_symbols == {n, x}
+
+
+def test_issue_10503():
+    f = exp(x**3)*cos(x**6)
+    assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)

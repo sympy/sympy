@@ -231,6 +231,10 @@ def test_polygamma():
     assert polygamma(3, 5) == 6*(Rational(-22369, 20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
 
+    assert polygamma(1, S.Half) == pi**2 / 2
+    assert polygamma(2, S.Half) == -14*zeta(3)
+    assert polygamma(11, S.Half) == 176896*pi**12
+
     def t(m, n):
         x = S(m)/n
         r = polygamma(0, x)

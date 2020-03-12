@@ -1,9 +1,12 @@
+from typing import List
+
 from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne,
                    oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And,
                    real_root)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show, plot_contour, PlotGrid
+from sympy.plotting.plot import (unset_show, plot_contour, PlotGrid,
+                            DefaultBackend, MatplotlibBackend, TextBackend)
 from sympy.utilities import lambdify as lambdify_
 from sympy.testing.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
@@ -20,7 +23,7 @@ unset_show()
 # entirely
 class TmpFileManager:
 
-    tmp_files = []
+    tmp_files = []  # type: List[str]
 
     @classmethod
     def tmp_file(cls, name=''):
@@ -583,4 +586,40 @@ def test_issue_11461():
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
+    assert len(p[0].get_segments()) >= 30
+
+def test_issue_11764():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    x = Symbol('x')
+    p = plot_parametric(cos(x), sin(x), (x, 0, 2 * pi), aspect_ratio=(1,1), show=False)
+    p.aspect_ratio == (1, 1)
+    # Random number of segments, probably more than 100, but we want to see
+    # that there are segments generated, as opposed to when the bug was present
+    assert len(p[0].get_segments()) >= 30
+
+def test_issue_13516():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    np = import_module('numpy')
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+    if not np:
+        skip("Numpy not found")
+    x = Symbol('x')
+
+    pm = plot(sin(x), backend="matplotlib", show=False)
+    assert pm.backend == MatplotlibBackend
+    assert len(pm[0].get_segments()) >= 30
+
+    pt = plot(sin(x), backend="text", show=False)
+    assert pt.backend == TextBackend
+    assert len(pt[0].get_segments()) >= 30
+
+    pd = plot(sin(x), backend="default", show=False)
+    assert pd.backend == DefaultBackend
+    assert len(pd[0].get_segments()) >= 30
+
+    p = plot(sin(x), show=False)
+    assert p.backend == DefaultBackend
     assert len(p[0].get_segments()) >= 30

@@ -5,6 +5,8 @@ here for easy import.
 """
 from __future__ import print_function, division
 
+from typing import Tuple, Type
+
 import operator
 from collections import defaultdict
 from sympy.external import import_module
@@ -15,14 +17,8 @@ Python 2 and Python 3 compatible imports
 String and Unicode compatible changes:
     * `unicode()` removed in Python 3, import `unicode` for Python 2/3
       compatible function
-    * `unichr()` removed in Python 3, import `unichr` for Python 2/3 compatible
-      function
     * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
     * Use `u_decode()` to decode utf-8 formatted unicode strings
-
-Integer related changes:
-    * `long()` removed in Python 3, import `long` for Python 2/3 compatible
-      function
 
 Renamed function attributes:
     * Python 2 `.func_code`, Python 3 `.__func__`, access with
@@ -52,30 +48,26 @@ Metaclasses:
 """
 
 __all__ = [
-    'PY3', 'long', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
-    'unicode', 'unichr', 'u_decode', 'Iterator', 'get_function_code',
+    'PY3', 'int_info', 'SYMPY_INTS', 'lru_cache', 'clock',
+    'unicode', 'u_decode', 'get_function_code', 'gmpy',
     'get_function_globals', 'get_function_name', 'builtins', 'reduce',
-    'StringIO', 'cStringIO', 'exec_', 'round', 'Mapping', 'Callable',
+    'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
     'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
     'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
-    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY', 'gmpy',
+    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY',
 ]
 
 import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    long = int
     int_info = sys.int_info
 
     # String / unicode compatibility
     unicode = str
-    unichr = chr
 
     def u_decode(x):
         return x
-
-    Iterator = object
 
     # Moved definitions
     get_function_code = operator.attrgetter("__code__")
@@ -89,27 +81,19 @@ if PY3:
 
     exec_ = getattr(builtins, "exec")
 
-    round = round
-
     from collections.abc import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
 
     from inspect import unwrap
     from itertools import accumulate
 else:
-    long = long
     int_info = sys.long_info
 
     # String / unicode compatibility
     unicode = unicode
-    unichr = unichr
 
     def u_decode(x):
         return x.decode('utf-8')
-
-    class Iterator(object):
-        def next(self):
-            return type(self).__next__(self)
 
     # Moved definitions
     get_function_code = operator.attrgetter("func_code")
@@ -132,13 +116,6 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-
-    _round = round
-    def round(x, *args):
-        try:
-            return x.__round__(*args)
-        except (AttributeError, TypeError):
-            return _round(x, *args)
 
     from collections import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -344,10 +321,10 @@ def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
 
-    The return value is guaranteed to be equal to the input. ValueError
-    is raised if the input has a non-integral value. When ``strict`` is
-    False, non-integer input that compares equal to the integer value
-    will not raise an error.
+    The return value is guaranteed to be equal to the input. ValueError is
+    raised if the input has a non-integral value. When ``strict`` is True, this
+    uses `__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>`_
+    and when it is False it uses ``int``.
 
 
     Examples
@@ -390,16 +367,19 @@ def as_int(n, strict=True):
     ...
     ValueError: ... is not an integer
     """
-    from sympy.core.numbers import Integer
-    try:
-        if strict and not isinstance(n, SYMPY_INTS + (Integer,)):
-            raise TypeError
-        result = int(n)
-        if result != n:
-            raise TypeError
+    if strict:
+        try:
+            return operator.index(n)
+        except TypeError:
+            raise ValueError('%s is not an integer' % (n,))
+    else:
+        try:
+            result = int(n)
+        except TypeError:
+            raise ValueError('%s is not an integer' % (n,))
+        if n != result:
+            raise ValueError('%s is not an integer' % (n,))
         return result
-    except TypeError:
-        raise ValueError('%s is not an integer' % (n,))
 
 
 def default_sort_key(item, order=None):
@@ -730,6 +710,8 @@ if GROUND_TYPES != 'python':
             module_version_attr='version', module_version_attr_call_args=())
         if gmpy:
             HAS_GMPY = 1
+else:
+    gmpy = None
 
 if GROUND_TYPES == 'auto':
     if HAS_GMPY:
@@ -743,7 +725,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = (int, )
+SYMPY_INTS = (int, )  # type: Tuple[Type, ...]
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
@@ -759,7 +741,7 @@ from threading import RLock
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
 
 class _HashedSeq(list):
-    __slots__ = 'hashvalue'
+    __slots__ = ('hashvalue',)
 
     def __init__(self, tup, hash=hash):
         self[:] = tup
@@ -925,7 +907,4 @@ else:
         return decorating_function
     ### End of backported lru_cache
 
-try:
-    from time import clock
-except ImportError: # Python 3.8+
-    from time import perf_counter as clock
+from time import perf_counter as clock

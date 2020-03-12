@@ -1,11 +1,11 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
+    Wild, acos, asin, atan, atanh, binomial, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -2126,8 +2126,28 @@ def test_issue_17650():
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
 
 
+def test_issue_17882():
+    eq = -8*x**2/(9*(x**2 - 1)**(S(4)/3)) + 4/(3*(x**2 - 1)**(S(1)/3))
+    assert unrad(eq) == (4*x**2 - 12, [])
+
+
 def test_issue_17949():
     assert solve(exp(+x+x**2), x) == []
     assert solve(exp(-x+x**2), x) == []
     assert solve(exp(+x-x**2), x) == []
     assert solve(exp(-x-x**2), x) == []
+
+def test_issue_10993():
+    assert solve(Eq(binomial(x, 2), 3)) == [-2, 3]
+    assert solve(Eq(pow(x, 2) + binomial(x, 3), x)) == [-4, 0, 1]
+    assert solve(Eq(binomial(x, 2), 0)) == [0, 1]
+    assert solve(a+binomial(x, 3), a) == [-binomial(x, 3)]
+    assert solve(x-binomial(a, 3) + binomial(y, 2) + sin(a), x) == [-sin(a) + binomial(a, 3) - binomial(y, 2)]
+    assert solve((x+1)-binomial(x+1, 3), x) == [-2, -1, 3]
+
+def test_issue_11553():
+    eq1 = x + y + 1
+    eq2 = x + GoldenRatio
+    assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
+    eq3 = x + 2 + TribonacciConstant
+    assert solve([eq1, eq3], x, y) == {x: -2 - TribonacciConstant, y: 1 + TribonacciConstant}

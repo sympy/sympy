@@ -76,7 +76,11 @@ def test_all_classes_are_tested():
 
 
 def _test_args(obj):
-    return all(isinstance(arg, Basic) for arg in obj.args)
+    all_basic = all(isinstance(arg, Basic) for arg in obj.args)
+    # Ideally obj.func(*obj.args) would always recreate the object, but for
+    # now, we only require it for objects with non-empty .args
+    recreatable = not obj.args or obj.func(*obj.args) == obj
+    return all_basic and recreatable
 
 
 def test_sympy__assumptions__assume__AppliedPredicate():
@@ -867,8 +871,12 @@ def test_sympy__sets__sets__Set():
 
 def test_sympy__sets__sets__Intersection():
     from sympy.sets.sets import Intersection, Interval
-    assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
-        evaluate=False))
+    from sympy.core.symbol import Symbol
+    x = Symbol('x')
+    y = Symbol('y')
+    S = Intersection(Interval(0, x), Interval(y, 1))
+    assert isinstance(S, Intersection)
+    assert _test_args(S)
 
 
 def test_sympy__sets__sets__Union():
@@ -1422,6 +1430,9 @@ def test_sympy__stats__crv_types__MaxwellDistribution():
     from sympy.stats.crv_types import MaxwellDistribution
     assert _test_args(MaxwellDistribution(1))
 
+def test_sympy__stats__crv_types__MoyalDistribution():
+    from sympy.stats.crv_types import MoyalDistribution
+    assert _test_args(MoyalDistribution(1,2))
 
 def test_sympy__stats__crv_types__NakagamiDistribution():
     from sympy.stats.crv_types import NakagamiDistribution
@@ -3674,6 +3685,21 @@ def test_sympy__physics__quantum__state__StateBase():
     assert _test_args(StateBase(0))
 
 
+def test_sympy__physics__quantum__state__OrthogonalBra():
+    from sympy.physics.quantum.state import OrthogonalBra
+    assert _test_args(OrthogonalBra(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalKet():
+    from sympy.physics.quantum.state import OrthogonalKet
+    assert _test_args(OrthogonalKet(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalState():
+    from sympy.physics.quantum.state import OrthogonalState
+    assert _test_args(OrthogonalState(0))
+
+
 def test_sympy__physics__quantum__state__TimeDepBra():
     from sympy.physics.quantum.state import TimeDepBra
     assert _test_args(TimeDepBra('psi', 't'))
@@ -3976,8 +4002,8 @@ def test_sympy__series__sequences__RecursiveSeq():
     from sympy.series.sequences import RecursiveSeq
     y = Function("y")
     n = symbols("n")
-    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n, (0, 1)))
-    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, (0, 1)))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), n))
 
 
 def test_sympy__series__sequences__SeqExprOp():
@@ -4094,7 +4120,9 @@ def test_sympy__tensor__array__arrayop__Flatten():
 
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
-    tp = TensorProduct(3, 4, evaluate=False)
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    tp = TensorProduct(A, B)
     assert _test_args(tp)
 
 
