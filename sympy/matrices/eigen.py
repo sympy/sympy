@@ -375,7 +375,7 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
 #G&VL, Matrix Computations, Algo 5.4.2
 def _householder_vector(x):
     if not x.cols == 1:
-            raise ValueError("Input must be a column matrix")
+        raise ValueError("Input must be a column matrix")
     v = x.copy()
     if x[0, 0] != 0:
         q = x[0, 0] / abs(x[0, 0])
