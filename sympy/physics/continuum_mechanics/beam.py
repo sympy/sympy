@@ -388,7 +388,8 @@ class Beam(object):
         Parameters
         ==========
         value : Sympifyable
-            The magnitude of an applied load for orders greater than or equal to 0 and slope for orders greater than 0.
+            The magnitude of an applied load for orders greater than or
+            equal to 0 and slope for orders greater than 0.
         start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
@@ -457,7 +458,8 @@ class Beam(object):
         Parameters
         ==========
         value : Sympifyable
-            The magnitude of an applied load for orders greater than or equal to 0 and slope for orders greater than 0.
+            The magnitude of an applied load for orders greater than or
+            equal to 0 and slope for orders greater than 0.
         start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
