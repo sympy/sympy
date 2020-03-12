@@ -752,7 +752,7 @@ def rsolve(f, y, init=None):
     common = S.One
 
     if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
-       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), f.expand().args))):
+       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), i_part.expand().args))):
         raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():

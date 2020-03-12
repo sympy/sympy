@@ -188,6 +188,8 @@ def test_rsolve():
     assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
             is None)
 
+    assert rsolve(y(n) + y(n + 1) + 2**n + 3**n, y(n)) == (-1)**n*C0 - 2**n/3 - 3**n/4
+
 
 def test_rsolve_raises():
     x = Function('x')
@@ -196,6 +198,7 @@ def test_rsolve_raises():
     raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - sqrt(n)*y(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - y(n + 1), y(n), {x(0): 0}))
+    raises(ValueError, lambda: rsolve(y(n) + y(n + 1) + 2**n + cos(n), y(n)))
 
 
 def test_issue_6844():
