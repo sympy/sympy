@@ -226,7 +226,7 @@ class Particle(object):
         """
 
         self._pe = sympify(scalar)
-    
+
     def total_energy(self, frame):
         """The total energy of the Particle.
         The total energy, E, of a particle, P, is given by

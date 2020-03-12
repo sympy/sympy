@@ -201,7 +201,7 @@ class RigidBody(object):
         v = self.masscenter.vel(frame)
 
         return I.dot(w) + r.cross(m * v)
-    
+
     def rotational_kinetic_energy(self, frame):
         """Rotational kinetic energy of the rigid body
         The rotational kinetic energy, T, of a rigid body, B, is given by
@@ -235,7 +235,7 @@ class RigidBody(object):
 
         return dot(self.frame.ang_vel_in(frame), dot(self.central_inertia,
                 self.frame.ang_vel_in(frame)) / sympify(2))
-    
+
     def translational_kinetic_energy(self, frame):
         """Translational kinetic energy of the rigid body
         The translational kinetic energy, T, of a rigid body, B, is given by
@@ -359,7 +359,7 @@ class RigidBody(object):
         """
 
         self._pe = sympify(scalar)
-    
+
     def total_energy(self, frame):
         """The total energy of the RigidBody.
         The total energy E, of rigidbody B, is given by
