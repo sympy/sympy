@@ -2566,6 +2566,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq27, sol27, order=2, solve_for_func=False)[0]
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
 
+
 def test_issue_12623():
     t = symbols("t")
     u = symbols("u",cls=Function)
@@ -2582,6 +2583,7 @@ def test_issue_12623():
     assert dsolve(eqRLC_2) == sol_2
     assert checkodesol(eqRLC_2, sol_2) == (True, 0)  
     #issue-https://github.com/sympy/sympy/issues/12623
+
 
 def test_issue_5787():
     # This test case is to show the classification of imaginary constants under
