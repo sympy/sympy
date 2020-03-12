@@ -306,9 +306,9 @@ def test_bidiagonalize():
     assert simplify(P[1]) == Matrix([[-sqrt(10), -7*sqrt(10)/5], [0, -sqrt(10)/5]])
     test_matrix(M)
 
-    M = Matrix([3, 4])
-    assert M.bidiagonalize() == Matrix([-5, 0])
-    assert M.bidiagonalize(upper=False) == Matrix([3, 4])
+    Matrix([[14, 51], [68, 87]])
+    assert simplify(M.bidiagonalize()) == Matrix([[-2*sqrt(1205), -663*sqrt(1205)/241], [0, -225*sqrt(1205)/241]])
+    assert simplify(M.bidiagonalize(upper=False)) == Matrix([[-2*sqrt(1205), -663*sqrt(1205)/241], [0, -225*sqrt(1205)/241]])
     test_matrix(M)
 
 
