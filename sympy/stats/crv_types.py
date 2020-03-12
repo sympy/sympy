@@ -54,7 +54,6 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-import random
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
