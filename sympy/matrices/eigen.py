@@ -379,7 +379,10 @@ def _householder_vector(x):
     v = x.copy()
     v_plus = x.copy()
     v_minus = x.copy()
-    q = x[0, 0] / abs(x[0, 0])
+    if x[0, 0] != 0:
+        q = x[0, 0] / abs(x[0, 0])
+    else:
+        q = 1
     norm_x = x.norm()
     v_plus[0, 0] = x[0, 0] + q * norm_x
     v_minus[0, 0] = x[0, 0] - q * norm_x
