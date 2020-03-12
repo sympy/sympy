@@ -285,11 +285,30 @@ def test_bidiagonalize():
     M = randMatrix(2, 2, min=-1000000000, max=1000000000) + I * randMatrix(2, 2, min=-1000000000, max=1000000000)
     test_matrix(M)
 
-    M = Matrix(18, 8, range(1, 145))
-    M = M.applyfunc(lambda i: Float(i, 100))
+    M = Matrix(4, 3, range(1, 13)).applyfunc(lambda i: Float(i, 100))
     a, b, c = M.bidiagonal_decomposition()
     diff = a * b * c - M
-    assert abs(max(diff)) < 10**-40
+    assert abs(max(diff)) < 10**-90
+    assert b.applyfunc(lambda i : round(i, 5)) == Matrix([[-12.88410, 21.87643, 0.0],
+                                                          [0.0, 2.24624, -0.61328],
+                                                          [0.0, 0, 0.0],
+                                                          [0.0, 0.0, 0.0]])
+
+
+    M = Matrix(10, 8, range(1, 81)).applyfunc(lambda i: Float(i, 100))
+    a, b, c = M.bidiagonal_decomposition()
+    diff = a * b * c - M
+    assert abs(max(diff)) < 10**-90
+    assert b.applyfunc(lambda i : round(i, 5)) == Matrix([[-137.73162, 393.09074, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0, 17.96369, -8.18375, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                                          [0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0]])
 
     x,y,z,w = symbols('x y z w', real=True, zero=False)
     M = Matrix([[x, y], [z, w]])
