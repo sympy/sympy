@@ -4187,9 +4187,6 @@ def Mul_preprocessor(*args, **options):
     return result
 
 def Pow_preprocessor(b, e, **options):
-    evaluate = options.get('evaluate', global_parameters.evaluate)
-    if not evaluate:
-        return None
     if isinstance(e, TensExpr):
         raise NotImplementedError
     if e.is_negative:
