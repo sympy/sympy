@@ -251,6 +251,10 @@ def linsolve_domain(system, symbols):
 
     Aaugdm_rref, pivots = Aaugdm.rref()
     Aaug = Aaugdm_rref.to_Matrix()
+
+    if Aaug.is_zero_matrix:
+        return {sym:sym for sym in symbols}
+
     rows, cols = Aaug.shape
     while all(Aaug[rows-1, c] == 0 for c in range(cols)):
         rows -= 1
