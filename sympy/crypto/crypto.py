@@ -32,6 +32,8 @@ from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.testing.randtest import _randrange, _randint
 
+import math as mt
+
 
 class NonInvertibleCipherWarning(RuntimeWarning):
     """A warning raised if the cipher is not invertible."""
@@ -70,11 +72,15 @@ def AZ(s=None):
     t = type(s) is str
     if t:
         s = [s]
-    rv = [check_and_join(i.upper().split(), uppercase, filter=True)
-        for i in s]
+    L = []
+    for i in s:
+        L.append(check_and_join(i.upper().split(), uppercase, filter=True))
+
+    rv = L
     if t:
         return rv[0]
     return rv
+
 
 bifid5 = AZ().replace('J', '')
 bifid6 = AZ() + '0123456789'
@@ -108,8 +114,7 @@ def padded_key(key, symbols, filter=True):
     extra = set(key) - set(syms)
     if extra:
         raise ValueError(
-            'characters in key but not symbols: %s' % ''.join(
-            sorted(extra)))
+            'characters in key but not symbols: %s' % ''.join(sorted(extra)))
     key0 = ''.join(list(uniq(key)))
     return key0 + ''.join([i for i in syms if i not in key0])
 
@@ -190,7 +195,7 @@ def cycle_list(k, n):
     return list(range(k, n)) + list(range(k))
 
 
-######## shift cipher examples ############
+"""######## shift cipher examples ############"""
 
 
 def encipher_shift(msg, key, symbols=None):
@@ -296,6 +301,7 @@ def decipher_shift(msg, key, symbols=None):
     """
     return encipher_shift(msg, -key, symbols)
 
+
 def encipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 encryption on a given plaintext ``msg``.
@@ -323,6 +329,7 @@ def encipher_rot13(msg, symbols=None):
 
     """
     return encipher_shift(msg, 13, symbols)
+
 
 def decipher_rot13(msg, symbols=None):
     """
@@ -354,7 +361,8 @@ def decipher_rot13(msg, symbols=None):
     """
     return decipher_shift(msg, 13, symbols)
 
-######## affine cipher examples ############
+
+"""######## affine cipher examples ############"""
 
 
 def encipher_affine(msg, key, symbols=None, _inverse=False):
@@ -481,7 +489,7 @@ def encipher_atbash(msg, symbols=None):
     decipher_atbash
 
     """
-    return encipher_affine(msg, (25,25), symbols)
+    return encipher_affine(msg, (25, 25), symbols)
 
 
 def decipher_atbash(msg, symbols=None):
@@ -520,9 +528,10 @@ def decipher_atbash(msg, symbols=None):
     encipher_atbash
 
     """
-    return decipher_affine(msg, (25,25), symbols)
+    return decipher_affine(msg, (25, 25), symbols)
 
-#################### substitution cipher ###########################
+
+"""#################### substitution cipher ###########################"""
 
 
 def encipher_substitution(msg, old, new=None):
@@ -584,9 +593,10 @@ def encipher_substitution(msg, old, new=None):
     return translate(msg, old, new)
 
 
-######################################################################
+"""######################################################################
 #################### Vigenere cipher examples ########################
-######################################################################
+######################################################################"""
+
 
 def encipher_vigenere(msg, key, symbols=None):
     """
@@ -780,7 +790,7 @@ def decipher_vigenere(msg, key, symbols=None):
     return rv
 
 
-#################### Hill cipher  ########################
+"""#################### Hill cipher  ########################"""
 
 
 def encipher_hill(msg, key, symbols=None, pad="Q"):
@@ -872,15 +882,15 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     if r:
         P = P + [map[pad]]*(k - r)
         m += 1
-    rv = ''.join([A[c % N] for j in range(m) for c in
-        list(key*Matrix(k, 1, [P[i]
-        for i in range(k*j, k*(j + 1))]))])
+    rv = ''.join([A[c % N] for j in range(m) for c in list(key*Matrix(k, 1, [P[i] for i in range(k*j, k*(j + 1))]))])
     return rv
 
 
 def decipher_hill(msg, key, symbols=None):
     """
-    Deciphering is the same as enciphering but using the inverse of the
+    Deciphering is the same as enciphering but using the
+    invecontinuous-integration/travis-ci/pr —
+    The Travis CI build failed rse of the
     key matrix.
 
     Examples
@@ -941,13 +951,11 @@ def decipher_hill(msg, key, symbols=None):
         C = C + [0]*(k - r)
         m += 1
     key_inv = key.inv_mod(N)
-    rv = ''.join([A[p % N] for j in range(m) for p in
-        list(key_inv*Matrix(
-        k, 1, [C[i] for i in range(k*j, k*(j + 1))]))])
+    rv = ''.join([A[p % N] for j in range(m) for p in list(key_inv*Matrix(k, 1, [C[i] for i in range(k*j, k*(j + 1))]))])
     return rv
 
 
-#################### Bifid cipher  ########################
+"""#################### Bifid cipher  ########################"""
 
 
 def encipher_bifid(msg, key, symbols=None):
@@ -1001,7 +1009,7 @@ def encipher_bifid(msg, key, symbols=None):
             'Length of alphabet (%s) is not a square number.' % len(A))
     N = int(n)
     if len(long_key) < N**2:
-      long_key = list(long_key) + [x for x in A if x not in long_key]
+        long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
     row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}
@@ -1438,7 +1446,8 @@ def bifid6_square(key=None):
     return bifid_square(key)
 
 
-#################### RSA  #############################
+"""#################### RSA  #############################"""
+
 
 def _decipher_rsa_crt(i, d, factors):
     """Decipher RSA using chinese remainder theorem from the information
@@ -1515,8 +1524,8 @@ def _rsa_key(*args, **kwargs):
 
     if totient not in ('Euler', 'Carmichael'):
         raise ValueError(
-            "The argument totient={} should either be " \
-            "'Euler', 'Carmichalel'." \
+            "The argument totient={} should either be "
+            "'Euler', 'Carmichalel'."
             .format(totient))
 
     if totient == 'Euler':
@@ -2053,7 +2062,7 @@ def decipher_rsa(i, key, factors=None):
     return _encipher_decipher_rsa(i, key, factors=factors)
 
 
-#################### kid krypto (kid RSA) #############################
+"""#################### kid krypto (kid RSA) #############################"""
 
 
 def kid_rsa_public_key(a, b, A, B):
@@ -2158,7 +2167,7 @@ def decipher_kid_rsa(msg, key):
     return (msg*d) % n
 
 
-#################### Morse Code ######################################
+"""#################### Morse Code ######################################"""
 
 morse_char = {
     ".-": "A", "-...": "B",
@@ -2271,7 +2280,7 @@ def decode_morse(msg, sep='|', mapping=None):
     return rv
 
 
-#################### LFSRs  ##########################################
+"""#################### LFSRs  ##########################################"""
 
 
 def lfsr_sequence(key, fill, n):
@@ -2309,7 +2318,7 @@ def lfsr_sequence(key, fill, n):
 
     .. math::
 
-        C(k) = C(k,a) = \lim_{N\rightarrow \infty} {1\over N}\sum_{n=1}^N (-1)^{a_n + a_{n+k}}.
+C(k)=C(k,a)=\lim_{N\rightarrow\infty}{1\over N}\sum_{n=1}^N(-1)^{a_n + a_{n+k}}
 
     In the case where `a` is periodic with period
     `P` then this reduces to
@@ -2330,10 +2339,10 @@ def lfsr_sequence(key, fill, n):
 
        .. math::
 
-         C(k) = \left\{ \begin{array}{cc} 1,& k = 0,\\ \epsilon, & k \ne 0. \end{array} \right.
+    C(k)=\left\{\begin{array}{cc}1,&k=0,\\ \epsilon, &k \ne0.\end{array}\right.
 
-      (For sequences satisfying these first two properties, it is known
-      that `\epsilon = -1/P` must hold.)
+    (For sequences satisfying these first two properties, it is known
+    that `\epsilon = -1/P` must hold.)
 
     - proportional runs property: In each period, half the runs have
       length `1`, one-fourth have length `2`, etc.
@@ -2496,10 +2505,10 @@ def lfsr_connection_polynomial(s):
         if L > 0:
             dC = Poly(C).degree()
             r = min(L + 1, dC + 1)
-            coeffsC = [C.subs(x, 0)] + [C.coeff(x**i)
-                for i in range(1, dC + 1)]
-            d = (s[N].to_int() + sum([coeffsC[i]*s[N - i].to_int()
-                for i in range(1, r)])) % p
+            coeffsC = [C.subs(x, 0)]+[C.coeff(x**i) for i in range(1, dC + 1)]
+            f = s[N].to_int()
+            x = (f+sum([coeffsC[i]*s[N-i].to_int() for i in range(1, r)]))
+            d = x % p
         if L == 0:
             d = s[N].to_int()*x**0
         if d == 0:
@@ -2520,11 +2529,19 @@ def lfsr_connection_polynomial(s):
                 N += 1
     dC = Poly(C).degree()
     coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
-    return sum([coeffsC[i] % p*x**i for i in range(dC + 1)
-        if coeffsC[i] is not None])
+    return coeffsC_helper(dC, coeffsC)
 
 
-#################### ElGamal  #############################
+def coeffsC_helper(dC, coeffsC):
+    L = []
+    for i in range(dC + 1):
+        if coeffsC[i] is not None:
+            L.append(coeffsC[i] % p*x**i)
+
+    return sum(L)
+
+
+"""#################### ElGamal  #############################"""
 
 
 def elgamal_private_key(digit=10, seed=None):
@@ -2647,7 +2664,8 @@ def encipher_elgamal(i, key, seed=None):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import encipher_elgamal, elgamal_private_key, elgamal_public_key
+    >>> from sympy.crypto.crypto import
+    encipher_elgamal, elgamal_private_key, elgamal_public_key
     >>> pri = elgamal_private_key(5, seed=[3]); pri
     (37, 2, 3)
     >>> pub = elgamal_public_key(pri); pub
@@ -2679,9 +2697,9 @@ def decipher_elgamal(msg, key):
 
     `u \equiv 1/{{c_{1}}^d} \pmod p`
 
-    `u c_{2} \equiv \frac{1}{c_{1}^d} c_{2} \equiv \frac{1}{r^{ad}} c_{2} \pmod p`
+    `u c_{2}\equiv\frac{1}{c_{1}^d} c_{2} \equiv \frac{1}{r^{ad}} c_{2}\pmod p`
 
-    `\frac{1}{r^{ad}} m e^a \equiv \frac{1}{r^{ad}} m {r^{d a}} \equiv m \pmod p`
+    `\frac{1}{r^{ad}}m e^a \equiv \frac{1}{r^{ad}}m{r^{da}} \equiv m \pmod p`
 
     Examples
     ========
@@ -2705,7 +2723,100 @@ def decipher_elgamal(msg, key):
     return u * c2 % p
 
 
-################ Diffie-Hellman Key Exchange  #########################
+"""##########Columnar Transposition Cipher################"""
+
+
+r"""
+Columnar Transposition Cipher
+This cipher involves writing the plaintext out in rows
+and then reading the ciphertext off in columns one by one.
+"""
+
+
+def encipher_ctc(message, key):
+
+    r"""
+    Usage
+    >>> from sympy.crypto.crypto import encipher_ctc
+    >>> key = "HI"
+    >>> encipher_ctc("HelloIlovecrypto", key)
+
+    """
+    c = ""
+
+    k_index = 0
+
+    message_len = len(message)
+    message_list = list(message)
+    key_list = sorted(list(key))
+
+    col = len(key)
+    row = int(mt.ceil(message_len/col))
+
+    null_m = int(row*col - message_len)
+    message_list.extend(' ' * null_m)
+
+    matrix = [message_list[i: i+col] for i in range(0, len(message_list), col)]
+
+    for _ in range(col):
+        current_ind = key.index(key_list[k_index])
+
+        c += ''.join([row[current_ind] for row in matrix])
+
+        k_index += 1
+
+    return c
+
+
+def decipher_ctc(c, key):
+    r"""
+    Usage
+    >>> from sympy.crypto.crypto import decipher_ctc
+    >>> key = "HI"
+    >>> decipher_ctc("HlolvcytelIoerpo", key)
+    """
+
+    message = ""
+
+    k_index = 0
+
+    message_index = 0
+    message_len = len(c)
+    message_list = list(c)
+
+    col = len(key)
+
+    row = int(mt.ceil(message_len / col))
+
+    key_list = sorted(list(key))
+
+    decrypt_cip = []
+    for _ in range(row):
+        decrypt_cip += [[None] * col]
+
+    for _ in range(col):
+        current_ind = key.index(key_list[k_index])
+
+        for x in range(row):
+            decrypt_cip[x][current_ind] = message_list[message_index]
+            message_index += 1
+
+        k_index += 1
+
+    try:
+        message = ''.join(sum(decrypt_cip, []))
+    except TypeError:
+        raise TypeError("There cannot be any repeating letters in the key")
+    n = message.count(' ')
+
+    if n > 0:
+        return message[: -n]
+
+    return message
+
+
+"""################ Diffie-Hellman Key Exchange  #########################"""
+
 
 def dh_private_key(digit=10, seed=None):
     r"""
@@ -2852,7 +2963,7 @@ def dh_shared_key(key, b):
     return pow(x, b, p)
 
 
-################ Goldwasser-Micali Encryption  #########################
+"""################ Goldwasser-Micali Encryption  #########################"""
 
 
 def _legendre(a, p):
@@ -3035,9 +3146,12 @@ def encipher_gm(i, key, seed=None):
 
     gen = _random_coprime_stream(N, seed)
     rev = reversed(bits)
-    encode = lambda b: next(gen)**2*pow(a, b) % N
-    return [ encode(b) for b in rev ]
+    encode = gm_helper2(gen, a, b, N)
+    return [encode(b) for b in rev]
 
+
+def gm_helper2(gen, a, b, N):
+    return next(gen)**2*pow(a, b) % N
 
 
 def decipher_gm(message, key):
@@ -3061,7 +3175,7 @@ def decipher_gm(message, key):
 
     """
     p, q = key
-    res = lambda m, p: _legendre(m, p) > 0
+    res = gm_helper1(m, p)
     bits = [res(m, p) * res(m, q) for m in message]
     m = 0
     for b in bits:
@@ -3070,10 +3184,15 @@ def decipher_gm(message, key):
     return m
 
 
+def gm_helper1(m, p):
+    res = _legendre(m, p) > 0
+    return res
 
-########### RailFence Cipher #############
 
-def encipher_railfence(message,rails):
+"""########### RailFence Cipher #############"""
+
+
+def encipher_railfence(message, rails):
     """
     Performs Railfence Encryption on plaintext and returns ciphertext
 
@@ -3106,7 +3225,7 @@ def encipher_railfence(message,rails):
     return ''.join(sorted(message, key=lambda i: next(p)))
 
 
-def decipher_railfence(ciphertext,rails):
+def decipher_railfence(ciphertext, rails):
     """
     Decrypt the message using the given rails
 
@@ -3139,7 +3258,8 @@ def decipher_railfence(ciphertext,rails):
     return ''.join(res)
 
 
-################ Blum-Goldwasser cryptosystem  #########################
+"""################ Blum-Goldwasser cryptosystem  #########################"""
+
 
 def bg_private_key(p, q):
     """
@@ -3175,14 +3295,15 @@ def bg_private_key(p, q):
 
     if not isprime(p) or not isprime(q):
         raise ValueError("the two arguments must be prime, "
-                         "got %i and %i" %(p, q))
+                         "got %i and %i" % (p, q))
     elif p == q:
         raise ValueError("the two arguments must be distinct, "
-                         "got two copies of %i. " %p)
-    elif (p - 3) % 4 != 0 or (q - 3) % 4 != 0:
+                         "got two copies of %i. " % p)
+    elif ((p - 3) % 4 != 0) or (((q - 3) % 4) != 0):
         raise ValueError("the two arguments must be congruent to 3 mod 4, "
-                         "got %i and %i" %(p, q))
+                         "got %i and %i" % (p, q))
     return p, q
+
 
 def bg_public_key(p, q):
     """
@@ -3208,6 +3329,7 @@ def bg_public_key(p, q):
     p, q = bg_private_key(p, q)
     N = p * q
     return N
+
 
 def encipher_bg(i, key, seed=None):
     """
@@ -3271,6 +3393,7 @@ def encipher_bg(i, key, seed=None):
 
     return (encrypt_msg, x_L)
 
+
 def decipher_bg(message, key):
     """
     Decrypts the message using private keys.
@@ -3311,7 +3434,7 @@ def decipher_bg(message, key):
     r_p = pow(int(y), int(p_t), int(p))
     r_q = pow(int(y), int(q_t), int(q))
 
-    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+    x = (q*mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
 
     orig_bits = []
     for _ in range(L):
