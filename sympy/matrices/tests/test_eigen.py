@@ -300,8 +300,12 @@ def test_bidiagonalize():
     assert abs(max(diff)) < 10**-40
 
     x,y,z,w = symbols('x y z w', real=True, zero=False)
-    L = Matrix([[x, y], [z, w]])
-    test_matrix(L)
+    M = Matrix([[x, y], [z, w]])
+    test_matrix(M)
+
+    M = Matrix([[1, x], [x, 1]])
+    test_matrix(M)
+
 
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
