@@ -2581,7 +2581,7 @@ def test_issue_12623():
     eqRLC_2 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
     sol_2 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
     assert dsolve(eqRLC_2) == sol_2
-    assert checkodesol(eqRLC_2, sol_2) == (True, 0)  
+    assert checkodesol(eqRLC_2, sol_2) == (True, 0)
     #issue-https://github.com/sympy/sympy/issues/12623
 
 
