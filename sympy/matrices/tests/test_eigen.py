@@ -232,35 +232,51 @@ def test_bidiagonalize():
     def test_matrix(M):
         def test_orthogonal(M):
             assert simplify(M.H * M) == M.eye(M.cols)
-            assert simplify(M * M.H) == M.eye(M.rows)
+        def test_upper_bidiagonal(M):
+            assert all(M[i, j].is_zero or i == j or i + 1 == j
+                        for i in range(M.rows)
+                        for j in range(M.cols))
+        def test_lower_bidiagonal(M):
+            assert all(M[i, j].is_zero or i == j or i == j + 1
+                        for i in range(M.rows)
+                        for j in range(M.cols))
+
         M1, M2, M3 = M.bidiagonal_decomposition()
         M0 = M.bidiagonalize()
+        M2.simplify()
         assert M == simplify(M1 * M2 * M3)
-        assert simplify(M2) == simplify(M0)
+        assert M2 == simplify(M0)
         test_orthogonal(M1)
         test_orthogonal(M3)
+        test_upper_bidiagonal(M2)
 
         N = ImmutableMatrix(M)
         N1, N2, N3 = N.bidiagonal_decomposition()
         N0 = N.bidiagonalize()
+        N2.simplify()
         assert N == simplify(N1 * N2 * N3)
-        assert simplify(N2) == simplify(N0)
+        assert N2 == simplify(N0)
         test_orthogonal(N1)
         test_orthogonal(N3)
+        test_upper_bidiagonal(N2)
 
         LM0 = M.bidiagonalize(upper=False)
         LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
+        LM2.simplify()
         assert M == simplify(LM1 * LM2 * LM3)
-        assert simplify(LM2) == simplify(LM0)
+        assert LM2 == simplify(LM0)
         test_orthogonal(LM1)
         test_orthogonal(LM3)
+        test_lower_bidiagonal(LM2)
 
         LN0 = N.bidiagonalize(upper=False)
         LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
+        LN2.simplify()
         assert N == simplify(LN1 * LN2 * LN3)
-        assert simplify(LN2) == simplify(LN0)
+        assert LN2 == simplify(LN0)
         test_orthogonal(LN1)
         test_orthogonal(LN3)
+        test_lower_bidiagonal(LN2)
 
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
