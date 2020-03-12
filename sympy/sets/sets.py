@@ -2355,3 +2355,14 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
+def disjoint_union(*sets):
+    index = 1
+    dj_union = EmptySet
+    for set_i in sets:
+        if isinstance(set_i, Set):
+            dj_union = dj_union + set_i*FiniteSet(index)
+            index = index+1
+        else:
+            raise ValueError("Unknown argument '%s'" % set_i)
+    return product
