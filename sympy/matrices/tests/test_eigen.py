@@ -10,6 +10,8 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
+from sympy.matrices.dense import randMatrix
+
 class EigenOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixEigen):
     pass
 
@@ -227,121 +229,67 @@ def test_left_eigenvects():
 
 
 def test_bidiagonalize():
+    def test_matrix(M):
+        # L     -> Lower Bidiagonalization
+        # M     -> Mutable Matrix
+        # N     -> Immutable Matrix
+        # 0     -> Bidiagonalized form
+        # 1,2,3 -> Bidiagonal_decomposition matrices
+        # 4     -> Product of 1 2 3
+        M1, M2, M3 = M.bidiagonal_decomposition()
+        M0 = M.bidiagonalize()
+        M4 = M1 * M2 * M3
+        M0.simplify()
+        M2.simplify()
+        M4.simplify()
+        assert M == M4
+        assert M2 == M0
+
+        N = ImmutableMatrix(M)
+        N1, N2, N3 = N.bidiagonal_decomposition()
+        N0 = N.bidiagonalize()
+        N4 = N1 * N2 * N3
+        N2.simplify()
+        N4.simplify()
+        N0.simplify()
+        assert N == N4
+        assert N2 == N0
+
+        LM0 = M.bidiagonalize(upper=False)
+        LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
+        LM4 = LM1 * LM2 * LM3
+        LM0.simplify()
+        LM2.simplify()
+        LM4.simplify()
+        assert M == LM4
+        assert LM2 == LM0
+
+        LN0 = N.bidiagonalize(upper=False)
+        LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
+        LN4 = LN1 * LN2 * LN3
+        LN2.simplify()
+        LN4.simplify()
+        LN0.simplify()
+        assert N == LN4
+        assert LN2 == LN0
+
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
                 [0, 0, 1]])
     assert M.bidiagonalize() == M
-    assert M.bidiagonalize(upper=False) == M
-    assert M.bidiagonalize() == M
     assert M.bidiagonal_decomposition() == (M, M, M)
+    assert M.bidiagonalize(upper=False) == M
     assert M.bidiagonal_decomposition(upper=False) == (M, M, M)
-    assert M.bidiagonalize() == M
-
-    import random
-    #Real Tests
+    
+    #Real Random Tests
     for real_test in range(2):
-        test_values = []
-        row = 2
-        col = 2
-        for _ in range(row * col):
-            value = random.randint(-1000000000, 1000000000)
-            test_values = test_values + [value]
-        # L     -> Lower Bidiagonalization
-        # M     -> Mutable Matrix
-        # N     -> Immutable Matrix
-        # 0     -> Bidiagonalized form
-        # 1,2,3 -> Bidiagonal_decomposition matrices
-        # 4     -> Product of 1 2 3
-        M = Matrix(row, col, test_values)
-        M1, M2, M3 = M.bidiagonal_decomposition()
-        M0 = M.bidiagonalize()
-        M4 = M1 * M2 * M3
-        M0.simplify()
-        M2.simplify()
-        M4.simplify()
-        assert M == M4
-        assert M2 == M0
+        M = randMatrix(2, 2, min=-1000000000, max=1000000000)
+        test_matrix(M)
 
-        N = ImmutableMatrix(M)
-        N1, N2, N3 = N.bidiagonal_decomposition()
-        N0 = N.bidiagonalize()
-        N4 = N1 * N2 * N3
-        N2.simplify()
-        N4.simplify()
-        N0.simplify()
-        assert N == N4
-        assert N2 == N0
-
-        LM0 = M.bidiagonalize(upper=False)
-        LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
-        LM4 = LM1 * LM2 * LM3
-        LM0.simplify()
-        LM2.simplify()
-        LM4.simplify()
-        assert M == LM4
-        assert LM2 == LM0
-
-        LN0 = N.bidiagonalize(upper=False)
-        LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
-        LN4 = LN1 * LN2 * LN3
-        LN2.simplify()
-        LN4.simplify()
-        LN0.simplify()
-        assert N == LN4
-        assert LN2 == LN0
-
-    #Complex Tests
+    #Complex Random Tests
     for complex_test in range(2):
-        test_values = []
-        size = 2
-        for _ in range(size * size):
-            real = random.randint(-1000000000, 1000000000)
-            comp = random.randint(-1000000000, 1000000000)
-            value = real + comp * I
-            test_values = test_values + [value]
-        # L     -> Lower Bidiagonalization
-        # M     -> Mutable Matrix
-        # N     -> Immutable Matrix
-        # 0     -> Bidiagonalized form
-        # 1,2,3 -> Bidiagonal_decomposition matrices
-        # 4     -> Product of 1 2 3
-        M = Matrix(size, size, test_values)
-        M1, M2, M3 = M.bidiagonal_decomposition()
-        M0 = M.bidiagonalize()
-        M4 = M1 * M2 * M3
-        M0.simplify()
-        M2.simplify()
-        M4.simplify()
-        assert M == M4
-        assert M2 == M0
-
-        N = ImmutableMatrix(M)
-        N1, N2, N3 = N.bidiagonal_decomposition()
-        N0 = N.bidiagonalize()
-        N4 = N1 * N2 * N3
-        N2.simplify()
-        N4.simplify()
-        N0.simplify()
-        assert N == N4
-        assert N2 == N0
-
-        LM0 = M.bidiagonalize(upper=False)
-        LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
-        LM4 = LM1 * LM2 * LM3
-        LM0.simplify()
-        LM2.simplify()
-        LM4.simplify()
-        assert M == LM4
-        assert LM2 == LM0
-
-        LN0 = N.bidiagonalize(upper=False)
-        LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
-        LN4 = LN1 * LN2 * LN3
-        LN2.simplify()
-        LN4.simplify()
-        LN0.simplify()
-        assert N == LN4
-        assert LN2 == LN0
+        M = randMatrix(2, 2, min=-1000000000, max=1000000000) + I * randMatrix(2, 2, min=-1000000000, max=1000000000)
+        test_matrix(M)
 
     M = Matrix(18, 8, range(1, 145))
     M = M.applyfunc(lambda i: Float(i))
