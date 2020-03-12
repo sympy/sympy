@@ -147,19 +147,25 @@ class ContinuousDistribution(Basic):
         return self.pdf(*args)
 
 
-class SampleExternal(Basic):
-    def __new__(cls, distribution, size):
-        return Basic.__new__(cls, distribution, size)
+class SampleExternal(object):
+    """Class consisting of the methods that are used to sample values of random
+    variables from external libraries."""
 
-    @property
-    def distribution(self):
-        return self.args[0]
+    def __init__(self, distribution, size):
+        r"""
+        Parameters
+        ==========
 
-    @property
-    def size(self):
-        return self.args[1]
+        distribution: Continuous Distribution
+            Distribution from which sample is to be extracted
+        size: int, list
+           size of the sample
+        """
+        self.distribution = distribution
+        self.size = size
 
     def _sample_scipy(self):
+        """Sample from SciPy."""
         dist = self.distribution
         size = self.size
 
@@ -217,6 +223,8 @@ class SampleExternal(Basic):
         return scipy_rv_map[dist.__class__.__name__](dist, size)
 
     def _sample_numpy(self):
+        """Sample from NumPy."""
+
         dist = self.distribution
         size = self.size
 
@@ -249,6 +257,8 @@ class SampleExternal(Basic):
         return numpy_rv_map[dist.__class__.__name__](dist, size)
 
     def _sample_python(self):
+        """Sample from random."""
+
         dist = self.distribution
         size = self.size
 
@@ -288,6 +298,8 @@ class SampleExternal(Basic):
                                          *[(x, 0, i-1) for i in size]).doit()
 
     def _sample_pymc3(self):
+        """Sample from PyMC3."""
+
         dist = self.distribution
         size = self.size
 
@@ -370,7 +382,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                     return samps if size != 1 else samps[0]
 
         icdf = self._inverse_cdf_expression()
-        if not size:
+        if size == 1:
             return icdf(random.uniform(0, 1))
         else:
             return [icdf(random.uniform(0, 1))]*size
