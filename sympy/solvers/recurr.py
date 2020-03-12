@@ -66,7 +66,6 @@ from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.basic import preorder_traversal
 
 
 def rsolve_poly(coeffs, f, n, **hints):
@@ -728,7 +727,7 @@ def rsolve(f, y, init=None):
         coeff = S.One
         kspec = None
         for h in Mul.make_args(g):
-            if y.func not in map(lambda x: x.func, preorder_traversal(h)):
+            if not h.has(y.func):
                 coeff *= h
             elif h.is_Function and h.func == y.func:
                 result = h.args[0].match(n + k)
@@ -753,7 +752,7 @@ def rsolve(f, y, init=None):
     common = S.One
 
     if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
-       not (i_part.is_Add and all(map(lambda x: i_part.is_hypergeometric(n), f.expand().args))):
+       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), f.expand().args))):
         raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():
