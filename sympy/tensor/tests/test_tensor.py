@@ -1,6 +1,6 @@
 from functools import wraps
 
-from sympy import Matrix, eye, Integer, expand, Indexed, Sum
+from sympy import Matrix, Mul, eye, Integer, expand, Indexed, Pow, Sum
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
@@ -1968,3 +1968,14 @@ def test_TensorType():
         Lorentz = TensorIndexType('Lorentz')
         S2 = TensorType([Lorentz]*2, sym2)
         assert isinstance(S2, TensorType)
+
+@filter_warnings_decorator
+def test_preprocessor():
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+        n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+
+    assert Add(A(i0), B(i0), evaluate=False) == TensAdd(A(i0), B(i0))
+    assert Add(A(i0), B(i0)) == TensAdd(A(i0), B(i0)).doit()
+    assert Mul(A(i0), A(-i0), evaluate=False) == TensMul(A(i0), A(-i0))
+    assert Mul(A(i0), A(-i0)) == TensMul(A(i0), A(-i0)).doit()
+    assert Pow(A(i0), 2) == A(i0) ** 2

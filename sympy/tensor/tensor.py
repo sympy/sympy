@@ -4152,7 +4152,7 @@ def _expand(expr, **kwargs):
 def Add_preprocessor(*args, **options):
     evaluate = options.get('evaluate', global_parameters.evaluate)
     if not evaluate:
-        return None
+        return TensAdd(*args)
 
     extras, tensors, others = [], [], []
     for a in args:
@@ -4176,7 +4176,7 @@ def Add_preprocessor(*args, **options):
 def Mul_preprocessor(*args, **options):
     evaluate = options.get('evaluate', global_parameters.evaluate)
     if not evaluate:
-        return None
+        return TensMul(*args)
 
     for i,a in enumerate(args):
         if i == 0:
