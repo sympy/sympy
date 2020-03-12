@@ -2566,6 +2566,22 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq27, sol27, order=2, solve_for_func=False)[0]
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
 
+def test_issue_12623():
+    t = symbols("t")
+    u = symbols("u",cls=Function)
+    R, L, C, E_0, alpha = symbols("R L C E_0 alpha",positive=True)
+    omega = Symbol('omega')
+
+    eqRLC_1 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha)
+    sol_1 = Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))
+    assert dsolve(eqRLC_1) == sol_1
+    assert checkodesol(eqRLC_1, sol_1) == (True, 0)
+
+    eqRLC_2 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
+    sol_2 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
+    assert dsolve(eqRLC_2) == sol_2
+    assert checkodesol(eqRLC_2, sol_2) == (True, 0)  
+    #issue-https://github.com/sympy/sympy/issues/12623
 
 def test_issue_5787():
     # This test case is to show the classification of imaginary constants under
