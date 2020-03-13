@@ -1434,11 +1434,11 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     a_term = a.as_independent(symbol)[1]
     b_term = b.as_independent(symbol)[1]
 
-    if type(a_term) == Pow :
+    if a_term.is_Pow:
         a_base, a_exp = a_term.base, a_term.exp
-    else: # it's for sake of domain
+    else: # it's just for the sake of domain
         a_base , a_exp = a_term , a_term
-    if type(b_term) == Pow:
+    if b_term.is_Pow:
         b_base, b_exp = b_term.base, b_term.exp
     else:
         b_base , b_exp = b_term , b_term
