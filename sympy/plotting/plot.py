@@ -1564,14 +1564,9 @@ def plot(*args, **kwargs):
         limit = arg[1]
         frac = fraction(expr) #to find the denominator
         fra = 1/frac[0]
-        new_deno = frac[1]*fra
-        if not new_deno.is_Integer:
+        new_deno = frac[1]
+        if (not new_deno.is_Integer) and (not new_deno.is_Float) and (not new_deno.is_irrational):
             root_deno = real_roots(new_deno)   #to find the points of discontinuity
-            print(root_deno)
-            if not frac[0].is_integer:
-                root_num = real_roots(frac[0])
-                for i in root_num:
-                    root_deno.append(i)
             new_limit = []
             for root in root_deno:
                 left_limit = (limit[0], limit[1] , root)
