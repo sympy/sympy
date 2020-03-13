@@ -1621,21 +1621,6 @@ def test_1st_linear():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
-def test_Bernoulli():
-    # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
-    eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0)
-    sol = dsolve(eq, f(x), hint='Bernoulli')
-    assert sol == Eq(f(x), 1/(x*(C1 + 1/x)))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
-def test_Riccati_special_minus2():
-    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
-    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
-    sol = dsolve(eq, f(x), hint='Riccati_special_minus2')
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
 @slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
