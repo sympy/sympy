@@ -4,7 +4,6 @@ from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
 from sympy.core import Basic
-from sympy.core.compatibility import range
 
 
 class Subset(Basic):
@@ -53,10 +52,12 @@ class Subset(Basic):
         2
         """
         if len(subset) > len(superset):
-            raise ValueError('Invalid arguments have been provided. The superset must be larger than the subset.')
+            raise ValueError('Invalid arguments have been provided. The '
+                             'superset must be larger than the subset.')
         for elem in subset:
             if elem not in superset:
-                raise ValueError('The superset provided is invalid as it does not contain the element %i' % elem)
+                raise ValueError('The superset provided is invalid as it does '
+                                 'not contain the element {}'.format(elem))
         obj = Basic.__new__(cls)
         obj._subset = subset
         obj._superset = superset
@@ -506,7 +507,7 @@ class Subset(Basic):
         """
         bitlist = ['0'] * len(superset)
         if type(subset) is Subset:
-            subset = subset.args[0]
+            subset = subset.subset
         for i in Subset.subset_indices(subset, superset):
             bitlist[i] = '1'
         return ''.join(bitlist)
@@ -604,6 +605,6 @@ def ksubsets(superset, k):
     See Also
     ========
 
-    class:Subset
+    Subset
     """
     return combinations(superset, k)

@@ -4,8 +4,6 @@
 Utilities
 =========
 
-.. TODO: add  benchmarking.rst
-
 .. automodule:: sympy.utilities
 
 Contents:
@@ -22,8 +20,5 @@ Contents:
    memoization.rst
    misc.rst
    pkgdata.rst
-   pytest.rst
-   randtest.rst
-   runtests.rst
    source.rst
    timeutils.rst

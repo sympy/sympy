@@ -12,9 +12,8 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
     ZeroMatrix, GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
-from sympy.core.operations import AssocOp
 
-
+# XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 
@@ -32,29 +31,38 @@ class MatAdd(MatrixExpr, Add):
     """
     is_MatAdd = True
 
-    def __new__(cls, *args, **kwargs):
+    identity = GenericZeroMatrix()
+
+    def __new__(cls, *args, evaluate=False, **kwargs):
         if not args:
-            return GenericZeroMatrix()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: GenericZeroMatrix() != i, args)
+        args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 
         obj = Basic.__new__(cls, *args)
+
         if check:
             if all(not isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
+
+        if evaluate:
+            if all(not isinstance(i, MatrixExpr) for i in args):
+                return Add(*args, evaluate=True)
+            obj = canonicalize(obj)
+
         return obj
 
     @property
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j, expand=None):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()

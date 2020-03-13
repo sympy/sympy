@@ -3,7 +3,7 @@ from sympy import (Derivative as D, Eq, exp, sin,
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 a, b, c, x, y = symbols('a b c x y')
@@ -33,7 +33,7 @@ def test_pde_separate_mul():
     r, theta, z = symbols('r,theta,z')
 
     # Something simple :)
-    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z))
+    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z), 0)
 
     # Duplicate arguments in functions
     raises(
@@ -56,7 +56,7 @@ def test_pde_separate_mul():
 
     # Laplace equation in cylindrical coords
     eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
-            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2))
+            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2), 0)
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
     assert res == [D(Z(z), z, z)/Z(z),

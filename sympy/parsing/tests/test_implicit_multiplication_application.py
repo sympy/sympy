@@ -11,7 +11,7 @@ from sympy.parsing.sympy_parser import (
     split_symbols_custom,
     _token_splittable
 )
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_implicit_multiplication():

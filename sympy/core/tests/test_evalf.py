@@ -1,15 +1,16 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
+from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath)
+    scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
-from sympy.core.compatibility import long, range
-from sympy.utilities.pytest import raises, XFAIL
-
+from sympy.core.expr import unchanged
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
+
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -208,17 +209,17 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*E**(oo)).n() == S.NaN
-    assert (0/E**(oo)).n() == S.Zero
+    assert (0*E**(oo)).n() is S.NaN
+    assert (0/E**(oo)).n() is S.Zero
 
-    assert (0+E**(oo)).n() == S.Infinity
-    assert (0-E**(oo)).n() == S.NegativeInfinity
+    assert (0+E**(oo)).n() is S.Infinity
+    assert (0-E**(oo)).n() is S.NegativeInfinity
 
-    assert (5*E**(oo)).n() == S.Infinity
-    assert (5/E**(oo)).n() == S.Zero
+    assert (5*E**(oo)).n() is S.Infinity
+    assert (5/E**(oo)).n() is S.Zero
 
-    assert (5+E**(oo)).n() == S.Infinity
-    assert (5-E**(oo)).n() == S.NegativeInfinity
+    assert (5+E**(oo)).n() is S.Infinity
+    assert (5-E**(oo)).n() is S.NegativeInfinity
 
     #issue 7416
     assert as_mpmath(0.0, 10, {'chop': True}) == 0
@@ -233,6 +234,7 @@ def test_evalf_bugs():
     #issue 13076
     assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
+
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
@@ -242,23 +244,24 @@ def test_evalf_integer_parts():
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
     assert int(floor(factorial(50)/E, evaluate=False).evalf(70)) == \
-        long(11188719610782480504630258070757734324011354208865721592720336800)
+        int(11188719610782480504630258070757734324011354208865721592720336800)
     assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
-        long(11188719610782480504630258070757734324011354208865721592720336801)
-    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2)))
+        int(11188719610782480504630258070757734324011354208865721592720336801)
+    assert int(floor((GoldenRatio**999 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(999)
-    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2)))
+    assert int(floor((GoldenRatio**1000 / sqrt(5) + S.Half))
                .evalf(1000)) == fibonacci(1000)
 
     assert ceiling(x).evalf(subs={x: 3}) == 3
-    assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
-    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3*I}) == 3.0*I
+    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2.0 + 3.0*I
     assert ceiling(x).evalf(subs={x: 3.}) == 3
-    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
-    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3.0*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2.0 + 3.0*I
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
+
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -298,7 +301,7 @@ def test_evalf_divergent_series():
 
 def test_evalf_product():
     assert Product(n, (n, 1, 10)).evalf() == 3628800.
-    assert Product(1 - S.Half**2/n**2, (n, 1, oo)).evalf(5)==0.63662
+    assert comp(Product(1 - S.Half**2/n**2, (n, 1, oo)).n(5), 0.63662)
     assert Product(n, (n, -1, 3)).evalf() == 0
 
 
@@ -348,6 +351,11 @@ def test_evaluate_false():
 
 def test_evalf_relational():
     assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
+    # if this first assertion fails it should be replaced with
+    # one that doesn't
+    assert unchanged(Eq, (3 - I)**2/2 + I, 0)
+    assert Eq((3 - I)**2/2 + I, 0).n() is S.false
+    assert nfloat(Eq((3 - I)**2 + I, 0)) == S.false
 
 
 def test_issue_5486():
@@ -441,8 +449,8 @@ def test_infinities():
 
 
 def test_to_mpmath():
-    assert sqrt(3)._to_mpmath(20)._mpf_ == (0, long(908093), -19, 20)
-    assert S(3.2)._to_mpmath(20)._mpf_ == (0, long(838861), -18, 20)
+    assert sqrt(3)._to_mpmath(20)._mpf_ == (0, int(908093), -19, 20)
+    assert S(3.2)._to_mpmath(20)._mpf_ == (0, int(838861), -18, 20)
 
 
 def test_issue_6632_evalf():
@@ -480,8 +488,18 @@ def test_issue_8853():
 
     assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
     assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
-    assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
-    assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)
+    assert get_integer_part(Rational(-1, 2), -1, {}, True) == (-1, 0)
+    assert get_integer_part(Rational(-1, 2), 1, {}, True) == (0, 0)
+
+
+def test_issue_17681():
+    class identity_func(Function):
+
+        def _eval_evalf(self, *args, **kwargs):
+            return self.args[0].evalf(*args, **kwargs)
+
+    assert floor(identity_func(S(0))) == 0
+    assert get_integer_part(S(0), 1, {}, True) == (0, 0)
 
 
 def test_issue_9326():
@@ -535,3 +553,29 @@ def test_issue_14601():
     e2 = e.evalf(subs=subst)
     assert float(e2) == 0.0
     assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+
+
+def test_issue_11151():
+    z = S.Zero
+    e = Sum(z, (x, 1, 2))
+    assert e != z  # it shouldn't evaluate
+    # when it does evaluate, this is what it should give
+    assert evalf(e, 15, {}) == \
+        evalf(z, 15, {}) == (None, None, 15, None)
+    # so this shouldn't fail
+    assert (e/2).n() == 0
+    # this was where the issue appeared
+    expr0 = Sum(x**2 + x, (x, 1, 2))
+    expr1 = Sum(0, (x, 1, 2))
+    expr2 = expr1/expr0
+    assert simplify(factor(expr2) - expr2) == 0
+
+
+def test_issue_13425():
+    assert N('2**.5', 30) == N('sqrt(2)', 30)
+    assert N('x - x', 30) == 0
+    assert abs((N('pi*.1', 22)*10 - pi).n()) < 1e-22
+
+
+def test_issue_17421():
+    assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I

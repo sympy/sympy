@@ -3,10 +3,11 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, Rational, AlgebraicNumber,
+    S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
-from sympy.core.compatibility import reduce, range
+from sympy.functions import sqrt, cbrt
+from sympy.core.compatibility import reduce
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp
@@ -31,6 +32,7 @@ from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.printing.lambdarepr import LambdaPrinter
+from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
@@ -516,6 +518,22 @@ def _minpoly_compose(ex, x, dom):
     if ex is I:
         _, factors = factor_list(x**2 + 1, x, domain=dom)
         return x**2 + 1 if len(factors) == 1 else x - I
+
+    if ex is GoldenRatio:
+        _, factors = factor_list(x**2 - x - 1, x, domain=dom)
+        if len(factors) == 1:
+            return x**2 - x - 1
+        else:
+            return _choose_factor(factors, x, (1 + sqrt(5))/2, dom=dom)
+
+    if ex is TribonacciConstant:
+        _, factors = factor_list(x**3 - x**2 - x - 1, x, domain=dom)
+        if len(factors) == 1:
+            return x**3 - x**2 - x - 1
+        else:
+            fac = (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+            return _choose_factor(factors, x, fac, dom=dom)
+
     if hasattr(dom, 'symbols') and ex in dom.symbols:
         return x - ex
 
@@ -805,7 +823,6 @@ def _minpoly_groebner(ex, x, cls):
 
 
 minpoly = minimal_polynomial
-__all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
@@ -995,9 +1012,9 @@ def field_isomorphism_factor(a, b):
                 return coeffs
 
             if (a.root + root).evalf(chop=True) == 0:
-                return [ -c for c in coeffs ]
-    else:
-        return None
+                return [-c for c in coeffs]
+
+    return None
 
 
 @public
@@ -1068,18 +1085,20 @@ def to_number_field(extension, theta=None, **args):
                 "%s is not in a subfield of %s" % (root, theta.root))
 
 
-class IntervalPrinter(LambdaPrinter):
+class IntervalPrinter(MpmathPrinter, LambdaPrinter):
     """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
 
     def _print_Integer(self, expr):
-        return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
 
     def _print_Rational(self, expr):
-        return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Half(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
 
     def _print_Pow(self, expr):
-        return super(IntervalPrinter, self)._print_Pow(expr, rational=True)
-
+        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
 
 @public
 def isolate(alg, eps=None, fast=False):

@@ -1,5 +1,6 @@
+========
 Simplify
-********
+========
 
 .. currentmodule:: sympy.simplify.simplify
 
@@ -14,6 +15,10 @@ separatevars
 nthroot
 -------
 .. autofunction:: nthroot
+
+kroneckersimp
+-------------
+.. autofunction:: kroneckersimp
 
 besselsimp
 ----------

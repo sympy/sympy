@@ -5,6 +5,7 @@ from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
+
 class Transpose(MatrixExpr):
     """
     The transpose of a matrix expression.
@@ -51,8 +52,8 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-    def _entry(self, i, j, expand=False):
-        return self.arg._entry(j, i, expand=expand)
+    def _entry(self, i, j, expand=False, **kwargs):
+        return self.arg._entry(j, i, expand=expand, **kwargs)
 
     def _eval_adjoint(self):
         return conjugate(self.arg)
@@ -70,6 +71,10 @@ class Transpose(MatrixExpr):
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import det
         return det(self.arg)
+
+    def _eval_derivative(self, x):
+        # x is a scalar:
+        return self.arg._eval_derivative(x)
 
     def _eval_derivative_matrix_lines(self, x):
         lines = self.args[0]._eval_derivative_matrix_lines(x)

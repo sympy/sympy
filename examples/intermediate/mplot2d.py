@@ -9,7 +9,7 @@ import sys
 
 from sample import sample
 
-from sympy import log, pi, sqrt, sin, Symbol
+from sympy import sqrt, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 
@@ -20,7 +20,7 @@ def mplot2d(f, var, show=True):
     """
 
     import warnings
-    warnings.filterwarnings("ignore", "Could not match \S")
+    warnings.filterwarnings("ignore", r"Could not match \S")
 
     p = import_module('pylab')
     if not p:

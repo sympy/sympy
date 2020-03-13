@@ -151,7 +151,7 @@ raise it to the ``-1`` power.
     >>> N**-1
     Traceback (most recent call last):
     ...
-    ValueError: Matrix det == 0; not invertible.
+    NonInvertibleMatrixError: Matrix det == 0; not invertible.
 
 To take the transpose of a Matrix, use ``T``.
 
@@ -403,7 +403,7 @@ expensive to calculate.
 
     >>> lamda = symbols('lamda')
     >>> p = M.charpoly(lamda)
-    >>> factor(p)
+    >>> factor(p.as_expr())
            2
     (λ - 5) ⋅(λ - 3)⋅(λ + 2)
 
@@ -427,7 +427,7 @@ guaranteed to be accurate in some limited domain of numerics and symbols,
 and any complicated expressions beyond its decidability are treated as ``None``,
 which behaves similarly to logical ``False``.
 
-The list of methods using zero testing procedures are as followings.
+The list of methods using zero testing procedures are as follows:
 
 ``echelon_form`` , ``is_echelon`` , ``rank`` , ``rref`` , ``nullspace`` ,
 ``eigenvects`` , ``inverse_ADJ`` , ``inverse_GE`` , ``inverse_LU`` ,
@@ -461,8 +461,8 @@ by injecting a custom zero test with warnings enabled.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if result == None:
-    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     if result is None:
+    ...         warnings.warn("Zero testing of {} evaluated into None".format(x))
     ...     return result
     ...
     >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP
@@ -487,8 +487,8 @@ while being harmless to other polynomials or transcendental functions.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if result == None:
-    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     if result is None:
+    ...         warnings.warn("Zero testing of {} evaluated into None".format(x))
     ...     return result
     ...
     >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP

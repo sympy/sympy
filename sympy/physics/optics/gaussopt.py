@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """
 Gaussian optics.
 
@@ -44,8 +43,8 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
-    together)
+from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
+    together, MutableDenseMatrix)
 from sympy.utilities.misc import filldedent
 
 ###
@@ -53,7 +52,7 @@ from sympy.utilities.misc import filldedent
 ###
 
 
-class RayTransferMatrix(Matrix):
+class RayTransferMatrix(MutableDenseMatrix):
     """
     Base class for a Ray Transfer Matrix.
 
@@ -375,7 +374,7 @@ class ThinLens(RayTransferMatrix):
 # Representation for geometric ray
 ###
 
-class GeometricRay(Matrix):
+class GeometricRay(MutableDenseMatrix):
     """
     Representation for a geometric ray in the Ray Transfer Matrix formalism.
 
@@ -516,22 +515,30 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    __slots__ = ['z', 'z_r', 'wavelen']
+    def __new__(cls, wavelen, z, z_r=None, w=None):
+        wavelen = sympify(wavelen)
+        z = sympify(z)
 
-    def __new__(cls, wavelen, z, **kwargs):
-        wavelen, z = map(sympify, (wavelen, z))
-        inst = Expr.__new__(cls, wavelen, z)
-        inst.wavelen = wavelen
-        inst.z = z
-        if len(kwargs) != 1:
-            raise ValueError('Constructor expects exactly one named argument.')
-        elif 'z_r' in kwargs:
-            inst.z_r = sympify(kwargs['z_r'])
-        elif 'w' in kwargs:
-            inst.z_r = waist2rayleigh(sympify(kwargs['w']), wavelen)
+        if z_r is not None and w is None:
+            z_r = sympify(z_r)
+        elif w is not None and z_r is None:
+            z_r = waist2rayleigh(sympify(w), wavelen)
         else:
-            raise ValueError('The constructor needs named argument w or z_r')
-        return inst
+            raise ValueError('Constructor expects exactly one named argument.')
+
+        return Expr.__new__(cls, wavelen, z, z_r)
+
+    @property
+    def wavelen(self):
+        return self.args[0]
+
+    @property
+    def z(self):
+        return self.args[1]
+
+    @property
+    def z_r(self):
+        return self.args[2]
 
     @property
     def q(self):
@@ -721,8 +728,8 @@ def geometric_conj_ab(a, b):
     a*b/(a + b)
     """
     a, b = map(sympify, (a, b))
-    if abs(a) == oo or abs(b) == oo:
-        return a if abs(b) == oo else b
+    if a.is_infinite or b.is_infinite:
+        return a if b.is_infinite else b
     else:
         return a*b/(a + b)
 

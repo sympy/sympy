@@ -11,22 +11,24 @@ sympy.stats.drv
 
 from __future__ import print_function, division
 
-# __all__ = ['marginal_distribution']
-
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
- Dummy)
+                   Dummy)
+from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum, summation
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
 from sympy.stats.crv import (ContinuousDistribution,
-    SingleContinuousDistribution, SingleContinuousPSpace)
+                             SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution,
-    SingleDiscreteDistribution, SingleDiscretePSpace)
+                             SingleDiscreteDistribution, SingleDiscretePSpace)
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+                            ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
+
+
+# __all__ = ['marginal_distribution']
 
 
 class JointPSpace(ProductPSpace):
@@ -39,7 +41,7 @@ class JointPSpace(ProductPSpace):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
-        if isinstance(sym, string_types):
+        if isinstance(sym, str):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -64,7 +66,11 @@ class JointPSpace(ProductPSpace):
     @property
     def component_count(self):
         _set = self.distribution.set
-        return len(_set.args) if isinstance(_set, ProductSet) else 1
+        if isinstance(_set, ProductSet):
+            return S(len(_set.args))
+        elif isinstance(_set, Product):
+            return _set.limits[0][-1]
+        return S.One
 
     @property
     def pdf(self):
@@ -74,23 +80,22 @@ class JointPSpace(ProductPSpace):
     @property
     def domain(self):
         rvs = random_symbols(self.distribution)
-        if len(rvs) == 0:
-            return SingleDomain(self.symbol, self.set)
+        if not rvs:
+            return SingleDomain(self.symbol, self.distribution.set)
         return ProductDomain(*[rv.pspace.domain for rv in rvs])
 
     def component_domain(self, index):
         return self.set.args[index]
 
-    @property
-    def symbols(self):
-        return self.domain.symbols
-
     def marginal_distribution(self, *indices):
         count = self.component_count
+        if count.atoms(Symbol):
+            raise ValueError("Marginal distributions cannot be computed "
+                                "for symbolic dimensions. It is a work under progress.")
         orig = [Indexed(self.symbol, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
-        sym = [Symbol(str(Indexed(self.symbol, i))) for i in indices]
+        sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
         limits = list([i,] for i in all_syms if i not in sym)
         index = 0
         for i in range(count):
@@ -98,11 +103,10 @@ class JointPSpace(ProductPSpace):
                 limits[index].append(self.distribution.set.args[i])
                 limits[index] = tuple(limits[index])
                 index += 1
-        limits = tuple(limits)
         if self.distribution.is_Continuous:
-            f = Lambda(sym, integrate(self.distribution(*all_syms), limits))
+            f = Lambda(sym, integrate(self.distribution(*all_syms), *limits))
         elif self.distribution.is_Discrete:
-            f = Lambda(sym, summation(self.distribution(all_syms), limits))
+            f = Lambda(sym, summation(self.distribution(*all_syms), *limits))
         return f.xreplace(replace_dict)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
@@ -156,13 +160,14 @@ class JointDistribution(Basic, NamedArgsMixin):
         return ProductDomain(self.symbols)
 
     @property
-    def pdf(self, *args):
+    def pdf(self):
         return self.density.args[1]
 
     def cdf(self, other):
-        assert isinstance(other, dict)
+        if not isinstance(other, dict):
+            raise ValueError("%s should be of type dict, got %s"%(other, type(other)))
         rvs = other.keys()
-        _set = self.domain.set
+        _set = self.domain.set.sets
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
         for i in range(len(other)):
             if rvs[i].is_Continuous:
@@ -183,7 +188,7 @@ class JointRandomSymbol(RandomSymbol):
     """
     def __getitem__(self, key):
         if isinstance(self.pspace, JointPSpace):
-            if self.pspace.component_count <= key:
+            if (self.pspace.component_count <= key) == True:
                 raise ValueError("Index keys for %s can only up to %s." %
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
@@ -228,7 +233,7 @@ def marginal_distribution(rv, *indices):
         if isinstance(indices[i], Indexed):
             indices[i] = indices[i].args[1]
     prob_space = rv.pspace
-    if indices == ():
+    if not indices:
         raise ValueError(
             "At least one component for marginal density is needed.")
     if hasattr(prob_space.distribution, 'marginal_distribution'):
@@ -282,7 +287,9 @@ class MarginalDistribution(Basic):
     distribution.
     """
 
-    def __new__(cls, dist, rvs):
+    def __new__(cls, dist, *rvs):
+        if len(rvs) == 1 and iterable(rvs[0]):
+            rvs = tuple(rvs[0])
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
@@ -297,13 +304,8 @@ class MarginalDistribution(Basic):
 
     @property
     def set(self):
-        rvs = [i for i in random_symbols(self.args[1])]
-        marginalise_out = [i for i in random_symbols(self.args[1]) \
-         if i not in self.args[1]]
-        for i in rvs:
-            if i in marginalise_out:
-                rvs.remove(i)
-        return ProductSet((i.pspace.set for i in rvs))
+        rvs = [i for i in self.args[1] if isinstance(i, RandomSymbol)]
+        return ProductSet(*[rv.pspace.set for rv in rvs])
 
     @property
     def symbols(self):
@@ -312,20 +314,17 @@ class MarginalDistribution(Basic):
 
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
-        marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
-        syms = [i.pspace.symbol for i in self.args[1]]
-        for i in expr.atoms(Indexed):
-            if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
-             and i not in rvs:
-                marginalise_out.append(i)
+        marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
         if isinstance(expr, CompoundDistribution):
             syms = Dummy('x', real=True)
             expr = expr.args[0].pdf(syms)
         elif isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
-            syms = [Indexed(x, i) for i in count]
-            expr = expression.pdf(syms)
+            syms = tuple(Indexed(x, i) for i in count)
+            expr = expr.pdf(syms)
+        else:
+            syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
     def compute_pdf(self, expr, rvs):

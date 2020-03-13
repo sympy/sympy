@@ -1,29 +1,25 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, Lambda, symbols, exp, log, S, oo
-from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection)
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
-
+from sympy import Set, symbols
+from sympy.core import Basic, Expr
+from sympy.multipledispatch import dispatch
+from sympy.sets import Interval
 
 _x, _y = symbols("x y")
 
 
-@dispatch(Basic, Basic)
-def _set_mul(x, y):
+@dispatch(Basic, Basic)  # type: ignore # noqa:F811
+def _set_mul(x, y): # noqa:F811
     return None
 
-@dispatch(Set, Set)
-def _set_mul(x, y):
+@dispatch(Set, Set)  # type: ignore # noqa:F811
+def _set_mul(x, y): # noqa:F811
     return None
 
-@dispatch(Expr, Expr)
-def _set_mul(x, y):
+@dispatch(Expr, Expr)  # type: ignore # noqa:F811
+def _set_mul(x, y): # noqa:F811
     return x*y
 
-@dispatch(Interval, Interval)
-def _set_mul(x, y):
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
+def _set_mul(x, y): # noqa:F811
     """
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -44,23 +40,21 @@ def _set_mul(x, y):
         minopen,
         maxopen
     )
-    return SetExpr(Interval(start, end))
 
-
-@dispatch(Basic, Basic)
-def _set_div(x, y):
+@dispatch(Basic, Basic)  # type: ignore # noqa:F811
+def _set_div(x, y): # noqa:F811
     return None
 
-@dispatch(Expr, Expr)
-def _set_div(x, y):
+@dispatch(Expr, Expr)  # type: ignore # noqa:F811
+def _set_div(x, y): # noqa:F811
     return x/y
 
-@dispatch(Set, Set)
-def _set_div(x, y):
+@dispatch(Set, Set)  # type: ignore # noqa:F811 # noqa:F811
+def _set_div(x, y): # noqa:F811
     return None
 
-@dispatch(Interval, Interval)
-def _set_div(x, y):
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
+def _set_div(x, y): # noqa:F811
     """
     Divisions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic

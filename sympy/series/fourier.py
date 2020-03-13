@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import pi, oo, Wild, Basic
+from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence
@@ -14,7 +14,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
-from sympy.simplify.fu import TR8, TR2, TR1, TR10, sincos_to_sum
+from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
 
 
 def fourier_cos_seq(func, limits, n):
@@ -480,7 +480,11 @@ class FiniteFourierSeries(FourierSeries):
     """
 
     def __new__(cls, f, limits, exprs):
-        if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+        f = sympify(f)
+        limits = sympify(limits)
+        exprs = sympify(exprs)
+
+        if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
             rexpr = c + Add(*[TR10(i) for i in e])
@@ -506,11 +510,9 @@ class FiniteFourierSeries(FourierSeries):
                 else:
                     a0 += p
 
-            exprs = (a0, an, bn)
+            exprs = Tuple(a0, an, bn)
 
-        args = map(sympify, (f, limits, exprs))
-
-        return Expr.__new__(cls, *args)
+        return Expr.__new__(cls, f, limits, exprs)
 
     @property
     def interval(self):

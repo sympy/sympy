@@ -10,8 +10,8 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
+from sympy.testing.pytest import raises, XFAIL
+from sympy.printing.ccode import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
@@ -20,7 +20,6 @@ from sympy.codegen.ast import (
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import warns_deprecated_sympy
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
@@ -70,6 +69,14 @@ def test_ccode_Pow():
 def test_ccode_Max():
     # Test for gh-11926
     assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+
+
+def test_ccode_Min_performance():
+    #Shouldn't take more than a few seconds
+    big_min = Min(*symbols('a[0:50]'))
+    for curr_standard in ('c89', 'c99', 'c11'):
+        output = ccode(big_min, standard=curr_standard)
+        assert output.count('(') == output.count(')')
 
 
 def test_ccode_constants_mathh():
@@ -290,14 +297,11 @@ def test_ccode_Indexed():
     A = IndexedBase('A')[i, j]
     B = IndexedBase('B')[i, j, k]
 
-    with warns_deprecated_sympy():
-        p = CCodePrinter()
-    p._not_c = set()
+    p = C99CodePrinter()
 
     assert p._print_Indexed(x) == 'x[j]'
     assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
     assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
-    assert p._not_c == set()
 
     A = IndexedBase('A', shape=(5,3))[i, j]
     assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
@@ -586,13 +590,6 @@ def test_ccode_standard():
     assert ccode(float('nan'), standard='c99') == 'NAN'
 
 
-def test_CCodePrinter():
-    with warns_deprecated_sympy():
-        CCodePrinter()
-    with warns_deprecated_sympy():
-        assert CCodePrinter().language == 'C'
-
-
 def test_C89CodePrinter():
     c89printer = C89CodePrinter()
     assert c89printer.language == 'C'
@@ -774,13 +771,6 @@ def test_MatrixElement_printing():
 
     F = C[0, 0].subs(C, A - B)
     assert(ccode(F) == "(A - B)[0]")
-
-
-def test_subclass_CCodePrinter():
-    # issue gh-12687
-    class MySubClass(CCodePrinter):
-        pass
-
 
 def test_ccode_math_macros():
     assert ccode(z + exp(1)) == 'z + M_E'

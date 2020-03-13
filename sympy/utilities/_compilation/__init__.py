@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function)
 """ This sub-module is private, i.e. external code should not depend on it.
 
@@ -17,3 +16,8 @@ TODO:
 
 from .compilation import compile_link_import_strings, compile_run_strings
 from .availability import has_fortran, has_c, has_cxx
+
+__all__ = [
+    'compile_link_import_strings', 'compile_run_strings',
+    'has_fortran', 'has_c', 'has_cxx',
+]

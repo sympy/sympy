@@ -1,7 +1,7 @@
 from sympy.core.compatibility import (default_sort_key, as_int, ordered,
     iterable, NotIterable)
 from sympy.core.singleton import S
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import x
 
@@ -62,6 +62,7 @@ def test_iterable():
         _iterable = False
 
     assert iterable(Test6()) is False
+
 
 def test_ordered():
     # Issue 7210 - this had been failing with python2/3 problems

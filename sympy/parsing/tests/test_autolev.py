@@ -2,7 +2,7 @@ import os
 
 from sympy import sin, cos
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 from sympy.parsing.autolev import parse_autolev
 
 antlr4 = import_module("antlr4")
@@ -93,7 +93,7 @@ def test_dynamics_online():
 
 
 def test_output_01():
-    """Autolev example calculates the position, velocity, and accleration of a
+    """Autolev example calculates the position, velocity, and acceleration of a
     point and expresses in a single reference frame::
 
           (1) FRAMES C,D,F

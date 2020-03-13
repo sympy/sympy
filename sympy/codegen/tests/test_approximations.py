@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, print_function)
 
 import math
-from sympy import symbols, exp, S, Poly
+from sympy import symbols, exp
 from sympy.codegen.rewriting import optimize
 from sympy.codegen.approximations import SumApprox, SeriesApprox
 

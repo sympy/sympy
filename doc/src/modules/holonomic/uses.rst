@@ -1,4 +1,4 @@
-.. module:: sympy.holonomic.holonomic
+.. currentmodule:: sympy.holonomic.holonomic
 
 Uses and Current limitations
 ============================

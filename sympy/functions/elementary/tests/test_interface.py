@@ -65,4 +65,4 @@ def test_function_series3():
 
     e = tanh(x)
     f = mytanh(x)
-    assert tanh(x).series(x, 0, 6) == mytanh(x).series(x, 0, 6)
+    assert e.series(x, 0, 6) == f.series(x, 0, 6)

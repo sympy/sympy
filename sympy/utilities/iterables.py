@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
     product, product as cartes
@@ -12,11 +12,47 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, range
+    as_int, default_sort_key, is_sequence, iterable, ordered
 )
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+
+
+def is_palindromic(s, i=0, j=None):
+    """return True if the sequence is the same from left to right as it
+    is from right to left in the whole sequence (default) or in the
+    Python slice ``s[i: j]``; else False.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import is_palindromic
+    >>> is_palindromic([1, 0, 1])
+    True
+    >>> is_palindromic('abcbb')
+    False
+    >>> is_palindromic('abcbb', 1)
+    False
+
+    Normal Python slicing is performed in place so there is no need to
+    create a slice of the sequence for testing:
+
+    >>> is_palindromic('abcbb', 1, -1)
+    True
+    >>> is_palindromic('abcbb', -4, -1)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.digits.is_palindromic: tests integers
+
+    """
+    i, j, _ = slice(i, j).indices(len(s))
+    m = (j - i)//2
+    # if length is odd, middle element will be ignored
+    return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
 def flatten(iterable, levels=None, cls=None):
@@ -55,6 +91,7 @@ def flatten(iterable, levels=None, cls=None):
 
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
+    from sympy.tensor.array import NDimArray
     if levels is not None:
         if not levels:
             return iterable
@@ -73,7 +110,7 @@ def flatten(iterable, levels=None, cls=None):
 
     for el in iterable:
         if reducible(el):
-            if hasattr(el, 'args'):
+            if hasattr(el, 'args') and not isinstance(el, NDimArray):
                 el = el.args
             result.extend(flatten(el, levels=levels, cls=cls))
         else:
@@ -169,7 +206,9 @@ def group(seq, multiple=True):
 
     See Also
     ========
+
     multiset
+
     """
     if not seq:
         return []
@@ -194,6 +233,75 @@ def group(seq, multiple=True):
     return groups
 
 
+def _iproduct2(iterable1, iterable2):
+    '''Cartesian product of two possibly infinite iterables'''
+
+    it1 = iter(iterable1)
+    it2 = iter(iterable2)
+
+    elems1 = []
+    elems2 = []
+
+    sentinel = object()
+    def append(it, elems):
+        e = next(it, sentinel)
+        if e is not sentinel:
+            elems.append(e)
+
+    n = 0
+    append(it1, elems1)
+    append(it2, elems2)
+
+    while n <= len(elems1) + len(elems2):
+        for m in range(n-len(elems1)+1, len(elems2)):
+            yield (elems1[n-m], elems2[m])
+        n += 1
+        append(it1, elems1)
+        append(it2, elems2)
+
+
+def iproduct(*iterables):
+    '''
+    Cartesian product of iterables.
+
+    Generator of the cartesian product of iterables. This is analogous to
+    itertools.product except that it works with infinite iterables and will
+    yield any item from the infinite product eventually.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import iproduct
+    >>> sorted(iproduct([1,2], [3,4]))
+    [(1, 3), (1, 4), (2, 3), (2, 4)]
+
+    With an infinite iterator:
+
+    >>> from sympy import S
+    >>> (3,) in iproduct(S.Integers)
+    True
+    >>> (3, 4) in iproduct(S.Integers, S.Integers)
+    True
+
+    .. seealso::
+
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
+    '''
+    if len(iterables) == 0:
+        yield ()
+        return
+    elif len(iterables) == 1:
+        for e in iterables[0]:
+            yield (e,)
+    elif len(iterables) == 2:
+        for e12 in _iproduct2(*iterables):
+            yield e12
+    else:
+        first, others = iterables[0], iterables[1:]
+        for ef, eo in _iproduct2(first, iproduct(*others)):
+            yield (ef,) + eo
+
+
 def multiset(seq):
     """Return the hashable sequence in multiset form with values being the
     multiplicity of the item in the sequence.
@@ -207,7 +315,9 @@ def multiset(seq):
 
     See Also
     ========
+
     group
+
     """
     rv = defaultdict(int)
     for s in seq:
@@ -280,10 +390,10 @@ def interactive_traversal(expr):
 
     RED, BRED = '\033[0;31m', '\033[1;31m'
     GREEN, BGREEN = '\033[0;32m', '\033[1;32m'
-    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'
-    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'
-    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'
-    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'
+    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'  # noqa
+    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'      # noqa
+    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'# noqa
+    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'      # noqa
     END = '\033[0m'
 
     def cprint(*args):
@@ -326,7 +436,7 @@ def interactive_traversal(expr):
             choices = '0-%d' % (n_args - 1)
 
         try:
-            choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
+            choice = input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
             print()
@@ -455,11 +565,10 @@ def variations(seq, n, repetition=False):
         >>> list(variations([0, 1], 3, repetition=True))[:4]
         [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
-    See Also
-    ========
+    .. seealso::
 
-    sympy.core.compatibility.permutations
-    sympy.core.compatibility.product
+       `itertools.permutations <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
+       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     """
     if not repetition:
         seq = tuple(seq)
@@ -686,11 +795,13 @@ def sift(seq, keyfunc, binary=False):
 
     If you need to sort the sifted items it might be better to use
     ``ordered`` which can economically apply multiple sort keys
-    to a squence while sorting.
+    to a sequence while sorting.
 
     See Also
     ========
+
     ordered
+
     """
     if not binary:
         m = defaultdict(list)
@@ -873,7 +984,7 @@ def topological_sort(graph, key=None):
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     Only acyclic graphs can be sorted. If the input graph has a cycle,
-    then :py:exc:`ValueError` will be raised::
+    then ``ValueError`` will be raised::
 
         >>> topological_sort((V, E + [(10, 7)]))
         Traceback (most recent call last):
@@ -927,6 +1038,200 @@ def topological_sort(graph, key=None):
         raise ValueError("cycle detected")
     else:
         return L
+
+
+def strongly_connected_components(G):
+    r"""
+    Strongly connected components of a directed graph in reverse topological
+    order.
+
+
+    Parameters
+    ==========
+
+    graph : tuple[list, list[tuple[T, T]]
+        A tuple consisting of a list of vertices and a list of edges of
+        a graph whose strongly connected components are to be found.
+
+
+    Examples
+    ========
+
+    Consider a directed graph (in dot notation)::
+
+        digraph {
+            A -> B
+            A -> C
+            B -> C
+            C -> B
+            B -> D
+        }
+
+    where vertices are the letters A, B, C and D. This graph can be encoded
+    using Python's elementary data structures as follows::
+
+        >>> V = ['A', 'B', 'C', 'D']
+        >>> E = [('A', 'B'), ('A', 'C'), ('B', 'C'), ('C', 'B'), ('B', 'D')]
+
+    The strongly connected components of this graph can be computed as
+
+        >>> from sympy.utilities.iterables import strongly_connected_components
+
+        >>> strongly_connected_components((V, E))
+        [['D'], ['B', 'C'], ['A']]
+
+    This also gives the components in reverse topological order.
+
+    Since the subgraph containing B and C has a cycle they must be together in
+    a strongly connected component. A and D are connected to the rest of the
+    graph but not in a cyclic manner so they appear as their own strongly
+    connected components.
+
+
+    Notes
+    =====
+
+    The vertices of the graph must be hashable for the data structures used.
+    If the vertices are unhashable replace them with integer indices.
+
+    This function uses Tarjan's algorithm to compute the strongly connected
+    components in `O(|V|+|E|)` (linear) time.
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Strongly_connected_component
+    .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+
+
+    See Also
+    ========
+
+    sympy.utilities.iterables.connected_components
+
+    """
+    # Map from a vertex to its neighbours
+    V, E = G
+    Gmap = {vi: [] for vi in V}
+    for v1, v2 in E:
+        Gmap[v1].append(v2)
+
+    # Non-recursive Tarjan's algorithm:
+    lowlink = {}
+    indices = {}
+    stack = OrderedDict()
+    callstack = []
+    components = []
+    nomore = object()
+
+    def start(v):
+        index = len(stack)
+        indices[v] = lowlink[v] = index
+        stack[v] = None
+        callstack.append((v, iter(Gmap[v])))
+
+    def finish(v1):
+        # Finished a component?
+        if lowlink[v1] == indices[v1]:
+            component = [stack.popitem()[0]]
+            while component[-1] is not v1:
+                component.append(stack.popitem()[0])
+            components.append(component[::-1])
+        v2, _ = callstack.pop()
+        if callstack:
+            v1, _ = callstack[-1]
+            lowlink[v1] = min(lowlink[v1], lowlink[v2])
+
+    for v in V:
+        if v in indices:
+            continue
+        start(v)
+        while callstack:
+            v1, it1 = callstack[-1]
+            v2 = next(it1, nomore)
+            # Finished children of v1?
+            if v2 is nomore:
+                finish(v1)
+            # Recurse on v2
+            elif v2 not in indices:
+                start(v2)
+            elif v2 in stack:
+                lowlink[v1] = min(lowlink[v1], indices[v2])
+
+    # Reverse topological sort order:
+    return components
+
+
+def connected_components(G):
+    r"""
+    Connected components of an undirected graph or weakly connected components
+    of a directed graph.
+
+
+    Parameters
+    ==========
+
+    graph : tuple[list, list[tuple[T, T]]
+        A tuple consisting of a list of vertices and a list of edges of
+        a graph whose connected components are to be found.
+
+
+    Examples
+    ========
+
+
+    Given an undirected graph::
+
+        graph {
+            A -- B
+            C -- D
+        }
+
+    We can find the connected components using this function if we include
+    each edge in both directions::
+
+        >>> from sympy.utilities.iterables import connected_components
+
+        >>> V = ['A', 'B', 'C', 'D']
+        >>> E = [('A', 'B'), ('B', 'A'), ('C', 'D'), ('D', 'C')]
+        >>> connected_components((V, E))
+        [['A', 'B'], ['C', 'D']]
+
+    The weakly connected components of a directed graph can found the same
+    way.
+
+
+    Notes
+    =====
+
+    The vertices of the graph must be hashable for the data structures used.
+    If the vertices are unhashable replace them with integer indices.
+
+    This function uses Tarjan's algorithm to compute the connected components
+    in `O(|V|+|E|)` (linear) time.
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Connected_component_(graph_theory)
+    .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+
+
+    See Also
+    ========
+
+    sympy.utilities.iterables.strongly_connected_components
+
+    """
+    # Duplicate edges both ways so that the graph is effectively undirected
+    # and return the strongly connected components:
+    V, E = G
+    E_undirected = []
+    for v1, v2 in E:
+        E_undirected.extend([(v1, v2), (v2, v1)])
+    return strongly_connected_components((V, E_undirected))
 
 
 def rotate_left(x, y):
@@ -1137,7 +1442,7 @@ def _partition(seq, vector, m=None):
     See Also
     ========
 
-    combinatorics.partitions.Partition.from_rgs()
+    combinatorics.partitions.Partition.from_rgs
 
     """
     if m is None:
@@ -1281,15 +1586,8 @@ def multiset_partitions(multiset, m=None):
     The number of partitions of length k from a set of size n is given by the
     Stirling Number of the 2nd kind:
 
-    >>> def S2(n, k):
-    ...     from sympy import Dummy, binomial, factorial, Sum
-    ...     if k > n:
-    ...         return 0
-    ...     j = Dummy()
-    ...     arg = (-1)**(k-j)*j**n*binomial(k,j)
-    ...     return 1/factorial(k)*Sum(arg,(j,0,k)).doit()
-    ...
-    >>> S2(5, 2) == len(list(multiset_partitions(5, 2))) == 15
+    >>> from sympy.functions.combinatorial.numbers import stirling
+    >>> stirling(5, 2) == len(list(multiset_partitions(5, 2))) == 15
     True
 
     These comments on counting apply to *sets*, not multisets.
@@ -1304,12 +1602,13 @@ def multiset_partitions(multiset, m=None):
 
     See Also
     ========
+
     partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     sympy.functions.combinatorial.numbers.nT
-    """
 
+    """
     # This function looks at the supplied input and dispatches to
     # several special-case routines as they apply.
     if type(multiset) is int:
@@ -1336,7 +1635,7 @@ def multiset_partitions(multiset, m=None):
                 yield rv
         return
 
-    if len(multiset) == 1 and type(multiset) is str:
+    if len(multiset) == 1 and isinstance(multiset, str):
         multiset = [multiset]
 
     if not has_variety(multiset):
@@ -1460,6 +1759,7 @@ def partitions(n, m=None, k=None, size=False):
 
     See Also
     ========
+
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
 
@@ -1871,7 +2171,8 @@ def generate_bell(n):
 
     See Also
     ========
-    sympy.combinatorics.Permutation.next_trotterjohnson
+
+    sympy.combinatorics.permutations.Permutation.next_trotterjohnson
 
     References
     ==========
@@ -1991,14 +2292,13 @@ def generate_derangements(perm):
 
     See Also
     ========
+
     sympy.functions.combinatorial.factorials.subfactorial
+
     """
-    p = multiset_permutations(perm)
-    indices = range(len(perm))
-    p0 = next(p)
-    for pi in p:
-        if all(pi[i] != p0[i] for i in indices):
-            yield pi
+    for p in multiset_permutations(perm):
+        if not any(i == j for i, j in zip(perm, p)):
+            yield p
 
 
 def necklaces(n, k, free=False):
@@ -2288,6 +2588,7 @@ def kbins(l, k, ordered=None):
 
     See Also
     ========
+
     partitions, multiset_partitions
 
     """
@@ -2390,3 +2691,25 @@ def rotations(s, dir=1):
     for i in range(len(seq)):
         yield seq
         seq = rotate_left(seq, dir)
+
+
+def roundrobin(*iterables):
+    """roundrobin recipe taken from itertools documentation:
+    https://docs.python.org/2/library/itertools.html#recipes
+
+    roundrobin('ABC', 'D', 'EF') --> A D E B F C
+
+    Recipe credited to George Sakkis
+    """
+    import itertools
+
+    nexts = itertools.cycle(iter(it).__next__ for it in iterables)
+
+    pending = len(iterables)
+    while pending:
+        try:
+            for next in nexts:
+                yield next()
+        except StopIteration:
+            pending -= 1
+            nexts = itertools.cycle(itertools.islice(nexts, pending))

@@ -1,18 +1,84 @@
 from sympy.core.numbers import Integer, Rational
+from sympy.core.singleton import S
+from sympy.core.sympify import _sympify
 
 
+def continued_fraction(a):
+    """Return the continued fraction representation of a Rational or
+    quadratic irrational.
 
-def continued_fraction_periodic(p, q, d=0):
+    Examples
+    ========
+
+    >>> from sympy.ntheory.continued_fraction import continued_fraction
+    >>> from sympy import sqrt
+    >>> continued_fraction((1 + 2*sqrt(3))/5)
+    [0, 1, [8, 3, 34, 3]]
+
+    See Also
+    ========
+    continued_fraction_periodic, continued_fraction_reduce, continued_fraction_convergents
+    """
+    e = _sympify(a)
+    if all(i.is_Rational for i in e.atoms()):
+        if e.is_Integer:
+            return continued_fraction_periodic(e, 1, 0)
+        elif e.is_Rational:
+            return continued_fraction_periodic(e.p, e.q, 0)
+        elif e.is_Pow and e.exp is S.Half and e.base.is_Integer:
+            return continued_fraction_periodic(0, 1, e.base)
+        elif e.is_Mul and len(e.args) == 2 and (
+                e.args[0].is_Rational and
+                e.args[1].is_Pow and
+                e.args[1].base.is_Integer and
+                e.args[1].exp is S.Half):
+            a, b = e.args
+            return continued_fraction_periodic(0, a.q, b.base, a.p)
+        else:
+            # this should not have to work very hard- no
+            # simplification, cancel, etc... which should be
+            # done by the user.  e.g. This is a fancy 1 but
+            # the user should simplify it first:
+            # sqrt(2)*(1 + sqrt(2))/(sqrt(2) + 2)
+            p, d = e.expand().as_numer_denom()
+            if d.is_Integer:
+                if p.is_Rational:
+                    return continued_fraction_periodic(p, d)
+                # look for a + b*c
+                # with c = sqrt(s)
+                if p.is_Add and len(p.args) == 2:
+                    a, bc = p.args
+                else:
+                    a = S.Zero
+                    bc = p
+                if a.is_Integer:
+                    b = S.NaN
+                    if bc.is_Mul and len(bc.args) == 2:
+                        b, c = bc.args
+                    elif bc.is_Pow:
+                        b = Integer(1)
+                        c = bc
+                    if b.is_Integer and (
+                            c.is_Pow and c.exp is S.Half and
+                            c.base.is_Integer):
+                        # (a + b*sqrt(c))/d
+                        c = c.base
+                        return continued_fraction_periodic(a, d, c, b)
+    raise ValueError(
+        'expecting a rational or quadratic irrational, not %s' % e)
+
+
+def continued_fraction_periodic(p, q, d=0, s=1):
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
     Compute the continued fraction expansion of a rational or a
-    quadratic irrational number, i.e. `\frac{p + \sqrt{d}}{q}`, where
-    `p`, `q` and `d \ge 0` are integers.
+    quadratic irrational number, i.e. `\frac{p + s\sqrt{d}}{q}`, where
+    `p`, `q \ne 0` and `d \ge 0` are integers.
 
     Returns the continued fraction representation (canonical form) as
     a list of integers, optionally ending (for quadratic irrationals)
-    with repeating block as the last term of this list.
+    with list of integers representing the repeating digits.
 
     Parameters
     ==========
@@ -23,6 +89,8 @@ def continued_fraction_periodic(p, q, d=0):
         the denominator of the number
     d : int, optional
         the irrational part (discriminator) of the number's numerator
+    s : int, optional
+        the coefficient of the irrational part
 
     Examples
     ========
@@ -58,35 +126,53 @@ def continued_fraction_periodic(p, q, d=0):
 
     """
     from sympy.core.compatibility import as_int
-    from sympy.functions import sqrt
+    from sympy.functions import sqrt, floor
 
-    p, q, d = list(map(as_int, [p, q, d]))
-    sd = sqrt(d)
-
-    if q == 0:
-        raise ValueError("The denominator is zero.")
+    p, q, d, s = list(map(as_int, [p, q, d, s]))
 
     if d < 0:
-        raise ValueError("Delta supposed to be a non-negative "
-                         "integer, got %d" % d)
-    elif d == 0 or sd.is_integer:
-        # the number is a rational number
-        return list(continued_fraction_iterator(Rational(p + sd, q)))
+        raise ValueError("expected non-negative for `d` but got %s" % d)
+
+    if q == 0:
+        raise ValueError("The denominator cannot be 0.")
+
+    if not s:
+        d = 0
+
+    # check for rational case
+    sd = sqrt(d)
+    if sd.is_Integer:
+        return list(continued_fraction_iterator(Rational(p + s*sd, q)))
+
+    # irrational case with sd != Integer
+    if q < 0:
+        p, q, s = -p, -q, -s
+
+    n = (p + s*sd)/q
+    if n < 0:
+        w = floor(-n)
+        f = -n - w
+        one_f = continued_fraction(1 - f)  # 1-f < 1 so cf is [0 ... [...]]
+        one_f[0] -= w + 1
+        return one_f
+
+    d *= s**2
+    sd *= s
 
     if (d - p**2)%q:
         d *= q**2
         sd *= q
-        p *= abs(q)
-        q *= abs(q)
+        p *= q
+        q *= q
 
     terms = []
     pq = {}
 
     while (p, q) not in pq:
         pq[(p, q)] = len(terms)
-        terms.append(int((p + sd)/q))
+        terms.append((p + sd)//q)
         p = terms[-1]*q - p
-        q = (d - p**2)/q
+        q = (d - p**2)//q
 
     i = pq[(p, q)]
     return terms[:i] + [terms[i:]]
@@ -124,7 +210,7 @@ def continued_fraction_reduce(cf):
     >>> continued_fraction_reduce([1, 4, 2, [3, 1]])
     (sqrt(21) + 287)/238
     >>> continued_fraction_reduce([[1]])
-    1/2 + sqrt(5)/2
+    (1 + sqrt(5))/2
     >>> from sympy.ntheory.continued_fraction import continued_fraction_periodic
     >>> continued_fraction_reduce(continued_fraction_periodic(8, 5, 13))
     (sqrt(13) + 8)/5
@@ -135,6 +221,7 @@ def continued_fraction_reduce(cf):
     continued_fraction_periodic
 
     """
+    from sympy.core.exprtools import factor_terms
     from sympy.core.symbol import Dummy
     from sympy.solvers import solve
 
@@ -158,9 +245,14 @@ def continued_fraction_reduce(cf):
         solns = solve(continued_fraction_reduce(period + [y]) - y, y)
         solns.sort()
         pure = solns[-1]
-        return a.subs(x, pure).radsimp()
+        rv = a.subs(x, pure).radsimp()
     else:
-        return a
+        rv = a
+    if rv.is_Add:
+        rv = factor_terms(rv)
+        if rv.is_Mul and rv.args[0] == -1:
+            rv = rv.func(*rv.args)
+    return rv
 
 
 def continued_fraction_iterator(x):

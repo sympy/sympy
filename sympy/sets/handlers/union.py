@@ -1,21 +1,45 @@
-from sympy import (Interval, Intersection, Set, EmptySet,
-        FiniteSet, Union, ComplexRegion, ProductSet)
-from sympy.sets.fancysets import Integers, Naturals, Reals
-from sympy.sets.sets import UniversalSet
-from sympy import S, sympify
+from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
+                   FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
+from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
+                                  Reals)
+from sympy.sets.sets import UniversalSet
 
 
-@dispatch(Integers, Set)
-def union_sets(a, b):
+@dispatch(Naturals0, Naturals)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Rationals, Naturals)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Rationals, Naturals0)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Reals, Naturals)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Reals, Naturals0)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Reals, Rationals)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    return a
+
+@dispatch(Integers, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     intersect = Intersection(a, b)
     if intersect == a:
         return b
     elif intersect == b:
         return a
 
-@dispatch(ComplexRegion, Set)
-def union_sets(a, b):
+@dispatch(ComplexRegion, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     if b.is_subset(S.Reals):
         # treat a subset of reals as a complex region
         b = ComplexRegion.from_real(b)
@@ -29,37 +53,38 @@ def union_sets(a, b):
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(EmptySet, Set)
-def union_sets(a, b):
+@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     return b
 
 
-@dispatch(UniversalSet, Set)
-def union_sets(a, b):
+@dispatch(UniversalSet, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     return a
 
-@dispatch(ProductSet, ProductSet)
-def union_sets(a, b):
+@dispatch(ProductSet, ProductSet)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     if b.is_subset(a):
         return a
-    if len(b.args) != len(a.args):
+    if len(b.sets) != len(a.sets):
         return None
-    if a.args[0] == b.args[0]:
-        return a.args[0] * Union(ProductSet(a.args[1:]),
-                                    ProductSet(b.args[1:]))
-    if a.args[-1] == b.args[-1]:
-        return Union(ProductSet(a.args[:-1]),
-                     ProductSet(b.args[:-1])) * a.args[-1]
+    if len(a.sets) == 2:
+        a1, a2 = a.sets
+        b1, b2 = b.sets
+        if a1 == b1:
+            return a1 * Union(a2, b2)
+        if a2 == b2:
+            return Union(a1, b1) * a2
     return None
 
-@dispatch(ProductSet, Set)
-def union_sets(a, b):
+@dispatch(ProductSet, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     if b.is_subset(a):
         return a
     return None
 
-@dispatch(Interval, Interval)
-def union_sets(a, b):
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     if a._is_comparable(b):
         from sympy.functions.elementary.miscellaneous import Min, Max
         # Non-overlapping intervals
@@ -78,12 +103,12 @@ def union_sets(a, b):
                           (b.end != end or b.right_open))
             return Interval(start, end, left_open, right_open)
 
-@dispatch(Interval, UniversalSet)
-def union_sets(a, b):
+@dispatch(Interval, UniversalSet)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     return S.UniversalSet
 
-@dispatch(Interval, Set)
-def union_sets(a, b):
+@dispatch(Interval, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     # If I have open end points and these endpoints are contained in b
     # But only in case, when endpoints are finite. Because
     # interval does not contain oo or -oo.
@@ -101,18 +126,18 @@ def union_sets(a, b):
         return set((new_a, b))
     return None
 
-@dispatch(FiniteSet, FiniteSet)
-def union_sets(a, b):
+@dispatch(FiniteSet, FiniteSet)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     return FiniteSet(*(a._elements | b._elements))
 
-@dispatch(FiniteSet, Set)
-def union_sets(a, b):
+@dispatch(FiniteSet, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
         return set((
-            FiniteSet(*[x for x in a if not b.contains(x)]), b))
+            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
     return None
 
-@dispatch(Set, Set)
-def union_sets(a, b):
+@dispatch(Set, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
     return None

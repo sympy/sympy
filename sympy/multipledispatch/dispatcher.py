@@ -1,3 +1,5 @@
+from typing import Set
+
 from warnings import warn
 import inspect
 from .conflict import ordering, ambiguities, super_signature, AmbiguityWarning
@@ -26,7 +28,7 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-_unresolved_dispatchers = set()
+_unresolved_dispatchers = set() # type: Set[Dispatcher]
 _resolve = [True]
 
 

@@ -172,6 +172,8 @@ The output of the code above is::
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from contextlib import contextmanager
 
 from sympy import Basic, Add
@@ -201,12 +203,12 @@ class Printer(object):
     for your custom class then see the example above: printer_example_ .
     """
 
-    _global_settings = {}
+    _global_settings = {}  # type: Dict[str, Any]
 
-    _default_settings = {}
+    _default_settings = {}  # type: Dict[str, Any]
 
     emptyPrinter = str
-    printmethod = None
+    printmethod = None  # type: str
 
     def __init__(self, settings=None):
         self._str = str
@@ -285,7 +287,11 @@ class Printer(object):
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, **kwargs)
-            # Unknown object, fall back to the emptyPrinter.
+            # Unknown object, fall back to the emptyPrinter. Checks what type of
+            # decimal separator to print.
+            if (self.emptyPrinter == str) & \
+                (self._settings.get('decimal_separator', None) == 'comma'):
+                expr = str(expr).replace('.', '{,}')
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
@@ -296,5 +302,7 @@ class Printer(object):
 
         if order == 'old':
             return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
+        elif order == 'none':
+            return list(expr.args)
         else:
             return expr.as_ordered_terms(order=order)

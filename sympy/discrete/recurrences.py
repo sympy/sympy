@@ -3,8 +3,8 @@ Recurrences
 """
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, sympify
-from sympy.core.compatibility import as_int, range, iterable
+from sympy.core import S, sympify
+from sympy.core.compatibility import as_int, iterable
 
 def linrec(coeffs, init, n):
     r"""
@@ -109,6 +109,32 @@ def linrec(coeffs, init, n):
     else:
         b += [S.Zero]*(k - len(b)) # remaining initial values default to zero
 
+    if n < k:
+        return b[n]
+    terms = [u*v for u, v in zip(linrec_coeffs(c, n), b)]
+    return sum(terms[:-1], terms[-1])
+
+
+def linrec_coeffs(c, n):
+    r"""
+    Compute the coefficients of n'th term in linear recursion
+    sequence defined by c.
+
+    `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`.
+
+    It computes the coefficients by using binary exponentiation.
+    This function is used by `linrec` and `_eval_pow_by_cayley`.
+
+    Parameters
+    ==========
+
+    c = coefficients of the divisor polynomial
+    n = exponent of x, so dividend is x^n
+
+    """
+
+    k = len(c)
+
     def _square_and_reduce(u, offset):
         # squares `(u_0 + u_1 x + u_2 x^2 + \cdots + u_{k-1} x^k)` (and
         # multiplies by `x` if offset is 1) and reduces the above result of
@@ -134,6 +160,6 @@ def linrec(coeffs, init, n):
         if n < k:
             return [S.Zero]*n + [S.One] + [S.Zero]*(k - n - 1)
         else:
-            return _square_and_reduce(_final_coeffs(n//2), n%2)
+            return _square_and_reduce(_final_coeffs(n // 2), n % 2)
 
-    return b[n] if n < k else sum(u*v for u, v in zip(_final_coeffs(n), b))
+    return _final_coeffs(n)

@@ -1,21 +1,22 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
+    CantSympify)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY, PY3
+from sympy.core.compatibility import exec_, HAS_GMPY
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.external import import_module
 
 import mpmath
+from collections import defaultdict, OrderedDict
 from mpmath.rational import mpq
 
 
@@ -34,7 +35,7 @@ def test_sympify1():
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
     # issue 4877
-    n1 = Rational(1, 2)
+    n1 = S.Half
     assert sympify('--.5') == n1
     assert sympify('-1/2') == -n1
     assert sympify('-+--.5') == -n1
@@ -161,9 +162,24 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+
+
+@XFAIL
+def test_issue_16772():
+    # because there is a converter for tuple, the
+    # args are only sympified without the flags being passed
+    # along; list, on the other hand, is not converted
+    # with a converter so its args are traversed later
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+
+
+def test_issue_16859():
+    class no(float, CantSympify):
+        pass
+    raises(SympifyError, lambda: sympify(no(1.2)))
 
 
 def test_sympify4():
@@ -244,7 +260,7 @@ def test_lambda():
     assert sympify('lambda: 1') == Lambda((), 1)
     assert sympify('lambda x: x') == Lambda(x, x)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
-    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
+    assert sympify('lambda x, y: 2*x+y') == Lambda((x, y), 2*x + y)
 
 
 def test_lambda_raises():
@@ -492,7 +508,7 @@ def test_kernS():
 
 def test_issue_6540_6552():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
-    assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
+    assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (S.Half,)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
@@ -525,9 +541,10 @@ def test_issue_10295():
 
     B = numpy.array([-7, x, 3*y**2])
     sB = S(B)
-    assert B[0] == -7
-    assert B[1] == x
-    assert B[2] == 3*y**2
+    assert sB.shape == (3,)
+    assert B[0] == sB[0] == -7
+    assert B[1] == sB[1] == x
+    assert B[2] == sB[2] == 3*y**2
 
     C = numpy.arange(0, 24)
     C.resize(2,3,4)
@@ -544,19 +561,14 @@ def test_issue_10295():
 
 def test_Range():
     # Only works in Python 3 where range returns a range type
-    if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange
-
-    assert sympify(builtin_range(10)) == Range(10)
-    assert _sympify(builtin_range(10)) == Range(10)
+    assert sympify(range(10)) == Range(10)
+    assert _sympify(range(10)) == Range(10)
 
 
 def test_sympify_set():
     n = Symbol('n')
     assert sympify({n}) == FiniteSet(n)
-    assert sympify(set()) == EmptySet()
+    assert sympify(set()) == EmptySet
 
 
 def test_sympify_numpy():
@@ -620,6 +632,7 @@ def test_issue_13924():
     assert isinstance(a, ImmutableDenseNDimArray)
     assert a[0] == 1
 
+
 def test_numpy_sympify_args():
     # Issue 15098. Make sure sympify args work with numpy types (like numpy.str_)
     if not numpy:
@@ -663,3 +676,82 @@ def test_issue_5939():
      a = Symbol('a')
      b = Symbol('b')
      assert sympify('''a+\nb''') == a + b
+
+
+def test_issue_16759():
+    d = sympify({.5: 1})
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(OrderedDict({.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(defaultdict(int, {.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+
+
+def test_issue_17811():
+    a = Function('a')
+    assert sympify('a(x)*5', evaluate=False) == Mul(a(x), 5, evaluate=False)
+
+
+def test_issue_14706():
+    if not numpy:
+        skip("numpy not installed.")
+
+    z1 = numpy.zeros((1, 1), dtype=numpy.float)
+    z2 = numpy.zeros((2, 2), dtype=numpy.float)
+    z3 = numpy.zeros((), dtype=numpy.float)
+
+    y1 = numpy.ones((1, 1), dtype=numpy.float)
+    y2 = numpy.ones((2, 2), dtype=numpy.float)
+    y3 = numpy.ones((), dtype=numpy.float)
+
+    assert numpy.all(x + z1 == numpy.full((1, 1), x))
+    assert numpy.all(x + z2 == numpy.full((2, 2), x))
+    assert numpy.all(z1 + x == numpy.full((1, 1), x))
+    assert numpy.all(z2 + x == numpy.full((2, 2), x))
+    for z in [z3,
+              numpy.int(0),
+              numpy.float(0),
+              numpy.complex(0)]:
+        assert x + z == x
+        assert z + x == x
+        assert isinstance(x + z, Symbol)
+        assert isinstance(z + x, Symbol)
+
+    # If these tests fail, then it means that numpy has finally
+    # fixed the issue of scalar conversion for rank>0 arrays
+    # which is mentioned in numpy/numpy#10404. In that case,
+    # some changes have to be made in sympify.py.
+    # Note: For future reference, for anyone who takes up this
+    # issue when numpy has finally fixed their side of the problem,
+    # the changes for this temporary fix were introduced in PR 18651
+    assert numpy.all(x + y1 == numpy.full((1, 1), x + 1.0))
+    assert numpy.all(x + y2 == numpy.full((2, 2), x + 1.0))
+    assert numpy.all(y1 + x == numpy.full((1, 1), x + 1.0))
+    assert numpy.all(y2 + x == numpy.full((2, 2), x + 1.0))
+    for y_ in [y3,
+              numpy.int(1),
+              numpy.float(1),
+              numpy.complex(1)]:
+        assert x + y_ == y_ + x
+        assert isinstance(x + y_, Add)
+        assert isinstance(y_ + x, Add)
+
+    assert x + numpy.array(x) == 2 * x
+    assert x + numpy.array([x]) == numpy.array([2*x], dtype=object)
+
+    assert sympify(numpy.array([1])) == ImmutableDenseNDimArray([1], 1)
+    assert sympify(numpy.array([[[1]]])) == ImmutableDenseNDimArray([1], (1, 1, 1))
+    assert sympify(z1) == ImmutableDenseNDimArray([0], (1, 1))
+    assert sympify(z2) == ImmutableDenseNDimArray([0, 0, 0, 0], (2, 2))
+    assert sympify(z3) == ImmutableDenseNDimArray([0], ())
+    assert sympify(z3, strict=True) == 0.0
+
+    raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
+    raises(SympifyError, lambda: sympify(z1, strict=True))
+    raises(SympifyError, lambda: sympify(z2, strict=True))

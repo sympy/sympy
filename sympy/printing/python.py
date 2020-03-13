@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function, division
 
 import keyword as kw
@@ -16,8 +14,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
     def __init__(self, settings=None):
-        ReprPrinter.__init__(self)
-        StrPrinter.__init__(self, settings)
+        super(PythonPrinter, self).__init__(settings)
         self.symbols = []
         self.functions = []
 
