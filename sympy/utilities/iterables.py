@@ -2091,9 +2091,10 @@ def uniq(seq, result=None):
     parameter ``result``  is used internally; it is not necessary
     to pass anything for this.
 
-    Note: changing the sequence during iteration will change the
-    output or raise a RuntimeError (when not dealing with an
-    iterator whose length is not known).
+    Note: changing the sequence during iteration will raise a
+    RuntimeError if the size of the sequence is known; if you pass
+    an iterator and advance the iterator you will change the
+    output of this routine but there will be no warning.
 
     Examples
     ========
