@@ -729,7 +729,7 @@ def rsolve(f, y, init=None):
             i_part.append(coeff)
             continue
         for h in dep:
-             if h.is_Function and h.func == y.func:
+            if h.is_Function and h.func == y.func:
                 result = h.args[0].match(n + k)
                 if result is not None:
                     h_part[int(result[k])].append(coeff)
@@ -738,6 +738,7 @@ def rsolve(f, y, init=None):
                 "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
     for k in h_part:
         h_part[k] = Add(*h_part[k])
+    h_part.default_factory = lambda: 0
     i_part = Add(*i_part)
 
     for k, coeff in h_part.items():
