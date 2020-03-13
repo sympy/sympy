@@ -580,9 +580,9 @@ class Bernoulli(SinglePatternODESolver):
     ... f(x), hint='Bernoulli'))
                     1
     f(x) = -------------------
-            /     log(x)   1\
-            x*|C1 + ------ + -|
-            \       x      x/
+            /                \
+            |C1*x + log(x) + 1|
+            \                /
 
     References
     ==========
@@ -613,10 +613,10 @@ class Bernoulli(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (
+        gensol = Eq(fx**(1-n), (
             (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
                           * exp(Integral(P, x)), x)
-            ) * exp(-(1 - n)*Integral(P, x)))**(1/(1 - n))
+            ) * exp(-(1 - n)*Integral(P, x)))
         )
         return [gensol]
 

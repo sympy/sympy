@@ -294,5 +294,5 @@ def test_Bernoulli():
     # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
     eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0)
     sol = dsolve(eq, f(x), hint='Bernoulli')
-    assert sol == Eq(f(x), 1/(x*(C1 + 1/x)))
+    assert sol == Eq(f(x), 1/(C1*x + 1))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
