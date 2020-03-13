@@ -721,30 +721,24 @@ def rsolve(f, y, init=None):
     # y(n) + a*(y(n + 1) + y(n - 1))/2
     f = f.expand().collect(y.func(Wild('m', integer=True)))
 
-    h_part = defaultdict(lambda: S.Zero)
-    i_part = S.Zero
+    h_part = defaultdict(list)
+    i_part = []
     for g in Add.make_args(f):
-        coeff = S.One
-        kspec = None
-        for h in Mul.make_args(g):
-            if not h.has(y.func):
-                coeff *= h
-            elif h.is_Function and h.func == y.func:
+        coeff, dep = g.as_coeff_mul(y.func)
+        if not dep:
+            i_part.append(coeff)
+            continue
+        for h in dep:
+             if h.is_Function and h.func == y.func:
                 result = h.args[0].match(n + k)
-
                 if result is not None:
-                    kspec = int(result[k])
-                else:
-                    raise ValueError(
-                        "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
-            else:
-                raise ValueError(
-                    "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
-
-        if kspec is not None:
-            h_part[kspec] += coeff
-        else:
-            i_part += coeff
+                    h_part[int(result[k])].append(coeff)
+                    continue
+            raise ValueError(
+                "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
+    for k in h_part:
+        h_part[k] = Add(*h_part[k])
+    i_part = Add(*i_part)
 
     for k, coeff in h_part.items():
         h_part[k] = simplify(coeff)
