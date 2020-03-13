@@ -3,7 +3,7 @@ from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
 from sympy import trigsimp
 from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
-from sympy.core.evalf import EvalfMixin
+from sympy.core.evalf import EvalfMixin, prec_to_dps
 __all__ = ['Vector']
 
 
@@ -732,6 +732,14 @@ class Vector(EvalfMixin):
         """
 
         return self.to_matrix(reference_frame).free_symbols
+
+    def _eval_evalf(self, prec):
+        if not self.args:
+            return self
+        new_args = []
+        for mat, frame in self.args:
+            new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
+        return Vector(new_args)
 
 
 class VectorTypeError(TypeError):
