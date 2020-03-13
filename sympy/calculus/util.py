@@ -7,6 +7,7 @@ from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
@@ -1667,19 +1668,6 @@ def argmax_real(f, symbol = None, domain = S.Reals):
     >>> argmax_real(exp(x), x, S.Reals)
     EmptySet
     """
-    f = _sympify(f)
-    if symbol is None:
-        if len(f.free_symbols) > 1:
-            raise ValueError(filldedent('''
-                Variable for which argmax is to be determined needs to be
-                specified.'''))
-        else:
-            symbol = list(f.free_symbols)[0]
-
-    if symbol not in f.free_symbols:
-        raise ValueError(filldedent('''
-            argmax of %s cannot be calculated with respect to %s'''%
-            (f, symbol)))
 
     return _argMaxMin(f, symbol , domain, max = True)
 
@@ -1718,20 +1706,30 @@ def argmin_real(f, symbol = None, domain = S.Reals):
     >>> argmin_real(exp(x), x, S.Reals)
     EmptySet
     """
-    f = _sympify(f)
-    if symbol is None:
-        if len(f.free_symbols) > 1:
-            raise ValueError(filldedent('''
-                Variable for which argmin is to be determined needs to be
-                specified.'''))
-        else:
-            symbol = list(f.free_symbols)[0]
-    if symbol not in f.free_symbols:
-        raise ValueError(filldedent('''
-            argmax of %s cannot be calculated with respect to %s'''%
-            (f, symbol)))
 
     return _argMaxMin(f, symbol , domain, max = False)
+
+def return_piecewise_solutions(f, x):
+    from sympy.logic.boolalg import And, Or
+
+    solutions = []
+    if type(f) == Piecewise:
+      for arg in f.args:
+          values = []
+          if isinstance(arg[1], (And, Or)):
+              for a in arg[1].args:
+                  a = a.simplify()
+                  values += a.args
+          else:
+              values = arg[1].simplify().args
+          for v in values:
+              if v.is_Number:
+                  solutions.append(v)
+    elif type(f) == Add or type(f) == Mul:
+      for arg in f.args:
+          solutions += return_piecewise_solutions(arg, x)
+
+    return FiniteSet(*solutions)
 
 def _argMaxMin(f, symbol, domain, max):
     """
@@ -1739,23 +1737,31 @@ def _argMaxMin(f, symbol, domain, max):
     """
     from sympy.solvers.solveset import solveset
 
+    f = _sympify(f)
+    task_name = "argmax" if max else "argmin"
+    if symbol is None:
+        if len(f.free_symbols) > 1:
+            raise ValueError(filldedent('''
+                Variable for which %s is to be determined needs to be
+                specified.'''%(task_name)))
+        else:
+            symbol = list(f.free_symbols)[0]
+
+    if symbol not in f.free_symbols:
+        raise ValueError(filldedent('''
+            %s of %s cannot be calculated with respect to %s'''%(task_name,
+                                                                f, symbol)))
+
     solns = S.EmptySet
 
     first_deriv = f.diff(symbol)
-    if first_deriv.is_positive:
-        soln1 = FiniteSet(domain.sup)
-        soln2 = FiniteSet(domain.inf)
-        if max:
-            return FiniteSet(list(soln1)[0]) if soln1.is_subset(domain) else S.EmptySet
-        else:
-            return FiniteSet(list(soln2)[0]) if soln2.is_subset(domain) else S.EmptySet
-    elif first_deriv.is_negative:
-        soln1 = FiniteSet(domain.sup)
-        soln2 = FiniteSet(domain.inf)
-        if max:
-            return list(soln2)[0] if soln2.is_subset(domain) else S.EmptySet
-        else:
-            return list(soln1)[0] if soln1.is_subset(domain) else S.EmptySet
+    is_inc = first_deriv.is_positive
+    is_dec = first_deriv.is_negative
+    if is_inc or is_dec:
+        point = domain.inf
+        if (max and is_inc) or (not max and is_dec):
+            point = domain.sup
+        return domain & FiniteSet(point)
 
     try:
         frange = function_range(f, symbol, domain)
@@ -1769,11 +1775,12 @@ def _argMaxMin(f, symbol, domain, max):
             implemented yet.'''%(f)))
     # If the supremum or the infimum of the function is not in its range,
     # then an empty set is returned.
-    if not FiniteSet(extremum).is_subset(frange):
+    if not frange.contains(extremum):
         return EmptySet()
 
     critical_points = Union(
-        solveset(first_deriv, symbol = symbol,domain = domain), domain.boundary)
+        solveset(first_deriv, symbol = symbol,domain = domain), domain.boundary,
+        return_piecewise_solutions(f.rewrite(Piecewise), symbol))
 
     try:
         solns = solveset(f - extremum, symbol, domain = critical_points)

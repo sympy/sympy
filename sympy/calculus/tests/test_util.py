@@ -544,6 +544,7 @@ def test_argmax_real():
 
     raises (ValueError, lambda : argmax_real(y, x, S.Reals))
     raises (ValueError, lambda: argmax_real(x*y, domain = S.Reals))
+    assert argmax_real(x - 2, domain = Interval(2, 3)) == FiniteSet(3)
     assert argmax_real(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == S.EmptySet
     assert argmax_real(x**2, domain = Interval(-oo, 4)) == S.EmptySet
     assert argmax_real(-(log(x)), x, Interval(0.02, 10)) == FiniteSet(0.02)
