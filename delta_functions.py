@@ -537,7 +537,7 @@ class Heaviside(Function):
         elif arg.is_extended_positive:
             return S.One
         elif arg.is_zero:
-            return 1/2
+            return S.Half
         elif arg is S.NaN:
             return S.NaN
         elif fuzzy_not(im(arg).is_zero):
