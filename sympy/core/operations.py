@@ -142,7 +142,7 @@ class AssocOp(Basic):
 
         # c_part, nc_part, order_symbols
         return [], new_seq, None
-
+'''
     def _matches_commutative(self, expr, repl_dict={}, old=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".
@@ -271,7 +271,7 @@ class AssocOp(Basic):
                 break  # if we didn't continue, there is nothing more to do
 
         return
-
+'''
     def _has_matcher(self):
         """Helper for .has()"""
         def _ncsplit(expr):
@@ -301,6 +301,7 @@ class AssocOp(Basic):
                                 return True
             return False
         return is_in
+
 
     def _eval_evalf(self, prec):
         """

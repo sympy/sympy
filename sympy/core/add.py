@@ -8,7 +8,7 @@ from .compatibility import reduce, is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp
+from .exprtools import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr

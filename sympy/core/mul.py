@@ -7,7 +7,7 @@ import operator
 from .sympify import sympify
 from .basic import Basic
 from .singleton import S
-from .operations import AssocOp
+from .exprtools import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce
