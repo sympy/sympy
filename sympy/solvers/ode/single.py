@@ -538,7 +538,7 @@ class Bernoulli(SinglePatternODESolver):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
                                                                                            1
                                                                                          -----
                                                                                          1 - n
@@ -580,9 +580,7 @@ class Bernoulli(SinglePatternODESolver):
     ... f(x), hint='Bernoulli'))
                     1
     f(x) = -------------------
-            /                \
-            |C1*x + log(x) + 1|
-            \                /
+            C1*x + log(x) + 1
 
     References
     ==========
