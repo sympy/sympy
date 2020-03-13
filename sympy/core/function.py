@@ -354,7 +354,7 @@ class Application(Basic, metaclass=FunctionClass):
             args = [a.doit(**hints) for a in self.args]
         else:
             args = self.args
-        return self.func(*self.args, evaluate=True)
+        return self.func(*args, evaluate=True)
 
 class Function(Application, Expr):
     """

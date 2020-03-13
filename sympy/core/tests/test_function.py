@@ -547,6 +547,16 @@ def test_function__eval_nseries():
 
 
 def test_doit():
+
+    class F(Function):
+        @classmethod
+        def eval(self, x):
+            return x
+
+    Fdx = F(Derivative(x,x), evaluate=False)
+    assert Fdx.doit(deep=False) == Derivative(x,x)
+    assert Fdx.doit() == 1
+
     n = Symbol('n', integer=True)
     f = Sum(2 * n * x, (n, 1, 3))
     d = Derivative(f, x)
