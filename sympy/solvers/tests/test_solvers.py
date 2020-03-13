@@ -1,13 +1,12 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
+    Wild, acos, asin, atan, atanh, binomial, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
 
-from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -19,8 +18,8 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy.testing.pytest import slow, XFAIL, SKIP, raises
+from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
@@ -173,17 +172,6 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
-
-
-def test_solve_dict():
-    assert solve(Eq(2*x,1), dict=True) == [{x: S(1)/2}]
-    assert solve([Eq(x**2-1, 0), Gt(x, 0)], (x,), dict=True) == [{x: 1}]
-    assert solve([Eq(x**3-6*x**2+11*x-6, 0), Eq(y**2, 1), Eq(z, 1)],
-            (x, y, z,), dict=True) == [{x: 1, y: -1, z: 1}, {x: 1, y: 1, z: 1},
-                                       {x: 2, y: -1, z: 1}, {x: 2, y: 1, z: 1},
-                                       {x: 3, y: -1, z: 1}, {x: 3, y: 1, z: 1}]
-    assert solve(Gt(x, 0), (x,), dict=True) == And(Lt(0, x), Lt(x, oo))
-
 
 def test_solve_polynomial1():
     assert solve(3*x - 2, x) == [Rational(2, 3)]
@@ -509,6 +497,16 @@ def test_solve_for_functions_derivatives():
     assert soln == { y.diff(t): (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
             x: (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
+    # issue 13263
+    x = Symbol('x')
+    f = Function('f')
+    soln = solve([f(x).diff(x) + f(x).diff(x, 2) - 1, f(x).diff(x) - f(x).diff(x, 2)],
+            f(x).diff(x), f(x).diff(x, 2))
+    assert soln == { f(x).diff(x, 2): 1/2, f(x).diff(x): 1/2 }
+
+    soln = solve([f(x).diff(x, 2) + f(x).diff(x, 3) - 1, 1 - f(x).diff(x, 2) -
+            f(x).diff(x, 3), 1 - f(x).diff(x,3)], f(x).diff(x, 2), f(x).diff(x, 3))
+    assert soln == { f(x).diff(x, 2): 0, f(x).diff(x, 3): 1 }
 
 def test_issue_3725():
     f = Function('f')
@@ -1116,6 +1114,10 @@ def test_unrad1():
     raises(NotImplementedError,
            lambda: unrad(root(x, 3) + root(y, 3) + root(x*y, 5)))
 
+    # Test unrad with an Equality
+    eq = Eq(-x**(S(1)/5) + x**(S(1)/3), -3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5))
+    assert check(unrad(eq),
+        (-s**5 + s**3 - 3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5), [s, s**15 - x]))
 
 @slow
 def test_unrad_slow():
@@ -2132,3 +2134,30 @@ def test_issue_17799():
 def test_issue_17650():
     x = Symbol('x', real=True)
     assert solve(abs((abs(x**2 - 1) - x)) - x) == [1, -1 + sqrt(2), 1 + sqrt(2)]
+
+
+def test_issue_17882():
+    eq = -8*x**2/(9*(x**2 - 1)**(S(4)/3)) + 4/(3*(x**2 - 1)**(S(1)/3))
+    assert unrad(eq) == (4*x**2 - 12, [])
+
+
+def test_issue_17949():
+    assert solve(exp(+x+x**2), x) == []
+    assert solve(exp(-x+x**2), x) == []
+    assert solve(exp(+x-x**2), x) == []
+    assert solve(exp(-x-x**2), x) == []
+
+def test_issue_10993():
+    assert solve(Eq(binomial(x, 2), 3)) == [-2, 3]
+    assert solve(Eq(pow(x, 2) + binomial(x, 3), x)) == [-4, 0, 1]
+    assert solve(Eq(binomial(x, 2), 0)) == [0, 1]
+    assert solve(a+binomial(x, 3), a) == [-binomial(x, 3)]
+    assert solve(x-binomial(a, 3) + binomial(y, 2) + sin(a), x) == [-sin(a) + binomial(a, 3) - binomial(y, 2)]
+    assert solve((x+1)-binomial(x+1, 3), x) == [-2, -1, 3]
+
+def test_issue_11553():
+    eq1 = x + y + 1
+    eq2 = x + GoldenRatio
+    assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
+    eq3 = x + 2 + TribonacciConstant
+    assert solve([eq1, eq3], x, y) == {x: -2 - TribonacciConstant, y: 1 + TribonacciConstant}

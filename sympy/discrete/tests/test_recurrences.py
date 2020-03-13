@@ -1,7 +1,6 @@
 from sympy import Rational, fibonacci
 from sympy.core import S, symbols
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.discrete.recurrences import linrec
 
 def test_linrec():

@@ -2,19 +2,25 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
+
+from .permutation import PermutationMatrix
 
 
 class MatPow(MatrixExpr):
 
-    def __new__(cls, base, exp):
+    def __new__(cls, base, exp, evaluate=False, **options):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("Function parameter should be a matrix")
         exp = _sympify(exp)
-        return super(MatPow, cls).__new__(cls, base, exp)
+
+        obj = super(MatPow, cls).__new__(cls, base, exp)
+        if evaluate:
+            obj = obj.doit(deep=False)
+
+        return obj
 
     @property
     def base(self):
@@ -71,6 +77,8 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
+        elif isinstance(base, PermutationMatrix):
+            return PermutationMatrix(base.args[0] ** exp).doit()
         elif isinstance(base, MatrixBase):
             if exp is S.One:
                 return base

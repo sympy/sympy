@@ -9,7 +9,7 @@ from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
 from sympy.strategies import null_safe
 from sympy import refine, Q, Symbol
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 n, m, l, k = symbols('n m l k', integer=True)
 x = symbols('x')
@@ -19,6 +19,8 @@ C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
+def test_evaluate():
+    assert MatMul(C, C, evaluate=True) == MatMul(C, C).doit()
 
 def test_adjoint():
     assert adjoint(A*B) == Adjoint(B)*Adjoint(A)

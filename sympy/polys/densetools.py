@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_lshift,

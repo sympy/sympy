@@ -60,13 +60,16 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, evaluate=False, **kwargs):
         args = list(map(sympify, args))
         check = kwargs.get('check', True)
         if check:
             validate(*args)
 
-        return super(HadamardProduct, cls).__new__(cls, *args)
+        obj = super(HadamardProduct, cls).__new__(cls, *args)
+        if evaluate:
+            obj = obj.doit(deep=False)
+        return obj
 
     @property
     def shape(self):
@@ -132,7 +135,7 @@ class HadamardProduct(MatrixExpr):
                                 ExprBuilder(_make_matrix, [l2]),
                             ]
                         ),
-                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                    *diagonal],
 
                 )
                 i._first_pointer_parent = subexpr.args[0].args[0].args
@@ -451,7 +454,7 @@ class HadamardPower(MatrixExpr):
                             ExprBuilder(_make_matrix, [l2]),
                         ]
                     ),
-                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                *diagonal],
                 validator=CodegenArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args

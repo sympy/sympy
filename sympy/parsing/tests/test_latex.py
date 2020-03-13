@@ -1,11 +1,4 @@
-# Testing import
-from sympy.parsing.latex._build_latex_antlr import (
-    build_parser,
-    check_antlr_version,
-    dir_latex_antlr
-)
-
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (
@@ -48,6 +41,16 @@ def _factorial(a):
 
 def _log(a, b):
     return log(a, b, evaluate=False)
+
+
+def test_import():
+    from sympy.parsing.latex._build_latex_antlr import (
+        build_parser,
+        check_antlr_version,
+        dir_latex_antlr
+    )
+    # XXX: It would be better to come up with a test for these...
+    del build_parser, check_antlr_version, dir_latex_antlr
 
 
 # These LaTeX strings should parse to the corresponding SymPy expression

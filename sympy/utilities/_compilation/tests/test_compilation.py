@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import shutil
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 from sympy.utilities._compilation.compilation import compile_link_import_strings
 

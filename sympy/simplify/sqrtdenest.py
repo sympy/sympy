@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, sympify, Mul, Add, Expr
-from sympy.core.compatibility import range
 from sympy.core.function import expand_mul, count_ops, _mexpand
 from sympy.core.symbol import Dummy
 from sympy.functions import sqrt, sign, root
@@ -33,7 +32,8 @@ def sqrt_depth(p):
     >>> sqrt_depth(1 + sqrt(2)*sqrt(1 + sqrt(3)))
     2
     """
-
+    if p is S.ImaginaryUnit:
+        return 1
     if p.is_Atom:
         return 0
     elif p.is_Add or p.is_Mul:

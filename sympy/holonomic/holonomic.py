@@ -7,7 +7,7 @@ from __future__ import print_function, division
 
 from sympy import (Symbol, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.core.compatibility import range, ordered, string_types
+from sympy.core.compatibility import ordered
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -115,7 +115,7 @@ class DifferentialOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = Symbol('Dx', commutative=False)
         else:
-            if isinstance(generator, string_types):
+            if isinstance(generator, str):
                 self.gen_symbol = Symbol(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
@@ -598,7 +598,7 @@ class HolonomicFunction(object):
 
         # if a solution is not obtained then increasing the order by 1 in each
         # iteration
-        while sol.is_zero:
+        while sol.is_zero_matrix:
             dim += 1
 
             diff1 = (gen * rowsself[-1])
@@ -986,7 +986,7 @@ class HolonomicFunction(object):
         sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
 
         # until a non trivial solution is found
-        while sol[0].is_zero:
+        while sol[0].is_zero_matrix:
 
             # updating the coefficients Dx^i(f).Dx^j(g) for next degree
             for i in range(a - 1, -1, -1):
@@ -1211,19 +1211,19 @@ class HolonomicFunction(object):
         homogeneous = Matrix([[S.Zero for i in range(a)]]).transpose()
         sol = S.Zero
 
-        while sol.is_zero:
+        while True:
             coeffs_next = [p.diff(self.x) for p in coeffs]
             for i in range(a - 1):
                 coeffs_next[i + 1] += (coeffs[i] * diff)
-
             for i in range(a):
                 coeffs_next[i] += (coeffs[-1] * subs[i] * diff)
             coeffs = coeffs_next
-
             # check for linear relations
             system.append(coeffs)
             sol, taus = (Matrix(system).transpose()
                 ).gauss_jordan_solve(homogeneous)
+            if sol.is_zero_matrix is not True:
+                break
 
         tau = list(taus)[0]
         sol = sol.subs(tau, 1)

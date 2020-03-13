@@ -2,9 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, Basic, Add, Mul, symbols
-from sympy.core.compatibility import range
-from sympy.functions.combinatorial.factorials import factorial
+from sympy.core import S, Basic, Add, Mul, symbols, Dummy
 from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError, OptionError)
@@ -95,7 +93,7 @@ def symmetrize(F, *gens, **args):
 
         if not f.is_homogeneous:
             symmetric.append(f.TC())
-            f -= f.TC()
+            f -= f.TC().as_poly(f.gens)
 
         while f:
             _height, _monom, _coeff = -1, None, None
@@ -205,13 +203,14 @@ def horner(f, *gens, **args):
 @public
 def interpolate(data, x):
     """
-    Construct an interpolating polynomial for the data points.
+    Construct an interpolating polynomial for the data points
+    evaluated at point x (which can be symbolic or numeric).
 
     Examples
     ========
 
     >>> from sympy.polys.polyfuncs import interpolate
-    >>> from sympy.abc import x
+    >>> from sympy.abc import a, b, x
 
     A list is interpreted as though it were paired with a range starting
     from 1:
@@ -232,30 +231,39 @@ def interpolate(data, x):
     >>> interpolate({-1: 2, 1: 2, 2: 5}, x)
     x**2 + 1
 
+    If the interpolation is going to be used only once then the
+    value of interest can be passed instead of passing a symbol:
+
+    >>> interpolate([1, 4, 9], 5)
+    25
+
+    Symbolic coordinates are also supported:
+
+    >>> [(i,interpolate((a, b), i)) for i in range(1, 4)]
+    [(1, a), (2, b), (3, -a + 2*b)]
     """
     n = len(data)
-    poly = None
 
     if isinstance(data, dict):
+        if x in data:
+            return S(data[x])
         X, Y = list(zip(*data.items()))
-        poly = interpolating_poly(n, x, X, Y)
     else:
         if isinstance(data[0], tuple):
             X, Y = list(zip(*data))
-            poly = interpolating_poly(n, x, X, Y)
+            if x in X:
+                return S(Y[X.index(x)])
         else:
+            if x in range(1, n + 1):
+                return S(data[x - 1])
             Y = list(data)
+            X = list(range(1, n + 1))
 
-            numert = Mul(*[(x - i) for i in range(1, n + 1)])
-            denom = -factorial(n - 1) if n%2 == 0 else factorial(n - 1)
-            coeffs = []
-            for i in range(1, n + 1):
-                coeffs.append(numert/(x - i)/denom)
-                denom = denom/(i - n)*i
-
-            poly = Add(*[coeff*y for coeff, y in zip(coeffs, Y)])
-
-    return poly.expand()
+    try:
+        return interpolating_poly(n, x, X, Y).expand()
+    except ValueError:
+        d = Dummy()
+        return interpolating_poly(n, d, X, Y).expand().subs(d, x)
 
 
 @public

@@ -9,9 +9,9 @@ from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce
 from sympy import sqrt, pi, oo
 
 def test_PolyRing___init__():
