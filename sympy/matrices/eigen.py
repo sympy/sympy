@@ -473,8 +473,8 @@ def _bidiagonal_decomposition(M, upper=True):
     Q, R = M.QRdecomposition()
     _U, B, V = _bidiagonal_decmp_hholder(R)
     U = Q * _U
-    S = M.zeros(M.rows, M.rows)
-    T = M.zeros(M.rows, M.cols)
+    S = M.zeros(M.rows, M.rows).as_mutable()
+    T = M.zeros(M.rows, M.cols).as_mutable()
     S[:U.rows, :U.cols] = U
     T[:B.rows, :B.cols] = B
     return S, T, V
@@ -510,7 +510,7 @@ def _bidiagonalize(M, upper=True):
 
     Q, R = M.QRdecomposition()
     S = _bidiagonal_decmp_hholder(R, only_b=True)
-    B = M.zeros(M.rows, M.cols)
+    B = M.zeros(M.rows, M.cols).as_mutable()
     B[:S.rows, :S.cols] = S
     return B
 
