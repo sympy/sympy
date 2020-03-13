@@ -1916,6 +1916,7 @@ def test_exponential_real():
     e7 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
     e8 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
     e9 = 2**x + 4**x + 8**x - 84
+    e10 = 29*2**(x + 1)*615**(x/3) - 123*2726**(x/3)
 
     assert solveset(e1, x, S.Reals) == FiniteSet(
         -3*log(2)/(-2*log(3) + log(2)))
@@ -1928,6 +1929,7 @@ def test_exponential_real():
     assert solveset(e7, x, S.Reals) == FiniteSet(2)
     assert solveset(e8, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + Rational(4, 5))
     assert solveset(e9, x, S.Reals) == FiniteSet(2)
+    assert solveset(e10,x, S.Reals) == FiniteSet(3*(-log(29) - log(2) + log(123))/(-log(2726) + 3*log(2) + log(615)))
 
     assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
         -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
