@@ -1079,7 +1079,7 @@ def test_conditionset():
         ) == ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals)
 
     assert solveset(cosh(x) + cosh(3*x) - cosh(5*x), x, S.Reals) == \
-        ConditionSet(x, Eq(cosh(x) + cosh(3*x) - cosh(5*x), 0), Reals)
+        ConditionSet(x, Eq(cosh(x) + cosh(3*x) - cosh(5*x), 0), S.Reals)
 
     assert solveset(y**x-z, x, S.Reals) == \
         ConditionSet(x, Eq(y**x - z, 0), S.Reals)
