@@ -3,7 +3,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     LambertW, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
     besselj, besselk, bessely, jn, tanh
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
@@ -42,7 +42,7 @@ def test_heurisch_fractions():
     assert heurisch(1/(2 + x), x) == log(x + 2)
     assert heurisch(1/(x + sin(y)), x) == log(x + sin(y))
 
-    # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
+    # Up to a constant, where C = pi*I*Rational(5, 12), Mathematica gives identical
     # result in the first case. The difference is because sympy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
@@ -175,10 +175,10 @@ def test_heurisch_hacking():
         sqrt(7*pi)*erf(sqrt(7)*x)/14
 
     assert heurisch(1/sqrt(9 - 4*x**2), x, hints=[]) == \
-        asin(2*x/3)/2
+        asin(x*Rational(2, 3))/2
 
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
-        asinh(2*x/3)/2
+        asinh(x*Rational(2, 3))/2
 
 def test_heurisch_function():
     assert heurisch(f(x), x) is None

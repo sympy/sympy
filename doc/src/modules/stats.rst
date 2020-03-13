@@ -1,3 +1,4 @@
+=====
 Stats
 =====
 
@@ -13,6 +14,7 @@ Finite Types
 .. autofunction:: Bernoulli
 .. autofunction:: Coin
 .. autofunction:: Binomial
+.. autofunction:: BetaBinomial
 .. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
 .. autofunction:: Rademacher
@@ -20,9 +22,11 @@ Finite Types
 Discrete Types
 --------------
 .. autofunction:: Geometric
+.. autofunction:: Hermite
 .. autofunction:: Poisson
 .. autofunction:: Logarithmic
 .. autofunction:: NegativeBinomial
+.. autofunction:: Skellam
 .. autofunction:: YuleSimon
 .. autofunction:: Zeta
 
@@ -32,6 +36,7 @@ Continuous Types
 .. autofunction:: Arcsin
 .. autofunction:: Benini
 .. autofunction:: Beta
+.. autofunction:: BetaNoncentral
 .. autofunction:: BetaPrime
 .. autofunction:: Cauchy
 .. autofunction:: Chi
@@ -39,6 +44,7 @@ Continuous Types
 .. autofunction:: ChiSquared
 .. autofunction:: Dagum
 .. autofunction:: Erlang
+.. autofunction:: ExGaussian
 .. autofunction:: Exponential
 .. autofunction:: FDistribution
 .. autofunction:: FisherZ
@@ -49,15 +55,20 @@ Continuous Types
 .. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
+.. autofunction:: Levy
 .. autofunction:: Logistic
+.. autofunction:: LogLogistic
 .. autofunction:: LogNormal
 .. autofunction:: Maxwell
+.. autofunction:: Moyal
 .. autofunction:: Nakagami
 .. autofunction:: Normal
 .. autofunction:: Pareto
+.. autofunction:: PowerFunction
 .. autofunction:: QuadraticU
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
+.. autofunction:: Reciprocal
 .. autofunction:: StudentT
 .. autofunction:: ShiftedGompertz
 .. autofunction:: Trapezoidal
@@ -65,6 +76,7 @@ Continuous Types
 .. autofunction:: Uniform
 .. autofunction:: UniformSum
 .. autofunction:: VonMises
+.. autofunction:: Wald
 .. autofunction:: Weibull
 .. autofunction:: WignerSemicircle
 .. autofunction:: ContinuousRV
@@ -84,6 +96,8 @@ Joint Types
 Stochastic Processes
 --------------------
 .. autofunction:: DiscreteMarkovChain
+.. autofunction:: ContinuousMarkovChain
+.. autofunction:: BernoulliProcess
 
 Interface
 ^^^^^^^^^
@@ -103,6 +117,11 @@ Interface
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
+.. autofunction:: sympy.stats.rv.sample_iter_lambdify
+.. autofunction:: sympy.stats.rv.sample_iter_subs
+.. autofunction:: sympy.stats.rv.sampling_density
+.. autofunction:: sympy.stats.rv.sampling_P
+.. autofunction:: sympy.stats.rv.sampling_E
 
 Mechanics
 ^^^^^^^^^

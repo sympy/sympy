@@ -33,7 +33,7 @@ except ImportError:
 from sympy.utilities.misc import filldedent
 
 
-# Load color templates, used from sympy/utilities/runtests.py
+# Load color templates, duplicated from sympy/testing/runtests.py
 color_templates = (
     ("Black", "0;30"),
     ("Red", "0;31"),
@@ -207,7 +207,7 @@ def _get_arg_list(name, fobj):
 
     trunc = 20  # Sometimes argument length can be huge
 
-    argspec = inspect.getargspec(fobj)
+    argspec = inspect.getfullargspec(fobj)
 
     arg_list = []
 

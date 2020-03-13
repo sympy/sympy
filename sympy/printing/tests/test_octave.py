@@ -11,7 +11,7 @@ from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix, HadamardPower)
@@ -259,7 +259,7 @@ def test_MatrixSymbol():
     assert mcode(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
     assert mcode(A**(x**2)) == "A^(x.^2)"
     assert mcode(A**3) == "A^3"
-    assert mcode(A**(S.Half)) == "A^(1/2)"
+    assert mcode(A**S.Half) == "A^(1/2)"
 
 
 def test_MatrixSolve():

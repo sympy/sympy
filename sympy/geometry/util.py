@@ -12,9 +12,9 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve
+from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
-    is_sequence, range, string_types, ordered)
+    is_sequence, ordered)
 from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 
@@ -27,7 +27,7 @@ def find(x, equation):
     """
 
     free = equation.free_symbols
-    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
+    xs = [i for i in free if (i.name if isinstance(x, str) else i) == x]
     if not xs:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
@@ -66,6 +66,7 @@ def are_coplanar(*e):
 
     """
     from sympy.geometry.line import LinearEntity3D
+    from sympy.geometry.entity import GeometryEntity
     from sympy.geometry.point import Point3D
     from sympy.geometry.plane import Plane
     # XXX update tests for coverage
@@ -284,7 +285,7 @@ def closest_points(*args):
 
     """
     from collections import deque
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
     from sympy.functions.elementary.miscellaneous import sqrt
 
     p = [Point2D(i) for i in set(args)]
@@ -302,6 +303,8 @@ def closest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
@@ -328,7 +331,7 @@ def closest_points(*args):
     return {tuple([p[i] for i in pair]) for pair in rv}
 
 
-def convex_hull(*args, **kwargs):
+def convex_hull(*args, polygon=True):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
@@ -336,10 +339,17 @@ def convex_hull(*args, **kwargs):
 
     args : a collection of Points, Segments and/or Polygons
 
+    Optional parameters
+    ===================
+
+    polygon : Boolean. If True, returns a Polygon, if false a tuple, see below.
+              Default is True.
+
     Returns
     =======
 
-    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where ``L`` and ``U`` are the lower and upper hulls, respectively.
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where
+                  ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes
     =====
@@ -379,7 +389,6 @@ def convex_hull(*args, **kwargs):
     from .line import Segment
     from .polygon import Polygon
 
-    polygon = kwargs.get('polygon', True)
     p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -473,7 +482,7 @@ def farthest_points(*args):
     {(Point2D(0, 0), Point2D(3, 4))}
 
     """
-    from math import hypot, sqrt as _sqrt
+    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -508,6 +517,8 @@ def farthest_points(*args):
             if arg.is_Rational:
                 return _sqrt(arg)
             return sqrt(arg)
+    else:
+        from math import hypot
 
     rv = []
     diam = 0

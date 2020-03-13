@@ -2,14 +2,14 @@ from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
 from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy import julia_code
 
@@ -196,7 +196,7 @@ def test_MatrixSymbol():
     assert julia_code(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
     assert julia_code(A**(x**2)) == "A^(x.^2)"
     assert julia_code(A**3) == "A^3"
-    assert julia_code(A**(S.Half)) == "A^(1/2)"
+    assert julia_code(A**S.Half) == "A^(1/2)"
 
 
 def test_special_matrices():

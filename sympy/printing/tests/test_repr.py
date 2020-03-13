@@ -1,7 +1,10 @@
-from sympy.utilities.pytest import raises
-from sympy import (symbols, Function, Integer, Matrix, Abs,
+from typing import Any, Dict
+
+from sympy.testing.pytest import raises
+from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
+from sympy.combinatorics import Cycle, Permutation
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -13,19 +16,25 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {}
+ENV = {}  # type: Dict[str, Any]
 exec_("from sympy import *", ENV)
 
 
-def sT(expr, string):
+def sT(expr, string, import_stmt=None):
     """
     sT := sreprTest
 
     Tests that srepr delivers the expected string and that
     the condition eval(srepr(expr))==expr holds.
     """
+    if import_stmt is None:
+        ENV2 = ENV
+    else:
+        ENV2 = ENV.copy()
+        exec_(import_stmt, ENV2)
+
     assert srepr(expr) == string
-    assert eval(string, ENV) == expr
+    assert eval(string, ENV2) == expr
 
 
 def test_printmethod():
@@ -39,6 +48,7 @@ def test_Add():
     sT(x + y, "Add(Symbol('x'), Symbol('y'))")
     assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
+    assert srepr(sympify('x + 3 - 2', evaluate=False), order='none') == "Add(Symbol('x'), Integer(3), Mul(Integer(-1), Integer(2)))"
 
 
 def test_more_than_255_args_issue_10259():
@@ -194,6 +204,7 @@ def test_settins():
 def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
+    assert srepr(sympify('(x+4)*2*x*7', evaluate=False), order='none') == "Mul(Add(Symbol('x'), Integer(4)), Integer(2), Symbol('x'), Integer(7))"
 
 def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2))
@@ -275,6 +286,7 @@ def test_Naturals0():
 def test_Reals():
     sT(S.Reals, "Reals")
 
+
 def test_matrix_expressions():
     n = symbols('n', integer=True)
     A = MatrixSymbol("A", n, n)
@@ -282,3 +294,16 @@ def test_matrix_expressions():
     sT(A, "MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
     sT(A*B, "MatMul(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
     sT(A + B, "MatAdd(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+
+
+def test_Cycle():
+    # FIXME: sT fails because Cycle is not immutable and calling srepr(Cycle(1, 2))
+    # adds keys to the Cycle dict (GH-17661)
+    #import_stmt = "from sympy.combinatorics import Cycle"
+    #sT(Cycle(1, 2), "Cycle(1, 2)", import_stmt)
+    assert srepr(Cycle(1, 2)) == "Cycle(1, 2)"
+
+
+def test_Permutation():
+    import_stmt = "from sympy.combinatorics import Permutation"
+    sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)

@@ -1,11 +1,6 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
-from heapq import heappush, heappop
-
-from sympy import default_sort_key
 from sympy.assumptions.cnf import EncodedCNF
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates, Boolean
 
 
 def pycosat_satisfiable(expr, all_models=False):

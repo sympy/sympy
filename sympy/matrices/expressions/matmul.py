@@ -1,16 +1,19 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify
-from sympy.core.compatibility import range
+from sympy.core import Mul, Basic, sympify, S
 from sympy.functions import adjoint
-from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix, GenericIdentity)
-from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
+
+from .inverse import Inverse
+from .matexpr import \
+    MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
+from .matpow import MatPow
+from .transpose import transpose
+from .permutation import PermutationMatrix
+
 
 # XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
@@ -31,7 +34,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, evaluate=False, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
@@ -43,13 +46,19 @@ class MatMul(MatrixExpr, Mul):
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
+
         if check:
             validate(*matrices)
+
         if not matrices:
             # Should it be
             #
             # return Basic.__neq__(cls, factor, GenericIdentity()) ?
             return factor
+
+        if evaluate:
+            return canonicalize(obj)
+
         return obj
 
     @property
@@ -156,7 +165,6 @@ class MatMul(MatrixExpr, Mul):
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
                     for arg in self.args[::-1]]).doit()
         except ShapeError:
-            from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
     def doit(self, **kwargs):
@@ -265,29 +273,6 @@ def merge_explicit(matmul):
 
     return MatMul(*newargs)
 
-def xxinv(mul):
-    """ Y * X * X.I -> Y """
-    from sympy.matrices.expressions.inverse import Inverse
-    factor, matrices = mul.as_coeff_matrices()
-    for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
-        try:
-            if X.is_square and Y.is_square:
-                _X, x_exp = X, 1
-                _Y, y_exp = Y, 1
-                if isinstance(X, MatPow) and not isinstance(X, Inverse):
-                    _X, x_exp = X.args
-                if isinstance(Y, MatPow) and not isinstance(Y, Inverse):
-                    _Y, y_exp = Y.args
-                if _X == _Y.inverse():
-                    if x_exp - y_exp > 0:
-                        I = _X**(x_exp-y_exp)
-                    else:
-                        I = _Y**(y_exp-x_exp)
-                    return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
-        except ValueError:  # Y might not be invertible
-            pass
-    return mul
-
 def remove_ids(mul):
     """ Remove Identities from a MatMul
 
@@ -316,39 +301,72 @@ def factor_in_front(mul):
     return mul
 
 def combine_powers(mul):
-    # combine consecutive powers with the same base into one
-    # e.g. A*A**2 -> A**3
-    from sympy.matrices.expressions import MatPow
-    factor, mmul = mul.as_coeff_mmul()
-    args = []
-    base = None
-    exp = 0
-    for arg in mmul.args:
-        if isinstance(arg, MatPow):
-            current_base = arg.args[0]
-            current_exp = arg.args[1]
-        else:
-            current_base = arg
-            current_exp = 1
-        if current_base == base:
-            exp += current_exp
-        else:
-            if not base is None:
-                if exp == 1:
-                    args.append(base)
-                else:
-                    args.append(base**exp)
-            exp = current_exp
-            base = current_base
-    if exp == 1:
-        args.append(base)
-    else:
-        args.append(base**exp)
+    """Combine consecutive powers with the same base into one
 
-    return newmul(factor, *args)
+    e.g. A*A**2 -> A**3
 
-rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
-         merge_explicit, factor_in_front, flatten, combine_powers)
+    This also cancels out the possible matrix inverses using the
+    knowledgebase of ``Inverse``.
+
+    e.g. Y * X * X.I -> Y
+    """
+    factor, args = mul.as_coeff_matrices()
+    new_args = [args[0]]
+
+    for B in args[1:]:
+        A = new_args[-1]
+        if A.is_square == False or B.is_square == False:
+            new_args.append(B)
+            continue
+
+        if isinstance(A, MatPow):
+            A_base, A_exp = A.args
+        else:
+            A_base, A_exp = A, S.One
+
+        if isinstance(B, MatPow):
+            B_base, B_exp = B.args
+        else:
+            B_base, B_exp = B, S.One
+
+        if A_base == B_base:
+            new_exp = A_exp + B_exp
+            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+        elif not isinstance(B_base, MatrixBase) and \
+            A_base == B_base.inverse():
+            new_exp = A_exp - B_exp
+            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+        else:
+            new_args.append(B)
+
+    return newmul(factor, *new_args)
+
+def combine_permutations(mul):
+    """Refine products of permutation matrices as the products of cycles.
+    """
+    args = mul.args
+    l = len(args)
+    if l < 2:
+        return mul
+
+    result = [args[0]]
+    for i in range(1, l):
+        A = result[-1]
+        B = args[i]
+        if isinstance(A, PermutationMatrix) and \
+            isinstance(B, PermutationMatrix):
+            cycle_1 = A.args[0]
+            cycle_2 = B.args[0]
+            result[-1] = PermutationMatrix(cycle_1 * cycle_2)
+        else:
+            result.append(B)
+
+    return MatMul(*result)
+
+rules = (
+    any_zeros, remove_ids, combine_powers, unpack, rm_id(lambda x: x == 1),
+    merge_explicit, factor_in_front, flatten, combine_permutations)
+
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):

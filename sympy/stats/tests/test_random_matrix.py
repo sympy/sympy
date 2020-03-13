@@ -1,10 +1,9 @@
 from sympy import (sqrt, exp, Trace, pi, S, Integral, MatrixSymbol, Lambda,
-                    Dummy, Product, Sum, Abs, IndexedBase, Matrix, I)
+                    Dummy, Product, Abs, IndexedBase, Matrix, I, Rational)
 from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          GaussianOrthogonalEnsemble as GOE,
                          GaussianSymplecticEnsemble as GSE,
                          joint_eigen_distribution,
-                         level_spacing_distribution,
                          CircularUnitaryEnsemble as CUE,
                          CircularOrthogonalEnsemble as COE,
                          CircularSymplecticEnsemble as CSE,
@@ -14,7 +13,7 @@ from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
 from sympy.stats.joint_rv import JointDistributionHandmade
 from sympy.stats.rv import RandomMatrixSymbol, Density
 from sympy.stats.random_matrix_models import GaussianEnsemble
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_GaussianEnsemble():
     G = GaussianEnsemble('G', 3)
@@ -24,14 +23,14 @@ def test_GaussianEnsemble():
 def test_GaussianUnitaryEnsemble():
     H = RandomMatrixSymbol('H', 3, 3)
     G = GUE('U', 3)
-    assert density(G)(H) == sqrt(2)*exp(-3*Trace(H**2)/2)/(4*pi**(S(9)/2))
+    assert density(G)(H) == sqrt(2)*exp(-3*Trace(H**2)/2)/(4*pi**Rational(9, 2))
     i, j = (Dummy('i', integer=True, positive=True),
             Dummy('j', integer=True, positive=True))
     l = IndexedBase('l')
     assert joint_eigen_distribution(G).dummy_eq(
             Lambda((l[1], l[2], l[3]),
             27*sqrt(6)*exp(-3*(l[1]**2)/2 - 3*(l[2]**2)/2 - 3*(l[3]**2)/2)*
-            Product(Abs(l[i] - l[j])**2, (j, i + 1, 3), (i, 1, 2))/(16*pi**(S(3)/2))))
+            Product(Abs(l[i] - l[j])**2, (j, i + 1, 3), (i, 1, 2))/(16*pi**Rational(3, 2))))
     s = Dummy('s')
     assert level_spacing_distribution(G).dummy_eq(Lambda(s, 32*s**2*exp(-4*s**2/pi)/pi**2))
 
@@ -62,7 +61,7 @@ def test_GaussianSymplecticEnsemble():
     assert joint_eigen_distribution(G).dummy_eq(
             Lambda((l[1], l[2], l[3]),
             162*sqrt(3)*exp(-3*l[1]**2/2 - 3*l[2]**2/2 - 3*l[3]**2/2)*
-            Product(Abs(l[i] - l[j])**4, (j, i + 1, 3), (i, 1, 2))/(5*pi**(S(3)/2))))
+            Product(Abs(l[i] - l[j])**4, (j, i + 1, 3), (i, 1, 2))/(5*pi**Rational(3, 2))))
     s = Dummy('s')
     assert level_spacing_distribution(G).dummy_eq(Lambda(s, S(262144)*s**4*exp(-64*s**2/(9*pi))/(729*pi**3)))
 

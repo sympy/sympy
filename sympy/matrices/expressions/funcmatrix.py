@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
-from sympy.core.basic import Basic
 from sympy.core.function import FunctionClass, Lambda
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify, sympify
 from sympy.matrices import Matrix
 from sympy.functions.elementary.complexes import re, im
@@ -93,6 +93,10 @@ class FunctionMatrix(MatrixExpr):
         if 2 not in lamda.nargs:
             raise ValueError(
                 '{} should be able to accept 2 arguments.'.format(lamda))
+
+        if not isinstance(lamda, Lambda):
+            i, j = Dummy('i'), Dummy('j')
+            lamda = Lambda((i, j), lamda(i, j))
 
         return super(FunctionMatrix, cls).__new__(cls, rows, cols, lamda)
 

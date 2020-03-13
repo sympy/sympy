@@ -2,7 +2,7 @@
 
 from sympy.interactive.session import init_ipython_session
 from sympy.external import import_module
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 # run_cell was added in IPython 0.11
 ipython = import_module("IPython", min_module_version="0.11")

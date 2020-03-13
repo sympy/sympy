@@ -116,7 +116,7 @@ class GroupHomomorphism(object):
         from sympy import S
         G = self.domain
         G_order = G.order()
-        if G_order == S.Infinity:
+        if G_order is S.Infinity:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
         gens = []
@@ -199,7 +199,7 @@ class GroupHomomorphism(object):
         from sympy import S
         im = self.image().order()
         oth = self.codomain.order()
-        if im == S.Infinity and oth == S.Infinity:
+        if im is S.Infinity and oth is S.Infinity:
             return None
         else:
             return im == oth
@@ -445,7 +445,6 @@ def group_isomorphism(G, H, isomorphism=True):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
@@ -495,11 +494,11 @@ def group_isomorphism(G, H, isomorphism=True):
     g_order = G.order()
     h_order = H.order()
 
-    if g_order == S.Infinity:
+    if g_order is S.Infinity:
         raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
 
     if isinstance(H, FpGroup):
-        if h_order == S.Infinity:
+        if h_order is S.Infinity:
             raise NotImplementedError("Isomorphism methods are not implemented for infinite groups.")
         _H, h_isomorphism = H._to_perm_group()
 

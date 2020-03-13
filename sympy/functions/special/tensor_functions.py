@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Integer
-from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import prod
@@ -16,7 +16,7 @@ def Eijk(*args, **kwargs):
     """
     Represent the Levi-Civita symbol.
 
-    This is just compatibility wrapper to ``LeviCivita()``.
+    This is a compatibility wrapper to ``LeviCivita()``.
 
     See Also
     ========
@@ -38,7 +38,11 @@ def eval_levicivita(*args):
 
 
 class LeviCivita(Function):
-    """Represent the Levi-Civita symbol.
+    """
+    Represent the Levi-Civita symbol.
+
+    Explanation
+    ===========
 
     For even permutations of indices it returns 1, for odd permutations -1, and
     for everything else (a repeated index) it returns 0.
@@ -82,23 +86,19 @@ class LeviCivita(Function):
 
 
 class KroneckerDelta(Function):
-    """The discrete, or Kronecker, delta function.
+    """
+    The discrete, or Kronecker, delta function.
 
-    A function that takes in two integers `i` and `j`. It returns `0` if `i` and `j` are
-    not equal or it returns `1` if `i` and `j` are equal.
+    Explanation
+    ===========
 
-    Parameters
-    ==========
-
-    i : Number, Symbol
-        The first index of the delta function.
-    j : Number, Symbol
-        The second index of the delta function.
+    A function that takes in two integers $i$ and $j$. It returns $0$ if $i$
+    and $j$ are not equal, or it returns $1$ if $i$ and $j$ are equal.
 
     Examples
     ========
 
-    A simple example with integer indices::
+    An example with integer indices:
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> KroneckerDelta(1, 2)
@@ -106,7 +106,7 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(3, 3)
         1
 
-    Symbolic indices::
+    Symbolic indices:
 
         >>> from sympy.abc import i, j, k
         >>> KroneckerDelta(i, j)
@@ -118,16 +118,25 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(i, i + 1 + k)
         KroneckerDelta(i, i + k + 1)
 
+    Parameters
+    ==========
+
+    i : Number, Symbol
+        The first index of the delta function.
+    j : Number, Symbol
+        The second index of the delta function.
+
     See Also
     ========
 
     eval
-    sympy.functions.special.delta_functions.DiracDelta
+    DiracDelta
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Kronecker_delta
+
     """
 
     is_integer = True
@@ -202,7 +211,7 @@ class KroneckerDelta(Function):
     @property
     def is_above_fermi(self):
         """
-        True if Delta can be non-zero above fermi
+        True if Delta can be non-zero above fermi.
 
         Examples
         ========
@@ -225,7 +234,6 @@ class KroneckerDelta(Function):
 
         is_below_fermi, is_only_below_fermi, is_only_above_fermi
 
-
         """
         if self.args[0].assumptions0.get("below_fermi"):
             return False
@@ -236,7 +244,7 @@ class KroneckerDelta(Function):
     @property
     def is_below_fermi(self):
         """
-        True if Delta can be non-zero below fermi
+        True if Delta can be non-zero below fermi.
 
         Examples
         ========
@@ -269,7 +277,7 @@ class KroneckerDelta(Function):
     @property
     def is_only_above_fermi(self):
         """
-        True if Delta is restricted to above fermi
+        True if Delta is restricted to above fermi.
 
         Examples
         ========
@@ -292,7 +300,6 @@ class KroneckerDelta(Function):
 
         is_above_fermi, is_below_fermi, is_only_below_fermi
 
-
         """
         return ( self.args[0].assumptions0.get("above_fermi")
                 or
@@ -302,7 +309,7 @@ class KroneckerDelta(Function):
     @property
     def is_only_below_fermi(self):
         """
-        True if Delta is restricted to below fermi
+        True if Delta is restricted to below fermi.
 
         Examples
         ========
@@ -324,7 +331,6 @@ class KroneckerDelta(Function):
         ========
 
         is_above_fermi, is_below_fermi, is_only_above_fermi
-
 
         """
         return ( self.args[0].assumptions0.get("below_fermi")
@@ -369,8 +375,11 @@ class KroneckerDelta(Function):
         """
         Returns the index which is preferred to keep in the final expression.
 
+        Explanation
+        ===========
+
         The preferred index is the index with more information regarding fermi
-        level.  If indices contain same information, 'a' is preferred before
+        level. If indices contain the same information, 'a' is preferred before
         'b'.
 
         Examples
@@ -406,8 +415,11 @@ class KroneckerDelta(Function):
         Returns the index which is preferred to substitute in the final
         expression.
 
+        Explanation
+        ===========
+
         The index to substitute is the index with less information regarding
-        fermi level.  If indices contain same information, 'a' is preferred
+        fermi level. If indices contain the same information, 'a' is preferred
         before 'b'.
 
         Examples
@@ -442,7 +454,8 @@ class KroneckerDelta(Function):
         Returns the index which is preferred to keep in the final expression.
 
         The preferred index is the index with more information regarding fermi
-        level.  If indices contain same information, index 0 is returned.
+        level. If indices contain the same information, index 0 is returned.
+
         """
         if not self.is_above_fermi:
             if self.args[0].assumptions0.get("below_fermi"):

@@ -12,12 +12,13 @@ from __future__ import print_function, division
 import random
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+from sympy import (Basic, Symbol, cacheit, sympify, Mul,
                    And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
-                   Sum, Intersection)
+                   Sum, Intersection, S)
 from sympy.core.containers import Dict
 from sympy.core.logic import Logic
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
@@ -191,7 +192,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def check(*args):
         pass
 
-    @property
+    @property # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:
@@ -244,8 +245,8 @@ class FinitePSpace(PSpace):
         elem = sympify(elem)
         density = self._density
         if isinstance(list(density.keys())[0], FiniteSet):
-            return density.get(elem, 0)
-        return density.get(tuple(elem)[0][1], 0)
+            return density.get(elem, S.Zero)
+        return density.get(tuple(elem)[0][1], S.Zero)
 
     def where(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
@@ -257,13 +258,13 @@ class FinitePSpace(PSpace):
         for elem in self.domain:
             val = expr.xreplace(dict(elem))
             prob = self.prob_of(elem)
-            d[val] = d.get(val, 0) + prob
+            d[val] = d.get(val, S.Zero) + prob
         return d
 
     @cacheit
     def compute_cdf(self, expr):
         d = self.compute_density(expr)
-        cum_prob = 0
+        cum_prob = S.Zero
         cdf = []
         for key in sorted(d):
             prob = d[key]
@@ -306,7 +307,7 @@ class FinitePSpace(PSpace):
         else:
             parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
             bools = [True for elem in self.domain]
-        return sum([Piecewise((prob * elem, blv), (0, True))
+        return sum([Piecewise((prob * elem, blv), (S.Zero, True))
                 for prob, elem, blv in zip(probs, parse_domain, bools)])
 
     def compute_quantile(self, expr):
@@ -328,8 +329,8 @@ class FinitePSpace(PSpace):
             rv = condition.lhs if isinstance(condition.rhs, Symbol) else condition.rhs
             return sum(Piecewise(
                        (self.prob_of(elem), condition.subs(rv, list(elem)[0][1])),
-                       (0, True)) for elem in self.domain)
-        return sum(self.prob_of(elem) for elem in self.where(condition))
+                       (S.Zero, True)) for elem in self.domain)
+        return sympify(sum(self.prob_of(elem) for elem in self.where(condition)))
 
     def conditional_space(self, condition):
         domain = self.where(condition)
@@ -338,7 +339,7 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
-    def sample(self):
+    def sample(self, size=()):
         """
         Internal sample method
 
@@ -388,7 +389,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     def pmf(self, expr):
         return self.distribution.pmf(expr)
 
-    @property
+    @property # type: ignore
     @cacheit
     def _density(self):
         return dict((FiniteSet((self.symbol, val)), prob)
@@ -430,7 +431,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
                      else expr.subs(rv, k)
             return Lambda(k,
             Piecewise((self.pmf(k), And(k >= self.args[1].low,
-            k <= self.args[1].high, cond)), (0, True)))
+            k <= self.args[1].high, cond)), (S.Zero, True)))
         expr = rv_subs(expr, self.values)
         return FinitePSpace(self.domain, self.distribution).compute_density(expr)
 
@@ -451,8 +452,10 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             cond = True if not isinstance(expr, (Relational, Logic)) \
                     else expr
             func = self.pmf(k) * k if cond != True else self.pmf(k) * expr
-            return Sum(Piecewise((func, cond), (0, True)),
+            return Sum(Piecewise((func, cond), (S.Zero, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
+
+        expr = _sympify(expr)
         expr = rv_subs(expr, rvs)
         return FinitePSpace(self.domain, self.distribution).compute_expectation(expr, rvs, **kwargs)
 
@@ -488,7 +491,7 @@ class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
     def domain(self):
         return ProductFiniteDomain(*[space.domain for space in self.spaces])
 
-    @property
+    @property  # type: ignore
     @cacheit
     def _density(self):
         proditer = product(*[iter(space._density.items())
@@ -498,10 +501,10 @@ class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
             elems, probs = list(zip(*items))
             elem = sumsets(elems)
             prob = Mul(*probs)
-            d[elem] = d.get(elem, 0) + prob
+            d[elem] = d.get(elem, S.Zero) + prob
         return Dict(d)
 
-    @property
+    @property  # type: ignore
     @cacheit
     def density(self):
         return Dict(self._density)

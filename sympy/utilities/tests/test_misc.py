@@ -1,5 +1,8 @@
 from textwrap import dedent
-from sympy.core.compatibility import range, unichr
+import sys
+from subprocess import Popen, PIPE
+import os
+
 from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
 
 def test_translate():
@@ -12,7 +15,7 @@ def test_translate():
     assert translate(abc, {'ab': ''}, 'c') == ''
     assert translate(abc, {'bc': 'x'}, 'c') == 'ab'
     assert translate(abc, {'abc': 'x', 'a': 'y'}) == 'x'
-    u = unichr(4096)
+    u = chr(4096)
     assert translate(abc, 'a', 'x', u) == 'xbc'
     assert (u in translate(abc, 'a', u, u)) is True
 
@@ -84,3 +87,34 @@ def test_strlines():
         ')')
     q = 'this\nother line'
     assert strlines(q) == rawlines(q)
+
+
+def test_translate_args():
+    try:
+        translate(None, None, None, 'not_none')
+    except ValueError:
+        pass # Exception raised successfully
+    else:
+        assert False
+
+    assert translate('s', None, None, None) == 's'
+
+    try:
+        translate('s', 'a', 'bc')
+    except ValueError:
+        pass # Exception raised successfully
+    else:
+        assert False
+
+
+def test_debug_output():
+    env = os.environ.copy()
+    env['SYMPY_DEBUG'] = 'True'
+    cmd = 'from sympy import *; x = Symbol("x"); print(integrate((1-cos(x))/x, x))'
+    cmdline = [sys.executable, '-c', cmd]
+    proc = Popen(cmdline, env=env, stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate()
+    out = out.decode('ascii') # utf-8?
+    err = err.decode('ascii')
+    expected = 'substituted: -x*(cos(x) - 1), u: 1/x, u_var: _u'
+    assert expected in err, err

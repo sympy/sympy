@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Optional
+
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
 from sympy.core import Symbol
@@ -10,8 +12,8 @@ from sympy.core.compatibility import iterable
 class MonomialOrder(object):
     """Base class for monomial orderings. """
 
-    alias = None
-    is_global = None
+    alias = None  # type: Optional[str]
+    is_global = None  # type: Optional[bool]
     is_default = False
 
     def __repr__(self):

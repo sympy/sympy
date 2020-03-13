@@ -12,12 +12,12 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
 from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def _common_new(cls, function, *symbols, **assumptions):
@@ -26,7 +26,18 @@ def _common_new(cls, function, *symbols, **assumptions):
     both ExprWithLimits and AddWithLimits."""
     function = sympify(function)
 
-    if hasattr(function, 'func') and isinstance(function, Equality):
+    if isinstance(function, Equality):
+        # This transforms e.g. Integral(Eq(x, y)) to Eq(Integral(x), Integral(y))
+        # but that is only valid for definite integrals.
+        limits, orientation = _process_limits(*symbols)
+        if not (limits and all(len(limit) == 3 for limit in limits)):
+            SymPyDeprecationWarning(
+                feature='Integral(Eq(x, y))',
+                useinstead='Eq(Integral(x, z), Integral(y, z))',
+                issue=18053,
+                deprecated_since_version=1.6,
+            ).warn()
+
         lhs = function.lhs
         rhs = function.rhs
         return Equality(cls(lhs, *symbols, **assumptions), \
@@ -150,7 +161,7 @@ def _process_limits(*symbols):
 
 
 class ExprWithLimits(Expr):
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)
@@ -224,7 +235,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits]
 
@@ -245,7 +256,7 @@ class ExprWithLimits(Expr):
 
         function, limits, free_symbols
         as_dummy : Rename dummy variables
-        transform : Perform mapping on the dummy variable
+        sympy.integrals.integrals.Integral.transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits if len(l) != 1]
 
@@ -369,6 +380,111 @@ class ExprWithLimits(Expr):
         limits.reverse()
 
         return self.func(func, *limits)
+
+    @property
+    def has_finite_limits(self):
+        """
+        Returns True if the limits are known to be finite, either by the
+        explicit bounds, assumptions on the bounds, or assumptions on the
+        variables.  False if known to be infinite, based on the bounds.
+        None if not enough information is available to determine.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Integral, Product, oo, Symbol
+        >>> x = Symbol('x')
+        >>> Sum(x, (x, 1, 8)).has_finite_limits
+        True
+
+        >>> Integral(x, (x, 1, oo)).has_finite_limits
+        False
+
+        >>> M = Symbol('M')
+        >>> Sum(x, (x, 1, M)).has_finite_limits
+
+        >>> N = Symbol('N', integer=True)
+        >>> Product(x, (x, 1, N)).has_finite_limits
+        True
+
+        See Also
+        ========
+
+        has_reversed_limits
+
+        """
+
+        ret_None = False
+        for lim in self.limits:
+            if len(lim) == 3:
+                if any(l.is_infinite for l in lim[1:]):
+                    # Any of the bounds are +/-oo
+                    return False
+                elif any(l.is_infinite is None for l in lim[1:]):
+                    # Maybe there are assumptions on the variable?
+                    if lim[0].is_infinite is None:
+                        ret_None = True
+            else:
+                if lim[0].is_infinite is None:
+                    ret_None = True
+
+        if ret_None:
+            return None
+        return True
+
+    @property
+    def has_reversed_limits(self):
+        """
+        Returns True if the limits are known to be in reversed order, either
+        by the explicit bounds, assumptions on the bounds, or assumptions on the
+        variables.  False if known to be in normal order, based on the bounds.
+        None if not enough information is available to determine.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Integral, Product, oo, Symbol
+        >>> x = Symbol('x')
+        >>> Sum(x, (x, 8, 1)).has_reversed_limits
+        True
+
+        >>> Sum(x, (x, 1, oo)).has_reversed_limits
+        False
+
+        >>> M = Symbol('M')
+        >>> Integral(x, (x, 1, M)).has_reversed_limits
+
+        >>> N = Symbol('N', integer=True, positive=True)
+        >>> Sum(x, (x, 1, N)).has_reversed_limits
+        False
+
+        >>> Product(x, (x, 2, N)).has_reversed_limits
+
+        >>> Product(x, (x, 2, N)).subs(N, N + 2).has_reversed_limits
+        False
+
+        See Also
+        ========
+
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.has_empty_sequence
+
+        """
+        ret_None = False
+        for lim in self.limits:
+            if len(lim) == 3:
+                var, a, b = lim
+                dif = b - a
+                if dif.is_extended_negative:
+                    return True
+                elif dif.is_extended_nonnegative:
+                    continue
+                else:
+                    ret_None = True
+            else:
+                return None
+        if ret_None:
+            return None
+        return False
 
 
 class AddWithLimits(ExprWithLimits):

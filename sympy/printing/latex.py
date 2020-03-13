@@ -4,6 +4,8 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
@@ -23,7 +25,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -123,6 +125,7 @@ class LatexPrinter(Printer):
     printmethod = "_latex"
 
     _default_settings = {
+        "full_prec": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
@@ -141,7 +144,10 @@ class LatexPrinter(Printer):
         "imaginary_unit": "i",
         "gothic_re_im": False,
         "decimal_separator": "period",
-    }
+        "perm_cyclic": True,
+        "min": None,
+        "max": None,
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -199,8 +205,11 @@ class LatexPrinter(Printer):
             self._settings['imaginary_unit_latex'] = \
                 self._settings['imaginary_unit']
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, is_neg=False, strict=False):
         prec_val = precedence_traditional(item)
+        if is_neg and strict:
+            return r"\left({}\right)".format(self._print(item))
+
         if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left({}\right)".format(self._print(item))
         else:
@@ -337,10 +346,7 @@ class LatexPrinter(Printer):
         return r"\text{%s}" % e
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
 
         tex = ""
         for i, term in enumerate(terms):
@@ -374,12 +380,47 @@ class LatexPrinter(Printer):
         term_tex = term_tex.replace(']', r"\right)")
         return term_tex
 
-    _print_Permutation = _print_Cycle
+    def _print_Permutation(self, expr):
+        from sympy.combinatorics.permutations import Permutation
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
+            return self._print_Cycle(expr)
+
+        if expr.size == 0:
+            return r"\left( \right)"
+
+        lower = [self._print(arg) for arg in expr.array_form]
+        upper = [self._print(arg) for arg in range(len(lower))]
+
+        row1 = " & ".join(upper)
+        row2 = " & ".join(lower)
+        mat = r" \\ ".join((row1, row2))
+        return r"\begin{pmatrix} %s \end{pmatrix}" % mat
+
+
+    def _print_AppliedPermutation(self, expr):
+        perm, var = expr.args
+        return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+        strip = False if self._settings['full_prec'] else True
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator
@@ -692,8 +733,15 @@ class LatexPrinter(Printer):
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
+        if any(_coeff_isneg(i) for i in expr.args):
+            return r"%s %s" % (tex, self.parenthesize(expr.expr,
+                                                  PRECEDENCE["Mul"],
+                                                  is_neg=True,
+                                                  strict=True))
+
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
+                                                  is_neg=False,
                                                   strict=True))
 
     def _print_Subs(self, subs):
@@ -737,6 +785,7 @@ class LatexPrinter(Printer):
 
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
+                                                    is_neg=any(_coeff_isneg(i) for i in expr.args),
                                                     strict=True),
                              "".join(symbols))
 
@@ -1655,6 +1704,10 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
+    def _print_PermutationMatrix(self, P):
+        perm_str = self._print(P.args[0])
+        return "P_{%s}" % perm_str
+
     def _print_NDimArray(self, expr):
 
         if expr.rank() == 0:
@@ -1774,6 +1827,19 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
         )
 
+    def _print_PartialDerivative(self, expr):
+        if len(expr.variables) == 1:
+            return r"\frac{\partial}{\partial {%s}}{%s}" % (
+                self._print(expr.variables[0]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+        else:
+            return r"\frac{\partial^{%s}}{%s}{%s}" % (
+                len(expr.variables),
+                " ".join([r"\partial {%s}" % self._print(i) for i in expr.variables]),
+                self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
+            )
+
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
@@ -1872,12 +1938,6 @@ class LatexPrinter(Printer):
             tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
-    def _print_ProductSet(self, p):
-        if len(p.sets) > 1 and not has_variety(p.sets):
-            return self._print(p.sets[0]) + "^{%d}" % len(p.sets)
-        else:
-            return r" \times ".join(self._print(set) for set in p.sets)
-
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
             return '\\text{Domain: }' + self._print(d.as_boolean())
@@ -1909,7 +1969,15 @@ class LatexPrinter(Printer):
     def _print_Range(self, s):
         dots = r'\ldots'
 
-        if s.start.is_infinite:
+        if s.has(Symbol):
+            return self._print_Basic(s)
+
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
         elif s.stop.is_infinite:
             it = iter(s)
@@ -2016,16 +2084,31 @@ class LatexPrinter(Printer):
                 (self._print(i.min), self._print(i.max))
 
     def _print_Union(self, u):
-        return r" \cup ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \cup ".join(args_str)
 
     def _print_Complement(self, u):
-        return r" \setminus ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \setminus ".join(args_str)
 
     def _print_Intersection(self, u):
-        return r" \cap ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \cap ".join(args_str)
 
     def _print_SymmetricDifference(self, u):
-        return r" \triangle ".join([self._print(i) for i in u.args])
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" \triangle ".join(args_str)
+
+    def _print_ProductSet(self, p):
+        prec = precedence_traditional(p)
+        if len(p.sets) >= 1 and not has_variety(p.sets):
+            return self.parenthesize(p.sets[0], prec) + "^{%d}" % len(p.sets)
+        return r" \times ".join(
+            self.parenthesize(set, prec) for set in p.sets)
 
     def _print_EmptySet(self, e):
         return r"\emptyset"
@@ -2039,6 +2122,9 @@ class LatexPrinter(Printer):
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
 
+    def _print_Rationals(self, i):
+        return r"\mathbb{Q}"
+
     def _print_Reals(self, i):
         return r"\mathbb{R}"
 
@@ -2046,18 +2132,17 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_ImageSet(self, s):
-        sets = s.args[1:]
-        varsets = [r"%s \in %s" % (self._print(var), self._print(setv))
-                   for var, setv in zip(s.lamda.variables, sets)]
-        return r"\left\{%s\; |\; %s\right\}" % (
-            self._print(s.lamda.expr),
-            ', '.join(varsets))
+        expr = s.lamda.expr
+        sig = s.lamda.signature
+        xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
+        xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
+        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
             return r"\left\{%s \mid %s \right\}" % \
-                (vars_print, self._print(s.condition.as_expr()))
+                (vars_print, self._print(s.condition))
 
         return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
             vars_print,
@@ -2479,17 +2564,19 @@ def translate(s):
         return s
 
 
-def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
-          fold_short_frac=None, inv_trig_style="abbreviated",
+def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
+          fold_func_brackets=False, fold_short_frac=None, inv_trig_style="abbreviated",
           itex=False, ln_notation=False, long_frac_ratio=None,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
           mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
-          decimal_separator="period" ):
+          decimal_separator="period", perm_cyclic=True):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
     ==========
+    full_prec: boolean, optional
+        If set to True, a floating point number is printed with full precision.
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
@@ -2557,6 +2644,12 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
         separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
         ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
+    min: Integer or None, optional
+        Sets the lower bound for the exponent to print floating point numbers in
+        fixed-point format.
+    max: Integer or None, optional
+        Sets the upper bound for the exponent to print floating point numbers in
+        fixed-point format.
 
     Notes
     =====
@@ -2668,6 +2761,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         symbol_names = {}
 
     settings = {
+        'full_prec': full_prec,
         'fold_frac_powers': fold_frac_powers,
         'fold_func_brackets': fold_func_brackets,
         'fold_short_frac': fold_short_frac,
@@ -2686,6 +2780,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'imaginary_unit': imaginary_unit,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
+        'perm_cyclic' : perm_cyclic,
+        'min': min,
+        'max': max,
     }
 
     return LatexPrinter(settings).doprint(expr)

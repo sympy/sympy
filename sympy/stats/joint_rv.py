@@ -15,7 +15,7 @@ from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy)
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum, summation
-from sympy.core.compatibility import string_types, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
@@ -41,7 +41,7 @@ class JointPSpace(ProductPSpace):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
-        if isinstance(sym, string_types):
+        if isinstance(sym, str):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -70,7 +70,7 @@ class JointPSpace(ProductPSpace):
             return S(len(_set.args))
         elif isinstance(_set, Product):
             return _set.limits[0][-1]
-        return S(1)
+        return S.One
 
     @property
     def pdf(self):
@@ -95,7 +95,7 @@ class JointPSpace(ProductPSpace):
         orig = [Indexed(self.symbol, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
-        sym = [Symbol(str(Indexed(self.symbol, i))) for i in indices]
+        sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
         limits = list([i,] for i in all_syms if i not in sym)
         index = 0
         for i in range(count):
@@ -160,7 +160,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         return ProductDomain(self.symbols)
 
     @property
-    def pdf(self, *args):
+    def pdf(self):
         return self.density.args[1]
 
     def cdf(self, other):
@@ -321,10 +321,10 @@ class MarginalDistribution(Basic):
         elif isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
-            syms = [Indexed(x, i) for i in count]
+            syms = tuple(Indexed(x, i) for i in count)
             expr = expr.pdf(syms)
         else:
-            syms = [rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs]
+            syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
     def compute_pdf(self, expr, rvs):

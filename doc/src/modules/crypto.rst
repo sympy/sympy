@@ -1,5 +1,6 @@
-Basic Cryptography Module
-=========================
+============
+Cryptography
+============
 
 .. warning::
 
@@ -141,3 +142,7 @@ substitutions at different times in the message.
 .. autofunction:: encipher_gm
 
 .. autofunction:: decipher_gm
+
+.. autofunction:: encipher_railfence
+
+.. autofunction:: decipher_railfence

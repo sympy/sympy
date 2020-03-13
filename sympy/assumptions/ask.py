@@ -5,7 +5,6 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
                                  BooleanFunction, BooleanAtom)
@@ -14,16 +13,6 @@ from sympy.utilities.decorator import memoize_property
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
-# Deprecated predicates should be added to this list
-deprecated_predicates = [
-    'bounded',
-    'infinity',
-    'infinitesimal'
-]
-
-# Memoization storage for predicates
-predicate_storage = {}
-predicate_memo = memoize_property(predicate_storage)
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
 # This is because assumption handlers are registered on those objects.
@@ -31,10 +20,11 @@ predicate_memo = memoize_property(predicate_storage)
 
 class AssumptionKeys(object):
     """
-    This class contains all the supported keys by ``ask``.
+    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+
     """
 
-    @predicate_memo
+    @memoize_property
     def hermitian(self):
         """
         Hermitian predicate.
@@ -51,7 +41,7 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('hermitian')
 
-    @predicate_memo
+    @memoize_property
     def antihermitian(self):
         """
         Antihermitian predicate.
@@ -69,7 +59,7 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('antihermitian')
 
-    @predicate_memo
+    @memoize_property
     def real(self):
         r"""
         Real number predicate.
@@ -126,7 +116,7 @@ class AssumptionKeys(object):
         """
         return Predicate('real')
 
-    @predicate_memo
+    @memoize_property
     def extended_real(self):
         r"""
         Extended real predicate.
@@ -150,7 +140,7 @@ class AssumptionKeys(object):
         """
         return Predicate('extended_real')
 
-    @predicate_memo
+    @memoize_property
     def imaginary(self):
         """
         Imaginary number predicate.
@@ -178,7 +168,7 @@ class AssumptionKeys(object):
         """
         return Predicate('imaginary')
 
-    @predicate_memo
+    @memoize_property
     def complex(self):
         """
         Complex number predicate.
@@ -206,7 +196,7 @@ class AssumptionKeys(object):
         """
         return Predicate('complex')
 
-    @predicate_memo
+    @memoize_property
     def algebraic(self):
         r"""
         Algebraic number predicate.
@@ -233,7 +223,7 @@ class AssumptionKeys(object):
         """
         return Predicate('algebraic')
 
-    @predicate_memo
+    @memoize_property
     def transcendental(self):
         """
         Transcedental number predicate.
@@ -246,7 +236,7 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('transcendental')
 
-    @predicate_memo
+    @memoize_property
     def integer(self):
         """
         Integer predicate.
@@ -270,7 +260,7 @@ class AssumptionKeys(object):
         """
         return Predicate('integer')
 
-    @predicate_memo
+    @memoize_property
     def rational(self):
         """
         Rational number predicate.
@@ -297,7 +287,7 @@ class AssumptionKeys(object):
         """
         return Predicate('rational')
 
-    @predicate_memo
+    @memoize_property
     def irrational(self):
         """
         Irrational number predicate.
@@ -326,7 +316,7 @@ class AssumptionKeys(object):
         """
         return Predicate('irrational')
 
-    @predicate_memo
+    @memoize_property
     def finite(self):
         """
         Finite predicate.
@@ -357,15 +347,8 @@ class AssumptionKeys(object):
         """
         return Predicate('finite')
 
-    @predicate_memo
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
-    def bounded(self):
-        """
-        See documentation of ``Q.finite``.
-        """
-        return Predicate('finite')
 
-    @predicate_memo
+    @memoize_property
     def infinite(self):
         """
         Infinite number predicate.
@@ -377,23 +360,8 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('infinite')
 
-    @predicate_memo
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
-    def infinity(self):
-        """
-        See documentation of ``Q.infinite``.
-        """
-        return Predicate('infinite')
 
-    @predicate_memo
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
-    def infinitesimal(self):
-        """
-        See documentation of ``Q.zero``.
-        """
-        return Predicate('zero')
-
-    @predicate_memo
+    @memoize_property
     def positive(self):
         r"""
         Positive real number predicate.
@@ -431,7 +399,7 @@ class AssumptionKeys(object):
         """
         return Predicate('positive')
 
-    @predicate_memo
+    @memoize_property
     def negative(self):
         r"""
         Negative number predicate.
@@ -469,7 +437,7 @@ class AssumptionKeys(object):
         """
         return Predicate('negative')
 
-    @predicate_memo
+    @memoize_property
     def zero(self):
         """
         Zero number predicate.
@@ -495,7 +463,7 @@ class AssumptionKeys(object):
         """
         return Predicate('zero')
 
-    @predicate_memo
+    @memoize_property
     def nonzero(self):
         """
         Nonzero real number predicate.
@@ -535,7 +503,7 @@ class AssumptionKeys(object):
         """
         return Predicate('nonzero')
 
-    @predicate_memo
+    @memoize_property
     def nonpositive(self):
         """
         Nonpositive real number predicate.
@@ -569,7 +537,7 @@ class AssumptionKeys(object):
         """
         return Predicate('nonpositive')
 
-    @predicate_memo
+    @memoize_property
     def nonnegative(self):
         """
         Nonnegative real number predicate.
@@ -602,7 +570,7 @@ class AssumptionKeys(object):
         """
         return Predicate('nonnegative')
 
-    @predicate_memo
+    @memoize_property
     def even(self):
         """
         Even number predicate.
@@ -626,7 +594,7 @@ class AssumptionKeys(object):
         """
         return Predicate('even')
 
-    @predicate_memo
+    @memoize_property
     def odd(self):
         """
         Odd number predicate.
@@ -649,7 +617,7 @@ class AssumptionKeys(object):
         """
         return Predicate('odd')
 
-    @predicate_memo
+    @memoize_property
     def prime(self):
         """
         Prime number predicate.
@@ -676,7 +644,7 @@ class AssumptionKeys(object):
         """
         return Predicate('prime')
 
-    @predicate_memo
+    @memoize_property
     def composite(self):
         """
         Composite number predicate.
@@ -700,7 +668,7 @@ class AssumptionKeys(object):
         """
         return Predicate('composite')
 
-    @predicate_memo
+    @memoize_property
     def commutative(self):
         """
         Commutative predicate.
@@ -712,7 +680,7 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('commutative')
 
-    @predicate_memo
+    @memoize_property
     def is_true(self):
         """
         Generic predicate.
@@ -731,7 +699,7 @@ class AssumptionKeys(object):
         """
         return Predicate('is_true')
 
-    @predicate_memo
+    @memoize_property
     def symmetric(self):
         """
         Symmetric matrix predicate.
@@ -764,7 +732,7 @@ class AssumptionKeys(object):
         # actual matrices and add more examples in the docstring.
         return Predicate('symmetric')
 
-    @predicate_memo
+    @memoize_property
     def invertible(self):
         """
         Invertible matrix predicate.
@@ -794,7 +762,7 @@ class AssumptionKeys(object):
         """
         return Predicate('invertible')
 
-    @predicate_memo
+    @memoize_property
     def orthogonal(self):
         """
         Orthogonal matrix predicate.
@@ -829,7 +797,7 @@ class AssumptionKeys(object):
         """
         return Predicate('orthogonal')
 
-    @predicate_memo
+    @memoize_property
     def unitary(self):
         """
         Unitary matrix predicate.
@@ -861,7 +829,7 @@ class AssumptionKeys(object):
         """
         return Predicate('unitary')
 
-    @predicate_memo
+    @memoize_property
     def positive_definite(self):
         r"""
         Positive definite matrix predicate.
@@ -893,7 +861,7 @@ class AssumptionKeys(object):
         """
         return Predicate('positive_definite')
 
-    @predicate_memo
+    @memoize_property
     def upper_triangular(self):
         """
         Upper triangular matrix predicate.
@@ -918,7 +886,7 @@ class AssumptionKeys(object):
         """
         return Predicate('upper_triangular')
 
-    @predicate_memo
+    @memoize_property
     def lower_triangular(self):
         """
         Lower triangular matrix predicate.
@@ -942,7 +910,7 @@ class AssumptionKeys(object):
         """
         return Predicate('lower_triangular')
 
-    @predicate_memo
+    @memoize_property
     def diagonal(self):
         """
         Diagonal matrix predicate.
@@ -970,7 +938,7 @@ class AssumptionKeys(object):
         """
         return Predicate('diagonal')
 
-    @predicate_memo
+    @memoize_property
     def fullrank(self):
         """
         Fullrank matrix predicate.
@@ -995,7 +963,7 @@ class AssumptionKeys(object):
         """
         return Predicate('fullrank')
 
-    @predicate_memo
+    @memoize_property
     def square(self):
         """
         Square matrix predicate.
@@ -1026,7 +994,7 @@ class AssumptionKeys(object):
         """
         return Predicate('square')
 
-    @predicate_memo
+    @memoize_property
     def integer_elements(self):
         """
         Integer elements matrix predicate.
@@ -1045,7 +1013,7 @@ class AssumptionKeys(object):
         """
         return Predicate('integer_elements')
 
-    @predicate_memo
+    @memoize_property
     def real_elements(self):
         """
         Real elements matrix predicate.
@@ -1064,7 +1032,7 @@ class AssumptionKeys(object):
         """
         return Predicate('real_elements')
 
-    @predicate_memo
+    @memoize_property
     def complex_elements(self):
         """
         Complex elements matrix predicate.
@@ -1085,7 +1053,7 @@ class AssumptionKeys(object):
         """
         return Predicate('complex_elements')
 
-    @predicate_memo
+    @memoize_property
     def singular(self):
         """
         Singular matrix predicate.
@@ -1110,7 +1078,7 @@ class AssumptionKeys(object):
         """
         return Predicate('singular')
 
-    @predicate_memo
+    @memoize_property
     def normal(self):
         """
         Normal matrix predicate.
@@ -1133,7 +1101,7 @@ class AssumptionKeys(object):
         """
         return Predicate('normal')
 
-    @predicate_memo
+    @memoize_property
     def triangular(self):
         """
         Triangular matrix predicate.
@@ -1158,7 +1126,7 @@ class AssumptionKeys(object):
         """
         return Predicate('triangular')
 
-    @predicate_memo
+    @memoize_property
     def unit_triangular(self):
         """
         Unit triangular matrix predicate.
@@ -1297,31 +1265,21 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
     if local_facts.clauses:
-        local_facts_ = CNF.CNF_to_cnf(local_facts)
 
-        # See if there's a straight-forward conclusion we can make for the inference
-        if local_facts_.is_Atom:
-            if key in known_facts_dict[local_facts_]:
-                return True
-            if Not(key) in known_facts_dict[local_facts_]:
+        if len(local_facts.clauses) == 1:
+            cl, = local_facts.clauses
+            f, = cl if len(cl)==1 else [None]
+            if f and f.is_Not and f.arg in known_facts_dict.get(key, []):
                 return False
-        elif (isinstance(local_facts_, And) and
-              all(k in known_facts_dict for k in local_facts_.args)):
-            for assum in local_facts_.args:
-                if assum.is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return True
-                    if Not(key) in known_facts_dict[assum]:
-                        return False
-                elif isinstance(assum, Not) and assum.args[0].is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return False
-                    if Not(key) in known_facts_dict[assum]:
-                        return True
-        elif (isinstance(key, Predicate) and
-              isinstance(local_facts_, Not) and local_facts_.args[0].is_Atom):
-            if local_facts_.args[0] in known_facts_dict[key]:
-                return False
+
+        for clause in local_facts.clauses:
+            if len(clause) == 1:
+                f, = clause
+                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if fdict and key in fdict:
+                    return True
+                if fdict and Not(key) in known_facts_dict[f.arg]:
+                    return False
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
@@ -1504,8 +1462,7 @@ def get_known_facts_keys():
     return [
         getattr(Q, attr)
         for attr in Q.__class__.__dict__
-        if not (attr.startswith('__') or
-                attr in deprecated_predicates)]
+        if not attr.startswith('__')]
 
 @cacheit
 def get_known_facts():
@@ -1564,4 +1521,4 @@ def get_known_facts():
     )
 
 from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_known_facts_cnf, get_all_known_facts)
+    get_known_facts_dict, get_all_known_facts)

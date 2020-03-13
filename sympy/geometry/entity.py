@@ -385,12 +385,12 @@ class GeometryEntity(Basic):
         g = self
         l = line
         o = Point(0, 0)
-        if l.slope == 0:
+        if l.slope.is_zero:
             y = l.args[0].y
             if not y:  # x-axis
                 return g.scale(y=-1)
             reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
-        elif l.slope == oo:
+        elif l.slope is oo:
             x = l.args[0].x
             if not x:  # y-axis
                 return g.scale(x=-1)
@@ -543,8 +543,8 @@ class GeometrySet(GeometryEntity, Set):
 
         return self.__contains__(other)
 
-@dispatch(GeometrySet, Set)
-def union_sets(self, o):
+@dispatch(GeometrySet, Set)  # type:ignore # noqa:F811
+def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
     for use with sympy.sets.Set, if possible. """
 
@@ -562,12 +562,12 @@ def union_sets(self, o):
     return None
 
 
-@dispatch(GeometrySet, Set)
-def intersection_sets(self, o):
+@dispatch(GeometrySet, Set)  # type: ignore # noqa:F811
+def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.sets import Set, FiniteSet, Union
+    from sympy.sets import FiniteSet, Union
     from sympy.geometry import Point
 
     try:

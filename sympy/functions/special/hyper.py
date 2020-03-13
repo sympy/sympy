@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
@@ -27,7 +27,7 @@ class TupleArg(Tuple):
 
 def _prep_tuple(v):
     """
-    Turn an iterable argument V into a Tuple and unpolarify, since both
+    Turn an iterable argument *v* into a tuple and unpolarify, since both
     hypergeometric and meijer g-functions are unbranched in their parameters.
 
     Examples
@@ -40,6 +40,7 @@ def _prep_tuple(v):
     (4, 5)
     >>> _prep_tuple((7, 8, 9))
     (7, 8, 9)
+
     """
     from sympy import unpolarify
     return TupleArg(*[unpolarify(x) for x in v])
@@ -66,14 +67,17 @@ class TupleParametersBase(Function):
 
 class hyper(TupleParametersBase):
     r"""
-    The (generalized) hypergeometric function is defined by a series where
+    The generalized hypergeometric function is defined by a series where
     the ratios of successive terms are a rational function of the summation
     index. When convergent, it is continued analytically to the largest
     possible domain.
 
+    Explanation
+    ===========
+
     The hypergeometric function depends on two vectors of parameters, called
-    the numerator parameters :math:`a_p`, and the denominator parameters
-    :math:`b_q`. It also has an argument :math:`z`. The series definition is
+    the numerator parameters $a_p$, and the denominator parameters
+    $b_q$. It also has an argument $z$. The series definition is
 
     .. math ::
         {}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
@@ -81,30 +85,30 @@ class hyper(TupleParametersBase):
         = \sum_{n=0}^\infty \frac{(a_1)_n \cdots (a_p)_n}{(b_1)_n \cdots (b_q)_n}
                             \frac{z^n}{n!},
 
-    where :math:`(a)_n = (a)(a+1)\cdots(a+n-1)` denotes the rising factorial.
+    where $(a)_n = (a)(a+1)\cdots(a+n-1)$ denotes the rising factorial.
 
-    If one of the :math:`b_q` is a non-positive integer then the series is
-    undefined unless one of the `a_p` is a larger (i.e. smaller in
-    magnitude) non-positive integer. If none of the :math:`b_q` is a
-    non-positive integer and one of the :math:`a_p` is a non-positive
+    If one of the $b_q$ is a non-positive integer then the series is
+    undefined unless one of the $a_p$ is a larger (i.e., smaller in
+    magnitude) non-positive integer. If none of the $b_q$ is a
+    non-positive integer and one of the $a_p$ is a non-positive
     integer, then the series reduces to a polynomial. To simplify the
-    following discussion, we assume that none of the :math:`a_p` or
-    :math:`b_q` is a non-positive integer. For more details, see the
+    following discussion, we assume that none of the $a_p$ or
+    $b_q$ is a non-positive integer. For more details, see the
     references.
 
-    The series converges for all :math:`z` if :math:`p \le q`, and thus
-    defines an entire single-valued function in this case. If :math:`p =
-    q+1` the series converges for :math:`|z| < 1`, and can be continued
-    analytically into a half-plane. If :math:`p > q+1` the series is
-    divergent for all :math:`z`.
+    The series converges for all $z$ if $p \le q$, and thus
+    defines an entire single-valued function in this case. If $p =
+    q+1$ the series converges for $|z| < 1$, and can be continued
+    analytically into a half-plane. If $p > q+1$ the series is
+    divergent for all $z$.
 
-    Note: The hypergeometric function constructor currently does *not* check
-    if the parameters actually yield a well-defined function.
+    Please note the hypergeometric function constructor currently does *not*
+    check if the parameters actually yield a well-defined function.
 
     Examples
     ========
 
-    The parameters :math:`a_p` and :math:`b_q` can be passed as arbitrary
+    The parameters $a_p$ and $b_q$ can be passed as arbitrary
     iterables, for example:
 
     >>> from sympy.functions import hyper
@@ -112,7 +116,7 @@ class hyper(TupleParametersBase):
     >>> hyper((1, 2, 3), [3, 4], x)
     hyper((1, 2, 3), (3, 4), x)
 
-    There is also pretty printing (it looks better using unicode):
+    There is also pretty printing (it looks better using Unicode):
 
     >>> from sympy import pprint
     >>> pprint(hyper((1, 2, 3), [3, 4], x), use_unicode=False)
@@ -127,22 +131,21 @@ class hyper(TupleParametersBase):
     >>> hyper((1, ), [], x)
     hyper((1,), (), x)
 
-    But of course they may be variables (but if they depend on x then you
+    But of course they may be variables (but if they depend on $x$ then you
     should not expect much implemented functionality):
 
     >>> hyper((n, a), (n**2,), x)
     hyper((n, a), (n**2,), x)
 
     The hypergeometric function generalizes many named special functions.
-    The function hyperexpand() tries to express a hypergeometric function
-    using named special functions.
-    For example:
+    The function ``hyperexpand()`` tries to express a hypergeometric function
+    using named special functions. For example:
 
     >>> from sympy import hyperexpand
     >>> hyperexpand(hyper([], [], x))
     exp(x)
 
-    You can also use expand_func:
+    You can also use ``expand_func()``:
 
     >>> from sympy import expand_func
     >>> expand_func(x*hyper([1, 1], [2], -x))
@@ -156,7 +159,7 @@ class hyper(TupleParametersBase):
     >>> hyperexpand(x*hyper([S(1)/2, S(1)/2], [S(3)/2], x**2))
     asin(x)
 
-    We can also sometimes hyperexpand parametric functions:
+    We can also sometimes ``hyperexpand()`` parametric functions:
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
@@ -166,7 +169,7 @@ class hyper(TupleParametersBase):
     ========
 
     sympy.simplify.hyperexpand
-    sympy.functions.special.gamma_functions.gamma
+    gamma
     meijerg
 
     References
@@ -175,12 +178,13 @@ class hyper(TupleParametersBase):
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
     .. [2] https://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+
     """
 
 
-    def __new__(cls, ap, bq, z):
+    def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z)
+        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
     def eval(cls, ap, bq, z):
@@ -216,6 +220,34 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
+    def _eval_nseries(self, x, n, logx):
+
+        from sympy.functions import factorial, RisingFactorial
+        from sympy import Order, Add
+
+        arg = self.args[2]
+        x0 = arg.limit(x, 0)
+        ap = self.args[0]
+        bq = self.args[1]
+
+        if x0 != 0:
+            return super(hyper, self)._eval_nseries(x, n, logx)
+
+        terms = []
+
+        for i in range(n):
+            num = 1
+            den = 1
+            for a in ap:
+                num *= RisingFactorial(a, i)
+
+            for b in bq:
+                den *= RisingFactorial(b, i)
+
+            terms.append(((num/den) * (arg**i)) / factorial(i))
+
+        return (Add(*terms) + Order(x**n,x))
+
     @property
     def argument(self):
         """ Argument of the hypergeometric function. """
@@ -245,9 +277,16 @@ class hyper(TupleParametersBase):
         """
         Compute the radius of convergence of the defining series.
 
-        Note that even if this is not oo, the function may still be evaluated
-        outside of the radius of convergence by analytic continuation. But if
-        this is zero, then the function is not actually defined anywhere else.
+        Explanation
+        ===========
+
+        Note that even if this is not ``oo``, the function may still be
+        evaluated outside of the radius of convergence by analytic
+        continuation. But if this is zero, then the function is not actually
+        defined anywhere else.
+
+        Examples
+        ========
 
         >>> from sympy.functions import hyper
         >>> from sympy.abc import z
@@ -257,12 +296,13 @@ class hyper(TupleParametersBase):
         0
         >>> hyper((1, 2), (3, 4), z).radius_of_convergence
         oo
+
         """
         if any(a.is_integer and (a <= 0) == True for a in self.ap + self.bq):
             aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
             bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
             if len(aints) < len(bints):
-                return S(0)
+                return S.Zero
             popped = False
             for b in bints:
                 cancelled = False
@@ -273,17 +313,17 @@ class hyper(TupleParametersBase):
                         break
                     popped = True
                 if not cancelled:
-                    return S(0)
+                    return S.Zero
             if aints or popped:
                 # There are still non-positive numerator parameters.
                 # This is a polynomial.
                 return oo
         if len(self.ap) == len(self.bq) + 1:
-            return S(1)
+            return S.One
         elif len(self.ap) <= len(self.bq):
             return oo
         else:
-            return S(0)
+            return S.Zero
 
     @property
     def convergence_statement(self):
@@ -319,13 +359,16 @@ class meijerg(TupleParametersBase):
     resembles an inverse Mellin transform. It generalizes the hypergeometric
     functions.
 
+    Explanation
+    ===========
+
     The Meijer G-function depends on four sets of parameters. There are
     "*numerator parameters*"
-    :math:`a_1, \ldots, a_n` and :math:`a_{n+1}, \ldots, a_p`, and there are
+    $a_1, \ldots, a_n$ and $a_{n+1}, \ldots, a_p$, and there are
     "*denominator parameters*"
-    :math:`b_1, \ldots, b_m` and :math:`b_{m+1}, \ldots, b_q`.
+    $b_1, \ldots, b_m$ and $b_{m+1}, \ldots, b_q$.
     Confusingly, it is traditionally denoted as follows (note the position
-    of `m`, `n`, `p`, `q`, and how they relate to the lengths of the four
+    of $m$, $n$, $p$, $q$, and how they relate to the lengths of the four
     parameter vectors):
 
     .. math ::
@@ -333,7 +376,7 @@ class meijerg(TupleParametersBase):
                                         b_1, \cdots, b_m & b_{m+1}, \cdots, b_q
                           \end{matrix} \middle| z \right).
 
-    However, in sympy the four parameter vectors are always available
+    However, in SymPy the four parameter vectors are always available
     separately (see examples), so that there is no need to keep track of the
     decorating sub- and super-scripts on the G symbol.
 
@@ -344,18 +387,18 @@ class meijerg(TupleParametersBase):
          \prod_{j=1}^n \Gamma(1 - a_j + s)}{\prod_{j=m+1}^q \Gamma(1- b_j +s)
          \prod_{j=n+1}^p \Gamma(a_j - s)} z^s \mathrm{d}s,
 
-    where :math:`\Gamma(z)` is the gamma function. There are three possible
+    where $\Gamma(z)$ is the gamma function. There are three possible
     contours which we will not describe in detail here (see the references).
-    If the integral converges along more than one of them the definitions
-    agree. The contours all separate the poles of :math:`\Gamma(1-a_j+s)`
-    from the poles of :math:`\Gamma(b_k-s)`, so in particular the G function
-    is undefined if :math:`a_j - b_k \in \mathbb{Z}_{>0}` for some
-    :math:`j \le n` and :math:`k \le m`.
+    If the integral converges along more than one of them, the definitions
+    agree. The contours all separate the poles of $\Gamma(1-a_j+s)$
+    from the poles of $\Gamma(b_k-s)$, so in particular the G function
+    is undefined if $a_j - b_k \in \mathbb{Z}_{>0}$ for some
+    $j \le n$ and $k \le m$.
 
     The conditions under which one of the contours yields a convergent integral
     are complicated and we do not state them here, see the references.
 
-    Note: Currently the Meijer G-function constructor does *not* check any
+    Please note currently the Meijer G-function constructor does *not* check any
     convergence conditions.
 
     Examples
@@ -372,7 +415,7 @@ class meijerg(TupleParametersBase):
     /__     |           | x|
     \_|4, 1 \ 5         |  /
 
-    or as two nested vectors:
+    Or as two nested vectors:
 
     >>> pprint(meijerg([(1, 2), (3, 4)], ([5], Tuple()), x), use_unicode=False)
      __1, 2 /1, 2  3, 4 |  \
@@ -417,8 +460,9 @@ class meijerg(TupleParametersBase):
                                  (-b + c + 1,), -x)/gamma(-b + c + 1)
 
     Thus the Meijer G-function also subsumes many named functions as special
-    cases. You can use expand_func or hyperexpand to (try to) rewrite a
-    Meijer G-function in terms of named special functions. For example:
+    cases. You can use ``expand_func()`` or ``hyperexpand()`` to (try to)
+    rewrite a Meijer G-function in terms of named special functions. For
+    example:
 
     >>> from sympy import expand_func, S
     >>> expand_func(meijerg([[],[]], [[0],[]], -x))
@@ -442,7 +486,7 @@ class meijerg(TupleParametersBase):
     """
 
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
@@ -463,7 +507,7 @@ class meijerg(TupleParametersBase):
                          "any b1, ..., bm by a positive integer")
 
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, arg0, arg1, args[2])
+        return Function.__new__(cls, arg0, arg1, args[2], **kwargs)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -569,7 +613,10 @@ class meijerg(TupleParametersBase):
 
     def get_period(self):
         """
-        Return a number P such that G(x*exp(I*P)) == G(x).
+        Return a number $P$ such that $G(x*exp(I*P)) == G(x)$.
+
+        Examples
+        ========
 
         >>> from sympy.functions.special.hyper import meijerg
         >>> from sympy.abc import z
@@ -583,6 +630,7 @@ class meijerg(TupleParametersBase):
         oo
         >>> meijerg([1,1], [2], [1, S(1)/2, S(1)/3], [1], z).get_period()
         12*pi
+
         """
         # This follows from slater's theorem.
         def compute(l):
@@ -628,9 +676,9 @@ class meijerg(TupleParametersBase):
                 return
             branch = branch[0].args[0]/I
         else:
-            branch = S(0)
+            branch = S.Zero
         n = ceiling(abs(branch/S.Pi)) + 1
-        znum = znum**(S(1)/n)*exp(I*branch / n)
+        znum = znum**(S.One/n)*exp(I*branch / n)
 
         # Convert all args to mpf or mpc
         try:
@@ -714,7 +762,7 @@ class HyperRep(Function):
     """
     A base class for "hyper representation functions".
 
-    This is used exclusively in hyperexpand(), but fits more logically here.
+    This is used exclusively in ``hyperexpand()``, but fits more logically here.
 
     pFq is branched at 1 if p == q+1. For use with slater-expansion, we want
     define an "analytic continuation" to all polar numbers, which is
@@ -723,6 +771,7 @@ class HyperRep(Function):
 
     This base class contains the core logic, concrete derived classes only
     supply the actual functions.
+
     """
 
 
@@ -760,7 +809,7 @@ class HyperRep(Function):
         newargs = self.args[:-1] + (x,)
         if not n.is_Integer:
             minus = True
-            n -= S(1)/2
+            n -= S.Half
         newerargs = newargs + (n,)
         if minus:
             small = self._expr_small_minus(*newargs)
@@ -886,11 +935,11 @@ class HyperRep_asin1(HyperRep):
 
     @classmethod
     def _expr_big(cls, z, n):
-        return S(-1)**n*((S(1)/2 - n)*pi/sqrt(z) + I*acosh(sqrt(z))/sqrt(z))
+        return S.NegativeOne**n*((S.Half - n)*pi/sqrt(z) + I*acosh(sqrt(z))/sqrt(z))
 
     @classmethod
     def _expr_big_minus(cls, z, n):
-        return S(-1)**n*(asinh(sqrt(z))/sqrt(z) + n*pi*I/sqrt(z))
+        return S.NegativeOne**n*(asinh(sqrt(z))/sqrt(z) + n*pi*I/sqrt(z))
 
 
 class HyperRep_asin2(HyperRep):
@@ -899,22 +948,22 @@ class HyperRep_asin2(HyperRep):
     @classmethod
     def _expr_small(cls, z):
         return HyperRep_asin1._expr_small(z) \
-            /HyperRep_power1._expr_small(S(1)/2, z)
+            /HyperRep_power1._expr_small(S.Half, z)
 
     @classmethod
     def _expr_small_minus(cls, z):
         return HyperRep_asin1._expr_small_minus(z) \
-            /HyperRep_power1._expr_small_minus(S(1)/2, z)
+            /HyperRep_power1._expr_small_minus(S.Half, z)
 
     @classmethod
     def _expr_big(cls, z, n):
         return HyperRep_asin1._expr_big(z, n) \
-            /HyperRep_power1._expr_big(S(1)/2, z, n)
+            /HyperRep_power1._expr_big(S.Half, z, n)
 
     @classmethod
     def _expr_big_minus(cls, z, n):
         return HyperRep_asin1._expr_big_minus(z, n) \
-            /HyperRep_power1._expr_big_minus(S(1)/2, z, n)
+            /HyperRep_power1._expr_big_minus(S.Half, z, n)
 
 
 class HyperRep_sqrts1(HyperRep):
@@ -982,24 +1031,24 @@ class HyperRep_log2(HyperRep):
 
     @classmethod
     def _expr_small(cls, z):
-        return log(S(1)/2 + sqrt(1 - z)/2)
+        return log(S.Half + sqrt(1 - z)/2)
 
     @classmethod
     def _expr_small_minus(cls, z):
-        return log(S(1)/2 + sqrt(1 + z)/2)
+        return log(S.Half + sqrt(1 + z)/2)
 
     @classmethod
     def _expr_big(cls, z, n):
         if n.is_even:
-            return (n - S(1)/2)*pi*I + log(sqrt(z)/2) + I*asin(1/sqrt(z))
+            return (n - S.Half)*pi*I + log(sqrt(z)/2) + I*asin(1/sqrt(z))
         else:
-            return (n - S(1)/2)*pi*I + log(sqrt(z)/2) - I*asin(1/sqrt(z))
+            return (n - S.Half)*pi*I + log(sqrt(z)/2) - I*asin(1/sqrt(z))
 
     def _expr_big_minus(cls, z, n):
         if n.is_even:
-            return pi*I*n + log(S(1)/2 + sqrt(1 + z)/2)
+            return pi*I*n + log(S.Half + sqrt(1 + z)/2)
         else:
-            return pi*I*n + log(sqrt(1 + z)/2 - S(1)/2)
+            return pi*I*n + log(sqrt(1 + z)/2 - S.Half)
 
 
 class HyperRep_cosasin(HyperRep):
@@ -1047,6 +1096,7 @@ class HyperRep_sinasin(HyperRep):
 class appellf1(Function):
     r"""
     This is the Appell hypergeometric function of two variables as:
+
     .. math ::
         F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
         \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}

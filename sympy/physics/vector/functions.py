@@ -22,7 +22,7 @@ def cross(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
-cross.__doc__ += Vector.cross.__doc__
+cross.__doc__ += Vector.cross.__doc__  # type: ignore
 
 
 def dot(vec1, vec2):
@@ -30,7 +30,7 @@ def dot(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
-dot.__doc__ += Vector.dot.__doc__
+dot.__doc__ += Vector.dot.__doc__  # type: ignore
 
 
 def express(expr, frame, frame2=None, variables=False):
@@ -217,7 +217,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.outer.__doc__
+outer.__doc__ += Vector.outer.__doc__  # type: ignore
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
@@ -493,7 +493,7 @@ def get_motion_params(frame, **kwargs):
             if i < 3:
                 kwargs[x] = Vector(0)
             else:
-                kwargs[x] = S(0)
+                kwargs[x] = S.Zero
         elif i < 3:
             _check_vector(kwargs[x])
         else:
@@ -572,7 +572,7 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0):
+def dynamicsymbols(names, level=0,**assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
@@ -587,6 +587,15 @@ def dynamicsymbols(names, level=0):
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    assumptions :
+        - real(bool) : This is used to set the dynamicsymbol as real,
+                    by default is False.
+        - positive(bool) : This is used to set the dynamicsymbol as positive,
+                    by default is False.
+        - commutative(bool) : This is used to set the commutative property of
+                    a dynamicsymbol, by default is True.
+        - integer(bool) : This is used to set the dynamicsymbol as integer,
+                    by default is False.
 
     Examples
     ========
@@ -596,11 +605,23 @@ def dynamicsymbols(names, level=0):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
+    >>> q2 = dynamicsymbols('q2', real=True)
+    >>> q2.is_real
+    True
+    >>> q3 = dynamicsymbols('q3', positive=True)
+    >>> q3.is_positive
+    True
+    >>> q4, q5 = dynamicsymbols('q4,q5', commutative=False)
+    >>> bool(q4*q5 != q5*q4)
+    True
+    >>> q6 = dynamicsymbols('q6', integer=True)
+    >>> q6.is_integer
+    True
     >>> diff(q1, Symbol('t'))
     Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function)
+    esses = symbols(names, cls=Function,**assumptions)
     t = dynamicsymbols._t
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
@@ -609,5 +630,5 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t] * level, esses(t))
 
 
-dynamicsymbols._t = Symbol('t')
-dynamicsymbols._str = '\''
+dynamicsymbols._t = Symbol('t')  # type: ignore
+dynamicsymbols._str = '\''  # type: ignore

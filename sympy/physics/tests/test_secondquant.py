@@ -6,15 +6,14 @@ from sympy.physics.secondquant import (
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
     PermutationOperator, simplify_index_permutations,
     _sort_anticommuting_fermions, _get_ordered_dummies,
-    substitute_dummies, FockState, FockStateBosonKet,
+    substitute_dummies, FockStateBosonKet,
     ContractionAppliesOnlyToFermions
 )
 
-from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
-                   Symbol, symbols, srepr)
+from sympy import (Dummy, expand, Function, I, S, simplify, sqrt, Sum,
+                   Symbol, symbols, srepr, Rational)
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.testing.pytest import slow, raises
 from sympy.printing.latex import latex
 
 
@@ -68,7 +67,7 @@ def test_dagger():
     assert Dagger(1) == 1
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
-    assert Dagger(Rational(1, 2)*I/3.0) == -Rational(1, 2)*I/3.0
+    assert Dagger(S.Half*I/3.0) == I*Rational(-1, 2)/3.0
     assert Dagger(BKet([n])) == BBra([n])
     assert Dagger(B(0)) == Bd(0)
     assert Dagger(Bd(0)) == B(0)
@@ -133,26 +132,6 @@ def test_basic_state():
     s = BosonState([n, m])
     assert s.down(0) == BosonState([n - 1, m])
     assert s.up(0) == BosonState([n + 1, m])
-
-
-# 2019-07-24: No method move in the whole of SymPy
-@XFAIL
-def test_move1():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = A(i)*C(j)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
-
-
-# 2019-07-24: No method move in the whole of SymPy
-@XFAIL
-def test_move2():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = C(j)*A(i)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
 
 
 def test_basic_apply():
@@ -227,7 +206,7 @@ def test_fixed_bosonic_basis():
 @slow
 def test_sho():
     n, m = symbols('n,m')
-    h_n = Bd(n)*B(n)*(n + Rational(1, 2))
+    h_n = Bd(n)*B(n)*(n + S.Half)
     H = Sum(h_n, (n, 0, 5))
     o = H.doit(deep=False)
     b = FixedBosonicBasis(2, 6)
@@ -1278,8 +1257,6 @@ def test_internal_external_pqrs_AT():
 
 def test_canonical_ordering_AntiSymmetricTensor():
     v = symbols("v")
-    virtual_indices = ('c', 'd')
-    occupied_indices = ('k', 'l')
 
     c, d = symbols(('c','d'), above_fermi=True,
                                    cls=Dummy)

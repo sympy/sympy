@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
 from sympy.codegen import Assignment
@@ -6,15 +5,18 @@ from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
-from sympy.functions import acos, Piecewise, sign, sqrt
+from sympy.core.singleton import S
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
     SymPyPrinter
 )
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
+from sympy.testing.pytest import skip
+from sympy.external import import_module
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -46,6 +48,7 @@ def test_PythonCodePrinter():
                                                         ' (3) if (x > 0) else None)'
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
+    assert prntr.doprint(KroneckerDelta(x,y)) == '(1 if x == y else 0)'
 
 
 def test_PythonCodePrinter_standard():
@@ -65,10 +68,26 @@ def test_MpmathPrinter():
     assert p.doprint(sign(x)) == 'mpmath.sign(x)'
     assert p.doprint(Rational(1, 2)) == 'mpmath.mpf(1)/mpmath.mpf(2)'
 
+    assert p.doprint(S.Exp1) == 'mpmath.e'
+    assert p.doprint(S.Pi) == 'mpmath.pi'
+    assert p.doprint(S.GoldenRatio) == 'mpmath.phi'
+    assert p.doprint(S.EulerGamma) == 'mpmath.euler'
+    assert p.doprint(S.NaN) == 'mpmath.nan'
+    assert p.doprint(S.Infinity) == 'mpmath.inf'
+    assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+
+
 def test_NumPyPrinter():
+    from sympy import (Lambda, ZeroMatrix, OneMatrix, FunctionMatrix,
+        HadamardProduct, KroneckerProduct, Adjoint, DiagonalOf,
+        DiagMatrix, DiagonalMatrix)
+    from sympy.abc import a, b
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
     A = MatrixSymbol("A", 2, 2)
+    B = MatrixSymbol("B", 2, 2)
+    C = MatrixSymbol("C", 1, 5)
+    D = MatrixSymbol("D", 3, 4)
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
     assert p.doprint(Identity(3)) == "numpy.eye(3)"
@@ -77,9 +96,46 @@ def test_NumPyPrinter():
     v = MatrixSymbol('y', 2, 1)
     assert p.doprint(MatrixSolve(A, u)) == 'numpy.linalg.solve(A, x)'
     assert p.doprint(MatrixSolve(A, u) + v) == 'numpy.linalg.solve(A, x) + y'
+
+    assert p.doprint(ZeroMatrix(2, 3)) == "numpy.zeros((2, 3))"
+    assert p.doprint(OneMatrix(2, 3)) == "numpy.ones((2, 3))"
+    assert p.doprint(FunctionMatrix(4, 5, Lambda((a, b), a + b))) == \
+        "numpy.fromfunction(lambda a, b: a + b, (4, 5))"
+    assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
+    assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
+    assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
+    assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
+    assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"
+
     # Workaround for numpy negative integer power errors
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'
+
+    assert p.doprint(S.Exp1) == 'numpy.e'
+    assert p.doprint(S.Pi) == 'numpy.pi'
+    assert p.doprint(S.EulerGamma) == 'numpy.euler_gamma'
+    assert p.doprint(S.NaN) == 'numpy.nan'
+    assert p.doprint(S.Infinity) == 'numpy.PINF'
+    assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+
+
+def test_issue_18770():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+
+    from sympy import lambdify, Min, Max
+
+    expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
+    func = lambdify(x, expr1, "numpy")
+    assert (func(numpy.linspace(0, 3, 3)) == [1.0 , 1.75, 2.5 ]).all()
+    assert  func(4) == 3
+
+    expr1 = Max(x**2 , x**3)
+    func = lambdify(x,expr1, "numpy")
+    assert (func(numpy.linspace(-1 , 2, 4)) == [1, 0, 1, 8] ).all()
+    assert func(4) == 64
 
 
 def test_SciPyPrinter():
@@ -92,6 +148,10 @@ def test_SciPyPrinter():
     smat = SparseMatrix(2, 5, {(0, 1): 3})
     assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
+
+    assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
+    assert p.doprint(S.Pi) == 'scipy.constants.pi'
+    assert p.doprint(S.Exp1) == 'numpy.e'
 
 
 def test_pycode_reserved_words():
@@ -217,6 +277,9 @@ def test_beta():
     assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
 
     prntr = PythonCodePrinter()
+    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+
+    prntr = PythonCodePrinter({'allow_unknown_functions': True})
     assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
 
     prntr = MpmathPrinter()

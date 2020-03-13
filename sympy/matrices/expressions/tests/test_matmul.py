@@ -5,11 +5,11 @@ from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
 from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
 from sympy.matrices.expressions.matexpr import GenericIdentity
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
-        MatMul, xxinv, any_zeros, unpack, only_squares)
+        MatMul, combine_powers, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
 from sympy import refine, Q, Symbol
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 n, m, l, k = symbols('n m l k', integer=True)
 x = symbols('x')
@@ -19,6 +19,8 @@ C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
+def test_evaluate():
+    assert MatMul(C, C, evaluate=True) == MatMul(C, C).doit()
 
 def test_adjoint():
     assert adjoint(A*B) == Adjoint(B)*Adjoint(A)
@@ -57,8 +59,8 @@ def test_remove_ids():
                                  MatMul(Identity(n), evaluate=False)
 
 
-def test_xxinv():
-    assert xxinv(MatMul(D, Inverse(D), D, evaluate=False)) == \
+def test_combine_powers():
+    assert combine_powers(MatMul(D, Inverse(D), D, evaluate=False)) == \
                  MatMul(Identity(n), D, evaluate=False)
 
 

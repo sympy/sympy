@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -185,7 +184,7 @@ class Product(ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
@@ -201,8 +200,47 @@ class Product(ExprWithIntLimits):
     function = term
 
     def _eval_is_zero(self):
-        # a Product is zero only if its term is zero.
-        return self.term.is_zero
+        if self.has_empty_sequence:
+            return False
+
+        z = self.term.is_zero
+        if z is True:
+            return True
+        if self.has_finite_limits:
+            # A Product is zero only if its term is zero assuming finite limits.
+            return z
+
+    def _eval_is_extended_real(self):
+        if self.has_empty_sequence:
+            return True
+
+        return self.function.is_extended_real
+
+    def _eval_is_positive(self):
+        if self.has_empty_sequence:
+            return True
+        if self.function.is_positive and self.has_finite_limits:
+            return True
+
+    def _eval_is_nonnegative(self):
+        if self.has_empty_sequence:
+            return True
+        if self.function.is_nonnegative and self.has_finite_limits:
+            return True
+
+    def _eval_is_extended_nonnegative(self):
+        if self.has_empty_sequence:
+            return True
+        if self.function.is_extended_nonnegative:
+            return True
+
+    def _eval_is_extended_nonpositive(self):
+        if self.has_empty_sequence:
+            return True
+
+    def _eval_is_finite(self):
+        if self.has_finite_limits and self.function.is_finite:
+            return True
 
     def doit(self, **hints):
         # first make sure any definite limits have product
@@ -365,7 +403,7 @@ class Product(ExprWithIntLimits):
 
     def is_convergent(self):
         r"""
-        See docs of Sum.is_convergent() for explanation of convergence
+        See docs of :obj:`.Sum.is_convergent()` for explanation of convergence
         in SymPy.
 
         The infinite product:
@@ -479,7 +517,9 @@ class Product(ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index,
+        reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -487,6 +527,7 @@ class Product(ExprWithIntLimits):
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
                http://dl.acm.org/citation.cfm?doid=322248.322255
+
         """
         l_indices = list(indices)
 

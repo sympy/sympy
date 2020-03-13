@@ -3,7 +3,7 @@ from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
                         Lt, Gt, Ge)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sinh, cosh, tanh, asin, acos, acosh, Max, Min)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -21,7 +21,7 @@ def test_printmethod():
 def test_jscode_sqrt():
     assert jscode(sqrt(x)) == "Math.sqrt(x)"
     assert jscode(x**0.5) == "Math.sqrt(x)"
-    assert jscode(x**(S(1)/3)) == "Math.cbrt(x)"
+    assert jscode(x**(S.One/3)) == "Math.cbrt(x)"
 
 
 def test_jscode_Pow():

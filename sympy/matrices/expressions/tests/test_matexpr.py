@@ -1,9 +1,8 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
                    expand, zeros, gcd_terms, Eq, Symbol)
 
-from sympy.core import S, symbols, Add, Mul, SympifyError
+from sympy.core import S, symbols, Add, Mul, SympifyError, Rational
 from sympy.core.expr import unchanged
-from sympy.core.compatibility import long
 from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -11,7 +10,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         SparseMatrix, Transpose, Adjoint)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
                                                 GenericZeroMatrix, GenericIdentity, OneMatrix)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -161,6 +160,8 @@ def test_OneMatrix():
         U ** 0
     with raises(ShapeError):
         U ** 2
+    with raises(ShapeError):
+        a + U
 
     U = OneMatrix(n, n)
     assert U[1, 2] == 1
@@ -235,7 +236,7 @@ def test_addition():
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
     with raises(TypeError):
-        ZeroMatrix(n,m) + S(0)
+        ZeroMatrix(n,m) + S.Zero
 
 
 def test_multiplication():
@@ -281,7 +282,7 @@ def test_MatPow():
     assert (A**-1)**-1 == A
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
-    assert A**(S(1)/3) == cbrt(A)
+    assert A**Rational(1, 3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
@@ -339,7 +340,7 @@ def test_indexing():
 def test_single_indexing():
     A = MatrixSymbol('A', 2, 3)
     assert A[1] == A[0, 1]
-    assert A[long(1)] == A[0, 1]
+    assert A[int(1)] == A[0, 1]
     assert A[3] == A[1, 0]
     assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
     raises(IndexError, lambda: A[6])

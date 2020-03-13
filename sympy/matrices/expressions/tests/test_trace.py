@@ -7,7 +7,7 @@ from sympy.matrices.expressions import (
     ZeroMatrix, trace, MatPow, MatAdd, MatMul
 )
 from sympy.matrices.expressions.matexpr import OneMatrix
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)

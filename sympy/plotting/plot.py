@@ -29,13 +29,13 @@ import warnings
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
-from sympy.core.compatibility import range, Callable
+from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
-# the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
+# the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
@@ -117,6 +117,7 @@ class Plot(object):
     - aspect_ratio : tuple of two floats or {'auto'}
     - autoscale : bool
     - margin : float in [0, 1]
+    - backend : {'default', 'matplotlib', 'text'}
 
     The per data series options and aesthetics are:
     There are none in the base series. See below for options for subclasses.
@@ -162,6 +163,10 @@ class Plot(object):
         self.legend = False
         self.autoscale = True
         self.margin = 0
+        self.annotations = None
+        self.markers = None
+        self.rectangles = None
+        self.fill = None
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -171,7 +176,7 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = DefaultBackend
+        self.backend = plot_backends[kwargs.pop('backend', 'default')]
 
 
         # The keyword arguments should only contain options for the plot.
@@ -1024,11 +1029,14 @@ class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
         self.matplotlib = import_module('matplotlib',
-            __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
+            import_kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
+        aspect = getattr(self.parent, 'aspect_ratio', 'auto')
+        if aspect != 'auto':
+            aspect = float(aspect[1]) / aspect[0]
 
         if isinstance(self.parent, Plot):
             nrows, ncolumns = 1, 1
@@ -1048,12 +1056,12 @@ class MatplotlibBackend(BaseBackend):
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits',
-                                     __import__kwargs={'fromlist': ['mplot3d']})
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
+                mpl_toolkits = import_module('mpl_toolkits', # noqa
+                                     import_kwargs={'fromlist': ['mplot3d']})
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d', aspect=aspect))
 
             elif not any(are_3D):
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, aspect=aspect))
                 self.ax[i].spines['left'].set_position('zero')
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
@@ -1074,7 +1082,7 @@ class MatplotlibBackend(BaseBackend):
             elif s.is_3Dline:
                 # TODO too complicated, I blame matplotlib
                 mpl_toolkits = import_module('mpl_toolkits',
-                    __import__kwargs={'fromlist': ['mplot3d']})
+                    import_kwargs={'fromlist': ['mplot3d']})
                 art3d = mpl_toolkits.mplot3d.art3d
                 collection = art3d.Line3DCollection(s.get_segments())
                 ax.add_collection(collection)
@@ -1136,40 +1144,12 @@ class MatplotlibBackend(BaseBackend):
         # TODO The 3D stuff
         # XXX The order of those is important.
         mpl_toolkits = import_module('mpl_toolkits',
-            __import__kwargs={'fromlist': ['mplot3d']})
+            import_kwargs={'fromlist': ['mplot3d']})
         Axes3D = mpl_toolkits.mplot3d.Axes3D
         if parent.xscale and not isinstance(ax, Axes3D):
             ax.set_xscale(parent.xscale)
         if parent.yscale and not isinstance(ax, Axes3D):
             ax.set_yscale(parent.yscale)
-        if parent.xlim:
-            from sympy.core.basic import Basic
-            xlim = parent.xlim
-            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            xlim = (float(i) for i in xlim)
-            ax.set_xlim(xlim)
-        else:
-            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
-                starts = [s.start for s in parent._series]
-                ends = [s.end for s in parent._series]
-                ax.set_xlim(min(starts), max(ends))
-
-        if parent.ylim:
-            from sympy.core.basic import Basic
-            ylim = parent.ylim
-            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            ylim = (float(i) for i in ylim)
-            ax.set_ylim(ylim)
         if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
@@ -1203,6 +1183,54 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
             ax.set_ylabel(parent.ylabel, position=(0, 1))
+        if parent.annotations:
+            for a in parent.annotations:
+                ax.annotate(**a)
+        if parent.markers:
+            for marker in parent.markers:
+                # make a copy of the marker dictionary
+                # so that it doesn't get altered
+                m = marker.copy()
+                args = m.pop('args')
+                ax.plot(*args, **m)
+        if parent.rectangles:
+            for r in parent.rectangles:
+                rect = self.matplotlib.patches.Rectangle(**r)
+                ax.add_patch(rect)
+        if parent.fill:
+            ax.fill_between(**parent.fill)
+
+        # xlim and ylim shoulld always be set at last so that plot limits
+        # doesn't get altered during the process.
+        if parent.xlim:
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            ax.set_xlim(xlim)
+        else:
+            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                ax.set_xlim(min(starts), max(ends))
+
+        if parent.ylim:
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            ax.set_ylim(ylim)
+
 
     def process_series(self):
         """
@@ -1390,7 +1418,7 @@ def plot(*args, **kwargs):
     the plot by calling the ``save()`` and ``show()`` methods
     respectively.
 
-    Arguments for ``LineOver1DRangeSeries`` class:
+    Arguments for :obj:`LineOver1DRangeSeries` class:
 
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
     specify ``nb_of_points`` if uniform sampling is required.
@@ -1429,6 +1457,23 @@ def plot(*args, **kwargs):
     ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
     ``ylim`` : tuple of two floats, denoting the y-axis limits.
+
+    ``annotations``: list. A list of dictionaries specifying the type of
+    annotation required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's annotate() function.
+
+    ``markers``: list. A list of dictionaries specifying the type the
+    markers required. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's plot() function along with the
+    marker related keyworded arguments.
+
+    ``rectangles``: list. A list of dictionaries specifying the dimensions
+    of the rectangles to be plotted. The keys in the dictionary should be
+    equivalent to the arguments of the matplotlib's patches.Rectangle class.
+
+    ``fill``: dict. A dictionary specifying the type of color filling
+    required in the plot. The keys in the dictionary should be equivalent
+    to the arguments of the matplotlib's fill_between() function.
 
     Examples
     ========
@@ -1492,7 +1537,7 @@ def plot(*args, **kwargs):
     See Also
     ========
 
-    Plot, LineOver1DRangeSeries.
+    Plot, LineOver1DRangeSeries
 
     """
     args = list(map(sympify, args))

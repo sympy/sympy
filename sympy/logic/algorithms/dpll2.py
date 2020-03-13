@@ -13,9 +13,8 @@ from __future__ import print_function, division
 from collections import defaultdict
 from heapq import heappush, heappop
 
-from sympy.core.compatibility import range
 from sympy import ordered
-from sympy.assumptions.cnf import EncodedCNF, Literal
+from sympy.assumptions.cnf import EncodedCNF
 
 
 def dpll_satisfiable(expr, all_models=False):

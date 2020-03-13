@@ -171,7 +171,14 @@ def represent(expr, **options):
         base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
-        return represent(base, **options)**exp
+        base = represent(base, **options)
+        # scipy.sparse doesn't support negative exponents
+        # and warns when inverting a matrix in csr format.
+        if format == 'scipy.sparse' and exp < 0:
+            from scipy.sparse.linalg import inv
+            exp = - exp
+            base = inv(base.tocsc()).tocsr()
+        return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
         return TensorProduct(*new_args)
@@ -489,9 +496,12 @@ def get_basis(expr, **options):
 
 
 def _make_default(expr):
+    # XXX: Catching TypeError like this is a bad way of distinguishing
+    # instances from classes. The logic using this function should be
+    # rewritten somehow.
     try:
         expr = expr()
-    except Exception:
+    except TypeError:
         return expr
 
     return expr

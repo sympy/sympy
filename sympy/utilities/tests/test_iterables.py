@@ -1,30 +1,48 @@
 from __future__ import print_function
+
 from textwrap import dedent
+from itertools import islice, product
 
 from sympy import (
-    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
+    symbols, Integer, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
     factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
-from sympy.core.compatibility import range
+from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
     filter_symbols, flatten, generate_bell, generate_derangements,
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
-    kbins, minlex, multiset, multiset_combinations, multiset_partitions,
-    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
-    permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, strongly_connected_components,
-    subsets, take, topological_sort, unflatten, uniq, variations,
-    ordered_partitions, rotations)
+    iproduct, kbins, minlex, multiset, multiset_combinations,
+    multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
+    ordered, partitions, permutations, postfixes, postorder_traversal,
+    prefixes, reshape, rotate_left, rotate_right, runs, sift,
+    strongly_connected_components, subsets, take, topological_sort, unflatten,
+    uniq, variations, ordered_partitions, rotations, is_palindromic)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
+
+
+def test_is_palindromic():
+    assert is_palindromic('')
+    assert is_palindromic('x')
+    assert is_palindromic('xx')
+    assert is_palindromic('xyx')
+    assert not is_palindromic('xy')
+    assert not is_palindromic('xyzx')
+    assert is_palindromic('xxyzzyx', 1)
+    assert not is_palindromic('xxyzzyx', 2)
+    assert is_palindromic('xxyzzyx', 2, -1)
+    assert is_palindromic('xxyzzyx', 2, 6)
+    assert is_palindromic('xxyzyx', 1)
+    assert not is_palindromic('xxyzyx', 2)
+    assert is_palindromic('xxyzyx', 2, 2 + 3)
 
 
 def test_postorder_traversal():
@@ -72,6 +90,28 @@ def test_flatten():
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
     assert flatten({1, 11, 2}) == list({1, 11, 2})
+
+
+def test_iproduct():
+    assert list(iproduct()) == [()]
+    assert list(iproduct([])) == []
+    assert list(iproduct([1,2,3])) == [(1,),(2,),(3,)]
+    assert sorted(iproduct([1, 2], [3, 4, 5])) == [
+        (1,3),(1,4),(1,5),(2,3),(2,4),(2,5)]
+    assert sorted(iproduct([0,1],[0,1],[0,1])) == [
+        (0,0,0),(0,0,1),(0,1,0),(0,1,1),(1,0,0),(1,0,1),(1,1,0),(1,1,1)]
+    assert iterable(iproduct(S.Integers)) is True
+    assert iterable(iproduct(S.Integers, S.Integers)) is True
+    assert (3,) in iproduct(S.Integers)
+    assert (4, 5) in iproduct(S.Integers, S.Integers)
+    assert (1, 2, 3) in iproduct(S.Integers, S.Integers, S.Integers)
+    triples  = set(islice(iproduct(S.Integers, S.Integers, S.Integers), 1000))
+    for n1, n2, n3 in triples:
+        assert isinstance(n1, Integer)
+        assert isinstance(n2, Integer)
+        assert isinstance(n3, Integer)
+    for t in set(product(*([range(-2, 3)]*3))):
+        assert t in iproduct(S.Integers, S.Integers, S.Integers)
 
 
 def test_group():
@@ -519,6 +559,7 @@ def test_derangements():
         [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
     assert list(generate_derangements([0, 1, 2, 2])) == [
         [2, 2, 0, 1], [2, 2, 1, 0]]
+    assert list(generate_derangements('ba')) == [list('ab')]
 
 
 def test_necklaces():
@@ -671,12 +712,12 @@ def test_kbins():
     assert len(list(kbins('1123', 2, ordered=0))) == 5
     assert len(list(kbins('1123', 2, ordered=None))) == 3
 
-    def test():
-        for ordered in [None, 0, 1, 10, 11]:
-            print('ordered =', ordered)
-            for p in kbins([0, 0, 1], 2, ordered=ordered):
+    def test1():
+        for orderedval in [None, 0, 1, 10, 11]:
+            print('ordered =', orderedval)
+            for p in kbins([0, 0, 1], 2, ordered=orderedval):
                 print('   ', p)
-    assert capture(lambda : test()) == dedent('''\
+    assert capture(lambda : test1()) == dedent('''\
         ordered = None
             [[0], [0, 1]]
             [[0, 0], [1]]
@@ -700,12 +741,12 @@ def test_kbins():
             [[1], [0, 0]]
             [[1, 0], [0]]\n''')
 
-    def test():
-        for ordered in [None, 0, 1, 10, 11]:
-            print('ordered =', ordered)
-            for p in kbins(list(range(3)), 2, ordered=ordered):
+    def test2():
+        for orderedval in [None, 0, 1, 10, 11]:
+            print('ordered =', orderedval)
+            for p in kbins(list(range(3)), 2, ordered=orderedval):
                 print('   ', p)
-    assert capture(lambda : test()) == dedent('''\
+    assert capture(lambda : test2()) == dedent('''\
         ordered = None
             [[0], [1, 2]]
             [[0, 1], [2]]

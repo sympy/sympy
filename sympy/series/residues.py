@@ -64,7 +64,7 @@ def residue(expr, x, x0):
         args = s.args
     else:
         args = [s]
-    res = S(0)
+    res = S.Zero
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)

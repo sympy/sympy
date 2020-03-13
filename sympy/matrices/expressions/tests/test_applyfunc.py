@@ -1,6 +1,7 @@
+from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy import (Matrix, Lambda, MatrixBase, MatrixSymbol, exp, symbols, MatMul, sin, simplify)
-from sympy.utilities.pytest import raises
+from sympy import Matrix, Lambda, MatrixSymbol, exp, MatMul, sin, simplify
+from sympy.testing.pytest import raises
 from sympy.matrices.common import ShapeError
 
 
@@ -16,6 +17,7 @@ x, y, z, t = symbols("x y z t")
 
 
 def test_applyfunc_matrix():
+    x = Dummy('x')
     double = Lambda(x, x**2)
 
     expr = ElementwiseApplyFunction(double, Xd)
@@ -34,7 +36,7 @@ def test_applyfunc_matrix():
 
     expr = ElementwiseApplyFunction(exp, X*Y)
     assert expr.expr == X*Y
-    assert expr.function == exp
+    assert expr.function == Lambda(x, exp(x))
     assert expr == (X*Y).applyfunc(exp)
     assert expr.func(*expr.args) == expr
 
@@ -53,7 +55,7 @@ def test_applyfunc_matrix():
     M = Matrix([[x, y], [z, t]])
     expr = ElementwiseApplyFunction(sin, M)
     assert isinstance(expr, ElementwiseApplyFunction)
-    assert expr.function == sin
+    assert expr.function == Lambda(x, sin(x))
     assert expr.expr == M
     assert expr.doit() == M.applyfunc(sin)
     assert expr.doit() == Matrix([[sin(x), sin(y)], [sin(z), sin(t)]])

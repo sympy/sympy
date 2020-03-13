@@ -18,12 +18,15 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 from __future__ import print_function, division
 
+from typing import Dict as tDict, Optional
+
 from collections import namedtuple, defaultdict
 
 import sympy
 
 from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
+from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.polynomials import OrthogonalPolynomial
@@ -32,6 +35,7 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.misc import debug
 
 ZERO = sympy.S.Zero
 
@@ -181,7 +185,7 @@ def find_substitutions(integrand, symbol, u_var):
         if symbol not in substituted.free_symbols:
             # replaced everything already
             return False
-
+        debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
         if symbol not in substituted.free_symbols:
@@ -266,6 +270,7 @@ def rewriter(condition, rewrite):
     """Strategy that rewrites an integrand."""
     def _rewriter(integral):
         integrand, symbol = integral
+        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
@@ -282,6 +287,7 @@ def proxy_rewriter(condition, rewrite):
     def _proxy_rewriter(criteria):
         criteria, integral = criteria
         integrand, symbol = integral
+        debug("Integral: {} is rewritten with {} on symbol: {} and criteria: {}".format(integrand, rewrite, symbol, criteria))
         args = criteria + list(integral)
         if condition(*args):
             rewritten = rewrite(*args)
@@ -304,7 +310,12 @@ def alternatives(*rules):
     """Strategy that makes an AlternativeRule out of multiple possible results."""
     def _alternatives(integral):
         alts = []
+        count = 0
+        debug("List of Alternative Rules")
         for rule in rules:
+            count = count + 1
+            debug("Rule {}: {}".format(count, rule))
+
             result = rule(integral)
             if (result and not isinstance(result, DontKnowRule) and
                 result != integral and result not in alts):
@@ -489,7 +500,6 @@ def add_rule(integral):
 
 def mul_rule(integral):
     integrand, symbol = integral
-    args = integrand.args
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
@@ -601,6 +611,7 @@ def parts_rule(integral):
     steps = []
     if result:
         u, dv, v, du, v_step = result
+        debug("u : {}, dv : {}, v : {}, du : {}, v_step: {}".format(u, dv, v, du, v_step))
         steps.append(result)
 
         if isinstance(v, sympy.Integral):
@@ -615,6 +626,7 @@ def parts_rule(integral):
 
         # Try cyclic integration by parts a few times
         for _ in range(4):
+            debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
             coefficient = ((v * du) / integrand).cancel()
             if coefficient == 1:
                 break
@@ -1076,10 +1088,15 @@ def substitution_rule(integral):
 
     u_var = sympy.Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
+    count = 0
     if substitutions:
+        debug("List of Substitution Rules")
         ways = []
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted, u_var)
+            count = count + 1
+            debug("Rule {}: {}".format(count, subrule))
+
             if contains_dont_know(subrule):
                 continue
 
@@ -1179,8 +1196,8 @@ def fallback_rule(integral):
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache = {}
-_parts_u_cache = defaultdict(int)
+_integral_cache = {}  # type: tDict[Expr, Optional[Expr]]
+_parts_u_cache = defaultdict(int)  # type: tDict[Expr, int]
 _cache_dummy = sympy.Dummy("z")
 
 def integral_steps(integrand, symbol, **options):
@@ -1589,7 +1606,7 @@ def manualintegrate(f, var):
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.
 
-    Unlike ``integrate``, var can only be a single symbol.
+    Unlike :func:`~.integrate`, var can only be a single symbol.
 
     Examples
     ========

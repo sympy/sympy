@@ -5,10 +5,9 @@ from sympy import (
     chebyshevu_root, laguerre, assoc_laguerre, laguerre_poly, hermite,
     gegenbauer, jacobi, jacobi_normalized, Sum, floor, exp)
 
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 x = Symbol('x')
@@ -23,16 +22,16 @@ def test_jacobi():
     assert jacobi(1, a, b, x) == a/2 - b/2 + x*(a/2 + b/2 + 1)
 
     assert jacobi(n, a, a, x) == RisingFactorial(
-        a + 1, n)*gegenbauer(n, a + S(1)/2, x)/RisingFactorial(2*a + 1, n)
+        a + 1, n)*gegenbauer(n, a + S.Half, x)/RisingFactorial(2*a + 1, n)
     assert jacobi(n, a, -a, x) == ((-1)**a*(-x + 1)**(-a/2)*(x + 1)**(a/2)*assoc_legendre(n, a, x)*
                                    factorial(-a + n)*gamma(a + n + 1)/(factorial(a + n)*gamma(n + 1)))
     assert jacobi(n, -b, b, x) == ((-x + 1)**(b/2)*(x + 1)**(-b/2)*assoc_legendre(n, b, x)*
                                    gamma(-b + n + 1)/gamma(n + 1))
     assert jacobi(n, 0, 0, x) == legendre(n, x)
     assert jacobi(n, S.Half, S.Half, x) == RisingFactorial(
-        S(3)/2, n)*chebyshevu(n, x)/factorial(n + 1)
-    assert jacobi(n, -S.Half, -S.Half, x) == RisingFactorial(
-        S(1)/2, n)*chebyshevt(n, x)/factorial(n)
+        Rational(3, 2), n)*chebyshevu(n, x)/factorial(n + 1)
+    assert jacobi(n, Rational(-1, 2), Rational(-1, 2), x) == RisingFactorial(
+        S.Half, n)*chebyshevt(n, x)/factorial(n)
 
     X = jacobi(n, a, b, x)
     assert isinstance(X, jacobi)
@@ -60,7 +59,7 @@ def test_jacobi():
         ((-_k + n)*RisingFactorial(_k + a + b + 1, -_k + n)) + jacobi(n, a,
         b, x))/(_k + a + b + n + 1), (_k, 0, n - 1)))
     assert diff(jacobi(n, a, b, x), x) == \
-        (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
+        (a/2 + b/2 + n/2 + S.Half)*jacobi(n - 1, a + 1, b + 1, x)
 
     assert jacobi_normalized(n, a, b, x) == \
            (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
@@ -69,7 +68,7 @@ def test_jacobi():
     raises(ValueError, lambda: jacobi(-2.1, a, b, x))
     raises(ValueError, lambda: jacobi(Dummy(positive=True, integer=True), 1, 2, oo))
 
-    assert jacobi(n, a, b, x).rewrite("polynomial").dummy_eq(Sum((S(1)/2 - x/2)
+    assert jacobi(n, a, b, x).rewrite("polynomial").dummy_eq(Sum((S.Half - x/2)
         **_k*RisingFactorial(-n, _k)*RisingFactorial(_k + a + 1, -_k + n)*
         RisingFactorial(a + b + n + 1, _k)/factorial(_k), (_k, 0, n))/factorial(n))
     raises(ArgumentIndexError, lambda: jacobi(n, a, b, x).fdiff(5))
@@ -83,10 +82,10 @@ def test_gegenbauer():
     assert gegenbauer(1, a, x) == 2*a*x
     assert gegenbauer(2, a, x) == -a + x**2*(2*a**2 + 2*a)
     assert gegenbauer(3, a, x) == \
-        x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)
+        x**3*(4*a**3/3 + 4*a**2 + a*Rational(8, 3)) + x*(-2*a**2 - 2*a)
 
     assert gegenbauer(-1, a, x) == 0
-    assert gegenbauer(n, S(1)/2, x) == legendre(n, x)
+    assert gegenbauer(n, S.Half, x) == legendre(n, x)
     assert gegenbauer(n, 1, x) == chebyshevu(n, x)
     assert gegenbauer(n, -1, x) == 0
 
@@ -95,12 +94,12 @@ def test_gegenbauer():
 
     assert gegenbauer(n, a, -x) == (-1)**n*gegenbauer(n, a, x)
     assert gegenbauer(n, a, 0) == 2**n*sqrt(pi) * \
-        gamma(a + n/2)/(gamma(a)*gamma(-n/2 + S(1)/2)*gamma(n + 1))
+        gamma(a + n/2)/(gamma(a)*gamma(-n/2 + S.Half)*gamma(n + 1))
     assert gegenbauer(n, a, 1) == gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
-    assert gegenbauer(n, Rational(3, 4), -1) == zoo
-    assert gegenbauer(n, Rational(1, 4), -1) == (sqrt(2)*cos(pi*(n + S(1)/4))*
-                      gamma(n + S(1)/2)/(sqrt(pi)*gamma(n + 1)))
+    assert gegenbauer(n, Rational(3, 4), -1) is zoo
+    assert gegenbauer(n, Rational(1, 4), -1) == (sqrt(2)*cos(pi*(n + S.One/4))*
+                      gamma(n + S.Half)/(sqrt(pi)*gamma(n + 1)))
 
     m = Symbol("m", positive=True)
     assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)
@@ -157,9 +156,9 @@ def test_legendre():
     assert isinstance(X, legendre)
     assert unchanged(legendre, n, x)
 
-    assert legendre(n, 0) == sqrt(pi)/(gamma(S(1)/2 - n/2)*gamma(n/2 + 1))
+    assert legendre(n, 0) == sqrt(pi)/(gamma(S.Half - n/2)*gamma(n/2 + 1))
     assert legendre(n, 1) == 1
-    assert legendre(n, oo) == oo
+    assert legendre(n, oo) is oo
     assert legendre(-n, x) == legendre(n - 1, x)
     assert legendre(n, -x) == (-1)**n*legendre(n, x)
     assert unchanged(legendre, -n + k, x)
@@ -171,8 +170,8 @@ def test_legendre():
     assert diff(legendre(n, x), n) == Derivative(legendre(n, x), n)
 
     _k = Dummy('k')
-    assert legendre(n, x).rewrite("polynomial").dummy_eq(Sum((-1)**_k*(S(1)/2 -
-            x/2)**_k*(x/2 + S(1)/2)**(-_k + n)*binomial(n, _k)**2, (_k, 0, n)))
+    assert legendre(n, x).rewrite("polynomial").dummy_eq(Sum((-1)**_k*(S.Half -
+            x/2)**_k*(x/2 + S.Half)**(-_k + n)*binomial(n, _k)**2, (_k, 0, n)))
     raises(ArgumentIndexError, lambda: legendre(n, x).fdiff(1))
     raises(ArgumentIndexError, lambda: legendre(n, x).fdiff(3))
 
@@ -207,7 +206,7 @@ def test_assoc_legendre():
 
     assert Plm(n, 0, x) == legendre(n, x)
     assert Plm(n, m, 0) == 2**m*sqrt(pi)/(gamma(-m/2 - n/2 +
-                           S(1)/2)*gamma(-m/2 + n/2 + 1))
+                           S.Half)*gamma(-m/2 + n/2 + 1))
 
     assert diff(Plm(m, n, x), x) == (m*x*assoc_legendre(m, n, x) -
                 (m + n)*assoc_legendre(m - 1, n, x))/(x**2 - 1)
@@ -253,7 +252,7 @@ def test_chebyshev():
 
     assert chebyshevt(n, 0) == cos(pi*n/2)
     assert chebyshevt(n, 1) == 1
-    assert chebyshevt(n, oo) == oo
+    assert chebyshevt(n, oo) is oo
 
     assert conjugate(chebyshevt(n, x)) == chebyshevt(n, conjugate(x))
 
@@ -269,7 +268,7 @@ def test_chebyshev():
 
     assert chebyshevu(n, 0) == cos(pi*n/2)
     assert chebyshevu(n, 1) == n + 1
-    assert chebyshevu(n, oo) == oo
+    assert chebyshevu(n, oo) is oo
 
     assert conjugate(chebyshevu(n, x)) == chebyshevu(n, conjugate(x))
 
@@ -301,8 +300,8 @@ def test_hermite():
     assert hermite(n, -x) == (-1)**n*hermite(n, x)
     assert unchanged(hermite, -n, x)
 
-    assert hermite(n, 0) == 2**n*sqrt(pi)/gamma(S(1)/2 - n/2)
-    assert hermite(n, oo) == oo
+    assert hermite(n, 0) == 2**n*sqrt(pi)/gamma(S.Half - n/2)
+    assert hermite(n, oo) is oo
 
     assert conjugate(hermite(n, x)) == hermite(n, conjugate(x))
 
@@ -332,7 +331,7 @@ def test_laguerre():
 
     assert laguerre(n, 0) == 1
     assert laguerre(n, oo) == (-1)**n*oo
-    assert laguerre(n, -oo) == oo
+    assert laguerre(n, -oo) is oo
 
     assert conjugate(laguerre(n, x)) == laguerre(n, conjugate(x))
 
@@ -382,7 +381,7 @@ def test_assoc_laguerre():
     assert assoc_laguerre(n, alpha, 0) == binomial(alpha + n, alpha)
     p = Symbol("p", positive=True)
     assert assoc_laguerre(p, alpha, oo) == (-1)**p*oo
-    assert assoc_laguerre(p, alpha, -oo) == oo
+    assert assoc_laguerre(p, alpha, -oo) is oo
 
     assert diff(assoc_laguerre(n, alpha, x), x) == \
         -assoc_laguerre(n - 1, alpha + 1, x)

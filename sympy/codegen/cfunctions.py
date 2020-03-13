@@ -398,7 +398,7 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
         Returns the first derivative of this function.
         """
         if argindex == 1:
-            return Pow(self.args[0], -S.Half)/_Two
+            return Pow(self.args[0], Rational(-1, 2))/_Two
         else:
             raise ArgumentIndexError(self, argindex)
 
