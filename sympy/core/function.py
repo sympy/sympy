@@ -348,6 +348,13 @@ class Application(Basic, metaclass=FunctionClass):
             old == self.func and len(self.args) in new.nargs):
             return new(*[i._subs(old, new) for i in self.args])
 
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
+        if deep:
+            args = [a.doit(**hints) for a in self.args]
+        else:
+            args = self.args
+        return self.func(*self.args, evaluate=True)
 
 class Function(Application, Expr):
     """
