@@ -17,7 +17,8 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
-
+from sympy.functions.elementary.complexes import im, re
+from sympy.core import Symbol
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _eigenvals(M, error_when_incomplete=True, **flags):
@@ -372,59 +373,70 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
 
 
-#G&VL, Matrix Computations, Algo 5.4.2
 def _householder_vector(x):
     if not x.cols == 1:
         raise ValueError("Input must be a column matrix")
     v = x.copy()
-    if x[0, 0] != 0:
-        q = x[0, 0] / abs(x[0, 0])
-    else:
+    res = x[0, 0].is_zero
+    if res is False:
+        q = x[0, 0] / sqrt(re(x[0, 0])**2 + im(x[0, 0])**2)
+    elif res is True:
         q = 1
-    if x[1:, 0].norm() == 0:
+    elif res is None:
+        if len(x[0, 0].atoms(Symbol)) != 0:
+            q = x[0, 0] / sqrt(re(x[0, 0])**2 + im(x[0, 0])**2)
+        elif abs(x[0, 0].evalf(maxn=60)) < Float(10**-50, 100):
+            q = 1
+        else:
+            q = x[0, 0] / sqrt(re(x[0, 0])**2 + im(x[0, 0])**2)
+    norm_x1 = x[1:, 0].norm()
+    res = norm_x1.is_zero
+    if res is True :
         bet = 0
         v[0, 0] = 1
-    else:
+    elif res is False:
         v[0, 0] = x[0, 0] + q * x.norm()
         v = v / v[0]
         bet = 2 / (v.norm() ** 2)
+    elif res is None:
+        if abs(norm_x1.evalf(maxn=60)) < Float(10**-60,100):
+            bet = 0
+            v[0, 0] = 1
+        else:
+            v[0, 0] = x[0, 0] + q * x.norm()
+            v = v / v[0]
+            bet = 2 / (v.norm() ** 2)
+    v = _simplify(v)
+    bet = _simplify(bet)
     return v, bet
 
-def _bidiagonal_decmp_hholder(M):
+
+def _bidiagonal_decmp_hholder(M, only_b=False):
     m = M.rows
     n = M.cols
     A = M.as_mutable()
-    U, V = A.eye(m), A.eye(n)
+    if not only_b:
+        U, V = A.eye(m), A.eye(n)
     for i in range(min(m, n)):
         v, bet = _householder_vector(A[i:, i])
         hh_mat = A.eye(m - i) - bet * v * v.H
         A[i:, i:] = hh_mat * A[i:, i:]
-        temp = A.eye(m)
-        temp[i:, i:] = hh_mat
-        U = U * temp
+        if not only_b:
+            temp = A.eye(m)
+            temp[i:, i:] = hh_mat
+            U = U * temp
         if i + 1 <= n - 2:
             v, bet = _householder_vector(A[i, i+1:].T)
             hh_mat = A.eye(n - i - 1) - bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
-            temp = A.eye(n)
-            temp[i+1:, i+1:] = hh_mat
-            V = temp * V
-    return U, A, V
-
-
-def _eval_bidiag_hholder(M):
-    m = M.rows
-    n = M.cols
-    A = M.as_mutable()
-    for i in range(min(m, n)):
-        v, bet = _householder_vector(A[i:, i])
-        hh_mat = A.eye(m-i) - bet * v * v.H
-        A[i:, i:] = hh_mat * A[i:, i:]
-        if i + 1 <= n - 2:
-            v, bet = _householder_vector(A[i, i+1:].T)
-            hh_mat = A.eye(n - i - 1) - bet * v * v.H
-            A[i:, i+1:] = A[i:, i+1:] * hh_mat
-    return A
+            if not only_b:
+                temp = A.eye(n)
+                temp[i+1:, i+1:] = hh_mat
+                V = temp * V
+    if not only_b:
+        return U, A, V
+    else:
+        return A
 
 
 def _bidiagonal_decomposition(M, upper=True):
@@ -458,7 +470,14 @@ def _bidiagonal_decomposition(M, upper=True):
         X = _bidiagonal_decmp_hholder(M.H)
         return X[2].H, X[1].H, X[0].H
 
-    return _bidiagonal_decmp_hholder(M)
+    Q, R = M.QRdecomposition()
+    _U, B, V = _bidiagonal_decmp_hholder(R)
+    U = Q * _U
+    S = M.zeros(M.rows, M.rows)
+    T = M.zeros(M.rows, M.cols)
+    S[:U.rows, :U.cols] = U
+    T[:B.rows, :B.cols] = B
+    return S, T, V
 
 
 def _bidiagonalize(M, upper=True):
@@ -487,9 +506,13 @@ def _bidiagonalize(M, upper=True):
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        return _eval_bidiag_hholder(M.H).H
+        return _bidiagonal_decmp_hholder(M.H, only_b=True).H
 
-    return _eval_bidiag_hholder(M)
+    Q, R = M.QRdecomposition()
+    S = _bidiagonal_decmp_hholder(R, only_b=True)
+    B = M.zeros(M.rows, M.cols)
+    B[:S.rows, :S.cols] = S
+    return B
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
