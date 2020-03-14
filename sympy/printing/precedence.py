@@ -35,6 +35,7 @@ PRECEDENCE_VALUES = {
     "And": PRECEDENCE["And"],
     "Add": PRECEDENCE["Add"],
     "Mod": PRECEDENCE["Mod"],
+    "Mul": PRECEDENCE["Mul"],
     "Pow": PRECEDENCE["Pow"],
     "Relational": PRECEDENCE["Relational"],
     "Sub": PRECEDENCE["Add"],
@@ -60,12 +61,6 @@ PRECEDENCE_VALUES = {
 # precedence value.
 
 # Precedence functions
-
-
-def precedence_Mul(item):
-    if _coeff_isneg(item):
-        return PRECEDENCE["Mul"]
-    return PRECEDENCE["Mul"]
 
 
 def precedence_Rational(item):
@@ -110,7 +105,6 @@ def precedence_UnevaluatedExpr(item):
 
 PRECEDENCE_FUNCTIONS = {
     "Integer": precedence_Integer,
-    "Mul": precedence_Mul,
     "Rational": precedence_Rational,
     "Float": precedence_Float,
     "PolyElement": precedence_PolyElement,
