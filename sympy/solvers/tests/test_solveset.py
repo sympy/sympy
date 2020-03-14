@@ -1008,6 +1008,9 @@ def test_solveset():
     assert solveset(exp(x) - 1, x) == imageset(Lambda(n, 2*I*pi*n), S.Integers)
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
+    # ISSUE 17940
+    _n = Dummy('n')
+    assert solveset(exp(exp(x))-5,x) == ImageSet(Lambda(_n, 2*_n*I*pi + log(log(5))), S.Integers)
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
 
