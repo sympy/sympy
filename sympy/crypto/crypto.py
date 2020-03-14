@@ -2907,19 +2907,19 @@ def gm_private_key(p, q, a=None):
 
     $\\cdot$ Call their product $N$.
 
-    $\\cdot$ Given a message as an integer $i$, write i in its
+    $\\cdot$ Given a message as an integer $i$, write $i$ in its
     bit representation $b_0$ , $\\dotsc$ , $b_n$ .
 
-    $\\cdot$ For each k,
+    $\\cdot$ For each $k$ ,
 
      if $b_k$ = 0:
         let $a_k$ be a random square
-        (quadratic residue) modulo p * q
-        such that $jacobi \\_symbol(a, pq) = 1$
+        (quadratic residue) modulo $p q$
+        such that $jacobi \\_symbol(a, p q) = 1$
      if $b_k$ = 1:
         let $a_k$ be a random non-square
-        (non-quadratic residue) modulo $pq$
-        such that $jacobi \\_ symbol(a, pq) = 1$
+        (non-quadratic residue) modulo $p q$
+        such that $jacobi \\_ symbol(a, p q) = 1$
 
     returns [$a_1$ , $a_2$ , $\\dotsc$ ]
 
