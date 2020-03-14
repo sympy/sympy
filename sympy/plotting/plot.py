@@ -1556,7 +1556,6 @@ def plot(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
-    series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
     new_plot = []
     for arg in plot_expr:
@@ -1578,7 +1577,10 @@ def plot(*args, **kwargs):
                 new_limit.append(limit)
                 for lim in new_limit:
                     new_plot.append((expr, lim))
-                series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in new_plot]
+        else:
+            new_plot.append((expr, limit))
+
+    series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in new_plot]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
