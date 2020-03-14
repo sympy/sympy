@@ -33,6 +33,12 @@ class Polygon(GeometrySet):
 
     vertices : sequence of Points
 
+    Optional parameters
+    ==========
+
+    n : If > 0, an n-sided RegularPolygon is created. See below.
+        Default value is 0.
+
     Attributes
     ==========
 
@@ -109,9 +115,8 @@ class Polygon(GeometrySet):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        if kwargs.get('n', 0):
-            n = kwargs.pop('n')
+    def __new__(cls, *args, n = 0, **kwargs):
+        if n:
             args = list(args)
             # return a virtual polygon with n sides
             if len(args) == 2:  # center, radius

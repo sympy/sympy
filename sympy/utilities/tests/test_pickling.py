@@ -694,3 +694,6 @@ def test_concrete():
 def test_deprecation_warning():
     w = SymPyDeprecationWarning('value', 'feature', issue=12345, deprecated_since_version='1.0')
     check(w)
+
+def test_issue_18438():
+    assert pickle.loads(pickle.dumps(S.Half)) == 1/2

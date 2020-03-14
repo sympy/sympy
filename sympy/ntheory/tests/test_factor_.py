@@ -4,11 +4,11 @@ from sympy.core.numbers import Integer, Rational
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
-    primerange, pollard_rho, perfect_power, multiplicity,
+    primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
-    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
+    antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
@@ -101,6 +101,12 @@ def test_multiplicity():
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
     assert multiplicity(3, Rational(1, 9)) == -2
+
+
+def test_multiplicity_in_factorial():
+    n = fac(1000)
+    for i in (2, 4, 6, 12, 30, 36, 48, 60, 72, 96):
+        assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
 
 
 def test_perfect_power():
@@ -396,6 +402,14 @@ def test_divisor_sigma():
     assert divisor_sigma(23450, 2) == 730747500
     assert divisor_sigma(23450, 3) == 14666785333344
 
+    a = Symbol("a", prime=True)
+    b = Symbol("b", prime=True)
+    j = Symbol("j", integer=True, positive=True)
+    k = Symbol("k", integer=True, positive=True)
+    assert divisor_sigma(a**j*b**k) == (a**(j + 1) - 1)*(b**(k + 1) - 1)/((a - 1)*(b - 1))
+    assert divisor_sigma(a**j*b**k, 2) == (a**(2*j + 2) - 1)*(b**(2*k + 2) - 1)/((a**2 - 1)*(b**2 - 1))
+    assert divisor_sigma(a**j*b**k, 0) == (j + 1)*(k + 1)
+
     m = Symbol("m", integer=True)
     k = Symbol("k", integer=True)
     assert divisor_sigma(m)
@@ -562,19 +576,6 @@ def test_core():
     assert core(10**27, 22) == 10**5
     assert core(537824) == 14
     assert core(1, 6) == 1
-
-
-def test_digits():
-    assert all([digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
-                for n in range(20)])
-    assert all([digits(n, 8)[1:] == [int(d) for d in format(n, 'o')]
-                for n in range(20)])
-    assert all([digits(n, 16)[1:] == [int(d, 16) for d in format(n, 'x')]
-                for n in range(20)])
-    assert digits(2345, 34) == [34, 2, 0, 33]
-    assert digits(384753, 71) == [71, 1, 5, 23, 4]
-    assert digits(93409) == [10, 9, 3, 4, 0, 9]
-    assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
 
 
 def test_primenu():

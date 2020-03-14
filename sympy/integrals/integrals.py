@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi
+from sympy.core.numbers import oo, pi, Float
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -395,6 +395,12 @@ class Integral(AddWithLimits):
         from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
+
+        if self.has(Float):
+            fvals = self.atoms(Float)
+            fsubs = {f: Dummy() for f in fvals}
+            rsubs = {s: f for f, s in fsubs.items()}
+            return self.subs(fsubs).doit(**hints).subs(rsubs)
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)

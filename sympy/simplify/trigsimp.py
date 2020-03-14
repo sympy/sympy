@@ -1114,7 +1114,7 @@ def _futrig(e, **kwargs):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, TR14, TR22,
+        TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, _TR11, TR14, TR22,
         TR12)
     from sympy.core.compatibility import _nodes
 
@@ -1142,7 +1142,7 @@ def _futrig(e, **kwargs):
         TR14,  # factored identities
         TR5,  # sin-pow -> cos_pow
         TR10,  # sin-cos of sums -> sin-cos prod
-        TR11, TR6, # reduce double angles and rewrite cos pows
+        TR11, _TR11, TR6, # reduce double angles and rewrite cos pows
         lambda x: _eapply(factor, x, trigs),
         TR14,  # factored powers of identities
         [identity, lambda x: _eapply(_mexpand, x, trigs)],

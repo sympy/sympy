@@ -679,20 +679,21 @@ class And(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        newargs = []
-        rel = []
         args = BooleanFunction.binary_check_and_simplify(*args)
-        for x in reversed(args):
+        args = LatticeOp._new_args_filter(args, And)
+        newargs = []
+        rel = set()
+        for x in ordered(args):
             if x.is_Relational:
                 c = x.canonical
                 if c in rel:
                     continue
-                nc = c.negated.canonical
-                if any(r == nc for r in rel):
+                elif c.negated.canonical in rel:
                     return [S.false]
-                rel.append(c)
+                else:
+                    rel.add(c)
             newargs.append(x)
-        return LatticeOp._new_args_filter(newargs, And)
+        return newargs
 
     def _eval_subs(self, old, new):
         args = []
