@@ -2927,13 +2927,13 @@ def gm_private_key(p, q, a=None):
     $a_k$ is a residue. And from the $b_k$ 's, the message
     can be reconstructed.
 
-    The idea is that, while $jacobi \\_ symbol(a, pq)$
+    The idea is that, while $jacobi \\_ symbol(a, p q)$
     can be easily computed (and when it is equal to $-1$ will
-    tell you that $a$ is not a square mod $pq$), quadratic
+    tell you that $a$ is not a square mod $p q$ ), quadratic
     residuosity modulo a composite number is hard to compute
     without knowing its factorization.
 
-    Moreover, approximately half the numbers coprime to $pq$ have
+    Moreover, approximately half the numbers coprime to $p q$ have
     $jacobi \\_ symbol$ equal to $1$ . And among those, approximately half
     are residues and approximately half are not. This maximizes the
     entropy of the code.
