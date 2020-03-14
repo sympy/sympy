@@ -425,21 +425,25 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
     for i in range(min(m, n)):
         v, bet = _householder_vector(A[i:, i])
         hh_mat = A.eye(m - i) - bet * v * v.H
+        hh_mat = _simplify(hh_mat)
         A[i:, i:] = hh_mat * A[i:, i:]
         A[i:, i:] = A[i:, i:].applyfunc(ratsimp)
         if not only_b:
             temp = A.eye(m)
             temp[i:, i:] = hh_mat
             U = U * temp
+            U = U.applyfunc(ratsimp)
         if i + 1 <= n - 2:
             v, bet = _householder_vector(A[i, i+1:].T)
             hh_mat = A.eye(n - i - 1) - bet * v * v.H
+            hh_mat = _simplify(hh_mat)
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
             A[i:, i+1:] = A[i:, i+1:].applyfunc(ratsimp)
             if not only_b:
                 temp = A.eye(n)
                 temp[i+1:, i+1:] = hh_mat
                 V = temp * V
+            V = V.applyfunc(ratsimp)
     if not only_b:
         return U, A, V
     else:
