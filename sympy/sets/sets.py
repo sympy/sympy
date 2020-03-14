@@ -2361,8 +2361,8 @@ def disjoint_union(*sets):
     dj_union = EmptySet
     for set_i in sets:
         if isinstance(set_i, Set):
-            dj_union = dj_union + set_i*FiniteSet(index)
-            index = index+1
+            dj_union = dj_union + (set_i * FiniteSet(index))
+            index = index + 1
         else:
             raise ValueError("Unknown argument '%s'" % set_i)
     return product
