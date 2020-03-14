@@ -296,3 +296,13 @@ def test_Bernoulli():
     sol = dsolve(eq, f(x), hint='Bernoulli')
     assert sol == Eq(f(x), 1/(C1*x + 1))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = f(x).diff(x) - y*f(x)
+    sol = dsolve(eq, hint='Bernoulli')
+    assert sol == Eq(f(x), C1*exp(x*y))
+    assert checkodesol(eq, sol)[0]
+
+    eq = f(x)*f(x).diff(x) - 1
+    sol = dsolve(eq,hint='Bernoulli')
+    assert sol == [Eq(f(x), -sqrt(C1 + 2*x)), Eq(f(x), sqrt(C1 + 2*x))]
+    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
