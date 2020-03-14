@@ -17,8 +17,7 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
-from sympy.polys.polytools import cancel
-from sympy.simplify.simplify import dotprodsimp
+from sympy.simplify import ratsimp
 from sympy.functions.elementary.complexes import im, re
 from sympy.core import Symbol
 
@@ -427,7 +426,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
         v, bet = _householder_vector(A[i:, i])
         hh_mat = A.eye(m - i) - bet * v * v.H
         A[i:, i:] = hh_mat * A[i:, i:]
-        A[i:, i:] = A[i:, i:].applyfunc(cancel)
+        A[i:, i:] = A[i:, i:].applyfunc(ratsimp)
         if not only_b:
             temp = A.eye(m)
             temp[i:, i:] = hh_mat
@@ -436,7 +435,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
             v, bet = _householder_vector(A[i, i+1:].T)
             hh_mat = A.eye(n - i - 1) - bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
-            A[i:, i+1:] = A[i:, i+1:].applyfunc(cancel)
+            A[i:, i+1:] = A[i:, i+1:].applyfunc(ratsimp)
             if not only_b:
                 temp = A.eye(n)
                 temp[i+1:, i+1:] = hh_mat
