@@ -337,8 +337,10 @@ def test_bidiagonalize():
     assert simplify(M.bidiagonalize(upper=False)) == Matrix([[sqrt(14), 0, 0], [-sqrt(12334)/7, -198*sqrt(18501)/6167, 0], [0, 3*sqrt(18501)/881, 0]])
 
     M = Matrix(4, 3, range(1, 13))
-    assert simplify(M.bidiagonalize())== Matrix([[sqrt(166), -sqrt(3296926)/83, 0], [0, -912*sqrt(16484630)/1648463, 3*sqrt(16484630)/19861], [0, 0, 0], [0, 0, 0]])
+    assert simplify(M.bidiagonalize(method="lhc"))== Matrix([[sqrt(166), -sqrt(3296926)/83, 0], [0, -912*sqrt(16484630)/1648463, 3*sqrt(16484630)/19861], [0, 0, 0], [0, 0, 0]])
 
+    M = Matrix([[2, 2], [0, 3], [1, 1]])
+    assert simplify(M.bidiagonalize(method="lhc")) == Matrix([[sqrt(5), sqrt(5)], [0, 3], [0, 0]])
 
 def test_diagonalize():
     m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
