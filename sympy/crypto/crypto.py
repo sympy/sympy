@@ -2903,38 +2903,38 @@ def gm_private_key(p, q, a=None):
     the Goldwasser-Micali encryption. The method works
     roughly as follows.
 
-    `\\cdot` Pick two large primes `p` and `q`.
+    $\\cdot$ Pick two large primes $p$ and $q$.
 
-    `\\cdot` Call their product `N`.
+    $\\cdot$ Call their product $N$.
 
-    `\\cdot` Given a message as an integer `i`, write i in its
-    bit representation `b_0` , `\\dotsc` , `b_n` .
+    $\\cdot$ Given a message as an integer $i$, write i in its
+    bit representation $b_0$ , $\\dotsc$ , $b_n$ .
 
-    `\\cdot` For each k,
+    $\\cdot$ For each k,
 
-     if `b_k` = 0:
-        let `a_k` be a random square
+     if $b_k$ = 0:
+        let $a_k$ be a random square
         (quadratic residue) modulo p * q
-        such that `jacobi \\_symbol(a, pq) = 1`
-     if `b_k` = 1:
-        let `a_k` be a random non-square
-        (non-quadratic residue) modulo `pq`
-        such that `jacobi \\_ symbol(a, pq) = 1`
+        such that $jacobi \\_symbol(a, pq) = 1$
+     if $b_k$ = 1:
+        let $a_k$ be a random non-square
+        (non-quadratic residue) modulo $pq$
+        such that $jacobi \\_ symbol(a, pq) = 1$
 
-    returns [`a_1` , `a_2` , `\\dotsc` ]
+    returns [$a_1$ , $a_2$ , $\\dotsc$ ]
 
-    `b_k` can be recovered by checking whether or not
-    `a_k` is a residue. And from the `b_k` 's, the message
+    $b_k$ can be recovered by checking whether or not
+    $a_k$ is a residue. And from the $b_k$ 's, the message
     can be reconstructed.
 
-    The idea is that, while `jacobi \\_ symbol(a, pq)`
-    can be easily computed (and when it is equal to `-1` will
-    tell you that `a` is not a square mod `pq`), quadratic
+    The idea is that, while $jacobi \\_ symbol(a, pq)$
+    can be easily computed (and when it is equal to $-1$ will
+    tell you that $a$ is not a square mod $pq$), quadratic
     residuosity modulo a composite number is hard to compute
     without knowing its factorization.
 
-    Moreover, approximately half the numbers coprime to `pq` have
-    jacobi_symbol equal to 1. And among those, approximately half
+    Moreover, approximately half the numbers coprime to $pq$ have
+    $jacobi \\_ symbol$ equal to $1$ . And among those, approximately half
     are residues and approximately half are not. This maximizes the
     entropy of the code.
 
