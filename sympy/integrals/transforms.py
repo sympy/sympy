@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, range, iterable
+from sympy.core.compatibility import reduce, iterable
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
@@ -737,7 +737,10 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             a, b, C, e, fac = _rewrite_gamma(g, s, strip[0], strip[1])
         except IntegralTransformError:
             continue
-        G = meijerg(a, b, C/x**e)
+        try:
+            G = meijerg(a, b, C/x**e)
+        except ValueError:
+            continue
         if as_meijerg:
             h = G
         else:

@@ -21,6 +21,10 @@ class RoundFunction(Function):
     @classmethod
     def eval(cls, arg):
         from sympy import im
+        v = cls._eval_number(arg)
+        if v is not None:
+            return v
+
         if arg.is_integer or arg.is_finite is False:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
@@ -28,10 +32,6 @@ class RoundFunction(Function):
             if not i.has(S.ImaginaryUnit):
                 return cls(i)*S.ImaginaryUnit
             return cls(arg, evaluate=False)
-
-        v = cls._eval_number(arg)
-        if v is not None:
-            return v
 
         # Integral, numerical, symbolic part
         ipart = npart = spart = S.Zero

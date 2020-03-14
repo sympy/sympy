@@ -1,8 +1,7 @@
 from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, \
-    expand_func, binomial, gamma, Rational
+    expand_func, binomial, gamma, Rational, Symbol, cos, sin, Abs
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
-from sympy.utilities.pytest import raises, slow
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b
 
 y = Function('y')
@@ -189,6 +188,8 @@ def test_rsolve():
     assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
             is None)
 
+    assert rsolve(y(n) + y(n + 1) + 2**n + 3**n, y(n)) == (-1)**n*C0 - 2**n/3 - 3**n/4
+
 
 def test_rsolve_raises():
     x = Function('x')
@@ -197,12 +198,21 @@ def test_rsolve_raises():
     raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - sqrt(n)*y(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - y(n + 1), y(n), {x(0): 0}))
+    raises(ValueError, lambda: rsolve(y(n) + y(n + 1) + 2**n + cos(n), y(n)))
 
 
 def test_issue_6844():
     f = y(n + 2) - y(n + 1) + y(n)/4
     assert rsolve(f, y(n)) == 2**(-n)*(C0 + C1*n)
     assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2*2**(-n)*n
+
+
+def test_issue_18751():
+    r = Symbol('r', real=True, positive=True)
+    theta = Symbol('theta', real=True)
+    f = y(n) - 2 * r * cos(theta) * y(n - 1) + r**2 * y(n - 2)
+    assert rsolve(f, y(n)) == \
+        C0*(r*(cos(theta) - I*Abs(sin(theta))))**n + C1*(r*(cos(theta) + I*Abs(sin(theta))))**n
 
 
 @slow

@@ -4,13 +4,12 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
         AccumBounds, Interval, ImageSet, Lambda, besselj, Add)
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.setexpr import SetExpr
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.testing.pytest import XFAIL, slow, raises
 
 
 x, y, z = symbols('x y z')
@@ -1829,3 +1828,16 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(pi*Rational(3, 2) + x) == csc(x)
     assert sec(pi*Rational(3, 2) - x) == -csc(x)
+
+
+def test_as_real_imag():
+    # This is for https://github.com/sympy/sympy/issues/17142
+    # If it start failing again in irrelevant builds or in the master
+    # please open up the issue again.
+    expr = atan(I/(I + I*tan(1)))
+    assert expr.as_real_imag() == (expr, 0)
+
+
+def test_issue_18746():
+    e3 = cos(S.Pi*(x/4 + 1/4))
+    assert e3.period() == 8

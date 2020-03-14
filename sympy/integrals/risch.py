@@ -34,7 +34,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered, range
+from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
@@ -769,14 +769,10 @@ def gcdex_diophantine(a, b, c):
     # XXX: Bettter name?
 
     s, g = a.half_gcdex(b)
-    q = c.exquo(g)  # Inexact division means c is not in (a, b)
-    s = q*s
-
-    if not s.is_zero and b.degree() >= b.degree():
-        q, s = s.div(b)
-
+    s *= c.exquo(g)  # Inexact division means c is not in (a, b)
+    if s and s.degree() >= b.degree():
+        _, s = s.div(b)
     t = (c - s*a).exquo(b)
-
     return (s, t)
 
 
@@ -895,7 +891,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
         if basic:
             r += d.as_expr()*pv.diff(v)
         else:
-            r += (d*pv.diff(v)).as_poly(t)
+            r += (d.as_expr()*pv.diff(v).as_expr()).as_poly(t)
 
     if basic:
         r = cancel(r)
@@ -912,7 +908,7 @@ def get_case(d, t):
     Returns one of {'exp', 'tan', 'base', 'primitive', 'other_linear',
     'other_nonlinear'}.
     """
-    if not d.has(t):
+    if not d.expr.has(t):
         if d.is_one:
             return 'base'
         return 'primitive'
@@ -945,7 +941,7 @@ def splitfactor(p, DE, coefficientD=False, z=None):
     if p.is_zero:
         return (p, One)
 
-    if not p.has(DE.t):
+    if not p.expr.has(DE.t):
         s = p.as_poly(*kinv).gcd(Dp.as_poly(*kinv)).as_poly(DE.t)
         n = p.exquo(s)
         return (n, s)
@@ -1139,8 +1135,10 @@ def laurent_series(a, d, F, n, DE):
         Q = Pa.quo(Pd)
         for i in range(0, j + 1):
             Q = Q.subs(Z[i], V[i])
-        Dha = hd*derivation(ha, DE, basic=True) + ha*derivation(hd, DE, basic=True)
-        Dha += hd*derivation(ha, DE_new, basic=True) + ha*derivation(hd, DE_new, basic=True)
+        Dha = (hd*derivation(ha, DE, basic=True).as_poly(DE.t)
+             + ha*derivation(hd, DE, basic=True).as_poly(DE.t)
+             + hd*derivation(ha, DE_new, basic=True).as_poly(DE.t)
+             + ha*derivation(hd, DE_new, basic=True).as_poly(DE.t))
         Dhd = Poly(j + 1, DE.t)*hd**2
         ha, hd = Dha, Dhd
 
@@ -1286,7 +1284,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
                 inv, coeffs = h_lc.as_poly(z, field=True).invert(s), [S.One]
 
                 for coeff in h.coeffs()[1:]:
-                    L = reduced(inv*coeff, [s])[1]
+                    L = reduced(inv*coeff.as_poly(inv.gens), [s])[1]
                     coeffs.append(L.as_expr())
 
                 h = Poly(dict(list(zip(h.monoms(), coeffs))), DE.t)
@@ -1337,11 +1335,11 @@ def integrate_primitive_polynomial(p, DE):
     Zero = Poly(0, DE.t)
     q = Poly(0, DE.t)
 
-    if not p.has(DE.t):
+    if not p.expr.has(DE.t):
         return (Zero, p, True)
 
     while True:
-        if not p.has(DE.t):
+        if not p.expr.has(DE.t):
             return (q, p, True)
 
         Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
@@ -1574,7 +1572,7 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
         DE, z).as_expr() + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
     q1, q2 = polynomial_reduce(p, DE)
 
-    if q2.has(DE.t):
+    if q2.expr.has(DE.t):
         b = False
     else:
         b = True
@@ -1744,7 +1742,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     result = S.Zero
     for case in reversed(DE.cases):
-        if not fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
+        if not fa.expr.has(DE.t) and not fd.expr.has(DE.t) and not case == 'base':
             DE.decrement_level()
             fa, fd = frac_in((fa, fd), DE.t)
             continue

@@ -10,9 +10,8 @@ from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
-from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices import Trace, MatAdd, MatMul, Transpose
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 A, B = symbols("A B", cls=IndexedBase)

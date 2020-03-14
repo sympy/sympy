@@ -2,12 +2,11 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (range, integer_types, with_metaclass,
-                                      is_sequence, iterable, ordered)
+from sympy.core.compatibility import is_sequence, iterable, ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
-from sympy.core.evaluate import global_evaluate
-from sympy.core.function import UndefinedFunction
+from sympy.core.parameters import global_parameters
+from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
@@ -284,7 +283,7 @@ class SeqBase(Basic):
             yield self.coeff(pt)
 
     def __getitem__(self, index):
-        if isinstance(index, integer_types):
+        if isinstance(index, int):
             index = self._ith_point(index)
             return self.coeff(index)
         elif isinstance(index, slice):
@@ -371,7 +370,7 @@ class SeqBase(Basic):
                     d -= coeffs[i]*gfvar**(i+1)
                 return coeffs, simplify(factor(n)/factor(d))
 
-class EmptySequence(with_metaclass(Singleton, SeqBase)):
+class EmptySequence(SeqBase, metaclass=Singleton):
     """Represents an empty sequence.
 
     The empty sequence is also available as a singleton as
@@ -735,9 +734,9 @@ class RecursiveSeq(SeqBase):
         equal to. For example, if :code:`a(n) = f(a(n - 1), ..., a(n - d))`,
         then the expression should be :code:`f(a(n - 1), ..., a(n - d))`.
 
-    y : function
-        The name of the recursively defined sequence without argument, e.g.,
-        :code:`y` if the recurrence function is :code:`y(n)`.
+    yn : applied undefined function
+        Represents the nth term of the sequence as e.g. :code:`y(n)` where
+        :code:`y` is an undefined function and `n` is the sequence index.
 
     n : symbolic argument
         The name of the variable that the recurrence is in, e.g., :code:`n` if
@@ -755,7 +754,7 @@ class RecursiveSeq(SeqBase):
     >>> from sympy.series.sequences import RecursiveSeq
     >>> y = Function("y")
     >>> n = symbols("n")
-    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y, n, [0, 1])
+    >>> fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1])
 
     >>> fib.coeff(3) # Value at a particular point
     2
@@ -789,14 +788,19 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __new__(cls, recurrence, y, n, initial=None, start=0):
-        if not isinstance(y, UndefinedFunction):
-            raise TypeError("recurrence sequence must be an undefined function"
-                            ", found `{}`".format(y))
+    def __new__(cls, recurrence, yn, n, initial=None, start=0):
+        if not isinstance(yn, AppliedUndef):
+            raise TypeError("recurrence sequence must be an applied undefined function"
+                            ", found `{}`".format(yn))
 
         if not isinstance(n, Basic) or not n.is_symbol:
             raise TypeError("recurrence variable must be a symbol"
                             ", found `{}`".format(n))
+
+        if yn.args != (n,):
+            raise TypeError("recurrence sequence does not match symbol")
+
+        y = yn.func
 
         k = Wild("k", exclude=(n,))
         degree = 0
@@ -830,21 +834,47 @@ class RecursiveSeq(SeqBase):
 
         initial = Tuple(*(sympify(x) for x in initial))
 
-        seq = Basic.__new__(cls, recurrence, y(n), initial, start)
+        seq = Basic.__new__(cls, recurrence, yn, n, initial, start)
 
         seq.cache = {y(start + k): init for k, init in enumerate(initial)}
-        seq._start = start
         seq.degree = degree
-        seq.y = y
-        seq.n = n
-        seq._recurrence = recurrence
 
         return seq
 
     @property
+    def _recurrence(self):
+        """Equation defining recurrence."""
+        return self.args[0]
+
+    @property
+    def recurrence(self):
+        """Equation defining recurrence."""
+        return Eq(self.yn, self.args[0])
+
+    @property
+    def yn(self):
+        """Applied function representing the nth term"""
+        return self.args[1]
+
+    @property
+    def y(self):
+        """Undefined function for the nth term of the sequence"""
+        return self.yn.func
+
+    @property
+    def n(self):
+        """Sequence index symbol"""
+        return self.args[2]
+
+    @property
+    def initial(self):
+        """The initial values of the sequence"""
+        return self.args[3]
+
+    @property
     def start(self):
         """The starting point of the sequence. This point is included"""
-        return self._start
+        return self.args[4]
 
     @property
     def stop(self):
@@ -854,33 +884,28 @@ class RecursiveSeq(SeqBase):
     @property
     def interval(self):
         """Interval on which sequence is defined."""
-        return (self._start, S.Infinity)
+        return (self.start, S.Infinity)
 
     def _eval_coeff(self, index):
-        if index - self._start < len(self.cache):
+        if index - self.start < len(self.cache):
             return self.cache[self.y(index)]
 
         for current in range(len(self.cache), index + 1):
             # Use xreplace over subs for performance.
             # See issue #10697.
-            seq_index = self._start + current
+            seq_index = self.start + current
             current_recurrence = self._recurrence.xreplace({self.n: seq_index})
             new_term = current_recurrence.xreplace(self.cache)
 
             self.cache[self.y(seq_index)] = new_term
 
-        return self.cache[self.y(self._start + current)]
+        return self.cache[self.y(self.start + current)]
 
     def __iter__(self):
-        index = self._start
+        index = self.start
         while True:
             yield self._eval_coeff(index)
             index += 1
-
-    @property
-    def recurrence(self):
-        """Equation defining recurrence."""
-        return Eq(self.y(self.n), self._recurrence)
 
 
 def sequence(seq, limits=None):
@@ -1005,7 +1030,7 @@ class SeqAdd(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)
@@ -1114,7 +1139,7 @@ class SeqMul(SeqExprOp):
     """
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
         args = list(args)

@@ -17,7 +17,7 @@ from sympy.polys.polyerrors import (
     DomainError)
 from sympy.polys.polyutils import illegal
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 
@@ -781,3 +781,7 @@ def test_CC_double():
     assert CC(1e-15j).imag > 1e-50
     assert CC(1e-20j).imag > 1e-50
     assert CC(1e-40j).imag > 1e-50
+
+def test_issue_18278():
+    assert str(RR(2).parent()) == 'RR'
+    assert str(CC(2).parent()) == 'CC'
