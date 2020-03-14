@@ -539,19 +539,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                           1
-                                                                                         -----
-                                                                                         1 - n
-               //               /                                  \                    \
-               ||              |                                   |                    |
-               ||              |            /           /          |            /       |
-               ||              |           |           |           |           |        |
-               ||              |       -n* | P(x) dx   | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||              |           |           |           |           |        |
-               ||              |          /           /            |          /         |
-        f(x) = ||C1 - (n - 1)* | Q(x)*e             *e           dx|*e                  |
-               ||              |                                   |                    |
-               \\             /                                    /                    /
+                                                                                                              -1
+                                                                                                             -----
+                                                                                                             n - 1
+               //         /                                /                           \                    \
+               ||        |                                |                            |                    |
+               ||        |                 /              |                 /          |            /       |
+               ||        |                |               |                |           |           |        |
+               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                |               |                |           |           |        |
+               ||        |               /                |               /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
+               ||        |                                |                            |                    |
+               \\       /                                /                             /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -579,7 +579,7 @@ class Bernoulli(SinglePatternODESolver):
     >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
     ... f(x), hint='Bernoulli'))
                     1
-    f(x) = -------------------
+    f(x) =  -----------------
             C1*x + log(x) + 1
 
     References
