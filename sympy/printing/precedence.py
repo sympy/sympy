@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.function import _coeff_isneg
-
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda": 1,
