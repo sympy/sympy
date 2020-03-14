@@ -2357,6 +2357,12 @@ def set_function(f, x):
     return _set_function(f, x)
 
 def disjoint_union(*sets):
+    """
+    Iterates over ``sets`` and computes their disjoint union
+    Find the  definition and examples here:
+    https://en.wikipedia.org/wiki/Disjoint_union
+    """
+
     index = 1
     dj_union = EmptySet
     for set_i in sets:
