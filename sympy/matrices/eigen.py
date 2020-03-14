@@ -17,6 +17,8 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
+from sympy.polys.polytools import cancel
+from sympy.simplify.simplify import dotprodsimp
 from sympy.functions.elementary.complexes import im, re
 from sympy.core import Symbol
 
@@ -399,7 +401,11 @@ def _householder_vector(x):
         v = v / v[0]
         bet = 2 / (v.norm() ** 2)
     elif res is None:
-        if abs(norm_x1.evalf(maxn=60)) < Float(10**-60,100):
+        if len(norm_x1.atoms(Symbol)) != 0:
+            v[0, 0] = x[0, 0] + q * x.norm()
+            v = v / v[0]
+            bet = 2 / (v.norm() ** 2)
+        elif abs(norm_x1.evalf(maxn=60)) < Float(10**-60,100):
             bet = 0
             v[0, 0] = 1
         else:
@@ -421,6 +427,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
         v, bet = _householder_vector(A[i:, i])
         hh_mat = A.eye(m - i) - bet * v * v.H
         A[i:, i:] = hh_mat * A[i:, i:]
+        A[i:, i:] = A[i:, i:].applyfunc(cancel)
         if not only_b:
             temp = A.eye(m)
             temp[i:, i:] = hh_mat
@@ -429,6 +436,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
             v, bet = _householder_vector(A[i, i+1:].T)
             hh_mat = A.eye(n - i - 1) - bet * v * v.H
             A[i:, i+1:] = A[i:, i+1:] * hh_mat
+            A[i:, i+1:] = A[i:, i+1:].applyfunc(cancel)
             if not only_b:
                 temp = A.eye(n)
                 temp[i+1:, i+1:] = hh_mat
