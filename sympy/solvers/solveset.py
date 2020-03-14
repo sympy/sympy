@@ -329,7 +329,6 @@ def _invert_complex(f, g_ys, symbol):
     if isinstance(f, exp):
         x = Symbol('x')
         if (len((f.args)) < 2) and (f.args == (exp(x),)):
-            print(len((f.args)))
             return _invert_complex(f.args[0],
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
         elif isinstance(g_ys, FiniteSet):
