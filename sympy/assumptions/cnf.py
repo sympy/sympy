@@ -10,7 +10,7 @@ from sympy.logic.boolalg import Or, And, Not, Xnor
 from itertools import zip_longest
 
 
-class Literal(object):
+class Literal:
     """
     The smallest element of a CNF object
     """
@@ -21,7 +21,7 @@ class Literal(object):
             is_Not = True
         elif isinstance(lit, (AND, OR, Literal)):
             return ~lit if is_Not else lit
-        obj = super(Literal, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj.lit = lit
         obj.is_Not = is_Not
         return obj
@@ -45,7 +45,7 @@ class Literal(object):
         return Literal(self.lit, is_Not)
 
     def __str__(self):
-        return '%s(%s, %s)' % (type(self).__name__, self.lit, self.is_Not)
+        return '{}({}, {})'.format(type(self).__name__, self.lit, self.is_Not)
 
     __repr__ = __str__
 
@@ -57,7 +57,7 @@ class Literal(object):
         return h
 
 
-class OR(object):
+class OR:
     """
     A low-level implementation for Or
     """
@@ -89,7 +89,7 @@ class OR(object):
     __repr__ = __str__
 
 
-class AND(object):
+class AND:
     """
     A low-level implementation for And
     """
@@ -206,7 +206,7 @@ def distribute_AND_over_OR(expr):
                              for arg in expr._args])
 
 
-class CNF(object):
+class CNF:
     """
     Class to represent CNF of a Boolean expression.
     Consists of set of clauses, which themselves are stored as
@@ -324,7 +324,7 @@ class CNF(object):
         return And(*(Or(*(remove_literal(arg) for arg in clause)) for clause in cnf.clauses))
 
 
-class EncodedCNF(object):
+class EncodedCNF:
     """
     Class for encoding the CNF expression.
     """

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Dict, Callable
 
 from sympy.core import S, Add, Expr, Basic, Mul
@@ -142,8 +140,8 @@ def refine_Pow(expr, assumptions):
 
                 coeff, terms = expr.exp.as_coeff_add()
                 terms = set(terms)
-                even_terms = set([])
-                odd_terms = set([])
+                even_terms = set()
+                odd_terms = set()
                 initial_number_of_terms = len(terms)
 
                 for t in terms:
