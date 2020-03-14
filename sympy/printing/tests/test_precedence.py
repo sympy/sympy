@@ -30,7 +30,7 @@ def test_Integral():
 
 def test_Mul():
     assert precedence(x*y) == PRECEDENCE["Mul"]
-    assert precedence(-x*y) == PRECEDENCE["Add"]
+    assert precedence(-x*y) == PRECEDENCE["Mul"]
 
 
 def test_Number():
@@ -52,7 +52,7 @@ def test_Order():
 
 def test_Pow():
     assert precedence(x**y) == PRECEDENCE["Pow"]
-    assert precedence(-x**y) == PRECEDENCE["Add"]
+    assert precedence(-x**y) == PRECEDENCE["Mul"]
     assert precedence(x**-y) == PRECEDENCE["Pow"]
 
 
