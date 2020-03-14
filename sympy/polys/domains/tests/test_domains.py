@@ -5,7 +5,7 @@ from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
 from sympy.polys.domains.realfield import RealField
-from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
+from sympy.polys.domains.gaussiandomains import ZZ_I
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
