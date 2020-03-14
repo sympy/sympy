@@ -443,7 +443,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
                 temp = A.eye(n)
                 temp[i+1:, i+1:] = hh_mat
                 V = temp * V
-            V = V.applyfunc(ratsimp)
+                V = V.applyfunc(ratsimp)
     if not only_b:
         return U, A, V
     else:
