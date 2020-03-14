@@ -81,7 +81,7 @@ bifid6 = AZ() + '0123456789'
 bifid10 = printable
 
 
-def padded_key(key, symbols, filter=True):
+def padded_key(key, symbols):
     """Return a string of the distinct characters of ``symbols`` with
     those of ``key`` appearing first, omitting characters in ``key``
     that are not in ``symbols``. A ValueError is raised if a) there are
@@ -111,7 +111,8 @@ def padded_key(key, symbols, filter=True):
             'characters in key but not symbols: %s' % ''.join(
             sorted(extra)))
     key0 = ''.join(list(uniq(key)))
-    return key0 + ''.join([i for i in syms if i not in key0])
+    # remove from syms characters in key0
+    return key0 + translate(''.join(syms), None, key0)
 
 
 def check_and_join(phrase, symbols=None, filter=None):
@@ -481,7 +482,7 @@ def encipher_atbash(msg, symbols=None):
     decipher_atbash
 
     """
-    return encipher_affine(msg, (25,25), symbols)
+    return encipher_affine(msg, (25, 25), symbols)
 
 
 def decipher_atbash(msg, symbols=None):
@@ -520,7 +521,7 @@ def decipher_atbash(msg, symbols=None):
     encipher_atbash
 
     """
-    return decipher_affine(msg, (25,25), symbols)
+    return decipher_affine(msg, (25, 25), symbols)
 
 #################### substitution cipher ###########################
 
