@@ -380,11 +380,11 @@ class MatrixEigen(MatrixSubspaces):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
                 normalize=normalize)
 
-    def bidiagonalize(self, upper=True):
-        return _bidiagonalize(self, upper=upper)
+    def bidiagonalize(self, upper=True, method="lhc"):
+        return _bidiagonalize(self, upper=upper, method=method)
 
-    def bidiagonal_decomposition(self, upper=True):
-        return _bidiagonal_decomposition(self, upper=upper)
+    def bidiagonal_decomposition(self, upper=True, method="householder"):
+        return _bidiagonal_decomposition(self, upper=upper, method=method)
 
     @property
     def is_positive_definite(self):

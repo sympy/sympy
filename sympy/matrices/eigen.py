@@ -439,7 +439,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
         return A
 
 
-def _bidiagonal_decomposition(M, upper=True):
+def _bidiagonal_decomposition(M, upper=True, method="householder"):
     """
     Returns (U,B,V.H)
 
@@ -462,25 +462,23 @@ def _bidiagonal_decomposition(M, upper=True):
     2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
 
     """
+    method = method.lower()
+    if method not in ("lhc", "householder"):
+        raise ValueError("Invalid Method for Bidiagonalization")
 
     if type(upper) is not bool:
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        X = _bidiagonal_decmp_hholder(M.H)
+        X = M.H.bidiagonal_decomposition()
         return X[2].H, X[1].H, X[0].H
-
-    Q, R = M.QRdecomposition()
-    _U, B, V = _bidiagonal_decmp_hholder(R)
-    U = Q * _U
-    S = M.zeros(M.rows, M.rows).as_mutable()
-    T = M.zeros(M.rows, M.cols).as_mutable()
-    S[:U.rows, :U.cols] = U
-    T[:B.rows, :B.cols] = B
-    return S, T, V
+    if method == "lhc":
+        raise NotImplementedError("LHC Method for Bidiagonalization has still not been implemented")
+    elif method == "householder":
+        return _bidiagonal_decmp_hholder(M, only_b=False)
 
 
-def _bidiagonalize(M, upper=True):
+def _bidiagonalize(M, upper=True, method="lhc"):
     """
     Returns `B`
 
@@ -494,6 +492,12 @@ def _bidiagonalize(M, upper=True):
     upper : bool. Whether to do upper bidiagnalization or lower.
                 True for upper and False for lower.
 
+    method : string. ``lhc`` , ``householder``
+            ``householder`` , this method uses householder transformations
+            to bidiagonalize the input.
+            ``lhc`` , this method uses R-Bidiagonalization/LHC-Bidiagonalization
+            to bidiagonalize the input.
+
     References
     ==========
 
@@ -501,19 +505,23 @@ def _bidiagonalize(M, upper=True):
     2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
 
     """
+    method = method.lower()
+    if method not in ("lhc", "householder"):
+        raise ValueError("Invalid Method for Bidiagonalization")
 
     if type(upper) is not bool:
         raise ValueError("upper must be a boolean")
 
     if not upper:
-        return _bidiagonal_decmp_hholder(M.H, only_b=True).H
-
-    Q, R = M.QRdecomposition()
-    S = _bidiagonal_decmp_hholder(R, only_b=True)
-    B = M.zeros(M.rows, M.cols).as_mutable()
-    B[:S.rows, :S.cols] = S
-    return B
-
+        return M.H.bidiagonalize(method=method).H
+    if method == "lhc":
+        Q, R = M.QRdecomposition()
+        S = _bidiagonal_decmp_hholder(R, only_b=True)
+        B = M.zeros(M.rows, M.cols).as_mutable()
+        B[:S.rows, :S.cols] = S
+        return B
+    elif method == "householder":
+        return _bidiagonal_decmp_hholder(M, only_b=True)
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     """

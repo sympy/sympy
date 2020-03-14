@@ -242,7 +242,7 @@ def test_bidiagonalize():
                         for j in range(M.cols))
 
         M1, M2, M3 = M.bidiagonal_decomposition()
-        M0 = M.bidiagonalize()
+        M0 = M.bidiagonalize(method="householder")
         assert M == simplify(M1 * M2 * M3)
         M2.simplify()
         assert M2 == simplify(M0)
@@ -252,7 +252,7 @@ def test_bidiagonalize():
 
         N = ImmutableMatrix(M)
         N1, N2, N3 = N.bidiagonal_decomposition()
-        N0 = N.bidiagonalize()
+        N0 = N.bidiagonalize(method="householder")
         assert N == simplify(N1 * N2 * N3)
         N2.simplify()
         assert N2 == simplify(N0)
@@ -260,7 +260,7 @@ def test_bidiagonalize():
         test_orthogonal(N3)
         test_upper_bidiagonal(N2)
 
-        LM0 = M.bidiagonalize(upper=False)
+        LM0 = M.bidiagonalize(method="householder", upper=False)
         LM1, LM2, LM3 = M.bidiagonal_decomposition(upper=False)
         assert M == simplify(LM1 * LM2 * LM3)
         LM2.simplify()
@@ -269,7 +269,7 @@ def test_bidiagonalize():
         test_orthogonal(LM3)
         test_lower_bidiagonal(LM2)
 
-        LN0 = N.bidiagonalize(upper=False)
+        LN0 = N.bidiagonalize(method="householder", upper=False)
         LN1, LN2, LN3 = N.bidiagonal_decomposition(upper=False)
         assert N == simplify(LN1 * LN2 * LN3)
         LN2.simplify()
@@ -281,9 +281,9 @@ def test_bidiagonalize():
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
                 [0, 0, 1]])
-    assert M.bidiagonalize() == M
+    assert M.bidiagonalize(method="householder") == M
     assert M.bidiagonal_decomposition() == (M, M, M)
-    assert M.bidiagonalize(upper=False) == M
+    assert M.bidiagonalize(method="householder", upper=False) == M
     assert M.bidiagonal_decomposition(upper=False) == (M, M, M)
 
     M = randMatrix(2, 2, min=-1000000000, max=1000000000)
@@ -295,45 +295,49 @@ def test_bidiagonalize():
     a, b, c = M.bidiagonal_decomposition()
     diff = a * b * c - M
     assert max(abs(diff)) < 10**-90
-    res = Matrix([[12.88410, -21.87643, 0.0],
+    res = Matrix([[-12.88410, 21.87643, 0.0],
                   [0.0, 2.24624, -0.61328],
                   [0.0, 0, 0.0],
                   [0.0, 0.0, 0.0]])
     assert max(abs(b.applyfunc(lambda i : round(i, 5)) - res)) < 10**-6
 
-
     M = Matrix(10, 8, range(1, 81)).applyfunc(lambda i: Float(i, 100))
     a, b, c = M.bidiagonal_decomposition()
     diff = a * b * c - M
     assert max(abs(diff)) < Float(10**-90, 100)
-    res = Matrix([[137.73162, -393.09074, 0.0, 0.0, 0.0, 0.0, 0.0, 0],
-                [0, 42.61022, -47.17247, 0, 0.0, 0, 0.0, 0.0],
-                [0, 0, 36.87168, -38.51377, 0.0, 0.0, 0.0, 0.0],
-                [0, 0.0, 0.0, 31.55575, 29.91785, 0.0, 0.0, 0.0],
-                [0, 0.0, 0.0, 0.0, -23.36203, -19.86616, 0.0, 0.0],
-                [0, 0, 0.0, 0.0, 0.0, -13.80644, -9.65693, 0.0],
-                [0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.06287, 1.33486],
-                [0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0]])
+    res = Matrix([[-137.73162, 393.09074, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0, 17.96369, -8.18375, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0]])
     assert max(abs(b.applyfunc(lambda i : round(i, 5)) - res)) < 10**-6
 
     x, y, z, w = symbols('x y z w', real=True, zero=False)
-
 
     M = Matrix([[1, x], [x, 1]])
     test_matrix(M)
 
     M = Matrix([[1, 2], [3, 4]])
-    N = M.bidiagonalize()
+    N = M.bidiagonalize(method="householder")
     P = M.bidiagonal_decomposition()
-    assert simplify(N) == Matrix([[sqrt(10), 7*sqrt(10)/5], [0, sqrt(10)/5]])
+    assert simplify(N) == Matrix([[-sqrt(10), -7*sqrt(10)/5], [0, -sqrt(10)/5]])
     assert P[2] == M.eye(2)
-    assert simplify(P[1]) == Matrix([[sqrt(10), 7*sqrt(10)/5], [0, sqrt(10)/5]])
+    assert simplify(P[1]) == Matrix([[-sqrt(10), -7*sqrt(10)/5], [0, -sqrt(10)/5]])
 
     M = Matrix([[14, 51], [68, 87]])
-    assert simplify(M.bidiagonalize()) == Matrix([[2*sqrt(1205), 663*sqrt(1205)/241], [0, 225*sqrt(1205)/241]])
-    assert simplify(M.bidiagonalize(upper=False)) == Matrix([[-sqrt(2797), 0], [-5389*sqrt(2797)/2797, -2250*sqrt(2797)/2797]])
+    assert simplify(M.bidiagonalize(method="householder")) == Matrix([[-2*sqrt(1205), -663*sqrt(1205)/241], [0, -225*sqrt(1205)/241]])
+    assert simplify(M.bidiagonalize(method="householder", upper=False)) == Matrix([[-sqrt(2797), 0], [-5389*sqrt(2797)/2797, -2250*sqrt(2797)/2797]])
+
+    M = Matrix(3, 3, range(1, 10))
+    assert simplify(M.bidiagonalize(upper=False)) == Matrix([[sqrt(14), 0, 0], [-sqrt(12334)/7, -198*sqrt(18501)/6167, 0], [0, 3*sqrt(18501)/881, 0]])
+
+    M = Matrix(4, 3, range(1, 13))
+    assert simplify(M.bidiagonalize())== Matrix([[sqrt(166), -sqrt(3296926)/83, 0], [0, -912*sqrt(16484630)/1648463, 3*sqrt(16484630)/19861], [0, 0, 0], [0, 0, 0]])
 
 
 def test_diagonalize():
