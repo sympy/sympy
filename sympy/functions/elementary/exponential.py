@@ -753,8 +753,8 @@ class log(Function):
                 return powsimp((-n) * p * x / (n + 1), deep=True, combine='exp')
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
-    def _eval_expand_log(self, deep=True, **hints):
-        from sympy import unpolarify, expand_log
+    def _eval_expand_log(self, deep=True, factor=False, **hints):
+        from sympy import unpolarify, expand_log, factorint
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         if (len(self.args) == 2):
@@ -765,6 +765,11 @@ class log(Function):
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
+            # expand as product of its prime factors if factor=True
+            if factor:
+                p = factorint(int(arg))
+                if int(arg) not in p.keys():
+                    return sum(log(arg / val**n) for val, n in p.items())
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
