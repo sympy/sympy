@@ -327,7 +327,12 @@ def _invert_complex(f, g_ys, symbol):
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, exp):
-        if isinstance(g_ys, FiniteSet):
+        x = Symbol('x')
+        if (len((f.args)) < 2) and (f.args == (exp(x),)):
+            print(len((f.args)))
+            return _invert_complex(f.args[0],
+                               imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
+        elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
