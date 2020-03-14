@@ -20,9 +20,9 @@ from sympy.logic.boolalg import (
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
-from sympy.utilities import cartes
+from sympy.utilities.iterables import cartes
 
-from itertools import combinations
+from itertools import combinations, permutations
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -60,7 +60,9 @@ def test_And():
     e = A > 1
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
-    assert And(g, l, ge, le) == And(l, le)
+    assert And(g, l, ge, le) == And(ge, g)
+    assert set([And(*i) for i in permutations((l,g,le,ge))]) == {And(ge, g)}
+    assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
 
 
 def test_Or():

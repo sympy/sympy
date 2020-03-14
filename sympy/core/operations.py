@@ -375,6 +375,12 @@ class AssocOp(Basic):
         else:
             return (sympify(expr),)
 
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            terms = [term.doit(**hints) for term in self.args]
+        else:
+            terms = self.args
+        return self.func(*terms, evaluate=True)
 
 class ShortCircuit(Exception):
     pass

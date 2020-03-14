@@ -372,6 +372,132 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
 
 
+#G&VL, Matrix Computations, Algo 5.4.2
+def _householder_vector(x):
+    if not x.cols == 1:
+        raise ValueError("Input must be a column matrix")
+    v = x.copy()
+    v_plus = x.copy()
+    v_minus = x.copy()
+    q = x[0, 0] / abs(x[0, 0])
+    norm_x = x.norm()
+    v_plus[0, 0] = x[0, 0] + q * norm_x
+    v_minus[0, 0] = x[0, 0] - q * norm_x
+    if x[1:, 0].norm() == 0:
+        bet = 0
+        v[0, 0] = 1
+    else:
+        if v_plus.norm() <= v_minus.norm():
+            v = v_plus
+        else:
+            v = v_minus
+        v = v / v[0]
+        bet = 2 / (v.norm() ** 2)
+    return v, bet
+
+
+def _bidiagonal_decmp_hholder(M):
+    m = M.rows
+    n = M.cols
+    A = M.as_mutable()
+    U, V = A.eye(m), A.eye(n)
+    for i in range(min(m, n)):
+        v, bet = _householder_vector(A[i:, i])
+        hh_mat = A.eye(m - i) - bet * v * v.H
+        A[i:, i:] = hh_mat * A[i:, i:]
+        temp = A.eye(m)
+        temp[i:, i:] = hh_mat
+        U = U * temp
+        if i + 1 <= n - 2:
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = A.eye(n - i - 1) - bet * v * v.H
+            A[i:, i+1:] = A[i:, i+1:] * hh_mat
+            temp = A.eye(n)
+            temp[i+1:, i+1:] = hh_mat
+            V = temp * V
+    return U, A, V
+
+
+def _eval_bidiag_hholder(M):
+    m = M.rows
+    n = M.cols
+    A = M.as_mutable()
+    for i in range(min(m, n)):
+        v, bet = _householder_vector(A[i:, i])
+        hh_mat = A.eye(m-i) - bet * v * v.H
+        A[i:, i:] = hh_mat * A[i:, i:]
+        if i + 1 <= n - 2:
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = A.eye(n - i - 1) - bet * v * v.H
+            A[i:, i+1:] = A[i:, i+1:] * hh_mat
+    return A
+
+
+def _bidiagonal_decomposition(M, upper=True):
+    """
+    Returns (U,B,V.H)
+
+    `A = UBV^{H}`
+
+    where A is the input matrix, and B is its Bidiagonalized form
+
+    Note: Bidiagonal Computation can hang for symbolic matrices.
+
+    Parameters
+    ==========
+
+    upper : bool. Whether to do upper bidiagnalization or lower.
+                True for upper and False for lower.
+
+    References
+    ==========
+
+    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+
+    """
+
+    if type(upper) is not bool:
+        raise ValueError("upper must be a boolean")
+
+    if not upper:
+        X = _bidiagonal_decmp_hholder(M.H)
+        return X[2].H, X[1].H, X[0].H
+
+    return _bidiagonal_decmp_hholder(M)
+
+
+def _bidiagonalize(M, upper=True):
+    """
+    Returns `B`
+
+    where B is the Bidiagonalized form of the input matrix.
+
+    Note: Bidiagonal Computation can hang for symbolic matrices.
+
+    Parameters
+    ==========
+
+    upper : bool. Whether to do upper bidiagnalization or lower.
+                True for upper and False for lower.
+
+    References
+    ==========
+
+    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+
+    """
+
+    if type(upper) is not bool:
+        raise ValueError("upper must be a boolean")
+
+    if not upper:
+        return _eval_bidiag_hholder(M.H).H
+
+    return _eval_bidiag_hholder(M)
+
+
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     """
     Return (P, D), where D is diagonal and
