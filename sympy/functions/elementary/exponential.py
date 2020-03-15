@@ -762,15 +762,10 @@ class log(Function):
             return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
         if arg.is_Integer:
-            # remove perfect powers
-            p = perfect_power(int(arg))
-            if p is not False:
-                return p[1]*self.func(p[0])
-            # expand as product of its prime factors if factor=True
-            if factor:
-                p = factorint(int(arg))
-                if int(arg) not in p.keys():
-                    return sum(log(arg / val**n) for val, n in p.items())
+            # expand log as product of its prime factors
+            p = factorint(int(arg))
+            if int(arg) not in p.keys() and factor:
+                return sum(n*log(val) for val, n in p.items())
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:

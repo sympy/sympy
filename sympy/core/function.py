@@ -2820,7 +2820,7 @@ def expand_multinomial(expr, deep=True):
     power_base=False, basic=False, multinomial=True, log=False)
 
 
-def expand_log(expr, deep=True, force=False):
+def expand_log(expr, deep=True, factor=False, force=False):
     """
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
@@ -2836,7 +2836,7 @@ def expand_log(expr, deep=True, force=False):
     """
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,
-        basic=False, force=force)
+        basic=False, force=force, factor=factor)
 
 
 def expand_func(expr, deep=True):
