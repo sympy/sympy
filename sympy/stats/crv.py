@@ -192,8 +192,8 @@ class SampleExternal(object):
             return scipy_rv.rvs(size=size)
 
         scipy_rv_map = {
-            'BetaDistribution': lambda dist, size: beta.rvs(a=float(dist.a),
-                b=float(dist.b), size=size),
+            'BetaDistribution': lambda dist, size: beta.rvs(a=float(dist.alpha),
+                b=float(dist.beta), size=size),
             'BetaPrimeDistribution':lambda dist, size:betaprime.rvs(a=float(dist.alpha),
                 b=float(dist.beta), size=size),
             'CauchyDistribution': lambda dist, size: cauchy.rvs(loc=float(dist.x0),
@@ -209,7 +209,7 @@ class SampleExternal(object):
             'GammaInverseDistribution': lambda dist, size: invgamma.rvs(a=float(dist.a),
                 loc=0, scale=float(dist.b), size=size),
             'LogNormalDistribution': lambda dist, size: lognorm.rvs(s=float(dist.std),
-                loc=0, scale=exp(float(dist.mean), size=size)),
+                loc=0, scale=exp(float(dist.mean)), size=size),
             'NormalDistribution': lambda dist, size: norm.rvs(float(dist.mean),
                 float(dist.std), size=size),
             'GaussianInverseDistribution': lambda dist, size: invgauss.rvs(

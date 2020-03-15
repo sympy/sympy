@@ -22,7 +22,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
-from sympy.stats.crv import SingleContinuousPSpace
+from sympy.stats.crv import SingleContinuousPSpace, SampleExternal
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -1539,8 +1539,10 @@ def test_sample_numpy():
     else:
         for X in distribs_numpy:
             samps = sample(X, size=size)
+            samps2 = SampleExternal(X.pspace.distribution, size)._sample_numpy()
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
+                assert samps2[sam] in X.pspace.domain.set
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -1565,8 +1567,10 @@ def test_sample_scipy():
     else:
         for X in distribs_scipy:
             samps = sample(X, size=size)
+            samps2 = SampleExternal(X.pspace.distribution, size)._sample_scipy()
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
+                assert samps2[sam] in X.pspace.domain.set
 
 def test_sample_pymc3():
     distribs_pymc3 = [
@@ -1588,5 +1592,7 @@ def test_sample_pymc3():
     else:
         for X in distribs_pymc3:
             samps = sample(X, size=size)
+            samps2 = SampleExternal(X.pspace.distribution, size)._sample_pymc3()
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
+                assert samps2[sam] in X.pspace.domain.set
