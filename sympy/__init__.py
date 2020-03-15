@@ -160,7 +160,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         ratsimp, ratsimpmodprime)
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
-        Intersection, imageset, Complement, SymmetricDifference, ImageSet,
+        Intersection, external_disjoint_union, imageset, Complement, SymmetricDifference, ImageSet,
         Range, ComplexRegion, Reals, Contains, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
@@ -390,7 +390,7 @@ __all__ = [
 
     # sympy.sets
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
-    'Intersection', 'imageset', 'Complement', 'SymmetricDifference',
+    'Intersection', 'imageset', 'external_disjoint_union', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
     'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
     'Naturals0', 'UniversalSet', 'Integers', 'Rationals',

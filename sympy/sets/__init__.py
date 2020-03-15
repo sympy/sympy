@@ -1,5 +1,6 @@
 from .sets import (Set, Interval, Union, FiniteSet, ProductSet,
-        Intersection, imageset, Complement, SymmetricDifference)
+        Intersection, imageset, Complement, SymmetricDifference,
+        external_disjoint_union)
 from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains
 from .conditionset import ConditionSet
@@ -17,7 +18,7 @@ Rationals = S.Rationals
 
 __all__ = [
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
-    'Intersection', 'imageset', 'Complement', 'SymmetricDifference',
+    'Intersection', 'imageset', 'Complement', 'SymmetricDifference', 'external_disjoint_union',
 
     'ImageSet', 'Range', 'ComplexRegion', 'Reals',
 

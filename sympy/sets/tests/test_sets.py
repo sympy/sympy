@@ -1488,19 +1488,19 @@ def test_issue_16878b():
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
 
-def test_disjoint_union():
-    assert disjoint_union(FiniteSet(1,2,3), FiniteSet(1,2,3), FiniteSet(1,2,3)) == (FiniteSet(1,2,3)*FiniteSet(1,2,3))
-    assert disjoint_union(Interval(1, 3), Interval(2, 4)) == Union(Interval(1,3) * FiniteSet(1), Interval(2, 4) * FiniteSet(2))
-    assert disjoint_union(Interval(0, 5), Interval(0, 5)) == Union(Interval(0,5) * FiniteSet(1), Interval(0, 5) * FiniteSet(2))
-    assert disjoint_union(Interval(-1,2), S.EmptySet, S.EmptySet) == Interval(-1,2)*FiniteSet(1)
-    assert disjoint_union(Interval(-1,2)) == Interval(-1,2)*FiniteSet(1)
-    assert disjoint_union(S.EmptySet, Interval(-1,2), S.EmptySet) == Interval(-1,2)*FiniteSet(2) 
+def test_external_disjoint_union():
+    assert external_disjoint_union(FiniteSet(1,2,3), FiniteSet(1,2,3), FiniteSet(1,2,3)) == (FiniteSet(1,2,3)*FiniteSet(0, 1,2))
+    assert external_disjoint_union(Interval(1, 3), Interval(2, 4)) == Union(Interval(1,3) * FiniteSet(0), Interval(2, 4) * FiniteSet(1))
+    assert external_disjoint_union(Interval(0, 5), Interval(0, 5)) == Union(Interval(0,5) * FiniteSet(0), Interval(0, 5) * FiniteSet(1))
+    assert external_disjoint_union(Interval(-1,2), S.EmptySet, S.EmptySet) == Interval(-1,2)*FiniteSet(0)
+    assert external_disjoint_union(Interval(-1,2)) == Interval(-1,2)*FiniteSet(0)
+    assert external_disjoint_union(S.EmptySet, Interval(-1,2), S.EmptySet) == Interval(-1,2)*FiniteSet(1) 
     #could skip indices for which sets are empty while computing disjoint union
-    assert disjoint_union(Interval(-oo, oo)) == Interval(-oo, oo) * FiniteSet(1)
-    assert disjoint_union(S.EmptySet) == S.EmptySet
-    assert disjoint_union() == S.EmptySet
+    assert external_disjoint_union(Interval(-oo, oo)) == Interval(-oo, oo) * FiniteSet(0)
+    assert external_disjoint_union(S.EmptySet) == S.EmptySet
+    assert external_disjoint_union() == S.EmptySet
 
     x = Symbol("x")
     y = Symbol("y")
     z = Symbol("z")
-    assert disjoint_union(FiniteSet(x), FiniteSet(y,z)) == (FiniteSet(x) * FiniteSet(1)) + (FiniteSet(y, z) * FiniteSet(2))
+    assert external_disjoint_union(FiniteSet(x), FiniteSet(y,z)) == (FiniteSet(x) * FiniteSet(0)) + (FiniteSet(y, z) * FiniteSet(1))

@@ -2356,19 +2356,21 @@ def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
 
-def disjoint_union(*sets):
+def external_disjoint_union(*sets):
     """
     Iterates over ``sets`` and computes their disjoint union
     Find the  definition and examples here:
     https://en.wikipedia.org/wiki/Disjoint_union
     """
 
-    index = 1
-    dj_union = EmptySet
+    index = 0
+    dj_union = EmptySet()
     for set_i in sets:
         if isinstance(set_i, Set):
-            dj_union = dj_union + (set_i * FiniteSet(index))
+            cross = set_i * FiniteSet(index)
+            dj_union = Union(dj_union, cross)
             index = index + 1
         else:
-            raise ValueError("Unknown argument '%s'" % set_i)
-    return product
+            raise ValueError("Invalid input: '%s', input args \
+                to external_disjoint_union must be Sets" % set_i)
+    return dj_union
