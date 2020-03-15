@@ -190,7 +190,7 @@ def _lambert(eq, x, domain=S.Complexes):
         for i in ind_ls:
             j += 1
             de = "{}".format(i)
-            if not i.has(I):
+            if not de.has(I):
                 args.append(ind_ls[j])
     else:
         args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
