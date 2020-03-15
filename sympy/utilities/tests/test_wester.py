@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     FiniteSet, elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci,
     sign, Lambda, Piecewise, Subs, residue, Derivative, logcombine, Symbol,
     Intersection, Union, EmptySet, Interval, idiff, ImageSet, acos, Max,
-    MatMul, conjugate)
+    MatMul, conjugate, cancel)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -2997,9 +2997,15 @@ def test_Z3():
     r = Function('r')
     # recurrence solution is correct, Wester expects it to be simplified to
     # fibonacci(n+1), but that is quite hard
+    expected = 2**(-n)*(- sqrt(5)*(1 - sqrt(5))**n
+                        + 5*(1 - sqrt(5))**n
+                        + sqrt(5)*(1 + sqrt(5))**n
+                        + 5*(1 + sqrt(5))**n)/10
     sol = rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n), {r(1): 1, r(2): 2})
-    assert sol == ((-224 + 96*sqrt(5))*(S(1)/2 - sqrt(5)/2)**n/(-320 + 128*sqrt(5))
-                    - 16*(S(1)/2 + sqrt(5)/2)**n/(-40 + 8*sqrt(5)))
+    # XXX: We use cancel and radsimp because the output from rsolve is
+    # non-deterministic.
+    assert cancel(radsimp(sol)) == expected
+
 
 
 @XFAIL
