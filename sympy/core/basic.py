@@ -1623,7 +1623,7 @@ class Basic(metaclass=ManagedProperties):
         from sympy import count_ops
         return count_ops(self, visual)
 
-    def doit(self, deep=True, properties=[], **hints):
+    def doit(self, **hints):
         """Evaluate objects that are not evaluated like operations, limits,
         integrals, sums and products.
 
@@ -1640,30 +1640,30 @@ class Basic(metaclass=ManagedProperties):
         Examples
         ========
 
-        >>> from sympy import Add, Integral
+        >>> from sympy import Add, Integral, Derivative
         >>> from sympy.abc import x
 
-        >>> Add(Integral(x, x), Integral(x, x), evaluate=False)
-        Integral(x, x) + Integral(x, x)
+        >>> expr = Add(Integral(x, x), Integral(x, x), Derivative(x, x), evaluate=False)
+        >>> expr
+        Derivative(x, x) + Integral(x, x) + Integral(x, x)
 
-        >>> (2*Integral(x, x)).doit()
-        x**2
+        >>> expr.doit()
+        x**2 + 1
 
-        >>> (2*Integral(x, x)).doit(deep=False)
-        2*Integral(x, x)
+        >>> expr.doit(deep=False)
+        Derivative(x, x) + 2*Integral(x, x)
 
         See Also
         ========
 
         core.operations.AssocOp
         """
-        hints.update(deep=deep, properties=properties)
+        deep = hints.get('deep', True)
+        properties = hints.get('properties', [])
+
         eval_doit = self._eval_doit(**hints)
         if eval_doit is not None:
             return eval_doit
-        if self.is_Atom:
-            return self
-
         if deep:
             if any(not f(self) for f in properties):
                 return self

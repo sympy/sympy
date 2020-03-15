@@ -11,7 +11,7 @@ from sympy.core.symbol import symbols, Symbol
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum, Add, Mul
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
 from sympy.core import I, pi
@@ -148,6 +148,12 @@ def test_doit():
     assert b21.doit() == b21
     assert b21.doit(deep=False) == b21
 
+    x,y = symbols('x y')
+    expr1 = Mul(x, x, evaluate=False)
+    expr = Add(expr1, expr1, evaluate=False)
+    assert expr.doit() == Mul(2, x**2)
+    assert expr.doit(deep=False) == Mul(2, x, x, evaluate=False)
+    assert expr.doit(properties=[lambda x: isinstance(x, Mul)]) == Add(x**2, x**2, evaluate=False)
 
 def test_S():
     assert repr(S) == 'S'
