@@ -417,11 +417,12 @@ def _householder_vector(x):
 
 
 def _bidiagonal_decmp_hholder(M, only_b=False):
+    from sympy.matrices import MatMul
     m = M.rows
     n = M.cols
     A = M.as_mutable()
     if not only_b:
-        U, V = A.eye(m), A.eye(n)
+        _U, _V = [], []
     for i in range(min(m, n)):
         v, bet = _householder_vector(A[i:, i])
         hh_mat = A.eye(m - i) - bet * v * v.H
@@ -431,8 +432,7 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
         if not only_b:
             temp = A.eye(m)
             temp[i:, i:] = hh_mat
-            U = U * temp
-            U = U.applyfunc(ratsimp)
+            _U.append(temp)
         if i + 1 <= n - 2:
             v, bet = _householder_vector(A[i, i+1:].T)
             hh_mat = A.eye(n - i - 1) - bet * v * v.H
@@ -442,9 +442,20 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
             if not only_b:
                 temp = A.eye(n)
                 temp[i+1:, i+1:] = hh_mat
-                V = temp * V
-                V = V.applyfunc(ratsimp)
+                _V.append(temp)
     if not only_b:
+        if len(_U) == 0:
+            U = A.eye(m)
+        else:
+            U = _U[0]
+            for i in _U[1:]:
+                U = MatMul(U, i)
+        if len(_V) == 0:
+            V = A.eye(n)
+        else:
+            V = _V[0]
+            for i in _V[1:]:
+                V = MatMul(i, V)
         return U, A, V
     else:
         return A
@@ -482,7 +493,7 @@ def _bidiagonal_decomposition(M, upper=True, method="householder"):
 
     if not upper:
         X = M.H.bidiagonal_decomposition()
-        return X[2].H, X[1].H, X[0].H
+        return X[2].T.C, X[1].T.C, X[0].T.C
     if method == "lhc":
         raise NotImplementedError("LHC Method for Bidiagonalization has still not been implemented")
     elif method == "householder":
