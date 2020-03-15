@@ -13,7 +13,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.ntheory import multiplicity, perfect_power
+from sympy.ntheory import multiplicity
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
