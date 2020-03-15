@@ -231,7 +231,7 @@ def test_left_eigenvects():
 def test_bidiagonalize():
     def test_matrix(M):
         def test_orthogonal(M):
-            assert simplify(M.H * M) == M.eye(M.cols)
+            assert simplify(M.T.C * M) == eye(M.cols)
         def test_upper_bidiagonal(M):
             assert all(M[i, j].is_zero or i == j or i + 1 == j
                         for i in range(M.rows)
@@ -282,9 +282,15 @@ def test_bidiagonalize():
                 [0, 1, 0],
                 [0, 0, 1]])
     assert M.bidiagonalize(method="householder") == M
-    assert M.bidiagonal_decomposition() == (M, M, M)
+    K = M.bidiagonal_decomposition()
+    assert K[0].doit() == M
+    assert K[2].doit() == M
+    assert K[1] == M
     assert M.bidiagonalize(method="householder", upper=False) == M
-    assert M.bidiagonal_decomposition(upper=False) == (M, M, M)
+    K = M.bidiagonal_decomposition(upper=False)
+    assert K[0].doit() == M
+    assert K[2].doit() == M
+    assert K[1] == M
 
     M = randMatrix(2, 2, min=-1000000000, max=1000000000)
     test_matrix(M)
