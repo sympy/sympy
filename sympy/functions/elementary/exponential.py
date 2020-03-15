@@ -764,13 +764,18 @@ class log(Function):
         if arg.is_Integer:
             # remove perfect powers
             p = perfect_power(int(arg))
+            logarg = None
+            coeff = 1
             if p is not False:
-                return p[1]*self.func(p[0])
+                arg, coeff = p
+                logarg = self.func(arg)
             # expand as product of its prime factors if factor=True
             if factor:
                 p = factorint(int(arg))
                 if int(arg) not in p.keys():
-                    return sum(n*log(val) for val, n in p.items())
+                    logarg = sum(n*log(val) for val, n in p.items())
+            if logarg is not None:
+                return coeff*logarg
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
