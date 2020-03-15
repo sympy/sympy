@@ -753,10 +753,11 @@ class log(Function):
                 return powsimp((-n) * p * x / (n + 1), deep=True, combine='exp')
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
-    def _eval_expand_log(self, deep=True, factor=False, **hints):
+    def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify, expand_log, factorint
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
+        factor = hints.get('factor', False)
         if (len(self.args) == 2):
             return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
