@@ -13,7 +13,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.ntheory import multiplicity
+from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -762,10 +762,15 @@ class log(Function):
             return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
         if arg.is_Integer:
-            # expand log as product of its prime factors
-            p = factorint(int(arg))
-            if int(arg) not in p.keys() and factor:
-                return sum(n*log(val) for val, n in p.items())
+            # remove perfect powers
+            p = perfect_power(int(arg))
+            if p is not False:
+                return p[1]*self.func(p[0])
+            # expand as product of its prime factors if factor=True
+            if factor:
+                p = factorint(int(arg))
+                if int(arg) not in p.keys():
+                    return sum(n*log(val) for val, n in p.items())
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
