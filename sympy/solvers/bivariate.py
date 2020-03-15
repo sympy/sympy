@@ -121,7 +121,7 @@ def _linab(arg, symbol):
     return a, b, x
 
 
-def _lambert(eq, x,domain = S.Complexes):
+def _lambert(eq, x, domain=S.Complexes):
     """
     Given an expression assumed to be in the form
         ``F(X, a..f) = a*log(b*X + c) + d*X + f = 0``
@@ -184,16 +184,16 @@ def _lambert(eq, x,domain = S.Complexes):
         t = e
         args = [d/(a*b)*t]
     elif domain.is_subset(S.Reals):
-        ind_ls = [d/(a*b)*t for t in roots(t**p - e, t).keys() ]
+        ind_ls = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
         args = []
         j = -1
         for i in ind_ls:
             j += 1
             de = "{}".format(i)
-            if 'I' not in de:
+            if not i.has(I):
                 args.append(ind_ls[j])
     else:
-        args = [d/(a*b)*t for t in roots(t**p - e, t).keys() ]
+        args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
     if len(args) == 0:
         return S.EmptySet
 
@@ -211,7 +211,7 @@ def _lambert(eq, x,domain = S.Complexes):
 
 
 def _lambert_real(eq, x):
-    return _lambert(eq, x,domain = S.Reals)
+    return _lambert(eq, x, domain=S.Reals)
 
 
 def _solve_lambert(f, symbol, gens, domain=S.Complexes):
@@ -248,7 +248,7 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
       X = B, a = -1, d = a*log(p), f = -log(d) - g*log(p)
     """
 
-    def _solve_even_degree_expr(expr, t, symbol,domain= S.Complexes):
+    def _solve_even_degree_expr(expr, t, symbol, domain=S.Complexes):
         """Return the unique solutions of equations derived from
         ``expr`` by replacing ``t`` with ``+/- symbol``.
 
@@ -291,11 +291,11 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
         """
         nlhs, plhs = [
             expr.xreplace({t: sgn*symbol}) for sgn in (-1, 1)]
-        sols = _solve_lambert(nlhs, symbol, gens,domain)
+        sols = _solve_lambert(nlhs, symbol, gens, domain)
         if sols == S.EmptySet:
             return S.EmptySet
         if plhs != nlhs:
-            sols.extend(_solve_lambert(plhs, symbol, gens,domain))
+            sols.extend(_solve_lambert(plhs, symbol, gens, domain))
         # uniq is needed for a case like
         # 2*log(t) - log(-z**2) + log(z + log(x) + log(z))
         # where subtituting t with +/-x gives all the same solution;
@@ -330,7 +330,7 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
             if not t_term.is_Add and _rhs and not (
                     t_term.has(S.ComplexInfinity, S.NaN)):
                 eq = expand_log(log(t_term) - log(_rhs))
-                return _solve_even_degree_expr(eq, t, symbol,domain)
+                return _solve_even_degree_expr(eq, t, symbol, domain)
         elif lhs.is_Mul and rhs:
             # this needs to happen whether t is present or not
             lhs = expand_log(log(lhs), force=True)
@@ -338,7 +338,7 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
             if lhs.has(t) and lhs.is_Add:
                 # it expanded from Mul to Add
                 eq = lhs - rhs
-                return _solve_even_degree_expr(eq, t, symbol,domain)
+                return _solve_even_degree_expr(eq, t, symbol, domain)
 
         # restore symbol in lhs
         lhs = lhs.xreplace({t: symbol})
