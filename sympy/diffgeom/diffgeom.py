@@ -486,7 +486,7 @@ class BaseScalarField(AtomicExpr):
     # XXX Workaround for limitations on the content of args
     free_symbols = set()  # type: Set[Any]
 
-    def doit(self):
+    def doit(self, **hints):
         return self
 
 

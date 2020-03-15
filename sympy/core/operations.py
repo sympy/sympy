@@ -302,8 +302,8 @@ class AssocOp(Basic):
             return False
         return is_in
 
-    def _eval_doit(self, **hints):
-        return self._eval_doit_evaluatable(**hints)
+    def _eval_doit(self, *args, **hints):
+        return self._eval_doit_evaluatable(*args, **hints)
 
     def _eval_evalf(self, prec):
         """

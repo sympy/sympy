@@ -44,7 +44,7 @@ class IndexedIntegral(Integral):
         obj._indexed_reverse_repl = dict((val, key) for key, val in repl.items())
         return obj
 
-    def doit(self):
+    def doit(self, **hints):
         res = super(IndexedIntegral, self).doit()
         return res.xreplace(self._indexed_reverse_repl)
 

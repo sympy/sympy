@@ -444,7 +444,7 @@ def ArcCosh(a):
     return acosh(a)
 
 class Util_Coefficient(Function):
-    def doit(self):
+    def doit(self, **hints):
         if len(self.args) == 2:
             n = 1
         else:
@@ -6579,7 +6579,7 @@ def Cancel(expr):
     return cancel(expr)
 
 class Util_Part(Function):
-    def doit(self):
+    def doit(self, **hints):
         i = Simplify(self.args[0])
         if len(self.args) > 2 :
             lst = list(self.args[1:])

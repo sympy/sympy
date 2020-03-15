@@ -84,7 +84,7 @@ class PartialDerivative(TensExpr):
 
         return args, indices, free, dum
 
-    def doit(self):
+    def doit(self, **hints):
         args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
 
         obj = self.func(*args)
