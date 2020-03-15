@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from sympy.core.add import Add
+from sympy.core.compatibility import ordered
 from sympy.core.numbers import I
 from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
@@ -161,7 +162,10 @@ class DomainMatrix:
         if ext:
             dom = AlgebraicField(dom, *ext)
         if syms:
-            dom = PolynomialRing(dom, list(syms))
+            # The use of ordered here is important because the ordering of the
+            # symbols affects the monomial ordering in the ring which in turn
+            # affects the sign-simplification of results from rref.
+            dom = PolynomialRing(dom, list(ordered(syms)))
         return dom
 
     def __repr__(self):
