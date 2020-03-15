@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float,
+    Max, Min, Float, external_disjoint_union,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -1494,7 +1494,7 @@ def test_external_disjoint_union():
     assert external_disjoint_union(Interval(0, 5), Interval(0, 5)) == Union(Interval(0,5) * FiniteSet(0), Interval(0, 5) * FiniteSet(1))
     assert external_disjoint_union(Interval(-1,2), S.EmptySet, S.EmptySet) == Interval(-1,2)*FiniteSet(0)
     assert external_disjoint_union(Interval(-1,2)) == Interval(-1,2)*FiniteSet(0)
-    assert external_disjoint_union(S.EmptySet, Interval(-1,2), S.EmptySet) == Interval(-1,2)*FiniteSet(1) 
+    assert external_disjoint_union(S.EmptySet, Interval(-1,2), S.EmptySet) == Interval(-1,2)*FiniteSet(1)
     #could skip indices for which sets are empty while computing disjoint union
     assert external_disjoint_union(Interval(-oo, oo)) == Interval(-oo, oo) * FiniteSet(0)
     assert external_disjoint_union(S.EmptySet) == S.EmptySet
