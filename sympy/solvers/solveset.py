@@ -1029,7 +1029,7 @@ def _solveset(f, symbol, domain, _check=False):
                         f = FiniteSet(*f)
                         return f
                 elif domain.is_subset(S.Reals):
-                    if not 'sqrt' in str(f) and len(str(f)) < 120:
+                    if not any(i for i in f.atoms(Pow) if i.exp is S.Half) and f.count_ops() < 120:
                         indls = _tsolve(f,x)
                         if indls is None or indls == []:
                             return result
@@ -1043,7 +1043,7 @@ def _solveset(f, symbol, domain, _check=False):
                             for _ in indls:
                                 j += 1
                                 de = "{}".format(_)
-                                if 'I' not in de:
+                                if not de.has(I):
                                     args.append(indls[j])
                             f = FiniteSet(*args)
                             return f
