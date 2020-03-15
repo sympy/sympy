@@ -425,8 +425,8 @@ decomposition as well:
 We can perform a `QR` factorization which is handy for solving systems:
 
     >>> A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
-    >>> Q, R = A.QRdecomposition()
-    >>> Q
+    >>> q, r = A.QRdecomposition()
+    >>> q
     [  ___     ___      ___ ]
     [\/ 6   -\/ 3    -\/ 2  ]
     [-----  -------  -------]
@@ -441,7 +441,7 @@ We can perform a `QR` factorization which is handy for solving systems:
     [\/ 6    \/ 3           ]
     [-----   -----      0   ]
     [  3       3            ]
-    >>> R
+    >>> r
     [           ___         ]
     [  ___  4*\/ 6       ___]
     [\/ 6   -------  2*\/ 6 ]
@@ -454,7 +454,7 @@ We can perform a `QR` factorization which is handy for solving systems:
     [                       ]
     [                   ___ ]
     [  0       0      \/ 2  ]
-    >>> Q*R
+    >>> q*r
     [1  1  1]
     [       ]
     [1  1  3]
