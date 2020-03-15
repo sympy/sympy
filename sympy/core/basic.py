@@ -1677,12 +1677,10 @@ class Basic(metaclass=ManagedProperties):
         # May be overridden in subclasses
         return None
 
-    def _eval_doit_evaluatable(self, **hints):
+    def _eval_doit_evaluatable(self, deep=True, properties=[], **hints):
         """Pre-generated method that can be used as `_eval_doit`
         for evaluatable classes, i.e. Add, Mul, etc.
         """
-        deep = hints.get('deep', True)
-        properties = hints.get('properties', [])
         if deep:
             terms = [term.doit(**hints) if isinstance(term, Basic)
                         else term for term in self.args]
@@ -1875,7 +1873,7 @@ class Atom(Basic):
     def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
 
-    def doit(self, **hints):
+    def _eval_doit(self, **hints):
         return self
 
     @classmethod
