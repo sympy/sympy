@@ -1862,7 +1862,7 @@ class Atom(Basic):
     def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
 
-    def _eval_doit(self, **hints):
+    def _eval_doit(self, *args, **hints):
         return self
 
     @classmethod
