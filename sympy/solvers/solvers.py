@@ -45,8 +45,9 @@ from sympy.simplify.fu import TR1, TR2i
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, degree
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-from sympy.polys.polymatrix import DomainMatrixDomainError, linsolve_domain
+from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
+    NotInvertible)
+from sympy.polys.polymatrix import linsolve_domain
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -2238,7 +2239,8 @@ def solve_linear_system(system, *symbols, **flags):
     # Try to use DomainMatrix
     try:
         sol = linsolve_domain(system, symbols)
-    except DomainMatrixDomainError:
+    except NotInvertible:
+        # https://github.com/sympy/sympy/issues/18874
         pass
     else:
         if sol is not None:

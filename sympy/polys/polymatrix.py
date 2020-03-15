@@ -8,6 +8,7 @@ from sympy.core.sympify import _sympify
 
 from sympy.matrices.dense import MutableDenseMatrix
 
+from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
 from sympy.polys.domains import EX, QQ, ZZ, AlgebraicField, PolynomialRing
 
@@ -114,9 +115,10 @@ class DomainMatrix:
         assert len(rows) == nrows
         assert all(len(row) == ncols for row in rows)
 
-        rows_sympy = [[_sympify(item) for item in row] for row in rows]
-        domain = cls.get_domain([item for row in rows_sympy for item in row])
-        domain_rows = [[domain.from_sympy(item) for item in row] for row in rows_sympy]
+        items_sympy = [_sympify(item) for row in rows for item in row]
+        K, items_K = sfield(items_sympy, extension=True)
+        domain_rows = [[items_K[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
+        domain = K.to_domain()
 
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
