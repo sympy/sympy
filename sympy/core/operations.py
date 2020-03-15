@@ -302,6 +302,9 @@ class AssocOp(Basic):
             return False
         return is_in
 
+    def _eval_doit(self, **hints):
+        return self._eval_doit_evaluatable(**hints)
+
     def _eval_evalf(self, prec):
         """
         Evaluate the parts of self that are numbers; if the whole thing
@@ -375,16 +378,8 @@ class AssocOp(Basic):
         else:
             return (sympify(expr),)
 
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            terms = [term.doit(**hints) for term in self.args]
-        else:
-            terms = self.args
-        return self.func(*terms, evaluate=True)
-
 class ShortCircuit(Exception):
     pass
-
 
 class LatticeOp(AssocOp):
     """

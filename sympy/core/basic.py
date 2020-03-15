@@ -1623,17 +1623,28 @@ class Basic(metaclass=ManagedProperties):
         from sympy import count_ops
         return count_ops(self, visual)
 
-    def doit(self, **hints):
-        """Evaluate objects that are not evaluated by default like limits,
-        integrals, sums and products. All objects of this kind will be
-        evaluated recursively, unless some species were excluded via 'hints'
-        or unless the 'deep' hint was set to 'False'.
+    def doit(self, deep=True, properties=[], **hints):
+        """Evaluate objects that are not evaluated like operations, limits,
+        integrals, sums and products.
 
-        >>> from sympy import Integral
+        Explanation
+        ===========
+
+        Arguments will be evaluated recursively, unless some species were
+        excluded via 'properties' or unless the 'deep' hint was set to 'False'.
+        Evaluatable classes should define their own `_eval_derivative` method,
+        which returns evaluated result. In this case, non-recursive evaluation
+        should also be done when `deep=False` is passed. It is also encouraged
+        to allow `evaluate` option to the constructor.
+
+        Examples
+        ========
+
+        >>> from sympy import Add, Integral
         >>> from sympy.abc import x
 
-        >>> 2*Integral(x, x)
-        2*Integral(x, x)
+        >>> Add(Integral(x, x), Integral(x, x), evaluate=False)
+        Integral(x, x) + Integral(x, x)
 
         >>> (2*Integral(x, x)).doit()
         x**2
@@ -1641,13 +1652,46 @@ class Basic(metaclass=ManagedProperties):
         >>> (2*Integral(x, x)).doit(deep=False)
         2*Integral(x, x)
 
+        See Also
+        ========
+
+        core.operations.AssocOp
         """
-        if hints.get('deep', True):
-            terms = [term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args]
+        hints.update(deep=deep, properties=properties)
+        eval_doit = self._eval_doit(**hints)
+        if eval_doit is not None:
+            return eval_doit
+        if self.is_Atom:
+            return self
+
+        if deep:
+            if any(not f(self) for f in properties):
+                return self
+            terms = [term.doit(**hints) if isinstance(term, Basic)
+                        else term for term in self.args]
             return self.func(*terms)
         else:
             return self
+
+    def _eval_doit(self, **hints):
+        # May be overridden in subclasses
+        return None
+
+    def _eval_doit_evaluatable(self, **hints):
+        """Pre-generated method that can be used as `_eval_doit`
+        for evaluatable classes, i.e. Add, Mul, etc.
+        """
+        deep = hints.get('deep', True)
+        properties = hints.get('properties', [])
+        if deep:
+            terms = [term.doit(**hints) if isinstance(term, Basic)
+                        else term for term in self.args]
+        else:
+            terms = self.args
+        if any(not f(self) for f in properties):
+            return self.func(*terms, evaluate=False)
+        else:
+            return self.func(*terms, evaluate=True)
 
     def simplify(self, **kwargs):
         """See the simplify function in sympy.simplify"""
