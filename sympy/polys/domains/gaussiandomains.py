@@ -184,7 +184,7 @@ class GaussianRational(GaussianElement):
     def __rtruediv__(self, other):
         try:
             other = self._parent.convert(other)
-        except CoercienFailed:
+        except CoercionFailed:
             return NotImplemented
         else:
             return other.__truediv__(self)
@@ -204,7 +204,7 @@ class GaussianRational(GaussianElement):
     def _rmod__(self, other):
         try:
             other = self._parent.convert(other)
-        except CoercienFailed:
+        except CoercionFailed:
             return NotImplemented
         else:
             other.__mod__(self)
