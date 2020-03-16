@@ -1355,3 +1355,11 @@ def test_Derivative_free_symbols():
 def test_issue_10503():
     f = exp(x**3)*cos(x**6)
     assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)
+
+def test_function_name():
+    class F1(Function):
+        name = 'F'
+    class F2(Function):
+        pass
+    assert F1.name == 'F'
+    assert F2.name == 'F2'

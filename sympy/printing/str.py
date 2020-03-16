@@ -151,7 +151,7 @@ class StrPrinter(Printer):
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
     def _print_Function(self, expr):
-        clsname = expr.func.__name__
+        clsname = expr.func.name
         func = getattr(expr.func, 'name', clsname)
         return func + "(%s)" % self.stringify(expr.args, ", ")
 

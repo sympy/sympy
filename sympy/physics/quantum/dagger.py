@@ -86,4 +86,5 @@ class Dagger(adjoint):
         return Expr.__new__(cls, arg)
 
 adjoint.__name__ = "Dagger"
+adjoint.name = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])
