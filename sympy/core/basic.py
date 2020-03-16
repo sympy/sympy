@@ -1649,17 +1649,17 @@ class Basic(metaclass=ManagedProperties):
         """
         hints.update(deep=deep, properties=properties)
 
-        if deep:       
+        if deep:
             terms = [term.doit(**hints) if isinstance(term, Basic)
                         else term for term in self.args]
             eval_doit = self._eval_doit(*terms, **hints)
             if eval_doit is not None:
-                return eval_doit    
+                return eval_doit
             return self.func(*terms)
         else:
             eval_doit = self._eval_doit(*self.args, **hints)
             if eval_doit is not None:
-                return eval_doit    
+                return eval_doit
             return self
 
     def _eval_doit(self, *args, **hints):
