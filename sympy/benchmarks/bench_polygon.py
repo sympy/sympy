@@ -1,12 +1,9 @@
 from __future__ import print_function, division
 
-import sys
-from time import time
 from timeit import default_timer as clock
 
-from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
-                            Polygon, Ray, RegularPolygon, Segment,
-                            Triangle, intersection)
+from sympy.geometry import (Line, Point,
+                            Polygon)
 from random import randint
 
 listOfPolygons = [Polygon(Point(randint(0,10),randint(0,10)),
@@ -16,7 +13,7 @@ Point(randint(0,10),randint(0,10))) for w in range(10)]
 
 def create_polygon():
     "Creating Polygon"
-    p1 = Polygon(Point(0, 0), Point(3, -1),Point(6, 0), Point(4, 5))
+    Polygon(Point(0, 0), Point(3, -1),Point(6, 0), Point(4, 5))
 
 def polygon_area(listOfPolygons):
    "Polygon.area for w in range(10)"
@@ -49,10 +46,6 @@ def polygon_polar_second_moment(listOfPolygons):
 def polygon_section_modulus(listOfPolygons):
     "Polygon.section_modulus for w in range(10)"
     [listOfPolygons[w].section_modulus() for w in range(10)]
-
-def polygon_second_moment(listOfPolygons):
-    "Polygon.second_moment_of_area() for w in range(10)"
-    [listOfPolygons[w].second_moment_of_area() for w in range(10)]
 
 def polygon_is_convex(listOfPolygons):
     "Polygon.is_convex() for w in range(10)"
