@@ -50,7 +50,7 @@ def test_commutator_dagger():
 
 class Foo(Operator):
 
-    def _eval_commutator_Bar(self, bar):
+    def _eval_commutator_Bar(self, bar, **hints):
         return Integer(0)
 
 
@@ -60,7 +60,7 @@ class Bar(Operator):
 
 class Tam(Operator):
 
-    def _eval_commutator_Foo(self, foo):
+    def _eval_commutator_Foo(self, foo, **hints):
         return Integer(1)
 
 

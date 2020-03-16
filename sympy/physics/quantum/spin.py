@@ -168,7 +168,7 @@ class JplusOp(SpinOpBase, Operator):
 
     basis = 'Jz'
 
-    def _eval_commutator_JminusOp(self, other):
+    def _eval_commutator_JminusOp(self, other, **hints):
         return 2*hbar*JzOp(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
@@ -253,10 +253,10 @@ class JxOp(SpinOpBase, HermitianOperator):
 
     basis = 'Jx'
 
-    def _eval_commutator_JyOp(self, other):
+    def _eval_commutator_JyOp(self, other, **hints):
         return I*hbar*JzOp(self.name)
 
-    def _eval_commutator_JzOp(self, other):
+    def _eval_commutator_JzOp(self, other, **hints):
         return -I*hbar*JyOp(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
@@ -288,10 +288,10 @@ class JyOp(SpinOpBase, HermitianOperator):
 
     basis = 'Jy'
 
-    def _eval_commutator_JzOp(self, other):
+    def _eval_commutator_JzOp(self, other, **hints):
         return I*hbar*JxOp(self.name)
 
-    def _eval_commutator_JxOp(self, other):
+    def _eval_commutator_JxOp(self, other, **hints):
         return -I*hbar*J2Op(self.name)
 
     def _apply_operator_JzKet(self, ket, **options):
@@ -323,16 +323,16 @@ class JzOp(SpinOpBase, HermitianOperator):
 
     basis = 'Jz'
 
-    def _eval_commutator_JxOp(self, other):
+    def _eval_commutator_JxOp(self, other, **hints):
         return I*hbar*JyOp(self.name)
 
-    def _eval_commutator_JyOp(self, other):
+    def _eval_commutator_JyOp(self, other, **hints):
         return -I*hbar*JxOp(self.name)
 
-    def _eval_commutator_JplusOp(self, other):
+    def _eval_commutator_JplusOp(self, other, **hints):
         return hbar*JplusOp(self.name)
 
-    def _eval_commutator_JminusOp(self, other):
+    def _eval_commutator_JminusOp(self, other, **hints):
         return -hbar*JminusOp(self.name)
 
     def matrix_element(self, j, m, jp, mp):
@@ -353,19 +353,19 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     _coord = '2'
 
-    def _eval_commutator_JxOp(self, other):
+    def _eval_commutator_JxOp(self, other, **hints):
         return S.Zero
 
-    def _eval_commutator_JyOp(self, other):
+    def _eval_commutator_JyOp(self, other, **hints):
         return S.Zero
 
-    def _eval_commutator_JzOp(self, other):
+    def _eval_commutator_JzOp(self, other, **hints):
         return S.Zero
 
-    def _eval_commutator_JplusOp(self, other):
+    def _eval_commutator_JplusOp(self, other, **hints):
         return S.Zero
 
-    def _eval_commutator_JminusOp(self, other):
+    def _eval_commutator_JminusOp(self, other, **hints):
         return S.Zero
 
     def _apply_operator_JxKet(self, ket, **options):

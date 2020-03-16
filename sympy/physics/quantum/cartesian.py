@@ -49,7 +49,7 @@ class XOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _eval_commutator_PxOp(self, other):
+    def _eval_commutator_PxOp(self, other, **hints):
         return I*hbar
 
     def _apply_operator_XKet(self, ket):

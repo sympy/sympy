@@ -109,10 +109,10 @@ class RaisingOp(SHOOp):
     def _eval_adjoint(self):
         return LoweringOp(*self.args)
 
-    def _eval_commutator_LoweringOp(self, other):
+    def _eval_commutator_LoweringOp(self, other, **hints):
         return Integer(-1)
 
-    def _eval_commutator_NumberOp(self, other):
+    def _eval_commutator_NumberOp(self, other, **hints):
         return Integer(-1)*self
 
     def _apply_operator_SHOKet(self, ket):
@@ -247,10 +247,10 @@ class LoweringOp(SHOOp):
     def _eval_adjoint(self):
         return RaisingOp(*self.args)
 
-    def _eval_commutator_RaisingOp(self, other):
+    def _eval_commutator_RaisingOp(self, other, **hints):
         return Integer(1)
 
-    def _eval_commutator_NumberOp(self, other):
+    def _eval_commutator_NumberOp(self, other, **hints):
         return Integer(1)*self
 
     def _apply_operator_SHOKet(self, ket):
@@ -371,13 +371,13 @@ class NumberOp(SHOOp):
     def _apply_operator_SHOKet(self, ket):
         return ket.n*ket
 
-    def _eval_commutator_Hamiltonian(self, other):
+    def _eval_commutator_Hamiltonian(self, other, **hints):
         return Integer(0)
 
-    def _eval_commutator_RaisingOp(self, other):
+    def _eval_commutator_RaisingOp(self, other, **hints):
         return other
 
-    def _eval_commutator_LoweringOp(self, other):
+    def _eval_commutator_LoweringOp(self, other, **hints):
         return Integer(-1)*other
 
     def _represent_default_basis(self, **options):
@@ -483,7 +483,7 @@ class Hamiltonian(SHOOp):
     def _apply_operator_SHOKet(self, ket):
         return (hbar*omega*(ket.n + Integer(1)/Integer(2)))*ket
 
-    def _eval_commutator_NumberOp(self, other):
+    def _eval_commutator_NumberOp(self, other, **hints):
         return Integer(0)
 
     def _represent_default_basis(self, **options):
