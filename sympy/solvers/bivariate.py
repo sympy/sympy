@@ -5,6 +5,7 @@ from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.numbers import I
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
@@ -189,8 +190,10 @@ def _lambert(eq, x, domain=S.Complexes):
         j = -1
         for i in ind_ls:
             j += 1
-            de = "{}".format(i)
-            if not de.has(I):
+            if not isinstance(i,int):
+                if not i.has(I):
+                    args.append(ind_ls[j])
+            elif isinstance(i,int):
                 args.append(ind_ls[j])
     else:
         args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
