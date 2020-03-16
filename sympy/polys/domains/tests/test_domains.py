@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi, I
+from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
