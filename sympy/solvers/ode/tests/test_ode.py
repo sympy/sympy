@@ -2801,56 +2801,51 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = a*y(t) + b*t*diff(y(t), t) + c*t**2*diff(y(t), t, 2)
     assert our_hint in classify_ode(eq)
 
-    eq = Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0)
-    sol = C1 + C2*x**Rational(5, 2)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    ode_sol_euler = {
+        'eq1': {
+            'eq': Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
+            'sol': C1 + C2*x**Rational(5, 2)
+        },
 
-    eq = Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0)
-    sol = C1*sqrt(x) + C2*x**3
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq2': {
+            'eq': Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
+            'sol': C1*sqrt(x) + C2*x**3
+        },
 
-    eq = Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0)
-    sol = (C1 + C2*log(x))/x**2
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq3': {
+            'eq': Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0),
+            'sol': (C1 + C2*log(x))/x**2
+        },
 
-    eq = Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0)
-    sol = dsolve(eq, f(x), hint=our_hint)
-    sol = C1/x**2 + C2*x + C3*x**3
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq4': {
+            'eq': Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
+            'sol': C1/x**2 + C2*x + C3*x**3
+        },
 
-    eq = Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0)
-    sol = x**5*(C1 + C2*log(x) + C3*log(x)**2)
-    sols = [sol, constant_renumber(sol)]
-    sols += [sols[-1].expand()]
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in sols
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq5': {
+            'eq': Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
+            'sol': x**5*(C1 + C2*log(x) + C3*log(x)**2)
+        },
 
-    eq = t**2*diff(y(t), t, 2) + t*diff(y(t), t) - 9*y(t)
-    sol = C1*t**3 + C2*t**-3
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq6': {
+            'eq': t**2*diff(y(t), t, 2) + t*diff(y(t), t) - 9*y(t),
+            'sol': C1*t**3 + C2*t**-3
+        },
 
-    eq = sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x)
-    sol = C1*sin(log(x)) + C2*cos(log(x))
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq7': {
+            'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
+            'sol': C1*sin(log(x)) + C2*cos(log(x))
+        },
+    }
+
+    for example in ode_sol_euler:
+        eq = ode_sol_euler[example]['eq']
+        sol = ode_sol_euler[example]['sol']
+        assert our_hint in classify_ode(eq)
+        sols = [sol,constant_renumber(sol)]
+        sols += [sols[-1].expand()]
+        assert dsolve(eq,hint=our_hint).rhs in sols
+        assert checkodesol(eq, sol)[0]
 
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
