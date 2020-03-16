@@ -406,3 +406,12 @@ class Parabola(GeometrySet):
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
 
         return vertex
+     """latus rectum of parabola- a special chord that passes through focus
+           Returns
+           =======
+           equation of latus rectum
+            
+        """
+    def latus_rectum(self):
+        s = self.directrix.slope
+        return [Line(self.focus,slope = s)]
