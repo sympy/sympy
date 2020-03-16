@@ -1633,6 +1633,7 @@ class AccumulationBounds(AtomicExpr):
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
 
+
 def argmax_real(f, symbol = None, domain = S.Reals):
     """
     Returns the set of arguments of maxima, i.e., values of `symbol`
@@ -1669,7 +1670,8 @@ def argmax_real(f, symbol = None, domain = S.Reals):
     EmptySet
     """
 
-    return _argMaxMin(f, symbol , domain, max = True)
+    return _argMaxMin(f, symbol, domain, is_max=True)
+
 
 def argmin_real(f, symbol = None, domain = S.Reals):
     """
@@ -1707,7 +1709,8 @@ def argmin_real(f, symbol = None, domain = S.Reals):
     EmptySet
     """
 
-    return _argMaxMin(f, symbol , domain, max = False)
+    return _argMaxMin(f, symbol, domain, is_max=False)
+
 
 def return_piecewise_solutions(f, x):
     from sympy.logic.boolalg import And, Or
@@ -1731,16 +1734,18 @@ def return_piecewise_solutions(f, x):
 
     return FiniteSet(*solutions)
 
-def _argMaxMin(f, symbol, domain, max):
+
+def _argMaxMin(f, symbol, domain, is_max):
     """
     Helper function for calculuating argmin/argmax
     """
     from sympy.solvers.solveset import solveset
+    from sympy.core.facts import InconsistentAssumptions
 
     f = _sympify(f)
-    task_name = "argmax" if max else "argmin"
+    task_name = "argmax" if is_max else "argmin"
     if symbol is None:
-        if len(f.free_symbols) > 1:
+        if len(f.free_symbols) != 1:
             raise ValueError(filldedent('''
                 Variable for which %s is to be determined needs to be
                 specified.'''%(task_name)))
@@ -1752,38 +1757,78 @@ def _argMaxMin(f, symbol, domain, max):
             %s of %s cannot be calculated with respect to %s'''%(task_name,
                                                                 f, symbol)))
 
-    solns = S.EmptySet
+    # Assuming that the domain is Real, the symbol is supposed
+    # to be real
+    if not symbol.is_real:
+        assumptions = symbol.assumptions0
+        assumptions['real'] = True
+        try:
+            r = Dummy('r', **assumptions)
+            return _argMaxMin(f.xreplace({symbol: r}), r, domain, is_max
+                ).xreplace({r: symbol})
+        except InconsistentAssumptions:
+            pass
 
+    solns = S.EmptySet
     first_deriv = f.diff(symbol)
     is_inc = first_deriv.is_positive
     is_dec = first_deriv.is_negative
     if is_inc or is_dec:
         point = domain.inf
-        if (max and is_inc) or (not max and is_dec):
+        if (is_max and is_inc) or (not is_max and is_dec):
             point = domain.sup
         return domain & FiniteSet(point)
 
-    try:
-        frange = function_range(f, symbol, domain)
-        if max:
-            extremum = frange.sup
+    # The current method can deal with discontinuous functions
+    # that has one or 0 layer of Piecewise. Later, it would be
+    # made recursive along with improving the
+    # return_piecewise_solutions function.
+
+    functions = f.rewrite(Piecewise)
+    is_piecewise = functions.has(Piecewise)
+    functions = functions.args if is_piecewise else [functions]
+    extremum = -oo if is_max else oo
+    complement_last_domain = S.EmptySet
+    frange = S.EmptySet
+
+    for arg in functions:
+        if is_piecewise:
+            f_ = arg[0]
+            if arg[1] is True:
+                domain_ = Complement(domain, complement_last_domain)
+            else:
+                domain_ = solveset(arg[1], symbol, S.Reals)
+                complement_last_domain = Union(complement_last_domain, domain_)
         else:
-            extremum = frange.inf
-    except NotImplementedError:
-        raise NotImplementedError(filldedent('''
-            Methods for finding the argument of maxima of %s have not been
-            implemented yet.'''%(f)))
+            f_ = arg
+            domain_ = domain
+
+        if not domain_.is_subset(domain):
+            continue
+
+        try:
+            frange_ = function_range(f_, symbol, domain_)
+            if is_max:
+                extremum = max(frange_.sup, extremum)
+            else:
+                extremum = min(frange_.inf, extremum)
+            frange = Union(frange, frange_)
+        except NotImplementedError:
+            raise NotImplementedError(filldedent('''
+                Methods for finding the argument of maxima of %s have not been
+                implemented yet.'''%(f)))
+
     # If the supremum or the infimum of the function is not in its range,
     # then an empty set is returned.
     if not frange.contains(extremum):
         return EmptySet()
 
     critical_points = Union(
-        solveset(first_deriv, symbol = symbol,domain = domain), domain.boundary,
+        solveset(first_deriv, symbol=symbol, domain=domain), domain.boundary,
         return_piecewise_solutions(f.rewrite(Piecewise), symbol))
 
     try:
-        solns = solveset(f - extremum, symbol, domain = critical_points)
+        solns = solveset(f - extremum, symbol, domain=critical_points)
     except (NotImplementedError, ValueError):
         for pt in critical_points:
             if f.subs(symbol, pt) == extremum and not pt.is_infinite:
