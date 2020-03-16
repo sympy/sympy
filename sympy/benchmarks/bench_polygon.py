@@ -103,7 +103,7 @@ if __name__ == '__main__':
         t = clock()
         try:
             b(listOfPolygons)
-        except:
+        except ValueError:
             t = clock()-t
             print("%s%65s: Error after %f" % (b.__name__, b.__doc__, t))
             continue
