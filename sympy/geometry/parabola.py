@@ -375,11 +375,10 @@ class Parabola(GeometrySet):
             y = self.directrix.coefficients[2]
             p = sign(self.focus.args[1] + y)
         return p * self.focal_length
-
     
     @property
     def latus_rectum(self):
-        """latus rectum of parabola- a special chord that passes through focus
+         """latus rectum of parabola- a special chord that passes through focus
            Returns
            =======
            equation of latus rectum
