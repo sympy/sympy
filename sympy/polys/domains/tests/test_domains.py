@@ -792,7 +792,7 @@ def test_gaussian_domains():
     ZZ_I.gcd(a, c) == b
     assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
     assert ZZ_I(3, 0) != 3           # and should this go to Integer?
-    assert QQ_I(S(3)/4, 0) != S(3)/4 # and should this go to Integer?
+    assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?
     assert ZZ_I(0, 0).quadrant() == 0
     assert ZZ_I(-1, 0).quadrant() == 2
     for G in (QQ_I, ZZ_I):
@@ -827,11 +827,11 @@ def test_gaussian_domains():
             assert q % 2 == G(-1, 0)
             assert i == G(0, 0)
             assert r == G(2, 0)
-            assert G.get_ring() == QQ_I
-            assert G.get_field() == G
-        else:
             assert G.get_ring() == G
-            assert G.get_field() == ZZ_I
+            assert G.get_field() == QQ_I
+        else:
+            assert G.get_ring() == ZZ_I
+            assert G.get_field() == G
             assert q//3 == G(1, S(4)/3)
             assert 12//q == G(S(36)/25, -S(48)/25)
             assert 12 % q == G(0, 0)
