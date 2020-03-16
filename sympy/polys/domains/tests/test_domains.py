@@ -1,11 +1,11 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly, Float, Rational
+from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
 from sympy.polys.domains.realfield import RealField
-from sympy.polys.domains.gaussiandomains import ZZ_I
+from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
@@ -790,6 +790,49 @@ def test_gaussian_domains():
     a, b, c = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I)]
     ZZ_I.gcd(a, b) == b
     ZZ_I.gcd(a, c) == b
+    assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
+    assert ZZ_I(3, 0) != 3           # and should this go to Integer?
+    assert QQ_I(S(3)/4, 0) != S(3)/4 # and should this go to Integer?
+    assert ZZ_I(0, 0).quadrant() == 0
+    assert ZZ_I(-1, 0).quadrant() == 2
+    for G in (QQ_I, ZZ_I):
+        q = G(3, 4)
+        assert G.get_ring() == G
+        assert G.get_field() == G
+        assert hash(q) == hash((3, 4))
+        assert q + q == G(6, 8)
+        assert q - q == G(0, 0)
+        assert 3 - q  == -q + 3 == G(0, -4)
+        assert 3 + q == q + 3 == G(6, 4)
+        assert repr(q) in ('GaussianInteger(3, 4)', 'GaussianRational(3, 4)')
+        assert str(q) == '3 + 4*I'
+        assert q.parent() == G
+        assert q/3 == QQ_I(1, S(4)/3)
+        assert 3/q == QQ_I(S(9)/25, -S(12)/25)
+        i, r = divmod(q, 2)
+        assert 2*i + r == q
+        i, r = divmod(2, q)
+        assert G.from_sympy(S(2)) == G(2, 0)
+        raises(ZeroDivisionError, lambda: q % 0)
+        raises(ZeroDivisionError, lambda: q / 0)
+        raises(ZeroDivisionError, lambda: q // 0)
+        raises(ZeroDivisionError, lambda: divmod(q, 0))
+        raises(ZeroDivisionError, lambda: divmod(q, 0))
+        raises(CoercionFailed, lambda: G.from_sympy(pi))
+        if G == ZZ_I:
+            assert q//3 == G(1, 1)
+            assert 12//q == G(1, -2)
+            assert 12 % q == G(1, 2)
+            assert q % 2 == G(-1, 0)
+            assert i == G(0, 0)
+            assert r == G(2, 0)
+        else:
+            assert q//3 == G(1, S(4)/3)
+            assert 12//q == G(S(36)/25, -S(48)/25)
+            assert 12 % q == G(0, 0)
+            assert q % 2 == G(0, 0)
+            assert i == G(S(6)/25, -S(8)/25), (G,i)
+            assert r == G(0, 0)
 
 
 def test_issue_18278():
