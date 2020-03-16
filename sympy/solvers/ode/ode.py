@@ -1047,6 +1047,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     ode = SingleODEProblem(eq_orig, func, x, prep=prep)
     solvers = {
         NthAlgebraic: ('nth_algebraic',),
+        FirstExact:('1st_exact',),
         FirstLinear: ('1st_linear',),
         AlmostLinear: ('almost_linear',),
         Bernoulli: ('Bernoulli',),
@@ -1061,7 +1062,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                 matching_hints[hints] = solver
                 if solvercls.has_integral:
                     matching_hints[hints + "_Integral"] = solver
-
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -1105,46 +1105,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     matching_hints["1st_power_series"] = rseries
 
             r3.update(r)
-            ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
-            # dP/dy == dQ/dx
-            try:
-                if r[d] != 0:
-                    numerator = simplify(r[d].diff(y) - r[e].diff(x))
-                    # The following few conditions try to convert a non-exact
-                    # differential equation into an exact one.
-                    # References : Differential equations with applications
-                    # and historical notes - George E. Simmons
-
-                    if numerator:
-                        # If (dP/dy - dQ/dx) / Q = f(x)
-                        # then exp(integral(f(x))*equation becomes exact
-                        factor = simplify(numerator/r[e])
-                        variables = factor.free_symbols
-                        if len(variables) == 1 and x == variables.pop():
-                            factor = exp(Integral(factor).doit())
-                            r[d] *= factor
-                            r[e] *= factor
-                            matching_hints["1st_exact"] = r
-                            matching_hints["1st_exact_Integral"] = r
-                        else:
-                            # If (dP/dy - dQ/dx) / -P = f(y)
-                            # then exp(integral(f(y))*equation becomes exact
-                            factor = simplify(-numerator/r[d])
-                            variables = factor.free_symbols
-                            if len(variables) == 1 and y == variables.pop():
-                                factor = exp(Integral(factor).doit())
-                                r[d] *= factor
-                                r[e] *= factor
-                                matching_hints["1st_exact"] = r
-                                matching_hints["1st_exact_Integral"] = r
-                    else:
-                        matching_hints["1st_exact"] = r
-                        matching_hints["1st_exact_Integral"] = r
-
-            except NotImplementedError:
-                # Differentiating the coefficients might fail because of things
-                # like f(2*x).diff(x).  See issue 4624 and issue 4719.
-                pass
 
         # Any first order ODE can be ideally solved by the Lie Group
         # method
@@ -2851,17 +2811,7 @@ def _handle_Integral(expr, func, hint):
     For most hints, this simply runs ``expr.doit()``.
 
     """
-    # XXX: This global y hack should be removed
-    global y
-    x = func.args[0]
-    f = func.func
-    if hint == "1st_exact":
-        sol = (expr.doit()).subs(y, f(x))
-        del y
-    elif hint == "1st_exact_Integral":
-        sol = Eq(Subs(expr.lhs, y, f(x)), expr.rhs)
-        del y
-    elif hint == "nth_linear_constant_coeff_homogeneous":
+    if hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif not hint.endswith("_Integral"):
         sol = expr.doit()
@@ -7093,6 +7043,5 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved)
+from .single import (FirstExact,NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial)
