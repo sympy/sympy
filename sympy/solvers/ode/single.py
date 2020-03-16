@@ -240,7 +240,6 @@ class SinglePatternODESolver(SingleODESolver):
         eq = eq.collect(f(x), func = cancel)
 
         self._wilds_match = match = eq.match(pattern)
-
         if match is not None:
             return self._verify(f(x))
         return False
@@ -357,6 +356,138 @@ class NthAlgebraic(SingleODESolver):
             diffcls = NthAlgebraic._diffx_stored.setdefault(var, diffx)
 
         return diffcls
+
+
+class FirstExact(SingleODESolver):
+    r"""Solves 1st order exact ordinary differential equations.
+    A 1st order differential equation is called exact if it is the total
+    differential of a function. That is, the differential equation:
+    P(x,y)dx+Q(x,y)dy=0, is exact if:
+    dP(x,y)/dy = dQ(x,y)/dx
+
+    Examples
+    ========
+    Following examples are problems:1,8 from SECTION.8 of
+    "Differential Equations With Applications And Historical Notes",
+     Second Edition, George.F.Simmons
+
+     >>> from sympy import Symbol,Function
+     >>> from sympy.solvers.ode.single import ExactODESolver,SingleODEProblem
+     >>> x=Symbol('x')
+     >>> f=Function('f')
+     >>> eq=(x+2/f(x))*f(x).diff(x)+f(x)
+     >>> prob=SingleODEProblem(eq,f(x),x)
+     >>> solver=ExactODESolver(prob)
+     >>> solver.matches()
+     True
+     >>> solver.get_general_solution()
+     [C1 + x*f(x) + 2*log(f(x))]
+     >>>
+     >>> from sympy import sin
+     >>> eq=(-sin(x/f(x))/f(x))+(x*sin(x/f(x))/f(x)**2)*f(x).diff(x)
+     >>> prob=SingleODEProblem(eq,f(x),x)
+     >>> solver=ExactODESolver(prob)
+     >>> solver.matches()
+     True
+     >>> solver.get_general_solution()
+     >>> [C1 + Integral(-sin(x/f(x))/f(x), x) + Integral(x*sin(x/f(x))/f(x)**2 - Integral(x*cos(x/f(x))/f(x)**3 + sin(x/f(x))/f(x)**2, x), f(x))]
+
+    References
+    ==========
+
+    - "Differential Equations With Applications And Historical Notes",
+       Second Edition, George.F.Simmons
+    - https://en.wikipedia.org/wiki/Exact_differential_equation
+    """
+
+    hint="1st_exact"
+    has_integral=True
+    p=None
+    q=None
+
+    def _matches(self) -> bool:
+        if self.ode_problem.order!=1:
+            self._matched=False
+            return False
+
+        eq= self.ode_problem.eq
+        f = self.ode_problem.func
+        x = self.ode_problem.sym
+        y=Dummy('y')
+
+        self.q=eq.coeff(f.diff(x))
+        self.p=eq-self.q*f.diff(x)
+
+        try:
+            if simplify(self.p)!=0:
+                m=self.p.subs(f,y)
+                n=self.q.subs(f,y)
+
+                numerator= simplify(m.diff(y)-n.diff(x))
+                # The following few conditions try to convert a non-exact
+                # differential equation into an exact one.
+                # References :
+                #1. Differential equations with applications
+                # and historical notes - George E. Simmons
+                #2. https://math.okstate.edu/people/binegar/2233-S99/2233-l12.pdf
+
+                if numerator:
+                    # If (dP/dy - dQ/dx) / Q = f(x)
+                    # then exp(integral(f(x))*equation becomes exact
+                    factor = simplify(numerator/n)
+                    variables = factor.free_symbols
+
+                    if len(variables) == 1 and x == variables.pop():
+                        factor = exp(Integral(factor).doit())
+                        m*= factor
+                        n*= factor
+                        self.p=m.subs(y,f)
+                        self.q=m.subs(y,f)
+                        self._matched=True
+                        return True
+                    else:
+                        # If (dP/dy - dQ/dx) / -P = f(y)
+                        # then exp(integral(f(y))*equation becomes exact
+                        factor = simplify(-numerator/m)
+                        variables = factor.free_symbols
+                        if len(variables) == 1 and y == variables.pop():
+                            factor = exp(Integral(factor).doit())
+                            m*= factor
+                            n*= factor
+                            self.p=m.subs(y,f)
+                            self.q=m.subs(y,f)
+                            self._matched=True
+                            return True
+                else:
+                    self._matched=True
+                    return True
+        except NotImplementedError:
+            # Differentiating the coefficients might fail because of things
+            # like f(2*x).diff(x).  See issue 4624 and issue 4719.
+            pass
+
+        self._matched=False
+        return False
+
+    def _get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
+        y=Dummy('y')
+        f=self.ode_problem.func
+        x=self.ode_problem.sym
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+
+        m=self.p.subs(f,y)
+        n=self.q.subs(f,y)
+
+        sol= Integral(m,x)+Integral(n-Integral(m,x).diff(y),y)
+
+        try:
+            sol=sol.doit()
+            gen_sol=Eq(sol.subs(y,f),C1)
+        except:
+            # For case Integration or differentiation fails
+            gen_sol=Eq(sol.subs(y,f),C1)
+
+        return gen_sol
 
 
 class FirstLinear(SinglePatternODESolver):
