@@ -447,15 +447,11 @@ def _bidiagonal_decmp_hholder(M, only_b=False):
         if len(_U) == 0:
             U = A.eye(m)
         else:
-            U = _U[0]
-            for i in _U[1:]:
-                U = MatMul(U, i)
+            U = MatMul( * (i for i in _U))
         if len(_V) == 0:
             V = A.eye(n)
         else:
-            V = _V[0]
-            for i in _V[1:]:
-                V = MatMul(i, V)
+            V = MatMul( * (i for i in reversed(_V)))
         return U, A, V
     else:
         return A
