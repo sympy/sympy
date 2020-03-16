@@ -378,14 +378,13 @@ class Parabola(GeometrySet):
     
     @property
     def latus_rectum(self):
-         """latus rectum of parabola- a special chord that passes through focus
+        """latus rectum of parabola- a special chord that passes through focus
            Returns
            =======
            equation of latus rectum
            >>>p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))>>>
            >>> p1.latus_rectum
-           [Line2D(Point2D(0, 0), Point2D(1, 0))]
-            
+           [Line2D(Point2D(0, 0), Point2D(1, 0))] 
         """
         s = self.directrix.slope
         return [Line(self.focus,slope = s)]
