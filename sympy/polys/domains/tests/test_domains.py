@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi
+from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi, I
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
@@ -797,6 +797,9 @@ def test_gaussian_domains():
     assert ZZ_I(-1, 0).quadrant() == 2
     for G in (QQ_I, ZZ_I):
         q = G(3, 4)
+        assert q._get_xy(pi) == (None, None)
+        assert q._get_xy(2) == (2, 0)
+        assert q._get_xy(2*I) == (0, 2)
         assert G.get_ring() == G
         assert G.get_field() == G
         assert hash(q) == hash((3, 4))
