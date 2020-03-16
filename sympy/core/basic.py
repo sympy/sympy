@@ -1652,14 +1652,21 @@ class Basic(metaclass=ManagedProperties):
         if deep:
             terms = [term.doit(**hints) if isinstance(term, Basic)
                         else term for term in self.args]
-            eval_doit = self._eval_doit(*terms, **hints)
-            if eval_doit is not None:
-                return eval_doit
+        else:
+            terms = self.args
+
+        eval_doit = self._eval_doit(*terms, **hints)
+        if eval_doit is not None:
+            return eval_doit
+
+        # Place this condition here so that Atom's subclass
+        # can define its own _eval_doit.
+        if self.is_Atom:
+            return self
+
+        if deep:
             return self.func(*terms)
         else:
-            eval_doit = self._eval_doit(*self.args, **hints)
-            if eval_doit is not None:
-                return eval_doit
             return self
 
     def _eval_doit(self, *args, **hints):
@@ -1861,9 +1868,6 @@ class Atom(Basic):
 
     def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
-
-    def _eval_doit(self, *args, **hints):
-        return self
 
     @classmethod
     def class_key(cls):
