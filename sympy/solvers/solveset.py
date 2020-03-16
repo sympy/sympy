@@ -29,7 +29,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
-                             piecewise_fold, Piecewise, LambertW)
+                             piecewise_fold, Piecewise, LambertW, sqrt)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -54,7 +54,6 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
-from sympy import sqrt
 from types import GeneratorType
 from collections import defaultdict
 
@@ -1014,13 +1013,13 @@ def _solveset(f, symbol, domain, _check=False):
     if _check:
         if (isinstance(result,ConditionSet)) and \
                 (domain.is_subset(S.Reals) and \
-                    (type(result) is not list)):
+                    (not isinstance(result,list))):
             x = Symbol('x')
             f = f.subs({symbol: x})
             if _is_lambert(f,x):
                 if result.has(cos,sin):
                     if (result.has(exp)) or (f.has(sqrt(x))) or\
-                        'Abs' in str(f):
+                        f.has(Abs):
                         return result
                     elif not domain.is_subset(S.Integers) and \
                         ((result.has(cos) and not result.has(sin)) or \
@@ -1040,10 +1039,12 @@ def _solveset(f, symbol, domain, _check=False):
                         if indls is not None:
                             args = []
                             j = -1
-                            for _ in indls:
+                            for i in indls:
                                 j += 1
-                                de = "{}".format(_)
-                                if not de.has(I):
+                                if not isinstance(i,int):
+                                    if not i.has(I):
+                                        args.append(indls[j])
+                                elif isinstance(i,int):
                                     args.append(indls[j])
                             f = FiniteSet(*args)
                             return f
@@ -1067,7 +1068,7 @@ def _solveset(f, symbol, domain, _check=False):
             result = FiniteSet(*[s for s in result
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
-        elif type(result) is list:
+        elif isinstance(result,list):
             for _ in range(len(result)-1):
                 result = result[_] + result[_+1]
             if len(result) == 1:
@@ -2145,7 +2146,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             assumptions = symbol.assumptions0
             assumptions['real'] = True
             try:
-                if type(f) != list:
+                if not isinstance(f,list):
                     r = Dummy('r', **assumptions)
                     return solveset(f.xreplace({symbol: r}), r, domain
                         ).xreplace({r: symbol})
