@@ -800,8 +800,6 @@ def test_gaussian_domains():
         assert q._get_xy(pi) == (None, None)
         assert q._get_xy(2) == (2, 0)
         assert q._get_xy(2*I) == (0, 2)
-        assert G.get_ring() == G
-        assert G.get_field() == G
         assert hash(q) == hash((3, 4))
         assert q + q == G(6, 8)
         assert q - q == G(0, 0)
@@ -829,7 +827,11 @@ def test_gaussian_domains():
             assert q % 2 == G(-1, 0)
             assert i == G(0, 0)
             assert r == G(2, 0)
+            assert G.get_ring() == QQ_I
+            assert G.get_field() == G
         else:
+            assert G.get_ring() == G
+            assert G.get_field() == ZZ_I
             assert q//3 == G(1, S(4)/3)
             assert 12//q == G(S(36)/25, -S(48)/25)
             assert 12 % q == G(0, 0)

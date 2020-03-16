@@ -274,7 +274,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     def get_field(self):
         """Returns a field associated with ``self``. """
-        return ZZ_I
+        return QQ_I
 
     def normalize(self, d, *args):
         """Return first quadrant element associated with ``d``.
@@ -308,7 +308,7 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        return QQ_I
+        return ZZ_I
 
     def get_field(self):
         """Returns a field associated with ``self``. """
