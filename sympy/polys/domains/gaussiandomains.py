@@ -1,7 +1,5 @@
 """Domains of Gaussian type."""
 
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core.numbers import I
 from sympy.polys.polyerrors import CoercionFailed
@@ -118,7 +116,7 @@ class GaussianInteger(GaussianElement):
 
     def __divmod__(self, other):
         if not other:
-            raise ZeroDivisionError('divmod(%s, 0)' % self)
+            raise ZeroDivisionError('divmod({}, 0)'.format(self))
         x, y = self._get_xy(other)
         if x is None:
             return NotImplemented
@@ -153,7 +151,7 @@ class GaussianInteger(GaussianElement):
         return qr if qr is NotImplemented else qr[0]
 
     def __rfloordiv__(self, other):
-        qr = self._rdivmod__(self, other)
+        qr = self.__rdivmod__(other)
         return qr if qr is NotImplemented else qr[0]
 
     def __mod__(self, other):
@@ -161,7 +159,7 @@ class GaussianInteger(GaussianElement):
         return qr if qr is NotImplemented else qr[1]
 
     def __rmod__(self, other):
-        qr = self._rdivmod__(self, other)
+        qr = self.__rdivmod__(other)
         return qr if qr is NotImplemented else qr[1]
 
 
@@ -170,7 +168,7 @@ class GaussianRational(GaussianElement):
 
     def __truediv__(self, other):
         if not other:
-            raise ZeroDivisionError('%s / 0' % self)
+            raise ZeroDivisionError('{} / 0'.format(self))
         x, y = self._get_xy(other)
         if x is None:
             return NotImplemented
@@ -197,26 +195,26 @@ class GaussianRational(GaussianElement):
         except CoercionFailed:
             return NotImplemented
         if not other:
-            raise ZeroDivisionError('%s % 0' % self)
+            raise ZeroDivisionError('{} % 0'.format(self))
         else:
-            return self._parent.zero
+            return self._parent.zero  # XXX always 0?
 
-    def _rmod__(self, other):
+    def __rmod__(self, other):
         try:
             other = self._parent.convert(other)
         except CoercionFailed:
             return NotImplemented
         else:
-            other.__mod__(self)
+            return other.__mod__(self)
 
     def __divmod__(self, other):
         return self.__truediv__(other), self.__mod__(other)
 
-    def _rdivmod__(self, other):
-        return self._rtruediv__(other), self.__rmod__(other)
+    def __rdivmod__(self, other):
+        return self.__rtruediv__(other), self.__rmod__(other)
 
 
-class GaussianDomain(object):
+class GaussianDomain():
     """Base class for Gaussian domains."""
     base = None  # base domain, ZZ or QQ
 
@@ -239,7 +237,7 @@ class GaussianDomain(object):
         if b is I:
             return self.new(x, y)
         else:
-            raise CoercionFailed("%s is not Gaussian" % a)
+            raise CoercionFailed("{} is not Gaussian".format(a))
 
     def convert(self, element):
         """Convert ``element`` to ``self.dtype``.
@@ -276,7 +274,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     def get_field(self):
         """Returns a field associated with ``self``. """
-        return QQ_I
+        return ZZ_I
 
     def normalize(self, d, *args):
         """Return first quadrant element associated with ``d``.
@@ -310,7 +308,7 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        return ZZ_I
+        return QQ_I
 
     def get_field(self):
         """Returns a field associated with ``self``. """
