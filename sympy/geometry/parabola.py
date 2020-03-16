@@ -375,7 +375,7 @@ class Parabola(GeometrySet):
             y = self.directrix.coefficients[2]
             p = sign(self.focus.args[1] + y)
         return p * self.focal_length
-    
+
     @property
     def latus_rectum(self):
         """latus rectum of parabola- a special chord that passes through focus
@@ -384,11 +384,11 @@ class Parabola(GeometrySet):
            equation of latus rectum
            >>>p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))>>>
            >>> p1.latus_rectum
-           [Line2D(Point2D(0, 0), Point2D(1, 0))] 
+          [Line2D(Point2D(0, 0), Point2D(1, 0))]
         """
         s = self.directrix.slope
         return [Line(self.focus,slope = s)]
-    
+
     @property
     def vertex(self):
         """The vertex of the parabola.
@@ -419,4 +419,3 @@ class Parabola(GeometrySet):
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
 
         return vertex
-    
