@@ -480,14 +480,7 @@ class FirstExact(SingleODESolver):
 
         sol= Integral(m,x)+Integral(n-Integral(m,x).diff(y),y)
 
-        try:
-            sol=sol.doit()
-            gen_sol=Eq(sol.subs(y,f),C1)
-        except:
-            # For case Integration or differentiation fails
-            gen_sol=Eq(sol.subs(y,f),C1)
-
-        return gen_sol
+        return Eq(sol,C1)
 
 
 class FirstLinear(SinglePatternODESolver):
