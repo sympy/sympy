@@ -869,5 +869,11 @@ def test_str_special_matrices():
     assert str(OneMatrix(2, 2)) == '1'
 
 
-def test_issue_14567():
+def test_str_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+def test_latex_customfunction():
+    f_star1 = Function('f^*')
+    class f_star2(Function):
+        name = 'f^*'
+    assert str(f_star1(x)) == str(f_star2(x))

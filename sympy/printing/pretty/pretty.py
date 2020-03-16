@@ -1422,6 +1422,8 @@ class PrettyPrinter(Printer):
     def _print_Function(self, e, sort=False, func_name=None):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
+        if not func_name and hasattr(e, 'name'):
+            func_name = e.name
         return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
 
     def _print_mathieuc(self, e):
@@ -1499,7 +1501,8 @@ class PrettyPrinter(Printer):
                     return prettyForm(self._special_function_classes[cls][0])
                 else:
                     return prettyForm(self._special_function_classes[cls][1])
-        func_name = expr.__name__
+        clsname = expr.__name__
+        func_name = getattr(expr, 'name', clsname)
         return prettyForm(pretty_symbol(func_name))
 
     def _print_GeometryEntity(self, expr):

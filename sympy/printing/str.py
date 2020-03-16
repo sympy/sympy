@@ -151,7 +151,9 @@ class StrPrinter(Printer):
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
     def _print_Function(self, expr):
-        return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
+        clsname = expr.func.__name__
+        func = getattr(expr.func, 'name', clsname)
+        return func + "(%s)" % self.stringify(expr.args, ", ")
 
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'

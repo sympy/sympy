@@ -6960,3 +6960,10 @@ def test_issue_18272():
     '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
     '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
     '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+
+def test_pretty_customfunction():
+    f_star1 = Function('f^*')
+    class f_star2(Function):
+        name = 'f^*'
+    assert pretty(f_star1) == pretty(f_star2)
+    assert pretty(f_star1(x)) == pretty(f_star2(x))

@@ -832,7 +832,8 @@ class LatexPrinter(Printer):
         expr is the expression involving the function
         exp is an exponent
         '''
-        func = expr.func.__name__
+        clsname = expr.func.__name__
+        func = getattr(expr.func, 'name', clsname)
         if hasattr(self, '_print_' + func) and \
                 not isinstance(expr, AppliedUndef):
             return getattr(self, '_print_' + func)(expr, exp)
