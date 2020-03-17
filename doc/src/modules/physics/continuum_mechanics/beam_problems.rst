@@ -74,7 +74,7 @@ point load of 12 kN is applied at the free end of the beam.
 .. note::
 
     The user is free to choose their own sign convention. In this case the
-    upward forces and counterclockwise bending moment being positive.
+    upward forces and clockwise bending moment being positive.
 
 The beam must be initialized with the length, modulus of elasticity, and the
 second moment of area. These quantities can be symbols or numbers.
@@ -121,7 +121,7 @@ Similarly, the positive moment can be applied with a polynomial order -2:
    :format: doctest
    :include-source: True
 
-   >>> b.apply_load(50, 5, -2)
+   >>> b.apply_load(-50, 5, -2)
 
 The distributed load is of order 0 and spans x=0 to x=5:
 
@@ -156,8 +156,10 @@ need to be applied to the beam to maintain static equilibrium:
    >>> b.apply_load(R, 0, -1)
    >>> b.apply_load(M, 0, -2)
    >>> b.load
-        -2        -1        0             -2            0             -1
-   M⋅<x>   + R⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+         -2        -1        0             -2            0             -1
+    M⋅<x>   + R⋅<x>   - 8⋅<x>  - 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>  
+
+
 
 These two variables can be solved for in terms of the applied loads and the
 final loading can be displayed:
@@ -169,10 +171,10 @@ final loading can be displayed:
 
    >>> b.solve_for_reaction_loads(R, M)
    >>> b.reaction_loads
-       {M: -258, R: 52}
+       {M: -158, R: 52}
    >>> b.load
-                -2         -1        0             -2            0             -1
-       - 258⋅<x>   + 52⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+             -2         -1        0             -2            0             -1
+    - 158⋅<x>   + 52⋅<x>   - 8⋅<x>  - 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>  
 
 At this point, the beam is fully defined and the internal shear and bending
 moments are calculated:
@@ -183,11 +185,13 @@ moments are calculated:
    :include-source: True
 
    >>> b.shear_force()
-                -1         0        1             -1            1             0
-       - 258⋅<x>   + 52⋅<x>  - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
+             -1         0        1             -1            1             0
+    - 158⋅<x>   + 52⋅<x>  - 8⋅<x>  - 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9> 
+
    >>> b.bending_moment()
-                0         1        2             0            2             1
-       - 258⋅<x>  + 52⋅<x>  - 4⋅<x>  + 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9>
+             0         1        2             0            2             1
+    - 158⋅<x>  + 52⋅<x>  - 4⋅<x>  - 50⋅<x - 5>  + 4⋅<x - 5>  - 12⋅<x - 9> 
+
 
 These can be visualized by calling the respective plot methods:
 
@@ -208,19 +212,20 @@ with:
    :include-source: True
 
    >>> b.slope()
-                                   3                          3
-                1         2   4⋅<x>              1   4⋅<x - 5>             2
-       - 258⋅<x>  + 26⋅<x>  - ────── + 50⋅<x - 5>  + ────────── - 6⋅<x - 9>
-                                3                        3
-       ─────────────────────────────────────────────────────────────────────
-                                        E⋅I
+                                3                          3             
+             1         2   4⋅<x>              1   4⋅<x - 5>             2
+    - 158⋅<x>  + 26⋅<x>  - ────── - 50⋅<x - 5>  + ────────── - 6⋅<x - 9> 
+                             3                        3                  
+    ─────────────────────────────────────────────────────────────────────
+                                     E⋅I                                 
+
    >>> b.deflection()
-                          3      4                        4
-                2   26⋅<x>    <x>              2   <x - 5>             3
-       - 129⋅<x>  + ─────── - ──── + 25⋅<x - 5>  + ──────── - 2⋅<x - 9>
-                       3       3                      3
-       ─────────────────────────────────────────────────────────────────
-                                      E⋅I
+                      3      4                        4             
+            2   26⋅<x>    <x>              2   <x - 5>             3
+    - 79⋅<x>  + ─────── - ──── - 25⋅<x - 5>  + ──────── - 2⋅<x - 9> 
+                   3       3                      3                 
+    ────────────────────────────────────────────────────────────────
+                                  E⋅I                               
 
 The slope and deflection of the beam can be plotted so long as numbers are
 provided for the modulus and second moment:
@@ -254,7 +259,7 @@ deflection is restricted at both the supports.
 
 ::
 
-  || 8 N                                       ⭯ 120 Nm
+  || 8 N                                       ⟳ 120 Nm
   \/______________________________________________|
   |_______________________________________________|
               /\                                 /\
@@ -325,7 +330,7 @@ applied from the mid till the end of the beam.
 
 .. note::
 
-    Using the sign convention of upward forces and counterclockwise moment
+    Using the sign convention of upward forces and clockwise moment
     being positive.
 
 >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -334,7 +339,7 @@ applied from the mid till the end of the beam.
 >>> R1, R2 = symbols('R1, R2')
 >>> b = Beam(6, E, I)
 >>> b.apply_load(R1, 0, -1)
->>> b.apply_load(1.5, 3, -2)
+>>> b.apply_load(-1.5, 3, -2)
 >>> b.apply_load(-3, 3, 0)
 >>> b.apply_load(-1, 3, 1)
 >>> b.apply_load(R2, 6, -1)
@@ -342,35 +347,36 @@ applied from the mid till the end of the beam.
 >>> b.bc_deflection.append((6, 0))
 >>> b.solve_for_reaction_loads(R1, R2)
 >>> b.reaction_loads
-    {R₁: 2.75, R₂: 10.75}
+    {R₁: 3.25, R₂: 10.25}
 >>> b.load
             -1              -2            0          1                -1
-    2.75⋅<x>   + 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.75⋅<x - 6>
+    3.25⋅<x>   - 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.25⋅<x - 6>  
+
 >>> b.shear_force()
-                                                    2
+                                                    2                 
             0              -1            1   <x - 3>                 0
-    2.75⋅<x>  + 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.75⋅<x - 6>
-                                                2
+    3.25⋅<x>  - 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.25⋅<x - 6> 
+                                                2       
 >>> b.bending_moment()
-                                        2          3
+                                        2          3                 
             1              0   3⋅<x - 3>    <x - 3>                 1
-    2.75⋅<x>  + 1.5⋅<x - 3>  - ────────── - ──────── + 10.75⋅<x - 6>
-                                   2           6
+    3.25⋅<x>  - 1.5⋅<x - 3>  - ────────── - ──────── + 10.25⋅<x - 6> 
+                                   2           6         
 >>> b.slope()
-                                                      4
-             2              1              3   <x - 3>                 2
-    1.375⋅<x>  + 1.5⋅<x - 3>  - 0.5⋅<x - 3>  - ──────── + 5.375⋅<x - 6>  - 15.6
-                                                  24
-    ───────────────────────────────────────────────────────────────────────────
-                                        E⋅I
+                                       3          4                         
+             2              1   <x - 3>    <x - 3>                 2        
+    1.625⋅<x>  - 1.5⋅<x - 3>  - ──────── - ──────── + 5.125⋅<x - 6>  - 16.35
+                                   2          24                            
+    ────────────────────────────────────────────────────────────────────────
+                                      E⋅I          
 
 >>> b.deflection()
-                                                                               5
-                                   3               2                4   <x - 3>                            3
-    -15.6⋅x + 0.458333333333333⋅<x>  + 0.75⋅<x - 3>  - 0.125⋅<x - 3>  - ──────── + 1.79166666666667⋅<x - 6>
-                                                                          120
-    ────────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                      E⋅I
+                                                               4          5                            
+                                    3               2   <x - 3>    <x - 3>                            3
+    -16.35⋅x + 0.541666666666667⋅<x>  - 0.75⋅<x - 3>  - ──────── - ──────── + 1.70833333333333⋅<x - 6> 
+                                                           8         120                               
+    ───────────────────────────────────────────────────────────────────────────────────────────────────
+                                                    E⋅I       
 
 Example 4
 ---------
