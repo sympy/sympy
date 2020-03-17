@@ -384,7 +384,7 @@ class Parabola(GeometrySet):
            equation of latus rectum
            >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8))
            >>> p1.latus_rectum
-          [Line2D(Point2D(0, 0), Point2D(1, 0))]
+           Line2D(Point2D(0, 0), Point2D(1, 0))
         """
         s = self.directrix.slope
         return Line(self.focus, slope=s)
