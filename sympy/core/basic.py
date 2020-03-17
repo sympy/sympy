@@ -1674,7 +1674,7 @@ class Basic(metaclass=ManagedProperties):
         """
         If `deep=True` is passed to `doit` which called this method,
         `self.args` which are evaluated are passed to `args`.
-        If `deep=False` is passed, `self.args` are passed directly 
+        If `deep=False` is passed, `self.args` are passed directly
         to `args`.
         """
         # May be overridden in subclasses
