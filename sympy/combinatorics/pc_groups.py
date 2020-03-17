@@ -348,7 +348,6 @@ class Collector(DefaultPrinting):
                 s2 = free_group.dtype(s2)
                 word_ = self.map_relation(free_group.dtype(w))
                 word_ = s2*word_**e1
-                word_ = free_group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
             elif len(w) == 2 and w[1][1] < 0:
@@ -357,7 +356,6 @@ class Collector(DefaultPrinting):
                 s2 = free_group.dtype(s2)
                 word_ = self.map_relation(free_group.dtype(w))
                 word_ = s2**-1*word_**e1
-                word_ = free_group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
         return word

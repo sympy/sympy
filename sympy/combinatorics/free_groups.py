@@ -3,11 +3,13 @@ from __future__ import print_function, division
 from typing import Dict, List
 
 from sympy.core import S
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.numbers import Integer
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
-from sympy.core.sympify import CantSympify
-from sympy.printing.defaults import DefaultPrinting
+from sympy.core.sympify import _sympify
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
@@ -111,9 +113,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}  # type: Dict[int, FreeGroup]
-
-class FreeGroup(DefaultPrinting):
+class FreeGroup(Basic):
     """
     Free group with finite or infinite number of generators. Its input API
     is that of a str, Symbol/Expr or a sequence of one of
@@ -139,31 +139,31 @@ class FreeGroup(DefaultPrinting):
     relators = []  # type: List[Expr]
 
     def __new__(cls, symbols):
-        symbols = tuple(_parse_symbols(symbols))
-        rank = len(symbols)
-        _hash = hash((cls.__name__, symbols, rank))
-        obj = _free_group_cache.get(_hash)
+        if isinstance(symbols, str):
+            symbols = tuple(_parse_symbols(symbols))
+        elif isinstance(symbols, Symbol):
+            symbols = (symbols,)
 
-        if obj is None:
-            obj = object.__new__(cls)
-            obj._hash = _hash
-            obj._rank = rank
-            # dtype method is used to create new instances of FreeGroupElement
-            obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
-            obj.symbols = symbols
-            obj.generators = obj._generators()
-            obj._gens_set = set(obj.generators)
-            for symbol, generator in zip(obj.symbols, obj.generators):
-                if isinstance(symbol, Symbol):
-                    name = symbol.name
-                    if hasattr(obj, name):
-                        setattr(obj, name, generator)
-
-            _free_group_cache[_hash] = obj
+        obj = super().__new__(cls, Tuple(*symbols))
+        obj._generators = None
+        for symbol, generator in zip(obj.symbols, obj.generators):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
+                if hasattr(obj, name):
+                    setattr(obj, name, generator)
 
         return obj
 
-    def _generators(group):
+    def dtype(self, arg):
+        # dtype method is used to create new instances of FreeGroupElement
+        return FreeGroupElement(arg, self)
+
+    @property
+    def symbols(self):
+        return self.args[0]
+
+    @property
+    def generators(self):
         """Returns the generators of the FreeGroup.
 
         Examples
@@ -175,11 +175,16 @@ class FreeGroup(DefaultPrinting):
         (x, y, z)
 
         """
+        if self._generators is not None:
+            return self._generators
+
         gens = []
-        for sym in group.symbols:
+        for sym in self.symbols:
             elm = ((sym, 1),)
-            gens.append(group.dtype(elm))
-        return tuple(gens)
+            gens.append(self.dtype(elm))
+
+        self._generators = tuple(gens)
+        return self._generators
 
     def clone(self, symbols=None):
         return self.__class__(symbols or self.symbols)
@@ -188,34 +193,14 @@ class FreeGroup(DefaultPrinting):
         """Return True if ``i`` is contained in FreeGroup."""
         if not isinstance(i, FreeGroupElement):
             return False
-        group = i.group
-        return self == group
-
-    def __hash__(self):
-        return self._hash
+        return self == i.group
 
     def __len__(self):
         return self.rank
 
-    def __str__(self):
-        if self.rank > 30:
-            str_form = "<free group with %s generators>" % self.rank
-        else:
-            str_form = "<free group on the generators "
-            gens = self.generators
-            str_form += str(gens) + ">"
-        return str_form
-
-    __repr__ = __str__
-
     def __getitem__(self, index):
         symbols = self.symbols[index]
         return self.clone(symbols=symbols)
-
-    def __eq__(self, other):
-        """No ``FreeGroup`` is equal to any "other" ``FreeGroup``.
-        """
-        return self is other
 
     def index(self, gen):
         """Return the index of the generator `gen` from ``(f_0, ..., f_(n-1))``.
@@ -252,9 +237,8 @@ class FreeGroup(DefaultPrinting):
 
         """
         if self.rank == 0:
-            return 1
-        else:
-            return S.Infinity
+            return S.One
+        return S.Infinity
 
     @property
     def elements(self):
@@ -287,7 +271,7 @@ class FreeGroup(DefaultPrinting):
         \operatorname{rank}(G)=\min\{ |X|: X\subseteq G, \left\langle X\right\rangle =G\}.
 
         """
-        return self._rank
+        return len(self.symbols)
 
     @property
     def is_abelian(self):
@@ -310,7 +294,7 @@ class FreeGroup(DefaultPrinting):
     @property
     def identity(self):
         """Returns the identity element of free group."""
-        return self.dtype()
+        return self.dtype(tuple())
 
     def contains(self, g):
         """Tests if Free Group element ``g`` belong to self, ``G``.
@@ -344,27 +328,70 @@ class FreeGroup(DefaultPrinting):
 ############################################################################
 
 
-class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
+class FreeGroupElement(Basic):
     """Used to create elements of FreeGroup. It can not be used directly to
     create a free group element. It is called by the `dtype` method of the
     `FreeGroup` class.
 
+    Equality between free group elements
+    ====================================
+
+    Two associative words are equal if they are words over the
+    same alphabet and if they are sequences of the same letters.
+    This is equivalent to saying that the external representations
+    of the words are equal.
+    There is no "universal" empty word, every alphabet has its own
+    empty word.
+
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> f, swapnil0, swapnil1 = free_group("swapnil0 swapnil1")
+    >>> f
+    <free group on the generators (swapnil0, swapnil1)>
+    >>> g, swap0, swap1 = free_group("swap0 swap1")
+    >>> g
+    <free group on the generators (swap0, swap1)>
+
+    >>> swapnil0 == swapnil1
+    False
+    >>> swapnil0*swapnil1 == swapnil1/swapnil1*swapnil0*swapnil1
+    True
+    >>> swapnil0*swapnil1 == swapnil1*swapnil0
+    False
+    >>> swapnil1**0 == swap0**0
+    False
     """
     is_assoc_word = True
 
-    def new(self, init):
-        return self.__class__(init)
+    _array_form = None
+    _group = None
 
-    _hash = None
+    def __new__(cls, array_form, group):
+        if isinstance(array_form, Tuple):
+            array_form = tuple(tuple(i) for i in array_form)
 
-    def __hash__(self):
-        _hash = self._hash
-        if _hash is None:
-            self._hash = _hash = hash((self.group, frozenset(tuple(self))))
-        return _hash
+        if not isinstance(array_form, tuple):
+            raise ValueError("{} must be a tuple.".format(array_form))
+        if not isinstance(group, FreeGroup):
+            raise ValueError("{} must be a free group.".format(group))
+
+        return cls._new(array_form, group)
+
+    @classmethod
+    def _new(cls, array_form, group):
+        obj = super().__new__(cls)
+        obj._array_form = array_form
+        obj._group = group
+        return obj
+
+    @property
+    def args(self):
+        return _sympify(self._array_form), self._group
 
     def copy(self):
-        return self.new(self)
+        return self
+
+    def _hashable_content(self):
+        return self._array_form, self._group
 
     @property
     def is_identity(self):
@@ -405,7 +432,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         letter_repr
 
         """
-        return tuple(self)
+        return self._array_form
 
     @property
     def letter_form(self):
@@ -435,6 +462,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         return tuple(flatten([(i,)*j if j > 0 else (-i,)*(-j)
                     for i, j in self.array_form]))
+
+    @property
+    def group(self):
+        """Return the parent group of the free group element."""
+        return self._group
 
     def __getitem__(self, i):
         group = self.group
@@ -467,29 +499,6 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def __contains__(self, gen):
         return gen.array_form[0][0] in tuple([r[0] for r in self.array_form])
 
-    def __str__(self):
-        if self.is_identity:
-            return "<identity>"
-
-        str_form = ""
-        array_form = self.array_form
-        for i in range(len(array_form)):
-            if i == len(array_form) - 1:
-                if array_form[i][1] == 1:
-                    str_form += str(array_form[i][0])
-                else:
-                    str_form += str(array_form[i][0]) + \
-                                    "**" + str(array_form[i][1])
-            else:
-                if array_form[i][1] == 1:
-                    str_form += str(array_form[i][0]) + "*"
-                else:
-                    str_form += str(array_form[i][0]) + \
-                                    "**" + str(array_form[i][1]) + "*"
-        return str_form
-
-    __repr__ = __str__
-
     def __pow__(self, n):
         n = as_int(n)
         group = self.group
@@ -507,6 +516,15 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         # multiplication of elements
         return result
 
+    def _check_other(self, other):
+        if not isinstance(other, FreeGroupElement):
+            raise TypeError("{} must be a free group element.".format(other))
+
+        if self.group != other.group:
+            raise TypeError(
+                "{} and {} must belong to the same group. "
+                .format(self, other))
+
     def __mul__(self, other):
         """Returns the product of elements belonging to the same ``FreeGroup``.
 
@@ -523,31 +541,23 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         <identity>
 
         """
-        group = self.group
-        if not isinstance(other, group.dtype):
-            raise TypeError("only FreeGroup elements of same FreeGroup can "
-                    "be multiplied")
+        self._check_other(other)
+
         if self.is_identity:
             return other
         if other.is_identity:
             return self
         r = list(self.array_form + other.array_form)
         zero_mul_simp(r, len(self.array_form) - 1)
-        return group.dtype(tuple(r))
+        return self.group.dtype(tuple(r))
 
     def __div__(self, other):
-        group = self.group
-        if not isinstance(other, group.dtype):
-            raise TypeError("only FreeGroup elements of same FreeGroup can "
-                    "be multiplied")
-        return self*(other.inverse())
+        self._check_other(other)
+        return self*other.inverse()
 
     def __rdiv__(self, other):
-        group = self.group
-        if not isinstance(other, group.dtype):
-            raise TypeError("only FreeGroup elements of same FreeGroup can "
-                    "be multiplied")
-        return other*(self.inverse())
+        self._check_other(other)
+        return other*self.inverse()
 
     __truediv__ = __div__
 
@@ -588,21 +598,16 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         if self.is_identity:
-            return 1
-        else:
-            return S.Infinity
+            return S.One
+        return S.Infinity
 
     def commutator(self, other):
         """
         Return the commutator of `self` and `x`: ``~x*~self*x*self``
 
         """
-        group = self.group
-        if not isinstance(other, group.dtype):
-            raise ValueError("commutator of only FreeGroupElement of the same "
-                    "FreeGroup exists")
-        else:
-            return self.inverse()*other.inverse()*self*other
+        self._check_other(other)
+        return self.inverse() * other.inverse() * self * other
 
     def eliminate_words(self, words, _all=False, inverse=True):
         '''
@@ -707,42 +712,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         0
 
         """
-        return sum(abs(j) for (i, j) in self)
-
-    def __eq__(self, other):
-        """
-        Two  associative words are equal if they are words over the
-        same alphabet and if they are sequences of the same letters.
-        This is equivalent to saying that the external representations
-        of the words are equal.
-        There is no "universal" empty word, every alphabet has its own
-        empty word.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> f, swapnil0, swapnil1 = free_group("swapnil0 swapnil1")
-        >>> f
-        <free group on the generators (swapnil0, swapnil1)>
-        >>> g, swap0, swap1 = free_group("swap0 swap1")
-        >>> g
-        <free group on the generators (swap0, swap1)>
-
-        >>> swapnil0 == swapnil1
-        False
-        >>> swapnil0*swapnil1 == swapnil1/swapnil1*swapnil0*swapnil1
-        True
-        >>> swapnil0*swapnil1 == swapnil1*swapnil0
-        False
-        >>> swapnil1**0 == swap0**0
-        False
-
-        """
-        group = self.group
-        if not isinstance(other, group.dtype):
-            return False
-        return tuple.__eq__(self, other)
+        return sum(abs(j) for (i, j) in self.array_form)
 
     def __lt__(self, other):
         """
@@ -766,10 +736,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         False
 
         """
+        self._check_other(other)
         group = self.group
-        if not isinstance(other, group.dtype):
-            raise TypeError("only FreeGroup elements of same FreeGroup can "
-                             "be compared")
         l = len(self)
         m = len(other)
         # implement lenlex order
@@ -811,10 +779,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         True
 
         """
-        group = self.group
-        if not isinstance(other, group.dtype):
-            raise TypeError("only FreeGroup elements of same FreeGroup can "
-                             "be compared")
+        self._check_other(other)
         return not self <= other
 
     def __ge__(self, other):
@@ -1340,7 +1305,7 @@ def letter_form_to_array_form(array_form, group):
                     new_array.append((-a[i], -1))
                 else:
                     new_array.append((a[i], 1))
-            return new_array
+            return tuple(new_array)
         elif a[i] == a[i + 1]:
             n += 1
         else:

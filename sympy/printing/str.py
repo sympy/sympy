@@ -409,6 +409,28 @@ class StrPrinter(Printer):
                 use = trim
             return 'Permutation(%s)' % use
 
+    def _print_FreeGroup(self, expr):
+        if expr.rank > 30:
+            str_form = "<free group with %s generators>" % expr.rank
+        else:
+            str_form = "<free group on the generators "
+            gens = expr.generators
+            str_form += self._print(gens) + ">"
+        return str_form
+
+    def _print_FreeGroupElement(self, expr):
+        if expr.is_identity:
+            return "<identity>"
+
+        terms = []
+        for base, exp in expr.array_form:
+            if exp == 1:
+                terms.append(self._print(base))
+            else:
+                terms.append(self._print(base) + "**" + self._print(exp))
+
+        return "*".join(terms)
+
     def _print_Subs(self, obj):
         expr, old, new = obj.args
         if len(obj.point) == 1:
@@ -452,9 +474,6 @@ class StrPrinter(Printer):
         return "Rational function field in %s over %s with %s order" % \
             (", ".join(map(lambda fs: self._print(fs), field.symbols)),
             self._print(field.domain), self._print(field.order))
-
-    def _print_FreeGroupElement(self, elm):
-        return elm.__str__()
 
     def _print_PolyElement(self, poly):
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
