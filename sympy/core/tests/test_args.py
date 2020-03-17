@@ -467,6 +467,17 @@ def test_sympy__combinatorics__subsets__Subset():
     assert _test_args(Subset(['c', 'd'], ['a', 'b', 'c', 'd']))
 
 
+def test_sympy__combinatorics__free_groups__FreeGroup():
+    from sympy.combinatorics.free_groups import FreeGroup
+    assert _test_args(FreeGroup('x y z'))
+
+
+def test_sympy__combinatorics__free_groups__FreeGroupElement():
+    from sympy.combinatorics.free_groups import free_group, FreeGroupElement
+    G, x, y, z = free_group('x y z')
+    assert _test_args(FreeGroupElement(((x, 1), (y, 2), (z, -1)), G))
+
+
 def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
