@@ -4866,7 +4866,7 @@ class PermutationGroup(Basic):
             Returns the exponent of a group
 
             The exponent e of a group G is the lcm of the orders of its elements,
-            that is, e is the smallest integer such that g^e = 1 for all g ∈ G.
+            that is, e is the smallest integer such that g^e = 1 for all g belong to G.
         """
 
         def gcd(a, b):
