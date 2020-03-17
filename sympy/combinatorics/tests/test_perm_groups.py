@@ -1116,3 +1116,13 @@ def test_conjugacy_classes():
 
     assert len(expected) == len(computed)
     assert all(e in computed for e in expected)
+
+def test_exponent():
+    a = Permutation(1,2)(2,3)
+    b = Permutation(1,2,3,4)(2,3,4)(5,6,7)(8,9)
+    A = PermutationGroup([a,b])
+    assert A.exponent() == 12
+
+    c = Permutation(1,2,3,4,5,6)(2,3,4)(5,6,7)(8,9)(10,11,12)
+    A = PermutationGroup([a,b,c])
+    assert A.exponent() == 60
