@@ -4869,15 +4869,9 @@ class PermutationGroup(Basic):
             that is, e is the smallest integer such that g^e = 1 for all g belong to G.
         """
 
-        def gcd(a, b):
-            #Calculate the greatest common divisor
-            if b == 0:
-                return a
-            return gcd(b, a%b)
-
         exp = self[0].order()
         for i in range(1, len(self)):
-            exp = (self[i].order()*exp)/gcd(self[i].order(), exp)
+            exp = exp.lcm(self[i].order())
         return exp
 
 def _orbit(degree, generators, alpha, action='tuples'):
