@@ -33,6 +33,17 @@ h = Function('h')
 # dsolve() to return different results on different machines)
 
 
+def _ode_solver_test(ode_examples,our_hint='default'):
+    for example in ode_examples:
+        eq = ode_examples[example]['eq']
+        sol = ode_examples[example]['sol']
+        assert our_hint in classify_ode(eq)
+        sols = [sol,constant_renumber(sol)]
+        sols += [sols[-1].expand()]
+        assert dsolve(eq,hint=our_hint).rhs in sols
+        assert checkodesol(eq, sol)[0]
+
+
 def test_get_numbered_constants():
     with raises(ValueError):
         get_numbered_constants(None)
@@ -2828,8 +2839,8 @@ def test_nth_order_linear_euler_eq_homogeneous():
         },
 
         'eq6': {
-            'eq': t**2*diff(y(t), t, 2) + t*diff(y(t), t) - 9*y(t),
-            'sol': C1*t**3 + C2*t**-3
+            'eq': x**2*diff(f(x), x, 2) + x*diff(f(x), x) - 9*f(x),
+            'sol': C1*x**3 + C2*x**-3
         },
 
         'eq7': {
@@ -2838,14 +2849,8 @@ def test_nth_order_linear_euler_eq_homogeneous():
         },
     }
 
-    for example in ode_sol_euler:
-        eq = ode_sol_euler[example]['eq']
-        sol = ode_sol_euler[example]['sol']
-        assert our_hint in classify_ode(eq)
-        sols = [sol,constant_renumber(sol)]
-        sols += [sols[-1].expand()]
-        assert dsolve(eq,hint=our_hint).rhs in sols
-        assert checkodesol(eq, sol)[0]
+    _ode_solver_test(ode_sol_euler, our_hint)
+
 
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
@@ -2859,40 +2864,34 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     eq = a*x**2*diff(f(x), x, 2) + b*x*diff(f(x), x) + c*f(x) + d*log(x)
     assert our_hint in classify_ode(eq, f(x))
 
-    eq = Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1)
-    sol =  C1 + C2*log(x) + log(x)**2/2
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq, f(x))
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    ode_sol_euler_undetermined_coeff = {
+        'eq1': {
+            'eq': Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1),
+            'sol': C1 + C2*log(x) + log(x)**2/2
+        },
 
-    eq = Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3)
-    sol = x*(C1 + C2*x + Rational(1, 2)*x**2)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq, f(x))
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq2': {
+            'eq': Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3),
+            'sol': x*(C1 + C2*x + Rational(1, 2)*x**2)
+        },
 
-    eq = Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x)
-    sol =  C1/x + C2*x**3 - Rational(1, 16)*log(x)/x - Rational(1, 8)*log(x)**2/x
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq, f(x))
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq3': {
+            'eq': Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x),
+            'sol': (C1 + C2*x**4 - log(x)**2/8 - log(x)/16)/x
+        },
 
-    eq = Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x))
-    sol = C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq4': {
+            'eq': Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x)),
+            'sol': C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
+        },
 
-    eq = Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x))
-    sol = C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+        'eq5': {
+            'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
+            'sol': C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
+        },
+    }
+
+    _ode_solver_test(ode_sol_euler_undetermined_coeff, our_hint)
 
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
