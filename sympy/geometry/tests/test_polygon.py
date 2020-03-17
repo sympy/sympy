@@ -496,8 +496,7 @@ def test_parameter_value():
     sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     assert sq.parameter_value((0.5, 1), t) == {t: Rational(3, 8)}
     q = Polygon((0, 0), (2, 1), (2, 4), (4, 0))
-    assert q.parameter_value((4, 0), t) ==\
-        {t: 3*(1 + sqrt(5))/(3*sqrt(5) + 7)} # ~= 0.708
+    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)} # ~= 0.708
 
     raises(ValueError, lambda: sq.parameter_value((5, 6), t))
 
