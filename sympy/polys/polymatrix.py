@@ -117,8 +117,14 @@ class DomainMatrix:
 
         items_sympy = [_sympify(item) for row in rows for item in row]
         K, items_K = sfield(items_sympy, extension=True)
+
+        if K.gens:
+            domain = K.to_domain()
+        else:
+            domain = K.domain
+            items_K = [domain.convert(item.as_expr()) for item in items_K]
+
         domain_rows = [[items_K[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
-        domain = K.to_domain()
 
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 

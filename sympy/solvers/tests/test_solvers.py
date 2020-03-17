@@ -334,6 +334,8 @@ def test_linear_system():
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
+@XFAIL
+def test_linear_system_xfail():
     # https://github.com/sympy/sympy/issues/6420
     M = Matrix([[0,    15.0, 10.0, 700.0],
                 [1,    1,    1,    100.0],
