@@ -13,7 +13,7 @@ from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor, factor_list
-from sympy.simplify import simplify
+from sympy.simplify import simplify,collect
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -415,7 +415,7 @@ class FirstExact(SingleODESolver):
         x = self.ode_problem.sym
         y=Dummy('y')
 
-        self.q=eq.coeff(f.diff(x))
+        self.q=collect(eq,f.diff(x)).coeff(f.diff(x))
         self.p=eq-self.q*f.diff(x)
 
         try:
@@ -430,7 +430,6 @@ class FirstExact(SingleODESolver):
                 #1. Differential equations with applications
                 # and historical notes - George E. Simmons
                 #2. https://math.okstate.edu/people/binegar/2233-S99/2233-l12.pdf
-
                 if numerator:
                     # If (dP/dy - dQ/dx) / Q = f(x)
                     # then exp(integral(f(x))*equation becomes exact
@@ -442,7 +441,7 @@ class FirstExact(SingleODESolver):
                         m*= factor
                         n*= factor
                         self.p=m.subs(y,f)
-                        self.q=m.subs(y,f)
+                        self.q=n.subs(y,f)
                         self._matched=True
                         return True
                     else:
@@ -455,7 +454,7 @@ class FirstExact(SingleODESolver):
                             m*= factor
                             n*= factor
                             self.p=m.subs(y,f)
-                            self.q=m.subs(y,f)
+                            self.q=n.subs(y,f)
                             self._matched=True
                             return True
                 else:
@@ -480,7 +479,14 @@ class FirstExact(SingleODESolver):
 
         sol= Integral(m,x)+Integral(n-Integral(m,x).diff(y),y)
 
-        return Eq(sol,C1)
+        try:
+            sol=sol.doit()
+            gen_sol=Eq(sol.subs(y,f),C1)
+        except:
+            # For case Integration or differentiation fails
+            gen_sol=Eq(sol.subs(y,f),C1)
+
+        return gen_sol
 
 
 class FirstLinear(SinglePatternODESolver):
