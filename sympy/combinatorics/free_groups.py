@@ -213,10 +213,11 @@ class FreeGroup(Basic):
         0
 
         """
-        if isinstance(gen, self.dtype):
+        gen = _sympify(gen)
+        if isinstance(gen, FreeGroupElement) and self == gen.group:
             return self.generators.index(gen)
-        else:
-            raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
+        raise ValueError(
+            "expected a generator of Free Group %s, got %s" % (self, gen))
 
     def order(self):
         """Return the order of the free group.

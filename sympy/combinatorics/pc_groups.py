@@ -256,8 +256,7 @@ class Collector(DefaultPrinting):
 
 
     def collected_word(self, word):
-        r"""
-        Return the collected form of a word.
+        r"""Return the collected form of a word.
 
         A word ``w`` is called collected, if `w = {x_{i_1}}^{a_1} * \ldots *
         {x_{i_r}}^{a_r}` with `i_1 < i_2< \ldots < i_r` and `a_j` is in
@@ -278,34 +277,6 @@ class Collector(DefaultPrinting):
             A collected word of form `w = {x_{i_1}}^{a_1}, \ldots,
             {x_{i_r}}^{a_r}` with `i_1, i_2, \ldots, i_r` and `a_j \in
             \{1, \ldots, {s_j}-1\}`.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> G = SymmetricGroup(4)
-        >>> PcGroup = G.polycyclic_group()
-        >>> collector = PcGroup.collector
-        >>> F, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
-        >>> word = x3*x2*x1*x0
-        >>> collected_word = collector.collected_word(word)
-        >>> free_to_perm = {}
-        >>> free_group = collector.free_group
-        >>> for sym, gen in zip(free_group.symbols, collector.pcgs):
-        ...     free_to_perm[sym] = gen
-        >>> G1 = PermutationGroup()
-        >>> for w in word:
-        ...     sym = w[0]
-        ...     perm = free_to_perm[sym]
-        ...     G1 = PermutationGroup([perm] + G1.generators)
-        >>> G2 = PermutationGroup()
-        >>> for w in collected_word:
-        ...     sym = w[0]
-        ...     perm = free_to_perm[sym]
-        ...     G2 = PermutationGroup([perm] + G2.generators)
-        >>> G1 == G2
-        True
 
         See Also
         ========
