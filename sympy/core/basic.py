@@ -1673,8 +1673,9 @@ class Basic(metaclass=ManagedProperties):
     def _eval_doit(self, *args, **hints):
         """
         If `deep=True` is passed to `doit` which called this method,
-        `args` are evaluated `self.args`. If `deep=False` is passed,
-        `args` are not-evaluated `self.args`.
+        `self.args` which are evaluated are passed to `args`.
+        If `deep=False` is passed, `self.args` are passed directly 
+        to `args`.
         """
         # May be overridden in subclasses
         return None
