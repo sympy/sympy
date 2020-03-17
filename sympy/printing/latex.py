@@ -414,6 +414,20 @@ class LatexPrinter(Printer):
         perm, var = expr.args
         return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
 
+    def _print_FreeGroupElement(self, expr):
+        if expr.is_identity:
+            return "1"
+
+        terms = []
+        for base, exp in expr.array_form:
+            if exp == 1:
+                terms.append(self._print(base))
+            else:
+                terms.append(
+                    "{}^{}".format(self._print(base), self._print(exp)))
+
+        return " ".join(terms)
+
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)

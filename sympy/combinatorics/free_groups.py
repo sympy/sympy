@@ -139,12 +139,9 @@ class FreeGroup(Basic):
     relators = []  # type: List[Expr]
 
     def __new__(cls, symbols):
-        if isinstance(symbols, str):
-            symbols = tuple(_parse_symbols(symbols))
-        elif isinstance(symbols, Symbol):
-            symbols = (symbols,)
-
+        symbols = tuple(_parse_symbols(symbols))
         obj = super().__new__(cls, Tuple(*symbols))
+        obj._symbols = symbols
         obj._generators = None
         for symbol, generator in zip(obj.symbols, obj.generators):
             if isinstance(symbol, Symbol):
@@ -160,7 +157,7 @@ class FreeGroup(Basic):
 
     @property
     def symbols(self):
-        return self.args[0]
+        return self._symbols
 
     @property
     def generators(self):
