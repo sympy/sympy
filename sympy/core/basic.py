@@ -1624,11 +1624,12 @@ class Basic(metaclass=ManagedProperties):
         return count_ops(self, visual)
 
     def doit(self, deep=True, properties=[], **hints):
-        """Evaluate objects that are not evaluated like operations, limits,
-        integrals, sums and products.
+        """Evaluate objects that are not evaluated like limits, integrals,
+        sums and products.
 
-        Arguments will be evaluated recursively, unless some species were
+        Arguments will be evaluated recursively, unless some classes were
         excluded via 'properties' or unless the 'deep' hint was set to 'False'.
+
         Evaluatable classes should define their own `_eval_doit` method,
         which returns evaluated result. In this case, non-recursive evaluation
         should also be done when `deep=False` is passed. It is also encouraged
