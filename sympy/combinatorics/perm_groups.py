@@ -4861,6 +4861,24 @@ class PermutationGroup(Basic):
 
         return PolycyclicGroup(pc_sequence, pc_series, relative_order, collector=None)
 
+    def exponent(self):
+        """
+            Returns the exponent of a group
+
+            The exponent e of a group G is the lcm of the orders of its elements,
+            that is, e is the smallest integer such that g^e = 1 for all g ∈ G.
+        """
+
+        def gcd(a, b):
+            #Calculate the greatest common divisor
+            if b == 0:
+                return a
+            return gcd(b, a%b)
+
+        exp = self[0].order()
+        for i in range(1, len(self)):
+            exp = (self[i].order()*exp)/gcd(self[i].order(), exp)
+        return exp
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
