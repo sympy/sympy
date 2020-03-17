@@ -4,6 +4,7 @@ from typing import List
 
 from sympy.core import S
 from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
@@ -140,14 +141,7 @@ class FreeGroup(Basic):
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
         obj = super().__new__(cls, Tuple(*symbols))
-        obj._symbols = symbols
         obj._generators = None
-        for symbol, generator in zip(obj.symbols, obj.generators):
-            if isinstance(symbol, Symbol):
-                name = symbol.name
-                if hasattr(obj, name):
-                    setattr(obj, name, generator)
-
         return obj
 
     def dtype(self, arg):
@@ -156,7 +150,7 @@ class FreeGroup(Basic):
 
     @property
     def symbols(self):
-        return self._symbols
+        return self.args[0].args
 
     @property
     def generators(self):
