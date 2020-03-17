@@ -1,11 +1,10 @@
 from __future__ import print_function, division
 
-from typing import Dict, List
+from typing import List
 
 from sympy.core import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.numbers import Integer
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
