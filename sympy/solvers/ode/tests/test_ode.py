@@ -43,7 +43,8 @@ def _ode_solver_test(ode_examples,our_hint='default'):
         assert dsolve(eq,hint=our_hint).rhs in sols, "Expected solution is different from solution returned by dsolve for the equation "+str(eq)
         assert checkodesol(eq, sol)[0], "The solution returned by dsolve is not correct for the equation "+str(eq)
 
-ode_sol_euler = {
+
+ode_sol_euler_homogeneous = {
     'euler_hom_01': {
         'eq': Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
         'sol': C1 + C2*x**Rational(5, 2)
@@ -80,6 +81,7 @@ ode_sol_euler = {
     },
 }
 
+
 ode_sol_euler_undetermined_coeff = {
     'euler_undet_01': {
         'eq': Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1),
@@ -106,6 +108,35 @@ ode_sol_euler_undetermined_coeff = {
         'sol': C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
     },
 }
+
+
+ode_sol_euler_var_para = {
+    'euler_var_01': {
+        'eq': Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4),
+        'sol': x*(C1 + C2*x + x**3/6)
+    },
+
+    'euler_var_02': {
+        'eq': Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x)),
+        'sol': C1/x**2 + C2*x + x*exp(x)/3 - 4*exp(x)/3 + 8*exp(x)/(3*x) - 8*exp(x)/(3*x**2)
+    },
+
+    'euler_var_03': {
+        'eq': Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4*exp(x)),
+        'sol':  x*(C1 + C2*x + x*exp(x) - 2*exp(x))
+    },
+
+    'euler_var_04': {
+        'eq': x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x),
+        'sol': C1*x + C2*x**2 + log(x)/2 + Rational(3, 4)
+    },
+
+    'euler_var_05': {
+        'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
+        'sol': C1 + C2*log(x) + exp(x) - Ei(x)
+    },
+}
+
 
 def test_get_numbered_constants():
     with raises(ValueError):
@@ -2875,7 +2906,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = a*y(t) + b*t*diff(y(t), t) + c*t**2*diff(y(t), t, 2)
     assert our_hint in classify_ode(eq)
 
-    _ode_solver_test(ode_sol_euler, our_hint)
+    _ode_solver_test(ode_sol_euler_homogeneous, our_hint)
 
 
 
@@ -2904,39 +2935,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     eq = Eq(a*x**3*diff(f(x),x,3) + b*x**2*diff(f(x),x,2) + c*x*diff(f(x),x) + d*f(x), x*log(x))
     assert our_hint in classify_ode(eq, f(x))
 
-    eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4)
-    sol = C1*x + C2*x**2 + x**4/6
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
-
-    eq = Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x))
-    sol = C1/x**2 + C2*x + x*exp(x)/3 - 4*exp(x)/3 + 8*exp(x)/(3*x) - 8*exp(x)/(3*x**2)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
-
-    eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4*exp(x))
-    sol = C1*x + C2*x**2 + x**2*exp(x) - 2*x*exp(x)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
-
-    eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
-    sol = C1*x + C2*x**2 + log(x)/2 + Rational(3, 4)
-    sols = constant_renumber(sol)
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
-
-    eq = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
-    assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint) == sol
-    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+    _ode_solver_test(ode_sol_euler_var_para, our_hint)
 
 
 def test_issue_5095():
