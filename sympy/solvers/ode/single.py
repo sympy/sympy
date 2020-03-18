@@ -400,11 +400,9 @@ class FirstExact(SinglePatternODESolver):
     >>> from sympy import E,dsolve,Eq,log,sin,cos
     >>> x=Symbol('x')
     >>> f=Function('f')
-    >>>>
     >>> eq=Eq(0,(sin(x)*sin(f(x))-x*E**f(x))*f(x).diff(x)-(E**f(x)+cos(x)*cos(f(x))))
     >>> dsolve(eq,hint='1st_exact')
     Eq(x*exp(f(x)) + sin(x)*cos(f(x)), C1)
-    >>>
     >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),f(x), hint='1st_exact')
     Eq(x*cos(f(x)) + f(x)**3/3, C1)
 
@@ -414,6 +412,8 @@ class FirstExact(SinglePatternODESolver):
     - "Differential Equations With Applications And Historical Notes",
        Second Edition, George.F.Simmons
     - https://en.wikipedia.org/wiki/Exact_differential_equation
+
+    # indirect doctest
 
     """
     hint="1st_exact"
