@@ -37,12 +37,75 @@ def _ode_solver_test(ode_examples,our_hint='default'):
     for example in ode_examples:
         eq = ode_examples[example]['eq']
         sol = ode_examples[example]['sol']
-        assert our_hint in classify_ode(eq)
+        assert our_hint in classify_ode(eq), our_hint+"Hint was not recognised for the equation "+str(eq)
         sols = [sol,constant_renumber(sol)]
         sols += [sols[-1].expand()]
-        assert dsolve(eq,hint=our_hint).rhs in sols
-        assert checkodesol(eq, sol)[0]
+        assert dsolve(eq,hint=our_hint).rhs in sols, "Expected solution is different from solution returned by dsolve for the equation "+str(eq)
+        assert checkodesol(eq, sol)[0], "The solution returned by dsolve is not correct for the equation "+str(eq)
 
+ode_sol_euler = {
+    'euler_hom_01': {
+        'eq': Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
+        'sol': C1 + C2*x**Rational(5, 2)
+    },
+
+    'euler_hom_02': {
+        'eq': Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
+        'sol': C1*sqrt(x) + C2*x**3
+    },
+
+    'euler_hom_03': {
+        'eq': Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0),
+        'sol': (C1 + C2*log(x))/x**2
+    },
+
+    'euler_hom_04': {
+        'eq': Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
+        'sol': C1/x**2 + C2*x + C3*x**3
+    },
+
+    'euler_hom_05': {
+        'eq': Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
+        'sol': x**5*(C1 + C2*log(x) + C3*log(x)**2)
+    },
+
+    'euler_hom_06': {
+        'eq': x**2*diff(f(x), x, 2) + x*diff(f(x), x) - 9*f(x),
+        'sol': C1*x**3 + C2*x**-3
+    },
+
+    'euler_hom_07': {
+        'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
+        'sol': C1*sin(log(x)) + C2*cos(log(x))
+    },
+}
+
+ode_sol_euler_undetermined_coeff = {
+    'euler_undet_01': {
+        'eq': Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1),
+        'sol': C1 + C2*log(x) + log(x)**2/2
+    },
+
+    'euler_undet_02': {
+        'eq': Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3),
+        'sol': x*(C1 + C2*x + Rational(1, 2)*x**2)
+    },
+
+    'euler_undet_03': {
+        'eq': Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x),
+        'sol': (C1 + C2*x**4 - log(x)**2/8 - log(x)/16)/x
+    },
+
+    'euler_undet_04': {
+        'eq': Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x)),
+        'sol': C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
+    },
+
+    'euler_undet_05': {
+        'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
+        'sol': C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
+    },
+}
 
 def test_get_numbered_constants():
     with raises(ValueError):
@@ -2812,43 +2875,6 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = a*y(t) + b*t*diff(y(t), t) + c*t**2*diff(y(t), t, 2)
     assert our_hint in classify_ode(eq)
 
-    ode_sol_euler = {
-        'eq1': {
-            'eq': Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
-            'sol': C1 + C2*x**Rational(5, 2)
-        },
-
-        'eq2': {
-            'eq': Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
-            'sol': C1*sqrt(x) + C2*x**3
-        },
-
-        'eq3': {
-            'eq': Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0),
-            'sol': (C1 + C2*log(x))/x**2
-        },
-
-        'eq4': {
-            'eq': Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
-            'sol': C1/x**2 + C2*x + C3*x**3
-        },
-
-        'eq5': {
-            'eq': Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
-            'sol': x**5*(C1 + C2*log(x) + C3*log(x)**2)
-        },
-
-        'eq6': {
-            'eq': x**2*diff(f(x), x, 2) + x*diff(f(x), x) - 9*f(x),
-            'sol': C1*x**3 + C2*x**-3
-        },
-
-        'eq7': {
-            'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
-            'sol': C1*sin(log(x)) + C2*cos(log(x))
-        },
-    }
-
     _ode_solver_test(ode_sol_euler, our_hint)
 
 
@@ -2863,33 +2889,6 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
 
     eq = a*x**2*diff(f(x), x, 2) + b*x*diff(f(x), x) + c*f(x) + d*log(x)
     assert our_hint in classify_ode(eq, f(x))
-
-    ode_sol_euler_undetermined_coeff = {
-        'eq1': {
-            'eq': Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1),
-            'sol': C1 + C2*log(x) + log(x)**2/2
-        },
-
-        'eq2': {
-            'eq': Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3),
-            'sol': x*(C1 + C2*x + Rational(1, 2)*x**2)
-        },
-
-        'eq3': {
-            'eq': Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x),
-            'sol': (C1 + C2*x**4 - log(x)**2/8 - log(x)/16)/x
-        },
-
-        'eq4': {
-            'eq': Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x)),
-            'sol': C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
-        },
-
-        'eq5': {
-            'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
-            'sol': C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
-        },
-    }
 
     _ode_solver_test(ode_sol_euler_undetermined_coeff, our_hint)
 
