@@ -4868,10 +4868,10 @@ class PermutationGroup(Basic):
             The exponent e of a group G is the lcm of the orders of its elements,
             that is, e is the smallest integer such that g^e = 1 for all g belong to G.
         """
-
-        exp = self[0].order()
-        for i in range(1, len(self)):
-            exp = exp.lcm(self[i].order())
+        elements = list(self.elements)
+        exp = elements[0].order()
+        for i in range(1, len(elements)):
+            exp = exp.lcm(elements[i].order())
         return exp
 
 def _orbit(degree, generators, alpha, action='tuples'):
