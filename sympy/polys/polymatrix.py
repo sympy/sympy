@@ -1,16 +1,13 @@
 from __future__ import print_function
 
 from sympy.core.add import Add
-from sympy.core.compatibility import ordered
-from sympy.core.numbers import I
-from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.dense import MutableDenseMatrix
 
 from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
-from sympy.polys.domains import EX, QQ, ZZ, AlgebraicField, PolynomialRing
+from sympy.polys.domains import EX
 
 
 class DomainMatrixDomainError(NotImplementedError):
@@ -116,65 +113,35 @@ class DomainMatrix:
         assert all(len(row) == ncols for row in rows)
 
         items_sympy = [_sympify(item) for row in rows for item in row]
-        K, items_K = sfield(items_sympy, extension=True)
+
+        domain, items_domain = cls.get_domain(items_sympy)
+
+        domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
+
+        return DomainMatrix(domain_rows, (nrows, ncols), domain)
+
+    @classmethod
+    def get_domain(cls, items_sympy):
+        K, items_K = sfield(items_sympy, field=True, extension=True)
 
         if K.gens:
             domain = K.to_domain()
         else:
-            domain = K.domain.get_field()
-            items_K = [domain.convert(item.as_expr()) for item in items_K]
+            domain = K.domain
 
-        domain_rows = [[items_K[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
+            def convert(item):
+                if not item:
+                    return domain.zero
+                else:
+                    return item.numer[()] / item.denom[()]
 
-        return DomainMatrix(domain_rows, (nrows, ncols), domain)
+            items_K = [convert(item) for item in items_K]
+
+        return domain, items_K
 
     def to_Matrix(self):
         rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in self.rows]
         return MutableDenseMatrix(rows_sympy)
-
-    @classmethod
-    def get_domain(cls, items):
-        ext = set()
-        syms = set()
-        dom = ZZ
-        items = items[:]
-        for item in items:
-            if item.has(I):
-                items.extend(Poly(item, I).coeffs())
-                ext.add(I)
-                dom = dom.unify(QQ)
-                continue
-            elif item.is_polynomial():
-                itemsyms = item.free_symbols
-                if itemsyms:
-                    items.extend(Poly(item, *itemsyms).coeffs())
-                    syms |= itemsyms
-                    continue
-            if item.has(Pow):
-                for pow in item.atoms(Pow):
-                    b, e = pow.as_base_exp()
-                    if b.is_Number and e.is_Rational and e.is_positive:
-                        items.extend(Poly(item, pow).coeffs())
-                        ext.add(pow)
-                        dom = dom.unify(QQ)
-                        break
-                    else:
-                        raise DomainMatrixDomainError
-                continue
-            if item.is_Integer:
-                pass
-            elif item.is_Rational:
-                dom = dom.unify(QQ)
-            else:
-                raise DomainMatrixDomainError
-        if ext:
-            dom = AlgebraicField(dom, *ext)
-        if syms:
-            # The use of ordered here is important because the ordering of the
-            # symbols affects the monomial ordering in the ring which in turn
-            # affects the sign-simplification of results from rref.
-            dom = PolynomialRing(dom, list(ordered(syms)))
-        return dom
 
     def __repr__(self):
         return str(self.to_Matrix())
@@ -198,11 +165,8 @@ class DomainMatrix:
             return sqrtAn * sqrtAn
 
     def rref(self):
-        rref_domain = self.domain.get_field()
-        convert = lambda item: rref_domain.convert(item)
-        converted_rows = [[convert(item) for item in row] for row in self.rows]
-        rref_rows, pivots = rref(converted_rows, self.shape)
-        rref_matrix = type(self)(rref_rows, self.shape, rref_domain)
+        rref_rows, pivots = rref(self.rows, self.shape)
+        rref_matrix = type(self)(rref_rows, self.shape, self.domain)
         pivots = tuple(pivots)
         return rref_matrix, pivots
 
