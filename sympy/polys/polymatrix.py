@@ -121,7 +121,7 @@ class DomainMatrix:
         if K.gens:
             domain = K.to_domain()
         else:
-            domain = K.domain
+            domain = K.domain.get_field()
             items_K = [domain.convert(item.as_expr()) for item in items_K]
 
         domain_rows = [[items_K[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
