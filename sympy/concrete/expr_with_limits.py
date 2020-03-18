@@ -328,7 +328,7 @@ class ExprWithLimits(Expr):
         change_index : Perform mapping on the sum and product dummy variables
 
         """
-        from sympy.core.function import AppliedUndef, UndefinedFunction
+        from sympy.core.function import AppliedUndef, UndefinedFunction, Function, FunctionClass
         func, limits = self.function, list(self.limits)
 
         # If one of the expressions we are replacing is used as a func index
@@ -355,13 +355,18 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old, AppliedUndef) or isinstance(old, UndefinedFunction):
+            if isinstance(old, (AppliedUndef, UndefinedFunction)):
                 sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
                 sy1 = set(self.variables).intersection(set(old.args))
                 if not sy2.issubset(sy1):
                     raise ValueError(
                         "substitution can not create dummy dependencies")
                 sub_into_func = True
+            elif isinstance(old, (Function, FunctionClass)):
+                # In this case (old is sin, log, or any custom function),
+                # allow substitution when old is exactly same with func.
+                if func == old:
+                    func = new
             if sub_into_func:
                 func = func.subs(old, new)
         else:
