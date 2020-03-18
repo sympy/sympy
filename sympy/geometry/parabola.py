@@ -407,20 +407,11 @@ class Parabola(GeometrySet):
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
 
         return vertex
-def tangent():
-     x,y=symbols('x y')
-    print('Enter the parameters a,b,g,f,h,c of equation ax^2+by^2+2gx+2fy+2hxy+c=0')
-    a=int(input())
-    b=int(input())
-    g=int(input())
-    f=int(input())
-    h=int(input())
-    c=int(input())
+from sympy import *
+def tangent(a,b,g,f,h,c,x1,y1):  
+    x,y=symbols('x y')
     P=Poly((x**2)*a+(y**2)*b+2*g*x+2*h*x*y+2*f*y+c,(x,y))
     S=Eq((x**2)*a+(y**2)*b+(2*g*x)+(2*h*x*y)+(2*f*y),-c)
-    print('Enter the point')
-    x1=int(input())
-    y1=int(input())
     S1=P(x1,y1)
     if S1==0:
         print('Point lies on the curve')
