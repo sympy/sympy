@@ -68,6 +68,8 @@ class RoundFunction(Function):
             return ipart
         elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:
             return ipart + cls(im(spart), evaluate=False)*S.ImaginaryUnit
+        elif isinstance(spart,cls):
+            return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
 
