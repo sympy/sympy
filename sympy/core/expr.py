@@ -3641,17 +3641,8 @@ class Expr(Basic, EvalfMixin):
         Notes
         =====
 
-        The Python builtin function, round, always returns a
-        float in Python 2 while the SymPy round method (and
-        round with a Number argument in Python 3) returns a
-        Number.
-
-        >>> from sympy.core.compatibility import PY3
-        >>> isinstance(round(S(123), -2), Number if PY3 else float)
-        True
-
-        For a consistent behavior, and Python 3 rounding
-        rules, import `round` from sympy.core.compatibility.
+        When applied to a Number, `round` will return a Number, not a Python
+        float or int:
 
         >>> isinstance(round(S(123), -2), Number)
         True
@@ -3670,10 +3661,9 @@ class Expr(Basic, EvalfMixin):
             return x
         if not x.is_extended_real:
             i, r = x.as_real_imag()
-            return i.round(n) + S.ImaginaryUnit*r.round(n)
+            return round(i, n) + S.ImaginaryUnit*round(r, n)
         if not x:
             return S.Zero if n is None else x
-
 
         p = as_int(n or 0)
 
