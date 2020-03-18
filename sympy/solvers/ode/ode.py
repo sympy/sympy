@@ -2942,7 +2942,7 @@ def _handle_Integral(expr, func, hint):
     else:
         sol = expr
     return sol
-    
+
 
 def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     r"""
