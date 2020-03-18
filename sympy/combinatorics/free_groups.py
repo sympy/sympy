@@ -4,11 +4,10 @@ from typing import List
 
 from sympy.core import S
 from sympy.core.basic import Basic
-from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol, symbols as _symbols
+from sympy.core.symbol import symbols as _symbols
 from sympy.core.sympify import _sympify
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten

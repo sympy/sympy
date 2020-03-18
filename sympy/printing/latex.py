@@ -424,7 +424,7 @@ class LatexPrinter(Printer):
                 terms.append(self._print(base))
             else:
                 terms.append(
-                    "{}^{}".format(self._print(base), self._print(exp)))
+                    r"{%s}^{%s}" % (self._print(base), self._print(exp)))
 
         return " ".join(terms)
 
