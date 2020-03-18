@@ -22,13 +22,12 @@ y1=int(input())
 S1=P(x1,y1)
 if S1==0:
     print('Point lies on the curve')
+     T=Eq((a*x1+g+h*y1)*x+(b*y1+f+h*x1)*y,-(c+(g*x1)+(f*y1)))
+    p1=plot_implicit(S,show=False)
+    p2=plot_implicit(T,show=False)
+    p1.extend(p2)
+    p1.show()
 elif S1<0:
     print('Point lies inside the curve')
 else:
     print('Point lies outside the curve')
-
-T=Eq((a*x1+g+h*y1)*x+(b*y1+f+h*x1)*y,-(c+(g*x1)+(f*y1)))
-p1=plot_implicit(S,show=False)
-p2=plot_implicit(T,show=False)
-p1.extend(p2)
-p1.show()
