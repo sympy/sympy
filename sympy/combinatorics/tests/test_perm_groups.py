@@ -1125,4 +1125,4 @@ def test_exponent():
 
     c = Permutation(1,2,3,4,5,6)(2,3,4)(5,6,7)(8,9)(10,11,12)
     A = PermutationGroup([a, b, c])
-    assert A.exponent() == 60
+    assert A.exponent() == 420
