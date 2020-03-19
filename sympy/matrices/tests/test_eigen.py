@@ -1,10 +1,9 @@
 from sympy import (
-    Rational, Poly, Symbol, N, I, Abs, sqrt, exp, Float, sin,
+    Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
 from sympy.matrices import eye, Matrix
 from sympy.matrices.matrices import MatrixEigen
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
-from sympy.abc import x, y
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
