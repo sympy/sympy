@@ -34,7 +34,7 @@ def _eigenvals_triangular(M, multiple=False):
 
 def _eigenvals_mpmath(M, multiple=False):
     """Compute eigenvalues using mpmath"""
-    A = mp.matrix(M.evalf().tolist())
+    A = mp.matrix(M.evalf())
     E, _ = mp.eig(A)
     result = [_sympify(x) for x in E]
     if multiple:
@@ -162,6 +162,36 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
         return [simplify(value) for value in eigs]
 
 
+def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
+    """Get a basis for the eigenspace for a particular eigenvalue
+
+    The nullspace for a real eigenvalue should be non-trivial.
+    If we didn't find an eigenvector, try once more a little harder
+    """
+    m   = M - M.eye(M.rows) * eigenval
+    ret = m.nullspace(iszerofunc=iszerofunc)
+
+    if len(ret) == 0 and simplify:
+        ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
+    if len(ret) == 0:
+        raise NotImplementedError(
+            "Can't evaluate eigenvector for eigenvalue {}".format(eigenval))
+    return ret
+
+
+def _eigenvects_mpmath(M):
+    A = mp.matrix(M.evalf())
+    E, ER = mp.eig(A)
+
+    result = []
+    for i in range(M.rows):
+        eigenval = _sympify(E[i])
+        eigenvect = _sympify(ER[:, i])
+        result.append((eigenval, 1, [eigenvect]))
+
+    return result
+
+
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     """Return list of triples (eigenval, multiplicity, eigenspace).
@@ -238,44 +268,29 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     eigenvals
     MatrixSubspaces.nullspace
     """
-
-    def eigenspace(eigenval):
-        """Get a basis for the eigenspace for a particular eigenvalue"""
-
-        m   = M - M.eye(M.rows) * eigenval
-        ret = m.nullspace(iszerofunc=iszerofunc)
-
-        # the nullspace for a real eigenvalue should be
-        # non-trivial.  If we didn't find an eigenvector, try once
-        # more a little harder
-        if len(ret) == 0 and simplify:
-            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
-        if len(ret) == 0:
-            raise NotImplementedError(
-                    "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
-
-        return ret
-
     simplify = flags.get('simplify', True)
+    primitive = flags.get('simplify', False)
+    chop = flags.pop('chop', False)
+    flags.pop('multiple', None)  # remove this if it's there
 
     if not isinstance(simplify, FunctionType):
         simpfunc = _simplify if simplify else lambda x: x
 
-    primitive = flags.get('simplify', False)
-    chop      = flags.pop('chop', False)
-
-    flags.pop('multiple', None)  # remove this if it's there
-
-    has_floats = M.has(Float) # roots doesn't like Floats, so replace them with Rationals
-
+    has_floats = M.has(Float)
     if has_floats:
+        if all(x.is_number for x in M):
+            return _eigenvects_mpmath(M)
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
-    eigenvals = M.eigenvals(rational=False,
-            error_when_incomplete=error_when_incomplete, **flags)
+    eigenvals = M.eigenvals(
+        rational=False, error_when_incomplete=error_when_incomplete,
+        **flags)
 
-    ret = [(val, mult, eigenspace(val)) for val, mult in
-                sorted(eigenvals.items(), key=default_sort_key)]
+    eigenvals = sorted(eigenvals.items(), key=default_sort_key)
+    ret = []
+    for val, mult in eigenvals:
+        vects = _eigenspace(M, val, iszerofunc=iszerofunc, simplify=simplify)
+        ret.append((val, mult, vects))
 
     if primitive:
         # if the primitive flag is set, get rid of any common
