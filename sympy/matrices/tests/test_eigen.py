@@ -168,6 +168,7 @@ def test_eigen_vects():
 
 def test_issue_8240():
     # Eigenvalues of large triangular matrices
+    x, y = symbols('x y')
     n = 200
 
     diagonal_variables = [Symbol('x%s' % i) for i in range(n)]
