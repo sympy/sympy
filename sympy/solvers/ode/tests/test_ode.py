@@ -33,7 +33,8 @@ h = Function('h')
 # dsolve() to return different results on different machines)
 
 
-def _ode_solver_test(ode_examples,our_hint='default'):
+def _ode_solver_test(ode_examples):
+    our_hint = ode_examples['hint']
     for example in ode_examples['examples']:
         eq = ode_examples['examples'][example]['eq']
         sol = ode_examples['examples'][example]['sol']
@@ -2947,7 +2948,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = a*y(t) + b*t*diff(y(t), t) + c*t**2*diff(y(t), t, 2)
     assert our_hint in classify_ode(eq)
 
-    _ode_solver_test(ode_sol_euler_homogeneous, our_hint)
+    _ode_solver_test(ode_sol_euler_homogeneous)
 
 
 
@@ -2962,7 +2963,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     eq = a*x**2*diff(f(x), x, 2) + b*x*diff(f(x), x) + c*f(x) + d*log(x)
     assert our_hint in classify_ode(eq, f(x))
 
-    _ode_solver_test(ode_sol_euler_undetermined_coeff, our_hint)
+    _ode_solver_test(ode_sol_euler_undetermined_coeff)
 
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
@@ -2976,7 +2977,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     eq = Eq(a*x**3*diff(f(x),x,3) + b*x**2*diff(f(x),x,2) + c*x*diff(f(x),x) + d*f(x), x*log(x))
     assert our_hint in classify_ode(eq, f(x))
 
-    _ode_solver_test(ode_sol_euler_var_para, our_hint)
+    _ode_solver_test(ode_sol_euler_var_para)
 
 
 def test_issue_5095():
