@@ -356,7 +356,7 @@ def refine_matrixelement(expr, assumptions):
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
         if (expr.args[1] > expr.args[2]):
-            return(MatrixElement(expr.args[0],expr.args[2],expr.args[1]))
+            return(MatrixElement(expr.args[0], expr.args[2], expr.args[1]))
         return(expr)
 
 handlers_dict = {
@@ -372,5 +372,5 @@ handlers_dict = {
     're': refine_re,
     'im': refine_im,
     'sign': refine_sign,
-    'matrixelement': refine_matrixelement
+    'MatrixElement': refine_matrixelement
 } # type: Dict[str, Callable[[Expr, Boolean], Expr]]

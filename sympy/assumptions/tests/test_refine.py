@@ -228,7 +228,7 @@ def test_refine_issue_12724():
 
 def test_matrixelement():
     x = MatrixSymbol('x', 3, 3)
-    assert refine(x[0,1]), Q.symmetric(x) == x[0,1]
-    assert refine(x[1,0]), Q.symmetric(x) == x[0,1]
-    assert refine(x[2,1]), Q.symmetric(x) == x[1,2]
-    assert refine(x[1,2]), Q.symmetric(x) == x[1,2]
+    assert refine(x[0, 1]), Q.symmetric(x) == x[0, 1]
+    assert refine(x[1, 0]), Q.symmetric(x) == x[0, 1]
+    assert refine(x[2, 1]), Q.symmetric(x) == x[1, 2]
+    assert refine(x[1, 2]), Q.symmetric(x) == x[1, 2]
