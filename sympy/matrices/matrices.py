@@ -973,6 +973,11 @@ class MatrixBase(MatrixDeprecated,
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
                 return args[0].rows, args[0].cols, args[0].as_explicit()._mat
 
+            elif isinstance(args[0], mp.matrix):
+                M = args[0]
+                flat_list = [cls._sympify(x) for x in M]
+                return M.rows, M.cols, flat_list
+
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
                 # NumPy array or matrix or some other object that implements
