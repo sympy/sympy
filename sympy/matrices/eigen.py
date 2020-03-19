@@ -1,13 +1,16 @@
 from __future__ import division, print_function
 
 from types import FunctionType
+from collections import Counter
 
+import mpmath as mp
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.compatibility import default_sort_key
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots
 from sympy.simplify import nsimplify, simplify as _simplify
@@ -17,6 +20,26 @@ from .common import (MatrixError, NonSquareMatrixError,
     NonPositiveDefiniteMatrixError)
 
 from .utilities import _iszero
+
+
+def _eigenvals_triangular(M, multiple=False):
+    """A fast decision for eigenvalues of an upper or a lower triangular
+    matrix.
+    """
+    diagonal_entries = [M[i, i] for i in range(M.rows)]
+    if multiple:
+        return diagonal_entries
+    return dict(Counter(diagonal_entries))
+
+
+def _eigenvals_mpmath(M, multiple=False):
+    """Compute eigenvalues using mpmath"""
+    A = mp.matrix(M.evalf().tolist())
+    E, _ = mp.eig(A)
+    result = [_sympify(x) for x in E]
+    if multiple:
+        return result
+    return dict(Counter(result))
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -91,49 +114,38 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
     Eigenvalues of a matrix `A` can be computed by solving a matrix
     equation `\det(A - \lambda I) = 0`
     """
-
-    simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
-    multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
-    rational = flags.pop('rational', True)
-
     if not M:
         return {}
+
+    if not M.is_square:
+        raise NonSquareMatrixError("{} must be a square matrix.".format(M))
+
+    simplify = flags.pop('simplify', False)
+    multiple = flags.get('multiple', False)
+    rational = flags.pop('rational', True)
+
+    if M.is_upper or M.is_lower:
+        return _eigenvals_triangular(M, multiple=multiple)
+
+    if all(x.is_number for x in M) and M.has(Float):
+        return _eigenvals_mpmath(M, multiple=multiple)
 
     if rational:
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
-    if M.is_upper or M.is_lower:
-        if not M.is_square:
-            raise NonSquareMatrixError()
-
-        diagonal_entries = [M[i, i] for i in range(M.rows)]
-
-        if multiple:
-            eigs = diagonal_entries
-
-        else:
-            eigs = {}
-
-            for diagonal_entry in diagonal_entries:
-                if diagonal_entry not in eigs:
-                    eigs[diagonal_entry] = 0
-
-                eigs[diagonal_entry] += 1
-
+    if isinstance(simplify, FunctionType):
+        eigs = roots(M.charpoly(simplify=simplify), **flags)
     else:
-        flags.pop('simplify', None)  # pop unsupported flag
-
-        if isinstance(simplify, FunctionType):
-            eigs = roots(M.charpoly(x=Dummy('x'), simplify=simplify), **flags)
-        else:
-            eigs = roots(M.charpoly(x=Dummy('x')), **flags)
+        eigs = roots(M.charpoly(), **flags)
 
     # make sure the algebraic multiplicity sums to the
     # size of the matrix
-    if error_when_incomplete and (sum(eigs.values()) if
-            isinstance(eigs, dict) else len(eigs)) != M.cols:
-        raise MatrixError("Could not compute eigenvalues for {}".format(M))
+    if error_when_incomplete:
+        if not multiple and sum(eigs.values()) != M.rows or \
+            multiple and len(eigs) != M.cols:
+            raise MatrixError(
+                "Could not compute eigenvalues for {}".format(M))
 
     # Since 'simplify' flag is unsupported in roots()
     # simplify() function will be applied once at the end of the routine.
