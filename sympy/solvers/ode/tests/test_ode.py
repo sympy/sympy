@@ -43,7 +43,7 @@ def _ode_solver_test(ode_examples,our_hint='default'):
         expected_checkodesol = [(True, 0) for i in range(len(sol))]
         assert dsolve(eq,hint=our_hint).rhs in sols, "Expected solution is different from solution returned by dsolve for the equation "+str(eq)
         assert checkodesol(eq, sol) == expected_checkodesol, "The solution returned by dsolve is not correct for the equation "+str(eq)
- 
+
 
 ode_sol_euler_homogeneous = {
     'euler_hom_01': {
