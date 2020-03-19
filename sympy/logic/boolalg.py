@@ -1986,7 +1986,8 @@ def is_literal(expr):
         return expr.args[0].is_Atom
     elif expr in (True, False) or expr.is_Atom:
         return True
-    elif expr.is_Relational and all(map(is_literal, expr.args)):
+    elif not isinstance(expr, BooleanFunction) and all(
+            map(is_literal, expr.args)):
         return True
     return False
 
