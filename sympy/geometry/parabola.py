@@ -15,7 +15,7 @@ from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
 from sympy.functions import sign
-from sympy import *
+from sympy import symbols, Eq, Poly
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
@@ -407,21 +407,18 @@ class Parabola(GeometrySet):
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
 
         return vertex
-from sympy import *
-def tangent(a,b,g,f,h,c,x1,y1):  
-    x,y=symbols('x y')
-    P=Poly((x**2)*a+(y**2)*b+2*g*x+2*h*x*y+2*f*y+c,(x,y))
-    S=Eq((x**2)*a+(y**2)*b+(2*g*x)+(2*h*x*y)+(2*f*y),-c)
-    S1=P(x1,y1)
-    if S1==0:
-        print('Point lies on the curve')
-    elif S1<0:
-        print('Point lies inside the curve')
-    else:
-        print('Point lies outside the curve')
-    
-    T=Eq((a*x1+g+h*y1)*x+(b*y1+f+h*x1)*y,-(c+(g*x1)+(f*y1)))
-    p1=plot_implicit(S,show=False)
-    p2=plot_implicit(T,show=False)
-    p1.extend(p2)
-    p1.show()
+
+    def tangent(a, b, g, f, h, c, x1, y1):  
+            x,y=symbols('x y')
+            P=Poly((x**2)*a+(y**2)*b+2*g*x+2*h*x*y+2*f*y+c,(x,y))
+            S=Eq((x**2)*a+(y**2)*b+(2*g*x)+(2*h*x*y)+(2*f*y),-c)
+            S1=P(x1,y1)
+            if S1==0:
+                print('Point lies on the curve')
+            elif S1<0:
+                print('Point lies inside the curve')
+            else:
+                print('Point lies outside the curve')
+
+            T=Eq((a*x1+g+h*y1)*x+(b*y1+f+h*x1)*y,-(c+(g*x1)+(f*y1)))
+            return T
