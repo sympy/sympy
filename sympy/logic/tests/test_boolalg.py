@@ -683,6 +683,8 @@ def test_is_literal():
     assert is_literal(Not(Q.zero(A))) is True
     assert is_literal(Or(A, B)) is False
     assert is_literal(And(Q.zero(A), Q.zero(B))) is False
+    assert is_literal(Not(a))
+    assert not is_literal(Not(a), literal_Not=False)
 
 
 def test_operators():

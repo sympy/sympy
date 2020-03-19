@@ -1960,9 +1960,12 @@ def eliminate_implications(expr):
     return to_nnf(expr, simplify=False)
 
 
-def is_literal(expr):
+def is_literal(expr, literal_Not=True):
     """
-    Returns True if expr is a literal, else False.
+    Returns True if expr is a literal, else False. When a
+    ``Not`` is encountered it is considered a literal
+    by default if its argument is literal. It can be
+    treated as non-literal by setting the ``literal_Not`` to False.
 
     Examples
     ========
@@ -1983,7 +1986,7 @@ def is_literal(expr):
 
     """
     if isinstance(expr, Not):
-        return expr.args[0].is_Atom
+        return literal_Not and expr.args[0].is_Atom
     elif expr in (True, False) or expr.is_Atom:
         return True
     elif not isinstance(expr, BooleanFunction) and all(
@@ -2793,11 +2796,15 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
     expr = sympify(expr)
-    # check for quick exit
-    if (all(map(is_literal, expr.args)) and (
-            form is None or
-            is_cnf(expr) and form == 'cnf' or
-            is_dnf(expr) and form == 'dnf')):
+    # check for quick exit: right form and all args are
+    # literal and do not involve Not
+    isc = is_cnf(expr)
+    isd = is_dnf(expr)
+    form_ok = (
+        isc and form == 'cnf' or
+        isd and form == 'dnf')
+    if form_ok and all(is_literal(a, literal_Not=False)
+            for a in expr.args):
         return expr
     if deep:
         variables = _find_predicates(expr)
