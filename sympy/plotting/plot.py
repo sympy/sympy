@@ -32,6 +32,8 @@ from sympy.core.function import arity
 from sympy.core.compatibility import range, Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
+from sympy import fraction
+from sympy import real_roots
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -1536,10 +1538,6 @@ def plot(*args, **kwargs):
     Plot, LineOver1DRangeSeries
 
     """
-    from sympy import fraction
-    from sympy.solvers import solve
-    from sympy import real_roots
-    from sympy import simplify
 
     args = list(map(sympify, args))
     free = set()
@@ -1562,7 +1560,6 @@ def plot(*args, **kwargs):
         expr = arg[0]
         limit = arg[1]
         frac = fraction(expr) #to find the denominator
-        fra = 1/frac[0]
         new_deno = frac[1]
         if (not new_deno.is_Integer) and (not new_deno.is_Float) and (not new_deno.is_irrational):
             root_deno = real_roots(new_deno)   #to find the points of discontinuity
