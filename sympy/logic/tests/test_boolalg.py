@@ -528,6 +528,11 @@ def test_to_cnf():
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
     assert to_cnf(A + 1) == A + 1
 
+
+def test_issue_9949():
+    assert is_cnf(to_cnf((b > -5) | (a > 2) & (a < 4)))
+
+
 def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(~(B | C))) == to_cnf(~(B | C))
     assert CNF.CNF_to_cnf(CNF.to_CNF((A & B) | C)) == to_cnf((A & B) | C)

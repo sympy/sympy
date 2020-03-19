@@ -1910,22 +1910,14 @@ def _is_form(expr, function1, function2):
     """
     expr = sympify(expr)
 
-    def is_a_literal(lit):
-        if isinstance(lit, Not) \
-                and lit.args[0].is_Atom:
-            return True
-        elif lit.is_Atom:
-            return True
-        return False
-
     vals = function1.make_args(expr) if isinstance(expr, function1) else [expr]
     for lit in vals:
         if isinstance(lit, function2):
             vals2 = function2.make_args(lit) if isinstance(lit, function2) else [lit]
             for l in vals2:
-                if is_a_literal(l) is False:
+                if is_literal(l) is False:
                     return False
-        elif is_a_literal(lit) is False:
+        elif is_literal(lit) is False:
             return False
 
     return True
@@ -1977,9 +1969,12 @@ def is_literal(expr):
 
     """
     if isinstance(expr, Not):
-        return not isinstance(expr.args[0], BooleanFunction)
-    else:
-        return not isinstance(expr, BooleanFunction)
+        return expr.args[0].is_Atom
+    elif expr in (True, False) or expr.is_Atom:
+        return True
+    elif expr.is_Relational and all(map(is_literal, expr.args)):
+        return True
+    return False
 
 
 def to_int_repr(clauses, symbols):
