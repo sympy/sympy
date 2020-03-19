@@ -1691,12 +1691,14 @@ def to_nnf(expr, simplify=True):
     return expr.to_nnf(simplify)
 
 
-def to_cnf(expr, simplify=False):
+def to_cnf(expr, simplify=False, force=False):
     """
-    Convert a propositional logical sentence s to conjunctive normal form.
-    That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
-    If simplify is True, the expr is evaluated to its simplest CNF form  using
-    the Quine-McCluskey algorithm.
+    Convert a propositional logical sentence s to conjunctive normal
+    form: ((A | ~B | ...) & (B | C | ...) & ...).
+    If simplify is True, the expr is evaluated to its simplest CNF
+    form using the Quine-McCluskey algorithm; this may take a long
+    time if there are more than 8 variables and requires that the
+    ``force`` flag be set to True (default is False).
 
     Examples
     ========
@@ -1714,7 +1716,12 @@ def to_cnf(expr, simplify=False):
         return expr
 
     if simplify:
-        return simplify_logic(expr, 'cnf', True)
+        if not force and len(_find_predicates(expr)) > 8:
+            raise ValueError(filldedent('''
+            To simplify a logical expression with more
+            than 8 variables may take a long time and requires
+            the use of `force=True`.'''))
+        return simplify_logic(expr, 'cnf', True, force=force)
 
     # Don't convert unless we have to
     if is_cnf(expr):
@@ -1726,12 +1733,14 @@ def to_cnf(expr, simplify=False):
     return res
 
 
-def to_dnf(expr, simplify=False):
+def to_dnf(expr, simplify=False, force=False):
     """
-    Convert a propositional logical sentence s to disjunctive normal form.
-    That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
+    Convert a propositional logical sentence s to disjunctive normal
+    form: ((A & ~B & ...) | (B & C & ...) | ...).
     If simplify is True, the expr is evaluated to its simplest DNF form using
-    the Quine-McCluskey algorithm.
+    the Quine-McCluskey algorithm; this may take a long
+    time if there are more than 8 variables and requires that the
+    ``force`` flag be set to True (default is False).
 
     Examples
     ========
@@ -1749,7 +1758,12 @@ def to_dnf(expr, simplify=False):
         return expr
 
     if simplify:
-        return simplify_logic(expr, 'dnf', True)
+        if not force and len(_find_predicates(expr)) > 8:
+            raise ValueError(filldedent('''
+            To simplify a logical expression with more
+            than 8 variables may take a long time and requires
+            the use of `force=True`.'''))
+        return simplify_logic(expr, 'dnf', True, force=force)
 
     # Don't convert unless we have to
     if is_dnf(expr):
@@ -2751,11 +2765,12 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         non-boolean functions contained within the input.
 
     force : boolean (default False)
-        As the simplifications require exponential time in the number of
-        variables, there is by default a limit on expressions with 8 variables.
-        When the expression has more than 8 variables only symbolical
-        simplification (controlled by ``deep``) is made. By setting force to ``True``, this limit
-        is removed. Be aware that this can lead to very long simplification times.
+        As the simplifications require exponential time in the number
+        of variables, there is by default a limit on expressions with
+        8 variables. When the expression has more than 8 variables
+        only symbolical simplification (controlled by ``deep``) is
+        made. By setting force to ``True``, this limit is removed. Be
+        aware that this can lead to very long simplification times.
 
     Examples
     ========
@@ -2777,6 +2792,12 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
     expr = sympify(expr)
+    # check for quick exit
+    if (all(map(is_literal, expr.args)) and (
+            form is None or
+            is_cnf(expr) and form == 'cnf' or
+            is_dnf(expr) and form == 'dnf')):
+        return expr
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify
