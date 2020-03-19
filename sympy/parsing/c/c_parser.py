@@ -80,7 +80,7 @@ if cin:
         converts them to SymPy Expressions.
         """
 
-        def __init__(self, name):
+        def __init__(self):
             """Initializes the code converter"""
             super(CCodeConverter, self).__init__()
             self._py_nodes = []
@@ -650,7 +650,7 @@ def parse_c(source):
         List of Python expression strings
 
     """
-    converter = CCodeConverter('output')
+    converter = CCodeConverter()
     if os.path.exists(source):
         src = converter.parse(source, flags = [])
     else:
