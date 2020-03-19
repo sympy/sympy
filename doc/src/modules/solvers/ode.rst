@@ -72,7 +72,7 @@ factorable
 
 1st_exact
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_1st_exact
+.. autoclass:: sympy.solvers.ode.single.FirstExact
 
 1st_homogeneous_coeff_best
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
