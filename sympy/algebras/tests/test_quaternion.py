@@ -176,7 +176,7 @@ def test_quaternion_multiplication():
 
 def test__rtruediv__iss16318():
     q1 = Quaternion(1, 2, 3, 4)
-    q0 = Quaternion(0,0,0,0)
+    q0 = Quaternion(0, 0, 0, 0)
     raises(ValueError, lambda: q0.__rtruediv__(q1))
 
 
