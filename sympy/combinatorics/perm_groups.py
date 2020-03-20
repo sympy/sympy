@@ -4867,11 +4867,38 @@ class PermutationGroup(Basic):
 
             The exponent e of a group G is the lcm of the orders of its elements,
             that is, e is the smallest integer such that g^e = 1 for all g belong to G.
+            or the exponent of a group G is just the product of exponents of its sylow_subgroups.
+
+            Examples
+            ========
+
+            >>> from sympy.combinatorics import Permutation
+            >>> from sympy.combinatorics.perm_groups import PermutationGroup
+            >>> a = Permutation(1, 2)(2, 3)
+            >>> b = Permutation(1, 2, 3, 4)(2, 3, 4)(5, 6, 7)(8, 9)
+            >>> A = PermutationGroup([a, b])
+            >>> A.exponent()
+            12
+            >>> c = Permutation(1, 2, 3, 4, 5, 6)(2, 3, 4)(5, 6, 7)(8, 9)(10, 11, 12)
+            >>> A = PermutationGroup([a, b, c])
+            >>> A.exponent()
+            420
+
         """
-        elements = list(self.elements)
-        exp = elements[0].order()
-        for i in range(1, len(elements)):
-            exp = exp.lcm(elements[i].order())
+
+        exp_p = 1
+        exp = 1
+        sylow_groups = {}
+        P = factorint(self.order()).keys()
+        for p in P:
+            sylow_p_subgroup = self.sylow_subgroup(p)
+            if sylow_p_subgroup not in sylow_groups:
+                elements = list(sylow_p_subgroup.elements)
+                exp_p = elements[0].order()
+                for i in range(1, len(elements)):
+                    exp_p = exp_p.lcm(elements[i].order())
+                sylow_groups[sylow_p_subgroup] = exp_p
+            exp = exp * sylow_groups[sylow_p_subgroup]
         return exp
 
 def _orbit(degree, generators, alpha, action='tuples'):
