@@ -355,7 +355,7 @@ def refine_matrixelement(expr, assumptions):
     from sympy.matrices.expressions.matexpr import MatrixElement
     arg = expr.args[0]
     if ask(Q.symmetric(arg), assumptions):
-        if (expr.args[1] > expr.args[2]):
+        if ask(Q.positive(expr.args[1] - expr.args[2])):
             return MatrixElement(expr.args[0], expr.args[2], expr.args[1])
         return expr
 
