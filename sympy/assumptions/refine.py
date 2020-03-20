@@ -345,7 +345,7 @@ def refine_matrixelement(expr, assumptions):
 
     >>> from sympy.assumptions.refine import refine_matrixelement
     >>> from sympy import Q
-    >>> from sympy.matrices.expressions.matexpr MatrixSymbol
+    >>> from sympy.matrices.expressions.matexpr import MatrixSymbol
     >>> X = MatrixSymbol('X', 3, 3)
     >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
     X[0, 1]
@@ -353,10 +353,10 @@ def refine_matrixelement(expr, assumptions):
     X[0, 1]
     """
     from sympy.matrices.expressions.matexpr import MatrixElement
-    arg = expr.args[0]
-    if ask(Q.symmetric(arg), assumptions):
-        if ask(Q.positive(expr.args[1] - expr.args[2])):
-            return MatrixElement(expr.args[0], expr.args[2], expr.args[1])
+    matrix, i, j = expr.args
+    if ask(Q.symmetric(matrix), assumptions):
+        if ask(Q.positive(i - j)):
+            return MatrixElement(matrix, j, i)
         return expr
 
 handlers_dict = {
