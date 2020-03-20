@@ -174,13 +174,12 @@ def test_quaternion_multiplication():
     assert q * z == q * z_quat
 
 
-def test__rtruediv__iss16318():
+def test_issue_16318():
+    #for rtruediv
     q1 = Quaternion(1, 2, 3, 4)
     q0 = Quaternion(0, 0, 0, 0)
     raises(ValueError, lambda: q0.__rtruediv__(q1))
-
-
-def test__rotate_point_iss16138():
+    #for rotate_point
     q = Quaternion(1, 2, 3, 4)
     (axis, angle) = q.to_axis_angle()
     assert Quaternion.rotate_point((1, 1, 1), (axis, angle)) == (S.One / 5, 1, S(7) / 5)
