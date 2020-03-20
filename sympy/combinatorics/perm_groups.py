@@ -4886,7 +4886,6 @@ class PermutationGroup(Basic):
 
         """
 
-        exp_p = 1
         exp = 1
         sylow_groups = {}
         P = factorint(self.order()).keys()
