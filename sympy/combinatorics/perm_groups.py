@@ -18,7 +18,7 @@ from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.testing.randtest import _randrange
 from itertools import islice
-
+from sympy.core.numbers import Integer
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -4895,7 +4895,7 @@ class PermutationGroup(Basic):
                 elements = list(sylow_p_subgroup.elements)
                 exp_p = elements[0].order()
                 for i in range(1, len(elements)):
-                    exp_p = exp_p.lcm(elements[i].order())
+                    exp_p = Integer(exp_p).lcm(elements[i].order())
                 sylow_groups[sylow_p_subgroup] = exp_p
             exp = exp * sylow_groups[sylow_p_subgroup]
         return exp
