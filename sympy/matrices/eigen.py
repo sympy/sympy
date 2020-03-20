@@ -162,14 +162,12 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
 
 
 def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
-    """Get a basis for the eigenspace for a particular eigenvalue
-
-    The nullspace for a real eigenvalue should be non-trivial.
-    If we didn't find an eigenvector, try once more a little harder
-    """
+    """Get a basis for the eigenspace for a particular eigenvalue"""
     m   = M - M.eye(M.rows) * eigenval
     ret = m.nullspace(iszerofunc=iszerofunc)
 
+    # The nullspace for a real eigenvalue should be non-trivial.
+    # If we didn't find an eigenvector, try once more a little harder
     if len(ret) == 0 and simplify:
         ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
     if len(ret) == 0:
