@@ -1960,12 +1960,9 @@ def eliminate_implications(expr):
     return to_nnf(expr, simplify=False)
 
 
-def is_literal(expr, literal_Not=True):
+def is_literal(expr):
     """
-    Returns True if expr is a literal, else False. When a
-    ``Not`` is encountered it is considered a literal
-    by default if its argument is literal. It can be
-    treated as non-literal by setting the ``literal_Not`` to False.
+    Returns True if expr is a literal, else False.
 
     Examples
     ========
@@ -2803,7 +2800,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     form_ok = (
         isc and form == 'cnf' or
         isd and form == 'dnf')
-    if form_ok and all(is_literal(a, literal_Not=False)
+    if form_ok and all(is_literal(a)
             for a in expr.args):
         return expr
     if deep:
