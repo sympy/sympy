@@ -176,9 +176,8 @@ def test_quaternion_multiplication():
 
 def test_issue_16318():
     #for rtruediv
-    q1 = Quaternion(1, 2, 3, 4)
     q0 = Quaternion(0, 0, 0, 0)
-    raises(ValueError, lambda: q0.__rtruediv__(q1))
+    raises(ValueError, lambda: 1/q0)
     #for rotate_point
     q = Quaternion(1, 2, 3, 4)
     (axis, angle) = q.to_axis_angle()
