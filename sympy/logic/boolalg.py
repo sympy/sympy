@@ -1983,11 +1983,11 @@ def is_literal(expr):
 
     """
     if isinstance(expr, Not):
-        return expr.args[0].is_Atom
+        return is_literal(expr.args[0])
     elif expr in (True, False) or expr.is_Atom:
         return True
     elif not isinstance(expr, BooleanFunction) and all(
-            map(is_literal, expr.args)):
+            a.is_Atom for a in expr.args):
         return True
     return False
 
