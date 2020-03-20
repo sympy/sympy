@@ -171,7 +171,7 @@ def test_create_expand_pow_optimization():
     assert cc(x**(-4)) == '1.0/(x*x*x*x)'
     assert cc(x**(-5)) == 'pow(x, -5)'
     assert cc(-x**4) == '-(x*x*x*x)'
-    assert cc(x**4 - x**2) == '-x*x + x*x*x*x'
+    assert cc(x**4 - x**2) == '-(x*x) + x*x*x*x'
     i = Symbol('i', integer=True)
     assert cc(x**i - x**2) == 'pow(x, i) - x*x'
 
