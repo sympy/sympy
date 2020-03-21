@@ -1393,7 +1393,7 @@ class EvalfMixin(object):
             Raise ``PrecisionExhausted`` if any subresult fails to
             evaluate to full accuracy, given the available maxprec.
 
-        quad = str, optional
+        quad : str, optional
             Choose algorithm for numerical quadrature. By default,
             tanh-sinh quadrature is used. For oscillatory
             integrals on an infinite interval, try ``quad='osc'``.
