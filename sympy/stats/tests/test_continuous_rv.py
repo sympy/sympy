@@ -22,7 +22,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
-from sympy.stats.crv import SingleContinuousPSpace
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -1497,3 +1497,15 @@ def test_ContinuousDistributionHandmade():
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)
+
+def test_issue_16318():
+    #test compute_expectation function of the SingleContinuousDomain
+    x,y = symbols('x y')
+    N = SingleContinuousDomain(x, Interval(0, 1))
+    raises (ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))
+    #test quantile function of the NormalDistribution
+    mu = Symbol("mu")
+    sigma = Symbol("sigma", positive=True)
+    p = Symbol("p")
+    X = Normal("x", mu, sigma)
+    assert mu + sqrt(2)*sigma*erfinv(2*p - 1),quantile(X)(p)
