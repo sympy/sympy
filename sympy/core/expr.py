@@ -3641,8 +3641,8 @@ class Expr(Basic, EvalfMixin):
         Notes
         =====
 
-        When applied to a Number, `round` will return a Number, not a Python
-        float or int:
+        The Python ``round`` function uses the SymPy ``round`` method so it
+        will always return a SymPy number (not a Python float or int):
 
         >>> isinstance(round(S(123), -2), Number)
         True
@@ -3660,8 +3660,8 @@ class Expr(Basic, EvalfMixin):
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_extended_real:
-            i, r = x.as_real_imag()
-            return round(i, n) + S.ImaginaryUnit*round(r, n)
+            r, i = x.as_real_imag()
+            return r.round(n) + S.ImaginaryUnit*i.round(n)
         if not x:
             return S.Zero if n is None else x
 
