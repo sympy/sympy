@@ -647,7 +647,7 @@ def test_do_poly_distance():
     with warns(UserWarning, \
                match="Polygons may intersect producing erroneous output"):
         assert square1._do_poly_distance(square2) == 0
-        
+
     # Polygons which bodies intersect
     triangle2 = Polygon(Point(0, -1), Point(2, -1), Point(S.Half, S.Half))
     with warns(UserWarning, \
