@@ -45,7 +45,7 @@ def linspace(start, stop, num):
     return [start + (stop - start) * x / (num-1) for x in range(num)]
 
 
-def textplot_str(expr, a, b, W=55, H=18):
+def textplot_str(expr, a, b, W=55, H=21):
     """Generator for the lines of the plot"""
     free = expr.free_symbols
     if len(free) > 1:
@@ -79,6 +79,11 @@ def textplot_str(expr, a, b, W=55, H=18):
                 mi, ma = -1, 1
     else:
         mi, ma = -1, 1
+    y_range = ma - mi
+    precision = math.floor(math.log(y_range, 10)) - 1
+    precision *= -1
+    mi = round(mi, precision)
+    ma = round(ma, precision)
     y = rescale(y, W, H, mi, ma)
 
     y_bins = linspace(mi, ma, H)
@@ -96,6 +101,10 @@ def textplot_str(expr, a, b, W=55, H=18):
                 else:
                     s[i] = '.'
 
+        if h == 0:
+            for i in range(W):
+                s[i] = '_'
+
         # Print y values
         if h in (0, H//2, H - 1):
             prefix = ("%g" % y_bins[h]).rjust(margin)[:margin]
@@ -104,10 +113,10 @@ def textplot_str(expr, a, b, W=55, H=18):
         s = "".join(s)
         if h == H//2:
             s = s.replace(" ", "-")
-        yield prefix + " | " + s
+        yield prefix + " |" + s
 
     # Print x values
-    bottom = " " * (margin + 3)
+    bottom = " " * (margin + 2)
     bottom += ("%g" % x[0]).ljust(W//2)
     if W % 2 == 1:
         bottom += ("%g" % x[W//2]).ljust(W//2)
@@ -117,7 +126,7 @@ def textplot_str(expr, a, b, W=55, H=18):
     yield bottom
 
 
-def textplot(expr, a, b, W=55, H=18):
+def textplot(expr, a, b, W=55, H=21):
     r"""
     Print a crude ASCII art plot of the SymPy expression 'expr' (which
     should contain a single symbol, e.g. x or something else) over the
@@ -130,25 +139,28 @@ def textplot(expr, a, b, W=55, H=18):
     >>> from sympy.plotting import textplot
     >>> t = Symbol('t')
     >>> textplot(sin(t)*t, 0, 15)
-    14.1605 |                                                   ...
-            |                                                      .
-            |                                                  .
-            |                                                 .     .
-            |                             ..
-            |                            /  ..               .
-            |                           /     .
-            |                          /
-    2.30284 | ------...---------------/--------.------------.--------
-            |   ....   ...           /
-            | ..          \         /           .          .
-            |              ..      /             .
-            |                ..   /                       .
-            |                  ...                .
-            |                                            .
-            |                                      .
-            |                                       \   .
-    -11.037 |                                        ...
-            0                          7.5                        15
+     14 |                                                  ...
+        |                                                     .
+        |                                                 .
+        |                                                      .
+        |                                                .
+        |                            ...
+        |                           /   .               .
+        |                          /
+        |                         /      .
+        |                        .        .            .
+    1.5 |----.......--------------------------------------------
+        |....       \           .          .
+        |            \         /                      .
+        |             ..      /             .
+        |               \    /                       .
+        |                ....
+        |                                    .
+        |                                     .     .
+        |
+        |                                      .   .
+    -11 |_______________________________________________________
+         0                          7.5                        15
     """
     for line in textplot_str(expr, a, b, W, H):
         print(line)
