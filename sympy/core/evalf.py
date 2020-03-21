@@ -1385,7 +1385,7 @@ class EvalfMixin(object):
         maxn : int, optional
             Allow a maximum temporary working precision of maxn digits.
 
-        chop : bool or int, optional
+        chop : bool or number, optional
             Specifies how to replace tiny real or imaginary parts in
             subresults by exact zeros.
 
