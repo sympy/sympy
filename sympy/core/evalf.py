@@ -1372,41 +1372,42 @@ class EvalfMixin(object):
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
-        Evaluate the given formula to an accuracy of n digits.
-        Optional keyword arguments:
+        Evaluate the given formula to an accuracy of *n* digits.
 
-            subs=<dict>
-                Substitute numerical values for symbols, e.g.
-                subs={x:3, y:1+pi}. The substitutions must be given as a
-                dictionary.
+        Parameters
+        ==========
 
-            maxn=<integer>
-                Allow a maximum temporary working precision of maxn digits
-                (default=100)
+        subs : dict, optional
+            Substitute numerical values for symbols, e.g.
+            ``subs={x:3, y:1+pi}``. The substitutions must be given as a
+            dictionary.
 
-            chop=<bool>
-                Replace tiny real or imaginary parts in subresults
-                by exact zeros (default=False)
+        maxn : int, optional
+            Allow a maximum temporary working precision of maxn digits.
 
-            strict=<bool>
-                Raise PrecisionExhausted if any subresult fails to evaluate
-                to full accuracy, given the available maxprec
-                (default=False)
+        chop : bool, optional
+            Replace tiny real or imaginary parts in subresults by exact
+            zeros.
 
-            quad=<str>
-                Choose algorithm for numerical quadrature. By default,
-                tanh-sinh quadrature is used. For oscillatory
-                integrals on an infinite interval, try quad='osc'.
+        strict : bool, optional
+            Raise ``PrecisionExhausted`` if any subresult fails to
+            evaluate to full accuracy, given the available maxprec.
 
-            verbose=<bool>
-                Print debug information (default=False)
+        quad = str, optional
+            Choose algorithm for numerical quadrature. By default,
+            tanh-sinh quadrature is used. For oscillatory
+            integrals on an infinite interval, try ``quad='osc'``.
+
+        verbose : bool, optional
+            Print debug information.
 
         Notes
         =====
 
-        When Floats are naively substituted into an expression, precision errors
-        may adversely affect the result. For example, adding 1e16 (a Float) to 1
-        will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
+        When Floats are naively substituted into an expression,
+        precision errors may adversely affect the result. For example,
+        adding 1e16 (a Float) to 1 will truncate to 1e16; if 1e16 is
+        then subtracted, the result will be 0.
         That is exactly what happens in the following:
 
         >>> from sympy.abc import x, y, z
@@ -1414,8 +1415,8 @@ class EvalfMixin(object):
         >>> (x + y - z).subs(values)
         0
 
-        Using the subs argument for evalf is the accurate way to evaluate such an
-        expression:
+        Using the subs argument for evalf is the accurate way to
+        evaluate such an expression:
 
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
