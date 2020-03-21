@@ -1385,9 +1385,23 @@ class EvalfMixin(object):
         maxn : int, optional
             Allow a maximum temporary working precision of maxn digits.
 
-        chop : bool, optional
-            Replace tiny real or imaginary parts in subresults by exact
-            zeros.
+        chop : bool or int, optional
+            Specifies how to replace tiny real or imaginary parts in
+            subresults by exact zeros.
+
+            When ``True`` the chop value defaults to standard precision.
+
+            Otherwise the chop value is used to determine the
+            magnitude of "small" for purposes of chopping.
+
+            >>> from sympy import N
+            >>> x = 1e-4
+            >>> N(x, chop=True)
+            0.000100000000000000
+            >>> N(x, chop=1e-5)
+            0.000100000000000000
+            >>> N(x, chop=1e-4)
+            0
 
         strict : bool, optional
             Raise ``PrecisionExhausted`` if any subresult fails to
