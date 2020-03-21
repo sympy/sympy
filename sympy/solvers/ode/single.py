@@ -418,7 +418,6 @@ class FirstExact(SinglePatternODESolver):
     """
     hint="1st_exact"
     has_integral=True
-    y = Dummy('y') # This is the only way to pass dummy y to _handle_Integral
 
     def _wilds(self, f, x, order):
         P = Wild('P')
@@ -433,7 +432,7 @@ class FirstExact(SinglePatternODESolver):
         P, Q = self.wilds()
         eq = self.ode_problem.eq
         x = self.ode_problem.sym
-        y = self.y
+        y = Dummy('y')
 
         #This checks if Derivative present in wild P
         if fx.diff(x) in self._wilds_match[P].atoms(Derivative):
@@ -492,16 +491,16 @@ class FirstExact(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify: bool = True):
         m, n = self.wilds_match()
-        f = self.ode_problem.func
+        fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
         y = Dummy('y')
 
-        m = m.subs(f, y)
-        n = n.subs(f, y)
+        m = m.subs(fx, y)
+        n = n.subs(fx, y)
 
         gen_sol = Eq(Subs(Integral(m, x)
-                          + Integral(n - Integral(m, x).diff(y), y), y, f), C1)
+                          + Integral(n - Integral(m, x).diff(y), y), y, fx), C1)
         return gen_sol
 
 
