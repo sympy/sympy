@@ -79,9 +79,11 @@ def textplot_str(expr, a, b, W=55, H=21):
                 mi, ma = -1, 1
     else:
         mi, ma = -1, 1
-    if ma-mi > 1.75:
-        mi = math.floor(mi)
-        ma = math.ceil(ma)
+    y_range = ma - mi
+    precision = math.floor(math.log(y_range, 10)) - 1
+    precision *= -1
+    mi = round(mi, precision)
+    ma = round(ma, precision)
     y = rescale(y, W, H, mi, ma)
 
     y_bins = linspace(mi, ma, H)
@@ -137,27 +139,27 @@ def textplot(expr, a, b, W=55, H=21):
     >>> from sympy.plotting import textplot
     >>> t = Symbol('t')
     >>> textplot(sin(t)*t, 0, 15)
-     15 |
-        |                                                  ...
-        |                                                 .   .
-        |
-        |                                                .     .
-        |                            ..
-        |                           /  ..
-        |                          /                    .
+     14 |                                                  ...
+        |                                                     .
+        |                                                 .
+        |                                                      .
+        |                                                .
+        |                            ...
+        |                           /   .               .
+        |                          /
         |                         /      .
         |                        .        .            .
     1.5 |----.......--------------------------------------------
         |....       \           .          .
-        |            ..        /                      .
-        |              \      /             .
-        |               ..  ..                       .
-        |                 ..                 .
-        |                                           .
-        |                                     .
-        |                                      \   .
-        |                                       ...
-    -12 |_______________________________________________________
+        |            \         /                      .
+        |             ..      /             .
+        |               \    /                       .
+        |                ....
+        |                                    .
+        |                                     .     .
+        |
+        |                                      .   .
+    -11 |_______________________________________________________
          0                          7.5                        15
     """
     for line in textplot_str(expr, a, b, W, H):
