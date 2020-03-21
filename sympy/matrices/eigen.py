@@ -7,6 +7,7 @@ import mpmath as mp
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.compatibility import default_sort_key
+from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
 from sympy.core.sympify import _sympify
@@ -31,14 +32,50 @@ def _eigenvals_triangular(M, multiple=False):
     return dict(Counter(diagonal_entries))
 
 
+def _eigenvals_eigenvects_mpmath(M):
+    prec = max([x._prec for x in M.atoms(Float)])
+
+    A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
+    E, ER = mp.eig(A)
+    norm = mp.fsum([mp.re(e)**2 + mp.im(e)**2 for e in E])
+
+    while True:
+        prec_new = round(prec * 1.5)
+
+        if prec_new > DEFAULT_MAXPREC:
+            raise PrecisionExhausted
+
+        A_new = mp.matrix(M.evalf(n=prec_to_dps(prec)))
+        E_new, ER_new = mp.eig(A_new)
+        norm_new = mp.fsum([mp.re(e)**2 + mp.im(e)**2 for e in E_new])
+
+        if abs(norm - norm_new) < max(norm, norm_new) * 2**-prec:
+            break
+
+        norm = norm_new
+        E, ER = E_new, ER_new
+
+    return E, ER
+
+
 def _eigenvals_mpmath(M, multiple=False):
     """Compute eigenvalues using mpmath"""
-    A = mp.matrix(M.evalf())
-    E, _ = mp.eig(A)
+    E, _ = _eigenvals_eigenvects_mpmath(M)
     result = [_sympify(x) for x in E]
     if multiple:
         return result
     return dict(Counter(result))
+
+
+def _eigenvects_mpmath(M):
+    E, ER = _eigenvals_eigenvects_mpmath(M)
+    result = []
+    for i in range(M.rows):
+        eigenval = _sympify(E[i])
+        eigenvect = _sympify(ER[:, i])
+        result.append((eigenval, 1, [eigenvect]))
+
+    return result
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -174,19 +211,6 @@ def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
         raise NotImplementedError(
             "Can't evaluate eigenvector for eigenvalue {}".format(eigenval))
     return ret
-
-
-def _eigenvects_mpmath(M):
-    A = mp.matrix(M.evalf())
-    E, ER = mp.eig(A)
-
-    result = []
-    for i in range(M.rows):
-        eigenval = _sympify(E[i])
-        eigenvect = _sympify(ER[:, i])
-        result.append((eigenval, 1, [eigenvect]))
-
-    return result
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
