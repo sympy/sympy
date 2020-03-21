@@ -666,12 +666,6 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if isinstance(match, SingleODESolver):
         solvefunc = match
-        # XXX: This global y hack should be removed
-        global y
-        if hint == "1st_exact":
-            y = match.y
-        elif hint == "1st_exact_Integral":
-            y = match.y
     elif hint.endswith('_Integral'):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
@@ -2925,17 +2919,10 @@ def _handle_Integral(expr, func, hint):
     For most hints, this simply runs ``expr.doit()``.
 
     """
-    # XXX: This global y hack should be removed
-    global y
     x = func.args[0]
     f = func.func
-    if hint == "1st_exact":
-        sol = (expr.doit()).subs(y, f(x))
-        del y
-    elif hint == "1st_exact_Integral":
-        sol = Eq(Subs(expr.lhs, y, f(x)), expr.rhs)
-        del y
-    elif hint == "nth_linear_constant_coeff_homogeneous":
+
+    if hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif not hint.endswith("_Integral"):
         sol = expr.doit()

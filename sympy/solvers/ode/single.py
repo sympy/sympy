@@ -7,7 +7,7 @@ from typing import ClassVar, Dict, Iterable, List, Optional, Type
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, Function, expand
+from sympy.core.function import AppliedUndef, Derivative, Function, expand, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.functions import exp, sqrt, tan, log
@@ -441,7 +441,11 @@ class FirstExact(SinglePatternODESolver):
             pattern = self._equation(fx, x, 1)
             self._wilds_match = eq.match(pattern)
 
+        if fx.diff(x) in self._wilds_match[P].atoms(Derivative):
+            return False
+
         m, n = self.wilds_match()
+
         try:
             if simplify(m) != 0:
                 m = m.subs(fx,y)
@@ -460,22 +464,22 @@ class FirstExact(SinglePatternODESolver):
                     variables = factor.free_symbols
                     if len(variables) == 1 and x == variables.pop():
                         factor = exp(Integral(factor).doit())
-                        m*= factor
-                        n*= factor
-                        self._wilds_match[P] = m.subs(y,fx)
-                        self._wilds_match[Q] = n.subs(y,fx)
+                        m *= factor
+                        n *= factor
+                        self._wilds_match[P] = m.subs(y, fx)
+                        self._wilds_match[Q] = n.subs(y, fx)
                         return True
                     else:
                         # If (dP/dy - dQ/dx) / -P = f(y)
                         # then exp(integral(f(y))*equation becomes exact
-                        factor = simplify(-numerator/m)
+                        factor = simplify(-numerator / m)
                         variables = factor.free_symbols
                         if len(variables) == 1 and y == variables.pop():
                             factor = exp(Integral(factor).doit())
-                            m*= factor
-                            n*= factor
-                            self._wilds_match[P] = m.subs(y,fx)
-                            self._wilds_match[Q] = n.subs(y,fx)
+                            m *= factor
+                            n *= factor
+                            self._wilds_match[P] = m.subs(y, fx)
+                            self._wilds_match[Q] = n.subs(y, fx)
                             return True
                 else:
                     return True
@@ -491,14 +495,13 @@ class FirstExact(SinglePatternODESolver):
         f = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        # XXX: This global y hack should be removed
-        # This is the only way to pass dummy y to _handle_Integral
-        y = self.y
+        y = Dummy('y')
 
-        m = m.subs(f,y)
-        n = n.subs(f,y)
+        m = m.subs(f, y)
+        n = n.subs(f, y)
 
-        gen_sol = Eq(Integral(m,x)+Integral(n-Integral(m,x).diff(y),y), C1)
+        gen_sol = Eq(Subs(Integral(m, x)
+                          + Integral(n - Integral(m, x).diff(y), y), y, f), C1)
         return gen_sol
 
 
