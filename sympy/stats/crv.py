@@ -12,7 +12,8 @@ from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda, Symbol,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial,
+        lambdify)
 from sympy.core.function import PoleError
 from sympy.tensor.array import ArrayComprehensionMap
 from sympy.functions.special.delta_functions import DiracDelta
@@ -258,10 +259,10 @@ class SampleExternal:
 
         if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
             from scipy.stats import rv_continuous
-            handmade_pdf = dist.pdf
+            handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
             class scipy_pdf(rv_continuous):
-                def _pdf(self, z):
-                    return handmade_pdf(z)
+                def _pdf(self, x):
+                    return handmade_pdf(x)
             scipy_rv = scipy_pdf(a=dist.set._inf, b=dist.set._sup, name='scipy_pdf')
             return scipy_rv.rvs(size=size)
 
@@ -340,14 +341,14 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
             size = 1
         samps = getattr(SampleExternal, '_sample_python')(self, size)
         if samps is not None:
-            return samps if size!=1 else samps[0]
+            return list(samps) if size!=1 else samps[0]
 
         libraries = ['scipy', 'numpy', 'pymc3']
         for lib in libraries:
             if import_module(lib):
                 samps = getattr(SampleExternal, '_sample_' + lib)(self, size)
                 if samps is not None:
-                    return samps if size != 1 else samps[0]
+                    return list(samps) if size != 1 else samps[0]
 
         icdf = self._inverse_cdf_expression()
         if size == 1:
