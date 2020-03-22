@@ -259,6 +259,7 @@ class SampleExternal:
 
         if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
             from scipy.stats import rv_continuous
+            z = Symbol('z')
             handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
             class scipy_pdf(rv_continuous):
                 def _pdf(self, x):
