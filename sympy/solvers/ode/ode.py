@@ -2919,9 +2919,6 @@ def _handle_Integral(expr, func, hint):
     For most hints, this simply runs ``expr.doit()``.
 
     """
-    x = func.args[0]
-    f = func.func
-
     if hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif not hint.endswith("_Integral"):
