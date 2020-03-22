@@ -1289,13 +1289,14 @@ def recognize_matrix_expression(expr):
     Trace(A)
 
     Recognize some more complex traces:
+    
     >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
     >>> cg = parse_indexed_expression(expr)
     >>> recognize_matrix_expression(cg)
     Trace(A*B)
 
     More complicated expressions:
-    
+
     >>> expr = Sum(A[i, j]*B[k, j]*A[l, k], (j, 0, N-1), (k, 0, N-1))
     >>> cg = parse_indexed_expression(expr)
     >>> recognize_matrix_expression(cg)
