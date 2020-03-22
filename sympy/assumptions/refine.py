@@ -373,4 +373,4 @@ handlers_dict = {
     'im': refine_im,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement
-} # type: Dict[str, Callable[[Expr, Boolean], Expr]]
+}  # type: Dict[str, Callable[[Expr, Boolean], Expr]]
