@@ -14,7 +14,7 @@ from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
-    warns_deprecated_sympy)
+    warns_deprecated_sympy, XFAIL)
 from sympy.testing.randtest import verify_numerically
 
 
@@ -1627,6 +1627,7 @@ def test_issue_8614():
     assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
 
 
+@XFAIL
 def test_issue_15494():
     s = symbols('s', real=True, positive=True)
 

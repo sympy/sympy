@@ -48,7 +48,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
 
     if len(pivots) == len(keys):
         sol = []
-        for s in echelon[:, -1]:
+        for s in [row[-1] for row in echelon.rows]:
             a = ring.ground_new(s)
             if as_expr:
                 a = a.as_expr()
