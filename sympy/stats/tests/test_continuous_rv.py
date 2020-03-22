@@ -17,7 +17,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
-                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
@@ -617,6 +617,11 @@ def test_exponential():
     expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
     assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
 
+    Y = Exponential('y', 2*rate)
+    assert coskewness(X, X, X) == skewness(X)
+    assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
+                        4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))
+
 def test_exponential_power():
     mu = Symbol('mu')
     z = Symbol('z')
@@ -699,6 +704,10 @@ def test_gamma():
     assert skewness(X).expand() == 2/sqrt(k)
     assert kurtosis(X).expand() == 3 + 6/k
 
+    Y = Gamma('y', 2*k, 3*theta)
+    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
+        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
+        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
