@@ -1,5 +1,4 @@
 language: python
-sudo: false
 stages:
 - quality
 - baseline
@@ -77,17 +76,14 @@ matrix:
         - TEST_PY2_IMPORT="true"
     - python: 3.7
       dist: xenial
-      sudo: true
       env:
         - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.7
       dist: xenial
-      sudo: true
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.7
       dist: xenial
-      sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
 
@@ -99,7 +95,6 @@ matrix:
 
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SPHINX="true"
         - FASTCACHE="false"
@@ -120,13 +115,11 @@ matrix:
 
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="1/2"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SLOW="true"
         - SPLIT="2/2"
@@ -134,28 +127,24 @@ matrix:
     # Code coverage tests
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="1/4"
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="2/4"
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
         - SPLIT="3/4"
     - python: 3.6
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true"
         - TEST_COVERAGE="true"
@@ -199,7 +188,6 @@ matrix:
     - stage: allowed_failures
       python: 3.6
       dist: xenial
-      sudo: true
       env:
         - BENCHMARK="true"
 

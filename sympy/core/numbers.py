@@ -7,7 +7,8 @@ import math
 import re as regex
 
 from .containers import Tuple
-from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
+from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
+                      _is_numpy_instance)
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
@@ -277,8 +278,6 @@ except ImportError:
 
 
 # Use Lehmer's algorithm only for very large numbers.
-# The limit could be different on Python 2.7 and 3.x.
-# If so, then this could be defined in compatibility.py.
 BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
@@ -1086,7 +1085,7 @@ class Float(Number):
             return num
         elif num is S.NaN:
             return num
-        elif type(num).__module__ == 'numpy': # support for numpy datatypes
+        elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
         elif isinstance(num, mpmath.mpf):
             if precision is None:
@@ -2605,6 +2604,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.Zero
@@ -2667,6 +2669,9 @@ class One(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.One
@@ -2719,6 +2724,9 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
     q = 1
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
@@ -2774,6 +2782,9 @@ class Half(RationalConstant, metaclass=Singleton):
     q = 2
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():

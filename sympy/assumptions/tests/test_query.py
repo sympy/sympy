@@ -1930,8 +1930,8 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**Rational(17, 31)))) is True
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(17/pi)))) is False
+    assert ask(Q.algebraic(1 + I*sqrt(3)**Rational(17, 31))) is True
+    assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2101,7 +2101,7 @@ def test_known_facts_consistent():
     from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
     from os.path import abspath, dirname, join
     filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         assert f.read() == \
             compute_known_facts(get_known_facts(), get_known_facts_keys())
 

@@ -1180,6 +1180,10 @@ def test_issue_16579():
     assert c.is_finite is True
     raises(InconsistentAssumptions, lambda: Dummy(complex=True, finite=False))
 
+    # Now infinite == !finite
+    nf = Symbol('nf', finite=False)
+    assert nf.is_infinite is True
+
 def test_issue_17556():
     z = I*oo
     assert z.is_imaginary is False

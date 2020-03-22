@@ -15,6 +15,8 @@ from sympy.printing.pycode import (
 )
 from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
+from sympy.testing.pytest import skip
+from sympy.external import import_module
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -116,6 +118,24 @@ def test_NumPyPrinter():
     assert p.doprint(S.NaN) == 'numpy.nan'
     assert p.doprint(S.Infinity) == 'numpy.PINF'
     assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+
+
+def test_issue_18770():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+
+    from sympy import lambdify, Min, Max
+
+    expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
+    func = lambdify(x, expr1, "numpy")
+    assert (func(numpy.linspace(0, 3, 3)) == [1.0 , 1.75, 2.5 ]).all()
+    assert  func(4) == 3
+
+    expr1 = Max(x**2 , x**3)
+    func = lambdify(x,expr1, "numpy")
+    assert (func(numpy.linspace(-1 , 2, 4)) == [1, 0, 1, 8] ).all()
+    assert func(4) == 64
 
 
 def test_SciPyPrinter():
@@ -264,3 +284,39 @@ def test_beta():
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
+
+def test_airy():
+    from sympy import airyai, airybi
+
+    expr1 = airyai(x)
+    expr2 = airybi(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybi\nairybi(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybi\nairybi(x)'
+
+def test_airy_prime():
+    from sympy import airyaiprime, airybiprime
+
+    expr1 = airyaiprime(x)
+    expr2 = airybiprime(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybiprime\nairybiprime(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'
