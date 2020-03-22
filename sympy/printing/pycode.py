@@ -970,6 +970,26 @@ class SciPyPrinter(NumPyPrinter):
                 self._module_format("scipy.special.fresnel"),
                 self._print(expr.args[0]))
 
+    def _print_airyai(self, expr):
+        return "{0}({1})[0]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
+    def _print_airyaiprime(self, expr):
+        return "{0}({1})[1]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
+    def _print_airybi(self, expr):
+        return "{0}({1})[2]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
+    def _print_airybiprime(self, expr):
+        return "{0}({1})[3]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
 
 for k in SciPyPrinter._kf:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_func)

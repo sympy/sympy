@@ -538,20 +538,20 @@ class Bernoulli(SinglePatternODESolver):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
-                                                                                           1
-                                                                                         -----
-                                                                                         1 - n
-               //               /                                  \                    \
-               ||              |                                   |                    |
-               ||              |            /           /          |            /       |
-               ||              |           |           |           |           |        |
-               ||              |       -n* | P(x) dx   | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||              |           |           |           |           |        |
-               ||              |          /           /            |          /         |
-        f(x) = ||C1 - (n - 1)* | Q(x)*e             *e           dx|*e                  |
-               ||              |                                   |                    |
-               \\             /                                    /                    /
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
+                                                                                                              -1
+                                                                                                             -----
+                                                                                                             n - 1
+               //         /                                /                           \                    \
+               ||        |                                |                            |                    |
+               ||        |                 /              |                 /          |            /       |
+               ||        |                |               |                |           |           |        |
+               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                |               |                |           |           |        |
+               ||        |               /                |               /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
+               ||        |                                |                            |                    |
+               \\       /                                /                             /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -579,10 +579,8 @@ class Bernoulli(SinglePatternODESolver):
     >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
     ... f(x), hint='Bernoulli'))
                     1
-    f(x) = -------------------
-            /     log(x)   1\
-            x*|C1 + ------ + -|
-            \       x      x/
+    f(x) =  -----------------
+            C1*x + log(x) + 1
 
     References
     ==========
@@ -613,11 +611,16 @@ class Bernoulli(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (
-            (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
-                          * exp(Integral(P, x)), x)
-            ) * exp(-(1 - n)*Integral(P, x)))**(1/(1 - n))
-        )
+        if n==1:
+            gensol = Eq(log(fx), (
+            (C1 + Integral((-P + Q),x)
+        )))
+        else:
+            gensol = Eq(fx**(1-n), (
+                (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
+                            * exp(Integral(P, x)), x)
+                ) * exp(-(1 - n)*Integral(P, x)))
+            )
         return [gensol]
 
 
