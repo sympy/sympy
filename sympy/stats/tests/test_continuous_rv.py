@@ -1508,4 +1508,4 @@ def test_issue_16318():
     sigma = Symbol("sigma", positive=True)
     p = Symbol("p")
     X = Normal("x", mu, sigma)
-    assert mu + sqrt(2)*sigma*erfinv(2*p - 1),quantile(X)(p)
+    assert mu + sqrt(2)*sigma*erfinv(2*p - 1) == quantile(X)(p)
