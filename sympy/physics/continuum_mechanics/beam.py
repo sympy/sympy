@@ -29,8 +29,9 @@ class Beam(object):
     and their material.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       While solving a beam bending problem, a user is free to choose its
+       own sign convention as long as the upward forces and clockwise moments
+       have the same signs. The results will
        automatically follow the chosen sign convention.
 
     Examples
@@ -1705,8 +1706,9 @@ class Beam3D(Beam):
     with unequal values of Second moment along different axes.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       While solving a beam bending problem, a user is free to choose its
+       own sign convention as long as the upward forces and clockwise moments
+       have the same signs. The results will
        automatically follow the chosen sign convention.
        This class assumes that any kind of distributed load/moment is
        applied through out the span of a beam.

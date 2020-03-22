@@ -44,6 +44,13 @@ Examples
 ========
 
 Below are examples of a variety two dimensional beam bending problems.
+ 
+.. note::
+
+    While solving a beam bending problem, a user is free to choose its
+    own sign convention as long as the upward forces and clockwise moments
+    have the same signs. The results will
+    automatically follow the chosen sign convention.
 
 Example 1
 ---------
@@ -268,7 +275,7 @@ deflection is restricted at both the supports.
 
 .. note::
 
-    Using the sign convention of upward forces and counterclockwise moment
+    Using the sign convention of upward forces and clockwise moment
     being positive.
 
 >>> from sympy.physics.continuum_mechanics.beam import Beam
