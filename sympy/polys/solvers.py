@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.matrices import MutableDenseMatrix, zeros
+from sympy.matrices import MutableDenseMatrix
+from sympy.polys.polymatrix import DomainMatrix
 
 class RawMatrix(MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)
@@ -10,12 +11,14 @@ class RawMatrix(MutableDenseMatrix):
 def eqs_to_matrix(eqs, ring):
     """Transform from equations to matrix form. """
     xs = ring.gens
-    M = zeros(len(eqs), len(xs)+1, cls=RawMatrix)
 
-    for j, e_j in enumerate(eqs):
-        for i, x_i in enumerate(xs):
-            M[j, i] = e_j.coeff(x_i)
-        M[j, -1] = -e_j.coeff(1)
+    shape = (len(eqs), len(xs) + 1)
+
+    rows = [[e_j.coeff(x_i) for x_i in xs] for e_j in eqs]
+    for row_j, e_j in zip(rows, eqs):
+        row_j.append(-e_j.coeff(1))
+
+    M = DomainMatrix(rows, shape, ring.domain)
 
     return M
 
@@ -35,7 +38,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     matrix = eqs_to_matrix(eqs, ring)
 
     # solve by row-reduction
-    echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
+    echelon, pivots = matrix.rref()
 
     # construct the returnable form of the solutions
     keys = ring.symbols if as_expr else ring.gens
@@ -54,10 +57,10 @@ def solve_lin_sys(eqs, ring, _raw=True):
     else:
         sols = {}
         g = ring.gens
-        _g = [[-i] for i in g]
+        echelon = echelon.rows
         for i, p in enumerate(pivots):
-            vect = RawMatrix(_g[p + 1:] + [[ring.one]])
-            v = (echelon[i, p + 1:]*vect)[0]
+            v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
+            v = (v + ring.zero)
             if as_expr:
                 v = v.as_expr()
             sols[keys[p]] = v
