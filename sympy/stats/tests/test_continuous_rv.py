@@ -1500,12 +1500,5 @@ def test_ContinuousDistributionHandmade():
 
 def test_issue_16318():
     #test compute_expectation function of the SingleContinuousDomain
-    x,y = symbols('x y')
     N = SingleContinuousDomain(x, Interval(0, 1))
     raises (ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))
-    #test quantile function of the NormalDistribution
-    mu = Symbol("mu")
-    sigma = Symbol("sigma", positive=True)
-    p = Symbol("p")
-    X = Normal("x", mu, sigma)
-    assert mu + sqrt(2)*sigma*erfinv(2*p - 1) == quantile(X)(p)
