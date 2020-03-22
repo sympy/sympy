@@ -2834,6 +2834,13 @@ def expand_log(expr, deep=True, factor=False, force=False):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
+    from sympy import Mul, log
+    if factor is False:
+        expr = expr.replace(
+        lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
+        for i in Mul.make_args(j)) for j in x.as_numer_denom()),
+        lambda x: expand(x, factor=True))
+
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,
         basic=False, force=force, factor=factor)
