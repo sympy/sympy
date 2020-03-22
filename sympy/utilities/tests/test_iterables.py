@@ -703,6 +703,10 @@ def test_uniq():
         [([1], 2, 2), (2, [1], 2), (2, 2, [1])]
     assert list(uniq([2, 3, 2, 4, [2], [1], [2], [3], [1]])) == \
         [2, 3, 4, [2], [1], [3]]
+    f = [1]
+    raises(RuntimeError, lambda: [f.remove(i) for i in uniq(f)])
+    f = [[1]]
+    raises(RuntimeError, lambda: [f.remove(i) for i in uniq(f)])
 
 
 def test_kbins():

@@ -81,7 +81,7 @@ bifid6 = AZ() + '0123456789'
 bifid10 = printable
 
 
-def padded_key(key, symbols, filter=True):
+def padded_key(key, symbols):
     """Return a string of the distinct characters of ``symbols`` with
     those of ``key`` appearing first, omitting characters in ``key``
     that are not in ``symbols``. A ValueError is raised if a) there are
@@ -111,7 +111,8 @@ def padded_key(key, symbols, filter=True):
             'characters in key but not symbols: %s' % ''.join(
             sorted(extra)))
     key0 = ''.join(list(uniq(key)))
-    return key0 + ''.join([i for i in syms if i not in key0])
+    # remove from syms characters in key0
+    return key0 + translate(''.join(syms), None, key0)
 
 
 def check_and_join(phrase, symbols=None, filter=None):
@@ -481,7 +482,7 @@ def encipher_atbash(msg, symbols=None):
     decipher_atbash
 
     """
-    return encipher_affine(msg, (25,25), symbols)
+    return encipher_affine(msg, (25, 25), symbols)
 
 
 def decipher_atbash(msg, symbols=None):
@@ -520,7 +521,7 @@ def decipher_atbash(msg, symbols=None):
     encipher_atbash
 
     """
-    return decipher_affine(msg, (25,25), symbols)
+    return decipher_affine(msg, (25, 25), symbols)
 
 #################### substitution cipher ###########################
 
@@ -2899,37 +2900,42 @@ def _random_coprime_stream(n, seed=None):
 
 def gm_private_key(p, q, a=None):
     """
-    Check if p and q can be used as private keys for
+    Check if ``p`` and ``q`` can be used as private keys for
     the Goldwasser-Micali encryption. The method works
     roughly as follows.
 
-    Pick two large primes p ands q. Call their product N.
-    Given a message as an integer i, write i in its
-    bit representation b_0,...,b_n. For each k,
+    $\\cdot$ Pick two large primes $p$ and $q$.
 
-     if b_k = 0:
-        let a_k be a random square
-        (quadratic residue) modulo p * q
-        such that jacobi_symbol(a, p * q) = 1
-     if b_k = 1:
-        let a_k be a random non-square
-        (non-quadratic residue) modulo p * q
-        such that jacobi_symbol(a, p * q) = 1
+    $\\cdot$ Call their product $N$.
 
-    return [a_1, a_2,...]
+    $\\cdot$ Given a message as an integer $i$, write $i$ in its
+    bit representation $b_0$ , $\\dotsc$ , $b_n$ .
 
-    b_k can be recovered by checking whether or not
-    a_k is a residue. And from the b_k's, the message
+    $\\cdot$ For each $k$ ,
+
+     if $b_k$ = 0:
+        let $a_k$ be a random square
+        (quadratic residue) modulo $p q$
+        such that $jacobi \\_symbol(a, p q) = 1$
+     if $b_k$ = 1:
+        let $a_k$ be a random non-square
+        (non-quadratic residue) modulo $p q$
+        such that $jacobi \\_ symbol(a, p q) = 1$
+
+    returns [$a_1$ , $a_2$ , $\\dotsc$ ]
+
+    $b_k$ can be recovered by checking whether or not
+    $a_k$ is a residue. And from the $b_k$ 's, the message
     can be reconstructed.
 
-    The idea is that, while jacobi_symbol(a, p * q)
-    can be easily computed (and when it is equal to -1 will
-    tell you that a is not a square mod p * q), quadratic
+    The idea is that, while $jacobi \\_ symbol(a, p q)$
+    can be easily computed (and when it is equal to $-1$ will
+    tell you that $a$ is not a square mod $p q$ ), quadratic
     residuosity modulo a composite number is hard to compute
     without knowing its factorization.
 
-    Moreover, approximately half the numbers coprime to p * q have
-    jacobi_symbol equal to 1. And among those, approximately half
+    Moreover, approximately half the numbers coprime to $p q$ have
+    $jacobi \\_ symbol$ equal to $1$ . And among those, approximately half
     are residues and approximately half are not. This maximizes the
     entropy of the code.
 

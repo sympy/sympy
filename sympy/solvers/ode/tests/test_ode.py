@@ -1621,21 +1621,6 @@ def test_1st_linear():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
-def test_Bernoulli():
-    # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
-    eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0)
-    sol = dsolve(eq, f(x), hint='Bernoulli')
-    assert sol == Eq(f(x), 1/(x*(C1 + 1/x)))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
-def test_Riccati_special_minus2():
-    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
-    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
-    sol = dsolve(eq, f(x), hint='Riccati_special_minus2')
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
 @slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
@@ -2565,6 +2550,24 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq26, sol26, order=5, solve_for_func=False)[0]
     assert checkodesol(eq27, sol27, order=2, solve_for_func=False)[0]
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
+
+
+def test_issue_12623():
+    t = symbols("t")
+    u = symbols("u",cls=Function)
+    R, L, C, E_0, alpha = symbols("R L C E_0 alpha",positive=True)
+    omega = Symbol('omega')
+
+    eqRLC_1 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha)
+    sol_1 = Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))
+    assert dsolve(eqRLC_1) == sol_1
+    assert checkodesol(eqRLC_1, sol_1) == (True, 0)
+
+    eqRLC_2 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
+    sol_2 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
+    assert dsolve(eqRLC_2) == sol_2
+    assert checkodesol(eqRLC_2, sol_2) == (True, 0)
+    #issue-https://github.com/sympy/sympy/issues/12623
 
 
 def test_issue_5787():

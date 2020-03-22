@@ -13,7 +13,7 @@ from sympy.core.compatibility import clock
 import sys
 
 
-def display_fraction(digits, skip=0, colwidth=10, columns=5):
+def display_fraction(digits, *, skip=0, colwidth=10, columns=5):
     """Pretty printer for first n digits of a fraction"""
     perline = colwidth * columns
     printed = 0
@@ -59,7 +59,7 @@ def calculateit(func, base, n, tofile):
         sys.stdout = tofile
     print("%i base-%i digits of pi:\n" % (n, base))
     print(intpart, ".\n")
-    display_fraction(d, skip, colwidth=10, columns=5)
+    display_fraction(d, skip=skip, colwidth=10, columns=5)
     if tofile:
         sys.stdout = out_
     print("\nFinished in %f seconds (%f calc, %f convert)" % \

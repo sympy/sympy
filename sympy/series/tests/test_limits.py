@@ -641,3 +641,7 @@ def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
     assert limit(n + p, n, 0) == 0
+
+
+def test_issue_15055():
+    assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1

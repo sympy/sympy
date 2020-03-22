@@ -186,10 +186,18 @@ class SingleODESolver:
     # Cache whether or not the equation has matched the method
     _matched = None  # type: Optional[bool]
 
+    # Subclasses should store in this attribute the list of order(s) of ODE
+    # that subclass can solve or leave it to None if not specific to any order
+    order = None  # type: None or list
+
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
 
     def matches(self) -> bool:
+        if self.order is not None and self.ode_problem.order not in self.order:
+            self._matched = False
+            return False
+
         if self._matched is None:
             self._matched = self._matches()
         return self._matched
@@ -229,6 +237,9 @@ class SinglePatternODESolver(SingleODESolver):
         x = self.ode_problem.sym
         order = self.ode_problem.order
         df = f(x).diff(x)
+
+        if order != 1:
+            return False
 
         pattern = self._equation(f(x), x, 1)
 
@@ -409,6 +420,7 @@ class FirstLinear(SinglePatternODESolver):
     """
     hint = '1st_linear'
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
@@ -418,12 +430,6 @@ class FirstLinear(SinglePatternODESolver):
     def _equation(self, fx, x, order):
         P, Q = self.wilds()
         return fx.diff(x) + P*fx - Q
-
-    def _verify(self, fx):
-        if self.ode_problem.order != 1:
-            return False
-        else:
-            return True
 
     def _get_general_solution(self, *, simplify: bool = True):
         P, Q = self.wilds_match()
@@ -485,6 +491,7 @@ class AlmostLinear(SinglePatternODESolver):
     """
     hint = "almost_linear"
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x).diff(x)])
@@ -496,9 +503,6 @@ class AlmostLinear(SinglePatternODESolver):
         return P*fx.diff(x) + Q
 
     def _verify(self, fx):
-        if self.ode_problem.order != 1:
-            return False
-
         a, b = self.wilds_match()
         c, b = b.as_independent(fx) if b.is_Add else (S.Zero, b)
         # a, b and c are the function a(x), b(x) and c(x) respectively.
@@ -544,20 +548,20 @@ class Bernoulli(SinglePatternODESolver):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=100)
-                                                                                           1
-                                                                                         -----
-                                                                                         1 - n
-               //               /                                  \                    \
-               ||              |                                   |                    |
-               ||              |            /           /          |            /       |
-               ||              |           |           |           |           |        |
-               ||              |       -n* | P(x) dx   | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||              |           |           |           |           |        |
-               ||              |          /           /            |          /         |
-        f(x) = ||C1 - (n - 1)* | Q(x)*e             *e           dx|*e                  |
-               ||              |                                   |                    |
-               \\             /                                    /                    /
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
+                                                                                                              -1
+                                                                                                             -----
+                                                                                                             n - 1
+               //         /                                /                           \                    \
+               ||        |                                |                            |                    |
+               ||        |                 /              |                 /          |            /       |
+               ||        |                |               |                |           |           |        |
+               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                |               |                |           |           |        |
+               ||        |               /                |               /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
+               ||        |                                |                            |                    |
+               \\       /                                /                             /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -585,10 +589,8 @@ class Bernoulli(SinglePatternODESolver):
     >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
     ... f(x), hint='Bernoulli'))
                     1
-    f(x) = -------------------
-            /     log(x)   1\
-            x*|C1 + ------ + -|
-            \       x      x/
+    f(x) =  -----------------
+            C1*x + log(x) + 1
 
     References
     ==========
@@ -603,6 +605,7 @@ class Bernoulli(SinglePatternODESolver):
     """
     hint = "Bernoulli"
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
@@ -614,22 +617,21 @@ class Bernoulli(SinglePatternODESolver):
         P, Q, n = self.wilds()
         return fx.diff(x) + P*fx - Q*fx**n
 
-    def _verify(self, fx):
-        if self.ode_problem.order != 1:
-            return False
-        else:
-            return True
-
     def _get_general_solution(self, *, simplify: bool = True):
         P, Q, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (
-            (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
-                          * exp(Integral(P, x)), x)
-            ) * exp(-(1 - n)*Integral(P, x)))**(1/(1 - n))
-        )
+        if n==1:
+            gensol = Eq(log(fx), (
+            (C1 + Integral((-P + Q),x)
+        )))
+        else:
+            gensol = Eq(fx**(1-n), (
+                (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
+                            * exp(Integral(P, x)), x)
+                ) * exp(-(1 - n)*Integral(P, x)))
+            )
         return [gensol]
 
 
@@ -682,7 +684,6 @@ class Factorable(SingleODESolver):
                 return fraction(factor(self.eqs[0]))[0]-eq!=0
             return True
         return False
-
 
     def _get_general_solution(self, *, simplify: bool = True):
         func = self.ode_problem.func.func
@@ -747,6 +748,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     """
     hint = "Riccati_special_minus2"
     has_integral = False
+    order = [1]
 
     def _wilds(self, f, x, order):
         a = Wild('a', exclude=[x, f(x), f(x).diff(x), 0])
@@ -758,12 +760,6 @@ class RiccatiSpecial(SinglePatternODESolver):
     def _equation(self, fx, x, order):
         a, b, c, d = self.wilds()
         return a*fx.diff(x) + b*fx**2 + c*fx/x + d/x**2
-
-    def _verify(self, fx):
-        if self.ode_problem.order != 1:
-            return False
-        else:
-            return True
 
     def _get_general_solution(self, *, simplify: bool = True):
         a, b, c, d = self.wilds_match()
