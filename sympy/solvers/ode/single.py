@@ -230,9 +230,6 @@ class SinglePatternODESolver(SingleODESolver):
         order = self.ode_problem.order
         df = f(x).diff(x)
 
-        if order != 1:
-            return False
-
         pattern = self._equation(f(x), x, 1)
 
         if not pattern.coeff(df).has(Wild):
@@ -422,6 +419,12 @@ class FirstLinear(SinglePatternODESolver):
         P, Q = self.wilds()
         return fx.diff(x) + P*fx - Q
 
+    def _verify(self, fx):
+        if self.ode_problem.order != 1:
+            return False
+        else:
+            return True
+
     def _get_general_solution(self, *, simplify: bool = True):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
@@ -493,6 +496,9 @@ class AlmostLinear(SinglePatternODESolver):
         return P*fx.diff(x) + Q
 
     def _verify(self, fx):
+        if self.ode_problem.order != 1:
+            return False
+
         a, b = self.wilds_match()
         c, b = b.as_independent(fx) if b.is_Add else (S.Zero, b)
         # a, b and c are the function a(x), b(x) and c(x) respectively.
@@ -607,6 +613,12 @@ class Bernoulli(SinglePatternODESolver):
     def _equation(self, fx, x, order):
         P, Q, n = self.wilds()
         return fx.diff(x) + P*fx - Q*fx**n
+
+    def _verify(self, fx):
+        if self.ode_problem.order != 1:
+            return False
+        else:
+            return True
 
     def _get_general_solution(self, *, simplify: bool = True):
         P, Q, n = self.wilds_match()
@@ -746,6 +758,12 @@ class RiccatiSpecial(SinglePatternODESolver):
     def _equation(self, fx, x, order):
         a, b, c, d = self.wilds()
         return a*fx.diff(x) + b*fx**2 + c*fx/x + d/x**2
+
+    def _verify(self, fx):
+        if self.ode_problem.order != 1:
+            return False
+        else:
+            return True
 
     def _get_general_solution(self, *, simplify: bool = True):
         a, b, c, d = self.wilds_match()
