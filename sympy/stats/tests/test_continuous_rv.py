@@ -1539,7 +1539,7 @@ def test_sample_numpy():
     else:
         for X in distribs_numpy:
             samps = sample(X, size=size)
-            samps2 = SampleExternal(X.pspace.distribution, size)._sample_numpy()
+            samps2 = SampleExternal._sample_numpy(X.pspace.distribution, size)
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
                 assert samps2[sam] in X.pspace.domain.set
@@ -1567,7 +1567,7 @@ def test_sample_scipy():
     else:
         for X in distribs_scipy:
             samps = sample(X, size=size)
-            samps2 = SampleExternal(X.pspace.distribution, size)._sample_scipy()
+            samps2 = SampleExternal._sample_scipy(X.pspace.distribution, size)
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
                 assert samps2[sam] in X.pspace.domain.set
@@ -1592,7 +1592,7 @@ def test_sample_pymc3():
     else:
         for X in distribs_pymc3:
             samps = sample(X, size=size)
-            samps2 = SampleExternal(X.pspace.distribution, size)._sample_pymc3()
+            samps2 = SampleExternal._sample_pymc3(X.pspace.distribution, size)
             for sam in range(size):
                 assert samps[sam] in X.pspace.domain.set
                 assert samps2[sam] in X.pspace.domain.set

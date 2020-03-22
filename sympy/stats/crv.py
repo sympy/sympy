@@ -25,6 +25,9 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
 
+scipy = import_module('scipy')
+numpy = import_module('numpy')
+pymc3 = import_module('pymc3')
 
 class ContinuousDomain(RandomDomain):
     """
@@ -147,43 +150,114 @@ class ContinuousDistribution(Basic):
         return self.pdf(*args)
 
 
-class SampleExternal(object):
+class SampleExternal:
     """Class consisting of the methods that are used to sample values of random
     variables from external libraries."""
 
-    def __init__(self, distribution, size):
-        r"""
-        Parameters
-        ==========
 
-        distribution: Continuous Distribution
-            Distribution from which sample is to be extracted
-        size: int, list
-           size of the sample
-        """
-        self.distribution = distribution
-        self.size = size
+    scipy_rv_map = {
+        'BetaDistribution': lambda dist, size: scipy.stats.beta.rvs(a=float(dist.alpha),
+            b=float(dist.beta), size=size),
+        'BetaPrimeDistribution':lambda dist, size: scipy.stats.betaprime.rvs(a=float(dist.alpha),
+            b=float(dist.beta), size=size),
+        'CauchyDistribution': lambda dist, size: scipy.stats.cauchy.rvs(loc=float(dist.x0),
+            scale=float(dist.gamma), size=size),
+        'ChiDistribution': lambda dist, size: scipy.stats.chi.rvs(df=float(dist.k),
+            size=size),
+        'ChiSquaredDistribution': lambda dist, size: scipy.stats.chi2.rvs(df=float(dist.k),
+            size=size),
+        'ExponentialDistribution': lambda dist, size: scipy.stats.expon.rvs(loc=0,
+            scale=1/float(dist.rate), size=size),
+        'GammaDistribution': lambda dist, size: scipy.stats.gamma.rvs(a=float(dist.k), loc=0,
+            scale=float(dist.theta), size=size),
+        'GammaInverseDistribution': lambda dist, size: scipy.stats.invgamma.rvs(a=float(dist.a),
+            loc=0, scale=float(dist.b), size=size),
+        'LogNormalDistribution': lambda dist, size: scipy.stats.lognorm.rvs(s=float(dist.std),
+            loc=0, scale=exp(float(dist.mean)), size=size),
+        'NormalDistribution': lambda dist, size: scipy.stats.norm.rvs(float(dist.mean),
+            float(dist.std), size=size),
+        'GaussianInverseDistribution': lambda dist, size: scipy.stats.invgauss.rvs(
+            mu=float(dist.mean)/float(dist.shape), scale=float(dist.shape), size=size),
+        'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(b=float(dist.alpha),
+            scale=float(dist.xm), size=size),
+        'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(loc=float(dist.left),
+            scale=float(dist.right)-float(dist.left), size=size),
+        }
 
-    def _sample_scipy(self):
+    numpy_rv_map = {
+        'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
+            b=float(dist.beta), size=size),
+        'ChiSquaredDistribution': lambda dist, size: numpy.random.chisquare(
+            df=float(dist.k), size=size),
+        'ExponentialDistribution': lambda dist, size: numpy.random.exponential(
+            1/float(dist.rate), size=size),
+        'GammaDistribution': lambda dist, size: numpy.random.gamma(float(dist.k),
+            float(dist.theta), size=size),
+        'LogNormalDistribution': lambda dist, size: numpy.random.lognormal(
+            float(dist.mean), float(dist.std), size=size),
+        'NormalDistribution': lambda dist, size: numpy.random.normal(
+            float(dist.mean), float(dist.std), size=size),
+        'ParetoDistribution': lambda dist, size: (numpy.random.pareto(
+            a=float(dist.alpha), size=size) + 1) * float(dist.xm),
+        'UniformDistribution': lambda dist, size: numpy.random.uniform(
+            low=float(dist.left), high=float(dist.right), size=size)
+    }
+
+    python_rv_map = {
+        'BetaDistribution': lambda dist:
+            random.betavariate(float(dist.alpha), float(dist.beta)),
+        'ExponentialDistribution': lambda dist:
+            random.expovariate(float(dist.rate)),
+        'GammaDistribution': lambda dist:
+            random.gammavariate(float(dist.k), float(dist.theta)),
+        'LogNormalDistribution': lambda dist:
+            random.lognormvariate(float(dist.mean), float(dist.std)),
+        'NormalDistribution': lambda dist:
+            random.normalvariate(float(dist.mean), float(dist.std)),
+        'ParetoDistribution': lambda dist:
+            random.paretovariate(float(dist.alpha)),
+        'UniformDistribution': lambda dist:
+            random.uniform(float(dist.left), float(dist.right)),
+        'WeibullDistribution': lambda dist:
+            random.weibullvariate(float(dist.alpha), float(dist.beta)),
+        'ContinuousDistributionHandmade': lambda dist:
+            dist._inverse_cdf_expression()(random.uniform(0, 1))
+        }
+
+    pymc3_rv_map = {
+        'BetaDistribution': lambda dist:
+            pymc3.Beta('X', alpha=float(dist.alpha), beta=float(dist.beta)),
+        'CauchyDistribution': lambda dist:
+            pymc3.Cauchy('X', alpha=float(dist.x0), beta=float(dist.gamma)),
+        'ChiSquaredDistribution': lambda dist:
+            pymc3.ChiSquared('X', nu=float(dist.k)),
+        'ExponentialDistribution': lambda dist:
+            pymc3.Exponential('X', lam=float(dist.rate)),
+        'GammaDistribution': lambda dist:
+            pymc3.Gamma('X', alpha=float(dist.k), beta=1/float(dist.theta)),
+        'LogNormalDistribution': lambda dist:
+            pymc3.Lognormal('X', mu=float(dist.mean), sigma=float(dist.std)),
+        'NormalDistribution': lambda dist:
+            pymc3.Normal('X', float(dist.mean), float(dist.std)),
+        'GaussianInverseDistribution': lambda dist:
+            pymc3.Wald('X', mu=float(dist.mean), lam=float(dist.shape)),
+        'ParetoDistribution': lambda dist:
+            pymc3.Pareto('X', alpha=float(dist.alpha), m=float(dist.xm)),
+        'UniformDistribution': lambda dist:
+            pymc3.Uniform('X', lower=float(dist.left), upper=float(dist.right))
+    }
+
+    @classmethod
+    def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
-        dist = self.distribution
-        size = self.size
 
-        dist_list =  ['BetaDistribution', 'BetaPrimeDistribution',
-        'CauchyDistribution', 'ChiDistribution', 'ChiSquaredDistribution',
-        'ExponentialDistribution', 'GammaDistribution', 'GammaInverseDistribution',
-        'LogNormalDistribution', 'NormalDistribution', 'GaussianInverseDistribution',
-        'ParetoDistribution', 'UniformDistribution', 'ContinuousDistributionHandmade']
-
+        dist_list = cls.scipy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        from scipy.stats import (beta, betaprime, cauchy, chi, chi2, expon, gamma,
-                                 invgamma, lognorm, norm, invgauss, pareto, uniform,
-                                 rv_continuous)
-
         if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
+            from scipy.stats import rv_continuous
             handmade_pdf = dist.pdf
             class scipy_pdf(rv_continuous):
                 def _pdf(self, z):
@@ -191,152 +265,46 @@ class SampleExternal(object):
             scipy_rv = scipy_pdf(a=dist.set._inf, b=dist.set._sup, name='scipy_pdf')
             return scipy_rv.rvs(size=size)
 
-        scipy_rv_map = {
-            'BetaDistribution': lambda dist, size: beta.rvs(a=float(dist.alpha),
-                b=float(dist.beta), size=size),
-            'BetaPrimeDistribution':lambda dist, size:betaprime.rvs(a=float(dist.alpha),
-                b=float(dist.beta), size=size),
-            'CauchyDistribution': lambda dist, size: cauchy.rvs(loc=float(dist.x0),
-                scale=float(dist.gamma), size=size),
-            'ChiDistribution': lambda dist, size: chi.rvs(df=float(dist.k),
-                size=size),
-            'ChiSquaredDistribution': lambda dist, size: chi2.rvs(df=float(dist.k),
-                size=size),
-            'ExponentialDistribution': lambda dist, size: expon.rvs(loc=0,
-                scale=1/float(dist.rate), size=size),
-            'GammaDistribution': lambda dist, size: gamma.rvs(a=float(dist.k), loc=0,
-                scale=float(dist.theta), size=size),
-            'GammaInverseDistribution': lambda dist, size: invgamma.rvs(a=float(dist.a),
-                loc=0, scale=float(dist.b), size=size),
-            'LogNormalDistribution': lambda dist, size: lognorm.rvs(s=float(dist.std),
-                loc=0, scale=exp(float(dist.mean)), size=size),
-            'NormalDistribution': lambda dist, size: norm.rvs(float(dist.mean),
-                float(dist.std), size=size),
-            'GaussianInverseDistribution': lambda dist, size: invgauss.rvs(
-                mu=float(dist.mean)/float(dist.shape), scale=float(dist.shape), size=size),
-            'ParetoDistribution': lambda dist, size: pareto.rvs(b=float(dist.alpha),
-                scale=float(dist.xm), size=size),
-            'UniformDistribution': lambda dist, size: uniform.rvs(loc=float(dist.left),
-                scale=float(dist.right)-float(dist.left), size=size),
-            }
+        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
 
-        return scipy_rv_map[dist.__class__.__name__](dist, size)
-
-    def _sample_numpy(self):
+    @classmethod
+    def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        dist = self.distribution
-        size = self.size
-
-        dist_list = ['BetaDistribution', 'ChiSquaredDistribution',
-        'ExponentialDistribution', 'GammaDistribution', 'LogNormalDistribution',
-        'NormalDistribution', 'ParetoDistribution', 'UniformDistribution']
+        dist_list = cls.numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        import numpy
-        numpy_rv_map = {
-            'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
-                b=float(dist.beta), size=size),
-            'ChiSquaredDistribution': lambda dist, size: numpy.random.chisquare(
-                df=float(dist.k), size=size),
-            'ExponentialDistribution': lambda dist, size: numpy.random.exponential(
-                1/float(dist.rate), size=size),
-            'GammaDistribution': lambda dist, size: numpy.random.gamma(float(dist.k),
-                float(dist.theta), size=size),
-            'LogNormalDistribution': lambda dist, size: numpy.random.lognormal(
-                float(dist.mean), float(dist.std), size=size),
-            'NormalDistribution': lambda dist, size: numpy.random.normal(
-                float(dist.mean), float(dist.std), size=size),
-            'ParetoDistribution': lambda dist, size: (numpy.random.pareto(
-                a=float(dist.alpha), size=size) + 1) * float(dist.xm),
-            'UniformDistribution': lambda dist, size: numpy.random.uniform(
-                low=float(dist.left), high=float(dist.right), size=size)
-        }
-        return numpy_rv_map[dist.__class__.__name__](dist, size)
+        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
 
-    def _sample_python(self):
+    @classmethod
+    def _sample_python(cls, dist, size):
         """Sample from random."""
 
-        dist = self.distribution
-        size = self.size
-
-        dist_list = ['BetaDistribution', 'ExponentialDistribution',
-         'GammaDistribution', 'LogNormalDistribution', 'NormalDistribution',
-         'ParetoDistribution', 'UniformDistribution', 'WeibullDistribution']
+        dist_list = cls.python_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
-
-        python_rv_map = {
-            'BetaDistribution': lambda dist:
-                random.betavariate(float(dist.alpha), float(dist.beta)),
-            'ExponentialDistribution': lambda dist:
-                random.expovariate(float(dist.rate)),
-            'GammaDistribution': lambda dist:
-                random.gammavariate(float(dist.k), float(dist.theta)),
-            'LogNormalDistribution': lambda dist:
-                random.lognormvariate(float(dist.mean), float(dist.std)),
-            'NormalDistribution': lambda dist:
-                random.normalvariate(float(dist.mean), float(dist.std)),
-            'ParetoDistribution': lambda dist:
-                random.paretovariate(float(dist.alpha)),
-            'UniformDistribution': lambda dist:
-                random.uniform(float(dist.left), float(dist.right)),
-            'WeibullDistribution': lambda dist:
-                random.weibullvariate(float(dist.alpha), float(dist.beta)),
-            'ContinuousDistributionHandmade': lambda dist:
-                dist._inverse_cdf_expression()(random.uniform(0, 1))
-            }
 
         x = Symbol('x')
         if isinstance(size, int):
-              return ArrayComprehensionMap(lambda: python_rv_map[dist.__class__.__name__](dist),
+              return ArrayComprehensionMap(lambda: cls.python_rv_map[dist.__class__.__name__](dist),
                     (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: python_rv_map[dist.__class__.__name__](dist),
+        return ArrayComprehensionMap(lambda: cls.python_rv_map[dist.__class__.__name__](dist),
                                          *[(x, 0, i-1) for i in size]).doit()
 
-    def _sample_pymc3(self):
+    @classmethod
+    def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        dist = self.distribution
-        size = self.size
-
-        dist_list = ['BetaDistribution', 'CauchyDistribution', 'ChiSquaredDistribution',
-        'ExponentialDistribution', 'GammaDistribution', 'LogNormalDistribution',
-        'NormalDistribution', 'GaussianInverseDistribution', 'ParetoDistribution',
-        'UniformDistribution']
+        dist_list = cls.pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        import pymc3
-        pymc3_rv_map = {
-            'BetaDistribution': lambda dist:
-                pymc3.Beta('X', alpha=float(dist.alpha), beta=float(dist.beta)),
-            'CauchyDistribution': lambda dist:
-                pymc3.Cauchy('X', alpha=float(dist.x0), beta=float(dist.gamma)),
-            'ChiSquaredDistribution': lambda dist:
-                pymc3.ChiSquared('X', nu=float(dist.k)),
-            'ExponentialDistribution': lambda dist:
-                pymc3.Exponential('X', lam=float(dist.rate)),
-            'GammaDistribution': lambda dist:
-                pymc3.Gamma('X', alpha=float(dist.k), beta=1/float(dist.theta)),
-            'LogNormalDistribution': lambda dist:
-                pymc3.Lognormal('X', mu=float(dist.mean), sigma=float(dist.std)),
-            'NormalDistribution': lambda dist:
-                pymc3.Normal('X', float(dist.mean), float(dist.std)),
-            'GaussianInverseDistribution': lambda dist:
-                pymc3.Wald('X', mu=float(dist.mean), lam=float(dist.shape)),
-            'ParetoDistribution': lambda dist:
-                pymc3.Pareto('X', alpha=float(dist.alpha), m=float(dist.xm)),
-            'UniformDistribution': lambda dist:
-                pymc3.Uniform('X', lower=float(dist.left), upper=float(dist.right))
-        }
-
         with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
+            cls.pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 
@@ -370,14 +338,14 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ A random realization from the distribution """
         if not size:
             size = 1
-        samps = getattr(SampleExternal(self, size), '_sample_python')()
+        samps = getattr(SampleExternal, '_sample_python')(self, size)
         if samps is not None:
             return samps if size!=1 else samps[0]
 
         libraries = ['scipy', 'numpy', 'pymc3']
         for lib in libraries:
             if import_module(lib):
-                samps = getattr(SampleExternal(self, size), '_sample_' + lib)()
+                samps = getattr(SampleExternal, '_sample_' + lib)(self, size)
                 if samps is not None:
                     return samps if size != 1 else samps[0]
 
