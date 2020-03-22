@@ -48,6 +48,7 @@ from sympy.polys import roots, cancel, factor, Poly, degree
 from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
     NotInvertible)
 from sympy.polys.polymatrix import linsolve_domain
+from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -2238,7 +2239,9 @@ def solve_linear_system(system, *symbols, **flags):
 
     # Try to use DomainMatrix
     try:
-        sol = linsolve_domain(system, symbols)
+        eqs = list(system * Matrix(symbols + (-1,)))
+        eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+        sol = solve_lin_sys(eqs, ring, _raw=False)
     except NotInvertible:
         # https://github.com/sympy/sympy/issues/18874
         pass

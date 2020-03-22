@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.matrices import MutableDenseMatrix
+from sympy.polys.rings import sring
 from sympy.polys.polymatrix import DomainMatrix
 
 class RawMatrix(MutableDenseMatrix):
@@ -21,6 +22,10 @@ def eqs_to_matrix(eqs, ring):
     M = DomainMatrix(rows, shape, ring.domain)
 
     return M
+
+def sympy_eqs_to_ring(eqs, symbols):
+    K, eqs_K = sring(eqs, symbols, field=True, extension=True)
+    return eqs_K, K.to_domain()
 
 def solve_lin_sys(eqs, ring, _raw=True):
     """Solve a system of linear equations.
@@ -46,12 +51,19 @@ def solve_lin_sys(eqs, ring, _raw=True):
     if pivots[-1] == len(keys):
         return None
 
+    def to_sympy(x):
+        as_expr = getattr(x, 'as_expr', None)
+        if as_expr:
+            return as_expr()
+        else:
+            return ring.domain.to_sympy(x)
+
     if len(pivots) == len(keys):
         sol = []
         for s in [row[-1] for row in echelon.rows]:
-            a = ring.ground_new(s)
+            a = (s + ring.zero)
             if as_expr:
-                a = a.as_expr()
+                a = to_sympy(a)
             sol.append(a)
         sols = dict(zip(keys, sol))
     else:
@@ -62,7 +74,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
             v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
             v = (v + ring.zero)
             if as_expr:
-                v = v.as_expr()
+                v = to_sympy(v)
             sols[keys[p]] = v
 
     return sols
