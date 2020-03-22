@@ -763,7 +763,7 @@ class log(Function):
         arg = self.args[0]
         if arg.is_Integer:
             # remove perfect powers
-            p = perfect_power(int(arg))
+            p = perfect_power(arg)
             logarg = None
             coeff = 1
             if p is not False:
@@ -771,8 +771,8 @@ class log(Function):
                 logarg = self.func(arg)
             # expand as product of its prime factors if factor=True
             if factor:
-                p = factorint(int(arg))
-                if int(arg) not in p.keys():
+                p = factorint(arg)
+                if arg not in p.keys():
                     logarg = sum(n*log(val) for val, n in p.items())
             if logarg is not None:
                 return coeff*logarg
