@@ -48,7 +48,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     # construct the returnable form of the solutions
     keys = ring.symbols if as_expr else ring.gens
 
-    if pivots[-1] == len(keys):
+    if pivots and pivots[-1] == len(keys):
         return None
 
     def to_sympy(x):

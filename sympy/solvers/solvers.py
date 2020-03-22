@@ -504,7 +504,7 @@ def solve(f, *symbols, **flags):
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
-            {y: -sqrt(3)/(x + 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
+            {y: -sqrt(3)/(x + 3), x + 2: -2*x/(x + 3) - 6/(x + 3) + sqrt(3)/(x + 3)}
             >>> solve(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
 
