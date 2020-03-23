@@ -39,17 +39,41 @@ def _ode_solver_test(ode_examples):
         eq = ode_examples['examples'][example]['eq']
         sol = ode_examples['examples'][example]['sol']
         if our_hint not in classify_ode(eq):
-            message = """Hint did not match the example {example}.\n\nThe ODE is:\n{eq}.\n\nThe expected hint was\n{our_hint}""".format(example=example, eq=eq, our_hint=our_hint)
+            message = """\
+Hint did not match the example {example}.
+
+The ODE is:
+{eq}.
+
+The expected hint was
+{our_hint}\
+        """.format(example=example, eq=eq, our_hint=our_hint)
             raise AssertionError(message)
 
         dsolve_sol = dsolve(eq,hint=our_hint)
         if dsolve_sol not in sol:
-            message = """Different solution found from dsolve for example {example}.\n\nThe ODE is:\n{eq}\n\nThe expected solution was\n{sol}\n\nWhat dsolve returned is:\n{dsolve_sol}""".format(example=example, eq=eq, sol=sol, dsolve_sol=dsolve_sol)
+            message = """\
+Different solution found from dsolve for example {example}.
+
+The ODE is:
+{eq}
+
+The expected solution was
+{sol}
+
+What dsolve returned is:
+{dsolve_sol}\
+        """.format(example=example, eq=eq, sol=sol, dsolve_sol=dsolve_sol)
             raise AssertionError(message)
 
         expected_checkodesol = [(True, 0) for i in range(len(sol))]
         if checkodesol(eq, sol) != expected_checkodesol:
-            message = """solution found is not correct for example {example}.\n\nThe ODE is:\n{eq}""".format(example=example, eq=eq)
+            message = """\
+solution found is not correct for example {example}.
+
+The ODE is:
+{eq}\
+        """.format(example=example, eq=eq)
             raise AssertionError(message)
 
 
