@@ -1621,21 +1621,6 @@ def test_1st_linear():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
-def test_Bernoulli():
-    # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
-    eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0)
-    sol = dsolve(eq, f(x), hint='Bernoulli')
-    assert sol == Eq(f(x), 1/(x*(C1 + 1/x)))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
-def test_Riccati_special_minus2():
-    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
-    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
-    sol = dsolve(eq, f(x), hint='Riccati_special_minus2')
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
 @slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
@@ -2565,6 +2550,24 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq26, sol26, order=5, solve_for_func=False)[0]
     assert checkodesol(eq27, sol27, order=2, solve_for_func=False)[0]
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
+
+
+def test_issue_12623():
+    t = symbols("t")
+    u = symbols("u",cls=Function)
+    R, L, C, E_0, alpha = symbols("R L C E_0 alpha",positive=True)
+    omega = Symbol('omega')
+
+    eqRLC_1 = Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha)
+    sol_1 = Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))
+    assert dsolve(eqRLC_1) == sol_1
+    assert checkodesol(eqRLC_1, sol_1) == (True, 0)
+
+    eqRLC_2 = Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) )
+    sol_2 = Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)) + E_0*exp(I*omega*t)/(-C*L*omega**2 + I*C*R*omega + 1))
+    assert dsolve(eqRLC_2) == sol_2
+    assert checkodesol(eqRLC_2, sol_2) == (True, 0)
+    #issue-https://github.com/sympy/sympy/issues/12623
 
 
 def test_issue_5787():
@@ -3858,77 +3861,6 @@ def test_dsolve_remove_redundant_solutions():
     assert dsolve(eq) == sol
 
 
-def test_factorable():
-
-    eq = f(x).diff(x)-1
-
-    eq = f(x) + f(x)*f(x).diff(x)
-    sols = [Eq(f(x), C1 - x), Eq(f(x), 0)]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = f(x)*(f(x).diff(x)+f(x)*x+2)
-    sols = [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))
-            *exp(-x**2/2)), Eq(f(x), 0)]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + x*f(x))
-    sols = [Eq(f(x), C1*airyai(-x) + C2*airybi(-x)),
-            Eq(f(x), C1*exp(-x**3/3))]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols[1]) == (True, 0)
-
-    eq = (f(x).diff(x)+f(x)*x**2)*(f(x).diff(x, 2) + f(x))
-    sols = [Eq(f(x), C1*exp(-x**3/3)), Eq(f(x), C1*sin(x) + C2*cos(x))]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 2*[(True, 0)]
-
-    eq = (f(x).diff(x)**2-1)*(f(x).diff(x)**2-4)
-    sols = [Eq(f(x), C1 - x), Eq(f(x), C1 + x), Eq(f(x), C1 + 2*x), Eq(f(x), C1 - 2*x)]
-    assert set(sols) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sols) == 4*[(True, 0)]
-
-    eq = (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x)
-    sol = Eq(f(x), C1)
-    assert sol == dsolve(eq, f(x), hint='factorable')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = (f(x).diff(x)**2-1)*(f(x)*f(x).diff(x)-1)
-    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
-           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 4*[(True, 0)]
-
-    eq = Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
-    sol = [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-    eq = f(x)**2*Derivative(f(x), x)**6 - 2*f(x)**2*Derivative(f(x),
-         x)**4 + f(x)**2*Derivative(f(x), x)**2 - 2*f(x)*Derivative(f(x),
-         x)**5 + 4*f(x)*Derivative(f(x), x)**3 - 2*f(x)*Derivative(f(x),
-         x) + Derivative(f(x), x)**4 - 2*Derivative(f(x), x)**2 + 1
-    sol = [Eq(f(x), C1 - x), Eq(f(x), -sqrt(C1 + 2*x)),
-           Eq(f(x), sqrt(C1 + 2*x)), Eq(f(x), C1 + x)]
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 4*[(True, 0)]
-
-    eq = (f(x).diff(x, 2)-exp(f(x)))*(f(x).diff(x, 2)+exp(f(x)))
-    raises(NotImplementedError, lambda: dsolve(eq, hint = 'factorable'))
-
-    eq = x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) + x**4*Derivative(f(x),
-         (x, 2))**2  + 2*x**3*f(x)*Derivative(f(x), x) + 2*x**3*Derivative(f(x),
-         x)*Derivative(f(x), (x, 2)) - 7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x),
-         (x, 2)) + x**2*Derivative(f(x), x)**2 - 7*x*f(x)*Derivative(f(x), x) + 12*f(x)**2
-
-    sol = [Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x)), Eq(f(x), C1*besselj(sqrt(3),
-           x) + C2*bessely(sqrt(3), x))]
-
-    assert set(sol) == set(dsolve(eq, f(x), hint='factorable'))
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-
 def test_issue_17322():
     eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
     sol = [Eq(f(x), C1*exp(-x)), Eq(f(x), C1*exp(x))]
@@ -3973,34 +3905,6 @@ def test_2nd_2F1_hypergeometric():
           C2*hyper((S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)))/(x**(S(2)/7) - 1)**(S(19)/84))
     assert sol == dsolve(eq, hint='2nd_hypergeometric')
     # assert checkodesol(eq, sol) == (True, 0) #issue-https://github.com/sympy/sympy/issues/17702
-
-
-def test_issue_15889():
-    eq = exp(f(x).diff(x))-f(x)**2
-    sol = Eq(Integral(1/log(y**2), (y, f(x))), C1 + x)
-    assert str(sol.as_dummy()) == str(dsolve(eq).as_dummy())
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-    eq = f(x).diff(x)**2 - f(x)
-    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**2
-    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
 
 
 def test_issue_5096():

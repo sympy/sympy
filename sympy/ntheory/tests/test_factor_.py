@@ -8,7 +8,7 @@ from sympy.ntheory import (totient,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
-    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
+    antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
@@ -576,19 +576,6 @@ def test_core():
     assert core(10**27, 22) == 10**5
     assert core(537824) == 14
     assert core(1, 6) == 1
-
-
-def test_digits():
-    assert all([digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
-                for n in range(20)])
-    assert all([digits(n, 8)[1:] == [int(d) for d in format(n, 'o')]
-                for n in range(20)])
-    assert all([digits(n, 16)[1:] == [int(d, 16) for d in format(n, 'x')]
-                for n in range(20)])
-    assert digits(2345, 34) == [34, 2, 0, 33]
-    assert digits(384753, 71) == [71, 1, 5, 23, 4]
-    assert digits(93409) == [10, 9, 3, 4, 0, 9]
-    assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
 
 
 def test_primenu():
