@@ -1627,7 +1627,6 @@ def test_issue_8614():
     assert integrate((exp(-x) - exp(-2*x))/x, (x, 0, oo)) == log(2)
 
 
-@XFAIL
 def test_issue_15494():
     s = symbols('s', real=True, positive=True)
 
