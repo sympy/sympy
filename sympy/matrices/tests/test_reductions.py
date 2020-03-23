@@ -1,12 +1,15 @@
-from sympy import diff
+from sympy import diff, Symbol, symbols, Function
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
-from sympy.matrices.matrices import MatrixReductions
+from sympy.matrices.matrices import (ShapeError, MatrixError,
+    NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
+    _simplify, MatrixReductions)
 from sympy.testing.pytest import raises
-from sympy.matrices import Matrix, MatrixSymbol
+from sympy.matrices import Matrix, MatrixSymbol, zeros
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify.simplify import simplify
+from sympy.abc import a, b, c, d, x, y, z, t
 
 class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
@@ -314,3 +317,32 @@ def test_issue_15872():
     assert B.rank() == 3
     assert (B**2).rank() == 2
     assert (B**3).rank() == 2
+
+def test_rank():
+    from sympy.abc import x
+    m = Matrix([[1, 2], [x, 1 - 1/x]])
+    assert m.rank() == 2
+    n = Matrix(3, 3, range(1, 10))
+    assert n.rank() == 2
+    p = zeros(3)
+    assert p.rank() == 0
+
+def test_rank_regression_from_so():
+    # see:
+    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+
+    nu, lamb = symbols('nu, lambda')
+    A = Matrix([[-3*nu,         1,                  0,  0],
+                [ 3*nu, -2*nu - 1,                  2,  0],
+                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
+                [    0,         0,          nu + lamb, -3]])
+    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
+                               [0, 1, 0,    3/(nu*(-lamb - nu))],
+                               [0, 0, 1,         3/(-lamb - nu)],
+                               [0, 0, 0,                      0]])
+    expected_pivots = (0, 1, 2)
+
+    reduced, pivots = A.rref()
+
+    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
+    assert pivots == expected_pivots
