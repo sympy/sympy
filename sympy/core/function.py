@@ -2836,10 +2836,16 @@ def expand_log(expr, deep=True, force=False, factor=False):
     """
     from sympy import Mul, log
     if factor is False:
+        def _handle(x):
+            x1 = expand_mul(expand_log(x, deep=deep, force=force, factor=True))
+            if x1.count(log) <= x.count(log):
+                return x1
+            return x
+
         expr = expr.replace(
         lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
         for i in Mul.make_args(j)) for j in x.as_numer_denom()),
-        lambda x: expand_log(x, factor=True))
+        lambda x: _handle(x))
 
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,

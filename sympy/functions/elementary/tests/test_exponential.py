@@ -652,9 +652,9 @@ def test_log_expand_factor():
     assert (log(2)/(-log(12) + log(24))).expand(factor=True) == 1
 
     assert expand_log(log(12), factor=True) == log(3) + 2*log(2)
-    assert expand_log(log(21)/log(7), factor=False) == (log(3) + log(7))/log(7)
+    assert expand_log(log(21)/log(7), factor=False) == log(3)/log(7) + 1
     assert expand_log(log(45)/log(5) + log(20), factor=False) == \
-        (log(5) + 2*log(3))/log(5) + log(20)
+        1 + 2*log(3)/log(5) + log(20)
     assert expand_log(log(45)/log(5) + log(26), factor=True) == \
         log(2) + log(13) + (log(5) + 2*log(3))/log(5)
 
