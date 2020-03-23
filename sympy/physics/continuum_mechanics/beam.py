@@ -29,10 +29,16 @@ class Beam(object):
     and their material.
 
     .. note::
-       While solving a beam bending problem, a user is free to choose its
-       own sign convention as long as the upward forces and clockwise moments
-       have the same signs. The results will
-       automatically follow the chosen sign convention.
+
+    There is no specific sign convention that must be followed. The only thing
+    that should be considered while choosing sign convention is that
+    upward forces and clockwise moments have the same signs.
+    A user is free to choose its own sign convention as long as these
+    conditions are met. The results will automatically follow
+    the chosen sign convention.
+    In most of the examples used here, upward forces and clockwise moments
+    are assigned positive signs.
+
 
     Examples
     ========
