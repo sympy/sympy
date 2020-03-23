@@ -584,7 +584,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True,finite=True)
+    p = Symbol("p", positive=True, real=True, finite=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -678,7 +678,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
-
+@slow
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)

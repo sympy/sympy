@@ -437,8 +437,12 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     Returns
     =======
 
-    coskewness : float
-        The coskewness of the three random variables
+    coskewness : The coskewness of the three random variables
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Coskewness
 
     """
     num = expectation((X - expectation(X, condition, **kwargs)) \
