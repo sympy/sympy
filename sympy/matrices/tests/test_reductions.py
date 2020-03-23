@@ -298,11 +298,19 @@ def test_issue_17827():
     raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
     raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
 
-def test_issue_8207():
-    a = Matrix(MatrixSymbol('a', 3, 1))
-    b = Matrix(MatrixSymbol('b', 3, 1))
-    c = a.dot(b)
-    d = diff(c, a[0, 0])
-    e = diff(d, a[0, 0])
-    assert d == b[0, 0]
-    assert e == 0
+def test_issue_11434():
+    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
+        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
+                [bx, by, bx*t0, by*t0, 0],
+                [cx, cy, cx*t0, cy*t0, 1],
+                [dx, dy, dx*t0, dy*t0, 1],
+                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
+    assert M.rank() == 4
+
+def test_issue_15872():
+    A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])
+    B = A - Matrix.eye(4) * I
+    assert B.rank() == 3
+    assert (B**2).rank() == 2
+    assert (B**3).rank() == 2
