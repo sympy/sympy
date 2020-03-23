@@ -4861,6 +4861,18 @@ class PermutationGroup(Basic):
 
         return PolycyclicGroup(pc_sequence, pc_series, relative_order, collector=None)
 
+    def perfect_residuum(self):
+        """
+        Returns the perfect residuum of a group G.
+
+        The perfect residuum of group G is the smallest normal subgroup of G
+        that has a solvable factor group.
+
+        """
+        if self.is_perfect:
+            return self
+        der = self.derived_series()
+        return der[-1];
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
