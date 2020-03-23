@@ -217,8 +217,8 @@ class Relational(Boolean, EvalfMixin):
         x > -y
         >>> (-y > x).canonical
         x < -y
-        >>> (b < a).canonical
-        a < b
+        >>> (y < x).canonical
+        x > y
         """
         args = self.args
         r = self
