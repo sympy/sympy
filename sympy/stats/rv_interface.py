@@ -420,7 +420,7 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import coskewness, Exponential
+    >>> from sympy.stats import coskewness, Exponential, skewness
     >>> from sympy import symbols
     >>> p = symbols('p', positive=True)
     >>> X = Exponential('X', p)
