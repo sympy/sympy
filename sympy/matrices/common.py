@@ -760,7 +760,7 @@ class MatrixSpecial(MatrixRequired):
 
         When more than one element is passed, each is interpreted as
         something to put on the diagonal. Lists are converted to
-        matricecs. Filling of the diagonal always continues from
+        matrices. Filling of the diagonal always continues from
         the bottom right hand corner of the previous item: this
         will create a block-diagonal matrix whether the matrices
         are square or not.
@@ -808,6 +808,7 @@ class MatrixSpecial(MatrixRequired):
         diagonal - to extract a diagonal
         .dense.diag
         .expressions.blockmatrix.BlockMatrix
+        .sparsetools.banded - to create multi-diagonal matrices
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
