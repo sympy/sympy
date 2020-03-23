@@ -11,7 +11,7 @@ sympy.stats.frv
 from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
-        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda, Symbol,
+        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial,
         lambdify)
 from sympy.core.function import PoleError
@@ -259,7 +259,7 @@ class SampleExternal:
 
         if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
             from scipy.stats import rv_continuous
-            z = Symbol('z')
+            z = Dummy('z')
             handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
             class scipy_pdf(rv_continuous):
                 def _pdf(self, x):
@@ -289,7 +289,7 @@ class SampleExternal:
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        x = Symbol('x')
+        x = Dummy('x')
         if isinstance(size, int):
               return ArrayComprehensionMap(lambda: cls.python_rv_map[dist.__class__.__name__](dist),
                     (x, 0, size-1)).doit()
