@@ -30,14 +30,22 @@ class Beam(object):
 
     .. note::
 
-    There is no specific sign convention that must be followed. The only thing
-    that should be considered while choosing sign convention is that
-    upward forces and clockwise moments have the same signs.
-    A user is free to choose its own sign convention as long as these
-    conditions are met. The results will automatically follow
-    the chosen sign convention.
-    In most of the examples used here, upward forces and clockwise moments
-    are assigned positive signs.
+        There is no specific sign convention that must be followed.
+        Given a right handed coordinate system with XYZ coordinates,
+        the beam's length is assumed to be along the positive X axis.
+        The loading forces are directed either in the positive or
+        negative Y direction and the loading moments are about
+        the positive or negative Z direction.
+        The only thing that should be considered while choosing
+        sign onvention is that forces acting along positive
+        Y direction(upward) and moments acting along
+        negative z direction(clockwise) must have the same signs.
+        A user is free to choose its own sign convention as long as these
+        conditions are met. The results will automatically follow
+        the chosen sign convention.
+        In most of the examples used here, forces acting along
+        positve Y direction and moments along negative z direction
+        are assigned positive signs.
 
 
     Examples
