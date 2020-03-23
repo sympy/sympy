@@ -214,7 +214,7 @@ def rref(rows, shape):
         # Eliminate above and below from col to the right
         for rk in range(nrows):
             pivotk = rows[rk][ci]
-            if rk != ri:
+            if rk != ri and pivotk:
                 for ck in range(ci, ncols):
                     rows[rk][ck] = rows[rk][ck] - pivotk * rows[ri][ck]
         ri += 1
