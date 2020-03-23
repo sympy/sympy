@@ -199,9 +199,11 @@ class Relational(Boolean, EvalfMixin):
     @property
     def canonical(self):
         """Return a canonical form of the relational by putting a
-        Number on the rhs else ordering the args. The relation is also changed
-        so that the left-hand side expression does not start with a ``-``.
-        No other simplification is attempted.
+        Number on the rhs else ordering the args. The relation is also
+        changed so that the left-hand side expression does not have an
+        extractable sign. If neither case applies, the relational will
+        have the args in canonical order. No other simplification is
+        attempted.
 
         Examples
         ========
@@ -215,6 +217,8 @@ class Relational(Boolean, EvalfMixin):
         x > -y
         >>> (-y > x).canonical
         x < -y
+        >>> (b < a).canonical
+        a < b
         """
         args = self.args
         r = self
