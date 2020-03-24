@@ -88,6 +88,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         coefficient. Otherwise, None is returned.
     """
     from sympy.solvers.solveset import linear_eq_to_matrix
+    from sympy.solvers.solvers import solve
 
     # Error for i == 0 can be added but isn't for now
 
@@ -143,8 +144,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             canon_eqs = [func.diff(t) - canon_eqs[func.diff(t)] for func in funcs]
             new_eqs = [canon_eq.subs(rep) for canon_eq in canon_eqs]
             coef = linear_eq_to_matrix(new_eqs, [rep[func] for func in funcs])
-            match['func_coeff'] = coef
+            match['func_coeff'] = coef[0]
 
             return match
 
-    return None
+    return match
