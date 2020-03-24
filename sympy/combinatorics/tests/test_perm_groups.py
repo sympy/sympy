@@ -1119,7 +1119,7 @@ def test_conjugacy_classes():
 
 def test_perfect_residuum():
     S = SymmetricGroup(4)
-    exp = PermutationGroup([(3)])
+    exp = PermutationGroup([Permutation(3)])
     res = S.perfect_residuum()
     assert res == exp
     assert res.is_perfect
