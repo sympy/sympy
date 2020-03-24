@@ -1,4 +1,4 @@
-from sympy import symbols, simplify, I
+from sympy import symbols, I
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
 from sympy.matrices.matrices import MatrixReductions
 from sympy.testing.pytest import raises
