@@ -1815,6 +1815,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type4'}
 
     """
+    # from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
+
     # Sympify equations and convert iterables of equations into
     # a list of equations
     def _sympify(eq):
@@ -1844,6 +1846,12 @@ def classify_sysode(eq, funcs=None, **kwargs):
     funcs = list(set(funcs))
     if len(funcs) != len(eq):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
+
+#    match = neq_nth_linear_constant_coeff_match(eq, funcs)
+#    if match is not None:
+#        match['func_coeff'] = func_coef
+#        return match
+
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
@@ -1920,6 +1928,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                 is_linear = linearity_check(eqs, j, func, is_linear)
     matching_hints['func_coeff'] = func_coef
     matching_hints['is_linear'] = is_linear
+
 
     if len(set(order.values())) == 1:
         order_eq = list(matching_hints['order'].values())[0]

@@ -8,7 +8,8 @@ def _get_func_order(eqs, funcs):
 
     for func in funcs:
         if not order.get(func, False):
-            max_order = 0
+            max_order = -1
+            eq_no = -1
             for i, eq in enumerate(eqs):
                 order_ = ode_order(eq, func)
                 if max_order < order_:
@@ -20,12 +21,12 @@ def _get_func_order(eqs, funcs):
                 list_func.append(func)
                 func_dict[eq_no] = list_func
             else:
-                func_dict[eq_no] = func
-            order[func] = max_order
+                if eq_no >= 0:
+                    func_dict[eq_no] = func
+            if max_order >= 0:
+                order[func] = max_order
 
-    funcs = [func_dict[i] for i in range(len(func_dict))]
-
-    return funcs, order
+    return order
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
@@ -95,7 +96,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Getting the func_dict and order using the helper
     # function
-    funcs, order = _get_func_order(eqs, funcs)
+    order = _get_func_order(eqs, funcs)
 
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
@@ -133,5 +134,17 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     }
 
     if match['is_linear'] and match['is_constant']:
-        return match
-    return match
+
+        # Converting the equation into canonical form if the
+        # equation is first order. There will be a separate
+        # function for this in the future.
+        if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
+            canon_eqs = solve(eqs, *[func.diff(t) for func in funcs])
+            canon_eqs = [func.diff(t) - canon_eqs[func.diff(t)] for func in funcs]
+            new_eqs = [canon_eq.subs(rep) for canon_eq in canon_eqs]
+            coef = linear_eq_to_matrix(new_eqs, [rep[func] for func in funcs])
+            match['func_coeff'] = coef
+
+            return match
+
+    return None
