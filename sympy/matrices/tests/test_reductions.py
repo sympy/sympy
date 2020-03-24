@@ -6,7 +6,8 @@ from sympy.matrices import Matrix, zeros
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify.simplify import simplify
+#from sympy.simplify.simplify import simplify
+from sympy.abc import x
 
 class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
@@ -299,7 +300,6 @@ def test_issue_17827():
     raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
 
 def test_rank():
-    from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.rank() == 2
     n = Matrix(3, 3, range(1, 10))
