@@ -572,7 +572,6 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
-    from sympy import ilcm
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
@@ -629,9 +628,6 @@ def rewrite(e, Omega, x, wsym):
 
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
-    exponent = reduce(ilcm, denominators, 1)
-    f = f.xreplace({wsym: wsym**exponent})
-    logw /= exponent
 
     return f, logw
 
