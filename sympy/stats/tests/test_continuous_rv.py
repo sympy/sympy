@@ -621,6 +621,8 @@ def test_exponential():
     assert coskewness(X, X, X) == skewness(X)
     assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
                         4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))
+    assert coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3) == \
+                        sqrt(170)*Rational(9, 85)
 
 def test_exponential_power():
     mu = Symbol('mu')

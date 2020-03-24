@@ -429,6 +429,8 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     0
     >>> coskewness(X, Y + X, Y + 2*X)
     16*sqrt(85)/85
+    >>> coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3)
+    9*sqrt(170)/85
     >>> coskewness(Y, Y, Y) == skewness(Y)
     True
     >>> coskewness(X, Y + p*X, Y + 2*p*X)
