@@ -7,7 +7,6 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify.simplify import simplify
-from sympy.abc import a, b, c, d, e, x
 
 class ReductionsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixReductions):
     pass
