@@ -469,4 +469,4 @@ def test_issue_7096():
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
 
 def test_issue_18482():
-    assert gruntz((2*exp(3*x)/(exp(2*x) + 1))**(1/x),x,oo) == E
+    assert gruntz((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == E
