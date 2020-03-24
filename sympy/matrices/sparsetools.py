@@ -69,9 +69,13 @@ def banded(*args, **kwargs):
     the diagonals of the matrix. The keys are positive for upper
     diagonals and negative for those below the main diagonal. The
     values may be:
-        * expressions or single-argument functions,
-        * lists or tuples of values,
-        * matrices
+
+    * expressions or single-argument functions,
+
+    * lists or tuples of values,
+
+    * matrices
+
     Unless dimensions are given, the size of the returned matrix will
     be large enough to contain the largest non-zero value provided.
 
