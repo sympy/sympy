@@ -1116,3 +1116,11 @@ def test_conjugacy_classes():
 
     assert len(expected) == len(computed)
     assert all(e in computed for e in expected)
+
+def test_perfect_residuum():
+    S = SymmetricGroup(4)
+    exp = PermutationGroup([(3)])
+    res = S.perfect_residuum()
+    assert res == exp
+    assert res.is_perfect
+    assert res.is_normal(S)
