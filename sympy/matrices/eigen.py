@@ -3,7 +3,7 @@ from __future__ import division, print_function
 from types import FunctionType
 from collections import Counter
 
-import mpmath as mp
+from mpmath import MPContext
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.compatibility import default_sort_key
@@ -33,8 +33,10 @@ def _eigenvals_triangular(M, multiple=False):
 
 
 def _eigenvals_eigenvects_mpmath(M):
+    mp = MPContext()
     prec = max([x._prec for x in M.atoms(Float)])
 
+    mp.prec = prec
     A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
     E, ER = mp.eig(A)
     norm = mp.fsum([mp.re(e)**2 + mp.im(e)**2 for e in E])
@@ -45,6 +47,7 @@ def _eigenvals_eigenvects_mpmath(M):
         if prec_new > DEFAULT_MAXPREC:
             raise PrecisionExhausted
 
+        mp.prec = prec_new
         A_new = mp.matrix(M.evalf(n=prec_to_dps(prec)))
         E_new, ER_new = mp.eig(A_new)
         norm_new = mp.fsum([mp.re(e)**2 + mp.im(e)**2 for e in E_new])

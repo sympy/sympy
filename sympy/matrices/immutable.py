@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from typing import Callable
-import mpmath as mp
+from mpmath.matrices.matrices import _matrix
 
 from sympy.core import Basic, Dict, Integer, S, Tuple
 from sympy.core.cache import cacheit
@@ -20,7 +20,7 @@ sympify_converter[MatrixBase] = sympify_matrix
 def sympify_mpmath_matrix(arg):
     mat = [_sympify(x) for x in arg]
     return ImmutableDenseMatrix(arg.rows, arg.cols, mat)
-sympify_converter[mp.matrix] = sympify_mpmath_matrix
+sympify_converter[_matrix] = sympify_mpmath_matrix
 
 
 class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
