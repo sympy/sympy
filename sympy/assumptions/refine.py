@@ -355,9 +355,9 @@ def refine_matrixelement(expr, assumptions):
     from sympy.matrices.expressions.matexpr import MatrixElement
     matrix, i, j = expr.args
     if ask(Q.symmetric(matrix), assumptions):
-        if ask(Q.positive(i - j)):
-            return MatrixElement(matrix, j, i)
-        return expr
+        if (i - j).could_extract_minus_sign():
+            return expr
+        return MatrixElement(matrix, j, i)
 
 handlers_dict = {
     'Abs': refine_abs,
