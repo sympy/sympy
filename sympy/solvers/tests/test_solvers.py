@@ -415,7 +415,7 @@ def test_solve_transcendental():
     # issue 4505
     assert solve(z**x - y, x) == [log(y)/log(z)]
     # issue 4504
-    assert solve(2**x - 10, x) == [log(10)/log(2)]
+    assert solve(2**x - 10, x) == [1 + log(5)/log(2)]
     # issue 6744
     assert solve(x*y) == [{x: 0}, {y: 0}]
     assert solve([x*y]) == [{x: 0}, {y: 0}]
