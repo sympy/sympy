@@ -522,17 +522,7 @@ def test_replace_map():
     assert N == K
 
 def test_rot90():
-    """
-    Parameter k specifies the rotation
-    k is 0 when the Matrix is not rotated
-    k is +ve when the Matrix is rotated Clockwise
-    k is -ve when the Matrix is rotated Anti-Clockwise
-    |k| > 1 represent iterative rotations 
-    i.e. 
-    2 --> Clockwise x 2
-    - 2 --> Anti-Clockwise x 2
-    """
-    A = MatrixSymbol('A', 2, 2).as_explicit()
+    A = Matrix([[1,2],[3,4]])
     assert A == A.rot90(k=0)
     assert A.rot90(k=1) == A.rot90(k=-3)
     assert A.rot90(k=2) == A.rot90(k=-2)
