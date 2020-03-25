@@ -1963,7 +1963,7 @@ class MatrixOperations(MatrixRequired):
         ==========
 
         k:int
-        
+
         Parameter k specifies the rotation
         Matrix is not rotated : k is 0
         Matrix is rotated Clockwise : k is +ve
@@ -2014,8 +2014,6 @@ class MatrixOperations(MatrixRequired):
             return self[::-1, ::-1].T
         if mod == 3:
             return self[::, ::-1].T
-        if mod == 4:
-            return self
 
 
     def permute_cols(self, swaps, direction='forward'):
