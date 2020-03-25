@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from typing import List
-
+from sympy import Add, Mul
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, HAS_GMPY
@@ -1057,3 +1057,100 @@ class binomial(CombinatorialFunction):
                 return True
             elif k.is_even is False:
                 return  False
+
+
+class multinomial(CombinatorialFunction):
+    r"""Implementation of multinomial function.
+    In mathematics, the multinomial theorem describes how to expand a power
+    of a sum in terms of powers of the terms in that sum. It is the
+    generalization of the binomial theorem from binomials to multinomials.
+
+    This is the number of ways of putting n1, n2, n3, n4....nm different objects
+    into m different boxes with nk in the kth box
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Rational, multinomial, gamma, symbols, I
+    >>> n = Symbol('n', integer=True, positive=True)
+
+    Comparing Coefficents generated with the multinomial function:
+
+    >>> a, b, c = symbols('a b c')
+    >>> ((a+b+c)**3).expand(func=True)
+    a**3 + 3*a**2*b + 3*a**2*c + 3*a*b**2 + 6*a*b*c + 3*a*c**2 + b**3 + 3*b**2*c + 3*b*c**2 + c**3
+
+    This can be computed by hand using the distributive property of
+    multiplication over addition, but it can also be done (perhaps more easily)
+    with the multinomial theorem, which gives us a simple formula for any
+    coefficient we might want. It is possible to "read off" the multinomial
+    coefficients from the terms by using the multinomial coefficient formula.
+
+    The Coefficient when of 1 1 1 corresponding to the second term is 6
+
+    >>> multinomial(1,1,1)
+    6
+
+    >>> multinomial(n, 3)
+    gamma(n + 4)/(6*gamma(n + 1))
+
+    >>> multinomial(n, 3).expand(func=True)
+    n**3/6 + n**2 + 11*n/6 + 1
+
+    >>> multinomial(3,1,0)
+    4
+
+    >>> multinomial(12, 5, 4, 3)
+    74959204320
+
+    >>> multinomial(3, 2, 0, 1)
+    60
+
+    >>> multinomial(I, Rational(-7, 8))
+    gamma(1/8 + I)/(gamma(1/8)*gamma(1 + I))
+
+    >>> multinomial(6, -1)
+    0
+
+    >>> multinomial(4, 3, -2)
+    0
+
+    References
+    =========
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Multinomial/02/
+    .. [2] https://en.wikipedia.org/wiki/Multinomial_theorem
+    .. [3] https://dlmf.nist.gov/26.4
+    .. [4] https://www.maplesoft.com/support/help/Maple/view.aspx?path=combinat%2Fmultinomial/02
+
+    """
+
+    @classmethod
+    def eval(cls, *k):
+        k = [sympify(x) for x in k]
+        numer = Add(*k)
+        if all(x.is_Integer for x in k) and numer > 0:
+            return factorial(numer)/Mul(*(factorial(x) for x in k))
+        else:
+            from sympy import gamma
+            return gamma(numer + 1)/Mul(*(gamma(x + 1) for x in k))
+
+    def _eval_rewrite_as_factorial(self, *args, **kwargs):
+        return factorial(Add(*args))/Mul(*(factorial(x) for x in args))
+
+    def _eval_rewrite_as_binomial(self, *k, **kwargs):
+        return Mul(*[binomial(j, k) for j,k in zip([Add(*k[:i]) for i in range(1,len(k)+1)],k)])
+
+    def _eval_rewrite_as_gamma(self, *k, **kwargs):
+        from sympy import gamma
+        return gamma(Add.fromiter(k) + 1)/Mul(*(gamma(x + 1) for x in k))
+
+    def _eval_is_integer(self):
+        k = self.args
+        if all(x.is_Integer for x in k):
+            return True
+        elif all(x.is_Integer for x in k) is False:
+            return  False
+
+    def _eval_rewrite_as_tractable(self, *k, **kwargs):
+        return self._eval_rewrite_as_gamma(k).rewrite('tractable')

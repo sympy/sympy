@@ -1742,6 +1742,9 @@ def test_sympy__functions__combinatorial__factorials__binomial():
     from sympy.functions.combinatorial.factorials import binomial
     assert _test_args(binomial(2, x))
 
+def test_sympy__functions__combinatorial__factorials__multinomial():
+    from sympy.functions.combinatorial.factorials import multinomial
+    assert _test_args(multinomial(2, x))
 
 def test_sympy__functions__combinatorial__factorials__subfactorial():
     from sympy.functions.combinatorial.factorials import subfactorial

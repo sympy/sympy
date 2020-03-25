@@ -1,7 +1,7 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
-                   rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
+                   rf, ff, gamma, polygamma, multinomial, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
-                   Mod, Eq, sqrt, Poly, Dummy, I, Rational)
+                   Mod, Eq, sqrt, Poly, Dummy, I, Rational, loggamma, exp)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
@@ -470,6 +470,77 @@ def test_binomial():
     assert expand_func(binomial(n, 0, evaluate=False)) == 1
     assert expand_func(binomial(n, -2, evaluate=False)) == 0
     assert expand_func(binomial(n, k)) == binomial(n, k)
+
+def test_multinomial():
+
+    n, t = symbols('n t', integer=True)
+    k = Symbol('k', integer=True, positive=True)
+    z = Symbol('z', zero=True)
+    s = Symbol('s', integer=True, nonzero=True)
+    a = Symbol('a', integer=True, nonnegative=True)
+    b = Symbol('b', integer=True, nonnegative=True)
+    f = Symbol('f', integer=False)
+
+    assert multinomial(0, 0) == 1
+    assert multinomial(1, 1) == 2
+    assert multinomial(1, 1, 1) == 6
+    assert multinomial(1, 2) == 3
+    assert multinomial(-1, 2) == 0
+    assert multinomial(1, -1) == 0
+    assert multinomial(n, -1) == 0 # Is true for all integers (negative, zero, positive)
+    assert multinomial(k, -1) == 0
+    assert multinomial(s, 0) == 1
+    assert multinomial(4, 0) == 1
+    assert multinomial(5, 0) == 1
+    assert multinomial(6, 0) == 1
+    assert multinomial(7, 0) == 1
+    assert multinomial(7, -1) == 0
+    assert multinomial(8, -1) == 0
+    assert multinomial(6, -1) == 0
+    assert multinomial(5, -1) == 0
+    assert expand_func(multinomial(n, 1)) == n + 1
+    assert expand_func(multinomial(4, 1)) == 5
+    assert expand_func(multinomial(5, 1)) == 6
+    assert expand_func(multinomial(11, 1)) == 12
+    assert expand_func(multinomial(23, 1)) == 24
+    assert expand_func(multinomial(43, 1)) == 44
+    assert expand_func(multinomial(n, 2)) == (n + 1)*(n + 2)/2
+    assert expand_func(multinomial(4, 2)) == 15
+    assert expand_func(multinomial(5, 2)) == 21
+    assert expand_func(multinomial(6, 2)) == 28
+    assert expand_func(multinomial(n, 2, 3)) == (n + 1)*(n + 2)*(n + 3)*(n + 4)*(n + 5)/12
+    assert multinomial(5, 2, 3) == 2520
+    assert multinomial(4, 2, 1, 1) == 840
+    assert expand_func(multinomial(5, 2, 2, 1)) == 7560
+    assert expand_func(multinomial(17, 4, 12, 1)) == 72201776446800
+    assert expand_func(multinomial(149, 1, 1, 4)) == 523895179500
+    assert multinomial(6, -1) == 0
+    assert multinomial(3, -2) == 0
+    assert multinomial(4, 3, -2) == 0
+    assert multinomial(7, -3, -2) == 0
+    assert multinomial(n, z) == gamma(n + z + 1)/(gamma(n + 1)*gamma(z + 1))
+    assert multinomial(S.Half, S.Half) == 4/pi
+    assert multinomial(n, 3).expand(func=True) ==  n**3/6 + n**2 + 11*n/6 + 1
+    assert multinomial(4321, 51) == 227457163650726634405257688425597243324930864330979686419067341046916573628729411790197413544787445180629754503984973472
+    assert multinomial(k, k + 1) == gamma(2*k + 2)/(gamma(k + 1)*gamma(k + 2))
+    assert expand_func(multinomial(n, n - 3)) == (n - 2)*(n - 1)*gamma(2*n)/(n*(2*n - 2)*(2*n - 1)*gamma(n)**2)
+    assert multinomial(I, Rational(-7, 8)) == gamma((Rational(1, 8))+ I)/(gamma(Rational(1, 8))*gamma(1 + I))
+    assert multinomial(I, 3*I) == gamma(1 + 4*I)/(gamma(1 + I)*gamma(1 + 3*I))
+    assert multinomial((1+2*I), (1+3*I)) == gamma(3 + 5*I)/(gamma(2 + 2*I)*gamma(2 + 3*I))
+    assert multinomial(I, 3) == gamma(4 + I)/(6*gamma(1 + I))
+    assert multinomial(I, 4) == gamma(5 + I)/(24*gamma(1 + I))
+    assert multinomial(I, 5) == gamma(6 + I)/(120*gamma(1 + I))
+    assert multinomial(I, 6) == gamma(7 + I)/(720*gamma(1 + I))
+    assert multinomial(I, 7) == gamma(8 + I)/(5040*gamma(1 + I))
+    assert multinomial(I, 8) == gamma(9 + I)/(40320*gamma(1 + I))
+    assert multinomial(I, 9) == gamma(10 + I)/(362880*gamma(1 + I))
+    assert multinomial(a, b).is_nonnegative is True
+    assert multinomial(10, 5).is_nonnegative is True
+    assert multinomial(10, -3).is_nonnegative is True
+    assert multinomial(n, t).rewrite(factorial) == factorial(t + n)/(factorial(t)*factorial(n))
+    assert multinomial(n, t).rewrite(gamma) == gamma(t + n + 1)/(gamma(t + 1)*gamma(n + 1))
+    assert multinomial(n, t).rewrite(gamma).rewrite('tractable') == exp(-loggamma(t + 1))*exp(-loggamma(n + 1))*exp(loggamma(t + n + 1))
+    assert multinomial(f, k).is_integer is None
 
 
 def test_binomial_Mod():
