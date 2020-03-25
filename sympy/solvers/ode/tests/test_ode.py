@@ -36,7 +36,7 @@ def _test_for_particular_hint(our_hint, ode_example):
     if our_hint in classify_ode(ode_example):
         dsolve_sol = dsolve(ode_example, hint=our_hint)
         expected_checkodesol = [(True, 0) for i in range(len(dsolve_sol))]
-        return checkodesol(ode_example, *dsolve_sol) != expected_checkodesol
+        return checkodesol(ode_example, dsolve_sol) != expected_checkodesol
     return True
 
 hint_message = """\
