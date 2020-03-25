@@ -2019,48 +2019,74 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
     
-    def rot90(self, anticlockwise = False):
+    def rot90(self, k = 0):
         """Rotates Matrix by 90 degrees
 
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> M = Matrix(2, 2, lambda i, j: i+j)
-        >>> M
+        >>> from sympy import MatrixSymbol
+        >>> A = MatrixSymbol('A', 2, 2).as_explicit()
+        >>> A
         Matrix([
-        [0, 1],
-        [1, 2]])
-        >>> M.rot90()
+        [A[0, 0], A[0, 1]],
+        [A[1, 0], A[1, 1]]])
+        >>> A.rot90(k = 0)
         Matrix([
-        [1, 2],
-        [0, 1]])
-        >>> M.r90
+        [A[0, 0], A[0, 1]],
+        [A[1, 0], A[1, 1]]])
+        >>> A.rot90(k = 1)
         Matrix([
-        [1, 2],
-        [0, 1]])
-        >>> M.rot90(anticlockwise = True)
+        [A[1, 0], A[0, 0]],
+        [A[1, 1], A[0, 1]]])
+        >>> A.r90
         Matrix([
-        [1, 0],
-        [2, 1]])
-        >>> M.r90a
+        [A[1, 0], A[0, 0]],
+        [A[1, 1], A[0, 1]]])
+        >>> A.rot90(k = -1)
         Matrix([
-        [1, 0],
-        [2, 1]])  
+        [A[0, 1], A[1, 1]],
+        [A[0, 0], A[1, 0]]])
+        >>> A.r90a
+        Matrix([
+        [A[0, 1], A[1, 1]],
+        [A[0, 0], A[1, 0]]])
+        >>> A.rot90(k = 2)
+        Matrix([
+        [A[1, 1], A[1, 0]],
+        [A[0, 1], A[0, 0]]])
+        >>> A.rot90(k = -2)
+        Matrix([
+        [A[1, 1], A[1, 0]],
+        [A[0, 1], A[0, 0]]])
+        >>> A.rot90(k = 3)
+        Matrix([
+        [A[0, 1], A[1, 1]],
+        [A[0, 0], A[1, 0]]])
+        >>> A.rot90(k = -3)
+        Matrix([
+        [A[1, 0], A[0, 0]],
+        [A[1, 1], A[0, 1]]])
         """
-        if(anticlockwise):
+
+        mod = k%4
+        if(mod == 0):
+            return self
+        if(mod == 1):
             return self[::-1, ::].T
-        else:
+        if(mod == 2):
+            return self[::-1, ::-1]
+        if(mod == 3):
             return self[::, ::-1].T
     
     @property
     def r90(self):
         '''Matrix transposition clockwise'''
-        return self.rot90()
+        return self.rot90(k = 1)
     @property
     def r90a(self):
         '''Matrix transposition anticlockwise'''
-        return self.rot90(anticlockwise=True)
+        return self.rot90(k = -1)
 
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
