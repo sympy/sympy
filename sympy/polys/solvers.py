@@ -58,7 +58,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     eqs_dict = [dict(eq) for eq in eqs]
 
     one_monom = ring.one.monoms()[0]
-    zero = ring.zero
+    zero = ring.domain.zero
 
     eqs_rhs = []
     eqs_coeffs = []
@@ -84,7 +84,16 @@ def solve_lin_sys(eqs, ring, _raw=True):
             else:
                 return ring.domain.to_sympy(x)
 
-        result = {to_sympy(sym): to_sympy(val) for sym, val in result.items()}
+        tresult = {to_sympy(sym): to_sympy(val) for sym, val in result.items()}
+
+        # Remove 1.0x
+        result = {}
+        for k, v in tresult.items():
+            if k.is_Mul:
+                c, s = k.as_coeff_Mul()
+                result[s] = v/c
+            else:
+                result[k] = v
 
     return result
 
@@ -130,7 +139,7 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
     echelon, pivots = matrix.rref()
 
     # construct the returnable form of the solutions
-    keys = ring.symbols
+    keys = ring.gens
 
     if pivots and pivots[-1] == len(keys):
         return None
@@ -138,7 +147,7 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
     if len(pivots) == len(keys):
         sol = []
         for s in [row[-1] for row in echelon.rows]:
-            a = s + ring.zero
+            a = s
             sol.append(a)
         sols = dict(zip(keys, sol))
     else:
@@ -147,7 +156,7 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
         echelon = echelon.rows
         for i, p in enumerate(pivots):
             v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
-            v = v + ring.zero
+            v = v
             sols[keys[p]] = v
 
     return sols
