@@ -226,9 +226,12 @@ def test_refine_issue_12724():
     expr3 = refine(Abs(x * y1**2 * z), Q.positive(x))
     assert expr3 == x * y1**2 * Abs(z)
 
+
 def test_matrixelement():
     x = MatrixSymbol('x', 3, 3)
-    assert refine(x[0, 1]), Q.symmetric(x) == x[0, 1]
-    assert refine(x[1, 0]), Q.symmetric(x) == x[0, 1]
-    assert refine(x[2, 1]), Q.symmetric(x) == x[1, 2]
-    assert refine(x[1, 2]), Q.symmetric(x) == x[1, 2]
+    i = Symbol('i', positive = True)
+    j = Symbol('j', positive = True)
+    assert refine(x[0, 1], Q.symmetric(x)) == x[0, 1]
+    assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
+    assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
+    assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
