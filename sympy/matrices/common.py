@@ -2019,7 +2019,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
     
-    def rot90(self, k = 0):
+    def rot90(self, k=1):
         """Rotates Matrix by 90 degrees
 
         Examples
