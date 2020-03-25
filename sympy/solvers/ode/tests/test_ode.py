@@ -39,14 +39,7 @@ def _test_for_particular_hint(our_hint, ode_example):
         return checkodesol(ode_example, dsolve_sol) != expected_checkodesol
     return False
 
-
-def _ode_solver_test(ode_examples):
-    our_hint = ode_examples['hint']
-    for example in ode_examples['examples']:
-        eq = ode_examples['examples'][example]['eq']
-        sol = ode_examples['examples'][example]['sol']
-        if our_hint not in classify_ode(eq):
-            message = """\
+hint_message = """\
 Hint did not match the example {example}.
 
 The ODE is:
@@ -54,12 +47,9 @@ The ODE is:
 
 The expected hint was
 {our_hint}\
-        """.format(example=example, eq=eq, our_hint=our_hint)
-            raise AssertionError(message)
+"""
 
-        dsolve_sol = dsolve(eq,hint=our_hint)
-        if dsolve_sol not in sol:
-            message = """\
+expected_sol_message = """\
 Different solution found from dsolve for example {example}.
 
 The ODE is:
@@ -70,17 +60,33 @@ The expected solution was
 
 What dsolve returned is:
 {dsolve_sol}\
-        """.format(example=example, eq=eq, sol=sol, dsolve_sol=dsolve_sol)
-            raise AssertionError(message)
+"""
 
-        expected_checkodesol = [(True, 0) for i in range(len(sol))]
-        if checkodesol(eq, sol) != expected_checkodesol:
-            message = """\
+checkodesol_msg = """\
 solution found is not correct for example {example}.
 
 The ODE is:
 {eq}\
-        """.format(example=example, eq=eq)
+"""
+
+
+def _ode_solver_test(ode_examples):
+    our_hint = ode_examples['hint']
+    for example in ode_examples['examples']:
+        eq = ode_examples['examples'][example]['eq']
+        sol = ode_examples['examples'][example]['sol']
+        if our_hint not in classify_ode(eq):
+            message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
+            raise AssertionError(message)
+
+        dsolve_sol = dsolve(eq,hint=our_hint)
+        if dsolve_sol not in sol:
+            message = expected_sol_message.format(example=example, eq=eq, sol=sol, dsolve_sol=dsolve_sol)
+            raise AssertionError(message)
+
+        expected_checkodesol = [(True, 0) for i in range(len(sol))]
+        if checkodesol(eq, sol) != expected_checkodesol:
+            message = checkodesol.format(example=example, eq=eq)
             raise AssertionError(message)
 
 
@@ -185,6 +191,13 @@ ode_sol_euler_var_para = {
         },
     }
 }
+
+all_solvers = [ode_sol_euler_homogeneous, ode_sol_euler_undetermined_coeff, ode_sol_euler_var_para]
+all_examples = []
+
+for solver in all_solvers:
+    for example in solver['examples']:
+        all_examples.append(solver['examples'][example]['eq'])
 
 
 def test_get_numbered_constants():
