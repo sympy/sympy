@@ -14,7 +14,7 @@ from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
-    warns_deprecated_sympy, XFAIL)
+    warns_deprecated_sympy)
 from sympy.testing.randtest import verify_numerically
 
 
