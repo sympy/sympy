@@ -4872,7 +4872,7 @@ class PermutationGroup(Basic):
         if self.is_perfect:
             return self
         der = self.derived_series()
-        return der[-1];
+        return der[-1]
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
