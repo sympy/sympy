@@ -2416,15 +2416,18 @@ def generate_oriented_forest(n):
 
 def minlex(seq, directed=True, is_set=False, small=None):
     """
-    Return a tuple where the smallest element appears first; if
-    ``directed`` is True (default) then the order is preserved, otherwise
-    the sequence will be reversed if that gives a smaller ordering.
+    Return a tuple representing the rotation of the sequence in which
+    the lexically smallest elements appear first, e.g. `cba ->acb`.
 
-    If every element appears only once then is_set can be set to True
-    for more efficient processing.
+    If ``directed`` is False then the smaller of the sequence and the
+    reversed sequence is returned, e.g. `cba -> abc`.
+
+    For more efficient processing, ``is_set`` can be set to True if there
+    are no duplicates in the sequence.
 
     If the smallest element is known at the time of calling, it can be
-    passed and the calculation of the smallest element will be omitted.
+    passed as ``small`` and the calculation of the smallest element will
+    be omitted.
 
     Examples
     ========
