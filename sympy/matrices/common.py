@@ -2018,6 +2018,49 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
+    
+    def rot90(self, anticlockwise = False):
+        """Rotates Matrix by 90 degrees
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix(2, 2, lambda i, j: i+j)
+        >>> M
+        Matrix([
+        [0, 1],
+        [1, 2]])
+        >>> M.rot90()
+        Matrix([
+        [1, 2],
+        [0, 1]])
+        >>> M.r90
+        Matrix([
+        [1, 2],
+        [0, 1]])
+        >>> M.rot90(anticlockwise = True)
+        Matrix([
+        [1, 0],
+        [2, 1]])
+        >>> M.r90a
+        Matrix([
+        [1, 0],
+        [2, 1]])  
+        """
+        if(anticlockwise):
+            return self[::-1, ::].T
+        else:
+            return self[::, ::-1].T
+    
+    @property
+    def r90(self):
+        '''Matrix transposition clockwise'''
+        return self.rot90()
+    @property
+    def r90a(self):
+        '''Matrix transposition anticlockwise'''
+        return self.rot90(anticlockwise=True)
 
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
