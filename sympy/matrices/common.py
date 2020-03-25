@@ -2079,15 +2079,6 @@ class MatrixOperations(MatrixRequired):
         if(mod == 3):
             return self[::, ::-1].T
     
-    @property
-    def r90(self):
-        '''Matrix transposition clockwise'''
-        return self.rot90(k = 1)
-    @property
-    def r90a(self):
-        '''Matrix transposition anticlockwise'''
-        return self.rot90(k = -1)
-
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
 
