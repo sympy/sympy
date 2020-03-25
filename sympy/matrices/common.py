@@ -1956,12 +1956,19 @@ class MatrixOperations(MatrixRequired):
         if orientation == 'cols':
             return self._eval_permute_cols(perm)
 
-#start
-
  def rot90(self, k=1):
         """Rotates Matrix by 90 degrees
-        Examples
-        ========
+
+        Parameters
+        ==========
+
+        k:int
+        
+        Parameter k specifies the rotation
+        Matrix is not rotated : k is 0
+        Matrix is rotated Clockwise : k is +ve
+        Matrix is rotated anti Clockwise : k is -ve
+
         >>> from sympy import MatrixSymbol
         >>> A = MatrixSymbol('A', 2, 2).as_explicit()
         >>> A
@@ -2009,17 +2016,7 @@ class MatrixOperations(MatrixRequired):
             return self[::, ::-1].T
         if mod == 4:
             return self
-        if mod == -1:
-            return self[::, ::-1].T
-        if mod == -2:
-            return self[::-1, ::-1].T
-        if mod == -3:
-            return self[::-1, ::].T
-        if mod == -4:
-            return self
 
-
-#end
 
     def permute_cols(self, swaps, direction='forward'):
         """Alias for
