@@ -2007,12 +2007,16 @@ class MatrixOperations(MatrixRequired):
             return self[::-1, ::-1].T
         if mod == 3:
             return self[::, ::-1].T
+        if mod == 4:
+            return self
         if mod == -1:
             return self[::, ::-1].T
         if mod == -2:
             return self[::-1, ::-1].T
         if mod == -3:
             return self[::-1, ::].T
+        if mod == -4:
+            return self
 
 
 #end
