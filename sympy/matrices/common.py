@@ -2018,7 +2018,59 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
+    
+    def rot90(self, k=1):
+        """Rotates Matrix by 90 degrees
 
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol
+        >>> A = MatrixSymbol('A', 2, 2).as_explicit()
+        >>> A
+        Matrix([
+        [A[0, 0], A[0, 1]],
+        [A[1, 0], A[1, 1]]])
+        >>> A.rot90(k = 0)
+        Matrix([
+        [A[0, 0], A[0, 1]],
+        [A[1, 0], A[1, 1]]])
+        >>> A.rot90(k = 1)
+        Matrix([
+        [A[1, 0], A[0, 0]],
+        [A[1, 1], A[0, 1]]])
+        >>> A.rot90(k = -1)
+        Matrix([
+        [A[0, 1], A[1, 1]],
+        [A[0, 0], A[1, 0]]])
+        >>> A.rot90(k = 2)
+        Matrix([
+        [A[1, 1], A[1, 0]],
+        [A[0, 1], A[0, 0]]])
+        >>> A.rot90(k = -2)
+        Matrix([
+        [A[1, 1], A[1, 0]],
+        [A[0, 1], A[0, 0]]])
+        >>> A.rot90(k = 3)
+        Matrix([
+        [A[0, 1], A[1, 1]],
+        [A[0, 0], A[1, 0]]])
+        >>> A.rot90(k = -3)
+        Matrix([
+        [A[1, 0], A[0, 0]],
+        [A[1, 1], A[0, 1]]])
+        """
+
+        mod = k%4
+        if mod == 0:
+            return self
+        if mod == 1:
+            return self[::-1, ::].T
+        if mod == 2:
+            return self[::-1, ::-1]
+        if mod == 3:
+            return self[::, ::-1].T
+    
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
 
