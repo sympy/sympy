@@ -2025,7 +2025,7 @@ class MatrixOperations(MatrixRequired):
         Parameters
         ==========
 
-        k : int
+        k: int
             Parameter k specifies rotation
             k is 0 when the Matrix is not rotated
             k > 0 when the Matrix is rotated Clockwise
@@ -2044,11 +2044,11 @@ class MatrixOperations(MatrixRequired):
         Matrix([
         [a, b],
         [c, d]])
-        >>> A.rot90(k=1)
+        >>> A.rot90(1)
         Matrix([
         [c, a],
         [d, b]])
-        >>> A.rot90(k=-2)
+        >>> A.rot90(-2)
         Matrix([
         [d, c],
         [b, a]])
