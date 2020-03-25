@@ -2038,8 +2038,8 @@ class MatrixOperations(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> A = Matrix(2,2,symbols('a:d'))
+        >>> from sympy import Matrix, symbols
+        >>> A = Matrix(2, 2, symbols('a:d'))
         >>> A
         Matrix([
         [a, b],
