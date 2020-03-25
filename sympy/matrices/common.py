@@ -2062,13 +2062,13 @@ class MatrixOperations(MatrixRequired):
         """
 
         mod = k%4
-        if mod == 0 :
+        if mod == 0:
             return self
-        if mod == 1 :
+        if mod == 1:
             return self[::-1, ::].T
-        if mod == 2 :
+        if mod == 2:
             return self[::-1, ::-1]
-        if mod == 3 :
+        if mod == 3:
             return self[::, ::-1].T
     
     def simplify(self, **kwargs):
