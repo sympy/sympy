@@ -521,12 +521,14 @@ def test_replace_map():
     N = M.replace(F, G, True)
     assert N == K
 
+
 def test_rot90():
-    A = Matrix([[1, 2],[3, 4]])
+    A = Matrix([[1, 2], [3, 4]])
     assert A == A.rot90(k=0)
     assert A.rot90(k=1) == A.rot90(k=-3)
     assert A.rot90(k=2) == A.rot90(k=-2)
     assert A.rot90(k=3) == A.rot90(k=-1)
+
 
 def test_simplify():
     n = Symbol('n')
