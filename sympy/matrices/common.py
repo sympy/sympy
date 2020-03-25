@@ -2030,11 +2030,11 @@ class MatrixOperations(MatrixRequired):
             k is 0 when the Matrix is not rotated
             k is +ve when the Matrix is rotated Clockwise
             k is -ve when the Matrix is rotated Anti-Clockwise
-            |k| > 1 represent iterative rotations 
-            i.e. 
+            |k| > 1 represent iterative rotations
+            i.e.
             2 --> Clockwise x 2
             -2 --> Anti-Clockwise x 2
-        
+
         Examples
         ========
 
