@@ -36,8 +36,8 @@ def _test_for_particular_hint(our_hint, ode_example):
     if our_hint in classify_ode(ode_example):
         dsolve_sol = dsolve(ode_example, hint=our_hint)
         expected_checkodesol = [(True, 0) for i in range(len(dsolve_sol))]
-        return checkodesol(ode_example, dsolve_sol) != expected_checkodesol
-    return False
+        return checkodesol(ode_example, *dsolve_sol) != expected_checkodesol
+    return True
 
 hint_message = """\
 Hint did not match the example {example}.
@@ -192,12 +192,62 @@ ode_sol_euler_var_para = {
     }
 }
 
+all_hints = [
+    "factorable",
+    "nth_algebraic",
+    "separable",
+    "1st_exact",
+    "1st_linear",
+    "Bernoulli",
+    "Riccati_special_minus2",
+    "1st_homogeneous_coeff_best",
+    "1st_homogeneous_coeff_subs_indep_div_dep",
+    "1st_homogeneous_coeff_subs_dep_div_indep",
+    "almost_linear",
+    "linear_coefficients",
+    "separable_reduced",
+    "1st_power_series",
+    "lie_group",
+    "nth_linear_constant_coeff_homogeneous",
+    "nth_linear_euler_eq_homogeneous",
+    "nth_linear_constant_coeff_undetermined_coefficients",
+    "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
+    "nth_linear_constant_coeff_variation_of_parameters",
+    "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
+    "Liouville",
+    "2nd_linear_airy",
+    "2nd_linear_bessel",
+    "2nd_hypergeometric",
+    "2nd_hypergeometric_Integral",
+    "nth_order_reducible",
+    "2nd_power_series_ordinary",
+    "2nd_power_series_regular",
+    "nth_algebraic_Integral",
+    "separable_Integral",
+    "1st_exact_Integral",
+    "1st_linear_Integral",
+    "Bernoulli_Integral",
+    "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
+    "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
+    "almost_linear_Integral",
+    "linear_coefficients_Integral",
+    "separable_reduced_Integral",
+    "nth_linear_constant_coeff_variation_of_parameters_Integral",
+    "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
+    "Liouville_Integral",
+       ]
 all_solvers = [ode_sol_euler_homogeneous, ode_sol_euler_undetermined_coeff, ode_sol_euler_var_para]
 all_examples = []
 
 for solver in all_solvers:
     for example in solver['examples']:
         all_examples.append(solver['examples'][example]['eq'])
+
+
+def _test_all_hints():
+    for our_hint in all_hints:
+        for ode_example in all_examples:
+            assert _test_for_particular_hint(our_hint, ode_example)
 
 
 def test_get_numbered_constants():
