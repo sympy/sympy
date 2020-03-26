@@ -528,7 +528,7 @@ def test_rot90():
     assert A.rot90(1) == A.rot90(-3)
     assert A.rot90(2) == A.rot90(-2)
     assert A.rot90(3) == A.rot90(-1)
-
+    assert A.rot90() == A.rot90(-7) == A.rot90(-3) == Matrix(((3, 1), (4, 2)))
 
 def test_simplify():
     n = Symbol('n')
