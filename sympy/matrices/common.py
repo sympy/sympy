@@ -2020,7 +2020,6 @@ class MatrixOperations(MatrixRequired):
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
 
     def rot90(self, k=1):
-<<<<<<< HEAD
         """Rotates Matrix by 90 degrees
 
         Parameters
@@ -2032,9 +2031,6 @@ class MatrixOperations(MatrixRequired):
             It > 0 when the Matrix is rotated Clockwise
             It < 0 when the Matrix is rotated Anti-Clockwise
             It represents iterative rotations when it is greater than 1
-=======
-        """Rotates Matrix by 90 degrees, k specifies rotation.
->>>>>>> 74fd4ef3575f4b2d9f2ca6662c33d7e1df97483a
 
         Examples
         ========
