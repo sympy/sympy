@@ -32,7 +32,7 @@ class DFT(MatrixExpr):
     sympy.discrete
     https://en.wikipedia.org/wiki/DFT_matrix
 """
-     def __new__(cls, n):
+    def __new__(cls, n):
         n = _sympify(n)
         cls._check_dim(n)
 
