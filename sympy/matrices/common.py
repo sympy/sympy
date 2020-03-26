@@ -2026,14 +2026,11 @@ class MatrixOperations(MatrixRequired):
         ==========
 
         k : int
-            Parameter k specifies rotation
-            k is 0 when the Matrix is not rotated
-            k > 0 when the Matrix is rotated Clockwise
-            k < 0 when the Matrix is rotated Anti-Clockwise
-            |k| > 1 represent iterative rotations
-            i.e.
-            2 --> Clockwise x 2
-            -2 --> Anti-Clockwise x 2
+            This Parameter specifies rotation
+            It is 0 when the Matrix is not rotated
+            It > 0 when the Matrix is rotated Clockwise
+            It < 0 when the Matrix is rotated Anti-Clockwise
+            It represents iterative rotations when it is greater than 1
 
         Examples
         ========
@@ -2044,11 +2041,11 @@ class MatrixOperations(MatrixRequired):
         Matrix([
         [a, b],
         [c, d]])
-        >>> A.rot90(k=1)
+        >>> A.rot90(1)
         Matrix([
         [c, a],
         [d, b]])
-        >>> A.rot90(k=-2)
+        >>> A.rot90(-2)
         Matrix([
         [d, c],
         [b, a]])
