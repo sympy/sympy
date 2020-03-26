@@ -1433,7 +1433,7 @@ class Pow(Expr):
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
         # where e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
-        from sympy import ceiling, collect, exp, log, O, Order, powsimp
+        from sympy import ceiling, collect, exp, log, O, Order, powsimp, powdenest
         b, e = self.args
         if e.is_Integer:
             if e > 0:
@@ -1463,6 +1463,7 @@ class Pow(Expr):
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
+                    b = powdenest(b)
                     prefactor = b.as_leading_term(x)
 
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
