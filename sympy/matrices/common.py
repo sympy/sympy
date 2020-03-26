@@ -2028,8 +2028,8 @@ class MatrixOperations(MatrixRequired):
         k : int
             This Parameter specifies rotation
             It is 0 when the Matrix is not rotated
-            It > 0 when the Matrix is rotated Clockwise
-            It < 0 when the Matrix is rotated Anti-Clockwise
+            It is greater than 0 when the Matrix is rotated Clockwise
+            It is lesser than 0 when the Matrix is rotated AntiClockwise
             It represents iterative rotations when it is greater than 1
 
         Examples
