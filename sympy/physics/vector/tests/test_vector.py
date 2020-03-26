@@ -169,3 +169,10 @@ def test_vector_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
     test4 = test4.simplify()
     assert (test4 & N.x) == -2 * y
+
+
+def test_vector_evalf():
+    a, b, c = symbols('a, b, c')
+    B = A.orientnew('B', 'Axis', (pi, A.x))
+    v = a*pi*A.x + b*2*pi*B.x + c*3*pi*B.z
+    assert v._eval_evalf(3) == 3.0*a*A.x + 6.0*b*B.x + 9.0*c*B.z
