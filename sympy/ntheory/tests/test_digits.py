@@ -10,8 +10,13 @@ def test_digits():
                 for n in range(20)])
     assert digits(2345, 34) == [34, 2, 0, 33]
     assert digits(384753, 71) == [71, 1, 5, 23, 4]
-    assert digits(93409) == [10, 9, 3, 4, 0, 9]
+    assert digits(93409, 10) == [10, 9, 3, 4, 0, 9]
     assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
+    assert digits(35, 10) == [10, 3, 5]
+    assert digits(35, 10, 1) == ValueError("b**(digits - 1) must be > n")
+    assert digits(35, 10, 2) == [10, 3, 5]
+    assert digits(35, 10, 3) == [10, 0, 3, 5]
+    assert digits(35, 10, 4) == [10, 0, 0, 3, 5]
 
 
 def test_count_digits():

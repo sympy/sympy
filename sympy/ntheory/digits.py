@@ -6,7 +6,7 @@ from sympy.core.compatibility import as_int
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 
 
-def digits(n, b=10):
+def digits(n, b=10, digits=None):
     """
     Return a list of the digits of ``n`` in base ``b``. The first
     element in the list is ``b`` (or ``-b`` if ``n`` is negative).
@@ -21,8 +21,32 @@ def digits(n, b=10):
     [2, 1, 1, 0, 1, 1]
     >>> digits(65536, 256)
     [256, 1, 0, 0]
-    >>> digits(-3958, 27)
+    >>> digits(-3958, 27, 2)
     [-27, 5, 11, 16]
+    >>> digits(35, 10)
+    [10, 3, 5]
+    >>> digits(35, 10, 1)
+    [10, 3, 5]
+    >>> digits(35, 10, 2)
+    [10, 3, 5]
+    >>> digits(35, 10, 3)
+    [10, 0, 3, 5]
+    >>> digits(35, 10, 4)
+    [10, 0, 0, 3, 5]
+
+    Parameters
+    ==========
+
+    n = integer
+    The number whose list of digits is computed
+
+    b = integer
+    The base in which list of digits is computed
+
+    digits = integer
+    indicates the number of digits to be return after the base;
+    leading zeros will be added if the number has too few digits
+
     """
 
     b = as_int(b)
@@ -37,6 +61,11 @@ def digits(n, b=10):
         y.append(x)
         y.append(-b if n < 0 else b)
         y.reverse()
+        if digits is not None and len(y) - 1 < digits:
+            if b**(digits - 1) <= n:
+                raise ValueError("b**(digits - 1) must be > n")
+            else:
+                y = [b] + [0]*(digits - len(y) + 1) + y[1:]
         return y
 
 
