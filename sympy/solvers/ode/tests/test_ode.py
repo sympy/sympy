@@ -86,7 +86,7 @@ def _test_for_particular_hint(our_hint, ode_example):
         expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
         if len(expected_sol) == 1:
             expected_checkodesol = (True, 0)
- 
+
         if checkodesol(eq, dsolve_sol) != expected_checkodesol:
             message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
             raise AssertionError(message)
