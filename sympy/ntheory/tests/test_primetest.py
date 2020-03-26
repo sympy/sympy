@@ -32,7 +32,7 @@ def test_is_extra_strong_lucas_prp():
     assert is_extra_strong_lucas_prp(9) == False
     assert is_extra_strong_lucas_prp(16) == False
     assert is_extra_strong_lucas_prp(169) == False
-    
+
 @slow
 def test_prps():
     oddcomposites = [n for n in range(1, 10**5) if
