@@ -2026,16 +2026,8 @@ class MatrixOperations(MatrixRequired):
         ==========
 
         k : int
-            Specifies how many times the matrix is rotated
-            anticlockwise.
-
-            - If zero, then the matrix is not rotated.
-            - If it is greater than zero, the matrix is rotated
-              clockwise.
-            - If it is less than zero, the matrix is rotated
-              anticlockwise.
-            - It also represents how many times the matrix is repeatedly
-              rotated.
+            Specifies how many times the matrix is rotated by 90 degrees
+            (clockwise when positive, counter-clockwise when negative).
 
         Examples
         ========
