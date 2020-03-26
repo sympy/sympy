@@ -288,20 +288,38 @@ class factorial(CombinatorialFunction):
         return self.func(arg)
 
 class MultiFactorial(CombinatorialFunction):
+    r"""Implementation of multifactorial function.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Factorial#Multifactorials
+    .. [2] https://mathworld.wolfram.com/Multifactorial.html
+
+    Examples
+    ========
+
+    >>> from sympy import MultiFactorial
+    >>> MultiFactorial(5, 1)
+    120
+    >>> MultiFactorial(5, 4)
+    5
+    """
 
     @classmethod
     def eval(cls, n, alpha):
+        n = sympify(n)
+        alpha = sympify(alpha)
         if not alpha.is_integer or not alpha.is_positive:
             raise ValueError("alpha should be a positive integer")
         if alpha == 1:
             return factorial(n)
         if alpha == 2:
-            factorial2(n)
+            return factorial2(n)
 
         if n.is_Number and alpha.is_Number:
             if not n.is_Integer:
-                raise ValueError("argument should be non negative or negative "
-                                     "argument should not be divisible by alpha")
+                raise ValueError("argument should be non negative or negative ")
             if n <= 0 and n > -alpha:
                 return S.One
             if n.is_nonnegative:
@@ -312,10 +330,11 @@ class MultiFactorial(CombinatorialFunction):
                 return n * MultiFactorial(n - alpha, alpha)
 
             if n % alpha == 0:
-                raise ValueError("argument should be non negative or negative "
-                                     "argument should not be divisible by alpha")
+                raise ValueError("argument should not be divisible by alpha")
             #When n is negative and n is less than -alpha
             return MultiFactorial(n + alpha, alpha) / (n + alpha)
+        else:
+            raise ValueError("n and alpha should be an integer")
 
 
 class subfactorial(CombinatorialFunction):
