@@ -637,13 +637,11 @@ def test_issue_13516():
     assert len(p[0].get_segments()) >= 30
 
 def test_check_figures_equal():
-    
+    from sympy.utilities.tmpfiles import TmpFileManager
     matplotlib = import_module('matplotlib' , min_module_version='1.1.0', catch= (RuntimeError,))
     if not matplotlib:
         skip("Matplotlib not the default backend")
-
     from matplotlib.testing.compare import compare_images
-    from sympy.utilities.tmpfiles import TmpFileManager
     test_directory = os.path.dirname(os.path.abspath(__file__))
 
     def tmp_file(dir=None, name=''):
@@ -651,8 +649,8 @@ def test_check_figures_equal():
     try:
         temp_dir = mkdtemp()
         TmpFileManager.tmp_folder(temp_dir)
-
         x = Symbol('x')
+        
         test_filename = tmp_file(dir = temp_dir, name = "test_singularity1")
         cmp_filename = os.path.join(test_directory, "test_singularity1.png")
         p = plot(x/(x-1)*(x-2))
