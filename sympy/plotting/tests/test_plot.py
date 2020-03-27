@@ -650,13 +650,11 @@ def test_check_figures_equal():
         temp_dir = mkdtemp()
         TmpFileManager.tmp_folder(temp_dir)
         x = Symbol('x')
-        
         test_filename = tmp_file(dir = temp_dir, name = "test_singularity1")
         cmp_filename = os.path.join(test_directory, "test_singularity1.png")
         p = plot(x/(x-1)*(x-2))
         p.save(test_filename)
         compare_images(cmp_filename , test_filename , 0.005)
-
         test_filename = tmp_file(dir = temp_dir, name = "test_singularity2")
         cmp_filename = os.path.join(test_directory, "test_singularity2.png")
         p = plot(sin(x)/x)
