@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float, external_disjoint_union,
+    Max, Min, Float, DisjointUnion,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -1488,19 +1488,20 @@ def test_issue_16878b():
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
 
-def test_external_disjoint_union():
-    assert external_disjoint_union(FiniteSet(1, 2, 3), FiniteSet(1, 2, 3), FiniteSet(1, 2, 3)) == (FiniteSet(1, 2, 3) * FiniteSet(0, 1, 2))
-    assert external_disjoint_union(Interval(1, 3), Interval(2, 4)) == Union(Interval(1, 3) * FiniteSet(0), Interval(2, 4) * FiniteSet(1))
-    assert external_disjoint_union(Interval(0, 5), Interval(0, 5)) == Union(Interval(0, 5) * FiniteSet(0), Interval(0, 5) * FiniteSet(1))
-    assert external_disjoint_union(Interval(-1, 2), S.EmptySet, S.EmptySet) == Interval(-1, 2) * FiniteSet(0)
-    assert external_disjoint_union(Interval(-1, 2)) == Interval(-1, 2) * FiniteSet(0)
-    assert external_disjoint_union(S.EmptySet, Interval(-1, 2), S.EmptySet) == Interval(-1, 2) * FiniteSet(1)
+def test_DisjointUnion():
+    assert DisjointUnion(FiniteSet(1, 2, 3), FiniteSet(1, 2, 3), FiniteSet(1, 2, 3)).rewrite(Union) == (FiniteSet(1, 2, 3) * FiniteSet(0, 1, 2))
+    assert DisjointUnion(Interval(1, 3), Interval(2, 4)).rewrite(Union) == Union(Interval(1, 3) * FiniteSet(0), Interval(2, 4) * FiniteSet(1))
+    assert DisjointUnion(Interval(0, 5), Interval(0, 5)).rewrite(Union) == Union(Interval(0, 5) * FiniteSet(0), Interval(0, 5) * FiniteSet(1))
+    assert DisjointUnion(Interval(-1, 2), S.EmptySet, S.EmptySet).rewrite(Union) == Interval(-1, 2) * FiniteSet(0)
+    assert DisjointUnion(Interval(-1, 2)).rewrite(Union) == Interval(-1, 2) * FiniteSet(0)
+    assert DisjointUnion(S.EmptySet, Interval(-1, 2), S.EmptySet).rewrite(Union) == Interval(-1, 2) * FiniteSet(1)
     #could skip indices for which sets are empty while computing disjoint union
-    assert external_disjoint_union(Interval(-oo, oo)) == Interval(-oo, oo) * FiniteSet(0)
-    assert external_disjoint_union(S.EmptySet) == S.EmptySet
-    assert external_disjoint_union() == S.EmptySet
+    assert DisjointUnion(Interval(-oo, oo)).rewrite(Union) == Interval(-oo, oo) * FiniteSet(0)
+    assert DisjointUnion(S.EmptySet).rewrite(Union) == S.EmptySet
+    assert DisjointUnion().rewrite(Union) == S.EmptySet
 
     x = Symbol("x")
     y = Symbol("y")
     z = Symbol("z")
-    assert external_disjoint_union(FiniteSet(x), FiniteSet(y, z)) == (FiniteSet(x) * FiniteSet(0)) + (FiniteSet(y, z) * FiniteSet(1))
+    assert DisjointUnion(FiniteSet(x), FiniteSet(y, z)).rewrite(Union) == (FiniteSet(x) * FiniteSet(0)) + (FiniteSet(y, z) * FiniteSet(1))
+

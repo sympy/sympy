@@ -2027,6 +2027,61 @@ class SymmetricDifference(Set):
                 yield item
 
 
+
+class DisjointUnion(Set):
+    """ Represents the disjoint union (also known as the external disjoint union)
+    of a finite number of sets.
+
+    Examples
+    ========
+
+    >>> from sympy import DisjointUnion, FiniteSet, Interval
+    >>> A = FiniteSet(1, 2, 3)
+    >>> B = Interval(0, oo)
+    >>> DisjointUnion(A, B)
+    DisjointUnion(FiniteSet(1, 2, 3), Interval(0, oo))
+    >>> DisjointUnion(A, B).rewrite(Union)
+    ({1, 2, 3} × {0}) ∪ ([0, ∞) × {1})
+    >>> C = FiniteSet(Symbol('x'), Symbol('y'), Symbol('z'))
+    >>> DisjointUnion(C, C)
+    DisjointUnion(FiniteSet(x, y, z), FiniteSet(x, y, z))
+    >>> DisjointUnion(C, C).rewrite(Union)
+    {x, y, z} × {0, 1}
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Disjoint_union
+    """
+
+    def __new__(cls, *sets):
+        dj_collection = []
+        for set_i in sets:
+            if isinstance(set_i, Set):
+                dj_collection.append(set_i)
+            else:
+                raise ValueError("Invalid input: '%s', input args \
+                    to DisjointUnion must be Sets" % set_i)
+        obj = Basic.__new__(cls, *dj_collection)
+        return obj
+
+    def rewrite(self, obj):
+        if obj == Union:
+            index = 0
+            dj_union = EmptySet()
+            for set_i in self.args:
+                if isinstance(set_i, Set):
+                    cross = ProductSet(set_i, FiniteSet(index))
+                    dj_union = Union(dj_union, cross)
+                    index = index + 1
+                else:
+                    continue
+            return dj_union
+        else:
+            raise ValueError("Invalid input: '%s'", obj)
+            return None
+
+
 def imageset(*args):
     r"""
     Return an image of the set under transformation ``f``.
@@ -2355,22 +2410,3 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
-
-def external_disjoint_union(*sets):
-    """
-    Iterates over ``sets`` and computes their disjoint union
-    Find the  definition and examples here:
-    https://en.wikipedia.org/wiki/Disjoint_union
-    """
-
-    index = 0
-    dj_union = EmptySet()
-    for set_i in sets:
-        if isinstance(set_i, Set):
-            cross = set_i * FiniteSet(index)
-            dj_union = Union(dj_union, cross)
-            index = index + 1
-        else:
-            raise ValueError("Invalid input: '%s', input args \
-                to external_disjoint_union must be Sets" % set_i)
-    return dj_union
