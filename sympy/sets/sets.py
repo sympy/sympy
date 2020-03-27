@@ -2065,9 +2065,37 @@ class DisjointUnion(Set):
         obj = Basic.__new__(cls, *dj_collection)
         return obj
 
+    @property
+    def sets(self):
+        return self.args
+
+    @property
+    def is_empty(self):
+        return fuzzy_and(s.is_empty for s in self.sets)
+
+    @property
+    def is_finite_set(self):
+        all_finite = fuzzy_and(s.is_finite_set for s in self.sets)
+        return fuzzy_or([self.is_empty, all_finite])
+
+    @property
+    def is_iterable(self):
+        if self.is_empty:
+            return False
+        iter_flag = True
+        for set_i in self.sets:
+            if not set_i.is_empty:
+                iter_flag = iter_flag and set_i.is_iterable
+        return iter_flag
+
     def _eval_rewrite_as_Union(self, *sets):
-        index = 0
+        """
+        Rewrites the disjoint union as the union of (``set`` x {``i``})
+        where ``set`` is the element in ``sets`` at index = ``i``
+        """
+
         dj_union = EmptySet()
+        index = 0
         for set_i in sets:
             if isinstance(set_i, Set):
                 cross = ProductSet(set_i, FiniteSet(index))
@@ -2076,6 +2104,89 @@ class DisjointUnion(Set):
             else:
                 continue
         return dj_union
+
+    def _contains(self, element):
+        """
+        'in' operator for DisjointUnion
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, DisjointUnion
+        >>> D = DisjointUnion(Interval(0, 1), Interval(0, 2))
+        >>> (0.5, 0) in D
+        True
+        >>> (0.5, 1) in D
+        True
+        >>> (1.5, 0) in D
+        False
+        >>> (1.5, 1) in D
+        True
+
+        Passes operation on to constituent sets
+        """
+        if not isinstance(element, Tuple) or len(element) != 2:
+            return False
+
+        if not element[1].is_Integer:
+            return False
+
+        if element[1] >= len(self.sets) or element[1] < 0:
+            return False
+
+        return element[0] in self.sets[element[1]]
+
+    def __iter__(self):
+        if self.is_iterable:
+            return iter(self.rewrite(Union))
+        #     index = 0
+        #     exhausted = []
+        #     component_set_iters = []
+        #     for set_i in self.sets:
+        #         i = iter(set_i)
+        #         component_set_iters.append(i)
+        #         yield (next(i), index)
+        #         index += 1
+        #     while len(exhausted) != len(self.sets):
+        #         index = 0
+        #         for set_i in self.sets:
+        #             try:
+        #                 for iter_j in component_set_iters:
+        #                     yield (next(iter_j), index)
+        #             except StopIteration:
+        #                 continue
+        #             index += 1
+        else:
+            raise TypeError("'%s' is not iterable." % self)
+
+    def __len__(self):
+        """
+        Returns the length of the disjoint union, i.e., the number of elements in the set.
+
+        Examples
+        ========
+
+        >>> from sympy import FiniteSet, DisjointUnion
+        >>> D1 = DisjointUnion(FiniteSet(1, 2, 3, 4), S.EmptySet, FiniteSet(3, 4, 5))
+        >>> len(D1)
+        7
+        >>> D2 = DisjointUnion(FiniteSet(3, 5, 7), S.EmptySet, FiniteSet(3, 5, 7))
+        >>> len(D2)
+        6
+        >>> D3 = DisjointUnion(S.EmptySet, S.EmptySet)
+        >>> len(D3)
+        0
+
+        Adds up the lengths of the constituent sets.
+        """
+
+        if self.is_finite_set:
+            size = 0
+            for set in self.sets:
+                size += len(set)
+            return size
+        else:
+            raise TypeError("'%s' is not a finite set." % self)
 
 
 def imageset(*args):
