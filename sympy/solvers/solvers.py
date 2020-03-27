@@ -45,8 +45,8 @@ from sympy.simplify.fu import TR1, TR2i
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, degree
-from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
-    NotInvertible)
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
@@ -2231,35 +2231,15 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
-    from sympy.solvers.solveset import linsolve
-    from sympy.sets import FiniteSet
-
     assert system.shape[1] == len(symbols) + 1
 
-    # Try to use DomainMatrix
-    try:
-        eqs = list(system * Matrix(symbols + (-1,)))
-        eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-        sol = solve_lin_sys(eqs, ring, _raw=False)
-    except NotInvertible:
-        # https://github.com/sympy/sympy/issues/18874
-        pass
-    else:
-        if sol is not None:
-            sol = {sym:val for sym, val in sol.items() if sym != val}
-        return sol
-
-    # This is just a wrapper for linsolve:
-    sol = linsolve(system, *symbols)
-
-    if sol is S.EmptySet:
-        return None
-    elif isinstance(sol, FiniteSet):
-        assert len(sol) == 1
-        sol = sol.args[0]
-        return {sym:val for sym, val in zip(symbols, sol) if sym != val}
-    else:
-        raise RuntimeError("We should never get here!")
+    # This is just a wrapper for solve_lin_sys
+    eqs = list(system * Matrix(symbols + (-1,)))
+    eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+    sol = solve_lin_sys(eqs, ring, _raw=False)
+    if sol is not None:
+        sol = {sym:val for sym, val in sol.items() if sym != val}
+    return sol
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):

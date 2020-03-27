@@ -5,7 +5,9 @@ from __future__ import print_function, division
 from sympy.utilities.iterables import connected_components
 
 from sympy.matrices import MutableDenseMatrix
+from sympy.polys.domains import EX
 from sympy.polys.rings import sring
+from sympy.polys.polyerrors import NotInvertible
 from sympy.polys.polymatrix import DomainMatrix
 
 class RawMatrix(MutableDenseMatrix):
@@ -40,7 +42,11 @@ def eqs_to_matrix2(eqs_coeffs, eqs_rhs, gens, domain):
     return M
 
 def sympy_eqs_to_ring(eqs, symbols):
-    K, eqs_K = sring(eqs, symbols, field=True, extension=True)
+    try:
+        K, eqs_K = sring(eqs, symbols, field=True, extension=True)
+    except NotInvertible:
+        # https://github.com/sympy/sympy/issues/18874
+        K, eqs_K = sring(eqs, symbols, domain=EX)
     return eqs_K, K.to_domain()
 
 def solve_lin_sys(eqs, ring, _raw=True):
