@@ -470,8 +470,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     sympy.utilities.iterables.signed_permutations
     """
 
+    #from sympy.utilities.iterables import (
+    #    subsets, permute_signs, signed_permutations)
     from sympy.utilities.iterables import (
-        subsets, permute_signs, signed_permutations)
+        subsets, permute_signs, signed_permutations, filter_permute)
 
     eq = _sympify(eq)
 
@@ -593,7 +595,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         #  x, y can be permuted such that their sign are same
                         # as sign of x*y.
                         # e.g 1. (x_val,y_val)=> (x_val,y_val), (-x_val,-y_val)
-                        # 2. (-x_vall, y_val)=> (-x_val,y_val), (x_val,-y_val)
+                        # 2. (-x_val, y_val)=> (-x_val,y_val), (x_val,-y_val)
                         permute_few_signs = True
         if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang
@@ -640,6 +642,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
+    #print("he")
+    #print(type(sols))
+    #print("ha")
     final_soln = set([])
     for sol in sols:
         if all(_is_int(s) for s in sol):
@@ -654,6 +659,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             elif do_permute_signs_var:
                 permuted_sign_var = set(signed_permutations(sol))
                 final_soln.update(permuted_sign_var)
+            elif not permute:
+                final_soln = filter_permute(sols)
+                return final_soln            
             else:
                 final_soln.add(sol)
         else:
