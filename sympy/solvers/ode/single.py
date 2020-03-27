@@ -186,10 +186,18 @@ class SingleODESolver:
     # Cache whether or not the equation has matched the method
     _matched = None  # type: Optional[bool]
 
+    # Subclasses should store in this attribute the list of order(s) of ODE
+    # that subclass can solve or leave it to None if not specific to any order
+    order = None  # type: None or list
+
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
 
     def matches(self) -> bool:
+        if self.order is not None and self.ode_problem.order not in self.order:
+            self._matched = False
+            return self._matched
+
         if self._matched is None:
             self._matched = self._matches()
         return self._matched
@@ -412,6 +420,7 @@ class FirstLinear(SinglePatternODESolver):
     """
     hint = '1st_linear'
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
@@ -482,6 +491,7 @@ class AlmostLinear(SinglePatternODESolver):
     """
     hint = "almost_linear"
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x).diff(x)])
@@ -597,6 +607,7 @@ class Bernoulli(SinglePatternODESolver):
     """
     hint = "Bernoulli"
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
@@ -735,6 +746,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     """
     hint = "Riccati_special_minus2"
     has_integral = False
+    order = [1]
 
     def _wilds(self, f, x, order):
         a = Wild('a', exclude=[x, f(x), f(x).diff(x), 0])
