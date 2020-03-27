@@ -1,18 +1,27 @@
 from __future__ import print_function, division
 
+from typing import Any, Dict, Tuple
+
 from itertools import product
 import re
 from sympy import sympify
 
 
 def mathematica(s, additional_translations=None):
-    '''Users can add their own translation dictionary
-    # Example
-    In [1]: mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
-    Out[1]: 2
-    In [2]: mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
-    Out[2]: 21
-    variable-length argument needs '*' character '''
+    '''
+    Users can add their own translation dictionary.
+    variable-length argument needs '*' character.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.mathematica import mathematica
+    >>> mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
+    2
+    >>> mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
+    21
+
+    '''
 
     parser = MathematicaParser(additional_translations)
     return sympify(parser.parse(s))
@@ -122,13 +131,13 @@ class MathematicaParser(object):
                 '''
 
     # will contain transformed CORRESPONDENCES dictionary
-    TRANSLATIONS = {}
+    TRANSLATIONS = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
 
     # cache for a raw users' translation dictionary
-    cache_original = {}
+    cache_original = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
 
     # cache for a compiled users' translation dictionary
-    cache_compiled = {}
+    cache_compiled = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
 
     @classmethod
     def _initialize_class(cls):
@@ -386,7 +395,7 @@ class MathematicaParser(object):
                 raise ValueError(err)
 
         if '{' in s:
-            err = "Currently list is not supported.".format(f=s)
+            err = "Currently list is not supported."
             raise ValueError(err)
 
     def parse(self, s):

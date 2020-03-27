@@ -8,10 +8,9 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.geometry import Point, Circle
+from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
@@ -123,7 +122,15 @@ def test_Function():
 def test_Geometry():
     assert sstr(Point(0, 0)) == 'Point2D(0, 0)'
     assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point2D(0, 0), 3)'
-    # TODO test other Geometry entities
+    assert sstr(Ellipse(Point(1, 2), 3, 4)) == 'Ellipse(Point2D(1, 2), 3, 4)'
+    assert sstr(Triangle(Point(1, 1), Point(7, 8), Point(0, -1))) == \
+        'Triangle(Point2D(1, 1), Point2D(7, 8), Point2D(0, -1))'
+    assert sstr(Polygon(Point(5, 6), Point(-2, -3), Point(0, 0), Point(4, 7))) == \
+        'Polygon(Point2D(5, 6), Point2D(-2, -3), Point2D(0, 0), Point2D(4, 7))'
+    assert sstr(Triangle(Point(0, 0), Point(1, 0), Point(0, 1)), sympy_integers=True) == \
+        'Triangle(Point2D(S(0), S(0)), Point2D(S(1), S(0)), Point2D(S(0), S(1)))'
+    assert sstr(Ellipse(Point(1, 2), 3, 4), sympy_integers=True) == \
+        'Ellipse(Point2D(S(1), S(2)), S(3), S(4))'
 
 
 def test_GoldenRatio():
@@ -514,6 +521,10 @@ def test_Float():
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.0'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
+    assert sstr(Float("100"), full_prec=False, min=-2, max=2) == '1.0e+2'
+    assert sstr(Float("100"), full_prec=False, min=-2, max=3) == '100.0'
+    assert sstr(Float("0.1"), full_prec=False, min=-2, max=3) == '0.1'
+    assert sstr(Float("0.099"), min=-2, max=3) == '9.90000000000000e-2'
 
 
 def test_Relational():
@@ -756,8 +767,14 @@ def test_issue_6387():
 
 def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
-    assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
-        "2*(X + Y)"
+
+    X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
+    assert str(2*(X + Y)) == "2*(X + Y)"
+
+    assert str(I*X) == "I*X"
+    assert str(-I*X) == "-I*X"
+    assert str((1 + I)*X) == '(1 + I)*X'
+    assert str(-(1 + I)*X) == '(-1 - I)*X'
 
 def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol

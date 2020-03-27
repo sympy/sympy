@@ -1,8 +1,8 @@
-from sympy import symbols, re, im, I, Abs, Symbol, \
+from sympy import symbols, re, im, sign, I, Abs, Symbol, \
      cos, sin, sqrt, conjugate, log, acos, E, pi, \
      Matrix, diff, integrate, trigsimp, S, Rational
 from sympy.algebras.quaternion import Quaternion
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
@@ -18,7 +18,7 @@ def test_quaternion_construction():
 
     M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
-    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(-2*cos(phi) + 2)/2)
+    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
@@ -172,3 +172,18 @@ def test_quaternion_multiplication():
 
     assert z * q == z_quat * q
     assert q * z == q * z_quat
+
+
+def test_issue_16318():
+    #for rtruediv
+    q0 = Quaternion(0, 0, 0, 0)
+    raises(ValueError, lambda: 1/q0)
+    #for rotate_point
+    q = Quaternion(1, 2, 3, 4)
+    (axis, angle) = q.to_axis_angle()
+    assert Quaternion.rotate_point((1, 1, 1), (axis, angle)) == (S.One / 5, 1, S(7) / 5)
+    #test for to_axis_angle
+    q = Quaternion(-1, 1, 1, 1)
+    axis = (-sqrt(3)/3, -sqrt(3)/3, -sqrt(3)/3)
+    angle = 2*pi/3
+    assert (axis, angle) == q.to_axis_angle()

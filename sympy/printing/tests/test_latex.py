@@ -1,5 +1,7 @@
+from sympy.tensor.toperators import PartialDerivative
+
 from sympy import (
-    Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
+    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -30,7 +32,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
@@ -39,7 +41,6 @@ from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
-from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import \
     Cycle, Permutation, AppliedPermutation
 from sympy.matrices.expressions.permutation import PermutationMatrix
@@ -213,6 +214,14 @@ def test_latex_Float():
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
     assert latex(Float(1.0e-100), mul_symbol="times") == \
         r"1.0 \times 10^{-100}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=2) == \
+        r"1.0 \cdot 10^{4}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=4) == \
+        r"1.0 \cdot 10^{4}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=5) == \
+        r"10000.0"
+    assert latex(Float('0.099999'), full_prec=True,  min=-2, max=5) == \
+        r"9.99990000000000 \cdot 10^{-2}"
 
 
 def test_latex_vector_expressions():
@@ -655,6 +664,11 @@ def test_latex_derivatives():
     assert latex(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
         r"\frac{\partial^{3}}{\partial y\partial x^{2}} " + latex(f(x, y))
 
+    # for negative nested Derivative
+    assert latex(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'\frac{d}{d x} \left(- \frac{d}{d x} y^{2}\right)'
+    assert latex(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
+        r'\frac{d^{2}}{d x^{2}} \left(- \frac{d^{2}}{d x^{2}} y\right)'
+
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int\limits_{0}^{\infty} e^{- x y}\, dx"
@@ -708,6 +722,12 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int\limits_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+    # for negative nested Integral
+    assert latex(Integral(-Integral(y**2,x),x)) == \
+        r'\int \left(- \int y^{2}\, dx\right)\, dx'
+    assert latex(Integral(-Integral(-Integral(y,x),x),x)) == \
+        r'\int \left(- \int \left(- \int y\, dx\right)\, dx\right)\, dx'
+
     # fix issue #10806
     assert latex(Integral(z, z)**2) == r"\left(\int z\, dz\right)^{2}"
     assert latex(Integral(x + z, z)) == r"\int \left(x + z\right)\, dz"
@@ -737,22 +757,23 @@ def test_latex_SetExpr():
 
 
 def test_latex_Range():
-    assert latex(Range(1, 51)) == \
-        r'\left\{1, 2, \ldots, 50\right\}'
+    assert latex(Range(1, 51)) == r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
-
     assert latex(Range(0, 3, 1)) == r'\left\{0, 1, 2\right\}'
-
     assert latex(Range(0, 30, 1)) == r'\left\{0, 1, \ldots, 29\right\}'
-
     assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
-
     assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots\right\}'
-
     assert latex(Range(oo, -2, -2)) == r'\left\{\ldots, 2, 0\right\}'
+    assert latex(Range(-2, -oo, -1)) == r'\left\{-2, -3, \ldots\right\}'
+    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
+    assert latex(Range(oo, -oo, -1)) == \
+        r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
-    assert latex(Range(-2, -oo, -1)) == \
-        r'\left\{-2, -3, \ldots\right\}'
+    a, b, c = symbols('a:c')
+    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
+    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
+    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
 
 
 def test_latex_sequences():
@@ -2092,17 +2113,6 @@ def test_issue_8470():
     assert latex(e) == r"A \left(- B\right)"
 
 
-def test_issue_7117():
-    # See also issue #5031 (hence the evaluate=False in these).
-    e = Eq(x + 1, 2*x)
-    q = Mul(2, e, evaluate=False)
-    assert latex(q) == r"2 \left(x + 1 = 2 x\right)"
-    q = Add(6, e, evaluate=False)
-    assert latex(q) == r"6 + \left(x + 1 = 2 x\right)"
-    q = Pow(e, 2, evaluate=False)
-    assert latex(q) == r"\left(x + 1 = 2 x\right)^{2}"
-
-
 def test_issue_15439():
     x = MatrixSymbol('x', 2, 2)
     y = MatrixSymbol('y', 2, 2)
@@ -2310,6 +2320,21 @@ def test_latex_printer_tensor():
 
     expr = TensorElement(K(i, j, -k, -l), {i: 3})
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
+
+    expr = PartialDerivative(A(i), A(i))
+    assert latex(expr) == r"\frac{\partial}{\partial {A{}^{L_{0}}}}{A{}^{L_{0}}}"
+
+    expr = PartialDerivative(A(-i), A(-j))
+    assert latex(expr) == r"\frac{\partial}{\partial {A{}_{j}}}{A{}_{i}}"
+
+    expr = PartialDerivative(K(i, j, -k, -l), A(m), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}^{m}} \partial {A{}_{n}}}{K{}^{ij}{}_{kl}}"
+
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}_{j}} \partial {A{}_{n}}}{\left(A{}_{i} + B{}_{i}\right)}"
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    assert latex(expr) == r"\frac{\partial^{2}}{\partial {A{}_{j}} \partial {A{}_{n}}}{\left(3A{}_{i}\right)}"
 
 
 def test_multiline_latex():
@@ -2540,8 +2565,3 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
-
-
-def test_issue_17857():
-    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
-    assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'

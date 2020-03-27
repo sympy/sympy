@@ -2,9 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.core import (S, Add, Mul, Pow, Expr,
+from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
-from sympy.core.compatibility import range
 from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
@@ -353,7 +352,7 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        if not isinstance(expr, Expr):
+        if not isinstance(expr, (Expr, Eq)):
             raise PolynomialError('expression must be of type Expr')
         expr = expr.expand()
         # TODO: Integrate this into expand() itself
@@ -433,7 +432,7 @@ class PicklableWithSlots(object):
 
         >>> from sympy.polys.polyutils import PicklableWithSlots
         >>> class Some(PicklableWithSlots):
-        ...     __slots__ = ['foo', 'bar']
+        ...     __slots__ = ('foo', 'bar')
         ...
         ...     def __init__(self, foo, bar):
         ...         self.foo = foo
@@ -460,7 +459,7 @@ class PicklableWithSlots(object):
 
     """
 
-    __slots__ = []
+    __slots__ = ()
 
     def __getstate__(self, cls=None):
         if cls is None:

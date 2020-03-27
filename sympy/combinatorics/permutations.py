@@ -3,11 +3,11 @@ from __future__ import print_function, division
 import random
 from collections import defaultdict
 
-from sympy.core.basic import Atom, Basic
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
-    is_sequence, reduce, range, as_int, Iterable
+    is_sequence, reduce, as_int, Iterable
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import as_Boolean
@@ -611,7 +611,7 @@ class Permutation(Atom):
     trigger an error. For this reason, it is better to start the cycle
     with the singleton:
 
-    The following fails because there is is no element 3:
+    The following fails because there is no element 3:
 
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
@@ -900,6 +900,8 @@ class Permutation(Atom):
             if isinstance(a, Cycle):  # f
                 return cls._af_new(a.list(size))
             if not is_sequence(a):  # b
+                if size is not None and a + 1 > size:
+                    raise ValueError('size is too small when max is %s' % a)
                 return cls._af_new(list(range(a + 1)))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
@@ -929,10 +931,12 @@ class Permutation(Atom):
             raise ValueError('there were repeated elements.')
         temp = set(temp)
 
-        if not is_cycle and \
-                any(i not in temp for i in range(len(temp))):
-            raise ValueError("Integers 0 through %s must be present." %
-                             max(temp))
+        if not is_cycle:
+            if any(i not in temp for i in range(len(temp))):
+                raise ValueError('Integers 0 through %s must be present.' %
+                max(temp))
+            if size is not None and temp and max(temp) + 1 > size:
+                raise ValueError('max element should not exceed %s' % (size - 1))
 
         if is_cycle:
             # it's not necessarily canonical so we won't store
@@ -3002,7 +3006,10 @@ class AppliedPermutation(Expr):
     >>> _.subs(x, 1)
     2
     """
-    def __new__(cls, perm, x, evaluate=global_evaluate[0]):
+    def __new__(cls, perm, x, evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+
         perm = _sympify(perm)
         x = _sympify(x)
 

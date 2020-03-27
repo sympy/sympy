@@ -38,11 +38,12 @@ Examples
 """
 
 __all__ = [
-    'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
+    'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf','median',
     'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
     'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
     'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
     'sampling_density', 'moment_generating_function', 'smoment', 'quantile',
+    'coskewness',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
     'BetaBinomial', 'Hypergeometric', 'Rademacher',
@@ -51,13 +52,13 @@ __all__ = [
     'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Logistic', 'LogLogistic', 'LogNormal',
-    'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto',
-    'QuadraticU', 'RaisedCosine', 'Rayleigh', 'StudentT', 'ShiftedGompertz',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Moyal',
+    'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
+    'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle',
 
-    'Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
@@ -67,7 +68,7 @@ __all__ = [
 
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
-    'GeneratorMatrixOf', 'ContinuousMarkovChain',
+    'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -79,11 +80,11 @@ __all__ = [
     'Probability', 'Expectation', 'Variance', 'Covariance',
 
 ]
-from .rv_interface import (P, E, H, density, where, given, sample, cdf,
+from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
         kurtosis, covariance, dependent, entropy, independent, random_symbols,
         correlation, factorial_moment, moment, cmoment, sampling_density,
-        moment_generating_function, smoment, quantile)
+        moment_generating_function, smoment, quantile, coskewness)
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher)
@@ -92,12 +93,12 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Logistic, LogLogistic, LogNormal, Maxwell, Nakagami, Normal,
-        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, StudentT,
-        ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
+        Levy, Logistic, LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal,
+        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
+        PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle)
 
-from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson,
+from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta)
 
 from .joint_rv_types import (JointRV, Dirichlet,
@@ -108,7 +109,7 @@ from .joint_rv_types import (JointRV, Dirichlet,
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
-        ContinuousMarkovChain)
+        ContinuousMarkovChain, BernoulliProcess)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,

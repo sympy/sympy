@@ -22,7 +22,7 @@ def cross(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
-cross.__doc__ += Vector.cross.__doc__
+cross.__doc__ += Vector.cross.__doc__  # type: ignore
 
 
 def dot(vec1, vec2):
@@ -30,7 +30,7 @@ def dot(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
-dot.__doc__ += Vector.dot.__doc__
+dot.__doc__ += Vector.dot.__doc__  # type: ignore
 
 
 def express(expr, frame, frame2=None, variables=False):
@@ -217,7 +217,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.outer.__doc__
+outer.__doc__ += Vector.outer.__doc__  # type: ignore
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
@@ -630,5 +630,5 @@ def dynamicsymbols(names, level=0,**assumptions):
         return reduce(diff, [t] * level, esses(t))
 
 
-dynamicsymbols._t = Symbol('t')
-dynamicsymbols._str = '\''
+dynamicsymbols._t = Symbol('t')  # type: ignore
+dynamicsymbols._str = '\''  # type: ignore

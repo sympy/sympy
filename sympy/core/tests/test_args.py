@@ -11,8 +11,7 @@ import io
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, SKIP
+from sympy.testing.pytest import XFAIL, SKIP
 
 x, y, z = symbols('x,y,z')
 
@@ -77,7 +76,11 @@ def test_all_classes_are_tested():
 
 
 def _test_args(obj):
-    return all(isinstance(arg, Basic) for arg in obj.args)
+    all_basic = all(isinstance(arg, Basic) for arg in obj.args)
+    # Ideally obj.func(*obj.args) would always recreate the object, but for
+    # now, we only require it for objects with non-empty .args
+    recreatable = not obj.args or obj.func(*obj.args) == obj
+    return all_basic and recreatable
 
 
 def test_sympy__assumptions__assume__AppliedPredicate():
@@ -868,8 +871,12 @@ def test_sympy__sets__sets__Set():
 
 def test_sympy__sets__sets__Intersection():
     from sympy.sets.sets import Intersection, Interval
-    assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
-        evaluate=False))
+    from sympy.core.symbol import Symbol
+    x = Symbol('x')
+    y = Symbol('y')
+    S = Intersection(Interval(0, x), Interval(y, 1))
+    assert isinstance(S, Intersection)
+    assert _test_args(S)
 
 
 def test_sympy__sets__sets__Union():
@@ -1401,6 +1408,9 @@ def test_sympy__stats__crv_types__LaplaceDistribution():
     from sympy.stats.crv_types import LaplaceDistribution
     assert _test_args(LaplaceDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LevyDistribution():
+    from sympy.stats.crv_types import LevyDistribution
+    assert _test_args(LevyDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
@@ -1420,6 +1430,9 @@ def test_sympy__stats__crv_types__MaxwellDistribution():
     from sympy.stats.crv_types import MaxwellDistribution
     assert _test_args(MaxwellDistribution(1))
 
+def test_sympy__stats__crv_types__MoyalDistribution():
+    from sympy.stats.crv_types import MoyalDistribution
+    assert _test_args(MoyalDistribution(1,2))
 
 def test_sympy__stats__crv_types__NakagamiDistribution():
     from sympy.stats.crv_types import NakagamiDistribution
@@ -1439,6 +1452,9 @@ def test_sympy__stats__crv_types__ParetoDistribution():
     from sympy.stats.crv_types import ParetoDistribution
     assert _test_args(ParetoDistribution(1, 1))
 
+def test_sympy__stats__crv_types__PowerFunctionDistribution():
+    from sympy.stats.crv_types import PowerFunctionDistribution
+    assert _test_args(PowerFunctionDistribution(2,0,1))
 
 def test_sympy__stats__crv_types__QuadraticUDistribution():
     from sympy.stats.crv_types import QuadraticUDistribution
@@ -1451,6 +1467,10 @@ def test_sympy__stats__crv_types__RaisedCosineDistribution():
 def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
+
+def test_sympy__stats__crv_types__ReciprocalDistribution():
+    from sympy.stats.crv_types import ReciprocalDistribution
+    assert _test_args(ReciprocalDistribution(5, 30))
 
 def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
     from sympy.stats.crv_types import ShiftedGompertzDistribution
@@ -1498,6 +1518,9 @@ def test_sympy__stats__drv_types__GeometricDistribution():
     from sympy.stats.drv_types import GeometricDistribution
     assert _test_args(GeometricDistribution(.5))
 
+def test_sympy__stats__drv_types__HermiteDistribution():
+    from sympy.stats.drv_types import HermiteDistribution
+    assert _test_args(HermiteDistribution(1, 2))
 
 def test_sympy__stats__drv_types__LogarithmicDistribution():
     from sympy.stats.drv_types import LogarithmicDistribution
@@ -1634,6 +1657,10 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
     from sympy.stats.stochastic_process_types import ContinuousMarkovChain
     from sympy import MatrixSymbol
     assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__BernoulliProcess():
+    from sympy.stats.stochastic_process_types import BernoulliProcess
+    assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
 
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
@@ -3658,6 +3685,21 @@ def test_sympy__physics__quantum__state__StateBase():
     assert _test_args(StateBase(0))
 
 
+def test_sympy__physics__quantum__state__OrthogonalBra():
+    from sympy.physics.quantum.state import OrthogonalBra
+    assert _test_args(OrthogonalBra(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalKet():
+    from sympy.physics.quantum.state import OrthogonalKet
+    assert _test_args(OrthogonalKet(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalState():
+    from sympy.physics.quantum.state import OrthogonalState
+    assert _test_args(OrthogonalState(0))
+
+
 def test_sympy__physics__quantum__state__TimeDepBra():
     from sympy.physics.quantum.state import TimeDepBra
     assert _test_args(TimeDepBra('psi', 't'))
@@ -3960,8 +4002,8 @@ def test_sympy__series__sequences__RecursiveSeq():
     from sympy.series.sequences import RecursiveSeq
     y = Function("y")
     n = symbols("n")
-    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n, (0, 1)))
-    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, (0, 1)))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), n))
 
 
 def test_sympy__series__sequences__SeqExprOp():
@@ -4078,7 +4120,9 @@ def test_sympy__tensor__array__arrayop__Flatten():
 
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
-    tp = TensorProduct(3, 4, evaluate=False)
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    tp = TensorProduct(A, B)
     assert _test_args(tp)
 
 
@@ -4673,27 +4717,31 @@ def test_sympy__vector__point__Point():
 
 
 def test_sympy__vector__basisdependent__BasisDependent():
-    from sympy.vector.basisdependent import BasisDependent
+    #from sympy.vector.basisdependent import BasisDependent
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__basisdependent__BasisDependentMul():
-    from sympy.vector.basisdependent import BasisDependentMul
+    #from sympy.vector.basisdependent import BasisDependentMul
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__basisdependent__BasisDependentAdd():
-    from sympy.vector.basisdependent import BasisDependentAdd
+    #from sympy.vector.basisdependent import BasisDependentAdd
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__basisdependent__BasisDependentZero():
-    from sympy.vector.basisdependent import BasisDependentZero
+    #from sympy.vector.basisdependent import BasisDependentZero
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__vector__BaseVector():
@@ -4728,7 +4776,7 @@ def test_sympy__vector__vector__VectorZero():
 
 
 def test_sympy__vector__vector__Vector():
-    from sympy.vector.vector import Vector
+    #from sympy.vector.vector import Vector
     #Vector is never to be initialized using args
     pass
 
@@ -4748,7 +4796,7 @@ def test_sympy__vector__vector__Dot():
 
 
 def test_sympy__vector__dyadic__Dyadic():
-    from sympy.vector.dyadic import Dyadic
+    #from sympy.vector.dyadic import Dyadic
     #Dyadic is never to be initialized using args
     pass
 
@@ -4814,13 +4862,15 @@ def test_sympy__vector__operators__Gradient():
 
 
 def test_sympy__vector__orienters__Orienter():
-    from sympy.vector.orienters import Orienter
+    #from sympy.vector.orienters import Orienter
     #Not to be initialized
+    pass
 
 
 def test_sympy__vector__orienters__ThreeAngleOrienter():
-    from sympy.vector.orienters import ThreeAngleOrienter
+    #from sympy.vector.orienters import ThreeAngleOrienter
     #Not to be initialized
+    pass
 
 
 def test_sympy__vector__orienters__AxisOrienter():

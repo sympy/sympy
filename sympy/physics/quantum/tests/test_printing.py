@@ -3,6 +3,8 @@
 TODO:
 * Address Issue 2251, printing of spin states
 """
+from typing import Dict, Any
+
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.cg import CG, Wigner3j, Wigner6j, Wigner9j
 from sympy.physics.quantum.commutator import Commutator
@@ -21,7 +23,7 @@ from sympy.physics.quantum.sho1d import RaisingOp
 
 from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
 from sympy.core.compatibility import exec_
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 # Imports used in srepr strings
 from sympy.physics.quantum.spin import JzOp
@@ -35,7 +37,7 @@ from sympy.core.compatibility import u_decode as u
 MutableDenseMatrix = Matrix
 
 
-ENV = {}
+ENV = {}  # type: Dict[str, Any]
 exec_('from sympy import *', ENV)
 exec_('from sympy.physics.quantum import *', ENV)
 exec_('from sympy.physics.quantum.cg import *', ENV)

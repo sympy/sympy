@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
+
 class _cache(list):
     """ List of cached functions """
 
@@ -34,14 +35,12 @@ class _cache(list):
                 else:
                     myfunc = myfunc.__wrapped__
 
+
 # global cache registry:
 CACHE = _cache()
 # make clear and print methods available
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
-
-from sympy.core.compatibility import lru_cache
-from functools import update_wrapper
 
 try:
     import fastcache
@@ -62,6 +61,7 @@ try:
     lru_cache = fastcache.clru_cache
 
 except ImportError:
+    from sympy.core.compatibility import lru_cache
 
     def __cacheit(maxsize):
         """caching decorator.
@@ -85,10 +85,11 @@ except ImportError:
            set environment variable SYMPY_USE_CACHE to 'debug'
         """
         def func_wrapper(func):
+            from .decorators import wraps
+
             cfunc = lru_cache(maxsize, typed=True)(func)
 
-            # wraps here does not propagate all the necessary info
-            # for py2.7, use update_wrapper below
+            @wraps(func)
             def wrapper(*args, **kwargs):
                 try:
                     retval = cfunc(*args, **kwargs)
@@ -98,14 +99,6 @@ except ImportError:
 
             wrapper.cache_info = cfunc.cache_info
             wrapper.cache_clear = cfunc.cache_clear
-
-            # Some versions of update_wrapper erroneously assign the final
-            # function of the wrapper chain to __wrapped__, see
-            # https://bugs.python.org/issue17482 .
-            # To work around this, we need to call update_wrapper first, then
-            # assign to wrapper.__wrapped__.
-            update_wrapper(wrapper, func)
-            wrapper.__wrapped__ = cfunc.__wrapped__
 
             CACHE.append(wrapper)
             return wrapper

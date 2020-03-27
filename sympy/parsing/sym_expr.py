@@ -3,7 +3,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 lfortran = import_module('lfortran')
-cin = import_module('clang.cindex', __import__kwargs = {'fromlist': ['cindex']})
+cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if not lfortran and not cin:
     class SymPyExpression(object):
@@ -17,7 +17,7 @@ else:
         from sympy.parsing.c.c_parser import parse_c
 
     @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
-    class SymPyExpression(object):
+    class SymPyExpression(object):  # type: ignore
         """Class to store and handle SymPy expressions
 
         This class will hold SymPy Expressions and handle the API for the
@@ -55,8 +55,8 @@ else:
         >>> a.return_expr()
         [Declaration(Variable(a, type=integer, value=0)),
         Declaration(Variable(b, type=integer, value=0)),
-        Declaration(Variable(c, type=integer, value=2)),
-        Declaration(Variable(d, type=integer, value=4))]
+        Declaration(Variable(c, type=real, value=2.0)),
+        Declaration(Variable(d, type=real, value=4.0))]
 
         An example of variable definiton:
 

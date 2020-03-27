@@ -86,6 +86,18 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         obj._shape = shape
         return obj
 
+    def __mul__(self, other):
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+
+    def __rmul__(self, other):
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+
     @staticmethod
     def _validate(expr, *contraction_indices):
         shape = expr.shape
@@ -1277,6 +1289,7 @@ def recognize_matrix_expression(expr):
     Trace(A)
 
     Recognize some more complex traces:
+
     >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
     >>> cg = parse_indexed_expression(expr)
     >>> recognize_matrix_expression(cg)

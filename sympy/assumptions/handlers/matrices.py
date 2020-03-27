@@ -2,7 +2,6 @@
 This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
-from __future__ import print_function, division
 
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
@@ -499,7 +498,9 @@ class AskDiagonalHandler(CommonHandler):
         if Q.diagonal(expr) in conjuncts(assumptions):
             return True
 
-    Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return True
 
     @staticmethod
     def Transpose(expr, assumptions):

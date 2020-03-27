@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S
-from sympy.core.compatibility import range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
@@ -49,7 +48,7 @@ class PrettyPrinter(Printer):
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
 
-        if not isinstance(self._settings['imaginary_unit'], string_types):
+        if not isinstance(self._settings['imaginary_unit'], str):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
@@ -390,7 +389,6 @@ class PrettyPrinter(Printer):
         return cyc
 
     def _print_Permutation(self, expr):
-        from ..str import sstr
         from sympy.combinatorics.permutations import Permutation, Cycle
 
         perm_cyclic = Permutation.print_cyclic
@@ -1193,6 +1191,9 @@ class PrettyPrinter(Printer):
 
         pform = prettyForm(deriv_symbol)
 
+        if len(deriv.variables) > 1:
+            pform = pform**self._print(len(deriv.variables))
+
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
@@ -1703,10 +1704,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
 
         def pretty_negative(pform, index):
@@ -2057,7 +2055,8 @@ class PrettyPrinter(Printer):
         else:
             cond = self._print(ts.condition)
             if self._use_unicode:
-                cond = self._print_seq(cond, "(", ")")
+                cond = self._print(cond)
+                cond = prettyForm(*cond.parens())
 
         bar = self._print("|")
 

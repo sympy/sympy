@@ -8,7 +8,7 @@ from sympy.core import Symbol, symbols
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin
 from sympy.matrices import Matrix
-from sympy.utilities.pytest import raises, nocache_fail
+from sympy.testing.pytest import raises, nocache_fail
 
 TP = TensorProduct
 
@@ -48,7 +48,7 @@ def test_R3():
 def test_point():
     x, y = symbols('x, y')
     p = R2_r.point([x, y])
-    #TODO assert p.free_symbols() == set([x, y])
+    assert p.free_symbols == {x, y}
     assert p.coords(R2_r) == p.coords() == Matrix([x, y])
     assert p.coords(R2_p) == Matrix([sqrt(x**2 + y**2), atan2(y, x)])
 

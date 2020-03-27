@@ -5,7 +5,7 @@ Primality testing
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range, as_int
+from sympy.core.compatibility import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 
@@ -464,12 +464,10 @@ def is_extra_strong_lucas_prp(n):
 
     if U == 0 and (V == 2 or V == n - 2):
         return True
-    if V == 0:
-        return True
     for r in range(1, s):
-        V = (V*V - 2) % n
         if V == 0:
             return True
+        V = (V*V - 2) % n
     return False
 
 
@@ -643,3 +641,26 @@ def isprime(n):
     # Add a random M-R base
     #import random
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
+
+
+def is_gaussian_prime(num):
+    r"""Test if num is a Gaussian prime number.
+
+    References
+    ==========
+
+    .. [1] https://oeis.org/wiki/Gaussian_primes
+    """
+
+    from sympy import sympify
+    num = sympify(num)
+    a, b = num.as_real_imag()
+    a = as_int(a)
+    b = as_int(b)
+    if a == 0:
+        b = abs(b)
+        return isprime(b) and b % 4 == 3
+    elif b == 0:
+        a = abs(a)
+        return isprime(a) and a % 4 == 3
+    return isprime(a**2 + b**2)

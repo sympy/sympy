@@ -5,7 +5,7 @@ from __future__ import print_function, division
 import math
 
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered, range, reduce
+from sympy.core.compatibility import ordered, reduce
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -470,7 +470,7 @@ def roots_cyclotomic(f, factor=False):
     for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
-        if f == g:
+        if f.expr == g.expr:
             break
     else:  # pragma: no cover
         raise RuntimeError("failed to find index of a cyclotomic polynomial")

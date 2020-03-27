@@ -7,7 +7,6 @@ from sympy.matrices.expressions import (MatrixSymbol, Identity,
 from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix)
 from sympy.core import Tuple, symbols, Expr
-from sympy.core.compatibility import range
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
@@ -110,6 +109,10 @@ def test_issue_17624():
     b = BlockMatrix([[a, z], [z, z]])
     assert block_collapse(b * b) == BlockMatrix([[a**2, z], [z, z]])
     assert block_collapse(b * b * b) == BlockMatrix([[a**3, z], [z, z]])
+
+def test_issue_18618():
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert A == Matrix(BlockDiagMatrix(A))
 
 def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']

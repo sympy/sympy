@@ -35,7 +35,7 @@ from sympy.polys import polyconfig as config
 
 from sympy.polys.domains import ZZ
 from sympy import pi, nextprime
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_gf_crt():

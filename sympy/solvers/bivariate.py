@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.compatibility import ordered, range
+from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -59,7 +59,7 @@ def _mostfunc(lhs, func, X=None):
 
     >>> from sympy.solvers.bivariate import _mostfunc
     >>> from sympy.functions.elementary.exponential import exp
-    >>> from sympy.utilities.pytest import raises
+    >>> from sympy.testing.pytest import raises
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)

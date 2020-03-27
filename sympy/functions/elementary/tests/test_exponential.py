@@ -7,7 +7,7 @@ from sympy.functions.elementary.exponential import match_real_imag
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_exp_values():
@@ -643,6 +643,20 @@ def test_issue_8866():
     b2 = log(exp(y), exp(5), evaluate=False)
     assert simplify(log(l1, b1)) == simplify(log(l2, b2))
     assert expand_log(log(l1, b1)) == expand_log(log(l2, b2))
+
+
+def test_log_expand_factor():
+    assert (log(18)/log(3) - 2).expand(factor=True) == log(2)/log(3)
+    assert (log(12)/log(2)).expand(factor=True) == log(3)/log(2) + 2
+    assert (log(15)/log(3)).expand(factor=True) == 1 + log(5)/log(3)
+    assert (log(2)/(-log(12) + log(24))).expand(factor=True) == 1
+
+    assert expand_log(log(12), factor=True) == log(3) + 2*log(2)
+    assert expand_log(log(21)/log(7), factor=False) == log(3)/log(7) + 1
+    assert expand_log(log(45)/log(5) + log(20), factor=False) == \
+        1 + 2*log(3)/log(5) + log(20)
+    assert expand_log(log(45)/log(5) + log(26), factor=True) == \
+        log(2) + log(13) + (log(5) + 2*log(3))/log(5)
 
 
 def test_issue_9116():

@@ -154,8 +154,6 @@ from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
-from sympy.core.compatibility import integer_types
-
 
 from random import shuffle
 
@@ -214,7 +212,7 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !extended_real',
 
-    'infinite       ->  !finite',
+    'infinite       ==  !finite',
     'noninteger     ==  extended_real & !integer',
     'extended_nonzero == extended_real & !zero',
 ])
@@ -338,7 +336,7 @@ class ManagedProperties(BasicMeta):
         for k in _assume_defined:
             attrname = as_property(k)
             v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, integer_types, type(None))):
+            if isinstance(v, (bool, int, type(None))):
                 if v is not None:
                     v = bool(v)
                 local_defs[k] = v
