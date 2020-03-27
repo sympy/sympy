@@ -637,7 +637,7 @@ def test_issue_13516():
     assert len(p[0].get_segments()) >= 30
 
 def test_check_figures_equal():
-    from sympy.utilities.tmpfiles import TmpFileManager
+    from sympy.testing.tmpfiles import TmpFileManager
     matplotlib = import_module('matplotlib' , min_module_version='1.1.0', catch= (RuntimeError,))
     if not matplotlib:
         skip("Matplotlib not the default backend")
