@@ -26,14 +26,12 @@ from __future__ import print_function, division
 
 import warnings
 
-from sympy import sympify, Expr, Tuple, Dummy, Symbol
+from sympy import sympify, Expr, Tuple, Dummy, Symbol, fraction, real_roots
 from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.core.compatibility import range, Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-from sympy import fraction
-from sympy import real_roots
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -1064,8 +1062,6 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
                 self.ax[i].spines['top'].set_color('none')
-                # self.ax[i].spines['left'].set_smart_bounds(True)
-                # self.ax[i].spines['bottom'].set_smart_bounds(False)
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 

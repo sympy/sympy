@@ -9,8 +9,9 @@ from sympy.utilities.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
 
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
 import os
+import shutil
 
 unset_show()
 
@@ -21,11 +22,16 @@ unset_show()
 class TmpFileManager:
 
     tmp_files = []
-
+    tmp_folders = []
     @classmethod
     def tmp_file(cls, name=''):
         cls.tmp_files.append(NamedTemporaryFile(prefix=name, suffix='.png').name)
         return cls.tmp_files[-1]
+
+    @classmethod
+    def tmp_folder(cls, name=''):
+        cls.tmp_folders.append(name)
+        return name
 
     @classmethod
     def cleanup(cls):
@@ -34,6 +40,11 @@ class TmpFileManager:
                 os.remove(file)
             except OSError:
                 # If the file doesn't exist, for instance, if the test failed.
+                pass
+        for folder in cls.tmp_folders:
+            try:
+                shutil.rmtree(folder)
+            except FileNotFoundError:
                 pass
 
 def plot_and_save_1(name):
@@ -584,3 +595,34 @@ def test_issue_11461():
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
     assert len(p[0].get_segments()) >= 30
+
+def test_check_figures_equal():
+    
+    matplotlib = import_module('matplotlib' , min_module_version='1.1.0', catch= (RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    from matplotlib.testing.compare import compare_images
+    from sympy.utilities.tmpfiles import TmpFileManager
+    test_directory = os.path.dirname(os.path.abspath(__file__))
+
+    def tmp_file(dir=None, name=''):
+        return NamedTemporaryFile(suffix='.png', dir=dir, delete=False).name
+    try:
+        temp_dir = mkdtemp()
+        TmpFileManager.tmp_folder(temp_dir)
+
+        x = Symbol('x')
+        test_filename = tmp_file(dir = temp_dir, name = "test_singularity1")
+        cmp_filename = os.path.join(test_directory, "test_singularity1.png")
+        p = plot(x/(x-1)*(x-2))
+        p.save(test_filename)
+        compare_images(cmp_filename , test_filename , 0.005)
+
+        test_filename = tmp_file(dir = temp_dir, name = "test_singularity2")
+        cmp_filename = os.path.join(test_directory, "test_singularity2.png")
+        p = plot(sin(x)/x)
+        p.save(test_filename)
+        compare_images(cmp_filename , test_filename , 0.005)
+    finally:
+        TmpFileManager.cleanup()
