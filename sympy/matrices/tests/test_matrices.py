@@ -2981,6 +2981,7 @@ def test_issue_8207():
     assert d == b[0, 0]
     assert e == 0
 
+
 def test_func():
     from sympy.simplify.simplify import nthroot
 

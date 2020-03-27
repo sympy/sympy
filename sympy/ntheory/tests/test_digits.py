@@ -1,5 +1,7 @@
 from sympy.ntheory import count_digits, digits, is_palindromic
 
+from sympy.testing.pytest import raises
+
 
 def test_digits():
     assert all([digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
@@ -13,10 +15,9 @@ def test_digits():
     assert digits(93409, 10) == [10, 9, 3, 4, 0, 9]
     assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
     assert digits(35, 10) == [10, 3, 5]
-    assert digits(35, 10, 1) == ValueError("b**(digits - 1) must be > n")
-    assert digits(35, 10, 2) == [10, 3, 5]
     assert digits(35, 10, 3) == [10, 0, 3, 5]
-    assert digits(35, 10, 4) == [10, 0, 0, 3, 5]
+    assert digits(-35, 10, 4) == [-10, 0, 0, 3, 5]
+    raises(ValueError, lambda: digits(2, 2, 1))
 
 
 def test_count_digits():
