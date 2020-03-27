@@ -13,13 +13,13 @@ from sympy import Symbol
 from sympy.external import import_module
 
 
-def mplot3d(f, var1, var2, show=True):
+def mplot3d(f, var1, var2, *, show=True):
     """
     Plot a 3d function using matplotlib/Tk.
     """
 
     import warnings
-    warnings.filterwarnings("ignore", "Could not match \S")
+    warnings.filterwarnings("ignore", r"Could not match \S")
 
     p = import_module('pylab')
     # Try newer version first

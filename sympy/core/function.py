@@ -46,7 +46,6 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.compatibility import PY3
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_and
@@ -135,30 +134,15 @@ def arity(cls):
     True
     """
     eval_ = getattr(cls, 'eval', cls)
-    if PY3:
-        parameters = inspect.signature(eval_).parameters.items()
-        if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
-            return
-        p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
-        # how many have no default and how many have a default value
-        no, yes = map(len, sift(p_or_k,
-            lambda p:p.default == p.empty, binary=True))
-        return no if not yes else tuple(range(no, no + yes + 1))
-    else:
-        cls_ = int(hasattr(cls, 'eval'))  # correction for cls arguments
-        evalargspec = inspect.getargspec(eval_)
-        if evalargspec.varargs:
-            return
-        else:
-            evalargs = len(evalargspec.args) - cls_
-            if evalargspec.defaults:
-                # if there are default args then they are optional; the
-                # fewest args will occur when all defaults are used and
-                # the most when none are used (i.e. all args are given)
-                fewest = evalargs - len(evalargspec.defaults)
-                return tuple(range(fewest, evalargs + 1))
-            return evalargs
 
+    parameters = inspect.signature(eval_).parameters.items()
+    if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
+        return
+    p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+    # how many have no default and how many have a default value
+    no, yes = map(len, sift(p_or_k,
+        lambda p:p.default == p.empty, binary=True))
+    return no if not yes else tuple(range(no, no + yes + 1))
 
 class FunctionClass(ManagedProperties):
     """
@@ -708,6 +692,9 @@ class Function(Application, Expr):
             if e == e1:
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
+                if len(e.args) == 1:
+                    # issue 14411
+                    e = e.func(e.args[0].cancel())
                 term = e.subs(x, S.Zero)
                 if term.is_finite is False or term is S.NaN:
                     raise PoleError("Cannot expand %s around 0" % (self))
@@ -737,7 +724,7 @@ class Function(Application, Expr):
         nterms = n + 2
         cf = Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
-            nterms = int(nterms / cf)
+            nterms = (n/cf).ceiling()
         for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
@@ -2833,7 +2820,7 @@ def expand_multinomial(expr, deep=True):
     power_base=False, basic=False, multinomial=True, log=False)
 
 
-def expand_log(expr, deep=True, force=False):
+def expand_log(expr, deep=True, force=False, factor=False):
     """
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
@@ -2847,9 +2834,22 @@ def expand_log(expr, deep=True, force=False):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
+    from sympy import Mul, log
+    if factor is False:
+        def _handle(x):
+            x1 = expand_mul(expand_log(x, deep=deep, force=force, factor=True))
+            if x1.count(log) <= x.count(log):
+                return x1
+            return x
+
+        expr = expr.replace(
+        lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
+        for i in Mul.make_args(j)) for j in x.as_numer_denom()),
+        lambda x: _handle(x))
+
     return sympify(expr).expand(deep=deep, log=True, mul=False,
         power_exp=False, power_base=False, multinomial=False,
-        basic=False, force=force)
+        basic=False, force=force, factor=factor)
 
 
 def expand_func(expr, deep=True):

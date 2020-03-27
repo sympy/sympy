@@ -907,7 +907,12 @@ class Piecewise(Function):
         exp_sets = []
         U = domain
         complex = not domain.is_subset(S.Reals)
+        cond_free = set()
         for expr, cond in self.args:
+            cond_free |= cond.free_symbols
+            if len(cond_free) > 1:
+                raise NotImplementedError(filldedent('''
+                    multivariate conditions are not handled.'''))
             if complex:
                 for i in cond.atoms(Relational):
                     if not isinstance(i, (Equality, Unequality)):
@@ -1187,6 +1192,8 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
+    if not isinstance(expr, Piecewise):
+        return expr
     args = list(expr.args)
 
     _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (

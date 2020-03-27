@@ -220,6 +220,34 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
+    def _eval_nseries(self, x, n, logx):
+
+        from sympy.functions import factorial, RisingFactorial
+        from sympy import Order, Add
+
+        arg = self.args[2]
+        x0 = arg.limit(x, 0)
+        ap = self.args[0]
+        bq = self.args[1]
+
+        if x0 != 0:
+            return super(hyper, self)._eval_nseries(x, n, logx)
+
+        terms = []
+
+        for i in range(n):
+            num = 1
+            den = 1
+            for a in ap:
+                num *= RisingFactorial(a, i)
+
+            for b in bq:
+                den *= RisingFactorial(b, i)
+
+            terms.append(((num/den) * (arg**i)) / factorial(i))
+
+        return (Add(*terms) + Order(x**n,x))
+
     @property
     def argument(self):
         """ Argument of the hypergeometric function. """

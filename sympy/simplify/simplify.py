@@ -1982,11 +1982,23 @@ def dotprodsimp(expr, withsimp=False):
 
     def count_ops_alg(expr):
         """Optimized count algebraic operations with no recursion into
-        non-algebraic args that ``core.function.count_ops`` does.
+        non-algebraic args that ``core.function.count_ops`` does. Also returns
+        whether rational functions may be present according to negative
+        exponents of powers or non-number fractions.
+
+        Returns
+        =======
+
+        ops, ratfunc : int, bool
+            ``ops`` is the number of algebraic operations starting at the top
+            level expression (not recursing into non-alg children). ``ratfunc``
+            specifies whether the expression MAY contain rational functions
+            which ``cancel`` MIGHT optimize.
         """
 
-        ops  = 0
-        args = [expr]
+        ops     = 0
+        args    = [expr]
+        ratfunc = False
 
         while args:
             a = args.pop()
@@ -2015,6 +2027,8 @@ def dotprodsimp(expr, withsimp=False):
                 elif d is not S.One:
                     if not d.is_Integer:
                         args.append(d)
+                        ratfunc=True
+
                     ops += 1
                     args.append(n) # could be -Mul
 
@@ -2038,7 +2052,10 @@ def dotprodsimp(expr, withsimp=False):
                 ops += 1
                 args.append(a.base)
 
-        return ops
+                if not ratfunc:
+                    ratfunc = a.exp.is_negative is not False
+
+        return ops, ratfunc
 
     def nonalg_subs_dummies(expr, dummies):
         """Substitute dummy variables for non-algebraic expressions to avoid
@@ -2079,18 +2096,19 @@ def dotprodsimp(expr, withsimp=False):
             expr       = expr2
             simplified = True
 
-        exprops = count_ops_alg(expr)
+        exprops, ratfunc = count_ops_alg(expr)
 
         if exprops >= 6: # empirically tested cutoff for expensive simplification
-            dummies = {}
-            expr2   = nonalg_subs_dummies(expr, dummies)
+            if ratfunc:
+                dummies = {}
+                expr2   = nonalg_subs_dummies(expr, dummies)
 
-            if expr2 is expr or count_ops_alg(expr2) >= 6: # check again after substitution
-                expr3 = cancel(expr2)
+                if expr2 is expr or count_ops_alg(expr2)[0] >= 6: # check again after substitution
+                    expr3 = cancel(expr2)
 
-                if expr3 != expr2:
-                    expr       = expr3.subs([(d, e) for e, d in dummies.items()])
-                    simplified = True
+                    if expr3 != expr2:
+                        expr       = expr3.subs([(d, e) for e, d in dummies.items()])
+                        simplified = True
 
         # very special case: x/(x-1) - 1/(x-1) -> 1
         elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
@@ -2100,7 +2118,7 @@ def dotprodsimp(expr, withsimp=False):
                 expr.args [1].args [-1].exp is S.NegativeOne):
 
             expr2    = together (expr)
-            expr2ops = count_ops_alg(expr2)
+            expr2ops = count_ops_alg(expr2)[0]
 
             if expr2ops < exprops:
                 expr       = expr2

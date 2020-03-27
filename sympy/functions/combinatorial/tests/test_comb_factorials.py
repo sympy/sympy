@@ -147,7 +147,9 @@ def test_ff_eval_apply():
     for i in range(100):
         x = -500 + 500 * random.random()
         k = -500 + 500 * random.random()
-        assert (abs(mpmath_ff(x, k) - ff(x, k)) < 10**(-15))
+        a = mpmath_ff(x, k)
+        b = ff(x, k)
+        assert (abs(a - b) < abs(a) * 10**(-15))
 
 
 def test_rf_ff_eval_hiprec():
@@ -429,6 +431,12 @@ def test_binomial():
     assert isinstance(binomial(u, u - 1), binomial)
     assert isinstance(binomial(x, x), binomial)
     assert isinstance(binomial(x, x - 1), binomial)
+
+    #issue #18802
+    assert expand_func(binomial(x + 1, x)) == x + 1
+    assert expand_func(binomial(x, x - 1)) == x
+    assert expand_func(binomial(x + 1, x - 1)) == x*(x + 1)/2
+    assert expand_func(binomial(x**2 + 1, x**2)) == x**2 + 1
 
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0

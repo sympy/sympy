@@ -578,7 +578,7 @@ class RisingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return reduce(lambda r, i:
-                                              r*(x.shift(i).expand()),
+                                              r*(x.shift(i)),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x + i),
@@ -597,7 +597,7 @@ class RisingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return 1/reduce(lambda r, i:
-                                                r*(x.shift(-i).expand()),
+                                                r*(x.shift(-i)),
                                                 range(1, abs(int(k)) + 1), 1)
                         else:
                             return 1/reduce(lambda r, i:
@@ -717,7 +717,7 @@ class FallingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return reduce(lambda r, i:
-                                              r*(x.shift(-i).expand()),
+                                              r*(x.shift(-i)),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x - i),
@@ -735,7 +735,7 @@ class FallingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return 1/reduce(lambda r, i:
-                                                r*(x.shift(i).expand()),
+                                                r*(x.shift(i)),
                                                 range(1, abs(int(k)) + 1), 1)
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
@@ -1012,7 +1012,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
         k = self.args[1]
-        if k.is_Add and n in k.args:
+        if (n-k).is_Integer:
             k = n - k
 
         if k.is_Integer:

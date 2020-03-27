@@ -14,13 +14,13 @@ from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 
 
-def mplot2d(f, var, show=True):
+def mplot2d(f, var, *, show=True):
     """
     Plot a 2d function using matplotlib/Tk.
     """
 
     import warnings
-    warnings.filterwarnings("ignore", "Could not match \S")
+    warnings.filterwarnings("ignore", r"Could not match \S")
 
     p = import_module('pylab')
     if not p:

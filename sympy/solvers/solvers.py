@@ -14,7 +14,7 @@ This module contain solvers for all kinds of equations:
 
 from __future__ import print_function, division
 
-from sympy import divisors
+from sympy import divisors, binomial, expand_func
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
@@ -1459,6 +1459,10 @@ def _solve(f, *symbols, **flags):
         else:
             raise NotImplementedError(not_impl_msg % f)
     symbol = symbols[0]
+
+    #expand binomials only if it has the unknown symbol
+    f = f.replace(lambda e: isinstance(e, binomial) and e.has(symbol),
+        lambda e: expand_func(e))
 
     # /!\ capture this flag then set it to False so that no checking in
     # recursive calls will be done; only the final answer is checked
@@ -3460,7 +3464,10 @@ def unrad(eq, *syms, **flags):
     # check for trivial case
     # - already a polynomial in integer powers
     if all(_Q(g) == 1 for g in gens):
-        return
+        if (len(gens) == len(poly.gens) and d!=1):
+            return eq, []
+        else:
+            return
     # - an exponent has a symbol of interest (don't handle)
     if any(g.as_base_exp()[1].has(*syms) for g in gens):
         return

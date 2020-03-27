@@ -720,6 +720,10 @@ class polygamma(Function):
                 if z != nz:
                     return polygamma(n, nz)
 
+            if n.is_positive:
+                if z is S.Half:
+                    return (-1)**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
+
             if n is S.NegativeOne:
                 return loggamma(z)
             else:

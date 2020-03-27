@@ -6,19 +6,19 @@ from sympy.sets import Interval
 _x, _y = symbols("x y")
 
 
-@dispatch(Basic, Basic)  # type: ignore
+@dispatch(Basic, Basic)  # type: ignore # noqa:F811
 def _set_mul(x, y): # noqa:F811
     return None
 
-@dispatch(Set, Set)  # type: ignore
+@dispatch(Set, Set)  # type: ignore # noqa:F811
 def _set_mul(x, y): # noqa:F811
     return None
 
-@dispatch(Expr, Expr)  # type: ignore
+@dispatch(Expr, Expr)  # type: ignore # noqa:F811
 def _set_mul(x, y): # noqa:F811
     return x*y
 
-@dispatch(Interval, Interval)  # type: ignore
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def _set_mul(x, y): # noqa:F811
     """
     Multiplications in interval arithmetic
@@ -41,19 +41,19 @@ def _set_mul(x, y): # noqa:F811
         maxopen
     )
 
-@dispatch(Basic, Basic)  # type: ignore
+@dispatch(Basic, Basic)  # type: ignore # noqa:F811
 def _set_div(x, y): # noqa:F811
     return None
 
-@dispatch(Expr, Expr)  # type: ignore
+@dispatch(Expr, Expr)  # type: ignore # noqa:F811
 def _set_div(x, y): # noqa:F811
     return x/y
 
-@dispatch(Set, Set)  # type: ignore
+@dispatch(Set, Set)  # type: ignore # noqa:F811 # noqa:F811
 def _set_div(x, y): # noqa:F811
     return None
 
-@dispatch(Interval, Interval)  # type: ignore
+@dispatch(Interval, Interval)  # type: ignore # noqa:F811
 def _set_div(x, y): # noqa:F811
     """
     Divisions in interval arithmetic

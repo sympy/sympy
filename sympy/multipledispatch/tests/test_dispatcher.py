@@ -44,7 +44,7 @@ def test_dispatcher_as_decorator():
     def inc(x): # noqa:F811
         return x + 1
 
-    @f.register(float)
+    @f.register(float) # noqa:F811
     def inc(x): # noqa:F811
         return x - 1
 

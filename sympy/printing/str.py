@@ -24,6 +24,8 @@ class StrPrinter(Printer):
         "sympy_integers": False,
         "abbrev": False,
         "perm_cyclic": True,
+        "min": None,
+        "max": None,
     }  # type: Dict[str, Any]
 
     _relationals = dict()  # type: Dict[str, str]
@@ -46,10 +48,7 @@ class StrPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
 
         PREC = precedence(expr)
         l = []
@@ -153,10 +152,6 @@ class StrPrinter(Printer):
 
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
-
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
-        return str(expr)
 
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
@@ -334,11 +329,16 @@ class StrPrinter(Printer):
 
     def _print_MatMul(self, expr):
         c, m = expr.as_coeff_mmul()
-        if c.is_number and c < 0:
-            expr = _keep_coeff(-c, m)
-            sign = "-"
-        else:
-            sign = ""
+
+        sign = ""
+        if c.is_number:
+            re, im = c.as_real_imag()
+            if im.is_zero and re.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+            elif re.is_zero and im.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
 
         return sign + '*'.join(
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
@@ -691,7 +691,9 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):

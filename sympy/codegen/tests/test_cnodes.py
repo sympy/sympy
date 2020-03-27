@@ -1,6 +1,6 @@
 from sympy.core.symbol import symbols
 from sympy.printing.ccode import ccode
-from sympy.codegen.ast import Declaration, Variable, float64, int64
+from sympy.codegen.ast import Declaration, Variable, float64, int64, String
 from sympy.codegen.cnodes import (
     alignof, CommaOperator, goto, Label, PreDecrement, PostDecrement, PreIncrement, PostIncrement,
     sizeof, union, struct
@@ -66,7 +66,7 @@ def test_sizeof():
     assert ccode(sz) == 'sizeof(%s)' % typename
     assert sz.func(*sz.args) == sz
     assert not sz.is_Atom
-    assert all(atom == typename for atom in sz.atoms())
+    assert sz.atoms() == {String('unsigned int'), String('sizeof')}
 
 
 def test_struct():

@@ -291,9 +291,6 @@ class Mul(Expr, AssocOp):
                 if not coeff:
                     # 0 * zoo = NaN
                     return [S.NaN], [], None
-                if coeff is S.ComplexInfinity:
-                    # zoo * zoo = zoo
-                    return [S.ComplexInfinity], [], None
                 coeff = S.ComplexInfinity
                 continue
 
@@ -958,7 +955,7 @@ class Mul(Expr, AssocOp):
     def matches(self, expr, repl_dict={}, old=False):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(self, expr, repl_dict, old)
+            return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
             return None
 
@@ -1318,7 +1315,9 @@ class Mul(Expr, AssocOp):
         z = self.is_zero
         if z:
             return False
-        elif z is False:
+        if self.is_finite is False:
+            return False
+        elif z is False and self.is_finite is True:
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):

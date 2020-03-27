@@ -72,7 +72,7 @@ class Beam(object):
          + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x'), base_char='C'):
+    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C'):
         """Initializes the class.
 
         Parameters
@@ -98,6 +98,9 @@ class Beam(object):
             bending axis of the beam. The second moment of area will be computed
             from the shape object internally.
 
+        area : Symbol/float
+            Represents the cross-section area of beam
+
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -119,6 +122,7 @@ class Beam(object):
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._area = area
         self._applied_supports = []
         self._support_as_loads = []
         self._applied_loads = []
@@ -146,6 +150,15 @@ class Beam(object):
         self._length = sympify(l)
 
     @property
+    def area(self):
+        """Cross-sectional area of the Beam. """
+        return self._area
+
+    @area.setter
+    def area(self, a):
+        self._area = sympify(a)
+
+    @property
     def variable(self):
         """
         A symbol that can be used as a variable along the length of the beam
@@ -158,7 +171,7 @@ class Beam(object):
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
-        >>> E, I = symbols('E, I')
+        >>> E, I, A = symbols('E, I, A')
         >>> x, y, z = symbols('x, y, z')
         >>> b = Beam(4, E, I)
         >>> b.variable
@@ -166,7 +179,7 @@ class Beam(object):
         >>> b.variable = y
         >>> b.variable
         y
-        >>> b = Beam(4, E, I, z)
+        >>> b = Beam(4, E, I, A, z)
         >>> b.variable
         z
         """
@@ -1217,6 +1230,13 @@ class Beam(object):
         else:
             return None
 
+    def shear_stress(self):
+        """
+        Returns an expression representing the Shear Stress
+        curve of the Beam object.
+        """
+        return self.shear_force()/self._area
+
     def plot_shear_force(self, subs=None):
         """
 
@@ -1626,9 +1646,9 @@ class Beam(object):
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
-                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
-                else:
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
+                else:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
             # higher order loads
             elif load[2] >= 0:
                 higher_order = True
@@ -1734,8 +1754,8 @@ class Beam3D(Beam):
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> b.slope()
-    [0, 0, x*(l*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
-        + q*x**2/6 + x*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
+    [0, 0, x*(l*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
+        + q*x**2/6 + x*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0
@@ -1782,7 +1802,7 @@ class Beam3D(Beam):
         """
         super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
-        self.area = area
+        self._area = area
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
         self._load_Singularity = [0, 0, 0]
@@ -2037,6 +2057,19 @@ class Beam3D(Beam):
         """
         return self.shear_force()[0]
 
+    def shear_stress(self):
+        """
+        Returns a list of three expressions which represents the shear stress
+        curve of the Beam object along all three axes.
+        """
+        return [self.shear_force()[0]/self._area, self.shear_force()[1]/self._area, self.shear_force()[2]/self._area]
+
+    def axial_stress(self):
+        """
+        Returns expression of Axial stress present inside the Beam object.
+        """
+        return self.axial_force()/self._area
+
     def bending_moment(self):
         """
         Returns a list of three expressions which represents the bending moment
@@ -2066,7 +2099,7 @@ class Beam3D(Beam):
             I_y, I_z = I[0], I[1]
         else:
             I_y = I_z = I
-        A = self.area
+        A = self._area
         load = self._load_vector
         moment = self._moment_load_vector
         defl = Function('defl')

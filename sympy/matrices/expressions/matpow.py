@@ -10,12 +10,17 @@ from .permutation import PermutationMatrix
 
 class MatPow(MatrixExpr):
 
-    def __new__(cls, base, exp):
+    def __new__(cls, base, exp, evaluate=False, **options):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("Function parameter should be a matrix")
         exp = _sympify(exp)
-        return super(MatPow, cls).__new__(cls, base, exp)
+
+        obj = super(MatPow, cls).__new__(cls, base, exp)
+        if evaluate:
+            obj = obj.doit(deep=False)
+
+        return obj
 
     @property
     def base(self):
