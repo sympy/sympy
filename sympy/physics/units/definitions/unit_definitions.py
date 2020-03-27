@@ -59,6 +59,9 @@ mg.set_global_relative_scale_factor(milli, gram)
 ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
 ug.set_global_relative_scale_factor(micro, gram)
 
+Da = dalton = daltons = Quantity("dalton", abbrev="Da")
+Da.set_global_relative_scale_factor(Rational(1.660539, 10**27), "kilogram")
+
 # derived units
 newton = newtons = N = Quantity("newton", abbrev="N")
 joule = joules = J = Quantity("joule", abbrev="J")
@@ -136,6 +139,9 @@ nm.set_global_relative_scale_factor(nano, meter)
 
 pm = picometer = picometers = Quantity("picometer", abbrev="pm")
 pm.set_global_relative_scale_factor(pico, meter)
+
+A = angstrom = angstroms = Quantity("angstrom", abbrev="A", latex_repr=r'\r{A}')
+A.set_global_relative_scale_factor(Rational(1, 10**10), meter)
 
 ft = foot = feet = Quantity("foot", abbrev="ft")
 ft.set_global_relative_scale_factor(Rational(3048, 10000), meter)
