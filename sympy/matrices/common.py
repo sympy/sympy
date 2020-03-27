@@ -2019,6 +2019,51 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
 
+    def rot90(self, k=1):
+        """Rotates Matrix by 90 degrees
+
+        Parameters
+        ==========
+
+        k : int
+            Specifies how many times the matrix is rotated by 90 degrees
+            (clockwise when positive, counter-clockwise when negative).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> A = Matrix(2, 2, symbols('a:d'))
+        >>> A
+        Matrix([
+        [a, b],
+        [c, d]])
+
+        Rotating the matrix clockwise one time:
+
+        >>> A.rot90(1)
+        Matrix([
+        [c, a],
+        [d, b]])
+
+        Rotating the matrix anticlockwise two times:
+
+        >>> A.rot90(-2)
+        Matrix([
+        [d, c],
+        [b, a]])
+        """
+
+        mod = k%4
+        if mod == 0:
+            return self
+        if mod == 1:
+            return self[::-1, ::].T
+        if mod == 2:
+            return self[::-1, ::-1]
+        if mod == 3:
+            return self[::, ::-1].T
+
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.
 
