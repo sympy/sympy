@@ -502,7 +502,19 @@ def test_multinomial():
     assert expand_func(multinomial(4, 1)) == 5
     assert expand_func(multinomial(5, 1)) == 6
     assert expand_func(multinomial(11, 1)) == 12
+    assert expand_func(multinomial(12, 1)) == 13
+    assert expand_func(multinomial(13, 1)) == 14
+    assert expand_func(multinomial(14, 1)) == 15
+    assert expand_func(multinomial(15, 1)) == 16
+    assert expand_func(multinomial(16, 1)) == 17
+    assert expand_func(multinomial(17, 1)) == 18
+    assert expand_func(multinomial(18, 1)) == 19
+    assert expand_func(multinomial(19, 1)) == 20
+    assert expand_func(multinomial(20, 1)) == 21
+    assert expand_func(multinomial(21, 1)) == 22
+    assert expand_func(multinomial(22, 1)) == 23
     assert expand_func(multinomial(23, 1)) == 24
+    assert expand_func(multinomial(24, 1)) == 25
     assert expand_func(multinomial(43, 1)) == 44
     assert expand_func(multinomial(n, 2)) == (n + 1)*(n + 2)/2
     assert expand_func(multinomial(4, 2)) == 15
