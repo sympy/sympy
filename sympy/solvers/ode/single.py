@@ -13,7 +13,7 @@ from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
 from sympy.polys.polytools import cancel, factor, factor_list
-from sympy.simplify import simplify,collect
+from sympy.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -237,7 +237,7 @@ class SinglePatternODESolver(SingleODESolver):
 
         if not pattern.coeff(df).has(Wild):
             eq = expand(eq / eq.coeff(df))
-        eq = eq.collect(f(x), func = cancel)
+        eq = eq.collect([f(x).diff(x)], func = cancel)
 
         self._wilds_match = match = eq.match(pattern)
         if match is not None:
@@ -416,11 +416,12 @@ class FirstExact(SinglePatternODESolver):
     # indirect doctest
 
     """
-    hint="1st_exact"
-    has_integral=True
+    hint = "1st_exact"
+    has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
-        P = Wild('P')
+        P = Wild('P', exclude=[f(x).diff(x)])
         Q = Wild('Q', exclude=[f(x).diff(x)])
         return P, Q
 
@@ -430,18 +431,8 @@ class FirstExact(SinglePatternODESolver):
 
     def _verify(self, fx) -> bool:
         P, Q = self.wilds()
-        eq = self.ode_problem.eq
         x = self.ode_problem.sym
         y = Dummy('y')
-
-        #This checks if Derivative present in wild P
-        if fx.diff(x) in self._wilds_match[P].atoms(Derivative):
-            eq = collect(eq,fx.diff(x))
-            pattern = self._equation(fx, x, 1)
-            self._wilds_match = eq.match(pattern)
-
-        if fx.diff(x) in self._wilds_match[P].atoms(Derivative):
-            return False
 
         m, n = self.wilds_match()
 
