@@ -134,7 +134,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_homogeneous': is_homogeneous,
     }
 
-    if match['is_linear'] and match['is_constant']:
+    # The last condition will be later removed.
+    if match['is_linear'] and match['is_constant'] and len(eqs) > 3:
 
         # Converting the equation into canonical form if the
         # equation is first order. There will be a separate
@@ -145,7 +146,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             new_eqs = [canon_eq.subs(rep) for canon_eq in canon_eqs]
             coef = linear_eq_to_matrix(new_eqs, [rep[func] for func in funcs])
             match['func_coeff'] = coef[0]
+            match['type_of_equation'] = "type1"
 
             return match
 
-    return match
+    return None

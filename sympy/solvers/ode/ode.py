@@ -600,7 +600,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                if match['no_of_equation'] > 3:
+                if match['no_of_equation'] > 3 and match['is_homogeneous'] and match['is_constant']:
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
                 else:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
@@ -1815,7 +1815,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type4'}
 
     """
-    # from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
+    from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
 
     # Sympify equations and convert iterables of equations into
     # a list of equations
@@ -1847,10 +1847,9 @@ def classify_sysode(eq, funcs=None, **kwargs):
     if len(funcs) != len(eq):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
-#    match = neq_nth_linear_constant_coeff_match(eq, funcs)
-#    if match is not None:
-#        match['func_coeff'] = func_coef
-#        return match
+    match = neq_nth_linear_constant_coeff_match(eq, funcs, t)
+    if match is not None:
+        return match
 
     func_dict = dict()
     for func in funcs:
@@ -8133,7 +8132,7 @@ def _linear_neq_order1_type1(match_):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
-    M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
+    M = fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
     P, J = matrix_exp_jordan_form(M, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
