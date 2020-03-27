@@ -76,20 +76,30 @@ what dsolve returned is:
 {dsolve_sol}\
 """
 
+exception_msg = """\
+dsolve raised exception : {e} 
+
+when using {hint}.
+
+The ODE is:
+{eq}\
+"""
 
 def _test_for_particular_hint(our_hint, ode_example):
     eq = ode_example['eq']
     expected_sol = ode_example['sol']
     if our_hint in classify_ode(eq):
-        print(our_hint,eq)
-        dsolve_sol = dsolve(eq, hint=our_hint)
-        expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
-        if len(expected_sol) == 1:
-            expected_checkodesol = (True, 0)
+        try:
+            dsolve_sol = dsolve(eq, hint=our_hint)
+            expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
+            if len(expected_sol) == 1:
+                expected_checkodesol = (True, 0)
 
-        if checkodesol(eq, dsolve_sol) != expected_checkodesol:
-            message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-            raise AssertionError(message)
+            if checkodesol(eq, dsolve_sol) != expected_checkodesol:
+                message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                raise AssertionError(message)
+        except Exception as e:
+            print(exception_msg.format(e=str(e), hint=our_hint, eq=eq))
 
 
 def _ode_solver_test(ode_examples):
@@ -115,107 +125,110 @@ def _ode_solver_test(ode_examples):
 def _get_examples_ode_sol_euler_homogeneous():
     return {
             'hint': "nth_linear_euler_eq_homogeneous",
+            'func': f(x),
             'examples':{
-                'euler_hom_01': {
-                    'eq': Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
-                    'sol': [Eq(f(x), C1 + C2*x**Rational(5, 2))]
-                },
+    'euler_hom_01': {
+        'eq': Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
+        'sol': [Eq(f(x), C1 + C2*x**Rational(5, 2))],
+    },
 
-                'euler_hom_02': {
-                    'eq': Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
-                    'sol': [Eq(f(x), C1*sqrt(x) + C2*x**3)]
-                },
+    'euler_hom_02': {
+        'eq': Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0),
+        'sol': [Eq(f(x), C1*sqrt(x) + C2*x**3)]
+    },
 
-                'euler_hom_03': {
-                    'eq': Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0),
-                    'sol': [Eq(f(x), (C1 + C2*log(x))/x**2)]
-                },
+    'euler_hom_03': {
+        'eq': Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0),
+        'sol': [Eq(f(x), (C1 + C2*log(x))/x**2)]
+    },
 
-                'euler_hom_04': {
-                    'eq': Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
-                    'sol': [Eq(f(x), C1/x**2 + C2*x + C3*x**3)]
-                },
+    'euler_hom_04': {
+        'eq': Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
+        'sol': [Eq(f(x), C1/x**2 + C2*x + C3*x**3)]
+    },
 
-                'euler_hom_05': {
-                    'eq': Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
-                    'sol': [Eq(f(x), x**5*(C1 + C2*log(x) + C3*log(x)**2))]
-                },
+    'euler_hom_05': {
+        'eq': Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0),
+        'sol': [Eq(f(x), x**5*(C1 + C2*log(x) + C3*log(x)**2))]
+    },
 
-                'euler_hom_06': {
-                    'eq': x**2*diff(f(x), x, 2) + x*diff(f(x), x) - 9*f(x),
-                    'sol': [Eq(f(x), C1*x**-3 + C2*x**3)]
-                },
+    'euler_hom_06': {
+        'eq': x**2*diff(f(x), x, 2) + x*diff(f(x), x) - 9*f(x),
+        'sol': [Eq(f(x), C1*x**-3 + C2*x**3)]
+    },
 
-                'euler_hom_07': {
-                    'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
-                    'sol': [Eq(f(x), C1*sin(log(x)) + C2*cos(log(x)))]
-                },
-                }
-            }
+    'euler_hom_07': {
+        'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
+        'sol': [Eq(f(x), C1*sin(log(x)) + C2*cos(log(x)))]
+    },
+    }
+    }
 
 
 def _get_examples_ode_sol_euler_undetermined_coeff():
     return {
             'hint': "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
+            'func': f(x),
             'examples':{
-                'euler_undet_01': {
-                    'eq': Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1),
-                    'sol': [Eq(f(x), C1 + C2*log(x) + log(x)**2/2)]
-                },
+    'euler_undet_01': {
+        'eq': Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1),
+        'sol': [Eq(f(x), C1 + C2*log(x) + log(x)**2/2)]
+    },
 
-                'euler_undet_02': {
-                    'eq': Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3),
-                    'sol': [Eq(f(x), x*(C1 + C2*x + Rational(1, 2)*x**2))]
-                },
+    'euler_undet_02': {
+        'eq': Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3),
+        'sol': [Eq(f(x), x*(C1 + C2*x + Rational(1, 2)*x**2))]
+    },
 
-                'euler_undet_03': {
-                    'eq': Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x),
-                    'sol': [Eq(f(x), (C1 + C2*x**4 - log(x)**2/8 - log(x)/16)/x)]
-                },
+    'euler_undet_03': {
+        'eq': Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x),
+        'sol': [Eq(f(x), (C1 + C2*x**4 - log(x)**2/8 - log(x)/16)/x)]
+    },
 
-                'euler_undet_04': {
-                    'eq': Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x)),
-                    'sol': [Eq(f(x), C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256))]
-                },
+    'euler_undet_04': {
+        'eq': Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x)),
+        'sol': [Eq(f(x), C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256))]
+    },
 
-                'euler_undet_05': {
-                    'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
-                    'sol': [Eq(f(x), C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36))]
-                },
-                }
-            }
+    'euler_undet_05': {
+        'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
+        'sol': [Eq(f(x), C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36))]
+    },
+    }
+    }
 
 
 def _get_examples_ode_sol_euler_var_para():
     return {
             'hint': "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
+            'func': f(x),
             'examples':{
-                'euler_var_01': {
-                    'eq': Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4),
-                    'sol': [Eq(f(x), x*(C1 + C2*x + x**3/6))]
-                },
+    'euler_var_01': {
+        'eq': Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4),
+        'sol': [Eq(f(x), x*(C1 + C2*x + x**3/6))]
+    },
 
-                'euler_var_02': {
-                    'eq': Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x)),
-                    'sol': [Eq(f(x), C1/x**2 + C2*x + x*exp(x)/3 - 4*exp(x)/3 + 8*exp(x)/(3*x) - 8*exp(x)/(3*x**2))]
-                },
+    'euler_var_02': {
+        'eq': Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x)),
+        'sol': [Eq(f(x), C1/x**2 + C2*x + x*exp(x)/3 - 4*exp(x)/3 + 8*exp(x)/(3*x) - 8*exp(x)/(3*x**2))]
+    },
 
-                'euler_var_03': {
-                    'eq': Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4*exp(x)),
-                    'sol':  [Eq(f(x), x*(C1 + C2*x + x*exp(x) - 2*exp(x)))]
-                },
+    'euler_var_03': {
+        'eq': Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4*exp(x)),
+        'sol':  [Eq(f(x), x*(C1 + C2*x + x*exp(x) - 2*exp(x)))]
+    },
 
-                'euler_var_04': {
-                    'eq': x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x),
-                    'sol': [Eq(f(x), C1*x + C2*x**2 + log(x)/2 + Rational(3, 4))]
-                },
+    'euler_var_04': {
+        'eq': x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x),
+        'sol': [Eq(f(x), C1*x + C2*x**2 + log(x)/2 + Rational(3, 4))]
+    },
 
-                'euler_var_05': {
-                    'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
-                    'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))]
-                },
-                }
-            }
+    'euler_var_05': {
+        'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
+        'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))]
+    },
+    }
+    }
 
 
 def _get_all_examples():
@@ -225,6 +238,7 @@ def _get_all_examples():
         for example in solver['examples']:
             temp = {
                 'hint': solver['hint'],
+                'func': solver['examples'][example].get('func',solver['func']),
                 'eq': solver['examples'][example]['eq'],
                 'sol': solver['examples'][example]['sol'],
             }
