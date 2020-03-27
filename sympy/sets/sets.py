@@ -2037,16 +2037,16 @@ class DisjointUnion(Set):
 
     >>> from sympy import DisjointUnion, FiniteSet, Interval
     >>> A = FiniteSet(1, 2, 3)
-    >>> B = Interval(0, oo)
+    >>> B = Interval(0, 5)
     >>> DisjointUnion(A, B)
-    DisjointUnion(FiniteSet(1, 2, 3), Interval(0, oo))
+    DisjointUnion(FiniteSet(1, 2, 3), Interval(0, 5))
     >>> DisjointUnion(A, B).rewrite(Union)
-    ({1, 2, 3} × {0}) ∪ ([0, ∞) × {1})
+    ({1, 2, 3} x {0}) U ([0, 5] x {1})
     >>> C = FiniteSet(Symbol('x'), Symbol('y'), Symbol('z'))
     >>> DisjointUnion(C, C)
     DisjointUnion(FiniteSet(x, y, z), FiniteSet(x, y, z))
     >>> DisjointUnion(C, C).rewrite(Union)
-    {x, y, z} × {0, 1}
+    {x, y, z} x {0, 1}
 
     References
     ==========
@@ -2065,21 +2065,17 @@ class DisjointUnion(Set):
         obj = Basic.__new__(cls, *dj_collection)
         return obj
 
-    def rewrite(self, obj):
-        if obj == Union:
-            index = 0
-            dj_union = EmptySet()
-            for set_i in self.args:
-                if isinstance(set_i, Set):
-                    cross = ProductSet(set_i, FiniteSet(index))
-                    dj_union = Union(dj_union, cross)
-                    index = index + 1
-                else:
-                    continue
-            return dj_union
-        else:
-            raise ValueError("Invalid input: '%s'", obj)
-            return None
+    def _eval_rewrite_as_Union(self, *sets):
+        index = 0
+        dj_union = EmptySet()
+        for set_i in sets:
+            if isinstance(set_i, Set):
+                cross = ProductSet(set_i, FiniteSet(index))
+                dj_union = Union(dj_union, cross)
+                index = index + 1
+            else:
+                continue
+        return dj_union
 
 
 def imageset(*args):

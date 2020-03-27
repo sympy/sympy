@@ -1504,4 +1504,3 @@ def test_DisjointUnion():
     y = Symbol("y")
     z = Symbol("z")
     assert DisjointUnion(FiniteSet(x), FiniteSet(y, z)).rewrite(Union) == (FiniteSet(x) * FiniteSet(0)) + (FiniteSet(y, z) * FiniteSet(1))
-

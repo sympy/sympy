@@ -220,7 +220,7 @@ class clean(Command):
                     os.remove(os.path.join(root, file))
 
         os.chdir(dir_setup)
-        names = ["python3.6-build-stamp-2.4", "MANIFEST", "build",
+        names = ["python-build-stamp-2.4", "MANIFEST", "build",
                  "dist", "doc/_build", "sample.tex"]
 
         for f in names:
