@@ -1,4 +1,5 @@
 from sympy.external import import_module
+import os
 
 pycp = import_module('pycparser')
 
