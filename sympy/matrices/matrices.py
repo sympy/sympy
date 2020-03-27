@@ -39,7 +39,6 @@ from .eigen import (
     _eigenvals, _eigenvects,
     _bidiagonalize, _bidiagonal_decomposition,
     _is_diagonalizable, _diagonalize,
-    _eval_is_positive_definite,
     _is_positive_definite, _is_positive_semidefinite,
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
     _jordan_form, _left_eigenvects, _singular_values)
@@ -364,9 +363,6 @@ class MatrixEigen(MatrixSubspaces):
     Should not be instantiated directly. See ``eigen.py`` for their
     implementations."""
 
-    def _eval_is_positive_definite(self, method="eigen"):
-        return _eval_is_positive_definite(self, method=method)
-
     def eigenvals(self, error_when_incomplete=True, **flags):
         return _eigenvals(self, error_when_incomplete=error_when_incomplete, **flags)
 
@@ -416,7 +412,6 @@ class MatrixEigen(MatrixSubspaces):
     def singular_values(self):
         return _singular_values(self)
 
-    _eval_is_positive_definite.__doc__ = _eval_is_positive_definite.__doc__
     eigenvals.__doc__                  = _eigenvals.__doc__
     eigenvects.__doc__                 = _eigenvects.__doc__
     is_diagonalizable.__doc__          = _is_diagonalizable.__doc__
