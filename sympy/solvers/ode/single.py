@@ -1,8 +1,11 @@
 #
 # This is the module for ODE solver classes for single ODEs.
 #
+import typing
 
-from typing import ClassVar, Dict, Iterable, List, Optional, Type
+if typing.TYPE_CHECKING:
+    from typing import ClassVar
+from typing import Dict, Iterable, List, Optional, Type
 
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
