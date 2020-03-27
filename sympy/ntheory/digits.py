@@ -17,40 +17,42 @@ def digits(n, b=10, digits=None):
     >>> from sympy.ntheory.digits import digits
     >>> digits(35)
     [10, 3, 5]
-    >>> digits(27, 2)
+
+    If the number is negative, the negative sign will be placed on the
+    base (which is the first element in the returned list):
+
+    >>> digits(-35)
+    [-10, 3, 5]
+
+    Bases other than 10 (and greater than 1) can be selected with ``b``:
+
+    >>> digits(27, b=2)
     [2, 1, 1, 0, 1, 1]
-    >>> digits(65536, 256)
-    [256, 1, 0, 0]
-    >>> digits(-3958, 27, 2)
-    [-27, 5, 11, 16]
-    >>> digits(35, 10)
-    [10, 3, 5]
-    >>> digits(35, 10, 2)
-    [10, 3, 5]
-    >>> digits(35, 10, 3)
-    [10, 0, 3, 5]
-    >>> digits(35, 10, 4)
+
+    Use the ``digits`` keyword if a certain number of digits is desired:
+
+    >>> digits(35, digits=4)
     [10, 0, 0, 3, 5]
 
     Parameters
     ==========
 
     n: integer
-        The number whose list of digits is computed
+        The number whose digits are returned.
 
     b: integer
-        The base in which list of digits is computed
+        The base in which digits are computed.
 
-    digits: integer
-        Indicates the number of digits to be return after the base;
-        leading zeros will be added if the number has too few digits
+    digits: integer (or None for all digits)
+        The number of digits to be returned (padded with zeros, if
+        necessary).
 
     """
 
     b = as_int(b)
     n = as_int(n)
-    if b <= 1:
-        raise ValueError("b must be >= 2")
+    if b < 2:
+        raise ValueError("b must be greater than 1")
     else:
         x, y = abs(n), []
         while x >= b:
@@ -59,10 +61,12 @@ def digits(n, b=10, digits=None):
         y.append(x)
         y.append(-b if n < 0 else b)
         y.reverse()
-        if digits is not None and len(y) - 1 < digits:
-            if b**(digits - 1) <= n:
+        ndig = len(y) - 1
+        if digits is not None:
+            if ndig > digits:
                 raise ValueError("b**(digits - 1) must be > n")
-            y = [b] + [0]*(digits - len(y) + 1) + y[1:]
+            elif ndig < digits:
+                y[1:1] = [0]*(digits - ndig)
         return y
 
 
