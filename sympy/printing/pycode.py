@@ -98,7 +98,6 @@ class AbstractPythonCodePrinter(CodePrinter):
     def __init__(self, settings=None):
         super(AbstractPythonCodePrinter, self).__init__(settings)
 
-        # XXX Remove after dropping python 2 support.
         # Python standard handler
         std = self._settings['standard']
         if std is None:
@@ -353,7 +352,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
 
-        # XXX Remove after dropping python 2 support.
         if self.standard == 'python2':
             return 'print %s' % print_args
         return 'print(%s)' % print_args
@@ -447,7 +445,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        # XXX Remove after dropping python 2 support.
         if self.standard == 'python2':
             return '{}./{}.'.format(expr.p, expr.q)
         return '{}/{}'.format(expr.p, expr.q)
