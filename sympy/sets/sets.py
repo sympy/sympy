@@ -2138,24 +2138,30 @@ class DisjointUnion(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            return iter(self.rewrite(Union))
-        #     index = 0
-        #     exhausted = []
-        #     component_set_iters = []
-        #     for set_i in self.sets:
-        #         i = iter(set_i)
-        #         component_set_iters.append(i)
-        #         yield (next(i), index)
-        #         index += 1
-        #     while len(exhausted) != len(self.sets):
-        #         index = 0
-        #         for set_i in self.sets:
-        #             try:
-        #                 for iter_j in component_set_iters:
-        #                     yield (next(iter_j), index)
-        #             except StopIteration:
-        #                 continue
-        #             index += 1
+            component_set_iters = []
+
+            for set_i in self.sets:
+                component_set_iters.append(iter(set_i)) #setting up all component iterators
+
+            visited = 0
+            size = 0
+            infinite_iter = False
+            try:
+                size = len(self)
+            except TypeError:
+                infinite_iter = True
+            while (visited <= size) or infinite_iter:
+                index = 0
+                for set_i in self.sets:
+                    try:
+                        yield (next(component_set_iters[index]), index)
+                        index += 1
+                    except StopIteration:
+                        index += 1
+                        continue
+                    visited += 1
+                if visited == size:
+                    visited += 1
         else:
             raise TypeError("'%s' is not iterable." % self)
 
