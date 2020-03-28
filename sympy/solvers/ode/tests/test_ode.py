@@ -16,6 +16,7 @@ from sympy.functions import airyai, airybi, besselj, bessely
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
 from sympy.utilities.misc import filldedent
+import traceback
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 u, x, y, z = symbols('u,x:z', real=True)
@@ -79,7 +80,13 @@ what dsolve returned is:
 exception_msg = """\
 dsolve raised exception : {e}
 
-when using {hint}.
+when using {hint} for the example {example}
+
+You can test this with:
+
+from sympy.solvers.ode.tests.test_ode import _test_particular_example
+
+_test_particular_example('{hint}', '{example}')
 
 The ODE is:
 {eq}\
@@ -88,6 +95,7 @@ The ODE is:
 def _test_for_particular_hint(our_hint, ode_example):
     eq = ode_example['eq']
     expected_sol = ode_example['sol']
+    example = ode_example['example_name']
     if our_hint in classify_ode(eq):
         try:
             dsolve_sol = dsolve(eq, hint=our_hint)
@@ -99,7 +107,8 @@ def _test_for_particular_hint(our_hint, ode_example):
                 message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
                 raise AssertionError(message)
         except Exception as e:
-            print(exception_msg.format(e=str(e), hint=our_hint, eq=eq))
+            print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
+            traceback.print_exc()
 
 
 def _ode_solver_test(ode_examples):
@@ -241,6 +250,7 @@ def _get_all_examples():
                 'func': solver['examples'][example].get('func',solver['func']),
                 'eq': solver['examples'][example]['eq'],
                 'sol': solver['examples'][example]['sol'],
+                'example_name': example,
             }
             all_examples.append(temp)
     return all_examples
@@ -252,6 +262,14 @@ def _test_all_hints():
     for our_hint in all_hints:
         for ode_example in all_examples:
             _test_for_particular_hint(our_hint, ode_example)
+
+
+def _test_particular_example(our_hint, example_name):
+    all_examples = _get_all_examples()
+    for example in all_examples:
+        if example['example_name'] == example_name:
+            eq = example['eq']
+            dsolve(eq, hint=our_hint)
 
 
 def test_get_numbered_constants():
