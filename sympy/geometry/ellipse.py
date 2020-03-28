@@ -1470,7 +1470,7 @@ class Ellipse(GeometrySet):
             x = max(x_c - x_min, x_max - x_c)
         else:
             # taking x and y as distances of the given point from the center
-            point = Point(point)
+            point = Point2D(point)
             y = point.y - y_c
             x = point.x - x_c
 
