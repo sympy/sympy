@@ -77,7 +77,7 @@ what dsolve returned is:
 """
 
 exception_msg = """\
-dsolve raised exception : {e} 
+dsolve raised exception : {e}
 
 when using {hint}.
 
