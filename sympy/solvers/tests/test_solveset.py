@@ -1261,9 +1261,10 @@ def test_linsolve():
 
     # Issue #14860
     from sympy.physics.units import meter, newton, kilo
-    Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
-    #assert linsolve(Eqns, x, y) == {
-    #        (kilo*newton*Rational(-28, 3), kilo*newton*Rational(4, 3))}
+    kN = kilo*newton
+    Eqns = [8*kN + x + y, 28*kN*meter + 3*x*meter]
+    assert linsolve(Eqns, x, y) == {
+            (kilo*newton*Rational(-28, 3), kN*Rational(4, 3))}
 
     # linsolve fully expands expressions, so removable singularities
     # and other nonlinearity does not raise an error
