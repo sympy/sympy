@@ -617,6 +617,12 @@ def test_issue_14393():
     assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a)*y**b/a
 
 
+# Hangs intermittently on Python 3.5. Probably this is because a codepath
+# depends on dict-ordering which it perhaps should not but also the codepath
+# that hangs might be due to a bug somewhere.
+#
+# https://github.com/sympy/sympy/pull/18978
+@XFAIL
 def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
 
