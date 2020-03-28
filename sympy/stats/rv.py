@@ -1031,10 +1031,10 @@ def sample(expr, condition=None, size=1, library='python', **kwargs):
     size : int
         Represents number of samples to be extracted
     library : str
-        - python : Sample using random module
-        - scipy : Sample using scipy
-        - numpy : Sample using numpy
-        - pymc3 : Sample using PyMC3
+        - 'python' : Sample using random module
+        - 'scipy' : Sample using scipy
+        - 'numpy' : Sample using numpy
+        - 'pymc3' : Sample using PyMC3
         Choose any of the available options to sample from as string,
         by default is 'python'
 
@@ -1057,7 +1057,7 @@ def sample(expr, condition=None, size=1, library='python', **kwargs):
     [True, True, True, True]
 
     """
-    return next(sample_iter(expr, condition, size=size, library = library,
+    return next(sample_iter(expr, condition, size=size, library=library,
                                                             numsamples=1))
 
 
@@ -1098,11 +1098,11 @@ def sample_iter(expr, condition=None, size=1, library='python',
     """
     # lambdify is much faster but not as robust
     try:
-        return sample_iter_lambdify(expr, condition, size=size, library = library,
+        return sample_iter_lambdify(expr, condition, size=size, library=library,
                         numsamples=numsamples, **kwargs)
     # use subs when lambdify fails
     except TypeError:
-        return sample_iter_subs(expr, condition, size=size, library = library,
+        return sample_iter_subs(expr, condition, size=size, library=library,
                         numsamples=numsamples, **kwargs)
 
 def quantile(expr, evaluate=True, **kwargs):
