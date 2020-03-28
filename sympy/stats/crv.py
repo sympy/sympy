@@ -336,26 +336,35 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=()):
+    def sample(self, size=1, library='python'):
         """ A random realization from the distribution """
-        if not size:
-            size = 1
-        samps = getattr(SampleExternal, '_sample_python')(self, size)
-        if samps is not None:
-            return list(samps) if size!=1 else samps[0]
+
+        if library == 'python':
+            samps = getattr(SampleExternal, '_sample_python')(self, size)
+            if samps != None:
+                return list(samps) if size!=1 else samps[0]
+            else:
+                icdf = self._inverse_cdf_expression()
+                if size == 1:
+                    return icdf(random.uniform(0, 1))
+                else:
+                    return [icdf(random.uniform(0, 1))]*size
 
         libraries = ['scipy', 'numpy', 'pymc3']
-        for lib in libraries:
-            if import_module(lib):
-                samps = getattr(SampleExternal, '_sample_' + lib)(self, size)
-                if samps is not None:
-                    return list(samps) if size != 1 else samps[0]
-
-        icdf = self._inverse_cdf_expression()
-        if size == 1:
-            return icdf(random.uniform(0, 1))
+        if library not in libraries:
+            raise NotImplementedError("Sampling from %s is not implemeted."
+                                        % str(library))
+        if import_module(library):
+            samps = getattr(SampleExternal, '_sample_' + library)(self, size)
+            if samps is not None:
+                return samps if size != 1 else samps[0]
+            raise NotImplementedError(
+                    "Sampling for %s is not currently implemented from %s"
+                    % (self.__class__.__name__, library)
+                    )
         else:
-            return [icdf(random.uniform(0, 1))]*size
+            raise ValueError("Failed to import %s" % library)
+
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -682,13 +691,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self, size=()):
+    def sample(self, size=1, library='python'):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample(size)}
+        return {self.value: self.distribution.sample(size, library=library)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)

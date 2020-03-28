@@ -386,7 +386,7 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=()):
+    def sample(self, size=1, library='python'):
         return {k: v for space in self.spaces
             for k, v in space.sample().items()}
 
@@ -1017,9 +1017,26 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, size=(), **kwargs):
+def sample(expr, condition=None, size=1, library='python', **kwargs):
     """
     A realization of the random expression
+
+    Parameters
+    ==========
+
+    expr : Expression of random variables
+        Expression from which sample is extracted
+    condition : Expr containing RandomSymbols
+        A conditional expression
+    size : int
+        Represents number of samples to be extracted
+    library : str
+        - python : Sample using random module
+        - scipy : Sample using scipy
+        - numpy : Sample using numpy
+        - pymc3 : Sample using PyMC3
+        Choose any of the available options to sample from as string,
+        by default is 'python'
 
     Examples
     ========
@@ -1032,15 +1049,20 @@ def sample(expr, condition=None, size=(), **kwargs):
     >>> samp = sample(N)
     >>> samp in N.pspace.domain.set
     True
+    >>> samp = sample(N, N>0)
+    >>> samp > 0
+    True
     >>> samp_list = sample(N, size=4)
     >>> [sam in N.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
 
     """
-    return next(sample_iter(expr, condition, size=size, numsamples=1))
+    return next(sample_iter(expr, condition, size=size, library = library,
+                                                            numsamples=1))
 
 
-def sample_iter(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
+def sample_iter(expr, condition=None, size=1, library='python',
+                            numsamples=S.Infinity, **kwargs):
     """
     Returns an iterator of realizations from the expression given a condition
 
@@ -1076,10 +1098,12 @@ def sample_iter(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
     """
     # lambdify is much faster but not as robust
     try:
-        return sample_iter_lambdify(expr, condition, size=size, numsamples=numsamples, **kwargs)
+        return sample_iter_lambdify(expr, condition, size=size, library = library,
+                        numsamples=numsamples, **kwargs)
     # use subs when lambdify fails
     except TypeError:
-        return sample_iter_subs(expr, condition, size=size, numsamples=numsamples, **kwargs)
+        return sample_iter_subs(expr, condition, size=size, library = library,
+                        numsamples=numsamples, **kwargs)
 
 def quantile(expr, evaluate=True, **kwargs):
     r"""
@@ -1127,7 +1151,8 @@ def quantile(expr, evaluate=True, **kwargs):
     else:
         return result
 
-def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
+def sample_iter_lambdify(expr, condition=None, size=1, library='python',
+                    numsamples=S.Infinity, **kwargs):
     """
     Uses lambdify for computation. This is fast but does not always work.
 
@@ -1149,7 +1174,7 @@ def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity, *
 
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
-    d = ps.sample(size)  # a dictionary that maps RVs to values
+    d = ps.sample(size, library)  # a dictionary that maps RVs to values
     args = [d[rv] for rv in rvs]
     fn(*args)
     if condition:
@@ -1158,7 +1183,7 @@ def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity, *
     def return_generator():
         count = 0
         while count < numsamples:
-            d = ps.sample(size)  # a dictionary that maps RVs to values
+            d = ps.sample(size, library)  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
             if condition:  # Check that these values satisfy the condition
@@ -1174,7 +1199,8 @@ def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity, *
     return return_generator()
 
 
-def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity, **kwargs):
+def sample_iter_subs(expr, condition=None, size=1, library='python',
+                numsamples=S.Infinity, **kwargs):
     """
     Uses subs for computation. This is slow but almost always works.
 
@@ -1191,7 +1217,7 @@ def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity, **kwa
 
     count = 0
     while count < numsamples:
-        d = ps.sample(size)  # a dictionary that maps RVs to values
+        d = ps.sample(size, library)  # a dictionary that maps RVs to values
 
         if condition is not None:  # Check that these values satisfy the condition
             gd = condition.xreplace(d)
@@ -1204,8 +1230,8 @@ def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity, **kwa
         count += 1
 
 
-def sampling_P(condition, given_condition=None, numsamples=1,
-               evalf=True, **kwargs):
+def sampling_P(condition, given_condition=None, size=1, library='python',
+               numsamples=1, evalf=True, **kwargs):
     """
     Sampling version of P
 
@@ -1221,7 +1247,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
     count_true = 0
     count_false = 0
 
-    samples = sample_iter(condition, given_condition,
+    samples = sample_iter(condition, given_condition, size=size, library=library,
                           numsamples=numsamples, **kwargs)
 
     for sample in samples:
@@ -1240,7 +1266,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
         return result
 
 
-def sampling_E(expr, given_condition=None, numsamples=1,
+def sampling_E(expr, given_condition=None, size=1, library='python', numsamples=1,
                evalf=True, **kwargs):
     """
     Sampling version of E
@@ -1253,7 +1279,7 @@ def sampling_E(expr, given_condition=None, numsamples=1,
     sampling_density
     """
 
-    samples = sample_iter(expr, given_condition,
+    samples = sample_iter(expr, given_condition, size=size, library=library,
                           numsamples=numsamples, **kwargs)
 
     result = Add(*list(samples)) / numsamples
@@ -1262,7 +1288,8 @@ def sampling_E(expr, given_condition=None, numsamples=1,
     else:
         return result
 
-def sampling_density(expr, given_condition=None, numsamples=1, **kwargs):
+def sampling_density(expr, given_condition=None, size=1, library='python',
+                    numsamples=1, **kwargs):
     """
     Sampling version of density
 
@@ -1274,7 +1301,7 @@ def sampling_density(expr, given_condition=None, numsamples=1, **kwargs):
     """
 
     results = {}
-    for result in sample_iter(expr, given_condition,
+    for result in sample_iter(expr, given_condition, size=size, library=library,
                               numsamples=numsamples, **kwargs):
         results[result] = results.get(result, 0) + 1
     return results

@@ -22,7 +22,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
-from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain, SampleExternal
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -960,7 +960,7 @@ def test_sampling_gaussian_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
-    assert sample(X) in X.pspace.domain.set
+    assert sample(X, library='scipy') in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)
@@ -1549,11 +1549,10 @@ def test_sample_numpy():
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
         for X in distribs_numpy:
-            samps = sample(X, size=size)
-            samps2 = SampleExternal._sample_numpy(X.pspace.distribution, size)
-            for sam in range(size):
-                assert samps[sam] in X.pspace.domain.set
-                assert samps2[sam] in X.pspace.domain.set
+            samps = sample(X, size=size, library='numpy')
+            for sam in samps:
+                assert sam in X.pspace.domain.set
+
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -1577,11 +1576,9 @@ def test_sample_scipy():
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         for X in distribs_scipy:
-            samps = sample(X, size=size)
-            samps2 = SampleExternal._sample_scipy(X.pspace.distribution, size)
-            for sam in range(size):
-                assert samps[sam] in X.pspace.domain.set
-                assert samps2[sam] in X.pspace.domain.set
+            samps = sample(X, size=size, library='scipy')
+            for sam in samps:
+                assert sam in X.pspace.domain.set
 
 def test_sample_pymc3():
     distribs_pymc3 = [
@@ -1602,11 +1599,9 @@ def test_sample_pymc3():
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
         for X in distribs_pymc3:
-            samps = sample(X, size=size)
-            samps2 = SampleExternal._sample_pymc3(X.pspace.distribution, size)
-            for sam in range(size):
-                assert samps[sam] in X.pspace.domain.set
-                assert samps2[sam] in X.pspace.domain.set
+            samps = sample(X, size=size, library='pymc3')
+            for sam in samps:
+                assert sam in X.pspace.domain.set
 
 
 def test_issue_16318():
