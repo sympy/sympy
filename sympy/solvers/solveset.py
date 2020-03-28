@@ -2229,19 +2229,21 @@ def linear_coeffs(eq, *syms, **_kw):
     """
     d = defaultdict(list)
     eq = _sympify(eq)
-    if not eq.has(*syms):
+    symset = set(syms)
+    has = eq.free_symbols & symset
+    if not has:
         return [S.Zero]*len(syms) + [eq]
-    c, terms = eq.as_coeff_add(*syms)
+    c, terms = eq.as_coeff_add(*has)
     d[0].extend(Add.make_args(c))
     for t in terms:
-        m, f = t.as_coeff_mul(*syms)
+        m, f = t.as_coeff_mul(*has)
         if len(f) != 1:
             break
         f = f[0]
-        if f in syms:
+        if f in symset:
             d[f].append(m)
         elif f.is_Add:
-            d1 = linear_coeffs(f, *syms, **{'dict': True})
+            d1 = linear_coeffs(f, *has, **{'dict': True})
             d[0].append(m*d1.pop(0))
             for xf, vf in d1.items():
                 d[xf].append(m*vf)
