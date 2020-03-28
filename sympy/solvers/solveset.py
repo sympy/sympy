@@ -23,7 +23,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
@@ -45,6 +45,7 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
+from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -2581,34 +2582,30 @@ def linsolve(system, *symbols):
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
 
-    try:
-        solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
-    except ValueError:
-        # No solution
+    if not symbols:
+        symbols = [Dummy() for _ in range(A.cols)]
+        allsyms = Tuple(*A) + Tuple(b)
+        name = _uniquely_named_symbol('tau', allsyms,
+            compare=lambda i: str(i).rstrip('1234567890')).name
+        gen  = numbered_symbols(name)
+    else:
+        gen = None
+
+    # This is just a wrapper for solve_lin_sys
+    eqs = list(A * Matrix(symbols) - b)
+    eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+    sol = solve_lin_sys(eqs, ring, _raw=False)
+    if sol is None:
         return S.EmptySet
+    #sol = {sym:val for sym, val in sol.items() if sym != val}
+    sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
 
-    # Replace free parameters with free symbols
-    if params:
-        if not symbols:
-            symbols = [_ for _ in params]
-            # re-use the parameters but put them in order
-            # params       [x, y, z]
-            # free_symbols [2, 0, 4]
-            # idx          [1, 0, 2]
-            idx = list(zip(*sorted(zip(free_syms, range(len(free_syms))))))[1]
-            # simultaneous replacements {y: x, x: y, z: z}
-            replace_dict = dict(zip(symbols, [symbols[i] for i in idx]))
-        elif len(symbols) >= A.cols:
-            replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
-        else:
-            raise IndexError(filldedent('''
-                the number of symbols passed should have a length
-                equal to the number of %s.
-                ''' % syms_needed_msg))
-        solution = [sol.xreplace(replace_dict) for sol in solution]
+    if gen is not None:
+        for sym in symbols:
+            if sol.has(sym):
+                sol = sol.subs(sym, next(gen))
 
-    solution = [simplify(sol).xreplace(swap) for sol in solution]
-    return FiniteSet(tuple(solution))
+    return sol
 
 
 
