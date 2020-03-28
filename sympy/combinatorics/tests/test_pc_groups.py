@@ -1,5 +1,5 @@
 from sympy.combinatorics.permutations import Permutation
-from sympy.combinatorics.named_groups import SymmetricGroup
+from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
 
 
 def test_pc_presentation():
@@ -79,7 +79,7 @@ def test_induced_pcgs():
     gens = [G[0], G[1]]
     ipcgs = collector.induced_pcgs(gens)
     order = [gen.order() for gen in ipcgs]
-    assert order == [3, 3]
+    assert order == [3, 3, 3, 3]
 
     G = SymmetricGroup(20).sylow_subgroup(2)
     PcGroup = G.polycyclic_group()
@@ -87,4 +87,19 @@ def test_induced_pcgs():
     gens = [G[0], G[1], G[2], G[3]]
     ipcgs = collector.induced_pcgs(gens)
     order = [gen.order() for gen in ipcgs]
-    assert order ==[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    assert order == [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+
+def test_issue_18804():
+    G = DihedralGroup(10)
+    A = G.polycyclic_group()
+    # Just checking the formation of polycyclic group
+    assert A.length() == 3
+
+def test_issue_18898():
+    A = AlternatingGroup(4)
+    G = A.polycyclic_group()
+    collector = G.collector
+    gens = [A[0], A[1]]
+    ipcgs = collector.induced_pcgs(gens)
+    order = [gen.order() for gen in ipcgs]
+    assert order == [3, 2, 2]

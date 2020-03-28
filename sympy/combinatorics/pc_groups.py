@@ -332,7 +332,9 @@ class Collector(DefaultPrinting):
                 key = ((w[0][0], re), )
                 key = free_group.dtype(key)
                 if self.pc_presentation[key]:
-                    word_ = ((w[0][0], r), (self.pc_presentation[key], q))
+                    presentation = self.pc_presentation[key].array_form
+                    sym, exp = presentation[0]
+                    word_ = ((w[0][0], r), (sym, q*exp))
                     word_ = free_group.dtype(word_)
                 else:
                     if r != 0:
@@ -601,9 +603,9 @@ class Collector(DefaultPrinting):
     def _sift(self, z, g):
         h = g
         d = self.depth(h)
-        while d < len(self.pcgs) and z[d-1] != 1:
+        while d < len(self.pcgs)+1 and z[d-1] != 1:
             k = z[d-1]
-            e = self.leading_exponent(h)*self.leading_exponent(k**-1)
+            e = self.leading_exponent(h)*(self.leading_exponent(k))**-1
             e = e % self.relative_order[d-1]
             h = k**-e*h
             d = self.depth(h)
@@ -645,7 +647,8 @@ class Collector(DefaultPrinting):
             g = G.pop(0)
             h = self._sift(z, g)
             d = self.depth(h)
-            if d < len(self.pcgs):
+            if d < len(self.pcgs)+1:
+                G.append(h**self.relative_order[d-1])
                 for gen in z:
                     if gen != 1:
                         G.append(h**-1*gen**-1*h*gen)
