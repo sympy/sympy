@@ -385,7 +385,7 @@ class prime(Function):
     """
     @classmethod
     def eval(cls, nth):
-        if(not isinstance(nth, Integer)):
+        if not isinstance(nth, Integer):
             return None
         n = as_int(nth)
         if n < 1:
@@ -541,7 +541,7 @@ class nextprime(Function):
         >>> from sympy import nextprime
         >>> [(i, nextprime(i)) for i in range(10, 15)]
         [(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]
-        >>> nextprime(2, ith=2) # the 2nd prime after 2
+        >>> nextprime(2, 2) # the 2nd prime after 2
         5
 
         See Also
@@ -553,7 +553,7 @@ class nextprime(Function):
     """
     @classmethod
     def eval(cls, n, ith=1):
-        if(not isinstance(n, Integer)):
+        if not isinstance(n, Integer):
             return None
         n = int(n)
         i = as_int(ith)
@@ -624,7 +624,7 @@ class prevprime(Function):
 
         # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        if(not isinstance(n, Integer)):
+        if not isinstance(n, Integer):
             return None
 
         n = as_int(ceiling(n))
@@ -788,13 +788,13 @@ class primorial(Function):
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210
-    >>> primorial(4, nth=False) # primes <= 4 are 2 and 3
+    >>> primorial(4, False) # primes <= 4 are 2 and 3
     6
     >>> primorial(1)
     2
-    >>> primorial(1, nth=False)
+    >>> primorial(1, False)
     1
-    >>> primorial(sqrt(101), nth=False)
+    >>> primorial(10, False)
     210
 
     One can argue that the primes are infinite since if you take
@@ -828,7 +828,7 @@ class primorial(Function):
     """
     @classmethod
     def eval(cls, n, nth=True):
-        if(not isinstance(n, Integer)):
+        if not isinstance(n, Integer):
             return None
 
         if nth:
@@ -963,7 +963,7 @@ class composite(Function):
     """
     @classmethod
     def eval(cls, nth):
-        if(not isinstance(nth, Integer)):
+        if not isinstance(nth, Integer):
             return None
 
         n = as_int(nth)
@@ -1033,7 +1033,7 @@ class compositepi(Function):
     """
     @classmethod
     def eval(cls, n):
-        if(not isinstance(n, Integer)):
+        if not isinstance(n, Integer):
             return None
 
         n = int(n)
