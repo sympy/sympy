@@ -1561,10 +1561,8 @@ def plot(*args, **kwargs):
         expr = arg[0]
         limit = arg[1]
         root_deno = []
-        for exp in denoms(expr):
-            if exp == pi or exp.is_integer:
-                continue
-            root_deno.extend(real_roots(exp))
+        for den in denoms(expr, limit[0]):
+            root_deno.extend(real_roots(den))
         if root_deno:
             new_limit = []
             for root in root_deno:
