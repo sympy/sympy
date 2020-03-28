@@ -1460,7 +1460,7 @@ class Ellipse(GeometrySet):
         >>> e.section_modulus()
         (8*pi, 4*pi)
         >>> e.section_modulus((2, 2))
-        (2*pi, 2*pi)
+        (16*pi, 4*pi)
         """
         x_c, y_c = self.center
         if point is None:

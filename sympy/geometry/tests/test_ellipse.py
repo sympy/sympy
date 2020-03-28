@@ -479,6 +479,7 @@ def test_section_modulus_and_polar_second_moment_of_area():
 
     e = Ellipse(Point(0, 0), 2, 2)
     assert e.section_modulus() == (2*pi, 2*pi)
+    assert e.section_modulus(Point(2, 2)) == (2*pi, 2*pi)
     assert e.section_modulus((2, 2)) == (2*pi, 2*pi)
 
 
