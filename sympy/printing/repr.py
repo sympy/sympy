@@ -10,6 +10,7 @@ from __future__ import print_function, division
 from typing import Any, Dict
 
 from sympy.core.function import AppliedUndef
+from sympy.core.mul import Mul
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer
@@ -191,11 +192,11 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        terms = expr.args
-        if self.order != 'old':
-            args = expr._new_rawargs(*terms).as_ordered_factors()
+        if self.order not in ('old', 'none'):
+            args = expr.as_ordered_factors()
         else:
-            args = terms
+            # use make_args in case expr was something like -x -> x
+            args = Mul.make_args(expr)
 
         nargs = len(args)
         args = map(self._print, args)

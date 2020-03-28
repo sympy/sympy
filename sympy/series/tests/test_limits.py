@@ -612,6 +612,21 @@ def test_issue_14590():
     assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)
 
 
+def test_issue_14393():
+    a, b = symbols('a b')
+    assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a)*y**b/a
+
+
+# Hangs intermittently on Python 3.5. Probably this is because a codepath
+# depends on dict-ordering which it perhaps should not but also the codepath
+# that hangs might be due to a bug somewhere.
+#
+# https://github.com/sympy/sympy/pull/18978
+@XFAIL
+def test_issue_14811():
+    assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
+
+
 def test_issue_17431():
     assert limit(((n + 1) + 1) / (((n + 1) + 2) * factorial(n + 1)) *
                  (n + 2) * factorial(n) / (n + 1), n, oo) == 0
@@ -641,3 +656,7 @@ def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
     assert limit(n + p, n, 0) == 0
+
+
+def test_issue_15055():
+    assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1

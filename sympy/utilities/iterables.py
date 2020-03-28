@@ -2088,8 +2088,13 @@ def has_variety(seq):
 def uniq(seq, result=None):
     """
     Yield unique elements from ``seq`` as an iterator. The second
-    parameter ``result``  is used internally; it is not necessary to pass
-    anything for this.
+    parameter ``result``  is used internally; it is not necessary
+    to pass anything for this.
+
+    Note: changing the sequence during iteration will raise a
+    RuntimeError if the size of the sequence is known; if you pass
+    an iterator and advance the iterator you will change the
+    output of this routine but there will be no warning.
 
     Examples
     ========
@@ -2107,14 +2112,26 @@ def uniq(seq, result=None):
     [[1], [2, 1]]
     """
     try:
+        n = len(seq)
+    except TypeError:
+        n = None
+    def check():
+        # check that size of seq did not change during iteration;
+        # if n == None the object won't support size changing, e.g.
+        # an iterator can't be changed
+        if n is not None and len(seq) != n:
+            raise RuntimeError('sequence changed size during iteration')
+    try:
         seen = set()
         result = result or []
         for i, s in enumerate(seq):
             if not (s in seen or seen.add(s)):
                 yield s
+                check()
     except TypeError:
         if s not in result:
             yield s
+            check()
             result.append(s)
         if hasattr(seq, '__getitem__'):
             for s in uniq(seq[i + 1:], result):
@@ -2399,15 +2416,18 @@ def generate_oriented_forest(n):
 
 def minlex(seq, directed=True, is_set=False, small=None):
     """
-    Return a tuple where the smallest element appears first; if
-    ``directed`` is True (default) then the order is preserved, otherwise
-    the sequence will be reversed if that gives a smaller ordering.
+    Return a tuple representing the rotation of the sequence in which
+    the lexically smallest elements appear first, e.g. `cba ->acb`.
 
-    If every element appears only once then is_set can be set to True
-    for more efficient processing.
+    If ``directed`` is False then the smaller of the sequence and the
+    reversed sequence is returned, e.g. `cba -> abc`.
+
+    For more efficient processing, ``is_set`` can be set to True if there
+    are no duplicates in the sequence.
 
     If the smallest element is known at the time of calling, it can be
-    passed and the calculation of the smallest element will be omitted.
+    passed as ``small`` and the calculation of the smallest element will
+    be omitted.
 
     Examples
     ========
