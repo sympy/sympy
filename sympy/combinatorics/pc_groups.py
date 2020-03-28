@@ -638,7 +638,7 @@ class Collector(DefaultPrinting):
         >>> gens = [G[0], G[1]]
         >>> ipcgs = collector.induced_pcgs(gens)
         >>> [gen.order() for gen in ipcgs]
-        [3]
+        [3, 3]
 
         """
         z = [1]*len(self.pcgs)
