@@ -2035,18 +2035,18 @@ class DisjointUnion(Set):
     Examples
     ========
 
-    >>> from sympy import DisjointUnion, FiniteSet, Interval
+    >>> from sympy import DisjointUnion, FiniteSet, Interval, Union, Symbol
     >>> A = FiniteSet(1, 2, 3)
     >>> B = Interval(0, 5)
     >>> DisjointUnion(A, B)
     DisjointUnion(FiniteSet(1, 2, 3), Interval(0, 5))
     >>> DisjointUnion(A, B).rewrite(Union)
-    ({1, 2, 3} x {0}) U ([0, 5] x {1})
+    Union(ProductSet(FiniteSet(1, 2, 3), FiniteSet(0)), ProductSet(Interval(0, 5), FiniteSet(1)))
     >>> C = FiniteSet(Symbol('x'), Symbol('y'), Symbol('z'))
     >>> DisjointUnion(C, C)
     DisjointUnion(FiniteSet(x, y, z), FiniteSet(x, y, z))
     >>> DisjointUnion(C, C).rewrite(Union)
-    {x, y, z} x {0, 1}
+    ProductSet(FiniteSet(x, y, z), FiniteSet(0, 1))
 
     References
     ==========
@@ -2166,14 +2166,14 @@ class DisjointUnion(Set):
         Examples
         ========
 
-        >>> from sympy import FiniteSet, DisjointUnion
-        >>> D1 = DisjointUnion(FiniteSet(1, 2, 3, 4), S.EmptySet, FiniteSet(3, 4, 5))
+        >>> from sympy import FiniteSet, DisjointUnion, EmptySet
+        >>> D1 = DisjointUnion(FiniteSet(1, 2, 3, 4), EmptySet, FiniteSet(3, 4, 5))
         >>> len(D1)
         7
-        >>> D2 = DisjointUnion(FiniteSet(3, 5, 7), S.EmptySet, FiniteSet(3, 5, 7))
+        >>> D2 = DisjointUnion(FiniteSet(3, 5, 7), EmptySet, FiniteSet(3, 5, 7))
         >>> len(D2)
         6
-        >>> D3 = DisjointUnion(S.EmptySet, S.EmptySet)
+        >>> D3 = DisjointUnion(EmptySet, EmptySet)
         >>> len(D3)
         0
 
