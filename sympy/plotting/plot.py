@@ -26,8 +26,9 @@ from __future__ import print_function, division
 
 import warnings
 
-from sympy import sympify, Expr, Tuple, Dummy, Symbol, fraction, real_roots
+from sympy import sympify, Expr, Tuple, Dummy, Symbol, pi, real_roots
 from sympy.external import import_module
+from sympy.solvers.solvers import denoms
 from sympy.core.function import arity
 from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
@@ -1559,21 +1560,23 @@ def plot(*args, **kwargs):
     for arg in plot_expr:
         expr = arg[0]
         limit = arg[1]
-        frac = fraction(expr) #to find the denominator
-        new_deno = frac[1]
-        if (not new_deno.is_Integer) and (not new_deno.is_Float) and (not new_deno.is_irrational):
-            root_deno = real_roots(new_deno)   #to find the points of discontinuity
+        root_deno = []
+        for exp in denoms(expr):
+            if exp == pi or exp.is_integer:
+                continue
+            root_deno.extend(real_roots(exp))
+        if root_deno:
             new_limit = []
             for root in root_deno:
-                left_limit = (limit[0], limit[1] , root)
-                new_limit.append(left_limit)
-                limit = list(limit)
-                limit[1]= root
-                limit = tuple(limit)
-            if root_deno:
-                new_limit.append(limit)
-                for lim in new_limit:
-                    new_plot.append((expr, lim))
+                if root>limit[1] and root<limit[2]:
+                    left_limit = (limit[0], limit[1] , root)
+                    new_limit.append(left_limit)
+                    limit = list(limit)
+                    limit[1]= root
+                    limit = tuple(limit)
+            new_limit.append(limit)
+            for lim in new_limit:
+                new_plot.append((expr, lim))
         else:
             new_plot.append((expr, limit))
 
