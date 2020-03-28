@@ -328,46 +328,65 @@ applied from the mid till the end of the beam.
     Using the sign convention of upward forces and counterclockwise moment
     being positive.
 
->>> from sympy.physics.continuum_mechanics.beam import Beam
->>> from sympy import symbols
->>> E, I = symbols('E, I')
->>> R1, R2 = symbols('R1, R2')
->>> b = Beam(6, E, I)
->>> b.apply_load(R1, 0, -1)
->>> b.apply_load(1.5, 3, -2)
->>> b.apply_load(-3, 3, 0)
->>> b.apply_load(-1/3, 3, 1)
->>> b.apply_load(R2, 6, -1)
->>> b.bc_deflection.append((0, 0))
->>> b.bc_deflection.append((6, 0))
->>> b.solve_for_reaction_loads(R1, R2)
->>> b.reaction_loads
-    {R₁: 2.25, R₂: 8.25}
-   
->>> b.load
-            -1              -2            0                            1               -1
-    2.25⋅<x>   + 1.5⋅<x - 3>   - 3⋅<x - 3>  - 0.333333333333333⋅<x - 3>  + 8.25⋅<x - 6>  
+For ramp loads, slope is used while defining singularity functions.
+Slope is defined as the ratio of the "vertical change" to the
+"horizontal change" between (any) two distinct points on a line.
+Here it is equal to 1/3. Hence 1/3 is used in place of 1.
 
->>> b.shear_force()
-            0              -1            1                            2               0
-    2.25⋅<x>  + 1.5⋅<x - 3>   - 3⋅<x - 3>  - 0.166666666666667⋅<x - 3>  + 8.25⋅<x - 6> 
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols, plot
+   >>> E, I = symbols('E, I')
+   >>> R1, R2 = symbols('R1, R2')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_load(R1, 0, -1)
+   >>> b.apply_load(-1.5, 3, -2)
+   >>> b.apply_load(3, 3, 0)
+   >>> b.apply_load(1/3, 3, 1)
+   >>> b.apply_load(R2, 6, -1)
+   >>> b.bc_deflection.append((0, 0))
+   >>> b.bc_deflection.append((6, 0))
+   >>> b.solve_for_reaction_loads(R1, R2)
+   >>> b.reaction_loads
+      {R₁:-2.25, R₂:-8.25}
 
->>> b.bending_moment()
-                                        2                                              
-            1              0   3⋅<x - 3>                              3               1
-    2.25⋅<x>  + 1.5⋅<x - 3>  - ────────── - 0.0555555555555556⋅<x - 3>  + 8.25⋅<x - 6> 
-                                   2                                                 
->>> b.slope()
-             2              1              3                             4                2         
-    1.125⋅<x>  + 1.5⋅<x - 3>  - 0.5⋅<x - 3>  - 0.0138888888888889⋅<x - 3>  + 4.125⋅<x - 6>  - 12.825
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-                                                  E⋅I
+   >>> b.load
+                                                          1
+               -1              -2            0   1⋅<x - 3>                 -1
+     - 2.25⋅<x>   - 1.5⋅<x - 3>   + 3⋅<x - 3>  + ──────────  - 8.25⋅<x - 6>  
+                                                     3
+   >>> plot(b.load)  # doctest: +SKIP
 
->>> b.deflection()
-                         3               2                4                              5                3
-    -12.825⋅x + 0.375⋅<x>  + 0.75⋅<x - 3>  - 0.125⋅<x - 3>  - 0.00277777777777778⋅<x - 3>  + 1.375⋅<x - 6> 
-    ───────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                      E⋅I     
+   >>> b.shear_force()
+                                                          2
+               0               -1            1   1⋅<x - 3>                 0
+     - 2.25⋅<x>   - 1.5⋅<x - 3>   + 3⋅<x - 3>  + ──────────  - 8.25⋅<x - 6>  
+                                                     6
+
+   >>> b.bending_moment()
+                                           2             3                                 
+               1              0   3⋅<x - 3>     1⋅<x - 3>                 1
+     - 2.25⋅<x>  - 1.5⋅<x - 3>  + ──────────  + ──────────  - 8.25⋅<x - 6>  
+                                      2             18                                        
+   >>> b.slope()
+                                             3             4                                 
+                 2              1   1⋅<x - 3>     1⋅<x - 3>                 2
+      - 1.125⋅<x>  - 1.5⋅<x - 3>  + ──────────  + ──────────  - 4.125⋅<x - 6> + 12.825 
+                                        2             72      
+       ───────────────────────────────────────────────────────────────────────────────
+                                            E⋅I
+
+
+   >>> b.deflection()
+                                                         4             5                                 
+                            3               2   1⋅<x - 3>     1⋅<x - 3>                  3
+       +12.825⋅x - 0.375⋅<x>  - 0.75⋅<x - 3>  + ──────────  + ──────────  - 1.375⋅<x - 6>  
+                                                   8            360      
+       ───────────────────────────────────────────────────────────────────────────────────
+                                            E⋅I     
 
 Example 4
 ---------
