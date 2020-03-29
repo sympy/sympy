@@ -4,7 +4,7 @@ from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, D
 
 def test_pc_presentation():
     Groups = [SymmetricGroup(3), SymmetricGroup(4), SymmetricGroup(9).sylow_subgroup(3),
-         SymmetricGroup(9).sylow_subgroup(2), SymmetricGroup(8).sylow_subgroup(2)]
+         SymmetricGroup(9).sylow_subgroup(2), SymmetricGroup(8).sylow_subgroup(2), DihedralGroup(10)]
 
     S = SymmetricGroup(125).sylow_subgroup(5)
     G = S.derived_series()[2]
@@ -89,11 +89,6 @@ def test_induced_pcgs():
     order = [gen.order() for gen in ipcgs]
     assert order == [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
-def test_issue_18804():
-    G = DihedralGroup(10)
-    A = G.polycyclic_group()
-    # Just checking the formation of polycyclic group
-    assert A.length() == 3
 
 def test_issue_18898():
     A = AlternatingGroup(4)
