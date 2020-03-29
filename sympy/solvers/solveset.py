@@ -2590,15 +2590,20 @@ def linsolve(system, *symbols):
 
     if not symbols:
         symbols = [Dummy() for _ in range(A.cols)]
-        allsyms = Tuple(*A) + Tuple(b)
-        name = _uniquely_named_symbol('tau', allsyms,
+        name = _uniquely_named_symbol('tau', (A, b),
             compare=lambda i: str(i).rstrip('1234567890')).name
         gen  = numbered_symbols(name)
     else:
         gen = None
 
     # This is just a wrapper for solve_lin_sys
-    eqs = list(A * Matrix(symbols) - b)
+    eqs = []
+    rows = A.tolist()
+    for rowi, bi in zip(rows, b):
+        terms = [elem * sym for elem, sym in zip(rowi, symbols) if elem]
+        terms.append(-bi)
+        eqs.append(Add(*terms))
+
     eqs, ring = sympy_eqs_to_ring(eqs, symbols)
     sol = solve_lin_sys(eqs, ring, _raw=False)
     if sol is None:
