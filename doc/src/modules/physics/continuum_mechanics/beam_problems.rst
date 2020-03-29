@@ -308,12 +308,12 @@ Example 3
 
 A beam of length 6 meters is having a roller support at the start and a hinged
 support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
-of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m is
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m/m is
 applied from the mid till the end of the beam.
 
 ::
 
-                              ramp load = 1 KN/m
+                              ramp load = 1 KN/m/m
                             constant load = 3 KN/m
                          |------------------------|
                        ⭯ 1.5 KN-m
@@ -328,11 +328,6 @@ applied from the mid till the end of the beam.
     Using the sign convention of upward forces and counterclockwise moment
     being positive.
 
-For ramp loads, slope is used while defining singularity functions.
-Slope is defined as the ratio of the "vertical change" to the
-"horizontal change" between (any) two distinct points on a line.
-Here it is equal to 1/3. Hence 1/3 is used in place of 1.
-
 .. plot::
    :context: close-figs
    :format: doctest
@@ -345,47 +340,47 @@ Here it is equal to 1/3. Hence 1/3 is used in place of 1.
    >>> b.apply_load(R1, 0, -1)
    >>> b.apply_load(-S(3)/2, 3, -2)
    >>> b.apply_load(3, 3, 0)
-   >>> b.apply_load(S(1)/3, 3, 1)
+   >>> b.apply_load(1, 3, 1)
    >>> b.apply_load(R2, 6, -1)
    >>> b.bc_deflection.append((0, 0))
    >>> b.bc_deflection.append((6, 0))
    >>> b.solve_for_reaction_loads(R1, R2)
    >>> b.reaction_loads
-      {R₁: -9/4, R₂: -33/4}
+      {R₁: -11/4, R₂: -43/4}
 
    >>> b.load
-           -1            -2                       1             -1
-      9⋅<x>     3⋅<x - 3>              0   <x - 3>    33⋅<x - 6>  
-    - ─────── - ─────────── + 3⋅<x - 3>  + ──────── - ────────────
-         4           2                        3            4      
+            -1            -2                                     -1
+      11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>  
+    - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
+         4            2                                     4     
    >>> plot(b.load)  # doctest: +SKIP
 
    >>> b.shear_force()
-          0            -1                       2             0
-     9⋅<x>    3⋅<x - 3>              1   <x - 3>    33⋅<x - 6> 
-   - ────── - ─────────── + 3⋅<x - 3>  + ──────── - ───────────
-       4           2                        6            4 
+            0            -1                       2             0
+      11⋅<x>    3⋅<x - 3>              1   <x - 3>    43⋅<x - 6> 
+    - ─────── - ─────────── + 3⋅<x - 3>  + ──────── - ───────────
+         4           2                        2            4     
 
    >>> b.bending_moment()
-           1            0            2          3             1
-      9⋅<x>    3⋅<x - 3>    3⋅<x - 3>    <x - 3>    33⋅<x - 6> 
-    - ────── - ────────── + ────────── + ──────── - ───────────
-        4          2            2           18           4                                        
+            1            0            2          3             1
+      11⋅<x>    3⋅<x - 3>    3⋅<x - 3>    <x - 3>    43⋅<x - 6> 
+    - ─────── - ────────── + ────────── + ──────── - ───────────
+         4          2            2           6            4                                  
  
    >>> b.slope()
-           2            1          3          4             2      
-      9⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    33⋅<x - 6>    513
-    - ────── - ────────── + ──────── + ──────── - ─────────── + ───
-        8          2           2          72           8         40
+            2            1          3          4             2     
+      11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>    78
+    - ─────── - ────────── + ──────── + ──────── - ─────────── + ──
+         8          2           2          24           8        5 
     ───────────────────────────────────────────────────────────────
-                                  E⋅I           
+                                  E⋅I       
 
 
    >>> b.deflection()
                  3            2          4          5             3
-    513⋅x   3⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    11⋅<x - 6> 
-    ───── - ────── - ────────── + ──────── + ──────── - ───────────
-      40      8          4           8         360           8     
+    78⋅x   11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6> 
+    ──── - ─────── - ────────── + ──────── + ──────── - ───────────
+     5        24         4           8         120           24    
     ───────────────────────────────────────────────────────────────
                                   E⋅I
 

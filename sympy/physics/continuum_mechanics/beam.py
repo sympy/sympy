@@ -401,7 +401,15 @@ class Beam(object):
         Parameters
         ==========
         value : Sympifyable
-            The magnitude of an applied load.
+            The value inserted should have the units [Force/(Distance**(n+1)]
+            where n is the order of applied load.
+            Units for applied loads:
+               - For moments, unit = kN*m
+               - For point loads, unit = kN
+               - For constant distributed load, unit = kN/m
+               - For ramp loads, unit = kN/m/m
+               - For parabolic ramp loads, unit = kN/m/m/m
+               - ... so on.
         start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
