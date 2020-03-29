@@ -1640,12 +1640,11 @@ class Beam(object):
         scaled_load = 0
         load_args1 = []
         scaled_load1 = 0
-        load_eq = 0     # For positive higher order loads
-        load_eq1 = 0    # For negative higher order loads
-        higher_order = False
+        load_eq = 0     # For positive valued higher order loads
+        load_eq1 = 0    # For negative valued higher order loads
         fill = None
-        plus = 0        # For positive higher order loads
-        minus = 0       # For negative higher order loads
+        plus = 0        # For positive valued higher order loads
+        minus = 0       # For negative valued higher order loads
         for load in loads:
 
             # check if the position of load is in terms of the beam length.
@@ -1668,7 +1667,6 @@ class Beam(object):
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
             # higher order loads
             elif load[2] >= 0:
-                higher_order = True
                 # `fill` will be assigned only when higher order loads are present
                 value, start, order, end = load
                 # Positive loads have their seperate equations
