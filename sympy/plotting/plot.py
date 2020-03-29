@@ -26,7 +26,7 @@ from __future__ import print_function, division
 
 import warnings
 
-from sympy import sympify, Expr, Tuple, Dummy, Symbol, pi, real_roots
+from sympy import sympify, Expr, Tuple, Dummy, Symbol, real_roots
 from sympy.external import import_module
 from sympy.solvers.solvers import denoms
 from sympy.core.function import arity
@@ -1557,22 +1557,20 @@ def plot(*args, **kwargs):
     plot_expr = check_arguments(args, 1, 1)
 
     new_plot = []
-    for arg in plot_expr:
-        expr = arg[0]
-        limit = arg[1]
+    for expr, limit in plot_expr:
+        _, x1, x2 = limit
         root_deno = []
-        for den in denoms(expr, limit[0]):
+        for den in denoms(expr, x):
             root_deno.extend(real_roots(den))
         if root_deno:
             new_limit = []
+            limit = list(limit)
             for root in root_deno:
-                if root>limit[1] and root<limit[2]:
-                    left_limit = (limit[0], limit[1] , root)
+                if x1 < root < x2:
+                    left_limit = (x, x1 , root)
                     new_limit.append(left_limit)
-                    limit = list(limit)
-                    limit[1]= root
-                    limit = tuple(limit)
-            new_limit.append(limit)
+                    limit[1] = root
+            new_limit.append(tuple(limit))
             for lim in new_limit:
                 new_plot.append((expr, lim))
         else:
