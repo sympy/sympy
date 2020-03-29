@@ -2138,30 +2138,13 @@ class DisjointUnion(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            component_set_iters = []
+            from sympy.core.numbers import Integer
 
-            for set_i in self.sets:
-                component_set_iters.append(iter(set_i)) #setting up all component iterators
+            iters = []
+            for i, s in enumerate(self.sets):
+                iters.append(iproduct(s, {Integer(i)}))
 
-            visited = 0
-            size = 0
-            infinite_iter = False
-            try:
-                size = len(self)
-            except TypeError:
-                infinite_iter = True
-            while (visited <= size) or infinite_iter:
-                index = 0
-                for set_i in self.sets:
-                    try:
-                        yield (next(component_set_iters[index]), index)
-                        index += 1
-                    except StopIteration:
-                        index += 1
-                        continue
-                    visited += 1
-                if visited == size:
-                    visited += 1
+            return iter(roundrobin(*iters))
         else:
             raise TypeError("'%s' is not iterable." % self)
 

@@ -1529,14 +1529,6 @@ def test_DisjointUnion_contains():
     assert (x, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
     assert (y, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
     assert (z, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
-    # assert (x, 1) not in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
-    # assert (y, 1) not in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
-    # assert (z, 1) not in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
-    # assert (x, 2) not in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
-    # assert (z, 2) not in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
-    # the tests above won't work because even something like
-    # x in FiniteSet(y, z)
-    # raises a TypeError.
     assert (y, 2) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
     assert (0.5, 0) in DisjointUnion(Interval(0, 1), Interval(0, 2))
     assert (0.5, 1) in DisjointUnion(Interval(0, 1), Interval(0, 2))
