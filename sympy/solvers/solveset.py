@@ -60,7 +60,7 @@ from collections import defaultdict
 
 
 class NonlinearError(ValueError):
-    """Raised by linear_eq_to_matrix if the equations are nonlinear"""
+    """Raised when unexpectedly encountering nonlinear equations"""
     pass
 
 
@@ -2556,7 +2556,11 @@ def linsolve(system, *symbols):
                     be given as a sequence, too.
                 '''))
             eqs = system
-            eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+            try:
+                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+            except PolynomialError as exc:
+                # e.g. cos(x) contains an element of the set of generators
+                raise NonlinearError(str(exc))
             sol = solve_lin_sys(eqs, ring, _raw=False)
             if sol is None:
                 return S.EmptySet
