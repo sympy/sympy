@@ -354,9 +354,19 @@ applied from the mid till the end of the beam.
       11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>  
     - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
          4            2                                     4     
-   
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
    >>> plot(b.load)  # doctest: +SKIP
 
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+   
    >>> b.shear_force()
             0            -1                       2             0
       11⋅<x>    3⋅<x - 3>              1   <x - 3>    43⋅<x - 6> 
