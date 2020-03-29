@@ -332,6 +332,7 @@ applied from the mid till the end of the beam.
    :context: close-figs
    :format: doctest
    :include-source: True
+   
    >>> from sympy.physics.continuum_mechanics.beam import Beam
    >>> from sympy import symbols, plot, S
    >>> E, I = symbols('E, I')
