@@ -150,8 +150,7 @@ class Domain(object):
         else: # TODO: remove this branch
             if not is_sequence(element):
                 try:
-                    element = sympify(element)
-
+                    element = sympify(element, strict=True)
                     if isinstance(element, Basic):
                         return self.from_sympy(element)
                 except (TypeError, ValueError):

@@ -527,7 +527,7 @@ def default_sort_key(item, order=None):
     else:
         if not isinstance(item, str):
             try:
-                item = sympify(item)
+                item = sympify(item, strict=True)
             except SympifyError:
                 # e.g. lambda x: x
                 pass

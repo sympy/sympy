@@ -8,6 +8,7 @@ from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
@@ -273,6 +274,11 @@ def test_lambda_raises():
 
 def test_sympify_raises():
     raises(SympifyError, lambda: sympify("fx)"))
+
+    class A:
+        def __str__(self):
+            return 'x'
+    raises(SymPyDeprecationWarning, lambda: sympify(A()))
 
 
 def test__sympify():

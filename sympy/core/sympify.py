@@ -376,19 +376,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             # Not all iterables are rebuildable with their type.
             pass
 
-    # At this point we were given an arbitrary expression
-    # which does not inherit from Basic and doesn't implement
-    # _sympy_ (which is a canonical and robust way to convert
-    # anything to SymPy expression).
-    #
-    # As a last chance, we try to take "a"'s normal form via unicode()
-    # and try to parse it. If it fails, then we have no luck and
-    # return an exception
-    try:
-        from .compatibility import unicode
-        a = unicode(a)
-    except Exception as exc:
-        raise SympifyError(a, exc)
+    if not isinstance(a, str):
+        try:
+            a = str(a)
+        except Exception as exc:
+            raise SympifyError(a, exc)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(
+            feature="String fallback in sympify",
+            useinstead='converter or _sympy_',
+            issue=18066,
+            deprecated_since_version='1.6'
+        ).warn()
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
