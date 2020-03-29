@@ -7,7 +7,7 @@ from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 from sympy.utilities.misc import filldedent
 
-from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
+from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity, MatrixElement
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
@@ -235,15 +235,22 @@ class BlockMatrix(MatrixExpr):
     def _entry(self, i, j, **kwargs):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if (i < numrows) != False:
+            cmp = i < numrows
+            if cmp == True:
                 break
-            else:
+            elif cmp == False:
                 i -= numrows
+            elif row_block < self.blockshape[0] - 1:
+                # Can't tell which block and it's not the last one, return unevaluated
+                return MatrixElement(self, i, j)
         for col_block, numcols in enumerate(self.colblocksizes):
-            if (j < numcols) != False:
+            cmp = j < numcols
+            if cmp == True:
                 break
-            else:
+            elif cmp == False:
                 j -= numcols
+            elif col_block < self.blockshape[1] - 1:
+                return MatrixElement(self, i, j)
         return self.blocks[row_block, col_block][i, j]
 
     @property
