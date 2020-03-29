@@ -1041,6 +1041,10 @@ class OneMatrix(MatrixExpr):
         cls._check_dim(m)
         cls._check_dim(n)
 
+        condition = Eq(m, 1) & Eq(n, 1)
+        if condition == True:
+            return Identity(1)
+
         obj = super(OneMatrix, cls).__new__(cls, m, n)
         return obj
 
