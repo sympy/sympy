@@ -2612,9 +2612,9 @@ def linsolve(system, *symbols):
     sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
 
     if gen is not None:
-        for sym in symbols:
-            if sol.has(sym):
-                sol = sol.subs(sym, next(gen))
+        solsym = sol.free_symbols
+        rep = {sym: next(gen) for sym in symbols if sym in solsym}
+        sol = sol.subs(rep)
 
     return sol
 
