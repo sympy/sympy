@@ -162,7 +162,6 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
         echelon = echelon.rows
         for i, p in enumerate(pivots):
             v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
-            v = v
             sols[keys[p]] = v
 
     return sols

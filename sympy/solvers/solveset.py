@@ -19,7 +19,7 @@ from sympy.core.containers import Tuple
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand)
+                                expand_log)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
@@ -2536,7 +2536,6 @@ def linsolve(system, *symbols):
         symbols = symbols[0]
     sym_gen = isinstance(symbols, GeneratorType)
 
-    swap = {}
     b = None  # if we don't get b the input was bad
     syms_needed_msg = None
 
@@ -2556,12 +2555,13 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            system = [
-                _mexpand(i.lhs - i.rhs if isinstance(i, Eq) else i,
-                recursive=True) for i in system]
-            system, symbols, swap = recast_to_symbols(system, symbols)
-            A, b = linear_eq_to_matrix(system, symbols)
-            syms_needed_msg = 'free symbols in the equations provided'
+            eqs = system
+            eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+            sol = solve_lin_sys(eqs, ring, _raw=False)
+            if sol is None:
+                return S.EmptySet
+            sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
+            return sol
 
     elif isinstance(system, MatrixBase) and not (
             symbols and not isinstance(symbols, GeneratorType) and

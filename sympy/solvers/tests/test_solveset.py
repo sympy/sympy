@@ -1289,7 +1289,7 @@ def test_linsolve_large_sparse():
             eqs.extend([xi + yi, xi - yi + 1])
         return eqs, syms, FiniteSet(sol)
 
-    n = 400
+    n = 500
     eqs, syms, sol = _mk_eqs_sol(n)
     assert linsolve(eqs, syms) == sol
 
