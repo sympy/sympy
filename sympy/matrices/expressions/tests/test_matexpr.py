@@ -62,7 +62,7 @@ def test_zero_matrix_creation():
 def test_one_matrix_creation():
     assert OneMatrix(2, 2)
     assert OneMatrix(0, 0)
-    assert OneMatrix(1, 1) == Identity(1)
+    assert Eq(OneMatrix(1, 1), Identity(1))
     raises(ValueError, lambda: OneMatrix(-1, 2))
     raises(ValueError, lambda: OneMatrix(2.0, 2))
     raises(ValueError, lambda: OneMatrix(2j, 2))

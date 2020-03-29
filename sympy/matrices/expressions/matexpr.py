@@ -1036,14 +1036,15 @@ class OneMatrix(MatrixExpr):
     """
     Matrix whose all entries are ones.
     """
-    def __new__(cls, m, n):
+    def __new__(cls, m, n, evaluate=False):
         m, n = _sympify(m), _sympify(n)
         cls._check_dim(m)
         cls._check_dim(n)
 
-        condition = Eq(m, 1) & Eq(n, 1)
-        if condition == True:
-            return Identity(1)
+        if evaluate:
+            condition = Eq(m, 1) & Eq(n, 1)
+            if condition == True:
+                return Identity(1)
 
         obj = super(OneMatrix, cls).__new__(cls, m, n)
         return obj
@@ -1055,6 +1056,12 @@ class OneMatrix(MatrixExpr):
     def as_explicit(self):
         from sympy import ImmutableDenseMatrix
         return ImmutableDenseMatrix.ones(*self.shape)
+
+    def doit(self, **hints):
+        args = self.args
+        if hints.get('deep', True):
+            args = [a.doit(**hints) for a in args]
+        return self.func(*args, evaluate=True)
 
     def _eval_transpose(self):
         return OneMatrix(self.cols, self.rows)
