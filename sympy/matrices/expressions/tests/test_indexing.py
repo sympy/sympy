@@ -107,10 +107,10 @@ def test_block_index_symbolic_nonzero():
     # matrices have nonzero size and all indices are nonnegative
     k, l, m, n = symbols('k l m n', integer=True, positive=True)
     i, j = symbols('i j', integer=True, nonnegative=True)
-    A1 = MatrixSymbol('K1', n, k)
-    A2 = MatrixSymbol('K2', n, l)
-    A3 = MatrixSymbol('K3', m, k)
-    A4 = MatrixSymbol('K4', m, l)
+    A1 = MatrixSymbol('A1', n, k)
+    A2 = MatrixSymbol('A2', n, l)
+    A3 = MatrixSymbol('A3', m, k)
+    A4 = MatrixSymbol('A4', m, l)
     A = BlockMatrix([[A1, A2], [A3, A4]])
     assert A[0, 0] == A1[0, 0]
     assert A[n + m - 1, 0] == A3[m - 1, 0]
@@ -120,6 +120,22 @@ def test_block_index_symbolic_nonzero():
     assert A[n + i, k + j] == A4[i, j]
     assert A[n - i - 1, k - j - 1] == A1[n - i - 1, k - j - 1]
     assert A[2 * n, 2 * k] == A4[n, k]
+
+
+def test_block_index_large():
+    n, m, k = symbols('n m k', integer=True, positive=True)
+    i = symbols('i', integer=True, nonnegative=True)
+    A1 = MatrixSymbol('A1', n, n)
+    A2 = MatrixSymbol('A2', n, m)
+    A3 = MatrixSymbol('A3', n, k)
+    A4 = MatrixSymbol('A4', m, n)
+    A5 = MatrixSymbol('A5', m, m)
+    A6 = MatrixSymbol('A6', m, k)
+    A7 = MatrixSymbol('A7', k, n)
+    A8 = MatrixSymbol('A8', k, m)
+    A9 = MatrixSymbol('A9', k, k)
+    A = BlockMatrix([[A1, A2, A3], [A4, A5, A6], [A7, A8, A9]])
+    assert A[n + i, n + i] == MatrixElement(A, n + i, n + i)
 
 
 @XFAIL

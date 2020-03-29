@@ -234,6 +234,7 @@ class BlockMatrix(MatrixExpr):
 
     def _entry(self, i, j, **kwargs):
         # Find row entry
+        orig_i, orig_j = i, j
         for row_block, numrows in enumerate(self.rowblocksizes):
             cmp = i < numrows
             if cmp == True:
@@ -242,7 +243,7 @@ class BlockMatrix(MatrixExpr):
                 i -= numrows
             elif row_block < self.blockshape[0] - 1:
                 # Can't tell which block and it's not the last one, return unevaluated
-                return MatrixElement(self, i, j)
+                return MatrixElement(self, orig_i, orig_j)
         for col_block, numcols in enumerate(self.colblocksizes):
             cmp = j < numcols
             if cmp == True:
@@ -250,7 +251,7 @@ class BlockMatrix(MatrixExpr):
             elif cmp == False:
                 j -= numcols
             elif col_block < self.blockshape[1] - 1:
-                return MatrixElement(self, i, j)
+                return MatrixElement(self, orig_i, orig_j)
         return self.blocks[row_block, col_block][i, j]
 
     @property
