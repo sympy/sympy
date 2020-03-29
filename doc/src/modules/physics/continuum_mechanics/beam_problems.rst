@@ -354,6 +354,7 @@ applied from the mid till the end of the beam.
       11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>  
     - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
          4            2                                     4     
+   
    >>> plot(b.load)  # doctest: +SKIP
 
    >>> b.shear_force()
@@ -457,7 +458,7 @@ Example 5
 
 A cantilever beam of length 6 meters is under downward distributed constant
 load with magnitude of 4.0 KN/m from starting point till 2 meters away
-from it. A ramp load of 1 kN/m applied from the mid till the end of
+from it. A ramp load of 1 kN/m/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
@@ -469,7 +470,7 @@ away from start.
                              |   . | | |
                              V . | | | |
   \\\\|   4 KN/m             . | | | | |
-  \\\\|___________         . 1 KN/m  | |
+  \\\\|___________         . 1 KN/m/m| |
   \\\\|| | | | | |       . V V V V V V V
   \\\\|V V V V V V     |---------------|
   \\\\|________________________________
