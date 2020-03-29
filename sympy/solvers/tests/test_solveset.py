@@ -1274,6 +1274,26 @@ def test_linsolve():
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
 
 
+def test_linsolve_large_sparse():
+    #
+    # This is mainly a performance test
+    #
+
+    def _mk_eqs_sol(n):
+        xs = symbols('x:{}'.format(n))
+        ys = symbols('y:{}'.format(n))
+        syms = xs + ys
+        eqs = []
+        sol = (-S.Half,) * n + (S.Half,) * n
+        for xi, yi in zip(xs, ys):
+            eqs.extend([xi + yi, xi - yi + 1])
+        return eqs, syms, FiniteSet(sol)
+
+    n = 400
+    eqs, syms, sol = _mk_eqs_sol(n)
+    assert linsolve(eqs, syms) == sol
+
+
 def test_linsolve_immutable():
     A = ImmutableDenseMatrix([[1, 1, 2], [0, 1, 2], [0, 0, 1]])
     B = ImmutableDenseMatrix([2, 1, -1])
