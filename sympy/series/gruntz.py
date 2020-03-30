@@ -429,8 +429,8 @@ def limitinf(e, x, leadsimp=False):
         p = Dummy('p', positive=True, finite=True)
         e = e.subs(x, p)
         x = p
+    e = powdenest(e)
     c0, e0 = mrv_leadterm(e, x)
-    e0 = e0.cancel()
     sig = sign(e0, x)
     if sig == 1:
         return S.Zero  # e0>0: lim f = 0
