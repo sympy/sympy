@@ -2101,8 +2101,6 @@ class DisjointUnion(Set):
                 cross = ProductSet(set_i, FiniteSet(index))
                 dj_union = Union(dj_union, cross)
                 index = index + 1
-            else:
-                continue
         return dj_union
 
     def _contains(self, element):

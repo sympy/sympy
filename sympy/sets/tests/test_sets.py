@@ -1500,6 +1500,12 @@ def test_DisjointUnion():
     assert DisjointUnion(Interval(-oo, oo)).rewrite(Union) == Interval(-oo, oo) * FiniteSet(0)
     assert DisjointUnion(S.EmptySet).rewrite(Union) == S.EmptySet
     assert DisjointUnion().rewrite(Union) == S.EmptySet
+    error_raised = False
+    try:
+        DisjointUnion(Symbol('n'))
+    except ValueError:
+        error_raised = True
+    assert error_raised is True
 
     x = Symbol("x")
     y = Symbol("y")
@@ -1515,6 +1521,7 @@ def test_DisjointUnion_is_iterable():
     assert DisjointUnion(S.Integers, S.Naturals, S.Rationals).is_iterable is True
     assert DisjointUnion(S.EmptySet, S.Reals).is_iterable is False
     assert DisjointUnion(FiniteSet(1, 2, 3), S.EmptySet, FiniteSet(x, y)).is_iterable is True
+    assert DisjointUnion(S.EmptySet, S.EmptySet).is_iterable is False
 
 def test_DisjointUnion_contains():
     assert (0, 0) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
@@ -1526,6 +1533,9 @@ def test_DisjointUnion_contains():
     assert (2, 0) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
     assert (2, 1) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
     assert (2, 2) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (0, 1, 2) not in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (0, 0.5) not in DisjointUnion(FiniteSet(0.5))
+    assert (0, 5) not in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
     assert (x, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
     assert (y, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
     assert (z, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
