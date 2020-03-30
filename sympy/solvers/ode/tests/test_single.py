@@ -254,7 +254,7 @@ def _get_all_examples():
     return all_examples
 
 
-def test_all_hints(runxfail=False):
+def _test_all_hints(runxfail=False):
     all_hints = list(allhints)
     all_examples = _get_all_examples()
     for our_hint in all_hints:
