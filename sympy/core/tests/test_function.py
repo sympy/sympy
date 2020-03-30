@@ -1360,4 +1360,4 @@ def test_issue_10503():
 def test_issue_16350():
     d = Derivative(y, x)
     assert Derivative(d, x) == Derivative(y, (x, 2))
-    assert Derivative(d, x, evaluate = False) == Derivative(Derivative(y, x), x)
+    assert Derivative(d, x, evaluate=False) == Derivative(Derivative(y, x), x)
