@@ -176,3 +176,4 @@ def test_vector_evalf():
     B = A.orientnew('B', 'Axis', (pi, A.x))
     v = a*pi*A.x + b*2*pi*B.x + c*3*pi*B.z
     assert v._eval_evalf(3) == 3.0*a*A.x + 6.0*b*B.x + 9.0*c*B.z
+    
