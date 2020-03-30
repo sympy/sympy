@@ -33,9 +33,7 @@ def _eigenvals_triangular(M, multiple=False):
 
 
 def _eigenvals_eigenvects_mpmath(M):
-    norm2 = lambda v1, v2: max(
-        [max(mp.fabs(r1 - r2), mp.fabs(i1 - i2))
-         for (r1, i1), (r2, i2) in zip(v1, v2)])
+    norm2 = lambda v: mp.sqrt(sum(i**2 for i in v)/len(v))
 
     v1 = None
     prec = max([x._prec for x in M.atoms(Float)])
@@ -45,17 +43,18 @@ def _eigenvals_eigenvects_mpmath(M):
         with workprec(prec):
             A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
             E, ER = mp.eig(A)
-            v2 = [(mp.re(e), mp.im(e)) for e in E]
-            if v1 is not None and norm2(v1, v2) < eps:
+            v2 = norm2([i for e in E for i in (mp.re(e), mp.im(e))])
+            if v1 is not None and mp.fabs(v1 - v2) < eps:
                 return E, ER
             v1 = v2
         prec *= 2
+
     # we get here because the next step would have taken us
     # past MAXPREC or because we never took a step; in case
     # of the latter, we refuse to send back a solution since
     # it would not have been verified; we also resist taking
     # a small step to arrive exactly at MAXPREC since then
-    # the norm and new_norm would be artificially close
+    # the two calculations might be artificially close.
     raise PrecisionExhausted
 
 
