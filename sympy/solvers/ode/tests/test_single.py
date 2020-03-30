@@ -7,7 +7,7 @@ This File contains test functions for the individual hints used for solving ODEs
 
 Examples of each solver will be returned by _get_examples_ode_sol_name_of_solver.
 
-Examples should have a key 'XFAIL' which stores the list of hints if they are 
+Examples should have a key 'XFAIL' which stores the list of hints if they are
 expected to fail for that hint.
 
 Functions that are for internal use:
