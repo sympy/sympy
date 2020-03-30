@@ -15,6 +15,7 @@ from sympy import Function, S
 from sympy.core.compatibility import as_int
 from .primetest import isprime
 from sympy.core.numbers import Integer
+from sympy.core.symbol import Symbol
 
 
 def _azeros(n):
@@ -385,8 +386,11 @@ class prime(Function):
     """
     @classmethod
     def eval(cls, nth):
-        if not isinstance(nth, Integer):
+        if isinstance(nth, Symbol):
             return None
+        if not isinstance(nth, Integer):
+            return ValueError
+
         n = as_int(nth)
         if n < 1:
             raise ValueError("nth must be a positive integer; prime(1) == 2")
@@ -486,6 +490,8 @@ class primepi(Function):
             return S.Infinity
         if n is S.NegativeInfinity:
             return S.Zero
+        if isinstance(n, Symbol):
+            return None
 
         try:
             n = int(n)
@@ -553,8 +559,9 @@ class nextprime(Function):
     """
     @classmethod
     def eval(cls, n, ith=1):
-        if not isinstance(n, Integer):
+        if isinstance(n, Symbol):
             return None
+
         n = int(n)
         i = as_int(ith)
         if i > 1:
@@ -624,7 +631,7 @@ class prevprime(Function):
 
         # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        if not isinstance(n, Integer):
+        if isinstance(n, Symbol):
             return None
 
         n = as_int(ceiling(n))
@@ -794,7 +801,7 @@ class primorial(Function):
     2
     >>> primorial(1, False)
     1
-    >>> primorial(10, False)
+    >>> primorial(sqrt(101), False)
     210
 
     One can argue that the primes are infinite since if you take
@@ -828,7 +835,7 @@ class primorial(Function):
     """
     @classmethod
     def eval(cls, n, nth=True):
-        if not isinstance(n, Integer):
+        if isinstance(n, Symbol):
             return None
 
         if nth:
@@ -963,8 +970,10 @@ class composite(Function):
     """
     @classmethod
     def eval(cls, nth):
-        if not isinstance(nth, Integer):
+        if isinstance(nth, Symbol):
             return None
+        if not isinstance(nth, Integer):
+            return ValueError
 
         n = as_int(nth)
         if n < 1:
