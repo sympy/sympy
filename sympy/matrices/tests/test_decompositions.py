@@ -215,6 +215,31 @@ def test_QR_trivial():
     assert R.is_upper
     assert A == Q*R
 
+
+def _numerically_equal(A, B, tol=1e-15):
+    if A.shape != B.shape:
+        return False
+
+    for a, b in zip(A, B):
+        if abs(a - b) > tol:
+            return False
+    return True
+
+
+def test_QR_float():
+    A = Matrix([[1, 1], [1, 1.01]])
+    Q, R = A.QRdecomposition()
+    assert _numerically_equal(Q * R, A)
+    assert _numerically_equal(Q * Q.T, Matrix.eye(2), tol=1e-13)
+    assert _numerically_equal(Q.T * Q, Matrix.eye(2), tol=1e-13)
+
+    A = Matrix([[1, 1], [1, 1.001]])
+    Q, R = A.QRdecomposition()
+    assert _numerically_equal(Q * R, A)
+    assert _numerically_equal(Q * Q.T, Matrix.eye(2), tol=1e-13)
+    assert _numerically_equal(Q.T * Q, Matrix.eye(2), tol=1e-13)
+
+
 def test_LUdecomposition_Simple_iszerofunc():
     # Test if callable passed to matrices.LUdecomposition_Simple() as iszerofunc keyword argument is used inside
     # matrices.LUdecomposition_Simple()
