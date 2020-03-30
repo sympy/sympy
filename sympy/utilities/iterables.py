@@ -2610,10 +2610,47 @@ def permute_signs(t):
         signs = list(signs)
         yield type(t)([i*signs.pop() if i else i for i in t])
 
-def filter_permute(setOfPermut):
-    setOfPermut = list(setOfPermut)
-    res = set(tuple(sorted(setOfPermut[x])) for x in range(len(setOfPermut)))
-    return res
+import functools
+
+def fitness(item):
+    tot = 0 
+    for i in range(len(item)):
+        tot = tot + item[i]
+    return tot
+
+def compare(item1,item2):
+    return fitness(item1) - fitness(item2)
+
+def mod_tup(tup):
+    tup = list(tup)
+    for i in range(len(tup)):
+            tup[i] = abs(tup[i])
+    tup.sort()
+    tup = tuple(tup)
+    return tup
+
+def filter_permute(set1):
+    sol_Dict = {}
+    for elem in set1:
+        key = elem
+        val = mod_tup(elem)
+        sol_Dict[key] = val
+    
+    result = {}
+    res_arr = []
+    
+    for key,value in sol_Dict.items():
+        if value not in result.values():
+            result[key] = value
+            res_arr.insert(len(res_arr),value)
+    sorted(res_arr, key=functools.cmp_to_key(compare))
+    return res_arr
+
+
+#def filter_permute(setOfPermut):
+#    setOfPermut = list(setOfPermut)
+#    res = set(tuple(sorted(setOfPermut[x])) for x in range(len(setOfPermut)))
+#    return res
 
 
 def signed_permutations(t):
