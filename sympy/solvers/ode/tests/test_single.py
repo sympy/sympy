@@ -85,24 +85,26 @@ The ODE is:
 {eq}\
 """
 
-def _test_for_particular_hint(our_hint, ode_example):
+def _test_for_particular_hint(our_hint, ode_example, xfail):
     eq = ode_example['eq']
     expected_sol = ode_example['sol']
     example = ode_example['example_name']
-    if our_hint not in ode_example['XFAIL']:
-        if our_hint in classify_ode(eq):
-            try:
-                dsolve_sol = dsolve(eq, hint=our_hint)
-                expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
-                if len(expected_sol) == 1:
-                    expected_checkodesol = (True, 0)
+    xpass = True
+    if our_hint in classify_ode(eq):
+        try:
+            dsolve_sol = dsolve(eq, hint=our_hint)
+            expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
+            if len(expected_sol) == 1:
+                expected_checkodesol = (True, 0)
 
-                if checkodesol(eq, dsolve_sol) != expected_checkodesol:
-                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-                    raise AssertionError(message)
-            except Exception as e:
-                print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
-                traceback.print_exc()
+            if checkodesol(eq, dsolve_sol) != expected_checkodesol:
+                message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                raise AssertionError(message)
+        except Exception as e:
+            print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
+            traceback.print_exc()
+            xpass = False
+    return xpass
 
 
 def _ode_solver_test(ode_examples):
@@ -252,12 +254,21 @@ def _get_all_examples():
     return all_examples
 
 
-def _test_all_hints():
+def test_all_hints(runxfail=False):
     all_hints = list(allhints)
     all_examples = _get_all_examples()
     for our_hint in all_hints:
         for ode_example in all_examples:
-            _test_for_particular_hint(our_hint, ode_example)
+            xfail = our_hint in ode_example['XFAIL']
+            if not runxfail:
+                xpass = _test_for_particular_hint(our_hint, ode_example, xfail)
+                if xpass and xfail:
+                    print(ode_example,"is now working for hint",our_hint)
+            else:
+                if xfail:
+                    xpass = _test_for_particular_hint(our_hint, ode_example, xfail)
+                    if xpass:
+                        print(ode_example,"is now working for hint",our_hint)
 
 
 def _test_particular_example(our_hint, example_name):
