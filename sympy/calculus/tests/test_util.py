@@ -67,6 +67,9 @@ def test_continuous_domain():
         Union(Interval.open(-oo, 0), Interval.open(0, oo))
     assert continuous_domain(1/(x**2 - 4) + 2, x, S.Reals) == \
         Union(Interval.open(-oo, -2), Interval.open(-2, 2), Interval.open(2, oo))
+    domain = continuous_domain(log(tan(x)**2 + 1), x, S.Reals)
+    assert not domain.contains(3*pi/2)
+    assert domain.contains(5)
 
 
 def test_not_empty_in():
