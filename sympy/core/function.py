@@ -1335,7 +1335,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        evaluate = kwargs.get('evaluate', False)
+        evaluate = kwargs.get('evaluate', None)
 
         if evaluate:
             if isinstance(expr, Derivative):
@@ -1386,7 +1386,7 @@ class Derivative(Expr):
             variable_count = cls._sort_variable_count(variable_count)
 
         # denest
-        if isinstance(expr, Derivative):
+        if evaluate is not False and isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             expr = expr.expr
             return cls(expr, *variable_count, **kwargs)
