@@ -45,7 +45,8 @@ if pycp:
 	class CCodeConverter:
 		""" Main class which handles CPyParser AST
 
-		To carry out conversion from C source code to SymPy Expressions
+		To carry out conversion from C source code to
+		SymPy Expressions
 		"""
 		def __init__(self):
 			"""Constructor of CCodeConverter"""
@@ -56,8 +57,9 @@ if pycp:
 		def parse(self, ast):
 			"""Generalized method to parse given pycparser AST
 
-			This function takes pycparser generated AST in the parameter,
-			traverse the nodes and gives out SymPy Expressions.
+			This function takes pycparser generated AST in
+			the parameter, traverse the nodes and gives out
+			SymPy Expressions.
 
 			Parameters
 			==========
@@ -95,9 +97,6 @@ if pycp:
 
 			expr_nodes: list
 				A list of SymPy Codegen AST nodes
-
-			Exception
-			=========
 
 			"""
 			self.source_string = c_str
@@ -142,8 +141,30 @@ if pycp:
 
 			Parameters
 			==========
+
 			node: Decl
-				a Decl object of PyCParser AST containing variable declaration
+				a Decl object of PyCParser AST containing
+				variable declaration
+
+			Returns
+			=======
+
+			node:  Variable
+				a Variable object, containing given value, name
+				and type
+
+
+			Raises
+			======
+
+			NotImplementedError: if called for data types not currently
+			implemented
+
+			Notes
+			=====
+
+			This function supports declaration of integer and floating
+			point type variables only
 
 			"""
 			decl_type = node.type.type.names[0]
@@ -189,6 +210,7 @@ if pycp:
 			if(node.init.type == 'char'):
 				return ord(node.init.value[1])
 else:
+	# when clang is not installed
 	class CCodeConverter:
 		def __init__(self, *args, **kwargs):
 			raise ImportError("Module not Installed")
