@@ -3,6 +3,8 @@ from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
+from sympy.testing.matrices import allclose
+
 
 def test_LUdecomp():
     testmat = Matrix([[0, 2, 5, 3],
@@ -216,28 +218,18 @@ def test_QR_trivial():
     assert A == Q*R
 
 
-def _numerically_equal(A, B, tol=1e-15):
-    if A.shape != B.shape:
-        return False
-
-    for a, b in zip(A, B):
-        if abs(a - b) > tol:
-            return False
-    return True
-
-
 def test_QR_float():
     A = Matrix([[1, 1], [1, 1.01]])
     Q, R = A.QRdecomposition()
-    assert _numerically_equal(Q * R, A)
-    assert _numerically_equal(Q * Q.T, Matrix.eye(2), tol=1e-13)
-    assert _numerically_equal(Q.T * Q, Matrix.eye(2), tol=1e-13)
+    assert allclose(Q * R, A)
+    assert allclose(Q * Q.T, Matrix.eye(2))
+    assert allclose(Q.T * Q, Matrix.eye(2))
 
     A = Matrix([[1, 1], [1, 1.001]])
     Q, R = A.QRdecomposition()
-    assert _numerically_equal(Q * R, A)
-    assert _numerically_equal(Q * Q.T, Matrix.eye(2), tol=1e-13)
-    assert _numerically_equal(Q.T * Q, Matrix.eye(2), tol=1e-13)
+    assert allclose(Q * R, A)
+    assert allclose(Q * Q.T, Matrix.eye(2))
+    assert allclose(Q.T * Q, Matrix.eye(2))
 
 
 def test_LUdecomposition_Simple_iszerofunc():
