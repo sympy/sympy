@@ -2060,7 +2060,7 @@ class DisjointUnion(Set):
             if isinstance(set_i, Set):
                 dj_collection.append(set_i)
             else:
-                raise ValueError("Invalid input: '%s', input args \
+                raise TypeError("Invalid input: '%s', input args \
                     to DisjointUnion must be Sets" % set_i)
         obj = Basic.__new__(cls, *dj_collection)
         return obj
@@ -2144,7 +2144,7 @@ class DisjointUnion(Set):
 
             return iter(roundrobin(*iters))
         else:
-            raise TypeError("'%s' is not iterable." % self)
+            raise ValueError("'%s' is not iterable." % self)
 
     def __len__(self):
         """
@@ -2173,7 +2173,7 @@ class DisjointUnion(Set):
                 size += len(set)
             return size
         else:
-            raise TypeError("'%s' is not a finite set." % self)
+            raise ValueError("'%s' is not a finite set." % self)
 
 
 def imageset(*args):

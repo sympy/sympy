@@ -1500,12 +1500,7 @@ def test_DisjointUnion():
     assert DisjointUnion(Interval(-oo, oo)).rewrite(Union) == Interval(-oo, oo) * FiniteSet(0)
     assert DisjointUnion(S.EmptySet).rewrite(Union) == S.EmptySet
     assert DisjointUnion().rewrite(Union) == S.EmptySet
-    error_raised = False
-    try:
-        DisjointUnion(Symbol('n'))
-    except ValueError:
-        error_raised = True
-    assert error_raised is True
+    raises(TypeError, lambda: DisjointUnion(Symbol('n')))
 
     x = Symbol("x")
     y = Symbol("y")
@@ -1571,35 +1566,11 @@ def test_DisjointUnion_iter():
     nxt = next(it)
     assert nxt in L2
     L2.remove(nxt)
-    stop_called = False
-    try:
-        next(it)
-    except StopIteration:
-        stop_called = True
-    assert stop_called is True
+    raises(StopIteration, lambda: next(it))
 
-    not_iterable = False
-    try:
-        i = iter(DisjointUnion(Interval(0, 1), S.EmptySet))
-        next(i)
-    except TypeError:
-        not_iterable = True
-    assert not_iterable is True
-
-    not_iterable = False
-    try:
-        i = iter(DisjointUnion(S.Integers, S.Rationals))
-        next(i)
-    except TypeError:
-        not_iterable = True
-    assert not_iterable is False
+    raises(ValueError, lambda: iter(DisjointUnion(Interval(0, 1), S.EmptySet)))
 
 def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
-    not_finite = False
-    try:
-        len(DisjointUnion(Interval(0, 1), S.EmptySet))
-    except TypeError:
-        not_finite = True
-    assert not_finite is True
+    raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
