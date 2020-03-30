@@ -33,7 +33,7 @@ def _eigenvals_triangular(M, multiple=False):
 
 
 def _eigenvals_eigenvects_mpmath(M):
-    norm2 = lambda v: mp.sqrt(sum(i**2 for i in v)/len(v))
+    norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
     prec = max([x._prec for x in M.atoms(Float)])
