@@ -329,7 +329,7 @@ applied from the mid till the end of the beam.
     being positive.
 
 .. plot::
-   :context: close-figs
+   :context:
    :format: doctest
    :include-source: True
    
@@ -363,7 +363,7 @@ applied from the mid till the end of the beam.
    >>> plot(b.load)  # doctest: +SKIP
 
 .. plot::
-   :context: close-figs
+   :context:
    :format: doctest
    :include-source: True
    
