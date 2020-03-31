@@ -1,6 +1,6 @@
 from sympy import (
     adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
-    symbols, transpose, Piecewise, Ne
+    symbols, transpose, Piecewise, Ne, cos, binomial
 )
 from sympy.physics.secondquant import evaluate_deltas, F
 
@@ -34,7 +34,10 @@ def test_kronecker_delta():
     k = Symbol('k', nonzero=True)
     assert KroneckerDelta(1, 1) == 1
     assert KroneckerDelta(1, 2) == 0
+    assert KroneckerDelta(2, 1) == 0
+    assert KroneckerDelta(2, 2) == 1
     assert KroneckerDelta(k, 0) == 0
+    assert KroneckerDelta(0, k) == 0
     assert KroneckerDelta(x, x) == 1
     assert KroneckerDelta(x**2 - y**2, x**2 - y**2) == 1
     assert KroneckerDelta(i, i) == 1
@@ -57,6 +60,8 @@ def test_kronecker_delta():
     assert adjoint(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     assert conjugate(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     assert transpose(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
+    assert KroneckerDelta(n, 0)*cos(n) == KroneckerDelta(n, 0)
+    assert KroneckerDelta(n, 2) * binomial(n, 2) == KroneckerDelta(n, 2)
     # to test if canonical
     assert (KroneckerDelta(i, j) == KroneckerDelta(j, i)) == True
 
