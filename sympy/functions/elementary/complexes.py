@@ -591,6 +591,8 @@ class Abs(Function):
 
     def _eval_nseries(self, x, n, logx):
         direction = self.args[0].leadterm(x)[0]
+        if direction.has(log(x)):
+            direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         when = Eq(direction, 0)
         return Piecewise(
