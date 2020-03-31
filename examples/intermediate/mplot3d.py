@@ -13,7 +13,7 @@ from sympy import Symbol
 from sympy.external import import_module
 
 
-def mplot3d(f, var1, var2, show=True):
+def mplot3d(f, var1, var2, *, show=True):
     """
     Plot a 3d function using matplotlib/Tk.
     """

@@ -4,7 +4,6 @@ import numbers
 import decimal
 import fractions
 import math
-import operator
 import re as regex
 
 from .containers import Tuple
@@ -279,8 +278,6 @@ except ImportError:
 
 
 # Use Lehmer's algorithm only for very large numbers.
-# The limit could be different on Python 2.7 and 3.x.
-# If so, then this could be defined in compatibility.py.
 BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
@@ -3416,216 +3413,6 @@ class NumberSymbol(AtomicExpr):
         return super(NumberSymbol, self).__hash__()
 
 
-class BigNumber:
-    """
-
-    Used to represent very large numbers,such as, 10**10**100.
-    More specifically, leaves 10**10**100,represented as
-    Pow(10, Pow(10,100)) without evaluating the entire number.
-
-    As of now, the operations will actually be done when the number is not a power,
-    and if the number is a power simply returns an unevaluated version of the expression
-
-    A BigNumber will not function properly if it is given a BigNumber.
-
-    Examples
-    ========
-
-    >>> from sympy.core.numbers import BigNumber, Float, Integer
-    >>> from sympy.core.expr import Pow, Mul
-    >>> e1 = Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(100)))
-    >>> 100 < e1
-    True
-
-    >>> from sympy.core.numbers import BigNumber, Float, Integer
-    >>> from sympy.core.expr import Pow, Mul
-    >>> BigNumber(10)*BigNumber(2)
-    20
-
-    >>> from sympy.core.numbers import BigNumber, Float, Integer
-    >>> from sympy.core.expr import Pow, Mul
-    >>> (BigNumber(10)*BigNumber(Pow(BigNumber(10), BigNumber(2)))).is_Mul
-    True
-
-    """
-
-    is_positive = True
-    integer = 0
-    __sympy__ = True
-    is_imaginary = False
-    is_Symbol = False
-    is_Number = False
-    is_number = False
-    is_Atom = True
-    is_extended_negative = False
-    is_integer = False
-    is_rational = False
-    is_zero = False
-    is_odd = False
-    is_negative=False
-    is_Rational = False
-    is_Relational = False
-    is_zero = False
-    is_nonnegative = False
-    is_infinite = False
-    free_symbols = []
-    is_algebraic=False
-    is_Integer = False
-    is_Float = False
-    is_comparable = False
-
-    def __init__(self, val):
-        self.val = sympify(val)
-
-    def _eval_power(self, other):
-        return BigNumber(Pow(self, other, evaluate=False))
-
-    def _evalf(self, prec):
-        return self
-
-    def __abs__(self):
-        return 0;
-
-    def __neg__(self):
-        return BigNumber(self.integer)
-
-    def __lt__(self,other):
-        return self.cmp(other, '<', '>', operator.lt)
-
-    def __gt__(self, other):
-        return self.cmp(other, '>', '<', operator.gt)
-
-    def __eq__(self, other):
-        return self.cmp(other, '=', '!=', operator.eq)
-
-    def __mul__(self, other):
-        return self.do_op(other, lambda s, o, e: Mul(s, o, evaluate=e))
-
-    def __pow__(self, power, modulo=None):
-        return self.do_op(power, lambda s, o, e: Pow(s, o, evaluate=e))
-
-    def __sub__(self, other):
-        return self.do_op(other, lambda s, o, e: Add(s, -o, evaluate=e))
-
-    def __add__(self, other):
-        return self.do_op(other, lambda s, o, e: Add(s, o, evaluate=e))
-
-
-    def do_op(self, other, op_func):
-        big_num_other = BigNumber.convert_to_big_num(other)
-        if self.is_Pow or big_num_other.is_Pow:
-            return BigNumber(op_func(self, other, False))
-        else:
-            return op_func(self.val, other.val, True)
-
-    def cmp(self, other, target_symbol, neg_target_symbol, op_func):
-        sym_other = sympify(other)
-        if self.is_Pow:
-            return self._cmp_pow(other) == target_symbol
-        elif (not sym_other.is_Number) and sym_other.is_Pow:
-            return sym_other._cmp_pow(self) == neg_target_symbol
-        else:
-            return op_func(self.val, sym_other)
-
-    def evaluate(self):
-        if self.val.is_Mul:
-            return self.val.args[0]*self.val.args[1]
-        else:
-            return self.val
-
-    def as_numer_denom(self):
-        return [Float(0), Float(0)]
-
-    def _cmp_pow(self, other):
-        other_is_negative = False
-        self_is_negative = False
-        pow2 = BigNumber.convert_to_big_num(other)
-        if pow2.val.is_Number and pow2.val.is_negative:
-            other_is_negative = True
-            pow2.val = -pow2.val
-        pow1_base10 = self.convert_base(10)
-        pow2_base10 = pow2.convert_base(10)
-        pow1_mul = pow1_base10.val.exp.pow_to_mul()
-        pow2_mul = pow2_base10.val.exp.pow_to_mul()
-        pow1_exp_val = pow1_mul.evalf()
-        pow2_exp_val = pow2_mul.evalf()
-        if pow1_exp_val < pow2_exp_val:
-            return '>' if other_is_negative else '<'
-        elif pow1_exp_val > pow2_exp_val:
-            return '<' if other_is_negative else '>'
-        else:
-            return '='
-
-    def convert_base(self, base):
-        if self.val.is_Pow:
-            if self.val.base.is_Number:
-                val_base = BigNumber(math.log(self.val.base, base))
-            else:
-                val_base = BigNumber(math.log(self.val.base.val, base))
-            val_base = BigNumber(Pow(val_base, self.val.exp, evaluate=False))
-        else:
-            val_base = BigNumber(math.log(self.val, base))
-        return BigNumber(Pow(base, val_base, evaluate=False))
-
-    def pow_to_mul(self):
-        if self.val.is_Pow:
-            return Mul(self.val.base.val, self.val.exp.pow_to_mul(), evaluate=False)
-        else:
-            return Mul(self.val, 1)
-    @property
-    def is_Pow(self):
-        return self.val.is_Pow
-
-    @property
-    def is_positive(self):
-        return self.val.is_positive
-
-    @property
-    def is_even(self):
-        return self.val.is_even
-
-    @property
-    def is_complex(self):
-        return self.val.is_complex
-
-    @property
-    def is_real(self):
-        return self.val.is_real
-
-    @property
-    def is_MatMul(self):
-        return self.val.is_MatMul
-
-    @property
-    def is_finite(self):
-        return self.val.is_finite
-
-    @property
-    def is_commutative(self):
-        return self.val.is_commutative
-
-    @property
-    def is_extended_real(self):
-        return self.val.is_extended_real
-
-    @property
-    def is_extended_positive(self):
-        return self.val.is_extended_positive
-
-    @property
-    def is_Mul(self):
-        return self.val.is_Mul
-
-    @staticmethod
-    def convert_to_big_num(other):
-        sym_other = sympify(other)
-        if sym_other.is_Number:
-            return BigNumber(sym_other)
-        else:
-           return sym_other
-
-
-
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.
 
@@ -4138,13 +3925,7 @@ def sympify_complex(a):
     real, imag = list(map(sympify, (a.real, a.imag)))
     return real + S.ImaginaryUnit*imag
 
-
-
 converter[complex] = sympify_complex
-
-
-
-
 
 from .power import Pow, integer_nthroot
 from .mul import Mul

@@ -776,7 +776,6 @@ def test_K7():
     assert sexpr == sqrt(y)
 
 
-@XFAIL
 def test_K8():
     z = symbols('z', complex=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0  # Passes
@@ -1562,9 +1561,14 @@ def test_P25():
                    [ -52,  -43,   49,   44, -599,  411,  208,  208],
                    [ -49,   -8,    8,   59,  208,  208,   99, -911],
                    [  29,  -44,   52,  -23,  208,  208, -911,   99]]))
-    assert (Matrix(sorted(MF.eigenvals())) - Matrix(
-            [-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0,
-             1019.9019513592784, 1020.0, 1020.0490184299969])).norm() < 1e-13
+
+    ev_1 = sorted(MF.eigenvals(multiple=True))
+    ev_2 = sorted(
+        [-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0, 1000.0,
+        1019.9019513592784, 1020.0, 1020.0490184299969])
+
+    for x, y in zip(ev_1, ev_2):
+        assert abs(x - y) < 1e-12
 
 
 def test_P26():
@@ -2346,9 +2350,10 @@ def test_V11():
 
 @XFAIL
 def test_V12():
-    r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
-    # Correct result in python2.7.4, wrong result in python3.5
     # https://github.com/sympy/sympy/issues/7157
+    # Fails intermittently for some Python versions.
+    # Probably this is dependent on the hash seed.
+    r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
     assert r1 == -1/(tan(x/2) + 2)
 
 

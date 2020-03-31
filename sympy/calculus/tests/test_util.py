@@ -395,6 +395,15 @@ def test_AccumBounds_div():
     assert AccumBounds(-oo, 1)/oo == AccumBounds(-oo, 0)
     assert AccumBounds(-oo, 1)/(-oo) == AccumBounds(0, oo)
 
+def test_issue_18795():
+    r = Symbol('r', real=True)
+    a = AccumBounds(-1,1)
+    c = AccumBounds(7, oo)
+    b = AccumBounds(-oo, oo)
+    assert c - tan(r) == AccumBounds(7-tan(r), oo)
+    assert b + tan(r) == AccumBounds(-oo, oo)
+    assert (a + r)/a == AccumBounds(-oo, oo)*AccumBounds(r - 1, r + 1)
+    assert (b + a)/a == AccumBounds(-oo, oo)
 
 def test_AccumBounds_func():
     assert (x**2 + 2*x + 1).subs(x, AccumBounds(-1, 1)) == AccumBounds(-1, 4)
@@ -533,3 +542,6 @@ def test_issue_16469():
     x = Symbol("x", real=True)
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
+
+def test_issue_18747():
+    assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8

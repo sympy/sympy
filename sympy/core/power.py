@@ -1433,7 +1433,7 @@ class Pow(Expr):
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
         # where e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
-        from sympy import ceiling, collect, exp, log, O, Order, powsimp
+        from sympy import ceiling, collect, exp, log, O, Order, powsimp, powdenest
         b, e = self.args
         if e.is_Integer:
             if e > 0:
@@ -1463,6 +1463,7 @@ class Pow(Expr):
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
+                    b = powdenest(b)
                     prefactor = b.as_leading_term(x)
 
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
@@ -1628,7 +1629,13 @@ class Pow(Expr):
         # either b0 is bounded but neither 1 nor 0 or e is infinite
         # b -> b0 + (b - b0) -> b0 * (1 + (b/b0 - 1))
         o2 = order*(b0**-e)
-        z = (b/b0 - 1)
+        from sympy import AccumBounds
+        # Issue: #18795 -"XXX This can be removed and simply "z = (b - b0)/b0"
+        # would be enough when the operations on AccumBounds have been fixed."
+        if isinstance(b0, AccumBounds):
+            z = (b/b0 - 1)
+        else:
+            z = (b - b0)/b0
         o = O(z, x)
         if o is S.Zero or o2 is S.Zero:
             infinite = True
@@ -1775,8 +1782,6 @@ class Pow(Expr):
         if e.has(n) and not b.has(n):
             new_e = e.subs(n, n + step)
             return (b**(new_e - e) - 1) * self
-
-
 
 
 from .add import Add

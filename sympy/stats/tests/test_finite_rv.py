@@ -7,7 +7,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
                          Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
                          sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
                          cmoment, smoment, characteristic_function, moment_generating_function,
-                         quantile,  kurtosis, median)
+                         quantile,  kurtosis, median, coskewness)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
@@ -202,6 +202,16 @@ def test_bernoulli():
 
     #issue 8248
     assert X.pspace.compute_expectation(1) == 1
+
+    p = Rational(1, 5)
+    X = Binomial('X', 5, p)
+    Y = Binomial('Y', 7, 2*p)
+    Z = Binomial('Z', 9, 3*p)
+    assert coskewness(Y + Z, X + Y, X + Z).simplify() == 0
+    assert coskewness(Y + 2*X + Z, X + 2*Y + Z, X + 2*Z + Y).simplify() == \
+                        sqrt(1529)*Rational(12, 16819)
+    assert coskewness(Y + 2*X + Z, X + 2*Y + Z, X + 2*Z + Y, X < 2).simplify() \
+                        == -sqrt(357451121)*Rational(2812, 4646864573)
 
 def test_cdf():
     D = Die('D', 6)

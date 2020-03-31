@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
@@ -36,12 +35,12 @@ class AssumptionsContext(set):
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
-            super(AssumptionsContext, self).add(a)
+            super().add(a)
 
     def _sympystr(self, printer):
         if not self:
             return "%s()" % self.__class__.__name__
-        return "%s(%s)" % (self.__class__.__name__, printer._print_set(self))
+        return "{}({})".format(self.__class__.__name__, printer._print_set(self))
 
 global_assumptions = AssumptionsContext()
 
@@ -104,7 +103,7 @@ class AppliedPredicate(Boolean):
         return False
 
     def __hash__(self):
-        return super(AppliedPredicate, self).__hash__()
+        return super().__hash__()
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
