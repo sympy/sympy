@@ -3449,7 +3449,8 @@ class BigNumber:
 
     """
 
-    is_positive = True
+
+    is_positive = True 
     integer = 0
     __sympy__ = True
     is_imaginary = False
