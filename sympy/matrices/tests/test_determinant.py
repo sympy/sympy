@@ -374,8 +374,8 @@ def test_charpoly():
     n = DeterminantOnlyMatrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
     assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)
     
-    def test_permanent():
-    a, b, c, d, e, f, g, h, i = Symbol('a b c d e f g h i')
+def test_permanent():
+    a, b, c, d, e, f, g, h, i = symbols('a b c d e f g h i')
 
     M1 = Matrix([[a, b], [c, d]])
     assert M1.permanent() == a*d + b*c
