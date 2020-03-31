@@ -1,7 +1,6 @@
 from __future__ import division, print_function
 
 from typing import Any
-import mpmath as mp
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -32,7 +31,7 @@ from .utilities import _iszero, _is_zero_after_expand_mul
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix,
-    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix, _permanent)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -129,6 +128,8 @@ class MatrixDeterminant(MatrixCommon):
     def minor_submatrix(self, i, j):
         return _minor_submatrix(self, i, j)
 
+    def permanent(self):
+        return _permanent(self)
     _find_reasonable_pivot.__doc__       = _find_reasonable_pivot.__doc__
     _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
     _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
@@ -142,7 +143,7 @@ class MatrixDeterminant(MatrixCommon):
     det.__doc__                          = _det.__doc__
     minor.__doc__                        = _minor.__doc__
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
-
+    permanent.__doc__                    = _permanent.__doc__
 
 class MatrixReductions(MatrixDeterminant):
     """Provides basic matrix row/column operations. Should not be instantiated
@@ -973,11 +974,6 @@ class MatrixBase(MatrixDeprecated,
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
                 return args[0].rows, args[0].cols, args[0].as_explicit()._mat
-
-            elif isinstance(args[0], mp.matrix):
-                M = args[0]
-                flat_list = [cls._sympify(x) for x in M]
-                return M.rows, M.cols, flat_list
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
