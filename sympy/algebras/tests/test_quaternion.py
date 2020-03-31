@@ -172,18 +172,3 @@ def test_quaternion_multiplication():
 
     assert z * q == z_quat * q
     assert q * z == q * z_quat
-
-
-def test_issue_16318():
-    #for rtruediv
-    q0 = Quaternion(0, 0, 0, 0)
-    raises(ValueError, lambda: 1/q0)
-    #for rotate_point
-    q = Quaternion(1, 2, 3, 4)
-    (axis, angle) = q.to_axis_angle()
-    assert Quaternion.rotate_point((1, 1, 1), (axis, angle)) == (S.One / 5, 1, S(7) / 5)
-    #test for to_axis_angle
-    q = Quaternion(-1, 1, 1, 1)
-    axis = (-sqrt(3)/3, -sqrt(3)/3, -sqrt(3)/3)
-    angle = 2*pi/3
-    assert (axis, angle) == q.to_axis_angle()

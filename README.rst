@@ -109,10 +109,6 @@ To install SymPy using PyPI, run the following command::
 
     $ pip install sympy
 
-To install SymPy using Anaconda, run the following command::
-
-    $ conda install -c anaconda sympy
-
 To install SymPy from GitHub source, first clone SymPy using ``git``::
 
     $ git clone https://github.com/sympy/sympy.git

@@ -1,4 +1,5 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import print_function, division
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -17,7 +18,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 # This is because assumption handlers are registered on those objects.
 
 
-class AssumptionKeys:
+class AssumptionKeys(object):
     """
     This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
 
@@ -1405,7 +1406,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     keys = [str(i[0]) for i in items]
     values = ['set(%s)' % sorted(i[1], key=str) for i in items]
     m = LINE.join(['\n'.join(
-        wrap("{}: {}".format(k, v),
+        wrap("%s: %s" % (k, v),
             subsequent_indent=HANG,
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','

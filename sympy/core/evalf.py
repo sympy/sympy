@@ -1255,7 +1255,7 @@ def _create_evalf_table():
     from sympy.concrete.summations import Sum
     from sympy.core.add import Add
     from sympy.core.mul import Mul
-    from sympy.core.numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
+    from sympy.core.numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero, BigNumber
     from sympy.core.power import Pow
     from sympy.core.symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
@@ -1278,6 +1278,7 @@ def _create_evalf_table():
         ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
         NaN: lambda x, prec, options: (fnan, None, prec, None),
+        BigNumber: lambda x, prec, options: BigNumber(x),
 
         exp: lambda x, prec, options: evalf_pow(
             Pow(S.Exp1, x.args[0], evaluate=False), prec, options),
@@ -1372,56 +1373,41 @@ class EvalfMixin(object):
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
-        Evaluate the given formula to an accuracy of *n* digits.
+        Evaluate the given formula to an accuracy of n digits.
+        Optional keyword arguments:
 
-        Parameters
-        ==========
+            subs=<dict>
+                Substitute numerical values for symbols, e.g.
+                subs={x:3, y:1+pi}. The substitutions must be given as a
+                dictionary.
 
-        subs : dict, optional
-            Substitute numerical values for symbols, e.g.
-            ``subs={x:3, y:1+pi}``. The substitutions must be given as a
-            dictionary.
+            maxn=<integer>
+                Allow a maximum temporary working precision of maxn digits
+                (default=100)
 
-        maxn : int, optional
-            Allow a maximum temporary working precision of maxn digits.
+            chop=<bool>
+                Replace tiny real or imaginary parts in subresults
+                by exact zeros (default=False)
 
-        chop : bool or number, optional
-            Specifies how to replace tiny real or imaginary parts in
-            subresults by exact zeros.
+            strict=<bool>
+                Raise PrecisionExhausted if any subresult fails to evaluate
+                to full accuracy, given the available maxprec
+                (default=False)
 
-            When ``True`` the chop value defaults to standard precision.
+            quad=<str>
+                Choose algorithm for numerical quadrature. By default,
+                tanh-sinh quadrature is used. For oscillatory
+                integrals on an infinite interval, try quad='osc'.
 
-            Otherwise the chop value is used to determine the
-            magnitude of "small" for purposes of chopping.
-
-            >>> from sympy import N
-            >>> x = 1e-4
-            >>> N(x, chop=True)
-            0.000100000000000000
-            >>> N(x, chop=1e-5)
-            0.000100000000000000
-            >>> N(x, chop=1e-4)
-            0
-
-        strict : bool, optional
-            Raise ``PrecisionExhausted`` if any subresult fails to
-            evaluate to full accuracy, given the available maxprec.
-
-        quad : str, optional
-            Choose algorithm for numerical quadrature. By default,
-            tanh-sinh quadrature is used. For oscillatory
-            integrals on an infinite interval, try ``quad='osc'``.
-
-        verbose : bool, optional
-            Print debug information.
+            verbose=<bool>
+                Print debug information (default=False)
 
         Notes
         =====
 
-        When Floats are naively substituted into an expression,
-        precision errors may adversely affect the result. For example,
-        adding 1e16 (a Float) to 1 will truncate to 1e16; if 1e16 is
-        then subtracted, the result will be 0.
+        When Floats are naively substituted into an expression, precision errors
+        may adversely affect the result. For example, adding 1e16 (a Float) to 1
+        will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
         That is exactly what happens in the following:
 
         >>> from sympy.abc import x, y, z
@@ -1429,8 +1415,8 @@ class EvalfMixin(object):
         >>> (x + y - z).subs(values)
         0
 
-        Using the subs argument for evalf is the accurate way to
-        evaluate such an expression:
+        Using the subs argument for evalf is the accurate way to evaluate such an
+        expression:
 
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000

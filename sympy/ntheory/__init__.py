@@ -23,7 +23,10 @@ from .multinomial import binomial_coefficients, binomial_coefficients_list, \
 from .continued_fraction import continued_fraction_periodic, \
     continued_fraction_iterator, continued_fraction_reduce, \
     continued_fraction_convergents, continued_fraction
-from .digits import count_digits, digits, is_palindromic
+from .digits import (
+    count_digits,
+    is_palindromic,
+)
 from .egyptian_fraction import egyptian_fraction
 
 __all__ = [
@@ -54,7 +57,6 @@ __all__ = [
     'continued_fraction_reduce', 'continued_fraction_convergents',
     'continued_fraction',
 
-    'digits',
     'count_digits',
     'is_palindromic',
 

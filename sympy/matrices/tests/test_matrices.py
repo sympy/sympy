@@ -2,7 +2,7 @@ import random
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
+    S, Symbol, cos, exp, log, expand_mul, oo, pi, signsimp, simplify, sin,
     sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
@@ -571,6 +571,58 @@ def test_issue_17247_expression_blowup_28():
         sqrt(14609315/131072 - sqrt(64789115132571/4294967296 + 3546944054712886603889144627/(110680464442257309696*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3)) + 2*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3))/2 + sqrt(64789115132571/2147483648 - 2*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3) - 76627253330829751075/(35184372088832*sqrt(64789115132571/4294967296 + 3546944054712886603889144627/(110680464442257309696*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3)) + 2*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3))) - 3546944054712886603889144627/(110680464442257309696*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3)))/2),
         sqrt(14609315/131072 - sqrt(64789115132571/4294967296 + 3546944054712886603889144627/(110680464442257309696*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3)) + 2*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3))/2 - sqrt(64789115132571/2147483648 - 2*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3) - 76627253330829751075/(35184372088832*sqrt(64789115132571/4294967296 + 3546944054712886603889144627/(110680464442257309696*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3)) + 2*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3))) - 3546944054712886603889144627/(110680464442257309696*(25895222463957462655758224991455280215303/633825300114114700748351602688 + sqrt(1213909058710955930446995195883114969038524625997915131236390724543989220134670)*I/22282920707136844948184236032)**(1/3)))/2)]''')
 
+def test_issue_17247_expression_blowup_29():
+    M = Matrix(S('''[
+        [             -3/4,       45/32 - 37*I/16,                   0,                     0],
+        [-149/64 + 49*I/32, -177/128 - 1369*I/128,                   0, -2063/256 + 541*I/128],
+        [                0,         9/4 + 55*I/16, 2473/256 + 137*I/64,                     0],
+        [                0,                     0,                   0, -177/128 - 1369*I/128]]'''))
+    assert M.gauss_jordan_solve(ones(4, 1)) == (Matrix(S('''[
+        [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
+        [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
+        [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
+        [                                                          -11328/952745 + 87616*I/952745]]''')), Matrix(0, 1, []))
+
+@XFAIL # dotprodsimp is not on by default in this function
+def test_issue_17247_expression_blowup_30():
+    M = Matrix(S('''[
+        [             -3/4,       45/32 - 37*I/16,                   0,                     0],
+        [-149/64 + 49*I/32, -177/128 - 1369*I/128,                   0, -2063/256 + 541*I/128],
+        [                0,         9/4 + 55*I/16, 2473/256 + 137*I/64,                     0],
+        [                0,                     0,                   0, -177/128 - 1369*I/128]]'''))
+    assert M.cholesky_solve(ones(4, 1)) == Matrix(S('''[
+        [                          -32549314808672/3306971225785 - 17397006745216*I/3306971225785],
+        [                               67439348256/3306971225785 - 9167503335872*I/3306971225785],
+        [-15091965363354518272/21217636514687010905 + 16890163109293858304*I/21217636514687010905],
+        [                                                          -11328/952745 + 87616*I/952745]]'''))
+
+# This test is commented out because without dotprodsimp this calculation hangs.
+# @XFAIL # dotprodsimp is not on by default in this function
+# def test_issue_17247_expression_blowup_31():
+#     M = Matrix([
+#         [x + 1, 1 - x,     0,     0],
+#         [1 - x, x + 1,     0, x + 1],
+#         [    0, 1 - x, x + 1,     0],
+#         [    0,     0,     0, x + 1]])
+#     assert M.LDLsolve(ones(4, 1)) == Matrix([
+#         [(x + 1)/(4*x)],
+#         [(x - 1)/(4*x)],
+#         [(x + 1)/(4*x)],
+#         [    1/(x + 1)]])
+
+@XFAIL # dotprodsimp is not on by default in this function
+def test_issue_17247_expression_blowup_32():
+    M = Matrix([
+        [x + 1, 1 - x,     0,     0],
+        [1 - x, x + 1,     0, x + 1],
+        [    0, 1 - x, x + 1,     0],
+        [    0,     0,     0, x + 1]])
+    assert M.LUsolve(ones(4, 1)) == Matrix([
+        [(x + 1)/(4*x)],
+        [(x - 1)/(4*x)],
+        [(x + 1)/(4*x)],
+        [    1/(x + 1)]])
+
 
 def test_issue_16823():
     # This still needs to be fixed if not using dotprodsimp.
@@ -829,6 +881,72 @@ def test_random():
             if M[i, j] == 0:
                 zero_count += 1
     assert zero_count == 30
+
+def test_LUsolve():
+    A = Matrix([[2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix(3, 1, [3, 7, 5])
+    b = A*x
+    soln = A.LUsolve(b)
+    assert soln == x
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4]])
+    x = Matrix(3, 1, [-1, 2, 5])
+    b = A*x
+    soln = A.LUsolve(b)
+    assert soln == x
+    A = Matrix([[2, 1], [1, 0], [1, 0]])   # issue 14548
+    b = Matrix([3, 1, 1])
+    assert A.LUsolve(b) == Matrix([1, 1])
+    b = Matrix([3, 1, 2])                  # inconsistent
+    raises(ValueError, lambda: A.LUsolve(b))
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4],
+                [2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix([2, 1, -4])
+    b = A*x
+    soln = A.LUsolve(b)
+    assert soln == x
+    A = Matrix([[0, -1, 2], [5, 10, 7]])  # underdetermined
+    x = Matrix([-1, 2, 0])
+    b = A*x
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
+
+def test_QRsolve():
+    A = Matrix([[2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix(3, 1, [3, 7, 5])
+    b = A*x
+    soln = A.QRsolve(b)
+    assert soln == x
+    x = Matrix([[1, 2], [3, 4], [5, 6]])
+    b = A*x
+    soln = A.QRsolve(b)
+    assert soln == x
+
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4]])
+    x = Matrix(3, 1, [-1, 2, 5])
+    b = A*x
+    soln = A.QRsolve(b)
+    assert soln == x
+    x = Matrix([[7, 8], [9, 10], [11, 12]])
+    b = A*x
+    soln = A.QRsolve(b)
+    assert soln == x
+
 
 def test_inverse():
     A = eye(4)
@@ -1921,6 +2039,7 @@ def test_errors():
            2], [3, 4]])))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
+    raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
@@ -2119,6 +2238,130 @@ def test_cholesky():
     assert L == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
     A = SparseMatrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
+
+
+def test_cholesky_solve():
+    A = Matrix([[2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix(3, 1, [3, 7, 5])
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4]])
+    x = Matrix(3, 1, [-1, 2, 5])
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
+    A = Matrix(((1, 5), (5, 1)))
+    x = Matrix((4, -3))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert expand_mul(soln) == x
+    a00, a01, a11, b0, b1 = symbols('a00, a01, a11, b0, b1')
+    A = Matrix(((a00, a01), (a01, a11)))
+    b = Matrix((b0, b1))
+    x = A.cholesky_solve(b)
+    assert simplify(A*x) == b
+
+
+def test_LDLsolve():
+    A = Matrix([[2, 3, 5],
+                [3, 6, 2],
+                [8, 3, 6]])
+    x = Matrix(3, 1, [3, 7, 5])
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert soln == x
+
+    A = Matrix([[0, -1, 2],
+                [5, 10, 7],
+                [8,  3, 4]])
+    x = Matrix(3, 1, [-1, 2, 5])
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert soln == x
+
+    A = Matrix(((9, 3*I), (-3*I, 5)))
+    x = Matrix((-2, 1))
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix(((9*I, 3), (-3 + I, 5)))
+    x = Matrix((2 + 3*I, -1))
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix(((9, 3), (3, 9)))
+    x = Matrix((1, 1))
+    b = A * x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix([[-5, -3, -4], [-3, -7, 7]])
+    x = Matrix([[8], [7], [-2]])
+    b = A * x
+    raises(NotImplementedError, lambda: A.LDLsolve(b))
+
+
+def test_lower_triangular_solve():
+
+    raises(NonSquareMatrixError,
+        lambda: Matrix([1, 0]).lower_triangular_solve(Matrix([0, 1])))
+    raises(ShapeError,
+        lambda: Matrix([[1, 0], [0, 1]]).lower_triangular_solve(Matrix([1])))
+    raises(ValueError,
+        lambda: Matrix([[2, 1], [1, 2]]).lower_triangular_solve(
+            Matrix([[1, 0], [0, 1]])))
+
+    A = Matrix([[1, 0], [0, 1]])
+    B = Matrix([[x, y], [y, x]])
+    C = Matrix([[4, 8], [2, 9]])
+
+    assert A.lower_triangular_solve(B) == B
+    assert A.lower_triangular_solve(C) == C
+
+
+def test_upper_triangular_solve():
+
+    raises(NonSquareMatrixError,
+        lambda: Matrix([1, 0]).upper_triangular_solve(Matrix([0, 1])))
+    raises(ShapeError,
+        lambda: Matrix([[1, 0], [0, 1]]).upper_triangular_solve(Matrix([1])))
+    raises(TypeError,
+        lambda: Matrix([[2, 1], [1, 2]]).upper_triangular_solve(
+            Matrix([[1, 0], [0, 1]])))
+
+    A = Matrix([[1, 0], [0, 1]])
+    B = Matrix([[x, y], [y, x]])
+    C = Matrix([[2, 4], [3, 8]])
+
+    assert A.upper_triangular_solve(B) == B
+    assert A.upper_triangular_solve(C) == C
+
+
+def test_diagonal_solve():
+    raises(TypeError, lambda: Matrix([1, 1]).diagonal_solve(Matrix([1])))
+    A = Matrix([[1, 0], [0, 1]])*2
+    B = Matrix([[x, y], [y, x]])
+    assert A.diagonal_solve(B) == B/2
+
+    A = Matrix([[1, 0], [1, 2]])
+    raises(TypeError, lambda: A.diagonal_solve(B))
 
 
 def test_matrix_norm():
@@ -2615,6 +2858,45 @@ def test_simplify_immutable():
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
 
+def test_rank():
+    from sympy.abc import x
+    m = Matrix([[1, 2], [x, 1 - 1/x]])
+    assert m.rank() == 2
+    n = Matrix(3, 3, range(1, 10))
+    assert n.rank() == 2
+    p = zeros(3)
+    assert p.rank() == 0
+
+def test_issue_11434():
+    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
+        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
+                [bx, by, bx*t0, by*t0, 0],
+                [cx, cy, cx*t0, cy*t0, 1],
+                [dx, dy, dx*t0, dy*t0, 1],
+                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
+    assert M.rank() == 4
+
+def test_rank_regression_from_so():
+    # see:
+    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+
+    nu, lamb = symbols('nu, lambda')
+    A = Matrix([[-3*nu,         1,                  0,  0],
+                [ 3*nu, -2*nu - 1,                  2,  0],
+                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
+                [    0,         0,          nu + lamb, -3]])
+    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
+                               [0, 1, 0,    3/(nu*(-lamb - nu))],
+                               [0, 0, 1,         3/(-lamb - nu)],
+                               [0, 0, 0,                      0]])
+    expected_pivots = (0, 1, 2)
+
+    reduced, pivots = A.rref()
+
+    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
+    assert pivots == expected_pivots
+
 def test_replace():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
@@ -2682,6 +2964,79 @@ def test_pinv():
         for i, j in zip(q.subs(reps), w.subs(reps))
         )
 
+def test_pinv_solve():
+    # Fully determined system (unique result, identical to other solvers).
+    A = Matrix([[1, 5], [7, 9]])
+    B = Matrix([12, 13])
+    assert A.pinv_solve(B) == A.cholesky_solve(B)
+    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == Matrix([sympify('-43/26'), sympify('71/26')])
+    assert A * A.pinv() * B == B
+    # Fully determined, with two-dimensional B matrix.
+    B = Matrix([[12, 13, 14], [15, 16, 17]])
+    assert A.pinv_solve(B) == A.cholesky_solve(B)
+    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == Matrix([[-33, -37, -41], [69, 75, 81]]) / 26
+    assert A * A.pinv() * B == B
+    # Underdetermined system (infinite results).
+    A = Matrix([[1, 0, 1], [0, 1, 1]])
+    B = Matrix([5, 7])
+    solution = A.pinv_solve(B)
+    w = {}
+    for s in solution.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert solution == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
+                               [w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 3],
+                               [-w['w0_0']/3 - w['w1_0']/3 + w['w2_0']/3 + 4]])
+    assert A * A.pinv() * B == B
+    # Overdetermined system (least squares results).
+    A = Matrix([[1, 0], [0, 0], [0, 1]])
+    B = Matrix([3, 2, 1])
+    assert A.pinv_solve(B) == Matrix([3, 1])
+    # Proof the solution is not exact.
+    assert A * A.pinv() * B != B
+
+def test_pinv_rank_deficient():
+    # Test the four properties of the pseudoinverse for various matrices.
+    As = [Matrix([[1, 1, 1], [2, 2, 2]]),
+          Matrix([[1, 0], [0, 0]]),
+          Matrix([[1, 2], [2, 4], [3, 6]])]
+
+    for A in As:
+        A_pinv = A.pinv(method="RD")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+    for A in As:
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+    # Test solving with rank-deficient matrices.
+    A = Matrix([[1, 0], [0, 0]])
+    # Exact, non-unique solution.
+    B = Matrix([3, 0])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B == B
+    # Least squares, non-unique solution.
+    B = Matrix([3, 1])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B != B
 
 @XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
@@ -2703,6 +3058,171 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
+
+def test_gauss_jordan_solve():
+
+    # Square, full rank, unique solution
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    b = Matrix([3, 6, 9])
+    sol, params = A.gauss_jordan_solve(b)
+    assert sol == Matrix([[-1], [2], [0]])
+    assert params == Matrix(0, 1, [])
+
+    # Square, full rank, unique solution, B has more columns than rows
+    A = eye(3)
+    B = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == B
+    assert params == Matrix(0, 4, [])
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    b = Matrix([3, 6, 9])
+    sol, params, freevar = A.gauss_jordan_solve(b, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
+    assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution, B has two columns
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    B = Matrix([[3, 4], [6, 8], [9, 12]])
+    sol, params, freevar = A.gauss_jordan_solve(B, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - Rational(4, 3)],
+                          [-2*w['tau0'] + 2, -2*w['tau1'] + Rational(8, 3)],
+                          [w['tau0'], w['tau1']],])
+    assert params == Matrix([[w['tau0'], w['tau1']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[-2*w['tau0'] - 3*w['tau1']],
+                         [w['tau0']], [w['tau1']]])
+    assert params == Matrix([[w['tau0']], [w['tau1']]])
+
+    # Square, reduced rank, parametrized solution
+    A = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    b = Matrix([0, 0, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0']], [w['tau1']], [w['tau2']]])
+    assert params == Matrix([[w['tau0']], [w['tau1']], [w['tau2']]])
+
+    # Square, reduced rank, no solution
+    A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    b = Matrix([0, 0, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, unique solution
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 1, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    assert sol == Matrix([[Rational(-1, 2)], [0], [Rational(1, 6)]])
+    assert params == Matrix(0, 1, [])
+
+    # Rectangular, tall, full rank, unique solution, B has less columns than rows
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == Matrix([[Rational(-1, 2), Rational(-2, 2)], [0, 0], [Rational(1, 6), Rational(2, 6)]])
+    assert params == Matrix(0, 2, [])
+
+    # Rectangular, tall, full rank, no solution
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 0, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (2nd has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 0], [0, 1]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (1st has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [0, 1], [1, 0]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
+
+    # Rectangular, tall, reduced rank, parametrized solution
+    A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 0, 1])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[-3*w['tau0'] + 5], [-1], [w['tau0']]])
+    assert params == Matrix([[w['tau0']]])
+
+    # Rectangular, tall, reduced rank, no solution
+    A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
+    b = Matrix([0, 0, 1, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, wide, full rank, parametrized solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 1, 12]])
+    b = Matrix([1, 1, 1])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[2*w['tau0'] - 1], [-3*w['tau0'] + 1], [0],
+                         [w['tau0']]])
+    assert params == Matrix([[w['tau0']]])
+
+    # Rectangular, wide, reduced rank, parametrized solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
+    b = Matrix([0, 1, 0])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] + 2*w['tau1'] + S.Half],
+                         [-2*w['tau0'] - 3*w['tau1'] - Rational(1, 4)],
+                         [w['tau0']], [w['tau1']]])
+    assert params == Matrix([[w['tau0']], [w['tau1']]])
+    # watch out for clashing symbols
+    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau1')
+    M = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
+    A = M[:, :-1]
+    b = M[:, -1:]
+    sol, params = A.gauss_jordan_solve(b)
+    assert params == Matrix(3, 1, [x0, x1, x2])
+    assert sol == Matrix(5, 1, [x1, 0, x0, _x0, x2])
+
+    # Rectangular, wide, reduced rank, no solution
+    A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
+    b = Matrix([1, 1, 1])
+    raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Test for immutable matrix
+    A = ImmutableMatrix([[1, 0], [0, 1]])
+    B = ImmutableMatrix([1, 2])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == ImmutableMatrix([1, 2])
+    assert params == ImmutableMatrix(0, 1, [])
+    assert sol.__class__ == ImmutableDenseMatrix
+    assert params.__class__ == ImmutableDenseMatrix
+
+
+def test_solve():
+    A = Matrix([[1,2], [2,4]])
+    b = Matrix([[3], [4]])
+    raises(ValueError, lambda: A.solve(b)) #no solution
+    b = Matrix([[ 4], [8]])
+    raises(ValueError, lambda: A.solve(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
@@ -2958,6 +3478,13 @@ def test_case_6913():
     a = m[0, 0]>0
     assert str(a) == 'm[0, 0] > 0'
 
+def test_issue_15872():
+    A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])
+    B = A - Matrix.eye(4) * I
+    assert B.rank() == 3
+    assert (B**2).rank() == 2
+    assert (B**3).rank() == 2
+
 def test_issue_11948():
     A = MatrixSymbol('A', 3, 3)
     a = Wild('a')
@@ -2972,6 +3499,27 @@ def test_gramschmidt_conjugate_dot():
     Q, R = mat.QRdecomposition()
     assert Q * Q.H == Matrix.eye(2)
 
+def test_issue_17827():
+    C = Matrix([
+        [3, 4, -1, 1],
+        [9, 12, -3, 3],
+        [0, 2, 1, 3],
+        [2, 3, 0, -2],
+        [0, 3, 3, -5],
+        [8, 15, 0, 6]
+    ])
+    # Tests for row/col within valid range
+    D = C.elementary_row_op('n<->m', row1=2, row2=5)
+    E = C.elementary_row_op('n->n+km', row1=5, row2=3, k=-4)
+    F = C.elementary_row_op('n->kn', row=5, k=2)
+    assert(D[5, :] == Matrix([[0, 2, 1, 3]]))
+    assert(E[5, :] == Matrix([[0, 3, 0, 14]]))
+    assert(F[5, :] == Matrix([[16, 30, 0, 12]]))
+    # Tests for row/col out of range
+    raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
+    raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
+    raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
+
 def test_issue_8207():
     a = Matrix(MatrixSymbol('a', 3, 1))
     b = Matrix(MatrixSymbol('b', 3, 1))
@@ -2980,6 +3528,7 @@ def test_issue_8207():
     e = diff(d, a[0, 0])
     assert d == b[0, 0]
     assert e == 0
+
 
 def test_func():
     from sympy.simplify.simplify import nthroot

@@ -19,8 +19,6 @@ C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
-def test_evaluate():
-    assert MatMul(C, C, evaluate=True) == MatMul(C, C).doit()
 
 def test_adjoint():
     assert adjoint(A*B) == Adjoint(B)*Adjoint(A)

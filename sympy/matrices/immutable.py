@@ -1,11 +1,10 @@
 from __future__ import division, print_function
 
 from typing import Callable
-from mpmath.matrices.matrices import _matrix
 
 from sympy.core import Basic, Dict, Integer, S, Tuple
 from sympy.core.cache import cacheit
-from sympy.core.sympify import converter as sympify_converter, _sympify
+from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
@@ -15,13 +14,6 @@ from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 def sympify_matrix(arg):
     return arg.as_immutable()
 sympify_converter[MatrixBase] = sympify_matrix
-
-
-def sympify_mpmath_matrix(arg):
-    mat = [_sympify(x) for x in arg]
-    return ImmutableDenseMatrix(arg.rows, arg.cols, mat)
-sympify_converter[_matrix] = sympify_mpmath_matrix
-
 
 class ImmutableDenseMatrix(DenseMatrix, MatrixExpr): # type: ignore
     """Create an immutable version of a matrix.

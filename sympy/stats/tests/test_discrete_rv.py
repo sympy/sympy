@@ -7,7 +7,7 @@ from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
-                         kurtosis, coskewness)
+                         kurtosis)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta)
@@ -37,18 +37,12 @@ def test_Poisson():
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
 
-@slow
 def test_GeometricDistribution():
     p = S.One / 5
     d = GeometricDistribution(p)
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
-
-    X = Geometric('X', Rational(1, 5))
-    Y = Geometric('Y', Rational(3, 10))
-    assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
-
 
 def test_Hermite():
     a1 = Symbol("a1", positive=True)

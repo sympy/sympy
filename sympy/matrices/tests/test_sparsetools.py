@@ -29,9 +29,7 @@ def test_csrtodok():
     i = [[1, 3, 12], [0, 2, 4], [0, 2, 3], [2, 5]]
     j = [[11, 15, 12, 15], [2, 4, 1, 2], [0, 1, 1, 2, 3, 4], [5, 8]]
     k = [[1, 3], [2, 1], [0, 1, 1, 2], [3, 3]]
-    m = _csrtodok(h)
-    assert isinstance(m, SparseMatrix)
-    assert m == SparseMatrix(3, 4,
+    assert _csrtodok(h) == SparseMatrix(3, 4,
         {(0, 2): 5, (2, 1): 7, (2, 3): 5})
     assert _csrtodok(g) == SparseMatrix(3, 7,
         {(0, 2): 12, (1, 4): 5, (2, 2): 4})

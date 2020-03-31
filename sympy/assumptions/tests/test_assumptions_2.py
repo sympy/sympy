@@ -18,7 +18,7 @@ def test_equal():
 def test_pretty():
     assert pretty(Q.positive(x)) == "Q.positive(x)"
     assert pretty(
-        {Q.positive, Q.integer}) == "{Q.integer, Q.positive}"
+        set([Q.positive, Q.integer])) == "{Q.integer, Q.positive}"
 
 
 def test_extract_facts():

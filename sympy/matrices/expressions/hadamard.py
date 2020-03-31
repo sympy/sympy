@@ -60,16 +60,13 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, **kwargs):
         args = list(map(sympify, args))
         check = kwargs.get('check', True)
         if check:
             validate(*args)
 
-        obj = super(HadamardProduct, cls).__new__(cls, *args)
-        if evaluate:
-            obj = obj.doit(deep=False)
-        return obj
+        return super(HadamardProduct, cls).__new__(cls, *args)
 
     @property
     def shape(self):

@@ -68,7 +68,7 @@ sol_simplicity
 
 factorable
 ^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.single.Factorable
+.. autofunction:: sympy.solvers.ode.ode.ode_factorable
 
 1st_exact
 ^^^^^^^^^
@@ -108,7 +108,7 @@ Liouville
 
 Riccati_special_minus2
 ^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.single.RiccatiSpecial
+.. autofunction:: sympy.solvers.ode.ode.ode_Riccati_special_minus2
 
 nth_linear_constant_coeff_homogeneous
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

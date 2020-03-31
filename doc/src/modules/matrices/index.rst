@@ -15,6 +15,5 @@ Contents:
    common.rst
    dense.rst
    sparse.rst
-   sparsetools.rst
    immutablematrices.rst
    expressions.rst

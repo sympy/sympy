@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Symbol, S
 from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
@@ -100,8 +102,8 @@ def get_relevant_facts(proposition, assumptions=None,
             cnf_fact = CNF.to_CNF(fact)
             newfact = cnf_fact.rcall(expr)
             relevant_facts = relevant_facts._and(newfact)
-            newexprs |= {key.args[0] for key in newfact.all_predicates()
-                             if isinstance(key, AppliedPredicate)}
+            newexprs |= set([key.args[0] for key in newfact.all_predicates()
+                             if isinstance(key, AppliedPredicate)])
 
     return newexprs - exprs, relevant_facts
 

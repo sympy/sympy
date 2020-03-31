@@ -103,13 +103,6 @@ def test_latex_basic():
     assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
         r"\frac{2 x}{3} \sqrt{2}"
 
-    x_star = Symbol('x^*')
-    f = Function('f')
-    assert latex(x_star**2) == r"\left(x^{*}\right)^{2}"
-    assert latex(x_star**2, parenthesize_super=False) == r"{x^{*}}^{2}"
-    assert latex(Derivative(f(x_star), x_star,2)) == r"\frac{d^{2}}{d \left(x^{*}\right)^{2}} f{\left(x^{*} \right)}"
-    assert latex(Derivative(f(x_star), x_star,2), parenthesize_super=False) == r"\frac{d^{2}}{d {x^{*}}^{2}} f{\left(x^{*} \right)}"
-
     assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
         r"\left(2 \int x\, dx\right) / 3"
@@ -671,11 +664,6 @@ def test_latex_derivatives():
     assert latex(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
         r"\frac{\partial^{3}}{\partial y\partial x^{2}} " + latex(f(x, y))
 
-    # for negative nested Derivative
-    assert latex(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'\frac{d}{d x} \left(- \frac{d}{d x} y^{2}\right)'
-    assert latex(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
-        r'\frac{d^{2}}{d x^{2}} \left(- \frac{d^{2}}{d x^{2}} y\right)'
-
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int\limits_{0}^{\infty} e^{- x y}\, dx"
@@ -728,12 +716,6 @@ def test_latex_integrals():
         r"\int\int\int\int\int\int x\, dx\, dx\, dx\, dx\, dx\, dx"
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int\limits_{0}^{1}\int\int x\, dx\, dy\, dz"
-
-    # for negative nested Integral
-    assert latex(Integral(-Integral(y**2,x),x)) == \
-        r'\int \left(- \int y^{2}\, dx\right)\, dx'
-    assert latex(Integral(-Integral(-Integral(y,x),x),x)) == \
-        r'\int \left(- \int \left(- \int y\, dx\right)\, dx\right)\, dx'
 
     # fix issue #10806
     assert latex(Integral(z, z)**2) == r"\left(\int z\, dz\right)^{2}"

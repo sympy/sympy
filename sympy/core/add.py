@@ -416,7 +416,7 @@ class Add(Expr, AssocOp):
         return
 
     def matches(self, expr, repl_dict={}, old=False):
-        return self._matches_commutative(expr, repl_dict, old)
+        return AssocOp._matches_commutative(self, expr, repl_dict, old)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):

@@ -463,7 +463,10 @@ class FunctionDoc(NumpyDocString):
             func, func_name = self.get_func()
             try:
                 # try to read signature
-                argspec = inspect.getfullargspec(func)
+                if sys.version_info[0] >= 3:
+                    argspec = inspect.getfullargspec(func)
+                else:
+                    argspec = inspect.getargspec(func)
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace('*', '\*')
                 signature = '%s%s' % (func_name, argspec)

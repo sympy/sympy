@@ -43,7 +43,6 @@ __all__ = [
     'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
     'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
     'sampling_density', 'moment_generating_function', 'smoment', 'quantile',
-    'coskewness',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
     'BetaBinomial', 'Hypergeometric', 'Rademacher',
@@ -84,7 +83,7 @@ from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
         kurtosis, covariance, dependent, entropy, independent, random_symbols,
         correlation, factorial_moment, moment, cmoment, sampling_density,
-        moment_generating_function, smoment, quantile, coskewness)
+        moment_generating_function, smoment, quantile)
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher)

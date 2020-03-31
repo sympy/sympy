@@ -9,7 +9,8 @@ returns
 
 Integer(1)/Integer(2)
 
-We use the ast module for this. It is well documented at docs.python.org.
+We use the Python ast module for that, which is in python2.6 and later. It is
+well documented at docs.python.org.
 
 Some tips to understand how this works: use dump() to get a nice
 representation of any node. Then write a string of what you want to get,

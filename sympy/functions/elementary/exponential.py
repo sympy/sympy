@@ -754,28 +754,17 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy import unpolarify, expand_log, factorint
+        from sympy import unpolarify, expand_log
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
-        factor = hints.get('factor', False)
         if (len(self.args) == 2):
             return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
         if arg.is_Integer:
             # remove perfect powers
-            p = perfect_power(arg)
-            logarg = None
-            coeff = 1
+            p = perfect_power(int(arg))
             if p is not False:
-                arg, coeff = p
-                logarg = self.func(arg)
-            # expand as product of its prime factors if factor=True
-            if factor:
-                p = factorint(arg)
-                if arg not in p.keys():
-                    logarg = sum(n*log(val) for val, n in p.items())
-            if logarg is not None:
-                return coeff*logarg
+                return p[1]*self.func(p[0])
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:

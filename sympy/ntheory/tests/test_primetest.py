@@ -25,13 +25,6 @@ def test_euler_pseudoprimes():
     assert is_euler_pseudoprime(8421, 29) == False
     assert is_euler_pseudoprime(9997, 19) == True
 
-def test_is_extra_strong_lucas_prp():
-    assert is_extra_strong_lucas_prp(4) == False
-    assert is_extra_strong_lucas_prp(989) == True
-    assert is_extra_strong_lucas_prp(10877) == True
-    assert is_extra_strong_lucas_prp(9) == False
-    assert is_extra_strong_lucas_prp(16) == False
-    assert is_extra_strong_lucas_prp(169) == False
 
 @slow
 def test_prps():

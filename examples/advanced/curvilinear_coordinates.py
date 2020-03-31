@@ -29,7 +29,7 @@ def laplace(f, g_inv, g_det, X):
     return r
 
 
-def transform(name, X, Y, *, g_correct=None, recursive=False):
+def transform(name, X, Y, g_correct=None, recursive=False):
     """
     Transforms from cartesian coordinates X to any curvilinear coordinates Y.
 

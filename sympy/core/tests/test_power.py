@@ -526,9 +526,3 @@ def test_issue_14815():
 def test_issue_18509():
     assert unchanged(Mul, oo, 1/pi**oo)
     assert (1/pi**oo).is_extended_positive == False
-
-
-def test_issue_18762():
-    e, p = symbols('e p')
-    g0 = sqrt(1 + e**2 - 2*e*cos(p))
-    assert len(g0.series(e, 1, 3).args) == 4

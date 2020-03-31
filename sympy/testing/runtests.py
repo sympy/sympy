@@ -1510,7 +1510,7 @@ class SymPyDocTests(object):
                             executables=(),
                             modules=(),
                             disable_viewers=(),
-                            python_version=(3, 5)):
+                            python_version=(2,)):
         """
         Checks if the dependencies for the test are installed.
 

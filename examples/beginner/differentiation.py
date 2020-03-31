@@ -17,7 +17,7 @@ def main():
     pprint(e)
     print("\n\nDifferentiating w.r.t. a:")
     print()
-    pprint(e.diff(a))
+    pprint(e.diff(a, 3))
     print("\n\nDifferentiating w.r.t. b:")
     print()
     pprint(e.diff(b))

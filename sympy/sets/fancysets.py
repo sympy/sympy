@@ -729,12 +729,6 @@ class Range(Set):
             return S.Infinity
         return Integer(abs(dif//self.step))
 
-    @property
-    def is_finite_set(self):
-        if self.start.is_integer and self.stop.is_integer:
-            return True
-        return self.size.is_finite
-
     def __nonzero__(self):
         return self.start != self.stop
 

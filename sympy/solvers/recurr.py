@@ -721,34 +721,36 @@ def rsolve(f, y, init=None):
     # y(n) + a*(y(n + 1) + y(n - 1))/2
     f = f.expand().collect(y.func(Wild('m', integer=True)))
 
-    h_part = defaultdict(list)
-    i_part = []
+    h_part = defaultdict(lambda: S.Zero)
+    i_part = S.Zero
     for g in Add.make_args(f):
-        coeff, dep = g.as_coeff_mul(y.func)
-        if not dep:
-            i_part.append(coeff)
-            continue
-        for h in dep:
-            if h.is_Function and h.func == y.func:
-                result = h.args[0].match(n + k)
-                if result is not None:
-                    h_part[int(result[k])].append(coeff)
-                    continue
-            raise ValueError(
-                "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
-    for k in h_part:
-        h_part[k] = Add(*h_part[k])
-    h_part.default_factory = lambda: 0
-    i_part = Add(*i_part)
+        coeff = S.One
+        kspec = None
+        for h in Mul.make_args(g):
+            if h.is_Function:
+                if h.func == y.func:
+                    result = h.args[0].match(n + k)
+
+                    if result is not None:
+                        kspec = int(result[k])
+                    else:
+                        raise ValueError(
+                            "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
+                else:
+                    raise ValueError(
+                        "'%s' expected, got '%s'" % (y.func, h.func))
+            else:
+                coeff *= h
+
+        if kspec is not None:
+            h_part[kspec] += coeff
+        else:
+            i_part += coeff
 
     for k, coeff in h_part.items():
         h_part[k] = simplify(coeff)
 
     common = S.One
-
-    if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
-       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), i_part.expand().args))):
-        raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():
         if coeff.is_rational_function(n):

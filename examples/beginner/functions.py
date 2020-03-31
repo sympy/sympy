@@ -5,14 +5,14 @@
 Demonstrates functions defined in SymPy.
 """
 
-from sympy import pprint, Symbol, log, exp
+from sympy import pprint, Symbol, log, exp, Eq,solve
 
 def main():
     a = Symbol('a')
     b = Symbol('b')
-    e = log((a + b)**5)
+    e = Eq(a**2 + 2,0)
     print()
-    pprint(e)
+    pprint(solve(e))
     print('\n')
 
     e = exp(e)

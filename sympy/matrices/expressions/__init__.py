@@ -46,7 +46,8 @@ __all__ = [
 
     'hadamard_product', 'HadamardProduct', 'hadamard_power', 'HadamardPower',
 
-    'DiagonalMatrix', 'DiagonalOf', 'DiagMatrix', 'diagonalize_vector',
+    'DiagonalMatrix', 'DiagonalOf', 'DiagMatrix', 'DiagonalizeVector',
+    'diagonalize_vector',
 
     'DotProduct',
 

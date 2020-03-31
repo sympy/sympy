@@ -477,11 +477,6 @@ def test_section_modulus_and_polar_second_moment_of_area():
     assert e.section_modulus() == (18*pi, 6*pi)
     assert e.polar_second_moment_of_area() == 120*pi
 
-    e = Ellipse(Point(0, 0), 2, 2)
-    assert e.section_modulus() == (2*pi, 2*pi)
-    assert e.section_modulus(Point(2, 2)) == (2*pi, 2*pi)
-    assert e.section_modulus((2, 2)) == (2*pi, 2*pi)
-
 
 def test_circumference():
     M = Symbol('M')
@@ -552,8 +547,3 @@ def test_evolute():
     t2 = (3*(y - 1))**Rational(2, 3)
     E = t1 + t2 - (27)**Rational(2, 3)
     assert e.evolute() == E
-
-
-def test_svg():
-    e1 = Ellipse(Point(1, 0), 3, 2)
-    assert e1._svg(2, "#FFAAFF") == '<ellipse fill="#FFAAFF" stroke="#555555" stroke-width="4.0" opacity="0.6" cx="1.00000000000000" cy="0" rx="3.00000000000000" ry="2.00000000000000"/>'

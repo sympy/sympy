@@ -132,13 +132,11 @@ if cin:
         )
         c_src3 = 'int a = 2.345, b = 5.67;'
         c_src4 = 'int p = 6, q = 23.45;'
-        c_src5 = "int x = '0', y = 'a';"
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
         res3 = SymPyExpression(c_src3, 'c').return_expr()
         res4 = SymPyExpression(c_src4, 'c').return_expr()
-        res5 = SymPyExpression(c_src5, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -193,22 +191,6 @@ if cin:
                 Symbol('q'),
                 type=IntBaseType(String('integer')),
                 value=Integer(23)
-            )
-        )
-
-        assert res5[0] == Declaration(
-            Variable(
-                Symbol('x'),
-                type=IntBaseType(String('integer')),
-                value=Integer(48)
-            )
-        )
-
-        assert res5[1] == Declaration(
-            Variable(
-                Symbol('y'),
-                type=IntBaseType(String('integer')),
-                value=Integer(97)
             )
         )
 

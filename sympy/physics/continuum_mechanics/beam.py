@@ -72,7 +72,7 @@ class Beam(object):
          + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C'):
+    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x'), base_char='C'):
         """Initializes the class.
 
         Parameters
@@ -98,9 +98,6 @@ class Beam(object):
             bending axis of the beam. The second moment of area will be computed
             from the shape object internally.
 
-        area : Symbol/float
-            Represents the cross-section area of beam
-
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -122,7 +119,6 @@ class Beam(object):
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
-        self._area = area
         self._applied_supports = []
         self._support_as_loads = []
         self._applied_loads = []
@@ -150,15 +146,6 @@ class Beam(object):
         self._length = sympify(l)
 
     @property
-    def area(self):
-        """Cross-sectional area of the Beam. """
-        return self._area
-
-    @area.setter
-    def area(self, a):
-        self._area = sympify(a)
-
-    @property
     def variable(self):
         """
         A symbol that can be used as a variable along the length of the beam
@@ -171,7 +158,7 @@ class Beam(object):
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
-        >>> E, I, A = symbols('E, I, A')
+        >>> E, I = symbols('E, I')
         >>> x, y, z = symbols('x, y, z')
         >>> b = Beam(4, E, I)
         >>> b.variable
@@ -179,7 +166,7 @@ class Beam(object):
         >>> b.variable = y
         >>> b.variable
         y
-        >>> b = Beam(4, E, I, A, z)
+        >>> b = Beam(4, E, I, z)
         >>> b.variable
         z
         """
@@ -1230,13 +1217,6 @@ class Beam(object):
         else:
             return None
 
-    def shear_stress(self):
-        """
-        Returns an expression representing the Shear Stress
-        curve of the Beam object.
-        """
-        return self.shear_force()/self._area
-
     def plot_shear_force(self, subs=None):
         """
 
@@ -1546,18 +1526,7 @@ class Beam(object):
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
-        """
-        Returns a plot object representing the beam diagram of the beam.
-
-        .. note::
-            The user must be careful while entering load values.
-            The draw function assumes a sign convention which is used
-            for plotting loads.
-            Given a right handed coordinate system with XYZ coordinates,
-            the beam's length is assumed to be along the positive X axis.
-            The draw function recognizes positve loads(with n>-2) as loads
-            acting along negative Y direction and positve moments acting
-            along positive Z direction.
+        """Returns a plot object representing the beam diagram of the beam.
 
         Parameters
         ==========
@@ -1591,11 +1560,10 @@ class Beam(object):
             >>> b.apply_support(20, "roller")
             >>> b.draw()
             Plot object containing:
-            [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
-            + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
-            - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
-            [1]: cartesian line: 5 for x over (0.0, 50.0)
-
+            [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
+            - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
+            - 20*SingularityFunction(x, 50, 0) - SingularityFunction(x, 50, 1)
+            + 5 for x over (0.0, 50.0)
         """
         if not numpy:
             raise ImportError("To use this function numpy module is required")
@@ -1616,15 +1584,15 @@ class Beam(object):
 
         rectangles = []
         rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq,load_eq1, fill = self._draw_load(pictorial, length, l)
+        annotations, markers, load_eq, fill = self._draw_load(pictorial, length, l)
         support_markers, support_rectangles = self._draw_supports(length, l)
 
         rectangles += support_rectangles
         markers += support_markers
 
-        sing_plot = plot(height + load_eq, height + load_eq1, (x, 0, length),
+        sing_plot = plot(height + load_eq, (x, 0, length),
          xlim=(-height, length + height), ylim=(-length, 1.25*length), annotations=annotations,
-          markers=markers, rectangles=rectangles, line_color='brown', fill=fill, axis=False, show=False)
+          markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
 
         return sing_plot
 
@@ -1638,15 +1606,11 @@ class Beam(object):
         markers = []
         load_args = []
         scaled_load = 0
-        load_args1 = []
-        scaled_load1 = 0
-        load_eq = 0     # For positive valued higher order loads
-        load_eq1 = 0    # For negative valued higher order loads
+        load_eq = 0
+        higher_order = False
         fill = None
-        plus = 0        # For positive valued higher order loads
-        minus = 0       # For negative valued higher order loads
-        for load in loads:
 
+        for load in loads:
             # check if the position of load is in terms of the beam length.
             if l:
                 pos =  load[1].subs(l)
@@ -1662,89 +1626,51 @@ class Beam(object):
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
-                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
-                else:
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
+                else:
+                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
             # higher order loads
             elif load[2] >= 0:
-                # `fill` will be assigned only when higher order loads are present
-                value, start, order, end = load
-                # Positive loads have their seperate equations
-                if(value>0):
-                    plus = 1
+                higher_order = True
                 # if pictorial is True we remake the load equation again with
                 # some constant magnitude values.
-                    if pictorial:
-                        value = 10**(1-order) if order > 0 else length/2
-                        scaled_load += value*SingularityFunction(x, start, order)
-                        if end:
-                            f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
-                            for i in range(0, order + 1):
-                                scaled_load -= (f2.diff(x, i).subs(x, end - start)*
-                                               SingularityFunction(x, end, i)/factorial(i))
+                if pictorial:
+                    value, start, order, end = load
+                    value = 10**(1-order) if order > 0 else length/2
 
-                    if pictorial:
-                        if isinstance(scaled_load, Add):
-                            load_args = scaled_load.args
-                        else:
-                            # when the load equation consists of only a single term
-                            load_args = (scaled_load,)
-                        load_eq = [i.subs(l) for i in load_args]
-                    else:
-                        if isinstance(self.load, Add):
-                            load_args = self.load.args
-                        else:
-                            load_args = (self.load,)
-                        load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
-                    load_eq = Add(*load_eq)
+                    scaled_load += value*SingularityFunction(x, start, order)
+                    if end:
+                        f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
+                        for i in range(0, order + 1):
+                            scaled_load -= (f2.diff(x, i).subs(x, end - start)*
+                                           SingularityFunction(x, end, i)/factorial(i))
 
-                    # filling higher order loads with colour
-                    expr = height + load_eq.rewrite(Piecewise)
-                    y1 = lambdify(x, expr, 'numpy')
-
-                # For loads with negative value
+        # `fill` will be assigned only when higher order loads are present
+        if higher_order:
+            if pictorial:
+                if isinstance(scaled_load, Add):
+                    load_args = scaled_load.args
                 else:
-                    minus = 1
-                    # if pictorial is True we remake the load equation again with
-                    # some constant magnitude values.
-                    if pictorial:
-                        value = 10**(1-order) if order > 0 else length/2
-                        scaled_load1 += value*SingularityFunction(x, start, order)
-                        if end:
-                            f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
-                            for i in range(0, order + 1):
-                                scaled_load1 -= (f2.diff(x, i).subs(x, end - start)*
-                                               SingularityFunction(x, end, i)/factorial(i))
-
-                    if pictorial:
-                        if isinstance(scaled_load1, Add):
-                            load_args1 = scaled_load1.args
-                        else:
-                            # when the load equation consists of only a single term
-                            load_args1 = (scaled_load1,)
-                        load_eq1 = [i.subs(l) for i in load_args1]
-                    else:
-                        if isinstance(self.load, Add):
-                            load_args1 = self.load.args1
-                        else:
-                            load_args1 = (self.load,)
-                        load_eq1 = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
-                    load_eq1 = -Add(*load_eq1)-height
-
-                    # filling higher order loads with colour
-                    expr = height + load_eq1.rewrite(Piecewise)
-                    y1_ = lambdify(x, expr, 'numpy')
-
-                y = numpy.arange(0, float(length), 0.001)
-                y2 = float(height)
-
-                if(plus == 1 and minus == 1):
-                    fill = {'x': y, 'y1': y1(y), 'y2': y1_(y), 'color':'darkkhaki'}
-                elif(plus == 1):
-                    fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+                    # when the load equation consists of only a single term
+                    load_args = (scaled_load,)
+                load_eq = [i.subs(l) for i in load_args]
+            else:
+                if isinstance(self.load, Add):
+                    load_args = self.load.args
                 else:
-                    fill = {'x': y, 'y1': y1_(y), 'y2': y2 , 'color':'darkkhaki'}
-        return annotations, markers, load_eq, load_eq1, fill
+                    load_args = (self.load,)
+                load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+
+            load_eq = Add(*load_eq)
+
+            # filling higher order loads with colour
+            y = numpy.arange(0, float(length), 0.001)
+            expr = height + load_eq.rewrite(Piecewise)
+            y1 = lambdify(x, expr, 'numpy')
+            y2 = float(height)
+            fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+
+        return annotations, markers, load_eq, fill
 
 
     def _draw_supports(self, length, l):
@@ -1856,7 +1782,7 @@ class Beam3D(Beam):
         """
         super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
-        self._area = area
+        self.area = area
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
         self._load_Singularity = [0, 0, 0]
@@ -2111,19 +2037,6 @@ class Beam3D(Beam):
         """
         return self.shear_force()[0]
 
-    def shear_stress(self):
-        """
-        Returns a list of three expressions which represents the shear stress
-        curve of the Beam object along all three axes.
-        """
-        return [self.shear_force()[0]/self._area, self.shear_force()[1]/self._area, self.shear_force()[2]/self._area]
-
-    def axial_stress(self):
-        """
-        Returns expression of Axial stress present inside the Beam object.
-        """
-        return self.axial_force()/self._area
-
     def bending_moment(self):
         """
         Returns a list of three expressions which represents the bending moment
@@ -2153,7 +2066,7 @@ class Beam3D(Beam):
             I_y, I_z = I[0], I[1]
         else:
             I_y = I_z = I
-        A = self._area
+        A = self.area
         load = self._load_vector
         moment = self._moment_load_vector
         defl = Function('defl')

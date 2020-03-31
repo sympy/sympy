@@ -14,7 +14,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 
 
-def mplot2d(f, var, *, show=True):
+def mplot2d(f, var, show=True):
     """
     Plot a 2d function using matplotlib/Tk.
     """

@@ -1,6 +1,8 @@
 # References :
 # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
 # https://en.wikipedia.org/wiki/Quaternion
+from __future__ import print_function
+
 from sympy import S, Rational
 from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln

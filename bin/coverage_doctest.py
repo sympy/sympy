@@ -207,7 +207,7 @@ def _get_arg_list(name, fobj):
 
     trunc = 20  # Sometimes argument length can be huge
 
-    argspec = inspect.getfullargspec(fobj)
+    argspec = inspect.getargspec(fobj)
 
     arg_list = []
 

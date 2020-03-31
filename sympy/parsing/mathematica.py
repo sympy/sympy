@@ -8,20 +8,13 @@ from sympy import sympify
 
 
 def mathematica(s, additional_translations=None):
-    '''
-    Users can add their own translation dictionary.
-    variable-length argument needs '*' character.
-
-    Examples
-    ========
-
-    >>> from sympy.parsing.mathematica import mathematica
-    >>> mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
-    2
-    >>> mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
-    21
-
-    '''
+    '''Users can add their own translation dictionary
+    # Example
+    In [1]: mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
+    Out[1]: 2
+    In [2]: mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
+    Out[2]: 21
+    variable-length argument needs '*' character '''
 
     parser = MathematicaParser(additional_translations)
     return sympify(parser.parse(s))

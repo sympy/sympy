@@ -80,7 +80,7 @@ if cin:
         converts them to SymPy Expressions.
         """
 
-        def __init__(self):
+        def __init__(self, name):
             """Initializes the code converter"""
             super(CCodeConverter, self).__init__()
             self._py_nodes = []
@@ -255,17 +255,6 @@ if cin:
                         node.spelling
                     ).as_Declaration(
                         value = val
-                    )
-                #case where a character is assigned to an integer type variable
-                elif (child.kind == cin.CursorKind.CHARACTER_LITERAL
-                    and node.type.kind == cin.TypeKind.INT):
-                    type = IntBaseType(String('integer'))
-                    value = Integer(ord(val))
-                    return Variable(
-                        node.spelling
-                    ).as_Declaration(
-                        type = type,
-                        value = value
                     )
                 else:
                     raise NotImplementedError()
@@ -489,29 +478,16 @@ if cin:
             pass
 
         def transform_character_literal(self, node):
-            """Transformation function for character literal
-
-            Used to get the value of the given character literal.
-
-            Returns
-            =======
-
-            val : str
-                val contains the string value stored in the variable
-
-            Notes
-            =====
-
-            Only for cases where character is assigned to a integer value,
-            since character literal is not in sympy AST
-
-            """
-            try:
-               value = next(node.get_tokens()).spelling
-            except (StopIteration, ValueError):
+            #TODO: No string Type in AST
+            #type =
+            #try:
+            #    value = next(node.get_tokens()).spelling
+            #except (StopIteration, ValueError):
                 # No tokens
-               value = node.literal
-            return str(value[1])
+            #    value = node.literal
+            #val = [type, value]
+            #return val
+            pass
 
         def transform_unexposed_decl(self,node):
             """Transformation function for unexposed declarations"""
@@ -674,7 +650,7 @@ def parse_c(source):
         List of Python expression strings
 
     """
-    converter = CCodeConverter()
+    converter = CCodeConverter('output')
     if os.path.exists(source):
         src = converter.parse(source, flags = [])
     else:

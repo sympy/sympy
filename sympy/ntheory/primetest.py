@@ -464,10 +464,12 @@ def is_extra_strong_lucas_prp(n):
 
     if U == 0 and (V == 2 or V == n - 2):
         return True
+    if V == 0:
+        return True
     for r in range(1, s):
+        V = (V*V - 2) % n
         if V == 0:
             return True
-        V = (V*V - 2) % n
     return False
 
 

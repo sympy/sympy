@@ -28,7 +28,6 @@ if USE_PYTEST:
     SKIP = pytest.mark.skip
     slow = pytest.mark.slow
     nocache_fail = pytest.mark.nocache_fail
-    from _pytest.outcomes import Failed
 
 else:
     # Not using pytest so define the things that would have been imported from

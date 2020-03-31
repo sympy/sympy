@@ -3,7 +3,7 @@ from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 
 
-class AskHandler:
+class AskHandler(object):
     """Base class that all Ask Handlers must inherit"""
     pass
 
