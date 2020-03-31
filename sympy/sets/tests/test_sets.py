@@ -1,5 +1,5 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float,
+    Max, Min, Float, DisjointUnion,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
@@ -82,6 +82,8 @@ def test_is_finiteset():
     assert Complement(FiniteSet(1), Interval(x, y)).is_finite_set is True
     assert Complement(Interval(x, y), FiniteSet(1)).is_finite_set is None
     assert Complement(Interval(1, 2), FiniteSet(x)).is_finite_set is False
+    assert DisjointUnion(Interval(-5, 3), FiniteSet(x, y)).is_finite_set is False
+    assert DisjointUnion(S.EmptySet, FiniteSet(x, y), S.EmptySet).is_finite_set is True
 
 
 def test_deprecated_is_EmptySet():
@@ -402,7 +404,7 @@ def test_complement():
 
     assert FiniteSet(0, x).complement(S.Reals) == Complement(Interval(-oo, 0, True, True) +
                                                              Interval(0, oo, True, True)
-                                                             ,FiniteSet(x), evaluate=False)
+                                                             , FiniteSet(x), evaluate=False)
 
     square = Interval(0, 1) * Interval(0, 1)
     notsquare = square.complement(S.Reals*S.Reals)
@@ -1272,11 +1274,11 @@ def test_SymmetricDifference():
 
     assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
             FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
-    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 ,4 ,5 )) \
+    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 , 4 , 5)) \
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(1, 2 ,3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
+    assert Set(1, 2 , 3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
             Set(2, 3, 4) - Set(1, 2, 3))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
@@ -1487,3 +1489,88 @@ def test_issue_16878b():
     # that handles the base_set of S.Reals like there is
     # for Integers
     assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
+
+def test_DisjointUnion():
+    assert DisjointUnion(FiniteSet(1, 2, 3), FiniteSet(1, 2, 3), FiniteSet(1, 2, 3)).rewrite(Union) == (FiniteSet(1, 2, 3) * FiniteSet(0, 1, 2))
+    assert DisjointUnion(Interval(1, 3), Interval(2, 4)).rewrite(Union) == Union(Interval(1, 3) * FiniteSet(0), Interval(2, 4) * FiniteSet(1))
+    assert DisjointUnion(Interval(0, 5), Interval(0, 5)).rewrite(Union) == Union(Interval(0, 5) * FiniteSet(0), Interval(0, 5) * FiniteSet(1))
+    assert DisjointUnion(Interval(-1, 2), S.EmptySet, S.EmptySet).rewrite(Union) == Interval(-1, 2) * FiniteSet(0)
+    assert DisjointUnion(Interval(-1, 2)).rewrite(Union) == Interval(-1, 2) * FiniteSet(0)
+    assert DisjointUnion(S.EmptySet, Interval(-1, 2), S.EmptySet).rewrite(Union) == Interval(-1, 2) * FiniteSet(1)
+    assert DisjointUnion(Interval(-oo, oo)).rewrite(Union) == Interval(-oo, oo) * FiniteSet(0)
+    assert DisjointUnion(S.EmptySet).rewrite(Union) == S.EmptySet
+    assert DisjointUnion().rewrite(Union) == S.EmptySet
+    raises(TypeError, lambda: DisjointUnion(Symbol('n')))
+
+    x = Symbol("x")
+    y = Symbol("y")
+    z = Symbol("z")
+    assert DisjointUnion(FiniteSet(x), FiniteSet(y, z)).rewrite(Union) == (FiniteSet(x) * FiniteSet(0)) + (FiniteSet(y, z) * FiniteSet(1))
+
+def test_DisjointUnion_is_empty():
+    assert DisjointUnion(S.EmptySet).is_empty is True
+    assert DisjointUnion(S.EmptySet, S.EmptySet).is_empty is True
+    assert DisjointUnion(S.EmptySet, FiniteSet(1, 2, 3)).is_empty is False
+
+def test_DisjointUnion_is_iterable():
+    assert DisjointUnion(S.Integers, S.Naturals, S.Rationals).is_iterable is True
+    assert DisjointUnion(S.EmptySet, S.Reals).is_iterable is False
+    assert DisjointUnion(FiniteSet(1, 2, 3), S.EmptySet, FiniteSet(x, y)).is_iterable is True
+    assert DisjointUnion(S.EmptySet, S.EmptySet).is_iterable is False
+
+def test_DisjointUnion_contains():
+    assert (0, 0) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (0, 1) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (0, 2) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (1, 0) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (1, 1) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (1, 2) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (2, 0) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (2, 1) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (2, 2) in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (0, 1, 2) not in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (0, 0.5) not in DisjointUnion(FiniteSet(0.5))
+    assert (0, 5) not in DisjointUnion(FiniteSet(0, 1, 2), FiniteSet(0, 1, 2), FiniteSet(0, 1, 2))
+    assert (x, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
+    assert (y, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
+    assert (z, 0) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
+    assert (y, 2) in DisjointUnion(FiniteSet(x, y, z), S.EmptySet, FiniteSet(y))
+    assert (0.5, 0) in DisjointUnion(Interval(0, 1), Interval(0, 2))
+    assert (0.5, 1) in DisjointUnion(Interval(0, 1), Interval(0, 2))
+    assert (1.5, 0) not in DisjointUnion(Interval(0, 1), Interval(0, 2))
+    assert (1.5, 1) in DisjointUnion(Interval(0, 1), Interval(0, 2))
+
+def test_DisjointUnion_iter():
+    D = DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))
+    it = iter(D)
+    L1 = [(x, 1), (y, 1), (z, 1)]
+    L2 = [(3, 0), (5, 0), (7, 0), (9, 0)]
+    nxt = next(it)
+    assert nxt in L2
+    L2.remove(nxt)
+    nxt = next(it)
+    assert nxt in L1
+    L1.remove(nxt)
+    nxt = next(it)
+    assert nxt in L2
+    L2.remove(nxt)
+    nxt = next(it)
+    assert nxt in L1
+    L1.remove(nxt)
+    nxt = next(it)
+    assert nxt in L2
+    L2.remove(nxt)
+    nxt = next(it)
+    assert nxt in L1
+    L1.remove(nxt)
+    nxt = next(it)
+    assert nxt in L2
+    L2.remove(nxt)
+    raises(StopIteration, lambda: next(it))
+
+    raises(ValueError, lambda: iter(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_DisjointUnion_len():
+    assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
+    assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
+    raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
