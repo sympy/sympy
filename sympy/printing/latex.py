@@ -935,6 +935,9 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_IdentityFunction(self, expr):
+        return r"\left( x \mapsto x + 1 \right)"
+
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
