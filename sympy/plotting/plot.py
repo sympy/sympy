@@ -1541,7 +1541,7 @@ def plot(*args, **kwargs):
 
     """
     args = list(map(sympify, args))
-    args[0]=args[0].simplify()
+    if(len(args)): args[0]=args[0].simplify()
     free = set()
     for a in args:
         if isinstance(a, Expr):
