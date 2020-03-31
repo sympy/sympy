@@ -828,3 +828,47 @@ def _minor_submatrix(M, i, j):
     cols = [a for a in range(M.cols) if a != j]
 
     return M.extract(rows, cols)
+
+
+def _permanent(M):
+    """Returns the permanent of a matrix as defined in [1]
+
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M.permanent()
+    450
+
+    References
+    ==========
+
+    1. Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
+
+    """
+    from itertools import permutations
+
+    if not M.is_square:
+        raise NonSquareMatrixError()
+
+    n = M.rows
+
+    perm_list = list(permutations(range(n)))
+
+    total = 0
+
+    # Computing permanent by summing over all permuatations on (0, ... n-1)
+    # TODO: find a faster way to do this, maybe a sparse method, maybe Gaussian Elim
+    for perm in perm_list:
+
+        product = 1
+
+        for i in range(n):
+
+            product = product*M[i, perm[i]]
+
+        total += product
+
+    return total
