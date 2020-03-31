@@ -1119,6 +1119,10 @@ def test_image_interval():
     assert imageset(Lambda(x, sin(cos(x))), Interval(0, 1)) == \
             ImageSet(Lambda(x, sin(cos(x))), Interval(0, 1))
 
+    # Assert these don't hang
+    imageset(x, 1/cos(x), S.Reals)
+    imageset(x, cos(x), S.Reals)
+
 
 def test_image_piecewise():
     f = Piecewise((x, x <= -1), (1/x**2, x <= 5), (x**3, True))
