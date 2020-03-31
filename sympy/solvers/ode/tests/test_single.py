@@ -19,16 +19,17 @@ Functions that are for internal use:
    to the hint provided.
 
 3) _test_all_hints(runxfail=False) - It is used to test all the examples with all the hints
-  currently implemented. It calls _test_for_particular_hint() which outputs whether the given
-  hint functions properly if it classifies the ODE example.
+  currently implemented. It calls _test_all_examples_for_one_hint() which outputs whether the
+  given hint functions properly if it classifies the ODE example.
   If runxfail flag is set to True then it will only test the examples which are expected to fail.
 
   Everytime the ODE of partiular solver are added then _test_all_hints() is to execuetd to find
   the possible failures of different solver hints.
 
-4) _test_all_examples_for_one_hint(our_hint) - It takes hint as argument and checks this hint against
-   all the ODE examples and gives output as the number of ODEs matched, number of ODEs which were
-   solved correctly, list of ODEs which gives incorrect solution and list of ODEs which raises exception.
+4) _test_all_examples_for_one_hint(our_hint, all_examples) - It takes hint as argument and checks
+   this hint against all the ODE examples and gives output as the number of ODEs matched, number
+   of ODEs which were solved correctly, list of ODEs which gives incorrect solution and list of
+   ODEs which raises exception.
 
 """
 from sympy import (cos, Derivative, diff,
@@ -130,28 +131,6 @@ Examples which raised exceptions are {exceptions}
 """
 
 
-def _test_for_particular_hint(our_hint, ode_example, xfail):
-    eq = ode_example['eq']
-    expected_sol = ode_example['sol']
-    example = ode_example['example_name']
-    xpass = True
-    if our_hint in classify_ode(eq):
-        try:
-            dsolve_sol = dsolve(eq, hint=our_hint)
-            expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
-            if len(expected_sol) == 1:
-                expected_checkodesol = (True, 0)
-
-            if checkodesol(eq, dsolve_sol) != expected_checkodesol:
-                message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-                raise AssertionError(message)
-        except Exception as e:
-            print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
-            traceback.print_exc()
-            xpass = False
-    return xpass
-
-
 def _ode_solver_test(ode_examples):
     our_hint = ode_examples['hint']
     for example in ode_examples['examples']:
@@ -176,17 +155,7 @@ def _test_all_hints(runxfail=False):
     all_hints = list(allhints)
     all_examples = _get_all_examples()
     for our_hint in all_hints:
-        for ode_example in all_examples:
-            xfail = our_hint in ode_example['XFAIL']
-            if not runxfail:
-                xpass = _test_for_particular_hint(our_hint, ode_example, xfail)
-                if xpass and xfail:
-                    print(ode_example,"is now working for hint",our_hint)
-            else:
-                if xfail:
-                    xpass = _test_for_particular_hint(our_hint, ode_example, xfail)
-                    if xpass:
-                        print(ode_example,"is now working for hint",our_hint)
+        _test_all_examples_for_one_hint(our_hint, all_examples, runxfail)
 
 
 def _test_particular_example(our_hint, example_name):
@@ -197,13 +166,18 @@ def _test_particular_example(our_hint, example_name):
             dsolve(eq, hint=our_hint)
 
 
-def _test_all_examples_for_one_hint(our_hint):
-    all_examples = _get_all_examples()
+def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
+    if all_examples == []:
+        all_examples = _get_all_examples()
     match_list, unsolve_list, exception_list = [], [], []
     for ode_example in all_examples:
         eq = ode_example['eq']
         expected_sol = ode_example['sol']
         example = ode_example['example_name']
+        xfail = our_hint in ode_example['XFAIL']
+        xpass = True
+        if runxfail and not xfail:
+            continue
         if our_hint in classify_ode(eq):
             match_list.append(example)
             try:
@@ -214,12 +188,22 @@ def _test_all_examples_for_one_hint(our_hint):
 
                 if checkodesol(eq, dsolve_sol) != expected_checkodesol:
                     unsolve_list.append(example)
-            except Exception:
+                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                    if runxfail is not None:
+                        raise AssertionError(message)
+            except Exception as e:
                 exception_list.append(example)
-    match_count = len(match_list)
-    solved = len(match_list)-len(unsolve_list)-len(exception_list)
-    msg = check_hint_msg.format(hint=our_hint, matched=match_count, solve=solved, unsolve=unsolve_list, exceptions=exception_list)
-    print(msg)
+                if runxfail is not None:
+                    print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
+                    traceback.print_exc()
+                xpass = False
+        if xpass and xfail:
+            print(example,"is now passing for hint",our_hint)
+    if runxfail is None:
+        match_count = len(match_list)
+        solved = len(match_list)-len(unsolve_list)-len(exception_list)
+        msg = check_hint_msg.format(hint=our_hint, matched=match_count, solve=solved, unsolve=unsolve_list, exceptions=exception_list)
+        print(msg)
 
 
 def test_SingleODESolver():
@@ -584,7 +568,7 @@ def _get_examples_ode_sol_euler_homogeneous():
     'euler_hom_07': {
         'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x),
         'sol': [Eq(f(x), C1*sin(log(x)) + C2*cos(log(x)))],
-        'XFAIL': ['2nd_power_series_regular']
+        'XFAIL': ['2nd_power_series_regular','nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients']
     },
     }
     }
