@@ -1116,6 +1116,55 @@ class Permutation(Atom):
         rv.sort()
         return rv
 
+    def _block_cyclic_form(self):
+        """Return permutation in block cyclic form.
+
+        This is used internally for decomposing permutation matrix into
+        block diagonal form. But can be introduced to a public API
+        if a suitable notation is found or can be useful.
+        Any suggestions?
+        """
+        result = []
+
+        a, b, c = 0, 0, 0
+        flag = False
+        for cycle in self.full_cyclic_form:
+            l = len(cycle)
+            m = max(cycle)
+
+            if not flag:
+                if m + 1 > a + l:
+                    flag = True
+                    temp = [cycle]
+                    b = m
+                    c = l
+                else:
+                    result.append([cycle])
+                    a += l
+
+            else:
+                if m > b:
+                    if m + 1 == a + c + l:
+                        temp.append(cycle)
+                        result.append(temp)
+                        flag = False
+                        a = m+1
+                    else:
+                        b = m
+                        temp.append(cycle)
+                        c += l
+                else:
+                    if b + 1 == a + c + l:
+                        temp.append(cycle)
+                        result.append(temp)
+                        flag = False
+                        a = b+1
+                    else:
+                        temp.append(cycle)
+                        c += l
+
+        return result
+
     @property
     def size(self):
         """
@@ -2941,6 +2990,17 @@ class Permutation(Atom):
             return Permutation(new_cyclic_form)
 
         return self
+
+    def _is_reverse_permutation(self):
+        """Tests if the permutation is a reverse permutation.
+
+        Reverse permutation is a permutation that flips an array.
+        And it is unique with respective to its size.
+
+        e.g. A reverse permutation of size 5 is
+        ``Permutation([4, 3, 2, 1, 0])``
+        """
+        return self.array_form == list(reversed(range(self.size)))
 
     # XXX Deprecated flag
     print_cyclic = None

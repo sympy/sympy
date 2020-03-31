@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Basic, Add
+from sympy.core import Basic, Add, S
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
@@ -129,7 +129,7 @@ class BlockMatrix(MatrixExpr):
 
     @property
     def shape(self):
-        numrows = numcols = 0
+        numrows, numcols = S.Zero, S.Zero
         M = self.blocks
         for i in range(M.shape[0]):
             numrows += M[i, 0].shape[0]
@@ -152,6 +152,20 @@ class BlockMatrix(MatrixExpr):
     @property
     def colblocksizes(self):
         return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
+
+    def _cumulative_rows(self):
+        result = [0]
+        blocks = self.blocks
+        for i in range(blocks.rows):
+            result += [result[-1] + blocks[i, 0].rows]
+        return result
+
+    def _cumulative_cols(self):
+        result = [0]
+        blocks = self.blocks
+        for j in range(blocks.cols):
+            result += [result[-1] + blocks[0, j].cols]
+        return result
 
     def structurally_equal(self, other):
         return (isinstance(other, BlockMatrix)
@@ -313,8 +327,11 @@ class BlockDiagMatrix(BlockMatrix):
 
     @property
     def shape(self):
-        return (sum(block.rows for block in self.args),
-                sum(block.cols for block in self.args))
+        numrows, numcols = S.Zero, S.Zero
+        for block in self.args:
+            numrows += block.rows
+            numcols += block.cols
+        return (numrows, numcols)
 
     @property
     def blockshape(self):
@@ -404,10 +421,12 @@ def block_collapse(expr):
     else:
         return result
 
+
 def bc_unpack(expr):
     if expr.blockshape == (1, 1):
         return expr.blocks[0, 0]
     return expr
+
 
 def bc_matadd(expr):
     args = sift(expr.args, lambda M: isinstance(M, BlockMatrix))
@@ -424,6 +443,7 @@ def bc_matadd(expr):
     else:
         return block
 
+
 def bc_block_plus_ident(expr):
     idents = [arg for arg in expr.args if arg.is_Identity]
     if not idents:
@@ -437,6 +457,7 @@ def bc_block_plus_ident(expr):
         return MatAdd(block_id * len(idents), *blocks).doit()
 
     return expr
+
 
 def bc_dist(expr):
     """ Turn  a*[X, Y] into [a*X, a*Y] """
@@ -483,6 +504,7 @@ def bc_matmul(expr):
             i+=1
     return MatMul(factor, *matrices).doit()
 
+
 def bc_transpose(expr):
     collapse = block_collapse(expr.arg)
     return collapse._eval_transpose()
@@ -497,11 +519,13 @@ def bc_inverse(expr):
         return expr2
     return blockinverse_2x2(Inverse(reblock_2x2(expr.arg)))
 
+
 def blockinverse_1x1(expr):
     if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (1, 1):
         mat = Matrix([[expr.arg.blocks[0].inverse()]])
         return BlockMatrix(mat)
     return expr
+
 
 def blockinverse_2x2(expr):
     if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
@@ -513,6 +537,7 @@ def blockinverse_2x2(expr):
                             [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
     else:
         return expr
+
 
 def deblock(B):
     """ Flatten a BlockMatrix of BlockMatrices """
@@ -533,7 +558,6 @@ def deblock(B):
         return BlockMatrix(MM)
     except ShapeError:
         return B
-
 
 
 def reblock_2x2(B):
@@ -559,6 +583,7 @@ def bounds(sizes):
         rv.append((low, low + size))
         low += size
     return rv
+
 
 def blockcut(expr, rowsizes, colsizes):
     """ Cut a matrix expression into Blocks

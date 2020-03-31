@@ -50,6 +50,8 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: MatrixPermute
    :members:
+.. autoclass:: MatrixSlice
+   :members:
 .. autoclass:: Identity
    :members:
 .. autoclass:: ZeroMatrix

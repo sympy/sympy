@@ -103,52 +103,13 @@ class PermutationMatrix(MatrixExpr):
         from .blockmatrix import BlockDiagMatrix
 
         perm = self.args[0]
-        full_cyclic_form = perm.full_cyclic_form
-
-        cycles_picks = []
-
         # Stage 1. Decompose the cycles into the blockable form.
-        a, b, c = 0, 0, 0
-        flag = False
-        for cycle in full_cyclic_form:
-            l = len(cycle)
-            m = max(cycle)
-
-            if not flag:
-                if m + 1 > a + l:
-                    flag = True
-                    temp = [cycle]
-                    b = m
-                    c = l
-                else:
-                    cycles_picks.append([cycle])
-                    a += l
-
-            else:
-                if m > b:
-                    if m + 1 == a + c + l:
-                        temp.append(cycle)
-                        cycles_picks.append(temp)
-                        flag = False
-                        a = m+1
-                    else:
-                        b = m
-                        temp.append(cycle)
-                        c += l
-                else:
-                    if b + 1 == a + c + l:
-                        temp.append(cycle)
-                        cycles_picks.append(temp)
-                        flag = False
-                        a = b+1
-                    else:
-                        temp.append(cycle)
-                        c += l
+        block_cyclic_form = perm._block_cyclic_form()
 
         # Stage 2. Normalize each decomposed cycles and build matrix.
         p = 0
         args = []
-        for pick in cycles_picks:
+        for pick in block_cyclic_form:
             new_cycles = []
             l = 0
             for cycle in pick:
@@ -299,3 +260,15 @@ class MatrixPermute(MatrixExpr):
             return MatMul(PermutationMatrix(perm), mat)
         elif axis == 1:
             return MatMul(mat, PermutationMatrix(perm**-1))
+
+    def _eval_rewrite_as_MatrixSlice(self, *args, **kwargs):
+        from .slice import MatrixSlice
+
+        mat, perm, axis = self.args
+        if not perm._is_reverse_permutation():
+            return None
+
+        if axis == 0:
+            return MatrixSlice(mat, (self.rows, 0, -1), (0, self.cols, 1))
+        elif axis == 1:
+            return MatrixSlice(mat, (0, self.rows, 1), (self.cols, 0, -1))
