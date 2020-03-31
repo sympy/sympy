@@ -91,7 +91,9 @@ def singularities(expression, symbol, domain=None):
     try:
         sings = S.EmptySet
         for i in expression.rewrite([sec, csc, cot, tan], cos).atoms(Pow):
-            if i.exp.is_negative and i.exp.is_finite:
+            if i.exp.is_infinite:
+                raise NotImplementedError
+            if i.exp.is_negative:
                 sings += solveset(i.base, symbol, domain)
         for i in expression.atoms(log):
             sings += solveset(i.args[0], symbol, domain)

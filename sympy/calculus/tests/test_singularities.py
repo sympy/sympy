@@ -27,6 +27,7 @@ def test_singularities():
     assert singularities(exp(1/x), x, S.Reals) == FiniteSet(0)
     assert singularities(exp(1/x), x, Interval(1, 2)) == S.EmptySet
     assert singularities(log((x - 2)**2), x, Interval(1, 3)) == FiniteSet(2)
+    raises(NotImplementedError, lambda: singularities(x**-oo, x))
 
 
 def test_is_increasing():

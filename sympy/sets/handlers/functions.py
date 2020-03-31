@@ -66,13 +66,11 @@ def _set_function(f, x): # noqa:F811
     if not x.start.is_comparable or not x.end.is_comparable:
         return
 
-    # XXX: when non-rational functions are supported, remove this line. 
-    if not expr.is_rational_function(var):
-        return
-
     try:
-        sing = [i for i in singularities(expr, var)
-            if i.is_real and i in x]
+        from sympy.polys.polyutils import _nsort
+        sing = list(singularities(expr, var, x))
+        if len(sing) > 1:
+            sing = _nsort(sing)
     except NotImplementedError:
         return
 
