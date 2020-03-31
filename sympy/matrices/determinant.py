@@ -858,15 +858,11 @@ def _permanent(M):
     perm_list = list(permutations(range(n)))
 
     total = 0
-
     # Computing permanent by summing over all permuatations on (0, ... n-1)
     # TODO: find a faster way to do this, maybe a sparse method, maybe Gaussian Elim
     for perm in perm_list:
-
         product = 1
-
         for i in range(n):
-
             product = product*M[i, perm[i]]
 
         total += product
