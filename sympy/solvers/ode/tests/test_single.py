@@ -26,6 +26,10 @@ Functions that are for internal use:
   Everytime the ODE of partiular solver are added then _test_all_hints() is to execuetd to find
   the possible failures of different solver hints.
 
+4) _test_all_examples_for_one_hint(our_hint) - It takes hint as argument and checks this hint against
+   all the ODE examples and gives output as the number of ODEs matched, number of ODEs which were
+   solved correctly, list of ODEs which gives incorrect solution and list of ODEs which raises exception. 
+
 """
 from sympy import (cos, Derivative, diff,
     Eq, exp, log, pi, Rational, sin,
@@ -112,6 +116,20 @@ The ODE is:
 \
 """
 
+check_hint_msg = """\
+Tested hint was : {hint}
+
+Total of {matched} examples matched with this hint.
+
+Out of which {solve} gave correct results.
+
+Examples which gave incorrect results are {unsolve}.
+
+Examples which raised exceptions are {exceptions}
+\
+"""
+
+
 def _test_for_particular_hint(our_hint, ode_example, xfail):
     eq = ode_example['eq']
     expected_sol = ode_example['sol']
@@ -177,6 +195,31 @@ def _test_particular_example(our_hint, example_name):
         if example['example_name'] == example_name:
             eq = example['eq']
             dsolve(eq, hint=our_hint)
+
+
+def _test_all_examples_for_one_hint(our_hint):
+    all_examples = _get_all_examples()
+    match_list, unsolve_list, exception_list = [], [], []
+    for ode_example in all_examples:
+        eq = ode_example['eq']
+        expected_sol = ode_example['sol']
+        example = ode_example['example_name']
+        if our_hint in classify_ode(eq):
+            match_list.append(example)
+            try:
+                dsolve_sol = dsolve(eq, hint=our_hint)
+                expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
+                if len(expected_sol) == 1:
+                    expected_checkodesol = (True, 0)
+
+                if checkodesol(eq, dsolve_sol) != expected_checkodesol:
+                    unsolve_list.append(example)
+            except Exception as e:
+                exception_list.append(example)
+    match_count = len(match_list)
+    solved = len(match_list)-len(unsolve_list)-len(exception_list)
+    msg = check_hint_msg.format(hint=our_hint, matched=match_count, solve=solved, unsolve=unsolve_list, exceptions=exception_list)
+    print(msg)
 
 
 def test_SingleODESolver():
