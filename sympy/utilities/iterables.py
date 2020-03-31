@@ -477,7 +477,7 @@ def interactive_traversal(expr):
     return _interactive_traversal(expr, 0)
 
 
-def ibin(n, bits=0, str=False):
+def ibin(n, bits=None, str=False):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -497,8 +497,6 @@ def ibin(n, bits=0, str=False):
     [1, 0]
     >>> ibin(2, 4)
     [0, 0, 1, 0]
-    >>> ibin(2, 4)[::-1]
-    [0, 1, 0, 0]
 
     If all lists corresponding to 0 to 2**n - 1, pass a non-integer
     for bits:
@@ -523,17 +521,31 @@ def ibin(n, bits=0, str=False):
     ['000', '001', '010', '011', '100', '101', '110', '111']
 
     """
-    if not str:
-        try:
-            bits = as_int(bits)
-            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
-        except ValueError:
-            return variations(list(range(2)), n, repetition=True)
+    if n < 0:
+        raise ValueError("negative numbers are not allowed")
+    n = as_int(n)
+
+    if bits is None:
+        bits = 0
     else:
         try:
-            bits = as_int(bits)
-            return bin(n)[2:].rjust(bits, "0")
+             bits = as_int(bits)
         except ValueError:
+            bits = -1
+        else:
+            if n.bit_length() > bits:
+                raise ValueError(
+                    "`bits` must be >= {}".format(n.bit_length()))
+
+    if not str:
+        if bits >= 0:
+            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
+        else:
+            return variations(list(range(2)), n, repetition=True)
+    else:
+        if bits >= 0:
+            return bin(n)[2:].rjust(bits, "0")
+        else:
             return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
 
 
