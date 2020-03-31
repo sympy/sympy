@@ -28,7 +28,7 @@ Functions that are for internal use:
 
 4) _test_all_examples_for_one_hint(our_hint) - It takes hint as argument and checks this hint against
    all the ODE examples and gives output as the number of ODEs matched, number of ODEs which were
-   solved correctly, list of ODEs which gives incorrect solution and list of ODEs which raises exception. 
+   solved correctly, list of ODEs which gives incorrect solution and list of ODEs which raises exception.
 
 """
 from sympy import (cos, Derivative, diff,
@@ -214,7 +214,7 @@ def _test_all_examples_for_one_hint(our_hint):
 
                 if checkodesol(eq, dsolve_sol) != expected_checkodesol:
                     unsolve_list.append(example)
-            except Exception as e:
+            except Exception:
                 exception_list.append(example)
     match_count = len(match_list)
     solved = len(match_list)-len(unsolve_list)-len(exception_list)
