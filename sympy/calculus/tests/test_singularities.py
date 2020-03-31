@@ -8,7 +8,7 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
 
@@ -24,14 +24,9 @@ def test_singularities():
 
     x = Symbol('x', real=True)
     assert singularities(1/(x**2 + 1), x) == S.EmptySet
-
-
-@XFAIL
-def test_singularities_non_rational():
-    x = Symbol('x', real=True)
-
-    assert singularities(exp(1/x), x) == FiniteSet(0)
-    assert singularities(log((x - 2)**2), x) == FiniteSet(2)
+    assert singularities(exp(1/x), x, S.Reals) == FiniteSet(0)
+    assert singularities(exp(1/x), x, Interval(1, 2)) == S.EmptySet
+    assert singularities(log((x - 2)**2), x, Interval(1, 3)) == FiniteSet(2)
 
 
 def test_is_increasing():

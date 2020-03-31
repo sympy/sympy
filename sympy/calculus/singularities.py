@@ -17,11 +17,11 @@ the following function types in the given ``Interval``:
 
 from sympy import S, Symbol
 from sympy.core.sympify import sympify
-from sympy.simplify import simplify
 from sympy.solvers.solveset import solveset
+from sympy.utilities.misc import filldedent
 
 
-def singularities(expression, symbol):
+def singularities(expression, symbol, domain=None):
     """
     Find singularities of a given function.
 
@@ -46,8 +46,8 @@ def singularities(expression, symbol):
     ======
 
     NotImplementedError
-        The algorithm to find singularities for irrational functions
-        has not been implemented yet.
+        Methods for determining the singularities of this function have
+        not been developed.
 
     Notes
     =====
@@ -56,7 +56,7 @@ def singularities(expression, symbol):
     nor does it find branch points of the expression.
 
     Currently supported functions are:
-        - univariate rational (real or complex) functions
+        - univariate continuous (real or complex) functions
 
     References
     ==========
@@ -67,7 +67,7 @@ def singularities(expression, symbol):
     ========
 
     >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, log
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
@@ -78,16 +78,28 @@ def singularities(expression, symbol):
     FiniteSet(I, -I)
     >>> singularities(1/(y**3 + 1), y)
     FiniteSet(-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2)
+    >>> singularities(log(x), x)
+    FiniteSet(0)
 
     """
-    if not expression.is_rational_function(symbol):
-        raise NotImplementedError(
-            "Algorithms finding singularities for non-rational"
-            " functions are not yet implemented."
-        )
-    else:
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
+    from sympy.core.power import Pow
+
+    if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
-        return solveset(simplify(1 / expression), symbol, domain)
+    try:
+        sings = S.EmptySet
+        for i in expression.rewrite([sec, csc, cot, tan], cos).atoms(Pow):
+            if i.exp.is_negative and i.exp.is_finite:
+                sings += solveset(i.base, symbol, domain)
+        for i in expression.atoms(log):
+            sings += solveset(i.args[0], symbol, domain)
+        return sings
+    except NotImplementedError:
+        raise NotImplementedError(filldedent('''
+            Methods for determining the singularities
+            of this function have not been developed.'''))
 
 
 ###########################################################################

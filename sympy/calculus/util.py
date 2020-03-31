@@ -14,6 +14,7 @@ from sympy.sets.fancysets import ImageSet
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 
+
 def continuous_domain(f, symbol, domain):
     """
     Returns the intervals in the given domain for which the function
@@ -62,8 +63,8 @@ def continuous_domain(f, symbol, domain):
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
-    from sympy.solvers.solveset import solveset, _has_rational_power
-    from sympy import sec, csc, cot, tan, cos
+    from sympy.solvers.solveset import _has_rational_power
+    from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
@@ -81,20 +82,8 @@ def continuous_domain(f, symbol, domain):
             constrained_interval = Intersection(constraint,
                                                 constrained_interval)
 
-        domain = constrained_interval
 
-    try:
-        sings = EmptySet()
-        for atom in f.rewrite([sec, csc, cot, tan], cos).atoms(Pow):
-            base, exponent = atom.as_base_exp()
-            if exponent.is_negative:
-                sings += solveset(base, symbol, domain)
-
-    except NotImplementedError:
-        raise NotImplementedError("Methods for determining the continuous domains"
-                                  " of this function have not been developed.")
-
-    return domain - sings
+    return constrained_interval - singularities(f, symbol, domain)
 
 
 def function_range(f, symbol, domain):
