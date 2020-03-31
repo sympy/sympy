@@ -936,7 +936,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_IdentityFunction(self, expr):
-        return r"\left( x \mapsto x + 1 \right)"
+        return r"\left( x \mapsto x \right)"
 
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
