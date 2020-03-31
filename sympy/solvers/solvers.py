@@ -52,7 +52,8 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq, generate_bell, flatten
+from sympy.utilities.iterables import (cartes, connected_components, flatten,
+    generate_bell, uniq)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -956,30 +957,30 @@ def solve(f, *symbols, **flags):
                     'is not real or imaginary.' % e)
 
         # arg
-        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
-        fi = fi.xreplace(dict(list(zip(_arg,
-            [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+        fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
 
         # save changes
         f[i] = fi
 
     # see if re(s) or im(s) appear
-    irf = []
-    for s in symbols:
-        if s.is_extended_real or s.is_imaginary:
-            continue  # neither re(x) nor im(x) will appear
-        # if re(s) or im(s) appear, the auxiliary equation must be present
-        if any(fi.has(re(s), im(s)) for fi in f):
-            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
-    if irf:
-        for s, rhs in irf:
-            for i, fi in enumerate(f):
-                f[i] = fi.xreplace({s: rhs})
-            f.append(s - rhs)
-            symbols.extend([re(s), im(s)])
-        if bare_f:
-            bare_f = False
-        flags['dict'] = True
+    freim = [fi for fi in f if fi.has(re, im)]
+    if freim:
+        irf = []
+        for s in symbols:
+            if s.is_real or s.is_imaginary:
+                continue  # neither re(x) nor im(x) will appear
+            # if re(s) or im(s) appear, the auxiliary equation must be present
+            if any(fi.has(re(s), im(s)) for fi in freim):
+                irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+        if irf:
+            for s, rhs in irf:
+                for i, fi in enumerate(f):
+                    f[i] = fi.xreplace({s: rhs})
+                f.append(s - rhs)
+                symbols.extend([re(s), im(s)])
+            if bare_f:
+                bare_f = False
+            flags['dict'] = True
     # end of real/imag handling  -----------------------------
 
     symbols = list(uniq(symbols))
@@ -1015,7 +1016,7 @@ def solve(f, *symbols, **flags):
         # to be obtained to queries like solve((x - y, y), x); without
         # this mod the return value is []
         ok = False
-        if fi.has(*symset):
+        if fi.free_symbols & symset:
             ok = True
         else:
             if fi.is_number:
@@ -1155,8 +1156,7 @@ def solve(f, *symbols, **flags):
             not isinstance(solution, dict) and
             all(isinstance(sol, dict) for sol in solution)
     ):
-        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
-                    for r in solution]
+        solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
@@ -1718,6 +1718,39 @@ def _solve(f, *symbols, **flags):
 def _solve_system(exprs, symbols, **flags):
     if not exprs:
         return []
+
+    # Split the system into connected components?
+    V = exprs
+    #exprsyms = {e: {s for s in symbols if e.has(s)} for e in exprs}
+    symsset = set(symbols)
+    exprsyms = {e: e.free_symbols & symsset for e in exprs}
+    E = []
+    for n, e1 in enumerate(exprs):
+        for e2 in exprs[:n]:
+            # Equations are connected if they share a symbol
+            if exprsyms[e1] & exprsyms[e2]:
+                E.append((e1, e2))
+    G = V, E
+    subexprs = connected_components(G)
+    if len(subexprs) > 1:
+        subsols = []
+        for subexpr in subexprs:
+            subsyms = set()
+            for e in subexpr:
+                subsyms |= exprsyms[e]
+            subsyms = sorted(subsyms, key=default_sort_key)
+            subsol = _solve_system(subexpr, subsyms, **flags)
+            if not isinstance(subsol, list):
+                subsol = [subsol]
+            subsols.append(subsol)
+        # Full solution is cartesion product of subsystems
+        sols = []
+        for soldicts in cartes(*subsols):
+            sols.append(dict(item for sd in soldicts for item in sd.items()))
+        # Return a single dict if it would be a list of one dicts
+        if len(sols) == 1:
+            return sols[0]
+        return sols
 
     polys = []
     dens = set()

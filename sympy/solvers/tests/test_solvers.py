@@ -148,10 +148,10 @@ def test_solve_args():
         NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
-    assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
+    assert solve([y, exp(x) + x]) == {x: -LambertW(1), y: 0}
     #     both fail
     assert solve(
-        (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
+        (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     # symbol is a number
@@ -1595,7 +1595,7 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
-    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,)]
     assert set(solve(abs(x - 7) - 8)) == set([-S.One, S(15)])
 
     # issue 8692
