@@ -1572,14 +1572,17 @@ def plot(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
-
+    from sympy.solvers.solveset import solveset
+    from sympy import nsimplify, Interval, N
     new_plot = []
     for arg in plot_expr:
         expr = arg[0]
         limit = arg[1]
         root_deno = []
         for den in denoms(expr, limit[0]):
-            root_deno.extend(real_roots(den))
+            for i in N((solveset(nsimplify(den), limit[0], domain= Interval(limit[1], limit[2])))):
+                if i.is_real:
+                    root_deno.append(i)
         if root_deno:
             new_limit = []
             for root in root_deno:
