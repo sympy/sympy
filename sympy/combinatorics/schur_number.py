@@ -54,26 +54,19 @@ class SchurNumber(Function):
         return (3**f_ - 1)/2
 
 
-class SchurSubsetsNumber(Function):
-    """
-    This function returns a lower bound to Schur's Number
-    using the formula log(2n+1, 3)
-    """
+def _schur_subsets_number(n):
+    n = int(n)
 
-    @classmethod
-    def eval(cls, n):
-        n = int(n)
+    if n is S.Infinity:
+        return S.Infinity
+    if n <= 0:
+        raise ValueError("n must be a positive integer.")
+    elif n <= 3:
+        min_k = 1
+    else:
+        min_k = math.ceil(math.log(2*n + 1, 3))
 
-        if n is S.Infinity:
-            return S.Infinity
-        if n <= 0:
-            raise ValueError("n must be a positive integer.")
-        elif n <= 3:
-            min_k = 1
-        else:
-            min_k = math.ceil(math.log(2*n + 1, 3))
-
-        return Integer(min_k)
+    return Integer(min_k)
 
 
 def schur_partition(n):
@@ -127,7 +120,7 @@ def schur_partition(n):
         raise ValueError("Input value must be a number")
 
     n = int(n)
-    number_of_subsets = SchurSubsetsNumber(n)
+    number_of_subsets = _schur_subsets_number(n)
     if n == 1:
         sum_free_subsets = [[1]]
     elif n == 2:
