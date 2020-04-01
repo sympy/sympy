@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-from sympy.core.add import Add
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.dense import MutableDenseMatrix
@@ -8,11 +7,6 @@ from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
 from sympy.polys.domains import EX
-
-
-class DomainMatrixDomainError(NotImplementedError):
-    """Raised when DomainMatrix is unable to construct a domain"""
-    pass
 
 
 class MutablePolyDenseMatrix(MutableDenseMatrix):
@@ -219,32 +213,3 @@ def rref(rows, shape):
                     rows[rk][ck] = rows[rk][ck] - pivotk * rows[ri][ck]
         ri += 1
     return rows, pivots
-
-
-def linsolve_domain(system, symbols):
-    # Possibly raises DomainMatrixDomainError
-    Aaugdm = DomainMatrix.from_list_sympy(system.tolist())
-
-    Aaugdm_rref, pivots = Aaugdm.rref()
-    Aaug = Aaugdm_rref.to_Matrix()
-
-    if Aaug.is_zero_matrix:
-        return {sym:sym for sym in symbols}
-
-    rows, cols = Aaug.shape
-    while all(Aaug[rows-1, c] == 0 for c in range(cols)):
-        rows -= 1
-    if all(Aaug[rows-1, c] == 0 for c in range(cols-1)):
-        return None
-    else:
-        sol = {}
-        for col, sym in zip(reversed(range(cols-1)), reversed(symbols)):
-            if col not in pivots:
-                sol[sym] = sym
-            else:
-                terms = [Aaug[rows-1, cols-1]] # rhs
-                for c in range(col+1, cols-1):
-                    terms.append( - Aaug[rows-1, c] * sol[symbols[c]])
-                sol[sym] = Add(*terms)
-                rows -= 1
-        return sol
