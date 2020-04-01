@@ -3418,7 +3418,6 @@ class NumberSymbol(AtomicExpr):
 
 class BigNumber:
     """
-
     Used to represent very large numbers,such as, 10**10**100.
     More specifically, leaves 10**10**100,represented as
     Pow(10, Pow(10,100)) without evaluating the entire number.
