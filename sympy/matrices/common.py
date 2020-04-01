@@ -604,8 +604,8 @@ class MatrixShaping(MatrixRequired):
     def todok(self):
         """Return the matrix as dictionary of keys.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import Matrix, SparseMatrix
         >>> M = Matrix.eye(3)
