@@ -1843,13 +1843,14 @@ def classify_sysode(eq, funcs=None, **kwargs):
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 funcs.append(func_)
-    funcs = list(set(funcs))
-    if len(funcs) != len(eq):
-        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
     match = neq_nth_linear_constant_coeff_match(eq, funcs, t)
     if match is not None:
         return match
+
+    funcs = list(set(funcs))
+    if len(funcs) != len(eq):
+        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
     func_dict = dict()
     for func in funcs:

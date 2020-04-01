@@ -92,8 +92,17 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Error for i == 0 can be added but isn't for now
 
-    # Assuming funcs has all the funcs mentioned and
-    # len(funcs) == len(eqs)
+    # Removing the duplicates from the list of funcs
+    # meanwhile maintaining the order. This is done
+    # since the line in classify_sysode: list(set(funcs)
+    # cause some test cases to fail when gives different
+    # results in different versions of Python.
+    seen = set()
+    funcs = [func for func in funcs if not (func in seen or seen.add(func))]
+
+    # Check for len(funcs) == len(eqs)
+    if len(funcs) != len(eqs):
+        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
     # Getting the func_dict and order using the helper
     # function
