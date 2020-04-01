@@ -29,8 +29,6 @@ def _connected_components(M):
     structural aspect of the matrix, so they will considered to be
     nonzero.
     """
-    from .sparse import SparseMatrix
-
     if not M.is_square:
         raise NonSquareMatrixError
 
