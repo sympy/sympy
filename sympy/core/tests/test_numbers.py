@@ -1945,9 +1945,6 @@ def test_NumberSymbol_comparison():
     fpi = Float(float(pi))
     assert rel_check(rpi, fpi)
 
-
-
-
 def test_Integer_precision():
     # Make sure Integer inputs for keyword args work
     assert Float('1.0', dps=Integer(15))._prec == 53
@@ -2054,4 +2051,3 @@ def test_bigNumber_ops():
     assert BigNumber(5) - BigNumber(3) == 2
     assert BigNumber(170) + BigNumber(222) == 392
     assert (BigNumber(20)*Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(100)))).is_Mul
-
