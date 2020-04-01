@@ -2033,17 +2033,17 @@ def test_issue_6835():
     e1_prime = Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(100)))
     e2 = Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(3)))
     e3 = Pow(BigNumber(5), Pow(BigNumber(5), Pow(BigNumber(2), BigNumber(7))))
-    assert (100 < e1) == True
-    assert (e1 < 100) == False
-    assert (100 < e2) == True
-    assert (Float(100) < e2) == True
-    assert (e2 < 100) == False
-    assert (100 < e3) == True
-    assert (e3 < e1) == True
-    assert (Rational(170, 10) < e1) == True
-    assert (Rational(170, 10) > e1) == False
-    assert (e1_prime == e1) == True
-    assert (e2 < e3) == True
+    assert (100 < e1)
+    assert not (e1 < 100)
+    assert (100 < e2)
+    assert (Float(100) < e2)
+    assert not (e2 < 100)
+    assert (100 < e3)
+    assert (e3 < e1)
+    assert (Rational(170, 10) < e1)
+    assert not (Rational(170, 10) > e1)
+    assert (e1_prime == e1)
+    assert (e2 < e3)
 
 def test_bigNumber_ops():
     assert BigNumber(10)*BigNumber(2) == 20
