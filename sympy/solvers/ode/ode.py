@@ -8133,7 +8133,7 @@ def _linear_neq_order1_type1(match_):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
-    M = fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
     P, J = matrix_exp_jordan_form(M, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))

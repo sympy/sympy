@@ -1,5 +1,6 @@
 from sympy.solvers.deutils import ode_order
 from sympy.core.symbol import Dummy
+from sympy.utilities.iterables import uniq
 
 
 def _get_func_order(eqs, funcs):
@@ -97,8 +98,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # since the line in classify_sysode: list(set(funcs)
     # cause some test cases to fail when gives different
     # results in different versions of Python.
-    seen = set()
-    funcs = [func for func in funcs if not (func in seen or seen.add(func))]
+    funcs = list(uniq(funcs))
 
     # Check for len(funcs) == len(eqs)
     if len(funcs) != len(eqs):

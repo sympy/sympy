@@ -3783,11 +3783,10 @@ def test_sysode_linear_neq_order1():
           k01*Z0(t) - k10*Z1(t) + k21*Z2(t)), Eq(Derivative(Z2(t), t), -(k20 + k21 + k23)*Z2(t)), Eq(Derivative(Z3(t),
           t), k23*Z2(t) - k30*Z3(t)))
 
-    sol1 = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(k30*t)/(k01 + k10 - k30) - C3*exp(t*(k01 + k10)) + C4*(-k10*k20 - k10*k21 + k10*k30 + k20**2 + k20*k21 + k20*k23 - k20*k30 - k23*k30)*exp(t*(k20 + k21 + k23))/(k23*(-k01 - k10 + k20 + k21 + k23))),
-            Eq(Z1(t), C1 - C2*k01*exp(k30*t)/(k01 + k10 - k30) + C3*exp(t*(k01 + k10)) + C4*(-k01*k20 - k01*k21 + k01*k30 + k20*k21 + k21**2 + k21*k23 - k21*k30)*exp(t*(k20 + k21 + k23))/(k23*(-k01 - k10 + k20 + k21 + k23))),
-            Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(k20 + k21 + k23))/k23),
-            Eq(Z3(t), C2*exp(k30*t) + C4*exp(t*(k20 + k21 + k23)))]
-
+    sol1 = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30) - C3*exp(t*(-k01 - k10)) + C4*(-k10*k20 - k10*k21 + k10*k30 + k20**2 + k20*k21 + k20*k23 - k20*k30 - k23*k30)*exp(t*(-k20 - k21 - k23))/(k23*(-k01 - k10 + k20 + k21 + k23))),
+            Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*exp(t*(-k01 - k10)) + C4*(-k01*k20 - k01*k21 + k01*k30 + k20*k21 + k21**2 + k21*k23 - k21*k30)*exp(t*(-k20 - k21 - k23))/(k23*(-k01 - k10 + k20 + k21 + k23))),
+            Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
+            Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))]
 
     assert dsolve(eq1, simplify=False) == sol1
     # assert checksysodesol(eq1, sol1) == (True, [0, 0, 0])
@@ -3816,6 +3815,55 @@ def test_sysode_linear_neq_order1():
             Eq(w(t), C1 * exp(-2 * t) + C2 * cos(sqrt(3) * t) - C3 * sin(sqrt(3) * t))}
     assert set(dsolve(eq3)) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0, 0])
+
+    tw = Rational(2, 9)
+    eq4 = [Eq(x(t).diff(t), 2 * x(t) + y(t) - tw * 4 * z(t) - tw * w(t)),
+           Eq(y(t).diff(t), 2 * y(t) + 8 * tw * z(t) + 2 * tw * w(t)),
+           Eq(z(t).diff(t), Rational(37, 9) * z(t) - tw * w(t)), Eq(w(t).diff(t), 22 * tw * w(t) - 2 * tw * z(t))]
+
+    sol4 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t)),
+            Eq(y(t), C2*exp(2*t) + 2*C3*exp(4*t)),
+            Eq(z(t), 2*C3*exp(4*t) - C4*exp(5*t)/4),
+            Eq(w(t), C3*exp(4*t) + C4*exp(5*t))]
+
+    assert dsolve(eq4) == sol4
+    assert checksysodesol(eq4, sol4) == (True, [0, 0, 0, 0])
+
+    eq5 = [Eq(x(t).diff(t), x(t)), Eq(y(t).diff(t), y(t)), Eq(z(t).diff(t), z(t)), Eq(w(t).diff(t), w(t))]
+    sol5 = [Eq(x(t), C1*exp(t)), Eq(y(t), C2*exp(t)), Eq(z(t), C3*exp(t)), Eq(w(t), C4*exp(t))]
+    assert dsolve(eq5) == sol5
+    assert checksysodesol(eq5, sol5) == (True, [0, 0, 0, 0])
+
+    eq6 = [Eq(x(t).diff(t), x(t) + y(t)), Eq(y(t).diff(t), y(t) + z(t)),
+           Eq(z(t).diff(t), z(t) + Rational(-1, 8) * w(t)),
+           Eq(w(t).diff(t), Rational(1, 2) * (w(t) + z(t)))]
+
+    sol6 = [Eq(x(t), 4*C1*exp(3*t/4) + C2*(4*t*exp(3*t/4) + 48*exp(3*t/4)) + C3*exp(t) + C4*t*exp(t)),
+            Eq(y(t), -C1*exp(3*t/4) + C2*(-t*exp(3*t/4) - 8*exp(3*t/4)) + C4*exp(t)),
+            Eq(z(t), C1*exp(3*t/4)/4 + C2*(t*exp(3*t/4)/4 + exp(3*t/4))),
+            Eq(w(t), C1*exp(3*t/4)/2 + C2*t*exp(3*t/4)/2)]
+
+    assert dsolve(eq6) == sol6
+    assert checksysodesol(eq6, sol6) == (True, [0, 0, 0, 0])
+
+    eq7 = [Eq(x(t).diff(t), x(t)), Eq(y(t).diff(t), y(t)), Eq(z(t).diff(t), z(t)),
+           Eq(w(t).diff(t), w(t)), Eq(u(t).diff(t), u(t))]
+
+    sol7 = [Eq(x(t), C1*exp(t)), Eq(y(t), C2*exp(t)), Eq(z(t), C3*exp(t)), Eq(w(t), C4*exp(t)),
+            Eq(u(t), C5*exp(t))]
+
+    assert dsolve(eq7) == sol7
+    assert checksysodesol(eq7, sol7) == (True, [0, 0, 0, 0, 0])
+
+    eq8 = [Eq(x(t).diff(t), 2 * x(t) + y(t)), Eq(y(t).diff(t), 2 * y(t)),
+           Eq(z(t).diff(t), 4 * z(t)), Eq(w(t).diff(t), 5 * w(t) + u(t)),
+           Eq(u(t).diff(t), 5 * u(t))]
+
+    sol8 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t)), Eq(y(t), C2*exp(2*t)), Eq(z(t), C3*exp(4*t)),
+            Eq(w(t), C4*exp(5*t) + C5*t*exp(5*t)), Eq(u(t), C5*exp(5*t))]
+
+    assert dsolve(eq8) == sol8
+    assert checksysodesol(eq8, sol8) == (True, [0, 0, 0, 0, 0])
 
 
 @slow
