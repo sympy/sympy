@@ -333,12 +333,12 @@ Example 3
 
 A beam of length 6 meters is having a roller support at the start and a hinged
 support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
-of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m is
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m/m is
 applied from the mid till the end of the beam.
 
 ::
 
-                              ramp load = 1 KN/m
+                              ramp load = 1 KN/m/m
                             constant load = 3 KN/m
                          |------------------------|
                        ⭯ 1.5 KN-m
@@ -353,50 +353,73 @@ applied from the mid till the end of the beam.
     Using the sign convention of upward forces and clockwise moment
     being positive.
 
->>> from sympy.physics.continuum_mechanics.beam import Beam
->>> from sympy import symbols
->>> E, I = symbols('E, I')
->>> R1, R2 = symbols('R1, R2')
->>> b = Beam(6, E, I)
->>> b.apply_load(R1, 0, -1)
->>> b.apply_load(-1.5, 3, -2)
->>> b.apply_load(-3, 3, 0)
->>> b.apply_load(-1, 3, 1)
->>> b.apply_load(R2, 6, -1)
->>> b.bc_deflection.append((0, 0))
->>> b.bc_deflection.append((6, 0))
->>> b.solve_for_reaction_loads(R1, R2)
->>> b.reaction_loads
-    {R₁: 3.25, R₂: 10.25}
->>> b.load
-            -1              -2            0          1                -1
-    3.25⋅<x>   - 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.25⋅<x - 6>  
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+   
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols, plot, S
+   >>> E, I = symbols('E, I')
+   >>> R1, R2 = symbols('R1, R2')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_load(R1, 0, -1)
+   >>> b.apply_load(-S(3)/2, 3, -2)
+   >>> b.apply_load(3, 3, 0)
+   >>> b.apply_load(1, 3, 1)
+   >>> b.apply_load(R2, 6, -1)
+   >>> b.bc_deflection.append((0, 0))
+   >>> b.bc_deflection.append((6, 0))
+   >>> b.solve_for_reaction_loads(R1, R2)
+   >>> b.reaction_loads
+      {R₁: -11/4, R₂: -43/4}
 
->>> b.shear_force()
-                                                    2                 
-            0              -1            1   <x - 3>                 0
-    3.25⋅<x>  - 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.25⋅<x - 6> 
-                                                2       
->>> b.bending_moment()
-                                        2          3                 
-            1              0   3⋅<x - 3>    <x - 3>                 1
-    3.25⋅<x>  - 1.5⋅<x - 3>  - ────────── - ──────── + 10.25⋅<x - 6> 
-                                   2           6         
->>> b.slope()
-                                       3          4                         
-             2              1   <x - 3>    <x - 3>                 2        
-    1.625⋅<x>  - 1.5⋅<x - 3>  - ──────── - ──────── + 5.125⋅<x - 6>  - 16.35
-                                   2          24                            
-    ────────────────────────────────────────────────────────────────────────
-                                      E⋅I          
+   >>> b.load
+               -1            -2                                     -1
+         11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>  
+       - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
+            4            2                                     4     
 
->>> b.deflection()
-                                                               4          5                            
-                                    3               2   <x - 3>    <x - 3>                            3
-    -16.35⋅x + 0.541666666666667⋅<x>  - 0.75⋅<x - 3>  - ──────── - ──────── + 1.70833333333333⋅<x - 6> 
-                                                           8         120                               
-    ───────────────────────────────────────────────────────────────────────────────────────────────────
-                                                    E⋅I       
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> plot(b.load)  # doctest: +SKIP
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+   
+   >>> b.shear_force()
+               0            -1                       2             0
+         11⋅<x>    3⋅<x - 3>              1   <x - 3>    43⋅<x - 6> 
+       - ─────── - ─────────── + 3⋅<x - 3>  + ──────── - ───────────
+            4           2                        2            4     
+
+   >>> b.bending_moment()
+               1            0            2          3             1
+         11⋅<x>    3⋅<x - 3>    3⋅<x - 3>    <x - 3>    43⋅<x - 6> 
+       - ─────── - ────────── + ────────── + ──────── - ───────────
+            4          2            2           6            4                                  
+ 
+   >>> b.slope()
+               2            1          3          4             2     
+         11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>    78
+       - ─────── - ────────── + ──────── + ──────── - ─────────── + ──
+            8          2           2          24           8        5 
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I       
+
+
+   >>> b.deflection()
+                    3            2          4          5             3
+       78⋅x   11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6> 
+       ──── - ─────── - ────────── + ──────── + ──────── - ───────────
+        5        24         4           8         120           24    
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
 
 Example 4
 ---------
