@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-
 import math
 import numbers as nums
 import decimal
