@@ -2289,6 +2289,10 @@ class MatrixBase(MatrixDeprecated,
     inverse_BLOCK.__doc__          = _inv_block.__doc__
     inv.__doc__                    = _inv.__doc__
 
+    connected_components.__doc__   = _connected_components.__doc__
+    connected_components_decomposition.__doc__ = \
+        _connected_components_decomposition.__doc__
+
 
 @deprecated(
     issue=15109,

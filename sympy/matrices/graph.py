@@ -37,25 +37,14 @@ def _connected_components(M):
     N = M.shape[0]
     V = list(range(N))
 
-    if isinstance(M, SparseMatrix):
-        E = set()
-        for i, j in M._smat.keys():
-            if i == j:
-                E.add((i, j))
-            else:
-                E.add((i, j))
-                E.add((j, i))
-        E = list(E)
-    else:
-        E = list()
-        for i in range(N):
-            for j in range(i):
-                if M[i, j] is M.zero and M[j, i] is M.zero:
-                    continue
-                E.append((i, j))
-                E.append((j, i))
-            if M[i, i] is M.zero:
-                E.append((i, i))
+    E = set()
+    for i, j in M.todok().keys():
+        if i == j:
+            E.add((i, j))
+        else:
+            E.add((i, j))
+            E.add((j, i))
+    E = list(E)
 
     return strongly_connected_components((V, E))
 

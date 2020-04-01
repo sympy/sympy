@@ -175,6 +175,16 @@ class MatrixShaping(MatrixRequired):
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
 
+    def _eval_todok(self):
+        dok = {}
+        rows, cols = self.shape
+        for i in range(rows):
+            for j in range(cols):
+                val = self[i, j]
+                if val != self.zero:
+                    dok[i, j] = val
+        return dok
+
     def _eval_vec(self):
         rows = self.rows
 
@@ -590,6 +600,19 @@ class MatrixShaping(MatrixRequired):
         3
         """
         return (self.rows, self.cols)
+
+    def todok(self):
+        """Return the matrix as dictionary of keys.
+
+        Example
+        =======
+
+        >>> from sympy import Matrix, SparseMatrix
+        >>> M = Matrix.eye(3)
+        >>> M.todok()
+        {(0, 0): 1, (1, 1): 1, (2, 2): 1}
+        """
+        return self._eval_todok()
 
     def tolist(self):
         """Return the Matrix as a nested Python list.
