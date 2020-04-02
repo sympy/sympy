@@ -32,7 +32,9 @@ def _connected_components(M):
     if not M.is_square:
         raise NonSquareMatrixError
 
-    return connected_components((range(M.rows), M.todok()))
+    V = range(M.rows)
+    E = sorted(M.todok().keys())
+    return connected_components((V, E))
 
 
 def _connected_components_decomposition(M):
