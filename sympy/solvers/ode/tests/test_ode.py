@@ -3570,7 +3570,7 @@ def test_issue_14395():
 
 def test_matrix_exp():
     from sympy.matrices.dense import Matrix, eye, zeros
-    from sympy.solvers.ode.ode import matrix_exp
+    from sympy.solvers.ode.systems import matrix_exp
     t = Symbol('t')
 
     for n in range(1, 6+1):

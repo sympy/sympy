@@ -1,6 +1,14 @@
+from sympy import Matrix, Derivative, Symbol
 from sympy.solvers.deutils import ode_order
+from sympy.core.numbers import I
+from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
+from sympy.functions import exp, im, cos, sin, re
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.matrices import zeros
+from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import uniq
+from sympy.simplify import simplify
 
 
 def _get_func_order(eqs, funcs):
@@ -28,6 +36,206 @@ def _get_func_order(eqs, funcs):
                 order[func] = max_order
 
     return order
+
+
+def matrix_exp(A, t):
+    '''Matrix exponential exp(A*t) for the matrix A and scalar t.
+
+    The matrix exponential exp(A*t) appears in the solution of linear
+    differential equations. For example if x is a vector and A is a matrix
+    then the initial value problem
+
+        dx(t)/dt = A x(t),   x(0) = x0
+
+    has the unique solution
+
+        x(t) = exp(A t) x0
+
+    Example:
+
+    >>> from sympy import Symbol, Matrix, pprint
+    >>> from sympy.solvers.ode.systems import matrix_exp
+    >>> t = Symbol('t')
+    >>> A = Matrix([[2, -5], [2, -4]])
+    >>> pprint(A)
+    [2  -5]
+    [     ]
+    [2  -4]
+    >>> pprint(matrix_exp(A, t))
+    [   -t           -t                    -t              ]
+    [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
+    [                                                      ]
+    [         -t                     -t           -t       ]
+    [      2*e  *sin(t)         - 3*e  *sin(t) + e  *cos(t)]
+    '''
+    P, J = matrix_exp_jordan_form(A, t)
+    return P * J * P.inv()
+
+
+def matrix_exp_jordan_form(A, t):
+    '''Matrix exponential exp(A*t) for the matrix A and scalar t.
+
+    Returns the Jordan form of the exp(A t).
+
+    >>> from sympy import Matrix, Symbol
+    >>> from sympy.solvers.ode.systems import matrix_exp, matrix_exp_jordan_form
+    >>> t = Symbol('t')
+    >>> A = Matrix([[1, 1], [0, 1]])
+    >>> P, J = matrix_exp_jordan_form(A, t)
+    >>> P * J * P.inv() == matrix_exp(A, t)
+    True
+    '''
+
+    N, M = A.shape
+    if N != M:
+        raise ValueError('Needed square matrix but got shape (%s, %s)' % (N, M))
+    elif A.has(t):
+        raise ValueError('Matrix A should not depend on t')
+
+    def jordan_chains(A):
+        '''Chains from Jordan normal form analogous to M.eigenvects().
+
+        Returns a dict with eignevalues as keys like:
+            {e1: [[v111,v112,...], [v121, v122,...]], e2:...}
+        where vijk is the kth vector in the jth chain for eigenvalue i.
+        '''
+        P, blocks = A.jordan_cells()
+        basis = [P[:,i] for i in range(P.shape[1])]
+        n = 0
+        chains = {}
+        for b in blocks:
+            eigval = b[0, 0]
+            size = b.shape[0]
+            if eigval not in chains:
+                chains[eigval] = []
+            chains[eigval].append(basis[n:n+size])
+            n += size
+        return chains
+
+    eigenchains = jordan_chains(A)
+
+    # Needed for consistency across Python versions:
+    eigenchains = sorted(eigenchains.items(), key=default_sort_key)
+    isreal = not A.has(I)
+
+    blocks = []
+    vectors = []
+    seen_conjugate = set()
+    for e, chains in eigenchains:
+        for chain in chains:
+            n = len(chain)
+            if isreal and im(e).is_nonzero:
+                if e in seen_conjugate:
+                    continue
+                seen_conjugate.add(e.conjugate())
+                exprt = exp(re(e) * t)
+                imrt = im(e) * t
+                imblock = Matrix([[cos(imrt), sin(imrt)],
+                                  [-sin(imrt), cos(imrt)]])
+                expJblock2 = Matrix(n, n, lambda i,j:
+                        imblock * t**(j-i) / factorial(j-i) if j >= i
+                        else zeros(2, 2))
+                expJblock = Matrix(2*n, 2*n, lambda i,j: expJblock2[i//2,j//2][i%2,j%2])
+
+                blocks.append(exprt * expJblock)
+                for i in range(n):
+                    vectors.append(re(chain[i]))
+                    vectors.append(im(chain[i]))
+            else:
+                vectors.extend(chain)
+                fun = lambda i,j: t**(j-i)/factorial(j-i) if j >= i else 0
+                expJblock = Matrix(n, n, fun)
+                blocks.append(exp(e * t) * expJblock)
+
+    expJ = Matrix.diag(*blocks)
+    P = Matrix(N, N, lambda i,j: vectors[j][i])
+
+    return P, expJ
+
+
+def _linear_neq_order1_type1(match_):
+    r"""
+    System of n first-order constant-coefficient linear nonhomogeneous differential equation
+
+    .. math:: y'_k = a_{k1} y_1 + a_{k2} y_2 +...+ a_{kn} y_n; k = 1,2,...,n
+
+    or that can be written as `\vec{y'} = A . \vec{y}`
+    where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
+
+    Since these equations are equivalent to a first order homogeneous linear
+    differential equation. So the general solution will contain `n` linearly
+    independent parts and solution will consist some type of exponential
+    functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
+    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
+    `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
+
+    .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
+
+    .. math:: r \vec{v} = A \vec{v}
+
+    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
+    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
+
+    - `n` distinct real eigenvalues
+    - complex conjugate eigenvalues
+    - eigenvalues with multiplicity `k`
+
+    1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
+    `v_1,...v_n` then the solution is given by
+
+    .. math:: \vec{y} = C_1 e^{r_1 t} \vec{v_1} + C_2 e^{r_2 t} \vec{v_2} +...+ C_n e^{r_n t} \vec{v_n}
+
+    where `C_1,C_2,...,C_n` are arbitrary constants.
+
+    2. When some eigenvalues are complex then in order to make the solution real,
+    we take a linear combination: if `r = a + bi` has an eigenvector
+    `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
+    the system, replace the complex-valued solutions `e^{rx} \vec{v}`
+    with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
+    and for `r = a - bi` replace the solution `e^{-r x} \vec{v}` with
+    `e^{ax} (\vec{w_1} \sin(bx) + \vec{w_2} \cos(bx))`
+
+    3. If some eigenvalues are repeated. Then we get fewer than `n` linearly
+    independent eigenvectors, we miss some of the solutions and need to
+    construct the missing ones. We do this via generalized eigenvectors, vectors
+    which are not eigenvectors but are close enough that we can use to write
+    down the remaining solutions. For a eigenvalue `r` with eigenvector `\vec{w}`
+    we obtain `\vec{w_2},...,\vec{w_k}` using
+
+    .. math:: (A - r I) . \vec{w_2} = \vec{w}
+
+    .. math:: (A - r I) . \vec{w_3} = \vec{w_2}
+
+    .. math:: \vdots
+
+    .. math:: (A - r I) . \vec{w_k} = \vec{w_{k-1}}
+
+    Then the solutions to the system for the eigenspace are `e^{rt} [\vec{w}],
+    e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
+    ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
+    + \vec{w_k}]`
+
+    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
+    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
+
+    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
+
+    """
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+    P, J = matrix_exp_jordan_form(M, t)
+    P = simplify(P)
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+    sol_vector = P * J * Cvect
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
