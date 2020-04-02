@@ -384,7 +384,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(
             feature="String fallback in sympify",
-            useinstead='converter or _sympy_',
+            useinstead= \
+                'sympify(str(obj)) or ' + \
+                'sympy.core.sympify.converter or obj._sympy_',
             issue=18066,
             deprecated_since_version='1.6'
         ).warn()
