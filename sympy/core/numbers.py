@@ -4139,10 +4139,6 @@ def sympify_complex(a):
 
 converter[complex] = sympify_complex
 
-
-
-
-
 from .power import Pow, integer_nthroot
 from .mul import Mul
 Mul.identity = One()
