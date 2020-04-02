@@ -1,5 +1,5 @@
 from sympy.utilities.iterables import \
-    flatten, strongly_connected_components
+    flatten, connected_components
 
 from .common import NonSquareMatrixError
 
@@ -32,19 +32,7 @@ def _connected_components(M):
     if not M.is_square:
         raise NonSquareMatrixError
 
-    N = M.shape[0]
-    V = list(range(N))
-
-    E = set()
-    for i, j in M.todok().keys():
-        if i == j:
-            E.add((i, j))
-        else:
-            E.add((i, j))
-            E.add((j, i))
-    E = list(E)
-
-    return strongly_connected_components((V, E))
+    return connected_components((range(M.rows), M.todok()))
 
 
 def _connected_components_decomposition(M):
