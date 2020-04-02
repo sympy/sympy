@@ -171,7 +171,7 @@ if cin:
         def transform(self, node):
             """Transformation Function for a Clang AST nodes
 
-            It determines the kind of node and calss the respective
+            It determines the kind of node and calls the respective
             transforation function for that node.
 
             Raises
