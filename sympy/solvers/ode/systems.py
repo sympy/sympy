@@ -1,4 +1,4 @@
-from sympy import Matrix, Derivative, Symbol
+from sympy import (Matrix, Derivative, Symbol)
 from sympy.solvers.deutils import ode_order
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
