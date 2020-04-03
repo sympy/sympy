@@ -4567,6 +4567,10 @@ def _linear_coeff_match(expr, func):
         a1, b1, c1, a2, b2, c2, denom = m1
         return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
 
+def _linear_neq_order1_type1(match_):
+    from sympy.solvers.ode.systems import _neq_linear_first_order_const_coeff_homogeneous
+    return _neq_linear_first_order_const_coeff_homogeneous(match_)
+
 def ode_linear_coefficients(eq, func, order, match):
     r"""
     Solves a differential equation with linear coefficients.
@@ -7744,7 +7748,6 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def sysode_linear_3eq_order1(match_):
-    from sympy.solvers.ode.systems import _linear_neq_order1_type1
 
     x = match_['func'][0].func
     y = match_['func'][1].func
@@ -7942,8 +7945,8 @@ def _linear_3eq_order1_type4(x, y, z, t, r, eq):
     sol3 = exp(Integral(g,t))*((sol[2].rhs).subs(t, Integral(f,t)))
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
+
 def sysode_linear_neq_order1(match_):
-    from sympy.solvers.ode.systems import _linear_neq_order1_type1
     sol = _linear_neq_order1_type1(match_)
     return sol
 
@@ -7972,6 +7975,7 @@ def sysode_nonlinear_2eq_order1(match_):
     elif match_['type_of_equation'] == 'type4':
         sol = _nonlinear_2eq_order1_type4(x, y, t, eq)
     return sol
+
 
 def _nonlinear_2eq_order1_type1(x, y, t, eq):
     r"""
