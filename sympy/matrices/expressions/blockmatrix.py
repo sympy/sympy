@@ -279,8 +279,10 @@ class BlockMatrix(MatrixExpr):
 
 
 class BlockDiagMatrix(BlockMatrix):
-    """
-    A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
+    """A sparse matrix with block matrices along its diagonals
+
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols, Identity
     >>> n, m, l = symbols('n m l')
@@ -291,8 +293,15 @@ class BlockDiagMatrix(BlockMatrix):
     [X, 0],
     [0, Y]])
 
+    Notes
+    =====
+
+    If you want to get the individual diagonal blocks, use
+    :meth:`get_diagonal_blocks`.
+
     See Also
     ========
+
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
@@ -350,6 +359,32 @@ class BlockDiagMatrix(BlockMatrix):
             return BlockDiagMatrix(*[a + b for a, b in zip(self.args, other.args)])
         else:
             return BlockMatrix._blockadd(self, other)
+
+    def get_diag_blocks(self):
+        """Return the list of diagonal blocks of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import BlockDiagMatrix, Matrix
+
+        >>> A = Matrix([[1, 2], [3, 4]])
+        >>> B = Matrix([[5, 6], [7, 8]])
+        >>> M = BlockDiagMatrix(A, B)
+
+        How to get diagonal blocks from the block diagonal matrix:
+
+        >>> diag_blocks = M.get_diag_blocks()
+        >>> diag_blocks[0]
+        Matrix([
+        [1, 2],
+        [3, 4]])
+        >>> diag_blocks[1]
+        Matrix([
+        [5, 6],
+        [7, 8]])
+        """
+        return self.args
 
 
 def block_collapse(expr):

@@ -172,6 +172,7 @@ def test_BlockDiagMatrix():
     assert all(X.blocks[i, j].is_ZeroMatrix if i != j else X.blocks[i, j] in [A, B, C]
             for i in range(3) for j in range(3))
     assert X.__class__(*X.args) == X
+    assert X.get_diag_blocks() == (A, B, C)
 
     assert isinstance(block_collapse(X.I * X), Identity)
 
