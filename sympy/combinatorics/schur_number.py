@@ -55,12 +55,11 @@ class SchurNumber(Function):
 
 
 def _schur_subsets_number(n):
-    n = int(n)
 
     if n is S.Infinity:
-        return S.Infinity
+        raise ValueError("Input must be finite")
     if n <= 0:
-        raise ValueError("n must be a positive integer.")
+        raise ValueError("n must be a non-zero positive integer.")
     elif n <= 3:
         min_k = 1
     else:
@@ -119,7 +118,6 @@ def schur_partition(n):
     if isinstance(n, Basic) and not n.is_Number:
         raise ValueError("Input value must be a number")
 
-    n = int(n)
     number_of_subsets = _schur_subsets_number(n)
     if n == 1:
         sum_free_subsets = [[1]]
