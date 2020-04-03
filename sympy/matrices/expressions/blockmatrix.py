@@ -297,7 +297,7 @@ class BlockDiagMatrix(BlockMatrix):
     =====
 
     If you want to get the individual diagonal blocks, use
-    :meth:`get_diagonal_blocks`.
+    :meth:`get_diag_blocks`.
 
     See Also
     ========

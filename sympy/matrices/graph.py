@@ -55,6 +55,10 @@ def _connected_components_decomposition(M):
         as in the explanation. And *B* is the block diagonal matrix of
         the result of the permutation.
 
+        If you would like to get the diagonal blocks from the
+        BlockDiagMatrix, see
+        :meth:`~sympy.matrices.expressions.blockmatrix.BlockDiagMatrix.get_diag_blocks`.
+
     Examples
     ========
 
@@ -83,7 +87,7 @@ def _connected_components_decomposition(M):
     [c, d, 0, 0],
     [0, 0, e, f],
     [0, 0, g, h]])
-    >>> P * B * P.inv()
+    >>> P * B * P_inv
     Matrix([
     [a, 0, b, 0],
     [0, e, 0, f],
