@@ -169,10 +169,10 @@ if cin:
             return self._py_nodes
 
         def transform(self, node):
-            """Transformation Function for a Clang AST nodes
+            """Transformation Function for Clang AST nodes
 
-            It determines the kind of node and calss the respective
-            transforation function for that node.
+            It determines the kind of node and calls the respective
+            transformation function for that node.
 
             Raises
             ======
