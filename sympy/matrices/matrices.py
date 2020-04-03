@@ -51,6 +51,8 @@ from .decompositions import (
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
     _QRdecomposition)
 
+from .graph import _connected_components, _connected_components_decomposition
+
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
@@ -2250,6 +2252,12 @@ class MatrixBase(MatrixDeprecated,
         return _inv(self, method=method, iszerofunc=iszerofunc,
                 try_block_diag=try_block_diag)
 
+    def connected_components(self):
+        return _connected_components(self)
+
+    def connected_components_decomposition(self):
+        return _connected_components_decomposition(self)
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
@@ -2280,6 +2288,10 @@ class MatrixBase(MatrixDeprecated,
     inverse_QR.__doc__             = _inv_QR.__doc__
     inverse_BLOCK.__doc__          = _inv_block.__doc__
     inv.__doc__                    = _inv.__doc__
+
+    connected_components.__doc__   = _connected_components.__doc__
+    connected_components_decomposition.__doc__ = \
+        _connected_components_decomposition.__doc__
 
 
 @deprecated(
