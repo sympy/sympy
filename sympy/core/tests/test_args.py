@@ -4925,7 +4925,3 @@ def test_sympy__integrals__rubi__utility_function__ProductLog():
 def test_sympy__combinatorics__schur_number__SchurNumber():
     from sympy.combinatorics.schur_number import SchurNumber
     assert _test_args(SchurNumber(1))
-
-def test_sympy__combinatorics__schur_number__SchurSubsetsNumber():
-    from sympy.combinatorics.schur_number import SchurSubsetsNumber
-    assert _test_args(SchurSubsetsNumber(4))
