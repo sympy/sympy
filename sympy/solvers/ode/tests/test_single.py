@@ -146,9 +146,9 @@ def _ode_solver_test(ode_examples):
             expect_sol_check = False
             if type(dsolve_sol)==list:
                 if any(sub_sol not in dsolve_sol for sub_sol in sol):
-                    excpect_sol_check = True
+                    expect_sol_check = True
             else:
-                excpect_sol_check = dsolve_sol not in sol
+                expect_sol_check = dsolve_sol not in sol
             if expect_sol_check:
                 message = expected_sol_message.format(example=example, eq=eq, sol=sol, dsolve_sol=dsolve_sol)
                 raise AssertionError(message)
