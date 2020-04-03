@@ -172,7 +172,7 @@ if cin:
             """Transformation Function for Clang AST nodes
 
             It determines the kind of node and calls the respective
-            transforation function for that node.
+            transformation function for that node.
 
             Raises
             ======
