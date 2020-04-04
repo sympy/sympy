@@ -1,9 +1,10 @@
 from sympy.core.compatibility import as_int, is_sequence
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, mod_inverse
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
 from sympy.solvers.solvers import solve
+from sympy.polys import poly
 from .factor_ import divisors
 from .residue_ntheory import polynomial_congruence
 
@@ -59,6 +60,21 @@ class EllipticCurve:
             self._rank = 0
         elif isinstance(self._domain, RationalField):
             self._rank = None
+
+        #For Division polynomials
+        X = symbols('X')
+        Y = symbols('Y')
+        div = {}
+        if domain != QQ:
+            self.X = X
+            self.Y = Y
+            div[-1] = poly(-1, X, Y, modulus=modulus)
+            div[0] = poly(0, X, Y, modulus=modulus)
+            div[1] = poly(1, X, Y, modulus=modulus)
+            div[2] = poly(2*Y, X, Y, modulus=modulus)
+            div[3] = poly(3*X**4 + 6*a4*X**2 + 12*a6*X - a4*a4, X, Y, modulus=modulus)
+            div[4] = poly(4*Y*(X**6 + 5*a4*X**4 + 20*b6*X**3 - 5*a4*a4*X**2 - 4*a4*a6*X - 8*a6**2 - a4**3), modulus=modulus)
+            self.div = div
 
     def __call__(self, x, y, z=1):
         return EllipticCurvePoint(x, y, z, self)
@@ -263,6 +279,26 @@ class EllipticCurve:
             return self._rank
         raise NotImplementedError("Still not implemented")
 
+    def div_poly(self, n):
+        """
+        Division Polynomials of an elliptic curve over finite fields.
+
+        """
+        from sympy import simplify
+        if self._domain == QQ:
+            raise ValueError("Only defined for curves over finite fields")
+        if n in self.div:
+            return self.div[n]
+        f = lambda a : self.div_poly(a)
+        if n % 2 == 0:
+            n //= 2
+            self.div[2*n] = f(n) * (f(n + 2)*f(n - 1)**2 - f(n - 2)*f(n + 1)**2)
+            self.div[2*n] = simplify((self.div[2*n] * mod_inverse(2, self.modulus)) / self.Y)
+            self.div[2*n] = poly(self.div[2*n], self.X, self.Y, modulus=self.modulus)
+            return self.div[2*n]
+        n = (n - 1) // 2
+        self.div[2*n + 1] = poly(f(n + 2)*f(n)**3 - f(n + 1)**3*f(n - 1), self.X, self.Y, modulus=self.modulus)
+        return self.div[2*n + 1]
 
 class EllipticCurvePoint:
     """
