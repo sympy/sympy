@@ -75,7 +75,7 @@ class Collector(DefaultPrinting):
         self.pcgs = pcgs
         self.pc_series = pc_series
         self.relative_order = relative_order
-        self.free_group = free_group('x:{0}'.format(len(pcgs)))[0] if not free_group_ else free_group_
+        self.free_group = free_group('x:{}'.format(len(pcgs)))[0] if not free_group_ else free_group_
         self.index = {s: i for i, s in enumerate(self.free_group.symbols)}
         self.pc_presentation = self.pc_relators()
 

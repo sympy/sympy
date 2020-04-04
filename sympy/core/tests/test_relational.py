@@ -16,7 +16,7 @@ x, y, z, t = symbols('x,y,z,t')
 def rel_check(a, b):
     from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
-    for do in range(len(set([type(a), type(b)]))):
+    for do in range(len({type(a), type(b)})):
         if S.NaN in (a, b):
             v = [(a == b), (a != b)]
             assert len(set(v)) == 1 and v[0] == False
@@ -969,7 +969,7 @@ def test_issue_18188():
     assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
-    ans = set([x])
+    ans = {x}
     for f in Eq, Ne:
         for t in S.true, S.false:
             eq = f(x, S.true)

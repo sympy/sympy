@@ -42,17 +42,17 @@ def test_iterable():
 
     assert iterable(Test2()) is True
 
-    class Test3(object):
+    class Test3:
         pass
 
     assert iterable(Test3()) is False
 
-    class Test4(object):
+    class Test4:
         _iterable = True
 
     assert iterable(Test4()) is True
 
-    class Test5(object):
+    class Test5:
         def __iter__(self):
             yield 1
 

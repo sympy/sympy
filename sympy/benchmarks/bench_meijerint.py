@@ -1,6 +1,4 @@
 # conceal the implicit import from the code quality tester
-from __future__ import print_function, division
-
 from sympy import (exp, gamma, integrate, oo, pi, sqrt, Symbol, symbols,
         besseli, laplace_transform, fourier_transform, mellin_transform,
         inverse_fourier_transform, inverse_laplace_transform,
