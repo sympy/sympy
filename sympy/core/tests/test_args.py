@@ -6,7 +6,6 @@
 
 import os
 import re
-import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
