@@ -99,12 +99,13 @@ class BlockMatrix(MatrixExpr):
                     if not ok:
                         break
                 blocky = ok
-                # same number of cols for each matrix in each col
-                for c in range(len(rows[0])):
-                    ok = len(set([rows[i][c].cols
-                        for i in range(len(rows))])) == 1
-                    if not ok:
-                        break
+                if ok:
+                    # same number of cols for each matrix in each col
+                    for c in range(len(rows[0])):
+                        ok = len(set([rows[i][c].cols
+                            for i in range(len(rows))])) == 1
+                        if not ok:
+                            break
             if not ok:
                 # same total cols in each row
                 ok = len(set([
