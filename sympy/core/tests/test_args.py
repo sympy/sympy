@@ -4954,3 +4954,7 @@ def test_sympy__integrals__rubi__utility_function__PolyGamma():
 def test_sympy__integrals__rubi__utility_function__ProductLog():
     from sympy.integrals.rubi.utility_function import ProductLog
     assert _test_args(ProductLog(1))
+
+def test_sympy__combinatorics__schur_number__SchurNumber():
+    from sympy.combinatorics.schur_number import SchurNumber
+    assert _test_args(SchurNumber(1))
