@@ -600,7 +600,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                if match['no_of_equation'] > 3 and match['is_homogeneous'] and match['is_constant']:
+                if all([str in match and match[str] for str in ['is_constant', 'is_homogeneous']]):
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
                 else:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]

@@ -312,6 +312,12 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     if len(funcs) != len(eqs):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
+    # ValueError when functions have more than one arguments
+    for func in funcs:
+        if len(func.args) != 1:
+            raise ValueError("dsolve() and classify_sysode() work with "
+            "functions of one variable only, not %s" % func)
+
     # Getting the func_dict and order using the helper
     # function
     order = _get_func_order(eqs, funcs)
@@ -351,8 +357,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_homogeneous': is_homogeneous,
     }
 
-    # The last condition will be later removed.
-    if match['is_linear'] and match['is_constant'] and len(eqs) > 3:
+    if match['is_linear'] and match['is_constant']:
 
         # Converting the equation into canonical form if the
         # equation is first order. There will be a separate
