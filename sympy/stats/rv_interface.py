@@ -479,14 +479,11 @@ def density_plot(expr_list, show=True, **kwargs):
 
     x = Dummy('x')
     plots = None
-    xlim = kwargs.pop('xlim', None)
 
     def _get_plot(expr, condition=None):
         dens_function = density(expr, condition=condition)(x)
-        xlim_ = xlim or _sympify((expr.pspace.domain.set._inf,
-                                expr.pspace.domain.set._sup)).is_real
         line_color = (random.random(), random.random(), random.random())
-        plot_dens = plot(dens_function, xlim=xlim_, show=False, label=str(expr.pspace.value),
+        plot_dens = plot(dens_function, show=False, label=str(expr.pspace.value),
                         line_color=line_color, **kwargs)
         return plot_dens
 
