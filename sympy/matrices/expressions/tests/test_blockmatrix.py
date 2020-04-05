@@ -119,6 +119,7 @@ def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
     assert trace(X) == trace(A) + trace(D)
+    assert trace(BlockMatrix([ZeroMatrix(n, n)])) == 0
 
 def test_BlockMatrix_Determinant():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
@@ -128,6 +129,8 @@ def test_BlockMatrix_Determinant():
         assert det(X) == det(A) * det(D - C*A.I*B)
 
     assert isinstance(det(X), Expr)
+    assert det(BlockMatrix([A])) == det(A)
+    assert det(BlockMatrix([ZeroMatrix(n, n)])) == 0
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
