@@ -4,7 +4,7 @@ from sympy import (
 )
 from sympy.physics.secondquant import evaluate_deltas, F
 
-x, y = symbols('x y')
+x, y, m = symbols('x y m')
 
 
 def test_levicivita():
@@ -51,6 +51,9 @@ def test_kronecker_delta():
     assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
 
     assert KroneckerDelta(i, j)**0 == 1
+    assert KroneckerDelta(m, 0) * cos(m) == KroneckerDelta(m, 0)
+    assert KroneckerDelta(m, 2) * binomial(m, 2) == KroneckerDelta(m, 2)
+
     for n in range(1, 10):
         assert KroneckerDelta(i, j)**n == KroneckerDelta(i, j)
         assert KroneckerDelta(i, j)**-n == 1/KroneckerDelta(i, j)
@@ -60,8 +63,6 @@ def test_kronecker_delta():
     assert adjoint(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     assert conjugate(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     assert transpose(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
-    assert KroneckerDelta(n, 0)*cos(n) == KroneckerDelta(n, 0)
-    assert KroneckerDelta(n, 2) * binomial(n, 2) == KroneckerDelta(n, 2)
     # to test if canonical
     assert (KroneckerDelta(i, j) == KroneckerDelta(j, i)) == True
 
