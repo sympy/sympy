@@ -5087,20 +5087,21 @@ class SymmetricPermutationGroup(Basic):
         deg = sympify(deg)
         obj = Basic.__new__(cls, deg)
         obj.deg = deg
-        obj.order = None
+        obj._order = None
         return obj
 
     def order(self):
         """
         Return the order of the permutation group.
         """
-        if self.order == None:
-            n = self.deg
-            self.order = factorial(n)
-        return self.order
+        if self._order is not None:
+            return self._order
+        n = self.deg
+        self._order = factorial(n)
+        return self._order
 
     @property
-    def degree():
+    def degree(self):
         """
         Return the degree of the permutation group.
         """
@@ -5112,7 +5113,7 @@ class SymmetricPermutationGroup(Basic):
         Return the identity element of the permutation group.
 
         '''
-        return _af_new(list(range(self.degree)))
+        return _af_new(list(range(self.deg)))
 
 class Coset(Basic):
     """A left coset of a permutation group with respect to an element.
@@ -5140,7 +5141,6 @@ class Coset(Basic):
     """
 
     def __new__(cls, g, H, G=None, dir = "+"):
-        from sympy.combinatorics.named_groups import SymmetricGroup
         g = sympify(g)
         if not isinstance(g, Permutation):
             raise NotImplementedError
