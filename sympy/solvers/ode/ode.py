@@ -1760,7 +1760,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     The parameters are further used in
     :py:meth:`~sympy.solvers.ode.dsolve` for solving that system.
 
-    The parameter names and values are:
+    Some parameter names and values are:
 
     'is_linear' (boolean), which tells whether the given system is linear.
     Note that "linear" here refers to the operator: terms such as ``x*diff(x,t)`` are
@@ -1773,10 +1773,12 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'order' (dict) with the maximum derivative for each element of the 'func'
     parameter.
 
-    'func_coeff' (dict) with the coefficient for each triple ``(equation number,
+    'func_coeff' (dict or Matrix) with the coefficient for each triple ``(equation number,
     function, order)```. The coefficients are those subexpressions that do not
     appear in 'func', and hence can be considered constant for purposes of ODE
-    solving.
+    solving. The value of this parameter can also be a  Matrix if the system of ODEs are
+    linear first order of the form X' = AX where X is the vector of dependent variables.
+    Here, this function returns the coefficient matrix A.
 
     'eq' (list) with the equations from ``eq``, sympified and transformed into
     expressions (we are solving for these expressions to be zero).
@@ -1786,6 +1788,15 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'type_of_equation' (string) is an internal classification of the type of
     ODE.
 
+    'is_constant' (boolean), which tells if the system of ODEs is constant coefficient
+    or not. This key is temporary addition for now and is in the match dict only when
+    the system of ODEs is linear first order constant coefficient homogeneous. So, this
+    key's value is True for now if it is available else it doesn't exist.
+
+    'is_homogeneous' (boolean), which tells if the system of ODEs is homogeneous. Like the
+    key 'is_constant', this key is a temporary addition and it is True since this key value
+    is available only when the system is linear first order constant coefficient homogeneous.
+
     References
     ==========
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
@@ -1794,7 +1805,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy import Function, Eq, symbols, diff
+    >>> from sympy import Function, Eq, symbols, diff, Rational
     >>> from sympy.solvers.ode.ode import classify_sysode
     >>> from sympy.abc import t
     >>> f, x, y = symbols('f, x, y', cls=Function)
@@ -1803,10 +1814,11 @@ def classify_sysode(eq, funcs=None, **kwargs):
     >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
     >>> eq = (Eq(5*x1, 12*x(t) - 6*y(t)), Eq(2*y1, 11*x(t) + 3*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t), -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)],
-    'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 5, (0, y(t), 0): 6,
-    (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 2},
-    'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
+    {'no_of_equation': 2, 'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t),
+    -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)], 'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1},
+    'is_linear': True, 'is_constant': True, 'is_homogeneous': True, 'func_coeff': Matrix([
+    [Rational(-12, 5),  Rational(6, 5)], [Rational(-11, 2), Rational(-3, 2)]]),
+    'type_of_equation': 'type1'}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
     {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
