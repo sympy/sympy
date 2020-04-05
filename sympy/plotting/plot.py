@@ -575,7 +575,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
         self.expr = sympify(expr)
-        self.label = str(self.expr)
+        self.label = kwargs.get('label', None) or str(self.expr)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
