@@ -1704,10 +1704,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
 
         def pretty_negative(pform, index):

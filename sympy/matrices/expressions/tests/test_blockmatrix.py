@@ -1,3 +1,4 @@
+from sympy.testing.pytest import raises
 from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
@@ -172,6 +173,7 @@ def test_BlockDiagMatrix():
     assert all(X.blocks[i, j].is_ZeroMatrix if i != j else X.blocks[i, j] in [A, B, C]
             for i in range(3) for j in range(3))
     assert X.__class__(*X.args) == X
+    assert X.get_diag_blocks() == (A, B, C)
 
     assert isinstance(block_collapse(X.I * X), Identity)
 
@@ -192,7 +194,6 @@ def test_BlockDiagMatrix():
 def test_blockcut():
     A = MatrixSymbol('A', n, m)
     B = blockcut(A, (n/2, n/2), (m/2, m/2))
-    assert A[i, j] == B[i, j]
     assert B == BlockMatrix([[A[:n/2, :m/2], A[:n/2, m/2:]],
                              [A[n/2:, :m/2], A[n/2:, m/2:]]])
 
@@ -232,3 +233,19 @@ def test_block_collapse_type():
     assert block_collapse(Transpose(bm1)).__class__ == BlockDiagMatrix
     assert bc_transpose(Transpose(bm1)).__class__ == BlockDiagMatrix
     assert bc_inverse(Inverse(bm1)).__class__ == BlockDiagMatrix
+
+def test_invalid_block_matrix():
+    raises(ValueError, lambda: BlockMatrix([
+        [Identity(2), Identity(5)],
+    ]))
+    raises(ValueError, lambda: BlockMatrix([
+        [Identity(n), Identity(m)],
+    ]))
+    raises(ValueError, lambda: BlockMatrix([
+        [ZeroMatrix(n, n), ZeroMatrix(n, n)],
+        [ZeroMatrix(n, n - 1), ZeroMatrix(n, n + 1)],
+    ]))
+    raises(ValueError, lambda: BlockMatrix([
+        [ZeroMatrix(n - 1, n), ZeroMatrix(n, n)],
+        [ZeroMatrix(n + 1, n), ZeroMatrix(n, n)],
+    ]))

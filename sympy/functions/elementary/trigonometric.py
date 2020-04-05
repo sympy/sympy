@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.relational import Ne
@@ -65,7 +65,7 @@ class TrigonometricFunction(Function):
         return (re, im)
 
     def _period(self, general_period, symbol=None):
-        f = self.args[0]
+        f = expand_mul(self.args[0])
         if symbol is None:
             symbol = tuple(f.free_symbols)[0]
 
@@ -1640,7 +1640,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
             return 1/t
 
     def _period(self, symbol):
-        f = self.args[0]
+        f = expand_mul(self.args[0])
         return self._reciprocal_of(f).period(symbol)
 
     def fdiff(self, argindex=1):

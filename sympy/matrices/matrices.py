@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 
 from typing import Any
+import mpmath as mp
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -37,7 +38,9 @@ from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
 
 from .eigen import (
-    _eigenvals, _eigenvects, _is_diagonalizable, _diagonalize,
+    _eigenvals, _eigenvects,
+    _bidiagonalize, _bidiagonal_decomposition,
+    _is_diagonalizable, _diagonalize,
     _eval_is_positive_definite,
     _is_positive_definite, _is_positive_semidefinite,
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
@@ -47,6 +50,8 @@ from .decompositions import (
     _rank_decomposition, _cholesky, _LDLdecomposition,
     _LUdecomposition, _LUdecomposition_Simple, _LUdecompositionFF,
     _QRdecomposition)
+
+from .graph import _connected_components, _connected_components_decomposition
 
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
@@ -378,6 +383,12 @@ class MatrixEigen(MatrixSubspaces):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
                 normalize=normalize)
 
+    def bidiagonalize(self, upper=True):
+        return _bidiagonalize(self, upper=upper)
+
+    def bidiagonal_decomposition(self, upper=True):
+        return _bidiagonal_decomposition(self, upper=upper)
+
     @property
     def is_positive_definite(self):
         return _is_positive_definite(self)
@@ -420,6 +431,8 @@ class MatrixEigen(MatrixSubspaces):
     jordan_form.__doc__                = _jordan_form.__doc__
     left_eigenvects.__doc__            = _left_eigenvects.__doc__
     singular_values.__doc__            = _singular_values.__doc__
+    bidiagonalize.__doc__              = _bidiagonalize.__doc__
+    bidiagonal_decomposition.__doc__   = _bidiagonal_decomposition.__doc__
 
 
 class MatrixCalculus(MatrixCommon):
@@ -962,6 +975,11 @@ class MatrixBase(MatrixDeprecated,
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
                 return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+
+            elif isinstance(args[0], mp.matrix):
+                M = args[0]
+                flat_list = [cls._sympify(x) for x in M]
+                return M.rows, M.cols, flat_list
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
@@ -2234,6 +2252,12 @@ class MatrixBase(MatrixDeprecated,
         return _inv(self, method=method, iszerofunc=iszerofunc,
                 try_block_diag=try_block_diag)
 
+    def connected_components(self):
+        return _connected_components(self)
+
+    def connected_components_decomposition(self):
+        return _connected_components_decomposition(self)
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
@@ -2264,6 +2288,10 @@ class MatrixBase(MatrixDeprecated,
     inverse_QR.__doc__             = _inv_QR.__doc__
     inverse_BLOCK.__doc__          = _inv_block.__doc__
     inv.__doc__                    = _inv.__doc__
+
+    connected_components.__doc__   = _connected_components.__doc__
+    connected_components_decomposition.__doc__ = \
+        _connected_components_decomposition.__doc__
 
 
 @deprecated(

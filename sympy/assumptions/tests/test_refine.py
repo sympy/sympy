@@ -3,6 +3,7 @@ from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 
 def test_Abs():
@@ -224,3 +225,13 @@ def test_refine_issue_12724():
     y1 = Symbol('y1', real = True)
     expr3 = refine(Abs(x * y1**2 * z), Q.positive(x))
     assert expr3 == x * y1**2 * Abs(z)
+
+
+def test_matrixelement():
+    x = MatrixSymbol('x', 3, 3)
+    i = Symbol('i', positive = True)
+    j = Symbol('j', positive = True)
+    assert refine(x[0, 1], Q.symmetric(x)) == x[0, 1]
+    assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
+    assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
+    assert refine(x[j, i], Q.symmetric(x)) == x[j, i]

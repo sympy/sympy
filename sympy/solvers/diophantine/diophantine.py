@@ -36,22 +36,6 @@ from sympy.utilities.misc import filldedent
 __all__ = ['diophantine', 'classify_diop']
 
 
-# these types are known (but not necessarily handled)
-diop_known = {
-    "binary_quadratic",
-    "cubic_thue",
-    "general_pythagorean",
-    "general_sum_of_even_powers",
-    "general_sum_of_squares",
-    "homogeneous_general_quadratic",
-    "homogeneous_ternary_quadratic",
-    "homogeneous_ternary_quadratic_normal",
-    "inhomogeneous_general_quadratic",
-    "inhomogeneous_ternary_quadratic",
-    "linear",
-    "univariate"}
-
-
 class DiophantineSolutionSet(set):
     """
     Container for a set of solutions to a particular diophantine equation.
@@ -150,6 +134,225 @@ class DiophantineSolutionSet(set):
         if len(args) > len(self.parameters):
             raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
         return self.subs(zip(self.parameters, args))
+
+
+class DiophantineEquationType:
+    """
+    Internal representation of a particular diophantine equation type.
+
+    Parameters
+    ==========
+
+    equation
+        The diophantine equation that is being solved.
+    free_symbols: list (optional)
+        The symbols being solved for.
+
+    Attributes
+    ==========
+
+    total_degree
+        The maximum of the degrees of all terms in the equation
+    homogeneous
+        Does the equation contain a term of degree 0
+    homogeneous_order
+        Does the equation contain any coefficient that is in the symbols being solved for
+    dimension
+        The number of symbols being solved for
+    """
+    name = None
+
+    def __init__(self, equation, free_symbols=None):
+        self.equation = _sympify(equation).expand(force=True)
+
+        if free_symbols is not None:
+            self.free_symbols = free_symbols
+        else:
+            self.free_symbols = list(self.equation.free_symbols)
+
+        if not self.free_symbols:
+            raise ValueError('equation should have 1 or more free symbols')
+
+        self.free_symbols.sort(key=default_sort_key)
+
+        self.coeff = self.equation.as_coefficients_dict()
+        if not all(_is_int(c) for c in self.coeff.values()):
+            raise TypeError("Coefficients should be Integers")
+
+        self.total_degree = Poly(self.equation).total_degree()
+        self.homogeneous = 1 not in self.coeff
+        self.homogeneous_order = not (set(self.coeff) & set(self.free_symbols))
+        self.dimension = len(self.free_symbols)
+
+    def matches(self):
+        """
+        Determine whether the given equation can be matched to the particular equation type.
+        """
+        return False
+
+
+class Univariate(DiophantineEquationType):
+    name = 'univariate'
+
+    def matches(self):
+        return self.dimension == 1
+
+
+class Linear(DiophantineEquationType):
+    name = 'linear'
+
+    def matches(self):
+        return self.total_degree == 1
+
+
+class BinaryQuadratic(DiophantineEquationType):
+    name = 'binary_quadratic'
+
+    def matches(self):
+        return self.total_degree == 2 and self.dimension == 2
+
+
+class InhomogeneousTernaryQuadratic(DiophantineEquationType):
+    name = 'inhomogeneous_ternary_quadratic'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension == 3):
+            return False
+        if not self.homogeneous:
+            return False
+        return not self.homogeneous_order
+
+
+class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
+    name = 'homogeneous_ternary_quadratic_normal'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension == 3):
+            return False
+        if not self.homogeneous:
+            return False
+        if not self.homogeneous_order:
+            return False
+
+        nonzero = [k for k in self.coeff if self.coeff[k]]
+        return len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols)
+
+
+class HomogeneousTernaryQuadratic(DiophantineEquationType):
+    name = 'homogeneous_ternary_quadratic'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension == 3):
+            return False
+        if not self.homogeneous:
+            return False
+        if not self.homogeneous_order:
+            return False
+
+        nonzero = [k for k in self.coeff if self.coeff[k]]
+        return not (len(nonzero) == 3 and all(i**2 in nonzero for i in self.free_symbols))
+
+
+class InhomogeneousGeneralQuadratic(DiophantineEquationType):
+    name = 'inhomogeneous_general_quadratic'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension >= 3):
+            return False
+        if not self.homogeneous_order:
+            return True
+        else:
+            # there may be Pow keys like x**2 or Mul keys like x*y
+            if any(k.is_Mul for k in self.coeff): # cross terms
+                return not self.homogeneous
+        return False
+
+
+class HomogeneousGeneralQuadratic(DiophantineEquationType):
+    name = 'homogeneous_general_quadratic'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension >= 3):
+            return False
+        if not self.homogeneous_order:
+            return False
+        else:
+            # there may be Pow keys like x**2 or Mul keys like x*y
+            if any(k.is_Mul for k in self.coeff): # cross terms
+                return self.homogeneous
+        return False
+
+
+class GeneralSumOfSquares(DiophantineEquationType):
+    name = 'general_sum_of_squares'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension >= 3):
+            return False
+        if not self.homogeneous_order:
+            return False
+        if any(k.is_Mul for k in self.coeff):
+            return False
+        return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
+
+
+class GeneralPythagorean(DiophantineEquationType):
+    name = 'general_pythagorean'
+
+    def matches(self):
+        if not (self.total_degree == 2 and self.dimension >= 3):
+            return False
+        if not self.homogeneous_order:
+            return False
+        if any(k.is_Mul for k in self.coeff):
+            return False
+        if all(self.coeff[k] == 1 for k in self.coeff if k != 1):
+            return False
+        if not all(is_square(abs(self.coeff[k])) for k in self.coeff):
+            return False
+        # all but one has the same sign
+        # e.g. 4*x**2 + y**2 - 4*z**2
+        return abs(sum(sign(self.coeff[k]) for k in self.coeff)) == self.dimension - 2
+
+
+class CubicThue(DiophantineEquationType):
+    name = 'cubic_thue'
+
+    def matches(self):
+        return self.total_degree == 3 and self.dimension == 2
+
+
+class GeneralSumOfEvenPowers(DiophantineEquationType):
+    name = 'general_sum_of_even_powers'
+
+    def matches(self):
+        if not self.total_degree > 3:
+            return False
+        if self.total_degree % 2 != 0:
+            return False
+        if not all(k.is_Pow and k.exp == self.total_degree for k in self.coeff if k != 1):
+            return False
+        return all(self.coeff[k] == 1 for k in self.coeff if k != 1)
+
+
+# these types are known (but not necessarily handled)
+# note that order is important here (in the current solver state)
+all_diop_classes = [
+    Linear,
+    Univariate,
+    BinaryQuadratic,
+    InhomogeneousTernaryQuadratic,
+    HomogeneousTernaryQuadraticNormal,
+    HomogeneousTernaryQuadratic,
+    InhomogeneousGeneralQuadratic,
+    HomogeneousGeneralQuadratic,
+    GeneralSumOfSquares,
+    GeneralPythagorean,
+    CubicThue,
+    GeneralSumOfEvenPowers,
+]
+
+diop_known = set([diop_class.name for diop_class in all_diop_classes])
 
 
 def _is_int(i):
@@ -322,12 +525,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         if permute:
             len_var = len(v)
             permute_signs_for = [
-                'general_sum_of_squares',
-                'general_sum_of_even_powers']
+                GeneralSumOfSquares.name,
+                GeneralSumOfEvenPowers.name]
             permute_signs_check = [
-                'homogeneous_ternary_quadratic',
-                'homogeneous_ternary_quadratic_normal',
-                'binary_quadratic']
+                HomogeneousTernaryQuadratic.name,
+                HomogeneousTernaryQuadraticNormal.name,
+                BinaryQuadratic.name]
             if t in permute_signs_for:
                 do_permute_signs_var = True
             elif t in permute_signs_check:
@@ -413,17 +616,17 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         solution = diop_solve(base, param)
 
         if eq_type in [
-                "linear",
-                "homogeneous_ternary_quadratic",
-                "homogeneous_ternary_quadratic_normal",
-                "general_pythagorean"]:
+                Linear.name,
+                HomogeneousTernaryQuadratic.name,
+                HomogeneousTernaryQuadraticNormal.name,
+                GeneralPythagorean.name]:
             sols.add(merge_solution(var, var_t, solution))
 
         elif eq_type in [
-                "binary_quadratic",
-                "general_sum_of_squares",
-                "general_sum_of_even_powers",
-                "univariate"]:
+                BinaryQuadratic.name,
+                GeneralSumOfSquares.name,
+                GeneralSumOfEvenPowers.name,
+                Univariate.name]:
             for sol in solution:
                 sols.add(merge_solution(var, var_t, sol))
 
@@ -536,28 +739,28 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     """
     var, coeff, eq_type = classify_diop(eq, _dict=False)
 
-    if eq_type == "linear":
+    if eq_type == Linear.name:
         return diop_linear(eq, param)
 
-    elif eq_type == "binary_quadratic":
+    elif eq_type == BinaryQuadratic.name:
         return diop_quadratic(eq, param)
 
-    elif eq_type == "homogeneous_ternary_quadratic":
+    elif eq_type == HomogeneousTernaryQuadratic.name:
         return diop_ternary_quadratic(eq, parameterize=True)
 
-    elif eq_type == "homogeneous_ternary_quadratic_normal":
+    elif eq_type == HomogeneousTernaryQuadraticNormal.name:
         return diop_ternary_quadratic_normal(eq, parameterize=True)
 
-    elif eq_type == "general_pythagorean":
+    elif eq_type == GeneralPythagorean.name:
         return diop_general_pythagorean(eq, param)
 
-    elif eq_type == "univariate":
+    elif eq_type == Univariate.name:
         return diop_univariate(eq)
 
-    elif eq_type == "general_sum_of_squares":
+    elif eq_type == GeneralSumOfSquares.name:
         return diop_general_sum_of_squares(eq, limit=S.Infinity)
 
-    elif eq_type == "general_sum_of_even_powers":
+    elif eq_type == GeneralSumOfEvenPowers.name:
         return diop_general_sum_of_even_powers(eq, limit=S.Infinity)
 
     if eq_type is not None and eq_type not in diop_known:
@@ -574,69 +777,17 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
 def classify_diop(eq, _dict=True):
     # docstring supplied externally
-    try:
-        var = list(eq.free_symbols)
-        assert var
-    except (AttributeError, AssertionError):
-        raise ValueError('equation should have 1 or more free symbols')
-    var.sort(key=default_sort_key)
-    eq = eq.expand(force=True)
-    coeff = eq.as_coefficients_dict()
-    if not all(_is_int(c) for c in coeff.values()):
-        raise TypeError("Coefficients should be Integers")
 
+    matched = False
     diop_type = None
-    total_degree = Poly(eq).total_degree()
-    homogeneous = 1 not in coeff
-    if total_degree == 1:
-        diop_type = "linear"
+    for diop_class in all_diop_classes:
+        diop_type = diop_class(eq)
+        if diop_type.matches():
+            matched = True
+            break
 
-    elif len(var) == 1:
-        diop_type = "univariate"
-
-    elif total_degree == 2 and len(var) == 2:
-        diop_type = "binary_quadratic"
-
-    elif total_degree == 2 and len(var) == 3 and homogeneous:
-        if set(coeff) & set(var):
-            diop_type = "inhomogeneous_ternary_quadratic"
-        else:
-            nonzero = [k for k in coeff if coeff[k]]
-            if len(nonzero) == 3 and all(i**2 in nonzero for i in var):
-                diop_type = "homogeneous_ternary_quadratic_normal"
-            else:
-                diop_type = "homogeneous_ternary_quadratic"
-
-    elif total_degree == 2 and len(var) >= 3:
-        if set(coeff) & set(var):
-            diop_type = "inhomogeneous_general_quadratic"
-        else:
-            # there may be Pow keys like x**2 or Mul keys like x*y
-            if any(k.is_Mul for k in coeff):  # cross terms
-                if not homogeneous:
-                    diop_type = "inhomogeneous_general_quadratic"
-                else:
-                    diop_type = "homogeneous_general_quadratic"
-            else:  # all squares: x**2 + y**2 + ... + constant
-                if all(coeff[k] == 1 for k in coeff if k != 1):
-                    diop_type = "general_sum_of_squares"
-                elif all(is_square(abs(coeff[k])) for k in coeff):
-                    if abs(sum(sign(coeff[k]) for k in coeff)) == \
-                            len(var) - 2:
-                        # all but one has the same sign
-                        # e.g. 4*x**2 + y**2 - 4*z**2
-                        diop_type = "general_pythagorean"
-
-    elif total_degree == 3 and len(var) == 2:
-        diop_type = "cubic_thue"
-
-    elif (total_degree > 3 and total_degree % 2 == 0 and
-            all(k.is_Pow and k.exp == total_degree for k in coeff if k != 1)):
-        if all(coeff[k] == 1 for k in coeff if k != 1):
-            diop_type = 'general_sum_of_even_powers'
-
-    if diop_type is not None:
-        return var, dict(coeff) if _dict else coeff, diop_type
+    if matched:
+        return diop_type.free_symbols, dict(diop_type.coeff) if _dict else diop_type.coeff, diop_type.name
 
     # new diop type instructions
     # --------------------------
@@ -733,7 +884,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "linear":
+    if diop_type == Linear.name:
         result = _diop_linear(var, coeff, param)
 
         if param is None:
@@ -1011,7 +1162,7 @@ def diop_univariate(eq):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "univariate":
+    if diop_type == Univariate.name:
         return set([(int(i),) for i in solveset_real(
             eq, var[0]).intersect(S.Integers)])
 
@@ -1068,7 +1219,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "binary_quadratic":
+    if diop_type == BinaryQuadratic.name:
         return set(_diop_quadratic(var, coeff, param))
 
 
@@ -1928,7 +2079,7 @@ def transformation_to_DN(eq):
     """
 
     var, coeff, diop_type = classify_diop(eq, _dict=False)
-    if diop_type == "binary_quadratic":
+    if diop_type == BinaryQuadratic.name:
         return _transformation_to_DN(var, coeff)
 
 
@@ -2023,7 +2174,7 @@ def find_DN(eq):
            http://www.jpr2718.org/ax2p.pdf
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
-    if diop_type == "binary_quadratic":
+    if diop_type == BinaryQuadratic.name:
         return _find_DN(var, coeff)
 
 
@@ -2468,7 +2619,7 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
     (4, 9, 1)
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
-    if diop_type == "homogeneous_ternary_quadratic_normal":
+    if diop_type == HomogeneousTernaryQuadraticNormal.name:
         sol = _diop_ternary_quadratic_normal(var, coeff)
         if len(sol) > 0:
             x_0, y_0, z_0 = list(sol)[0]
@@ -2916,7 +3067,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     """
     var, coeff, diop_type  = classify_diop(eq, _dict=False)
 
-    if diop_type == "general_pythagorean":
+    if diop_type == GeneralPythagorean.name:
         return list(_diop_general_pythagorean(var, coeff, param))[0]
 
 
@@ -2991,7 +3142,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "general_sum_of_squares":
+    if diop_type == GeneralSumOfSquares.name:
         return set(_diop_general_sum_of_squares(var, -int(coeff[1]), limit))
 
 
@@ -3050,7 +3201,7 @@ def diop_general_sum_of_even_powers(eq, limit=1):
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
-    if diop_type == "general_sum_of_even_powers":
+    if diop_type == GeneralSumOfEvenPowers.name:
         for k in coeff.keys():
             if k.is_Pow and coeff[k]:
                 p = k.exp

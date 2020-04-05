@@ -17,12 +17,12 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
-                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
-from sympy.stats.crv import SingleContinuousPSpace
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.joint_rv import JointPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -584,7 +584,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True,finite=True)
+    p = Symbol("p", positive=True, real=True, finite=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -616,6 +616,13 @@ def test_exponential():
 
     expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
     assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
+
+    Y = Exponential('y', 2*rate)
+    assert coskewness(X, X, X) == skewness(X)
+    assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
+                        4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))
+    assert coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3) == \
+                        sqrt(170)*Rational(9, 85)
 
 def test_exponential_power():
     mu = Symbol('mu')
@@ -673,7 +680,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
-
+@slow
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)
@@ -699,6 +706,10 @@ def test_gamma():
     assert skewness(X).expand() == 2/sqrt(k)
     assert kurtosis(X).expand() == 3 + 6/k
 
+    Y = Gamma('y', 2*k, 3*theta)
+    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
+        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
+        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -1497,3 +1508,8 @@ def test_ContinuousDistributionHandmade():
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)
+
+def test_issue_16318():
+    #test compute_expectation function of the SingleContinuousDomain
+    N = SingleContinuousDomain(x, Interval(0, 1))
+    raises (ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))

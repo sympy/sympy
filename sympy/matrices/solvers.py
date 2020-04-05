@@ -341,7 +341,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
         A, perm = M.LUdecomposition_Simple(
             iszerofunc=_iszero, rankcheck=True)
     except ValueError:
-        raise NotImplementedError("Underdetermined systems not supported.")
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     dps = _get_intermediate_simp()
     b   = rhs.permute_rows(perm).as_mutable()

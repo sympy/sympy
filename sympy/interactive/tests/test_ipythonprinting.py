@@ -100,11 +100,10 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
-    # Note : Unicode of Python2 is equivalent to str in Python3. In Python 3 we have one
-    # text type: str which holds Unicode data and two byte types bytes and bytearray.
+    # Note : In Python 3 we have one text type: str which holds Unicode data
+    # and two byte types bytes and bytearray.
     # Python 3.3.3 + IPython 0.13.2 gives: '{n_i: 3, pi: 3.14}'
     # Python 3.3.3 + IPython 1.1.0 gives: '{n_i: 3, pi: 3.14}'
-    # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'
     assert text in ("{pi: 3.14, n_i: 3}", "{n_i: 3, pi: 3.14}")
 
 

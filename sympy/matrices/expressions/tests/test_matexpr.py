@@ -62,6 +62,7 @@ def test_zero_matrix_creation():
 def test_one_matrix_creation():
     assert OneMatrix(2, 2)
     assert OneMatrix(0, 0)
+    assert Eq(OneMatrix(1, 1), Identity(1))
     raises(ValueError, lambda: OneMatrix(-1, 2))
     raises(ValueError, lambda: OneMatrix(2.0, 2))
     raises(ValueError, lambda: OneMatrix(2j, 2))
@@ -175,6 +176,12 @@ def test_OneMatrix_doit():
     assert isinstance(Unn.rows, Add)
     assert Unn.doit() == OneMatrix(2 * n, n)
     assert isinstance(Unn.doit().rows, Mul)
+
+
+def test_OneMatrix_mul():
+    assert OneMatrix(n, m) * OneMatrix(m, k) == OneMatrix(n, k) * m
+    assert w * OneMatrix(1, 1) == w
+    assert OneMatrix(1, 1) * w.T == w.T
 
 
 def test_Identity():

@@ -331,7 +331,7 @@ def closest_points(*args):
     return {tuple([p[i] for i in pair]) for pair in rv}
 
 
-def convex_hull(*args, **kwargs):
+def convex_hull(*args, polygon=True):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
@@ -339,10 +339,17 @@ def convex_hull(*args, **kwargs):
 
     args : a collection of Points, Segments and/or Polygons
 
+    Optional parameters
+    ===================
+
+    polygon : Boolean. If True, returns a Polygon, if false a tuple, see below.
+              Default is True.
+
     Returns
     =======
 
-    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where ``L`` and ``U`` are the lower and upper hulls, respectively.
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where
+                  ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes
     =====
@@ -382,7 +389,6 @@ def convex_hull(*args, **kwargs):
     from .line import Segment
     from .polygon import Polygon
 
-    polygon = kwargs.get('polygon', True)
     p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):

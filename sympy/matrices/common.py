@@ -175,6 +175,16 @@ class MatrixShaping(MatrixRequired):
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
 
+    def _eval_todok(self):
+        dok = {}
+        rows, cols = self.shape
+        for i in range(rows):
+            for j in range(cols):
+                val = self[i, j]
+                if val != self.zero:
+                    dok[i, j] = val
+        return dok
+
     def _eval_vec(self):
         rows = self.rows
 
@@ -591,6 +601,19 @@ class MatrixShaping(MatrixRequired):
         """
         return (self.rows, self.cols)
 
+    def todok(self):
+        """Return the matrix as dictionary of keys.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, SparseMatrix
+        >>> M = Matrix.eye(3)
+        >>> M.todok()
+        {(0, 0): 1, (1, 1): 1, (2, 2): 1}
+        """
+        return self._eval_todok()
+
     def tolist(self):
         """Return the Matrix as a nested Python list.
 
@@ -760,7 +783,7 @@ class MatrixSpecial(MatrixRequired):
 
         When more than one element is passed, each is interpreted as
         something to put on the diagonal. Lists are converted to
-        matricecs. Filling of the diagonal always continues from
+        matrices. Filling of the diagonal always continues from
         the bottom right hand corner of the previous item: this
         will create a block-diagonal matrix whether the matrices
         are square or not.
@@ -808,6 +831,7 @@ class MatrixSpecial(MatrixRequired):
         diagonal - to extract a diagonal
         .dense.diag
         .expressions.blockmatrix.BlockMatrix
+        .sparsetools.banded - to create multi-diagonal matrices
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
@@ -2017,6 +2041,51 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
+
+    def rot90(self, k=1):
+        """Rotates Matrix by 90 degrees
+
+        Parameters
+        ==========
+
+        k : int
+            Specifies how many times the matrix is rotated by 90 degrees
+            (clockwise when positive, counter-clockwise when negative).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> A = Matrix(2, 2, symbols('a:d'))
+        >>> A
+        Matrix([
+        [a, b],
+        [c, d]])
+
+        Rotating the matrix clockwise one time:
+
+        >>> A.rot90(1)
+        Matrix([
+        [c, a],
+        [d, b]])
+
+        Rotating the matrix anticlockwise two times:
+
+        >>> A.rot90(-2)
+        Matrix([
+        [d, c],
+        [b, a]])
+        """
+
+        mod = k%4
+        if mod == 0:
+            return self
+        if mod == 1:
+            return self[::-1, ::].T
+        if mod == 2:
+            return self[::-1, ::-1]
+        if mod == 3:
+            return self[::, ::-1].T
 
     def simplify(self, **kwargs):
         """Apply simplify to each element of the matrix.

@@ -955,7 +955,7 @@ class Mul(Expr, AssocOp):
     def matches(self, expr, repl_dict={}, old=False):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(self, expr, repl_dict, old)
+            return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
             return None
 

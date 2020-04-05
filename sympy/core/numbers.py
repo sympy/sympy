@@ -278,8 +278,6 @@ except ImportError:
 
 
 # Use Lehmer's algorithm only for very large numbers.
-# The limit could be different on Python 2.7 and 3.x.
-# If so, then this could be defined in compatibility.py.
 BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.

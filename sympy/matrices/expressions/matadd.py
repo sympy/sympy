@@ -33,7 +33,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, evaluate=False, **kwargs):
         if not args:
             return cls.identity
 
@@ -44,10 +44,17 @@ class MatAdd(MatrixExpr, Add):
         check = kwargs.get('check', False)
 
         obj = Basic.__new__(cls, *args)
+
         if check:
             if all(not isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
+
+        if evaluate:
+            if all(not isinstance(i, MatrixExpr) for i in args):
+                return Add(*args, evaluate=True)
+            obj = canonicalize(obj)
+
         return obj
 
     @property

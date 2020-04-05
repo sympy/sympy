@@ -403,7 +403,6 @@ class Point(Basic):
 
     @property
     def free_symbols(self):
-        raise NotImplementedError
         return self._coords.free_symbols
 
 
