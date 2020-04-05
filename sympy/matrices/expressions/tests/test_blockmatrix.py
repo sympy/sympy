@@ -1,3 +1,4 @@
+from sympy import Trace
 from sympy.testing.pytest import raises
 from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
@@ -5,6 +6,7 @@ from sympy.matrices.expressions.blockmatrix import (
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det, ZeroMatrix)
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix)
 from sympy.core import Tuple, symbols, Expr
@@ -193,6 +195,53 @@ def test_BlockDiagMatrix():
 
     assert (X._blockmul(M)).is_MatMul
     assert (X._blockadd(M)).is_MatAdd
+
+def test_BlockDiagMatrix_nonsquare():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', k, l)
+    X = BlockDiagMatrix(A, B)
+    assert X.shape == (n + k, m + l)
+    assert X.shape == (n + k, m + l)
+    assert X.rowblocksizes == [n, k]
+    assert X.colblocksizes == [m, l]
+    C = MatrixSymbol('C', n, m)
+    D = MatrixSymbol('D', k, l)
+    Y = BlockDiagMatrix(C, D)
+    assert block_collapse(X + Y) == BlockDiagMatrix(A + C, B + D)
+    assert block_collapse(X * Y.T) == BlockDiagMatrix(A * C.T, B * D.T)
+    raises(NonInvertibleMatrixError, lambda: BlockDiagMatrix(A, C.T).inverse())
+
+def test_BlockDiagMatrix_determinant():
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', m, m)
+    assert det(BlockDiagMatrix()) == 1
+    assert det(BlockDiagMatrix(A)) == det(A)
+    assert det(BlockDiagMatrix(A, B)) == det(A) * det(B)
+
+    # non-square blocks
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', n, m)
+    assert det(BlockDiagMatrix(C, D)) == 0
+
+def test_BlockDiagMatrix_trace():
+    assert trace(BlockDiagMatrix()) == 0
+    assert trace(BlockDiagMatrix(ZeroMatrix(n, n))) == 0
+    A = MatrixSymbol('A', n, n)
+    assert trace(BlockDiagMatrix(A)) == trace(A)
+    B = MatrixSymbol('B', m, m)
+    assert trace(BlockDiagMatrix(A, B)) == trace(A) + trace(B)
+
+    # non-square blocks
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', n, m)
+    assert isinstance(trace(BlockDiagMatrix(C, D)), Trace)
+
+def test_BlockDiagMatrix_transpose():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', k, l)
+    assert transpose(BlockDiagMatrix()) == BlockDiagMatrix()
+    assert transpose(BlockDiagMatrix(A)) == BlockDiagMatrix(A.T)
+    assert transpose(BlockDiagMatrix(A, B)) == BlockDiagMatrix(A.T, B.T)
 
 def test_blockcut():
     A = MatrixSymbol('A', n, m)

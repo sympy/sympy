@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Basic, Add
+from sympy.core import Basic, Add, Mul, S
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
@@ -341,8 +342,22 @@ class BlockDiagMatrix(BlockMatrix):
     def colblocksizes(self):
         return [block.cols for block in self.args]
 
+    def _all_square_blocks(self):
+        """Returns true if all blocks are square"""
+        return all(mat.is_square for mat in self.args)
+
+    def _eval_determinant(self):
+        if self._all_square_blocks():
+            return Mul(*[det(mat) for mat in self.args])
+        # At least one block is non-square.  Since the entire matrix must be square we know there must
+        # be at least two blocks in this matrix, in which case the entire matrix is necessarily rank-deficient
+        return S.Zero
+
     def _eval_inverse(self, expand='ignored'):
-        return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
+        if self._all_square_blocks():
+            return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
+        # See comment in _eval_determinant()
+        raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
 
     def _eval_transpose(self):
         return BlockDiagMatrix(*[mat.transpose() for mat in self.args])
