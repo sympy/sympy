@@ -17,7 +17,7 @@ from sympy.matrices.expressions.trace import trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, ShapeError
+from sympy.matrices import Matrix, ShapeError, MutableMatrix
 from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
@@ -309,6 +309,7 @@ class BlockDiagMatrix(BlockMatrix):
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
+        mats = [m.as_immutable() if isinstance(m, MutableMatrix) else m for m in mats]
         return Basic.__new__(BlockDiagMatrix, *mats)
 
     @property

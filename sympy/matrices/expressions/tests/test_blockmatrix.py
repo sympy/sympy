@@ -243,6 +243,11 @@ def test_BlockDiagMatrix_transpose():
     assert transpose(BlockDiagMatrix(A)) == BlockDiagMatrix(A.T)
     assert transpose(BlockDiagMatrix(A, B)) == BlockDiagMatrix(A.T, B.T)
 
+def test_issue_2460():
+    bdm1 = BlockDiagMatrix(Matrix([i]), Matrix([j]))
+    bdm2 = BlockDiagMatrix(Matrix([k]), Matrix([l]))
+    assert block_collapse(bdm1 + bdm2) == BlockDiagMatrix(Matrix([i + k]), Matrix([j + l]))
+
 def test_blockcut():
     A = MatrixSymbol('A', n, m)
     B = blockcut(A, (n/2, n/2), (m/2, m/2))
