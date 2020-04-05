@@ -9,7 +9,7 @@ from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
 from .matexpr import \
-    MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
+    MatrixExpr, ShapeError, Identity, ZeroMatrix, OneMatrix, GenericIdentity
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
@@ -363,8 +363,28 @@ def combine_permutations(mul):
 
     return MatMul(*result)
 
+def combine_one_matrices(mul):
+    """
+    Combine products of OneMatrix
+
+    e.g. OneMatrix(2, 3) * OneMatrix(3, 4) -> 3 * OneMatrix(2, 4)
+    """
+    factor, args = mul.as_coeff_matrices()
+    new_args = [args[0]]
+
+    for B in args[1:]:
+        A = new_args[-1]
+        if not isinstance(A, OneMatrix) or not isinstance(B, OneMatrix):
+            new_args.append(B)
+            continue
+        new_args.pop()
+        new_args.append(OneMatrix(A.shape[0], B.shape[1]))
+        factor *= A.shape[1]
+
+    return newmul(factor, *new_args)
+
 rules = (
-    any_zeros, remove_ids, combine_powers, unpack, rm_id(lambda x: x == 1),
+    any_zeros, remove_ids, combine_one_matrices, combine_powers, unpack, rm_id(lambda x: x == 1),
     merge_explicit, factor_in_front, flatten, combine_permutations)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))

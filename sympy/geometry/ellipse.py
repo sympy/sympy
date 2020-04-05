@@ -1459,6 +1459,8 @@ class Ellipse(GeometrySet):
         >>> e = Ellipse(Point2D(0, 0), 2, 4)
         >>> e.section_modulus()
         (8*pi, 4*pi)
+        >>> e.section_modulus((2, 2))
+        (16*pi, 4*pi)
         """
         x_c, y_c = self.center
         if point is None:
@@ -1468,6 +1470,7 @@ class Ellipse(GeometrySet):
             x = max(x_c - x_min, x_max - x_c)
         else:
             # taking x and y as distances of the given point from the center
+            point = Point2D(point)
             y = point.y - y_c
             x = point.x - x_c
 

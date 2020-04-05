@@ -1,28 +1,23 @@
 from sympy import (
-    Rational, Poly, Symbol, N, I, Abs, sqrt, exp, Float, sin,
+    Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
 from sympy.matrices import eye, Matrix
 from sympy.matrices.matrices import MatrixEigen
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
-from sympy.abc import x, y
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
+from sympy.testing.pytest import slow
+
+
 class EigenOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixEigen):
     pass
 
 def test_eigen():
     R = Rational
-
-    assert eye(3).charpoly(x) == Poly((x - 1)**3, x)
-    assert eye(3).charpoly(y) == Poly((y - 1)**3, y)
-
-    M = Matrix([[1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]])
-
+    M = Matrix.eye(3)
     assert M.eigenvals(multiple=False) == {S.One: 3}
     assert M.eigenvals(multiple=True) == [1, 1, 1]
 
@@ -120,13 +115,6 @@ def test_eigen():
         (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(-Rational(3, 8) + sqrt(73)/8)], [1]])]),
         (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])]
 
-    m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
-    evals = { Rational(5, 4) - sqrt(385)/20: 1, sqrt(385)/20 + Rational(5, 4): 1, S.Zero: 1}
-    assert m.eigenvals() == evals
-    nevals = list(sorted(m.eigenvals(rational=False).keys()))
-    sevals = list(sorted(evals.keys()))
-    assert all(abs(nevals[i] - sevals[i]) < 1e-9 for i in range(len(nevals)))
-
     # issue 10719
     assert Matrix([]).eigenvals() == {}
     assert Matrix([]).eigenvects() == []
@@ -151,6 +139,23 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
+
+def test_float_eigenvals():
+    m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
+    evals = [
+        Rational(5, 4) - sqrt(385)/20,
+        sqrt(385)/20 + Rational(5, 4),
+        S.Zero]
+
+    n_evals = m.eigenvals(rational=True, multiple=True)
+    n_evals = sorted(n_evals)
+    s_evals = [x.evalf() for x in evals]
+    s_evals = sorted(s_evals)
+
+    for x, y in zip(n_evals, s_evals):
+        assert abs(x-y) < 10**-9
+
+
 @XFAIL
 def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
@@ -163,6 +168,7 @@ def test_eigen_vects():
 
 def test_issue_8240():
     # Eigenvalues of large triangular matrices
+    x, y = symbols('x y')
     n = 200
 
     diagonal_variables = [Symbol('x%s' % i) for i in range(n)]
@@ -226,6 +232,7 @@ def test_left_eigenvects():
         assert vec_list[0]*M == val*vec_list[0]
 
 
+@slow
 def test_bidiagonalize():
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],

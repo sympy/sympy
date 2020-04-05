@@ -474,7 +474,7 @@ class Polygon(GeometrySet):
         Q_x, Q_y: number or sympy expressions
             Q_x is the first moment of area about the x-axis
             Q_y is the first moment of area about the y-axis
-            A negetive sign indicates that the section modulus is
+            A negative sign indicates that the section modulus is
             determined for a section below (or left of) the centroidal axis
 
         Examples
@@ -569,7 +569,7 @@ class Polygon(GeometrySet):
         S_x, S_y: numbers or SymPy expressions
                   S_x is the section modulus with respect to the x-axis
                   S_y is the section modulus with respect to the y-axis
-                  A negetive sign indicates that the section modulus is
+                  A negative sign indicates that the section modulus is
                   determined for a point below the centroidal axis
 
         Examples

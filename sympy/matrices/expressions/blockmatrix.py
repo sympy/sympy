@@ -7,7 +7,7 @@ from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 from sympy.utilities.misc import filldedent
 
-from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
+from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity, MatrixElement
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
@@ -99,12 +99,13 @@ class BlockMatrix(MatrixExpr):
                     if not ok:
                         break
                 blocky = ok
-                # same number of cols for each matrix in each col
-                for c in range(len(rows[0])):
-                    ok = len(set([rows[i][c].cols
-                        for i in range(len(rows))])) == 1
-                    if not ok:
-                        break
+                if ok:
+                    # same number of cols for each matrix in each col
+                    for c in range(len(rows[0])):
+                        ok = len(set([rows[i][c].cols
+                            for i in range(len(rows))])) == 1
+                        if not ok:
+                            break
             if not ok:
                 # same total cols in each row
                 ok = len(set([
@@ -234,16 +235,24 @@ class BlockMatrix(MatrixExpr):
 
     def _entry(self, i, j, **kwargs):
         # Find row entry
+        orig_i, orig_j = i, j
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if (i < numrows) != False:
+            cmp = i < numrows
+            if cmp == True:
                 break
-            else:
+            elif cmp == False:
                 i -= numrows
+            elif row_block < self.blockshape[0] - 1:
+                # Can't tell which block and it's not the last one, return unevaluated
+                return MatrixElement(self, orig_i, orig_j)
         for col_block, numcols in enumerate(self.colblocksizes):
-            if (j < numcols) != False:
+            cmp = j < numcols
+            if cmp == True:
                 break
-            else:
+            elif cmp == False:
                 j -= numcols
+            elif col_block < self.blockshape[1] - 1:
+                return MatrixElement(self, orig_i, orig_j)
         return self.blocks[row_block, col_block][i, j]
 
     @property
@@ -271,8 +280,10 @@ class BlockMatrix(MatrixExpr):
 
 
 class BlockDiagMatrix(BlockMatrix):
-    """
-    A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
+    """A sparse matrix with block matrices along its diagonals
+
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols, Identity
     >>> n, m, l = symbols('n m l')
@@ -283,8 +294,15 @@ class BlockDiagMatrix(BlockMatrix):
     [X, 0],
     [0, Y]])
 
+    Notes
+    =====
+
+    If you want to get the individual diagonal blocks, use
+    :meth:`get_diag_blocks`.
+
     See Also
     ========
+
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
@@ -342,6 +360,32 @@ class BlockDiagMatrix(BlockMatrix):
             return BlockDiagMatrix(*[a + b for a, b in zip(self.args, other.args)])
         else:
             return BlockMatrix._blockadd(self, other)
+
+    def get_diag_blocks(self):
+        """Return the list of diagonal blocks of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import BlockDiagMatrix, Matrix
+
+        >>> A = Matrix([[1, 2], [3, 4]])
+        >>> B = Matrix([[5, 6], [7, 8]])
+        >>> M = BlockDiagMatrix(A, B)
+
+        How to get diagonal blocks from the block diagonal matrix:
+
+        >>> diag_blocks = M.get_diag_blocks()
+        >>> diag_blocks[0]
+        Matrix([
+        [1, 2],
+        [3, 4]])
+        >>> diag_blocks[1]
+        Matrix([
+        [5, 6],
+        [7, 8]])
+        """
+        return self.args
 
 
 def block_collapse(expr):
