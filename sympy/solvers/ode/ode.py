@@ -1807,18 +1807,17 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     >>> from sympy import Function, Eq, symbols, diff, Rational
     >>> from sympy.solvers.ode.ode import classify_sysode
+    >>> from sympy.matrices.dense import Matrix
     >>> from sympy.abc import t
     >>> f, x, y = symbols('f, x, y', cls=Function)
     >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
     >>> x1 = diff(x(t), t) ; y1 = diff(y(t), t)
     >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
-    >>> eq = (Eq(5*x1, 12*x(t) - 6*y(t)), Eq(2*y1, 11*x(t) + 3*y(t)))
+    >>> eq = (Eq(x1, 12*x(t) - 6*y(t)), Eq(y1, 11*x(t) + 3*y(t)))
     >>> classify_sysode(eq)
-    {'no_of_equation': 2, 'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t),
-    -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)], 'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1},
-    'is_linear': True, 'is_constant': True, 'is_homogeneous': True, 'func_coeff': Matrix([
-    [Rational(-12, 5),  Rational(6, 5)], [Rational(-11, 2), Rational(-3, 2)]]),
-    'type_of_equation': 'type1'}
+    {'eq': [-12*x(t) + 6*y(t) + Derivative(x(t), t), -11*x(t) - 3*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
+    [-12,  6],
+    [-11, -3]]), 'is_constant': True, 'is_homogeneous': True, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
     {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
@@ -6702,8 +6701,6 @@ def sysode_linear_2eq_order1(match_):
         raise NotImplementedError("Only homogeneous problems are supported" +
                                   " (and constant inhomogeneity)")
 
-    if match_['type_of_equation'] == 'type1':
-        sol = _linear_2eq_order1_type1(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type2':
         gsol = _linear_2eq_order1_type1(x, y, t, r, eq)
         psol = _linear_2eq_order1_type2(x, y, t, r, eq)

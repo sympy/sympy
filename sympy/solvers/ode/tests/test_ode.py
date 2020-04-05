@@ -143,7 +143,7 @@ def test_linear_2eq_order1_type2_noninvertible():
 
 
 @XFAIL
-def test_linear_2eq_order1_type2_fixme():
+def test():
     # There is a FIXME comment about this in the code that handles this case.
     # The answer returned is currently incorrect as reported by checksysodesol
     # below...
