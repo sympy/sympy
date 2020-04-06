@@ -558,15 +558,36 @@ def blockinverse_1x1(expr):
     return expr
 
 def blockinverse_2x2(expr):
-    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2) and expr.arg.blocks[0, 0].is_square:
         # Cite: The Matrix Cookbook Section 9.1.3
         [[A, B],
          [C, D]] = expr.arg.blocks.tolist()
 
-        return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
-                            [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
-    else:
-        return expr
+        # Use one or the other formula, depending on whether A or D is known to be invertible or at least not known
+        # to not be invertible.  Note that invertAbility of the other expressions M is not checked.
+        A_invertible = ask(Q.invertible(A))
+        D_invertible = ask(Q.invertible(D))
+        if A_invertible == True:
+            invert_A = True
+        elif D_invertible == True:
+            invert_A = False
+        elif A_invertible != False:
+            invert_A = True
+        elif D_invertible != False:
+            invert_A = False
+        else:
+            invert_A = True
+
+        if invert_A:
+            AI = A.I
+            MI = (D - C * AI * B).I
+            return BlockMatrix([[AI + AI * B * MI * C * AI, -AI * B * MI], [-MI * C * AI, MI]])
+        else:
+            DI = D.I
+            MI = (A - B * DI * C).I
+            return BlockMatrix([[MI, -MI * B * DI], [-DI * C * MI, DI + DI * C * MI * B * DI]])
+
+    return expr
 
 def deblock(B):
     """ Flatten a BlockMatrix of BlockMatrices """

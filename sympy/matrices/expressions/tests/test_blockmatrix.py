@@ -5,7 +5,7 @@ from sympy.matrices.expressions.blockmatrix import (
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
-        Inverse, trace, Transpose, det, ZeroMatrix)
+        Inverse, trace, Transpose, det, ZeroMatrix, OneMatrix)
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -152,9 +152,6 @@ def test_squareBlockMatrix():
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
 
     assert block_collapse(Y.I) == A.I
-    assert block_collapse(X.inverse()) == BlockMatrix([
-        [(-B*D.I*C + A).I, -A.I*B*(D + -C*A.I*B).I],
-        [-(D - C*A.I*B).I*C*A.I, (D - C*A.I*B).I]])
 
     assert isinstance(X.inverse(), Inverse)
 
@@ -163,6 +160,34 @@ def test_squareBlockMatrix():
     Z = BlockMatrix([[Identity(n), B], [C, D]])
     assert not Z.is_Identity
 
+def test_BlockMatrix_inverse():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', n, n)
+    C = MatrixSymbol('C', m, m)
+    D = MatrixSymbol('D', m, n)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert X.is_square
+    assert isinstance(block_collapse(X.inverse()), Inverse)  # Can't inverse when A, D aren't square
+
+    # test code path for non-invertible D matrix
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', n, m)
+    C = MatrixSymbol('C', m, n)
+    D = OneMatrix(m, m)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix([
+        [A.I + A.I * B * (D - C * A.I * B).I * C * A.I, -A.I * B * (D - C * A.I * B).I],
+        [-(D - C * A.I * B).I * C * A.I, (D - C * A.I * B).I],
+    ])
+
+    # test code path for non-invertible A matrix
+    A = OneMatrix(n, n)
+    D = MatrixSymbol('D', m, m)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix([
+        [(A - B * D.I * C).I, -(A - B * D.I * C).I * B * D.I],
+        [-D.I * C * (A - B * D.I * C).I, D.I + D.I * C * (A - B * D.I * C).I * B * D.I],
+    ])
 
 def test_BlockDiagMatrix():
     A = MatrixSymbol('A', n, n)
