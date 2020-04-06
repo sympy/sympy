@@ -249,9 +249,11 @@ def test_sysode_linear_neq_order1():
    assert dsolve(eq3) == sol3
    assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
+   # Regression test case for issue #15474
+   # https://github.com/sympy/sympy/issues/15474
    eq4 = [Eq(x(t).diff(t), a*x(t)), Eq(y(t).diff(t), b*y(t))]
    sol4 = [Eq(x(t), C1*exp(a*t)), Eq(y(t), C2*exp(b*t))]
-   #assert dsolve(eq4) == sol4
+   assert dsolve(eq4) == sol4
    assert checksysodesol(eq4, sol4) == (True, [0, 0])
 
    eq5 = [Eq(x(t).diff(t), -y(t)), Eq(y(t).diff(t), x(t))]
@@ -274,7 +276,7 @@ def test_sysode_linear_neq_order1():
 
    eq8 = [Eq(x(t).diff(t), -a*y(t)), Eq(y(t).diff(t), a*x(t))]
    sol8 = [Eq(x(t), -I*C1*exp(-I*a*t) + I*C2*exp(I*a*t)), Eq(y(t), C1*exp(-I*a*t) + C2*exp(I*a*t))]
-   #assert dsolve(eq8) == sol8
+   assert dsolve(eq8) == sol8
    assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
    eq9 = [Eq(x(t).diff(t), x(t) + y(t)), Eq(y(t).diff(t), x(t) - y(t))]
@@ -309,19 +311,19 @@ def test_sysode_linear_neq_order1():
 
    eq14 = [Eq(x(t).diff(t), a*y(t)), Eq(y(t).diff(t), a*x(t))]
    sol14 = [Eq(x(t), -C1*exp(-a*t) + C2*exp(a*t)), Eq(y(t), C1*exp(-a*t) + C2*exp(a*t))]
-   #assert dsolve(eq14) == sol14
+   assert dsolve(eq14) == sol14
    assert checksysodesol(eq14, sol14) == (True, [0, 0])
 
    eq15 = [Eq(x(t).diff(t), a*y(t)), Eq(y(t).diff(t), b*x(t))]
    sol15 = [Eq(x(t), -C1*a*exp(-t*sqrt(a*b))/sqrt(a*b) + C2*a*exp(t*sqrt(a*b))/sqrt(a*b)),
             Eq(y(t), C1*exp(-t*sqrt(a*b)) + C2*exp(t*sqrt(a*b)))]
-   #assert dsolve(eq15) == sol15
+   assert dsolve(eq15) == sol15
    assert checksysodesol(eq15, sol15) == (True, [0, 0])
 
    eq16 = [Eq(x(t).diff(t), a*x(t) + b*y(t)), Eq(y(t).diff(t), c*x(t))]
    sol16 = [Eq(x(t), -2*C1*b*exp(t*(a/2 - sqrt(a**2 + 4*b*c)/2))/(a + sqrt(a**2 + 4*b*c)) - 2*C2*b*exp(t*(a/2 + sqrt(a**2 + 4*b*c)/2))/(a - sqrt(a**2 + 4*b*c))),
             Eq(y(t), C1*exp(t*(a/2 - sqrt(a**2 + 4*b*c)/2)) + C2*exp(t*(a/2 + sqrt(a**2 + 4*b*c)/2)))]
-   #assert dsolve(eq16) == sol16
+   assert dsolve(eq16) == sol16
    assert checksysodesol(eq16, sol16) == (True, [0, 0])
 
    Z0 = Function('Z0')
@@ -427,3 +429,6 @@ def test_sysode_linear_neq_order1():
    sol9 = [Eq(x(t), C1*exp(t)), Eq(y(t), C2*exp(t)), Eq(z(t), C3*exp(t))]
    assert dsolve(eq9) == sol9
    assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
+
+   eq10 = [Eq(x(t).diff(t), -a*y(t)), Eq(y(t).diff(t), a*x(t))]
+   sol10 =
