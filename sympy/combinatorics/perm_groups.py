@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import multiplicity, factorint, sympify, Symbol
+from sympy import multiplicity, factorint, Symbol
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -18,7 +18,7 @@ from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.testing.randtest import _randrange
 from itertools import islice
-
+from sympy.core.sympify import _sympify
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -5084,7 +5084,7 @@ class SymmetricPermutationGroup(Basic):
     """
 
     def __new__(cls, deg):
-        deg = sympify(deg)
+        deg = _sympify(deg)
         obj = Basic.__new__(cls, deg)
         obj.deg = deg
         obj._order = None
@@ -5141,16 +5141,16 @@ class Coset(Basic):
     """
 
     def __new__(cls, g, H, G=None, dir = "+"):
-        g = sympify(g)
+        g = _sympify(g)
         if not isinstance(g, Permutation):
             raise NotImplementedError
 
-        H = sympify(H)
+        H = _sympify(H)
         if not isinstance(H, PermutationGroup):
             raise NotImplementedError
 
         if G is not None:
-            G = sympify(G)
+            G = _sympify(G)
             if not isinstance(G, PermutationGroup):
                 raise NotImplementedError
             if not H.is_subgroup(G):
@@ -5168,11 +5168,7 @@ class Coset(Basic):
             G = SymmetricPermutationGroup(g.size)
 
         dir = Symbol(dir)
-        if str(dir) ==  '+':
-            type = "RightCoset"
-        else:
-            type = "LeftCoset"
-        obj = Basic.__new__(cls, g, H, G, type)
+        obj = Basic.__new__(cls, g, H, G, dir)
         obj._dir = dir
         return obj
 
@@ -5190,7 +5186,7 @@ class Coset(Basic):
         """
         return str(self._dir) == '+'
 
-    def aslist(self):
+    def as_list(self):
         """
         Return all the elements of coset in the form of list.
         """
