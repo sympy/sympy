@@ -429,6 +429,3 @@ def test_sysode_linear_neq_order1():
    sol9 = [Eq(x(t), C1*exp(t)), Eq(y(t), C2*exp(t)), Eq(z(t), C3*exp(t))]
    assert dsolve(eq9) == sol9
    assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
-
-   eq10 = [Eq(x(t).diff(t), -a*y(t)), Eq(y(t).diff(t), a*x(t))]
-   sol10 =
