@@ -19,8 +19,7 @@ def test_elliptic_curve():
     # Torsion points
     assert len(EllipticCurve(0, 1).torsion_points()) == 6
 
-    e2 = EllipticCurve(0, 1, modulus=3)
-    X = e2.X
-    Y = e2.Y
-    assert e2.div_poly(6) == Poly(0, X, Y, modulus=3)
-    assert e2.div_poly(7) == Poly(X**18*Y**4 - X**9*Y**4 + Y**4, X, Y, modulus=3)
+    assert EllipticCurve(46, 74, modulus=101) == 97
+    assert EllipticCurve(101 ,210 , modulus = 317).schoof() == 308
+    assert EllipticCurve(27, 238, modulus = 457) == 435
+    assert EllipticCurve(132 ,132 , modulus = 401).schoof() == 383
