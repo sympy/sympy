@@ -429,3 +429,13 @@ def test_sysode_linear_neq_order1():
    sol9 = [Eq(x(t), C1*exp(t)), Eq(y(t), C2*exp(t)), Eq(z(t), C3*exp(t))]
    assert dsolve(eq9) == sol9
    assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
+
+    # Regression test case for issue #15407
+    # https://github.com/sympy/sympy/issues/15407
+    a_b, a_c = sympy.symbols('t a_b a_c', real=True)
+
+    eq10 = [Eq(x(t).diff(t), (-a_b - a_c)*x(t)), Eq(y(t).diff(t), a_b*y(t)), Eq(z(t).diff(t), a_c*x(t))]
+    sol10 = [Eq(x(t), -C3*(a_b + a_c)*exp(t*(-a_b - a_c))/a_c), Eq(y(t), C2*exp(a_b*t)),
+             Eq(z(t), C1 + C3*exp(t*(-a_b - a_c)))]
+    assert dsolve(eq10) == sol10
+    assert checksysodesol(eq10, sol10) == (True, [0, 0, 0])
