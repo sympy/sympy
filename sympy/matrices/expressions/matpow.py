@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
-from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
+from sympy.matrices.common import NonSquareMatrixError
+from .matexpr import MatrixExpr, Identity, ZeroMatrix
 from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
+from sympy.matrices.common import NonInvertibleMatrixError
 
 from .permutation import PermutationMatrix
 
@@ -40,7 +42,7 @@ class MatPow(MatrixExpr):
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
             if not A.base.is_square:
-                raise ShapeError("Power of non-square matrix %s" % A.base)
+                raise NonSquareMatrixError("Power of non-square matrix %s" % A.base)
             elif A.exp.is_Integer and A.exp.is_positive:
                 A = MatMul(*[A.base for k in range(A.exp)])
             #elif A.exp.is_Integer and self.exp.is_negative:
@@ -74,7 +76,7 @@ class MatPow(MatrixExpr):
                 return base.func(Identity(base.shape[0]))
             return Identity(base.shape[0])
         elif isinstance(base, ZeroMatrix) and exp.is_negative:
-            raise ValueError("Matrix determinant is 0, not invertible.")
+            raise NonInvertibleMatrixError("Matrix determinant is 0, not invertible")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
         elif isinstance(base, PermutationMatrix):

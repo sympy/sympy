@@ -41,6 +41,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, degree
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
@@ -2645,7 +2646,7 @@ def inv_quick(M):
     n = M.rows
     d = det(M)
     if d == S.Zero:
-        raise ValueError("Matrix det == 0; not invertible.")
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
     ret = zeros(n)
     s1 = -1
     for i in range(n):

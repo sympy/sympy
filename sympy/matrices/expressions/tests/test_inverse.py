@@ -1,6 +1,7 @@
 from sympy.core import symbols, S
-from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow
-from sympy.matrices import eye, Identity, ShapeError
+from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow, ZeroMatrix, OneMatrix
+from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.matrices import eye, Identity
 from sympy.testing.pytest import raises
 from sympy import refine, Q
 
@@ -13,9 +14,6 @@ E = MatrixSymbol('E', m, n)
 
 
 def test_inverse():
-    raises(ShapeError, lambda: Inverse(A))
-    raises(ShapeError, lambda: Inverse(A*B))
-
     assert Inverse(C).args == (C, S.NegativeOne)
     assert Inverse(C).shape == (n, n)
     assert Inverse(A*E).shape == (n, n)
@@ -41,6 +39,16 @@ def test_inverse():
     assert Inverse(eye(3)).doit() == eye(3)
     assert Inverse(eye(3)).doit(deep=False) == eye(3)
 
+    assert OneMatrix(1, 1).I == Identity(1)
+    assert isinstance(OneMatrix(n, n).I, Inverse)
+
+def test_inverse_non_invertible():
+    raises(NonSquareMatrixError, lambda: Inverse(A))
+    raises(NonSquareMatrixError, lambda: Inverse(A*B))
+    raises(NonSquareMatrixError, lambda: ZeroMatrix(n, m).I)
+    raises(NonInvertibleMatrixError, lambda: ZeroMatrix(n, n).I)
+    raises(NonSquareMatrixError, lambda: OneMatrix(n, m).I)
+    raises(NonInvertibleMatrixError, lambda: OneMatrix(2, 2).I)
 
 def test_refine():
     assert refine(C.I, Q.orthogonal(C)) == C.T
