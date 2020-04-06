@@ -1,5 +1,4 @@
 from sympy.ntheory.elliptic_curve import EllipticCurve
-from sympy.polys import Poly
 
 def test_elliptic_curve():
     # Point addition and multiplication
