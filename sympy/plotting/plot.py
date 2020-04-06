@@ -575,7 +575,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
         self.expr = sympify(expr)
-        self.label = str(self.expr)
+        self.label = kwargs.get('label', None) or str(self.expr)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -696,7 +696,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         super(Parametric2DLineSeries, self).__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
-        self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.label = kwargs.get('label', None) or \
+                            "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -828,7 +829,8 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
-        self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.label = kwargs.get('label', None) or \
+                        "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
