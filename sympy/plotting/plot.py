@@ -1436,6 +1436,10 @@ def plot(*args, **kwargs):
     ``line_color``: float. Specifies the color for the plot.
     See ``Plot`` to see how to set color for the plots.
 
+    ``label``: str
+        The label to the plot. It will be used when called with ``legend=True``
+        to denote the function with the given label in the plot.
+
     If there are multiple plots, then the same series series are applied to
     all the plots. If you want to set these options separately, you can index
     the ``Plot`` object returned and set it.
@@ -1628,6 +1632,10 @@ def plot_parametric(*args, **kwargs):
     ``line_color``: function which returns a float. Specifies the color for the
     plot. See ``sympy.plotting.Plot`` for more details.
 
+    ``label``: str
+        The label to the plot. It will be used when called with ``legend=True``
+        to denote the function with the given label in the plot.
+
     If there are multiple plots, then the same Series arguments are applied to
     all the plots. If you want to set these options separately, you can index
     the returned ``Plot`` object and set it.
@@ -1761,6 +1769,10 @@ def plot3d_parametric_line(*args, **kwargs):
 
     ``line_color``: function which returns a float. Specifies the color for the
     plot. See ``sympy.plotting.Plot`` for more details.
+
+    ``label``: str
+        The label to the plot. It will be used when called with ``legend=True``
+        to denote the function with the given label in the plot.
 
     If there are multiple plots, then the same series arguments are applied to
     all the plots. If you want to set these options separately, you can index
