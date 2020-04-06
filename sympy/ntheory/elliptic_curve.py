@@ -10,7 +10,7 @@ from .residue_ntheory import polynomial_congruence
 
 
 
-    
+
 class EllipticCurve:
     """
     Create the following Elliptic Curve over domain.
