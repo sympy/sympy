@@ -1153,3 +1153,9 @@ def test_coset_class():
     Permutation(1, 4, 3, 2)]
     for ele in list_repr:
         assert ele in expected
+
+def test_symmetricpermutationgroup():
+    a = SymmetricPermutationGroup(5)
+    assert a.degree == 5
+    assert a.order() == 120
+    assert a.identity() == Permutation(4)

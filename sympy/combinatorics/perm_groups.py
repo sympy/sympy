@@ -5086,7 +5086,7 @@ class SymmetricPermutationGroup(Basic):
     def __new__(cls, deg):
         deg = _sympify(deg)
         obj = Basic.__new__(cls, deg)
-        obj.deg = deg
+        obj._deg = deg
         obj._order = None
         return obj
 
@@ -5096,7 +5096,7 @@ class SymmetricPermutationGroup(Basic):
         """
         if self._order is not None:
             return self._order
-        n = self.deg
+        n = self._deg
         self._order = factorial(n)
         return self._order
 
@@ -5105,7 +5105,7 @@ class SymmetricPermutationGroup(Basic):
         """
         Return the degree of the permutation group.
         """
-        return self.deg
+        return self._deg
 
     @property
     def identity(self):
@@ -5113,7 +5113,7 @@ class SymmetricPermutationGroup(Basic):
         Return the identity element of the permutation group.
 
         '''
-        return _af_new(list(range(self.deg)))
+        return _af_new(list(range(self._deg)))
 
 class Coset(Basic):
     """A left coset of a permutation group with respect to an element.
