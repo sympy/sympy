@@ -341,30 +341,24 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ A random realization from the distribution """
 
         if library == 'python':
-            samps = getattr(SampleExternal, '_sample_python')(self, size)
-            if samps != None:
-                return samps
-            else:
-                icdf = self._inverse_cdf_expression()
-                if size == 1:
-                    return icdf(random.uniform(0, 1))
-                else:
-                    return [icdf(random.uniform(0, 1))]*size
-
-        libraries = ['scipy', 'numpy', 'pymc3']
-        if library not in libraries:
-            raise NotImplementedError("Sampling from %s is not implemeted."
-                                        % str(library))
-        if import_module(library):
             samps = getattr(SampleExternal, '_sample_' + library)(self, size)
             if samps is not None:
                 return samps
-            raise NotImplementedError(
-                    "Sampling for %s is not currently implemented from %s"
-                    % (self.__class__.__name__, library)
-                    )
-        else:
+
+        libraries = ['scipy', 'numpy', 'pymc3']
+        if library not in libraries:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                        % str(library))
+        if not import_module(library):
             raise ValueError("Failed to import %s" % library)
+
+        samps = getattr(SampleExternal, '_sample_' + library)(self, size)
+        if samps is not None:
+            return samps
+        raise NotImplementedError(
+                "Sampling for %s is not currently implemented from %s"
+                % (self.__class__.__name__, library)
+                )
 
 
     @cacheit

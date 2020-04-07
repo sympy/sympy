@@ -718,7 +718,8 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     if not random_symbols(expr):  # expr isn't random?
         return expr
     if numsamples:  # Computing by monte carlo sampling?
-        return sampling_E(expr, condition, numsamples=numsamples)
+        evalf = kwargs.get('evalf', True)
+        return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
 
     if expr.has(RandomIndexedSymbol):
         return pspace(expr).compute_expectation(expr, condition, evaluate, **kwargs)
@@ -1224,7 +1225,7 @@ def sample_iter_subs(expr, condition=None, size=(1,), library='python',
         ps = pspace(Tuple(expr, condition))
     else:
         ps = pspace(expr)
-    print('subs')
+
     count = 0
     while count < numsamples:
         d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
@@ -1236,6 +1237,8 @@ def sample_iter_subs(expr, condition=None, size=(1,), library='python',
             gd = True
             for comb in combinations:
                 gd = gd and condition.xreplace(comb)
+            if gd != True and gd != False:
+                raise ValueError("Conditions must not contain free symbols")
             if not gd:  # If the values don't satisfy then try again
                 continue
         if not isinstance(expr, (Relational, Boolean)):
