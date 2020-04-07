@@ -597,8 +597,8 @@ def _get_examples_ode_sol_euler_var_para():
 
 
 def _get_examples_ode_sol_factorable():
-    """ some hints are marked as xfail for examples because they missed additional algebraic solution 
-    which could be found by Factorable hint. Fact_01 raise exception for 
+    """ some hints are marked as xfail for examples because they missed additional algebraic solution
+    which could be found by Factorable hint. Fact_01 raise exception for
     nth_linear_constant_coeff_undetermined_coefficients"""
 
     return {
@@ -611,7 +611,7 @@ def _get_examples_ode_sol_factorable():
         'XFAIL': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
          		'1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
                 'lie_group', 'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
-                'nth_linear_constant_coeff_variation_of_parameters', 
+                'nth_linear_constant_coeff_variation_of_parameters',
                 'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
                 'nth_linear_constant_coeff_undetermined_coefficients']
     },
