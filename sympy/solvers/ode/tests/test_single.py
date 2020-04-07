@@ -195,7 +195,7 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         example = ode_example['example_name']
         xfail = our_hint in ode_example['XFAIL']
         if our_hint.endswith('_Integral') or 'series' in our_hint:
-            continue 
+            continue
         xpass = True
         if runxfail and not xfail:
             continue
