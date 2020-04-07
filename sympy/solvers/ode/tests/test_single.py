@@ -97,7 +97,12 @@ The expected solution was
 {sol}
 
 what dsolve returned is:
-{dsolve_sol}\
+{dsolve_sol}
+
+You can test this with:
+
+dsolve({eq}, hint='{hint}')
+
 """
 
 exception_msg = """\
@@ -165,7 +170,7 @@ def _ode_solver_test(ode_examples):
             print(example,"now pass for hint",our_hint)
 
 
-def _test_all_hints(runxfail=False):
+def test_all_hints(runxfail=False):
     all_hints = list(allhints)
     all_examples = _get_all_examples()
     for our_hint in all_hints:
@@ -189,6 +194,8 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         expected_sol = ode_example['sol']
         example = ode_example['example_name']
         xfail = our_hint in ode_example['XFAIL']
+        if our_hint.endswith('_Integral') or 'series' in our_hint:
+            continue 
         xpass = True
         if runxfail and not xfail:
             continue
@@ -202,7 +209,7 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
 
                 if checkodesol(eq, dsolve_sol) != expected_checkodesol:
                     unsolve_list.append(example)
-                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol, example=example)
                     if runxfail is not None:
                         print('AssertionError: ' +message)
             except Exception as e:
@@ -590,6 +597,10 @@ def _get_examples_ode_sol_euler_var_para():
 
 
 def _get_examples_ode_sol_factorable():
+    """ some hints are marked as xfail for examples because they missed additional algebraic solution 
+    which could be found by Factorable hint. Fact_01 raise exception for 
+    nth_linear_constant_coeff_undetermined_coefficients"""
+
     return {
             'hint': "factorable",
             'func': f(x),
@@ -597,12 +608,18 @@ def _get_examples_ode_sol_factorable():
     'fact_01': {
         'eq': f(x) + f(x)*f(x).diff(x),
         'sol': [Eq(f(x), 0), Eq(f(x), C1 - x)],
-        'XFAIL': ['nth_linear_constant_coeff_undetermined_coefficients']
+        'XFAIL': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
+         		'1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
+                'lie_group', 'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
+                'nth_linear_constant_coeff_variation_of_parameters', 
+                'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
+                'nth_linear_constant_coeff_undetermined_coefficients']
     },
 
     'fact_02': {
         'eq': f(x)*(f(x).diff(x)+f(x)*x+2),
-        'sol': [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))*exp(-x**2/2)), Eq(f(x), 0)]
+        'sol': [Eq(f(x), (C1 - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2))*exp(-x**2/2)), Eq(f(x), 0)],
+        'XFAIL': ['Bernoulli', '1st_linear']
     },
 
     'fact_03': {
