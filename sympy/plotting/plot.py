@@ -26,6 +26,7 @@ from __future__ import print_function, division
 
 import warnings
 
+from sympy.core.numbers import Float, Integer, Zero
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
@@ -475,7 +476,7 @@ class BaseSeries(object):
 
     is_3Dline = False
     # Some of the backends expect:
-    #  - get_points returning 1D np.arrays list_x, list_y, list_y
+    #  - get_points returning 1D np.arrays list_x, list_y, list_z
     #  - get_segments returning np.array (done in Line2DBaseSeries)
     #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
     # with the colors calculated at the points from get_points
@@ -1148,6 +1149,13 @@ class MatplotlibBackend(BaseBackend):
         for s in series:
             # Create the collections
             if s.is_2Dline:
+                if type(s) == LineOver1DRangeSeries and type(s.expr) in [Float, Integer, Zero]:
+                    y = float(s.expr)
+                    if y:
+                        mi, ma = sorted([0, 2*y])
+                    else:
+                        mi, ma = -1, 1
+                    ax.set_ylim(mi, ma)
                 collection = self.LineCollection(s.get_segments())
                 ax.add_collection(collection)
             elif s.is_contour:
