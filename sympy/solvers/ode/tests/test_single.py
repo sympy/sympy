@@ -609,11 +609,11 @@ def _get_examples_ode_sol_factorable():
         'eq': f(x) + f(x)*f(x).diff(x),
         'sol': [Eq(f(x), 0), Eq(f(x), C1 - x)],
         'XFAIL': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
-         		'1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
-                'lie_group', 'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
-                'nth_linear_constant_coeff_variation_of_parameters',
-                'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
-                'nth_linear_constant_coeff_undetermined_coefficients']
+        '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
+        'lie_group', 'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
+        'nth_linear_constant_coeff_variation_of_parameters',
+        'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
+        'nth_linear_constant_coeff_undetermined_coefficients']
     },
 
     'fact_02': {
