@@ -240,7 +240,7 @@ before_install:
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr matplotlib<3.2 sphinx-math-dollar;
+      pip install "sphinx" "docutils" doctr "matplotlib<3.2" sphinx-math-dollar;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
       pip install asv;
