@@ -1230,7 +1230,7 @@ class MatplotlibBackend(BaseBackend):
                 "All numbers from ylim={} must be finite".format(ylim))
             ylim = (float(i) for i in ylim)
             ax.set_ylim(ylim)
-
+        ax.autoscale_view()
 
     def process_series(self):
         """
