@@ -284,16 +284,17 @@ class SampleExternal:
     def _sample_python(cls, dist, size):
         """Sample from random."""
 
-        dist_list = cls.python_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
+        def _get_single_sample(dist):
+            if cls.python_rv_map.get(dist.__class__.__name__, None):
+                return cls.python_rv_map[dist.__class__.__name__](dist)
+            icdf = dist._inverse_cdf_expression()
+            return icdf(random.uniform(0, 1)).evalf()
 
         x = Dummy('x')
         if isinstance(size, int):
-              return ArrayComprehensionMap(lambda: cls.python_rv_map[dist.__class__.__name__](dist),
-                    (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: cls.python_rv_map[dist.__class__.__name__](dist),
+              return ArrayComprehensionMap(lambda: _get_single_sample(dist),
+                                        (x, 0, size-1)).doit()
+        return ArrayComprehensionMap(lambda: _get_single_sample(dist),
                                          *[(x, 0, i-1) for i in size]).doit()
 
     @classmethod
@@ -342,7 +343,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if library == 'python':
             samps = getattr(SampleExternal, '_sample_python')(self, size)
             if samps != None:
-                return list(samps) if size!=1 else samps[0]
+                return samps
             else:
                 icdf = self._inverse_cdf_expression()
                 if size == 1:
@@ -357,7 +358,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if import_module(library):
             samps = getattr(SampleExternal, '_sample_' + library)(self, size)
             if samps is not None:
-                return samps if size != 1 else samps[0]
+                return samps
             raise NotImplementedError(
                     "Sampling for %s is not currently implemented from %s"
                     % (self.__class__.__name__, library)

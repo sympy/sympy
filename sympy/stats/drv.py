@@ -47,16 +47,16 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=1, library='python'):
+    def sample(self, size=(1,), library='python'):
         """ A random realization from the distribution"""
         if hasattr(self,'_sample_scipy') and import_module('scipy'):
-            return self._sample_scipy(size)
+            return self._sample_scipy(size=size)
         icdf = self._inverse_cdf_expression()
         samp_list = []
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
             if sample_ >= self.set.inf:
-                if size == 1:
+                if size == (1,):
                     return sample_
                 else:
                     samp_list.append(sample_)
@@ -327,7 +327,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     def domain(self):
         return SingleDiscreteDomain(self.symbol, self.set)
 
-    def sample(self, size=1, library='python'):
+    def sample(self, size=(1,), library='python'):
         """
         Internal sample method
 

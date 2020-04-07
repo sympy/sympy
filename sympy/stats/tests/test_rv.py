@@ -182,8 +182,8 @@ def test_Sample():
     Y = Normal('Y', 0, 1)
     z = Symbol('z')
 
-    assert sample(X) in [1, 2, 3, 4, 5, 6]
-    assert sample(X + Y).is_Float
+    assert next(sample(X))[0] in [1, 2, 3, 4, 5, 6]
+    assert next(sample(X + Y))[0].is_Float
 
     P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number

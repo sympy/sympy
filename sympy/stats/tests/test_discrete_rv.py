@@ -136,8 +136,8 @@ def test_zeta():
 @slow
 def test_sample_discrete():
     X = Geometric('X', S.Half)
-    assert sample(X) in X.pspace.domain.set
-    samps = sample(X, size=4)
+    assert next(sample(X))[0] in X.pspace.domain.set
+    samps = next(sample(X, size=4))
     for samp in samps:
         assert samp in X.pspace.domain.set
 
@@ -301,7 +301,7 @@ def test_sampling_methods():
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         for X in distribs_scipy:
-            samps = sample(X, size=size)
+            samps = next(sample(X, size=size))
             for samp in samps:
                 assert samp in X.pspace.domain.set
     pymc3 = import_module('pymc3')

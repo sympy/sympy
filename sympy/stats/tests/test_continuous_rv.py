@@ -321,9 +321,9 @@ def test_moment_generating_function():
 
 def test_sample_continuous():
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
-    assert sample(Z) in Z.pspace.domain.set
+    assert next(sample(Z))[0] in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
-    assert sym == Z and val in Interval(0, oo)
+    assert sym == Z and val[0] in Interval(0, oo)
     assert density(Z)(-1) == 0
 
 
@@ -726,7 +726,7 @@ def test_sampling_gamma_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
-    assert sample(X) in X.pspace.domain.set
+    assert next(sample(X))[0] in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -852,10 +852,10 @@ def test_lognormal():
 
     for i in range(3):
         X = LogNormal('x', i, 1)
-        assert sample(X) in X.pspace.domain.set
+        assert next(sample(X))[0] in X.pspace.domain.set
 
     size = 5
-    samps = sample(X, size=size)
+    samps = next(sample(X, size=size))
     for samp in samps:
         assert samp in X.pspace.domain.set
     # The sympy integrator can't do this too well
@@ -960,7 +960,7 @@ def test_sampling_gaussian_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
-    assert sample(X, library='scipy') in X.pspace.domain.set
+    assert next(sample(X, library='scipy'))[0] in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)
@@ -1260,8 +1260,8 @@ def test_prefab_sampling():
     size = 5
     for var in variables:
         for i in range(niter):
-            assert sample(var) in var.pspace.domain.set
-            samps = sample(var, size=size)
+            assert next(sample(var))[0] in var.pspace.domain.set
+            samps = next(sample(var, size=size))
             for samp in samps:
                 assert samp in var.pspace.domain.set
 
@@ -1518,14 +1518,22 @@ def test_sample_python():
         LogNormal("LN", 0, 1),
         Pareto("P", 1, 1),
         Uniform("U", 0, 1),
-        Weibull("W", 1, 1)
+        Weibull("W", 1, 1),
+        Cauchy("C", 3, 4)
     ]
     size = 3
+    numsamples = 5
+    C = Cauchy('C', 3, 4)
+    c_sample = list(sample(C, size=size, numsamples=numsamples))
+    assert len(c_sample) == numsamples
+    for samp in c_sample:
+        for sam in samp:
+            assert C in C.pspace.domain.set
 
     for X in distribs_python:
-        assert sample(X) in X.pspace.domain.set
-        samps = sample(X, size=size)
-        samps2 = sample(X, size=[2, 2])
+        assert next(sample(X))[0] in X.pspace.domain.set
+        samps = next(sample(X, size=size))
+        samps2 = next(sample(X, size=[2, 2]))
         for sam in samps:
             assert sam in X.pspace.domain.set
         for i in range(2):
@@ -1549,7 +1557,7 @@ def test_sample_numpy():
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
         for X in distribs_numpy:
-            samps = sample(X, size=size, library='numpy')
+            samps = next(sample(X, size=size, library='numpy'))
             for sam in samps:
                 assert sam in X.pspace.domain.set
 
@@ -1576,7 +1584,7 @@ def test_sample_scipy():
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         for X in distribs_scipy:
-            samps = sample(X, size=size, library='scipy')
+            samps = next(sample(X, size=size, library='scipy'))
             for sam in samps:
                 assert sam in X.pspace.domain.set
 
@@ -1599,7 +1607,7 @@ def test_sample_pymc3():
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
         for X in distribs_pymc3:
-            samps = sample(X, size=size, library='pymc3')
+            samps = next(sample(X, size=size, library='pymc3'))
             for sam in samps:
                 assert sam in X.pspace.domain.set
 
