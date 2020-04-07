@@ -430,12 +430,28 @@ def test_sysode_linear_neq_order1():
    assert dsolve(eq9) == sol9
    assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
-    # Regression test case for issue #15407
-    # https://github.com/sympy/sympy/issues/15407
-    a_b, a_c = sympy.symbols('t a_b a_c', real=True)
+   # Regression test case for issue #15407
+   # https://github.com/sympy/sympy/issues/15407
+   a_b, a_c = sympy.symbols('t a_b a_c', real=True)
 
-    eq10 = [Eq(x(t).diff(t), (-a_b - a_c)*x(t)), Eq(y(t).diff(t), a_b*y(t)), Eq(z(t).diff(t), a_c*x(t))]
-    sol10 = [Eq(x(t), -C3*(a_b + a_c)*exp(t*(-a_b - a_c))/a_c), Eq(y(t), C2*exp(a_b*t)),
-             Eq(z(t), C1 + C3*exp(t*(-a_b - a_c)))]
-    assert dsolve(eq10) == sol10
-    assert checksysodesol(eq10, sol10) == (True, [0, 0, 0])
+   eq10 = [Eq(x(t).diff(t), (-a_b - a_c)*x(t)), Eq(y(t).diff(t), a_b*y(t)), Eq(z(t).diff(t), a_c*x(t))]
+   sol10 = [Eq(x(t), -C3*(a_b + a_c)*exp(t*(-a_b - a_c))/a_c), Eq(y(t), C2*exp(a_b*t)),
+            Eq(z(t), C1 + C3*exp(t*(-a_b - a_c)))]
+   assert dsolve(eq10) == sol10
+   assert checksysodesol(eq10, sol10) == (True, [0, 0, 0])
+
+   # Regression test case for issue #14312
+   # https://github.com/sympy/sympy/issues/14312
+   eq11 = (Eq(Derivative(x(t),t), k3*y(t)), Eq(Derivative(y(t),t), -(k3+k2)*y(t)), Eq(Derivative(z(t),t), k2*y(t)))
+   sol11 = [Eq(x(t), C1 + C3*k3*exp(t*(-k2 - k3))/k2), Eq(y(t), -C3*(k2 + k3)*exp(t*(-k2 - k3))/k2),
+            Eq(z(t), C2 + C3*exp(t*(-k2 - k3)))]
+   assert dsolve(eq11) == sol11
+   assert checksysodesol(eq11, sol11) == (True, [0, 0, 0])
+
+   # Regression test case for issue #14312
+   # https://github.com/sympy/sympy/issues/14312
+   eq12 = (Eq(Derivative(z(t),t), k2*y(t)), Eq(Derivative(x(t),t), k3*y(t)), Eq(Derivative(y(t),t), -(k3+k2)*y(t)))
+   sol12 = [Eq(z(t), C1 - C3*k2*exp(t*(-k2 - k3))/(k2 + k3)), Eq(x(t), C2 - C3*k3*exp(t*(-k2 - k3))/(k2 + k3)),
+            Eq(y(t), C3*exp(t*(-k2 - k3)))]
+   assert dsolve(eq12) == sol12
+   assert checksysodesol(eq12, sol12) == (True, [0, 0, 0])
