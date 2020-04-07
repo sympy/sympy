@@ -514,6 +514,10 @@ class Add(Expr, AssocOp):
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
+    def _eval_is_meromorphic(self, x, a):
+        return _fuzzy_group((arg.is_meromorphic(x, a) for arg in self.args),
+                            quick_exit=True)
+
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
