@@ -5179,7 +5179,8 @@ class Coset(Basic):
                     .format(g, H))
             G = SymmetricPermutationGroup(g.size)
 
-        dir = Symbol(dir)
+        if not isinstance(dir, Symbol):
+            dir = Symbol(dir)
         obj = Basic.__new__(cls, g, H, G, dir)
         obj._dir = dir
         return obj
