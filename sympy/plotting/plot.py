@@ -1580,18 +1580,22 @@ def plot(*args, **kwargs):
         limit = arg[1]
         from sympy.calculus.util import continuous_domain
         try:
-            p = continuous_domain(expr, limit[0], domain = Interval(limit[1], limit[2]))    
+            try:
+                p = continuous_domain(expr, limit[0], domain = Interval(limit[1], limit[2]))
+            except:
+                for symbol in expr.atoms(Symbol)-{limit[0]}:
+                    p = continuous_domain(expr, symbol, domain = Interval(limit[1], limit[2])) 
             if p.is_Interval:
                 new_plot.append((expr, (limit[0], p.args[0], p.args[1])))
             if p.is_Union:
                 new_limit = []
                 for i in range(0,len(p.args)):
-                    new_limit.append((limit[0], N(p.args[i].args[0] ,5), N(p.args[i].args[1], 7)))
+                    new_limit.append((limit[0], N(p.args[i].args[0] ,4), N(p.args[i].args[1], 2)))
                 for lim in new_limit:
                     new_plot.append((expr, lim))
         except:
             new_plot.append((expr, limit))
-
+    print(new_plot)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in new_plot]
     plots = Plot(*series, **kwargs)
     if show:
