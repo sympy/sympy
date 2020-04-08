@@ -432,7 +432,7 @@ def test_sysode_linear_neq_order1():
 
    # Regression test case for issue #15407
    # https://github.com/sympy/sympy/issues/15407
-   a_b, a_c = sympy.symbols('t a_b a_c', real=True)
+   a_b, a_c = symbols('a_b a_c', real=True)
 
    eq10 = [Eq(x(t).diff(t), (-a_b - a_c)*x(t)), Eq(y(t).diff(t), a_b*y(t)), Eq(z(t).diff(t), a_c*x(t))]
    sol10 = [Eq(x(t), -C3*(a_b + a_c)*exp(t*(-a_b - a_c))/a_c), Eq(y(t), C2*exp(a_b*t)),
