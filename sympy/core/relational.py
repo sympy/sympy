@@ -33,6 +33,13 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
+def _nonsym_Bool(side):
+    """return True if ``side`` is a non-Symbol Boolean"""
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import Boolean
+    return isinstance(side, Boolean) and not isinstance(side, Symbol)
+
+
 class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
@@ -78,27 +85,18 @@ class Relational(Boolean, EvalfMixin):
         if cls is None:
             raise ValueError("Invalid relational operator symbol: %r" % rop)
 
-        # XXX: Why should the below be removed when Py2 is not supported?
-        #
-        # /// drop when Py2 is no longer supported
         if not issubclass(cls, (Eq, Ne)):
             # validate that Booleans are not being used in a relational
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            from sympy.core.symbol import Symbol
-            from sympy.logic.boolalg import Boolean
-            def unacceptable(side):
-                return isinstance(side, Boolean) and not isinstance(side, Symbol)
-
-            if unacceptable(lhs) or unacceptable(rhs):
+            if _nonsym_Bool(lhs) or _nonsym_Bool(rhs):
                 from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
                     real expressions.
                 '''))
-        # \\\
 
         return cls(lhs, rhs, **assumptions)
 
@@ -495,6 +493,13 @@ class Equality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
+        # sanitize 0/1 -> F/T if the other arg is a Boolean (other
+        # than a Symbol), e.g. Eq(0, ~x) -> Eq(False, ~x)
+        if lhs in (True, False) and _nonsym_Bool(rhs):
+            lhs = _sympify(bool(lhs))
+        elif rhs in (True, False) and _nonsym_Bool(lhs):
+            rhs = _sympify(bool(rhs))
+
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
@@ -724,6 +729,13 @@ class Unequality(Relational):
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
+
+        # sanitize 0/1 -> F/T if the other arg is a Boolean (other
+        # than a Symbol), e.g. Ne(0, ~x) -> Ne(False, ~x)
+        if lhs in (True, False) and _nonsym_Bool(rhs):
+            lhs = _sympify(bool(lhs))
+        elif rhs in (True, False) and _nonsym_Bool(lhs):
+            rhs = _sympify(bool(rhs))
 
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 

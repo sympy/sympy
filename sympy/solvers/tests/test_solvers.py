@@ -165,13 +165,15 @@ def test_solve_args():
     # - linear
     assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
     # When one or more args are Boolean
+    assert solve(Eq(x**2, 0.0)) == [0]  # issue 19048
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
     assert not solve([Eq(x, x+1), x < 2], x)
     assert solve([Eq(x, 0), x+1<2]) == Eq(x, 0)
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
-    assert solve([x-1, False], [x], set=True) == ([], set())
+    assert solve([x - 1, False], [x], set=True) == ([], set())
+
 
 def test_solve_polynomial1():
     assert solve(3*x - 2, x) == [Rational(2, 3)]
@@ -605,10 +607,15 @@ def test_solve_inequalities():
     assert solve(Eq(x < 1, True)) == (-oo < x) & (x < 1)
 
     assert solve(Eq(False, x)) == False
+    assert solve(Eq(0, x)) == [0]
     assert solve(Eq(True, x)) == True
+    assert solve(Eq(1, x)) == [1]
     assert solve(Eq(False, ~x)) == True
+    assert solve(Eq(0, ~x)) == True
     assert solve(Eq(True, ~x)) == False
+    assert solve(Eq(1, ~x)) == False
     assert solve(Ne(True, x)) == False
+    assert solve(Ne(1, x)) == (x > -oo) & (x < oo) & Ne(x, 1)
 
 
 def test_issue_4793():

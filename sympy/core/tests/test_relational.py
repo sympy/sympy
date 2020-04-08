@@ -125,8 +125,8 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
-    # issue 13348
-    assert Eq(True, 1) is S.false
+    # issue 13348; 19048
+    assert Eq(True, 1) is S.true
 
     assert Eq((), 1) is S.false
 
