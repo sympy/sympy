@@ -103,10 +103,8 @@ def test_polygon():
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(
         Polygon(Point(1, 8), Point(5, 8), Point(8, 12), Point(1, 12))) == 4
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(
-                Polygon(Point(0, 0), Point(0, 1), Point(1, 1)))
+    Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(
+            Polygon(Point(0, 0), Point(0, 1), Point(1, 1))) == 0
     assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
     assert hash(p1) == hash(p2)
     assert hash(p7) == hash(p8)
@@ -313,16 +311,11 @@ def test_polygon():
 
     '''Polygon to Polygon'''
     # p1.distance(p2) emits a warning
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        assert p1.distance(p2) == half/2
-
+    assert p1.distance(p2) == half/2
     assert p1.distance(p3) == sqrt(2)/2
 
     # p3.distance(p4) emits a warning
-    with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
-        assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
+    assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
 
     # Now, test overlaping
     p = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
