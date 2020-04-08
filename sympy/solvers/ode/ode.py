@@ -7646,8 +7646,6 @@ def sysode_linear_3eq_order1(match_):
             if not j.has(x(t), y(t), z(t)):
                 raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
 
-    if match_['type_of_equation'] == 'type2':
-        sol = _linear_3eq_order1_type2(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type3':
         sol = _linear_3eq_order1_type3(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type4':
@@ -7655,49 +7653,6 @@ def sysode_linear_3eq_order1(match_):
     if match_['type_of_equation'] == 'type6':
         sol = _linear_neq_order1_type1(match_)
     return sol
-
-def _linear_3eq_order1_type2(x, y, z, t, r, eq):
-    r"""
-    The equations of this type are
-
-    .. math:: x' = cy - bz
-
-    .. math:: y' = az - cx
-
-    .. math:: z' = bx - ay
-
-    1. First integral:
-
-    .. math:: ax + by + cz = A             \qquad - (1)
-
-    .. math:: x^2 + y^2 + z^2 = B^2        \qquad - (2)
-
-    where `A` and `B` are arbitrary constants. It follows from these integrals
-    that the integral lines are circles formed by the intersection of the planes
-    `(1)` and sphere `(2)`
-
-    2. Solution:
-
-    .. math:: x = a C_0 + k C_1 \cos(kt) + (c C_2 - b C_3) \sin(kt)
-
-    .. math:: y = b C_0 + k C_2 \cos(kt) + (a C_2 - c C_3) \sin(kt)
-
-    .. math:: z = c C_0 + k C_3 \cos(kt) + (b C_2 - a C_3) \sin(kt)
-
-    where `k = \sqrt{a^2 + b^2 + c^2}` and the four constants of integration,
-    `C_1,...,C_4` are constrained by a single relation,
-
-    .. math:: a C_1 + b C_2 + c C_3 = 0
-
-    """
-    C0, C1, C2, C3 = get_numbered_constants(eq, num=4, start=0)
-    a = -r['c2']; b = -r['a3']; c = -r['b1']
-    k = sqrt(a**2 + b**2 + c**2)
-    C3 = (-a*C1 - b*C2)/c
-    sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
-    sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
-    sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _linear_3eq_order1_type3(x, y, z, t, r, eq):
     r"""
