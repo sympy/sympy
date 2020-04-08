@@ -611,9 +611,7 @@ def test_solve_inequalities():
     assert solve(Eq(True, x)) == True
     assert solve(Eq(1, x)) == [1]
     assert solve(Eq(False, ~x)) == True
-    assert solve(Eq(0, ~x)) == True
     assert solve(Eq(True, ~x)) == False
-    assert solve(Eq(1, ~x)) == False
     assert solve(Ne(True, x)) == False
     assert solve(Ne(1, x)) == (x > -oo) & (x < oo) & Ne(x, 1)
 

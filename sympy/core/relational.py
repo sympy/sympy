@@ -4,7 +4,7 @@ from typing import Dict, Type, Union
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
-from .basic import S
+from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
 from .expr import Expr
@@ -21,6 +21,10 @@ __all__ = (
 )
 
 
+def _nontrivBool(side):
+    return isinstance(side, Boolean) and \
+        not isinstance(side, (BooleanAtom, Atom))
+
 
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
@@ -31,12 +35,6 @@ def _canonical(cond):
     return cond.xreplace(reps)
     # XXX: AttributeError was being caught here but it wasn't triggered by any of
     # the tests so I've removed it...
-
-
-def _nontriv_Bool(side):
-    """return True if ``side`` is a non-atomic Boolean"""
-    from sympy.logic.boolalg import Boolean
-    return isinstance(side, Boolean) and not side.is_Atom
 
 
 class Relational(Boolean, EvalfMixin):
@@ -89,7 +87,7 @@ class Relational(Boolean, EvalfMixin):
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            if _nontriv_Bool(lhs) or _nontriv_Bool(rhs):
+            if any(map(_nontrivBool, (lhs, rhs))):
                 from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
@@ -452,6 +450,12 @@ class Equality(Relational):
     Notes
     =====
 
+    Python treats 1 and True (and 0 and False) as being equal; SymPy
+    does not. And integer will always compare as unequal to a Boolean:
+
+    >>> Eq(True, 1), True == 1
+    (False, True)
+
     This class is not the same as the == operator.  The == operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
@@ -492,16 +496,13 @@ class Equality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        # sanitize 0/1 -> F/T if the other arg is a Boolean (other
-        # than a Symbol), e.g. Eq(0, ~x) -> Eq(False, ~x)
-        if lhs in (True, False) and _nontriv_Bool(rhs):
-            lhs = _sympify(bool(lhs))
-        elif rhs in (True, False) and _nontriv_Bool(lhs):
-            rhs = _sympify(bool(rhs))
-
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
+            if isinstance(lhs, Boolean) != isinstance(lhs, Boolean):
+                # e.g. 0/1 not recognized as Boolean in SymPy
+                return S.false
+
             # If one expression has an _eval_Eq, return its results.
             if hasattr(lhs, '_eval_Eq'):
                 r = lhs._eval_Eq(rhs)
@@ -729,16 +730,13 @@ class Unequality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
-        # sanitize 0/1 -> F/T if the other arg is a Boolean (other
-        # than a Symbol), e.g. Ne(0, ~x) -> Ne(False, ~x)
-        if lhs in (True, False) and _nontriv_Bool(rhs):
-            lhs = _sympify(bool(lhs))
-        elif rhs in (True, False) and _nontriv_Bool(lhs):
-            rhs = _sympify(bool(rhs))
-
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
+            if isinstance(lhs, Boolean) != isinstance(lhs, Boolean):
+                # e.g. 0/1 not recognized as Boolean in SymPy
+                return S.true
+
             is_equal = Equality(lhs, rhs)
             if isinstance(is_equal, BooleanAtom):
                 return is_equal.negated
