@@ -7645,8 +7645,7 @@ def sysode_linear_3eq_order1(match_):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
                 raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
-    if match_['type_of_equation'] == 'type1':
-        sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
+
     if match_['type_of_equation'] == 'type2':
         sol = _linear_3eq_order1_type2(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type3':
@@ -7656,36 +7655,6 @@ def sysode_linear_3eq_order1(match_):
     if match_['type_of_equation'] == 'type6':
         sol = _linear_neq_order1_type1(match_)
     return sol
-
-def _linear_3eq_order1_type1(x, y, z, t, r, eq):
-    r"""
-    .. math:: x' = ax
-
-    .. math:: y' = bx + cy
-
-    .. math:: z' = dx + ky + pz
-
-    Solution of such equations are forward substitution. Solving first equations
-    gives the value of `x`, substituting it in second and third equation and
-    solving second equation gives `y` and similarly substituting `y` in third
-    equation give `z`.
-
-    .. math:: x = C_1 e^{at}
-
-    .. math:: y = \frac{b C_1}{a - c} e^{at} + C_2 e^{ct}
-
-    .. math:: z = \frac{C_1}{a - p} (d + \frac{bk}{a - c}) e^{at} + \frac{k C_2}{c - p} e^{ct} + C_3 e^{pt}
-
-    where `C_1, C_2` and `C_3` are arbitrary constants.
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    a = -r['a1']; b = -r['a2']; c = -r['b2']
-    d = -r['a3']; k = -r['b3']; p = -r['c3']
-    sol1 = C1*exp(a*t)
-    sol2 = b*C1*exp(a*t)/(a-c) + C2*exp(c*t)
-    sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _linear_3eq_order1_type2(x, y, z, t, r, eq):
     r"""
