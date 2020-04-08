@@ -603,7 +603,7 @@ class Collector(DefaultPrinting):
     def _sift(self, z, g):
         h = g
         d = self.depth(h)
-        while d < len(self.pcgs)+1 and z[d-1] != 1:
+        while d < len(self.pcgs) and z[d-1] != 1:
             k = z[d-1]
             e = self.leading_exponent(h)*(self.leading_exponent(k))**-1
             e = e % self.relative_order[d-1]
@@ -647,8 +647,7 @@ class Collector(DefaultPrinting):
             g = G.pop(0)
             h = self._sift(z, g)
             d = self.depth(h)
-            if d < len(self.pcgs)+1:
-                G.append(h**self.relative_order[d-1])
+            if d < len(self.pcgs):
                 for gen in z:
                     if gen != 1:
                         G.append(h**-1*gen**-1*h*gen)
