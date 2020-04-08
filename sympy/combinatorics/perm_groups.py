@@ -5151,12 +5151,24 @@ class Coset(Basic):
 
         if G is not None:
             G = _sympify(G)
-            if not isinstance(G, PermutationGroup):
+            if not isinstance(G, PermutationGroup) and not isinstance(G, SymmetricPermutationGroup):
                 raise NotImplementedError
-            if not H.is_subgroup(G):
-                raise ValueError("{} must be a subgroup of {}.".format(H, G))
-            if g not in G:
-                raise ValueError("{} must be an element of {}.".format(g, G))
+            if isinstance(G, PermutationGroup):
+                if not H.is_subgroup(G):
+                    raise ValueError("{} must be a subgroup of {}.".format(H, G))
+                if g not in G:
+                    raise ValueError("{} must be an element of {}.".format(g, G))
+            else:
+                g_size = g.size
+                h_degree = H.degree
+                if g_size != h_degree:
+                    raise ValueError(
+                        "When using SymmetricPermutationGroup the size of the permutation {} and the degree of "
+                        "the permutation group {} should be matching "
+                        .format(g, H))
+                if G.degree != g.size:
+                    raise ValueError("{} is expected but {} was given".format(SymmetricPermutationGroup(g.size), G))
+
         else:
             g_size = g.size
             h_degree = H.degree
