@@ -1383,7 +1383,7 @@ class Polygon(GeometrySet):
         pts = list(p.args)
         pts.append(pts[0])  # close it
         cw = Polygon._isright(*pts[:3])
-        if cw:
+        if cw == 1:
             pts = list(reversed(pts))
         for v, a in p.angles.items():
             i = pts.index(v)
@@ -2827,7 +2827,7 @@ class Triangle(Polygon):
         return Line(self.orthocenter, self.circumcenter)
 
 
-class _PodalPair(Iterator):
+class _PodalPair(object):
     """
     An iterable for generating (anti)podal pairs.
 
