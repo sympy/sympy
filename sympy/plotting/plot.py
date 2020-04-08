@@ -1578,24 +1578,18 @@ def plot(*args, **kwargs):
     for arg in plot_expr:
         expr = arg[0]
         limit = arg[1]
-        root_deno = []
-        for den in denoms(expr, limit[0]):
-            for i in N((solveset(nsimplify(den), limit[0], domain= Interval(limit[1], limit[2])))):
-                if i.is_real:
-                    root_deno.append(i)
-        if root_deno:
-            new_limit = []
-            for root in root_deno:
-                if root>limit[1] and root<limit[2]:
-                    left_limit = (limit[0], limit[1] , root)
-                    new_limit.append(left_limit)
-                    limit = list(limit)
-                    limit[1]= root
-                    limit = tuple(limit)
-            new_limit.append(limit)
-            for lim in new_limit:
-                new_plot.append((expr, lim))
-        else:
+        from sympy.calculus.util import continuous_domain
+        try:
+            p = continuous_domain(expr, limit[0], domain = Interval(limit[1], limit[2]))    
+            if p.is_Interval:
+                new_plot.append((expr, (limit[0], p.args[0], p.args[1])))
+            if p.is_Union:
+                new_limit = []
+                for i in range(0,len(p.args)):
+                    new_limit.append((limit[0], N(p.args[i].args[0] ,5), N(p.args[i].args[1], 7)))
+                for lim in new_limit:
+                    new_plot.append((expr, lim))
+        except:
             new_plot.append((expr, limit))
 
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in new_plot]
