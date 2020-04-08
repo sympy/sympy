@@ -137,7 +137,7 @@ def test_zeta():
 def test_sample_discrete():
     X = Geometric('X', S.Half)
     assert next(sample(X))[0] in X.pspace.domain.set
-    samps = next(sample(X, size=4))
+    samps = next(sample(X, size=2)) # This takes long time if ran without scipy
     for samp in samps:
         assert samp in X.pspace.domain.set
 

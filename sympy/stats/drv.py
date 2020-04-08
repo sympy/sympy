@@ -56,10 +56,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
             if sample_ >= self.set.inf:
-                if size == (1,):
-                    return sample_
-                else:
-                    samp_list.append(sample_)
+                samp_list.append(sample_)
             if len(samp_list) == size:
                 return samp_list
 
