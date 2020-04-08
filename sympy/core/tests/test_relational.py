@@ -126,7 +126,7 @@ def test_Eq():
     assert Eq(p, 0) is S.false
 
     # issue 13348; 19048
-    assert Eq(True, 1) is S.true
+    assert Eq(True, 1) is S.false
 
     assert Eq((), 1) is S.false
 

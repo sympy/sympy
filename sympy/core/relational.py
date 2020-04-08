@@ -33,11 +33,10 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
-def _nonsym_Bool(side):
-    """return True if ``side`` is a non-Symbol Boolean"""
-    from sympy.core.symbol import Symbol
+def _nontriv_Bool(side):
+    """return True if ``side`` is a non-atomic Boolean"""
     from sympy.logic.boolalg import Boolean
-    return isinstance(side, Boolean) and not isinstance(side, Symbol)
+    return isinstance(side, Boolean) and not side.is_Atom
 
 
 class Relational(Boolean, EvalfMixin):
@@ -90,7 +89,7 @@ class Relational(Boolean, EvalfMixin):
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            if _nonsym_Bool(lhs) or _nonsym_Bool(rhs):
+            if _nontriv_Bool(lhs) or _nontriv_Bool(rhs):
                 from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
@@ -495,9 +494,9 @@ class Equality(Relational):
 
         # sanitize 0/1 -> F/T if the other arg is a Boolean (other
         # than a Symbol), e.g. Eq(0, ~x) -> Eq(False, ~x)
-        if lhs in (True, False) and _nonsym_Bool(rhs):
+        if lhs in (True, False) and _nontriv_Bool(rhs):
             lhs = _sympify(bool(lhs))
-        elif rhs in (True, False) and _nonsym_Bool(lhs):
+        elif rhs in (True, False) and _nontriv_Bool(lhs):
             rhs = _sympify(bool(rhs))
 
         evaluate = options.pop('evaluate', global_parameters.evaluate)
@@ -732,9 +731,9 @@ class Unequality(Relational):
 
         # sanitize 0/1 -> F/T if the other arg is a Boolean (other
         # than a Symbol), e.g. Ne(0, ~x) -> Ne(False, ~x)
-        if lhs in (True, False) and _nonsym_Bool(rhs):
+        if lhs in (True, False) and _nontriv_Bool(rhs):
             lhs = _sympify(bool(lhs))
-        elif rhs in (True, False) and _nonsym_Bool(lhs):
+        elif rhs in (True, False) and _nontriv_Bool(lhs):
             rhs = _sympify(bool(rhs))
 
         evaluate = options.pop('evaluate', global_parameters.evaluate)
