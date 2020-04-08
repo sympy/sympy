@@ -3,6 +3,8 @@ from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
+from sympy.testing.matrices import allclose
+
 
 def test_LUdecomp():
     testmat = Matrix([[0, 2, 5, 3],
@@ -214,6 +216,21 @@ def test_QR_trivial():
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
     assert A == Q*R
+
+
+def test_QR_float():
+    A = Matrix([[1, 1], [1, 1.01]])
+    Q, R = A.QRdecomposition()
+    assert allclose(Q * R, A)
+    assert allclose(Q * Q.T, Matrix.eye(2))
+    assert allclose(Q.T * Q, Matrix.eye(2))
+
+    A = Matrix([[1, 1], [1, 1.001]])
+    Q, R = A.QRdecomposition()
+    assert allclose(Q * R, A)
+    assert allclose(Q * Q.T, Matrix.eye(2))
+    assert allclose(Q.T * Q, Matrix.eye(2))
+
 
 def test_LUdecomposition_Simple_iszerofunc():
     # Test if callable passed to matrices.LUdecomposition_Simple() as iszerofunc keyword argument is used inside

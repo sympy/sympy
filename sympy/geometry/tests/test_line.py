@@ -63,6 +63,21 @@ def test_closing_angle():
     assert a.closing_angle(a) == 0
 
 
+def test_smallest_angle():
+    a = Line(Point(1, 1), Point(1, 2))
+    b = Line(Point(1, 1),Point(2, 3))
+    assert a.smallest_angle_between(b) == acos(2*sqrt(5)/5)
+
+
+def test_svg():
+    a = Line(Point(1, 1),Point(1, 2))
+    assert a._svg() == '<path fill-rule="evenodd" fill="#66cc99" stroke="#555555" stroke-width="2.0" opacity="0.6" d="M 1.00000000000000,1.00000000000000 L 1.00000000000000,2.00000000000000" marker-start="url(#markerReverseArrow)" marker-end="url(#markerArrow)"/>'
+    a = Segment(Point(1, 0),Point(1, 1))
+    assert a._svg() == '<path fill-rule="evenodd" fill="#66cc99" stroke="#555555" stroke-width="2.0" opacity="0.6" d="M 1.00000000000000,0 L 1.00000000000000,1.00000000000000" />'
+    a = Ray(Point(2, 3), Point(3, 5))
+    assert a._svg() == '<path fill-rule="evenodd" fill="#66cc99" stroke="#555555" stroke-width="2.0" opacity="0.6" d="M 2.00000000000000,3.00000000000000 L 3.00000000000000,5.00000000000000" marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
+
+
 def test_arbitrary_point():
     l1 = Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
     l2 = Line(Point(x1, x1), Point(y1, y1))
@@ -159,6 +174,7 @@ def test_basic_properties_2d():
 
     assert Line((1, 1), slope=1) == Line((1, 1), (2, 2))
     assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
+    assert Line((1, 1), slope=oo).bounds == (1, 1, 1, 2)
     assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
     assert Line(p1, p2).scale(2, 1) == Line(p1, Point(2, 1))
     assert Line(p1, p2) == Line(p1, p2)
@@ -172,6 +188,12 @@ def test_basic_properties_2d():
     assert s1 in Line(p1, p10)
     assert Ray(Point(0, 0), Point(0, 1)) in Ray(Point(0, 0), Point(0, 2))
     assert Ray(Point(0, 0), Point(0, 2)) in Ray(Point(0, 0), Point(0, 1))
+    assert Ray(Point(0, 0), Point(0, 2)).xdirection == S.Zero
+    assert Ray(Point(0, 0), Point(1, 2)).xdirection == S.Infinity
+    assert Ray(Point(0, 0), Point(-1, 2)).xdirection == S.NegativeInfinity
+    assert Ray(Point(0, 0), Point(2, 0)).ydirection == S.Zero
+    assert Ray(Point(0, 0), Point(2, 2)).ydirection == S.Infinity
+    assert Ray(Point(0, 0), Point(2, -2)).ydirection == S.NegativeInfinity
     assert (r1 in s1) is False
     assert Segment(p1, p2) in s1
     assert Ray(Point(x1, x1), Point(x1, 1 + x1)) != Ray(p1, Point(-1, 5))
@@ -227,6 +249,7 @@ def test_basic_properties_3d():
     assert Line3D((1, 1, 1), direction_ratio=[2, 3, 4]) == Line3D(Point3D(1, 1, 1), Point3D(3, 4, 5))
     assert Line3D((1, 1, 1), direction_ratio=[1, 5, 7]) == Line3D(Point3D(1, 1, 1), Point3D(2, 6, 8))
     assert Line3D((1, 1, 1), direction_ratio=[1, 2, 3]) == Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
+    assert Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0)).direction_cosine == [1, 0, 0]
     assert Line3D(Line3D(p1, Point3D(0, 1, 0))) == Line3D(p1, Point3D(0, 1, 0))
     assert Ray3D(Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))) == Ray3D(p1, Point3D(1, 0, 0))
     assert Line3D(p1, p2) != Line3D(p2, p1)
@@ -235,6 +258,15 @@ def test_basic_properties_3d():
     assert r3 != r1
     assert Ray3D(Point3D(0, 0, 0), Point3D(1, 1, 1)) in Ray3D(Point3D(0, 0, 0), Point3D(2, 2, 2))
     assert Ray3D(Point3D(0, 0, 0), Point3D(2, 2, 2)) in Ray3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, 2, 2)).xdirection == S.Infinity
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, 2, 2)).ydirection == S.Infinity
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, 2, 2)).zdirection == S.Infinity
+    assert Ray3D(Point3D(0, 0, 0), Point3D(-2, 2, 2)).xdirection == S.NegativeInfinity
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, -2, 2)).ydirection == S.NegativeInfinity
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, 2, -2)).zdirection == S.NegativeInfinity
+    assert Ray3D(Point3D(0, 0, 0), Point3D(0, 2, 2)).xdirection == S.Zero
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, 0, 2)).ydirection == S.Zero
+    assert Ray3D(Point3D(0, 0, 0), Point3D(2, 2, 0)).zdirection == S.Zero
     assert p1 in l1
     assert p1 not in l3
 

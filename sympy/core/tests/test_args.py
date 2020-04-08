@@ -894,6 +894,11 @@ def test_sympy__sets__sets__SymmetricDifference():
     assert _test_args(SymmetricDifference(FiniteSet(1, 2, 3), \
            FiniteSet(2, 3, 4)))
 
+def test_sympy__sets__sets__DisjointUnion():
+    from sympy.sets.sets import FiniteSet, DisjointUnion
+    assert _test_args(DisjointUnion(FiniteSet(1, 2, 3), \
+           FiniteSet(2, 3, 4)))
+
 
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
@@ -4949,3 +4954,7 @@ def test_sympy__integrals__rubi__utility_function__PolyGamma():
 def test_sympy__integrals__rubi__utility_function__ProductLog():
     from sympy.integrals.rubi.utility_function import ProductLog
     assert _test_args(ProductLog(1))
+
+def test_sympy__combinatorics__schur_number__SchurNumber():
+    from sympy.combinatorics.schur_number import SchurNumber
+    assert _test_args(SchurNumber(1))
