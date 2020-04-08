@@ -4,7 +4,7 @@ from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, \
                             Polygon, Ray, RegularPolygon, Segment, Triangle, \
                             are_similar, convex_hull, intersection, Line, Ray2D)
-from sympy.testing.pytest import raises, slow, warns
+from sympy.testing.pytest import raises, slow
 from sympy.testing.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
 from sympy import integrate
