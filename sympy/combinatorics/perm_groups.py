@@ -5122,7 +5122,7 @@ class SymmetricPermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
         >>> G = SymmetricPermutationGroup(4)
         >>> G.order()
-
+        24
         """
         if self._order is not None:
             return self._order
@@ -5141,6 +5141,7 @@ class SymmetricPermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
         >>> G = SymmetricPermutationGroup(4)
         >>> G.degree
+        4
 
         """
         return self._deg
@@ -5156,7 +5157,7 @@ class SymmetricPermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
         >>> G = SymmetricPermutationGroup(4)
         >>> G.identity()
-        Permutation(3)
+        (3)
 
         '''
         return _af_new(list(range(self._deg)))
