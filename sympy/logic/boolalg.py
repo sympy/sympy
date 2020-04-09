@@ -436,7 +436,6 @@ class BooleanFunction(Application, Boolean):
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
-    # /// drop when Py2 is no longer supported
     def __lt__(self, other):
         from sympy.utilities.misc import filldedent
         raise TypeError(filldedent('''
@@ -447,7 +446,6 @@ class BooleanFunction(Application, Boolean):
     __le__ = __lt__
     __ge__ = __lt__
     __gt__ = __lt__
-    # \\\
 
     @classmethod
     def binary_check_and_simplify(self, *args):

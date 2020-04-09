@@ -12,6 +12,7 @@ def test_default_sort_key():
 
 
 def test_as_int():
+    raises(ValueError, lambda : as_int(True))
     raises(ValueError, lambda : as_int(1.1))
     raises(ValueError, lambda : as_int([]))
     raises(ValueError, lambda : as_int(S.NaN))
@@ -25,6 +26,7 @@ def test_as_int():
     # integer. This is not -- by design -- as_ints role.
     raises(ValueError, lambda : as_int(1e23))
     raises(ValueError, lambda : as_int(S('1.'+'0'*20+'1')))
+    assert as_int(True, strict=False) == 1
 
 
 def test_iterable():

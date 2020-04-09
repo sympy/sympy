@@ -114,7 +114,7 @@ def test_wrappers():
     assert Ne(y, x + x**2) == res
 
 
-def test_Eq():
+def test_Eq_Ne():
 
     assert Eq(x, x)  # issue 5719
 
@@ -125,10 +125,20 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
-    # issue 13348
+    # issue 13348; 19048
+    # SymPy is strict about 0 and 1 not being
+    # interpreted as Booleans
     assert Eq(True, 1) is S.false
+    assert Eq(False, 0) is S.false
+    assert Eq(~x, 0) is S.false
+    assert Eq(~x, 1) is S.false
+    assert Ne(True, 1) is S.true
+    assert Ne(False, 0) is S.true
+    assert Ne(~x, 0) is S.true
+    assert Ne(~x, 1) is S.true
 
     assert Eq((), 1) is S.false
+    assert Ne((), 1) is S.true
 
 
 def test_as_poly():
@@ -979,10 +989,9 @@ def test_binary_symbols():
 
 
 def test_rel_args():
-    # can't have Boolean args; this is automatic with Python 3
-    # so this test and the __lt__, etc..., definitions in
-    # relational.py and boolalg.py which are marked with ///
-    # can be removed.
+    # can't have Boolean args; this is automatic for True/False
+    # with Python 3 and we confirm that SymPy does the same
+    # for true/false
     for op in ['<', '<=', '>', '>=']:
         for b in (S.true, x < 1, And(x, y)):
             for v in (0.1, 1, 2**32, t, S.One):

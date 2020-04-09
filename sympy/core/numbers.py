@@ -1389,12 +1389,15 @@ class Float(Number):
     __long__ = __int__
 
     def __eq__(self, other):
+        from sympy.logic.boolalg import Boolean
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
         if not self:
             return not other
+        if isinstance(other, Boolean):
+            return False
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False

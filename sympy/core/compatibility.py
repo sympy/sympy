@@ -369,6 +369,8 @@ def as_int(n, strict=True):
     """
     if strict:
         try:
+            if type(n) is bool:
+                raise TypeError
             return operator.index(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
