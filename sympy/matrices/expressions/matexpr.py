@@ -12,7 +12,7 @@ from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 

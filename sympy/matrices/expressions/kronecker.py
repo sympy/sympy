@@ -4,7 +4,8 @@ from __future__ import division, print_function
 
 from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity
+from sympy.matrices.common import ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr, Identity
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.matrices import MatrixBase
 from sympy.strategies import (
