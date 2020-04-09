@@ -1702,6 +1702,10 @@ class PermutationGroup(Basic):
         """
         if not isinstance(g, Permutation):
             return False
+        if isinstance(G, SymmetricPermutationGroup):
+            if g.size() == G.degree:
+                return True
+            return False
         if g.size != self.degree:
             if strict:
                 return False
@@ -2301,6 +2305,10 @@ class PermutationGroup(Basic):
         False
 
         """
+        if isinstance(G, SymmetricPermutationGroup):
+            if self.degree != G.degree:
+                return False
+            return True
         if not isinstance(G, PermutationGroup):
             return False
         if self == G or self.generators[0]==Permutation():
@@ -5081,6 +5089,7 @@ class SymmetricPermutationGroup(Basic):
     The class defining the lazy form of SymmetricGroup
 
     deg : int
+
     """
 
     def __new__(cls, deg):
@@ -5089,6 +5098,14 @@ class SymmetricPermutationGroup(Basic):
         obj._deg = deg
         obj._order = None
         return obj
+
+    def __contains__(self, i):
+        """Return ``True`` if *i* is contained in SymmetricPermutationGroup.
+        """
+        if not isinstance(i, Permutation):
+            raise TypeError("A SymmetricPermutationGroup contains only Permutations as "
+                            "elements, not elements of type %s" % type(i))
+        return i.size == self.degree
 
     def order(self):
         """
@@ -5115,6 +5132,7 @@ class SymmetricPermutationGroup(Basic):
         '''
         return _af_new(list(range(self._deg)))
 
+
 class Coset(Basic):
     """A left coset of a permutation group with respect to an element.
 
@@ -5138,6 +5156,7 @@ class Coset(Basic):
         ``SymmetricPermutationGroup(H.degree)`` if ``g.size`` and ``H.degree``
         are matching.``SymmetricPermutationGroup`` is a lazy form of SymmetricGroup
         used for representation purpose.
+        
     """
 
     def __new__(cls, g, H, G=None, dir = "+"):
@@ -5153,22 +5172,10 @@ class Coset(Basic):
             G = _sympify(G)
             if not isinstance(G, PermutationGroup) and not isinstance(G, SymmetricPermutationGroup):
                 raise NotImplementedError
-            if isinstance(G, PermutationGroup):
-                if not H.is_subgroup(G):
-                    raise ValueError("{} must be a subgroup of {}.".format(H, G))
-                if g not in G:
-                    raise ValueError("{} must be an element of {}.".format(g, G))
-            else:
-                g_size = g.size
-                h_degree = H.degree
-                if g_size != h_degree:
-                    raise ValueError(
-                        "When using SymmetricPermutationGroup the size of the permutation {} and the degree of "
-                        "the permutation group {} should be matching "
-                        .format(g, H))
-                if G.degree != g.size:
-                    raise ValueError("{} is expected but {} was given".format(SymmetricPermutationGroup(g.size), G))
-
+            if not H.is_subgroup(G):
+                raise ValueError("{} must be a subgroup of {}.".format(H, G))
+            if g not in G:
+                raise ValueError("{} must be an element of {}.".format(g, G))
         else:
             g_size = g.size
             h_degree = H.degree
