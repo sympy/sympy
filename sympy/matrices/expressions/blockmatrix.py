@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy import ask, Q
 from sympy.core import Basic, Add, Mul, S
+from sympy.core.sympify import _sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
@@ -17,7 +18,7 @@ from sympy.matrices.expressions.trace import trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, ShapeError, MutableMatrix
+from sympy.matrices import Matrix, ShapeError
 from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
@@ -309,8 +310,7 @@ class BlockDiagMatrix(BlockMatrix):
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
-        mats = [m.as_immutable() if isinstance(m, MutableMatrix) else m for m in mats]
-        return Basic.__new__(BlockDiagMatrix, *mats)
+        return Basic.__new__(BlockDiagMatrix, *[_sympify(m) for m in mats])
 
     @property
     def diag(self):
