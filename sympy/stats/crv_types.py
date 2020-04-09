@@ -1730,7 +1730,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             from scipy.stats import invgamma
             return invgamma.rvs(float(self.a), 0, float(self.b), size=size)
         else:
-            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
+            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires SciPy.')
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
@@ -2873,7 +2873,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
         scipy = import_module('scipy')
         if scipy:
             from scipy.stats import invgauss
-            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape), size=size)
+            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape), size=size).tolist()
         else:
             raise NotImplementedError(
                 'Sampling the Inverse Gaussian Distribution requires Scipy.')
@@ -3531,6 +3531,14 @@ class StudentTDistribution(SingleContinuousDistribution):
         nu = self.nu
         return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
                                 (Rational(3, 2),), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
+
+    def sample(self, size=()):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import t
+            return t.rvs(df=float(self.nu), size=size).tolist()
+        else:
+            raise NotImplementedError('Sampling the Student-T distribution requires SciPy.')
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
