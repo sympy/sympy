@@ -74,15 +74,12 @@ def test_exponent_vector():
 
 def test_induced_pcgs():
     G = [SymmetricGroup(9).sylow_subgroup(3), SymmetricGroup(20).sylow_subgroup(2), AlternatingGroup(4),
-    DihedralGroup(4), SymmetricGroup(3), SymmetricGroup(4)]
+    DihedralGroup(4), DihedralGroup(10), DihedralGroup(9), SymmetricGroup(3), SymmetricGroup(4)]
 
     for g in G:
         PcGroup = g.polycyclic_group()
         collector = PcGroup.collector
-        gens = []
-        genr = g.generators
-        for i in range(len(genr)):
-            gens.append(genr[i])
+        gens = [gen for gen in g.generators]
         ipcgs = collector.induced_pcgs(gens)
         m = []
         for i in ipcgs:
