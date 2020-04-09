@@ -5,11 +5,12 @@ from sympy.core import Mul, Basic, sympify, S
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
+from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
 from .matexpr import \
-    MatrixExpr, ShapeError, Identity, ZeroMatrix, OneMatrix, GenericIdentity
+    MatrixExpr, Identity, ZeroMatrix, OneMatrix, GenericIdentity
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix

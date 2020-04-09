@@ -12,7 +12,7 @@ from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices import ShapeError
+from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
@@ -129,7 +129,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
         if not self.is_square:
-            raise ShapeError("Power of non-square matrix %s" % self)
+            raise NonSquareMatrixError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
         elif other == S.Zero:
@@ -265,6 +265,8 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
+        if not self.is_square:
+            raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 
     def inv(self):
@@ -969,11 +971,11 @@ class ZeroMatrix(MatrixExpr):
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
         if other != 1 and not self.is_square:
-            raise ShapeError("Power of non-square matrix %s" % self)
+            raise NonSquareMatrixError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
         if other < 1:
-            raise ValueError("Matrix det == 0; not invertible.")
+            raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
         return self
 
     def _eval_transpose(self):
@@ -984,6 +986,9 @@ class ZeroMatrix(MatrixExpr):
 
     def _eval_determinant(self):
         return S.Zero
+
+    def _eval_inverse(self):
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     def conjugate(self):
         return self
@@ -1069,8 +1074,13 @@ class OneMatrix(MatrixExpr):
     def _eval_trace(self):
         return S.One*self.rows
 
+    def _is_1x1(self):
+        """Returns true if the matrix is known to be 1x1"""
+        shape = self.shape
+        return Eq(shape[0], 1) & Eq(shape[1], 1)
+
     def _eval_determinant(self):
-        condition = Eq(self.shape[0], 1) & Eq(self.shape[1], 1)
+        condition = self._is_1x1()
         if condition == True:
             return S.One
         elif condition == False:
@@ -1078,6 +1088,15 @@ class OneMatrix(MatrixExpr):
         else:
             from sympy import Determinant
             return Determinant(self)
+
+    def _eval_inverse(self):
+        condition = self._is_1x1()
+        if condition == True:
+            return Identity(1)
+        elif condition == False:
+            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+        else:
+            return Inverse(self)
 
     def conjugate(self):
         return self
