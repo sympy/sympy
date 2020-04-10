@@ -144,3 +144,6 @@ class MatPow(MatrixExpr):
         else:
             raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
         return newexpr._eval_derivative_matrix_lines(x)
+
+    def _eval_inverse(self):
+        return MatPow(self.base, -self.exp)
