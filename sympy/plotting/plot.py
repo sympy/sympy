@@ -575,7 +575,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
         self.expr = sympify(expr)
-        self.label = str(self.expr)
+        self.label = kwargs.get('label', None) or str(self.expr)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -696,7 +696,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         super(Parametric2DLineSeries, self).__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
-        self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.label = kwargs.get('label', None) or \
+                            "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -828,7 +829,8 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
-        self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.label = kwargs.get('label', None) or \
+                        "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -1434,6 +1436,10 @@ def plot(*args, **kwargs):
     ``line_color``: float. Specifies the color for the plot.
     See ``Plot`` to see how to set color for the plots.
 
+    ``label``: str
+        The label to the plot. It will be used when called with ``legend=True``
+        to denote the function with the given label in the plot.
+
     If there are multiple plots, then the same series series are applied to
     all the plots. If you want to set these options separately, you can index
     the ``Plot`` object returned and set it.
@@ -1626,6 +1632,10 @@ def plot_parametric(*args, **kwargs):
     ``line_color``: function which returns a float. Specifies the color for the
     plot. See ``sympy.plotting.Plot`` for more details.
 
+    ``label``: str
+        The label to the plot. It will be used when called with ``legend=True``
+        to denote the function with the given label in the plot.
+
     If there are multiple plots, then the same Series arguments are applied to
     all the plots. If you want to set these options separately, you can index
     the returned ``Plot`` object and set it.
@@ -1759,6 +1769,10 @@ def plot3d_parametric_line(*args, **kwargs):
 
     ``line_color``: function which returns a float. Specifies the color for the
     plot. See ``sympy.plotting.Plot`` for more details.
+
+    ``label``: str
+        The label to the plot. It will be used when called with ``legend=True``
+        to denote the function with the given label in the plot.
 
     If there are multiple plots, then the same series arguments are applied to
     all the plots. If you want to set these options separately, you can index
