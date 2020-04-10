@@ -33,7 +33,8 @@ from sympy.core.function import arity
 from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-
+from sympy.calculus.util import continuous_domain
+from sympy.sets.sets import Intersection
 # N.B.
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
@@ -1578,24 +1579,21 @@ def plot(*args, **kwargs):
     for arg in plot_expr:
         expr = arg[0]
         limit = arg[1]
-        from sympy.calculus.util import continuous_domain
-        try:
+        cont_domain = Interval(limit[1], limit[2])
+        for symbol in expr.atoms(Symbol):
             try:
-                p = continuous_domain(expr, limit[0], domain = Interval(limit[1], limit[2]))
+                p = continuous_domain(expr, symbol, domain = Interval(limit[1], limit[2]))
+                cont_domain = Intersection(cont_domain , p)
             except:
-                for symbol in expr.atoms(Symbol)-{limit[0]}:
-                    p = continuous_domain(expr, symbol, domain = Interval(limit[1], limit[2])) 
-            if p.is_Interval:
-                new_plot.append((expr, (limit[0], p.args[0], p.args[1])))
-            if p.is_Union:
-                new_limit = []
-                for i in range(0,len(p.args)):
-                    new_limit.append((limit[0], N(p.args[i].args[0] ,4), N(p.args[i].args[1], 2)))
-                for lim in new_limit:
-                    new_plot.append((expr, lim))
-        except:
-            new_plot.append((expr, limit))
-    print(new_plot)
+                pass
+        if cont_domain.is_Interval:
+            new_plot.append((expr, (limit[0], cont_domain.args[0], cont_domain.args[1])))
+        if cont_domain.is_Union:
+            new_limit = []
+            for i in range(0,len(cont_domain.args)):
+                new_limit.append((limit[0], N(cont_domain.args[i].args[0] ,4), N(cont_domain.args[i].args[1], 2)))
+            for lim in new_limit:
+                new_plot.append((expr, lim))
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in new_plot]
     plots = Plot(*series, **kwargs)
     if show:
