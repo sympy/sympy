@@ -324,11 +324,11 @@ def test_sympifyit():
 
 
 def test_int_float():
-    class F1_1(object):
+    class F1_1:
         def __float__(self):
             return 1.1
 
-    class F1_1b(object):
+    class F1_1b:
         """
         This class is still a float, even though it also implements __int__().
         """
@@ -338,7 +338,7 @@ def test_int_float():
         def __int__(self):
             return 1
 
-    class F1_1c(object):
+    class F1_1c:
         """
         This class is still a float, because it implements _sympy_()
         """
@@ -351,11 +351,11 @@ def test_int_float():
         def _sympy_(self):
             return Float(1.1)
 
-    class I5(object):
+    class I5:
         def __int__(self):
             return 5
 
-    class I5b(object):
+    class I5b:
         """
         This class implements both __int__() and __float__(), so it will be
         treated as Float in SymPy. One could change this behavior, by using
@@ -370,7 +370,7 @@ def test_int_float():
         def __int__(self):
             return 5
 
-    class I5c(object):
+    class I5c:
         """
         This class implements both __int__() and __float__(), but also
         a _sympy_() method, so it will be Integer.

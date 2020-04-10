@@ -1,7 +1,5 @@
 """sympify -- convert objects SymPy internal format"""
 
-from __future__ import print_function, division
-
 from typing import Dict, Type, Callable, Any
 
 from inspect import getmro
@@ -28,7 +26,7 @@ class SympifyError(ValueError):
 converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
-class CantSympify(object):
+class CantSympify:
     """
     Mix in this trait to a class to disallow sympification of its instances.
 

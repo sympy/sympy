@@ -6,8 +6,6 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
-from __future__ import print_function, division
-
 from collections import OrderedDict
 
 from sympy.core import S
@@ -95,12 +93,12 @@ class Tuple(Basic):
 
     def __eq__(self, other):
         if isinstance(other, Basic):
-            return super(Tuple, self).__eq__(other)
+            return super().__eq__(other)
         return self.args == other
 
     def __ne__(self, other):
         if isinstance(other, Basic):
-            return super(Tuple, self).__ne__(other)
+            return super().__ne__(other)
         return self.args != other
 
     def __hash__(self):
@@ -321,8 +319,7 @@ class OrderedSet(MutableSet):
         return self.map.popitem(last=last)[0]
 
     def __iter__(self):
-        for key in self.map.keys():
-            yield key
+        yield from self.map.keys()
 
     def __repr__(self):
         if not self.map:

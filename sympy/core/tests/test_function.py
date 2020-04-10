@@ -348,7 +348,7 @@ def test_Subs():
     assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
 
-    assert Subs(f(x), x, 0).free_symbols == set([])
+    assert Subs(f(x), x, 0).free_symbols == set()
     assert Subs(f(x, y), x, z).free_symbols == {y, z}
 
     assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)

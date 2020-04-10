@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 from functools import cmp_to_key
 import operator
@@ -452,8 +450,8 @@ class Mul(Expr, AssocOp):
                 new_c_powers.append((b, e))
             # there might have been a change, but unless the base
             # matches some other base, there is nothing to do
-            if changed and len(set(
-                    b for b, e in new_c_powers)) != len(new_c_powers):
+            if changed and len({
+                    b for b, e in new_c_powers}) != len(new_c_powers):
                 # start over again
                 c_part = []
                 c_powers = _gather(new_c_powers)
@@ -916,7 +914,7 @@ class Mul(Expr, AssocOp):
         if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
             # other types of s may not be well behaved, e.g.
             # (cos(x)*sin(y)).diff([[x, y, z]])
-            return super(Mul, self)._eval_derivative_n_times(s, n)
+            return super()._eval_derivative_n_times(s, n)
         args = self.args
         m = len(args)
         if isinstance(n, (int, Integer)):
@@ -1195,7 +1193,7 @@ class Mul(Expr, AssocOp):
         a.is_commutative for a in self.args)
 
     def _eval_is_complex(self):
-        comp = _fuzzy_group((a.is_complex for a in self.args))
+        comp = _fuzzy_group(a.is_complex for a in self.args)
         if comp is False:
             if any(a.is_infinite for a in self.args):
                 if any(a.is_zero is not False for a in self.args):
@@ -1604,7 +1602,7 @@ class Mul(Expr, AssocOp):
         elif len(old_c) > len(c):
             # more commutative terms
             ok = False
-        elif set(i[0] for i in old_nc).difference(set(i[0] for i in nc)):
+        elif {i[0] for i in old_nc}.difference({i[0] for i in nc}):
             # unmatched non-commutative bases
             ok = False
         elif set(old_c).difference(set(c)):
