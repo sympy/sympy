@@ -10,7 +10,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    sympify, srepr, Dummy, Sum)
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
-    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse, BigNumber)
+    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -2026,27 +2026,3 @@ def test_abc():
 
 def test_floordiv():
     assert S(2)//S.Half == 4
-
-def test_issue_6835():
-    e1 = Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(100)))
-    e1_prime = Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(100)))
-    e2 = Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(3)))
-    e3 = Pow(BigNumber(5), Pow(BigNumber(5), Pow(BigNumber(2), BigNumber(7))))
-    assert (100 < e1)
-    assert not (e1 < 100)
-    assert (100 < e2)
-    assert (Float(100) < e2)
-    assert not (e2 < 100)
-    assert (100 < e3)
-    assert (e3 < e1)
-    assert (Rational(170, 10) < e1)
-    assert not (Rational(170, 10) > e1)
-    assert (e1_prime == e1)
-    assert (e2 < e3)
-
-def test_bigNumber_ops():
-    assert BigNumber(10)*BigNumber(2) == 20
-    assert BigNumber(3)*BigNumber(4) == 12
-    assert BigNumber(5) - BigNumber(3) == 2
-    assert BigNumber(170) + BigNumber(222) == 392
-    assert (BigNumber(20)*Pow(BigNumber(10), Pow(BigNumber(10), BigNumber(100)))).is_Mul

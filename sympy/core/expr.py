@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
+import math
 from typing import Tuple as tTuple
+
 
 from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
@@ -24,6 +26,10 @@ class Expr(Basic, EvalfMixin):
     should subclass this class, instead of Basic (which should be
     used only for argument storage and expression manipulation, i.e.
     pattern matching, substitutions, etc).
+
+    Should us _eval_is_X (_eval_is_gt/_eval_is_lt _eval_is_le) if we want to override
+    the comparison functions.
+    _eval_is_X should return None if you want to return the object unevaluated
 
     See Also
     ========
@@ -333,78 +339,31 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    def _cmp(self, other, op, cls):
-        assert op in ("<", ">", "<=", ">=")
+    def __ge__(self, other):
+        from .relational import GreaterThan
+        return self._cmp(other, GreaterThan)
+
+    def __le__(self, other):
+        from .relational import LessThan
+        return self._cmp(other, LessThan)
+
+    def __gt__(self, other):
+        from .relational import StrictGreaterThan
+        return self._cmp(other, StrictGreaterThan)
+
+    def __lt__(self, other):
+        from .relational import StrictLessThan
+        return self._cmp(other, StrictLessThan)
+
+    def _cmp(self, other, cls):
+        from .relational import Relational
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-
         if not isinstance(other, Expr):
             return NotImplemented
-
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-
-        n2 = _n2(self, other)
-        if n2 is not None:
-            # use float comparison for infinity.
-            # otherwise get stuck in infinite recursion
-            if n2 in (S.Infinity, S.NegativeInfinity):
-                n2 = float(n2)
-            if op == "<":
-                return _sympify(n2 < 0)
-            elif op == ">":
-                return _sympify(n2 > 0)
-            elif op == "<=":
-                return _sympify(n2 <= 0)
-            else: # >=
-                return _sympify(n2 >= 0)
-
-        if self.is_extended_real and other.is_extended_real:
-            if op in ("<=", ">") \
-                and ((self.is_infinite and self.is_extended_negative) \
-                     or (other.is_infinite and other.is_extended_positive)):
-                return S.true if op == "<=" else S.false
-            if op in ("<", ">=") \
-                and ((self.is_infinite and self.is_extended_positive) \
-                     or (other.is_infinite and other.is_extended_negative)):
-                return S.true if op == ">=" else S.false
-            diff = self - other
-            if diff is not S.NaN:
-                if op == "<":
-                    test = diff.is_extended_negative
-                elif op == ">":
-                    test = diff.is_extended_positive
-                elif op == "<=":
-                    test = diff.is_extended_nonpositive
-                else: # >=
-                    test = diff.is_extended_nonnegative
-
-                if test is not None:
-                    return S.true if test == True else S.false
-
-        # return unevaluated comparison object
-        return cls(self, other, evaluate=False)
-
-    def __ge__(self, other):
-        from sympy import GreaterThan
-        return self._cmp(other, ">=", GreaterThan)
-
-    def __le__(self, other):
-        from sympy import LessThan
-        return self._cmp(other, "<=", LessThan)
-
-    def __gt__(self, other):
-        from sympy import StrictGreaterThan
-        return self._cmp(other, ">", StrictGreaterThan)
-
-    def __lt__(self, other):
-        from sympy import StrictLessThan
-        return self._cmp(other, "<", StrictLessThan)
+        return cls(self, other)
 
     def __trunc__(self):
         if not self.is_number:
@@ -3864,23 +3823,13 @@ class UnevaluatedExpr(Expr):
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
+
     def doit(self, **kwargs):
         if kwargs.get("deep", True):
             return self.args[0].doit(**kwargs)
         else:
             return self.args[0]
 
-
-def _n2(a, b):
-    """Return (a - b).evalf(2) if a and b are comparable, else None.
-    This should only be used when a and b are already sympified.
-    """
-    # /!\ it is very important (see issue 8245) not to
-    # use a re-evaluated number in the calculation of dif
-    if a.is_comparable and b.is_comparable:
-        dif = (a - b).evalf(2)
-        if dif.is_comparable:
-            return dif
 
 
 def unchanged(func, *args):
@@ -3961,6 +3910,8 @@ class ExprBuilder(object):
             elif id(arg) == id(elem):
                 return (i,)
         return None
+
+
 
 
 from .mul import Mul

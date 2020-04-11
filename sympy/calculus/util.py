@@ -1392,26 +1392,27 @@ class AccumulationBounds(AtomicExpr):
         else:
             return self
 
-    def __lt__(self, other):
+
+    def _eval_is_lt(self, other):
         """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is less than the range of values attained by `other`, where
-        other may be any value of type AccumulationBounds object or extended
-        real number value, False if `other` satisfies the same property, else
-        an unevaluated Relational
+           Returns True if range of values attained by `self` AccumulationBounds
+           object is less than the range of values attained by `other`, where
+           other may be any value of type AccumulationBounds object or extended
+           real number value, False if `other` satisfies the same property, else
+           an unevaluated Relational
 
-        Examples
-        ========
+           Examples
+           ========
 
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) < AccumBounds(4, oo)
-        True
-        >>> AccumBounds(1, 4) < AccumBounds(3, 4)
-        AccumBounds(1, 4) < AccumBounds(3, 4)
-        >>> AccumBounds(1, oo) < -1
-        False
+           >>> from sympy import AccumBounds, oo
+           >>> AccumBounds(1, 3) < AccumBounds(4, oo)
+           True
+           >>> AccumBounds(1, 4) < AccumBounds(3, 4)
+           AccumBounds(1, 4) < AccumBounds(3, 4)
+           >>> AccumBounds(1, oo) < -1
+           False
 
-        """
+           """
         other = _sympify(other)
         if isinstance(other, AccumBounds):
             if self.max < other.min:
@@ -1427,7 +1428,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min >= other:
                 return False
-        return super(AccumulationBounds, self).__lt__(other)
+        return None
 
     def __le__(self, other):
         """

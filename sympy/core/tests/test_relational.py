@@ -680,7 +680,7 @@ def test_issue_8245():
     r = Rational(str(a.n(29)))
     assert rel_check(a, r)
 
-    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == S.true
 
 
 def test_issue_8449():
