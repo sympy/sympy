@@ -5,7 +5,7 @@ from sympy.core import Mul, Basic, sympify, S
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.common import ShapeError
+from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
@@ -333,12 +333,17 @@ def combine_powers(mul):
         if A_base == B_base:
             new_exp = A_exp + B_exp
             new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-        elif not isinstance(B_base, MatrixBase) and \
-            A_base == B_base.inverse():
-            new_exp = A_exp - B_exp
-            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-        else:
-            new_args.append(B)
+            continue
+        elif not isinstance(B_base, MatrixBase):
+            try:
+                B_base_inv = B_base.inverse()
+                if A_base == B_base_inv:
+                    new_exp = A_exp - B_exp
+                    new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+                    continue
+            except NonInvertibleMatrixError:
+                pass
+        new_args.append(B)
 
     return newmul(factor, *new_args)
 
