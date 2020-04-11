@@ -1368,118 +1368,124 @@ def _matplotlib_list(interval_list):
 # TODO: Adaptive sampling for 3D plots.
 
 def plot(*args, **kwargs):
-    """
-    Plots a function of a single variable and returns an instance of
-    the ``Plot`` class (also, see the description of the
-    ``show`` keyword argument below).
+    """Plots a function of a single variable as a curve.
 
-    The plotting uses an adaptive algorithm which samples recursively to
-    accurately plot the plot. The adaptive algorithm uses a random point near
-    the midpoint of two points that has to be further sampled. Hence the same
-    plots can appear slightly different.
+    Parameters
+    ==========
 
-    Usage
-    =====
+    args
+        The first argument is the expression representing the function
+        of single variable to be plotted.
 
-    Single Plot
+        The last argument is a 3-tuple denoting the range of the free
+        variable. e.g. ``(x, 0, 5)``
 
-    ``plot(expr, range, **kwargs)``
+        Typical usage examples are in the followings:
 
-    If the range is not specified, then a default range of (-10, 10) is used.
+        - Plotting a single expression with a single range.
+            ``plot(expr, range, **kwargs)``
+        - Plotting a single expression with the default range (-10, 10).
+            ``plot(expr, **kwargs)``
+        - Plotting multiple expressions with a single range.
+            ``plot(expr1, expr2, ..., range, **kwargs)``
+        - Plotting multiple expressions with multiple ranges.
+            ``plot((expr1, range1), (expr2, range2), ..., **kwargs)``
 
-    Multiple plots with same range.
+        It is best practice to specify range explicitly because default
+        range may change in the future if a more advanced default range
+        detection algorithm is implemented.
 
-    ``plot(expr1, expr2, ..., range, **kwargs)``
+    show : bool, optional
+        The default value is set to ``True``. Set show to ``False`` and
+        the function will not display the plot. The returned instance of
+        the ``Plot`` class can then be used to save or display the plot
+        by calling the ``save()`` and ``show()`` methods respectively.
 
-    If the range is not specified, then a default range of (-10, 10) is used.
+    line_color : float, optional
+        Specifies the color for the plot.
+        See ``Plot`` to see how to set color for the plots.
 
-    Multiple plots with different ranges.
+        If there are multiple plots, then the same series series are
+        applied to all the plots. If you want to set these options
+        separately, you can index the ``Plot`` object returned and set
+        it.
 
-    ``plot((expr1, range), (expr2, range), ..., **kwargs)``
+    title : str, optional
+        Title of the plot. It is set to the latex representation of
+        the expression, if the plot has only one expression.
 
-    Range has to be specified for every expression.
+    label : str, optional
+        The label of the expression in the plot. It will be used when
+        called with ``legend``. Default is the name of the expression.
+        e.g. ``sin(x)``
 
-    Default range may change in the future if a more advanced default range
-    detection algorithm is implemented.
+    xlabel : str, optional
+        Label for the x-axis.
 
-    Arguments
-    =========
+    ylabel : str, optional
+        Label for the y-axis.
 
-    ``expr`` : Expression representing the function of single variable
+    xscale : 'linear' or 'log', optional
+        Sets the scaling of the x-axis.
 
-    ``range``: (x, 0, 5), A 3-tuple denoting the range of the free variable.
+    yscale : 'linear' or 'log', optional
+        Sets the scaling of the y-axis.
 
-    Keyword Arguments
-    =================
+    axis_center : (float, float), optional
+        Tuple of two floats denoting the coordinates of the center or
+        {'center', 'auto'}
 
-    Arguments for ``plot`` function:
+    xlim : (float, float), optional
+        Denotes the x-axis limits.
 
-    ``show``: Boolean. The default value is set to ``True``. Set show to
-    ``False`` and the function will not display the plot. The returned
-    instance of the ``Plot`` class can then be used to save or display
-    the plot by calling the ``save()`` and ``show()`` methods
-    respectively.
+    ylim : (float, float), optional
+        Denotes the y-axis limits.
 
-    Arguments for :obj:`LineOver1DRangeSeries` class:
+    annotations : list, optional
+        A list of dictionaries specifying the type of annotation
+        required. The keys in the dictionary should be equivalent
+        to the arguments of the matplotlib's annotate() function.
 
-    ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
-    specify ``nb_of_points`` if uniform sampling is required.
+    markers : list, optional
+        A list of dictionaries specifying the type the markers required.
+        The keys in the dictionary should be equivalent to the arguments
+        of the matplotlib's plot() function along with the marker
+        related keyworded arguments.
 
-    ``depth``: int Recursion depth of the adaptive algorithm. A depth of value ``n``
-    samples a maximum of `2^{n}` points.
+    rectangles : list, optional
+        A list of dictionaries specifying the dimensions of the
+        rectangles to be plotted. The keys in the dictionary should be
+        equivalent to the arguments of the matplotlib's
+        patches.Rectangle class.
 
-    ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The function
-    is uniformly sampled at ``nb_of_points`` number of points.
+    fill : dict, optional
+        A dictionary specifying the type of color filling required in
+        the plot. The keys in the dictionary should be equivalent to the
+        arguments of the matplotlib's fill_between() function.
 
-    Aesthetics options:
+    adaptive : bool, optional
+        The default value is set to ``True``. Set adaptive to ``False``
+        and specify ``nb_of_points`` if uniform sampling is required.
 
-    ``line_color``: float. Specifies the color for the plot.
-    See ``Plot`` to see how to set color for the plots.
+        The plotting uses an adaptive algorithm which samples
+        recursively to accurately plot. The adaptive algorithm uses a
+        random point near the midpoint of two points that has to be
+        further sampled. Hence the same plots can appear slightly
+        different.
 
-    ``label``: str
-        The label to the plot. It will be used when called with ``legend=True``
-        to denote the function with the given label in the plot.
+    depth : int, optional
+        Recursion depth of the adaptive algorithm. A depth of value
+        ``n`` samples a maximum of `2^{n}` points.
 
-    If there are multiple plots, then the same series series are applied to
-    all the plots. If you want to set these options separately, you can index
-    the ``Plot`` object returned and set it.
+        If the ``adaptive`` flag is set to ``False``, this will be
+        ignored.
 
-    Arguments for ``Plot`` class:
+    nb_of_points : int, optional
+        Used when the ``adaptive`` is set to ``False``. The function
+        is uniformly sampled at ``nb_of_points`` number of points.
 
-    ``title`` : str. Title of the plot. It is set to the latex representation of
-    the expression, if the plot has only one expression.
-
-    ``xlabel`` : str. Label for the x-axis.
-
-    ``ylabel`` : str. Label for the y-axis.
-
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x-axis.
-
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y-axis.
-
-    ``axis_center``: tuple of two floats denoting the coordinates of the center or
-    {'center', 'auto'}
-
-    ``xlim`` : tuple of two floats, denoting the x-axis limits.
-
-    ``ylim`` : tuple of two floats, denoting the y-axis limits.
-
-    ``annotations``: list. A list of dictionaries specifying the type of
-    annotation required. The keys in the dictionary should be equivalent
-    to the arguments of the matplotlib's annotate() function.
-
-    ``markers``: list. A list of dictionaries specifying the type the
-    markers required. The keys in the dictionary should be equivalent
-    to the arguments of the matplotlib's plot() function along with the
-    marker related keyworded arguments.
-
-    ``rectangles``: list. A list of dictionaries specifying the dimensions
-    of the rectangles to be plotted. The keys in the dictionary should be
-    equivalent to the arguments of the matplotlib's patches.Rectangle class.
-
-    ``fill``: dict. A dictionary specifying the type of color filling
-    required in the plot. The keys in the dictionary should be equivalent
-    to the arguments of the matplotlib's fill_between() function.
+        If the ``adaptive`` flag is set to ``True``, this will be
+        ignored.
 
     Examples
     ========
