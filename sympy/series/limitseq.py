@@ -113,7 +113,7 @@ def _limit_inf(expr, n):
 
 def _limit_seq(expr, n, trials):
     from sympy.concrete.summations import Sum
-
+    from sympy.calculus.util import AccumulationBounds
     for i in range(trials):
         if not expr.has(Sum):
             result = _limit_inf(expr, n)
@@ -123,6 +123,9 @@ def _limit_seq(expr, n, trials):
         num, den = expr.as_numer_denom()
         if not den.has(n) or not num.has(n):
             result = _limit_inf(expr.doit(), n)
+            powers = (p.as_base_exp() for p in expr.atoms(Pow))
+            if result is None and (any(b.is_negative and e.has(n) for b, e in powers)):
+                return AccumulationBounds(-1,1)
             if result is not None:
                 return result
             return None
@@ -218,17 +221,21 @@ def limit_seq(expr, n=None, trials=5):
     # If there is a negative term raised to a power involving n, or a
     # trigonometric function, then consider even and odd n separately.
     powers = (p.as_base_exp() for p in expr.atoms(Pow))
-    if any(b.is_negative and e.has(n) for b, e in powers) or expr.has(cos, sin):
+    if (any(b.is_negative and e.has(n) for b, e in powers) or
+            expr.has(cos, sin)):
         L1 = _limit_seq(expr.xreplace({n: n1}), n1, trials)
-        L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
-        if L1 != L2:
-            if (L1 == None or L2 == None) and expr.has(cos, sin):
-                L3 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
-                return L3
-            elif ((L1 != None and L2 != None) and (L1.is_comparable and L2.is_comparable)):
-                return AccumulationBounds(Min(L1, L2), Max(L1, L2))
-            else:
-                return None
+        if L1 is not None:
+            L2 = _limit_seq(expr.xreplace({n: n2}), n2, trials)
+            if L2 is not None:
+                if L1 != L2 :
+                    if L1.is_comparable and L2.is_comparable:
+                        return AccumulationBounds(Min(L1, L2), Max(L1, L2))
+                    elif L1 is S.Zero:
+                        return L2
+                    elif L2 is S.Zero:
+                        return L1
+                    else:
+                        return None
     else:
         L1 = _limit_seq(expr.xreplace({n: n_}), n_, trials)
     if L1 is not None:
@@ -243,5 +250,6 @@ def limit_seq(expr, n=None, trials=5):
         # Maybe the absolute value is easier to deal with (though not if
         # it has a Sum). If it tends to 0, the limit is 0.
         elif not expr.has(Sum):
-            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials).is_zero:
+            lim = _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials)
+            if lim is not None and lim.is_zero:
                 return S.Zero
