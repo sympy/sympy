@@ -5216,8 +5216,13 @@ class Coset(Basic):
                     .format(g, H))
             G = SymmetricPermutationGroup(g.size)
 
-        if not isinstance(dir, Symbol):
+        if isinstance(dir, str):
             dir = Symbol(dir)
+        elif not isinstance(dir, Symbol):
+            raise TypeError("dir must be of type basestring or "
+                    "Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-'):
+            raise ValueError("dir must be one of '+' or '-' not %s" % dir)
         obj = Basic.__new__(cls, g, H, G, dir)
         obj._dir = dir
         return obj
