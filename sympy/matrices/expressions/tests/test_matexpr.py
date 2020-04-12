@@ -140,6 +140,8 @@ def test_ZeroMatrix():
     with raises(NonSquareMatrixError):
         Z**2
 
+    assert ZeroMatrix(3, 3).as_explicit() == ImmutableMatrix.zeros(3, 3)
+
 
 def test_ZeroMatrix_doit():
     Znn = ZeroMatrix(Add(n, n, evaluate=False), n)
@@ -223,6 +225,7 @@ def test_Identity():
             (0, True)
         )
     )
+    assert Identity(3).as_explicit() == ImmutableMatrix.eye(3)
 
 
 def test_Identity_doit():
@@ -653,3 +656,12 @@ def test_matrixsymbol_from_symbol():
     A_2 = A.subs(2, 3)
     assert A_1.args == A.args
     assert A_2.args[0] == A.args[0]
+
+
+def test_as_explicit():
+    Z = MatrixSymbol('Z', 2, 3)
+    assert Z.as_explicit() == ImmutableMatrix([
+        [Z[0, 0], Z[0, 1], Z[0, 2]],
+        [Z[1, 0], Z[1, 1], Z[1, 2]],
+    ])
+    raises(ValueError, lambda: A.as_explicit())

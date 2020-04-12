@@ -340,8 +340,10 @@ class MatrixExpr(Expr):
         as_mutable: returns mutable Matrix type
 
         """
+        if not isinstance(self.rows, (SYMPY_INTS, Integer)) or not isinstance(self.cols, (SYMPY_INTS, Integer)):
+            raise ValueError('Matrix with symbolic shape cannot be represented explicitly')
         from sympy.matrices.immutable import ImmutableDenseMatrix
-        return ImmutableDenseMatrix([[    self[i, j]
+        return ImmutableDenseMatrix([[self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
