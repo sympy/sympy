@@ -101,7 +101,10 @@ what dsolve returned is:
 
 You can test this with:
 
-dsolve({eq}, hint='{hint}')
+eq = {eq}
+sol = dsolve(eq, hint='{hint}')
+print(sol)
+print(checkodesol(eq, sol))
 
 """
 
@@ -142,12 +145,13 @@ def _ode_solver_test(ode_examples):
         eq = ode_examples['examples'][example]['eq']
         sol = ode_examples['examples'][example]['sol']
         xfail = our_hint in ode_examples['examples'][example].get('XFAIL', [])
+        func = ode_examples['examples'][example].get('func',ode_examples['func'])
         xpass = True
-        if our_hint not in classify_ode(eq):
+        if our_hint not in classify_ode(eq, func):
             message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
             raise AssertionError(message)
         try:
-            dsolve_sol = dsolve(eq,hint=our_hint)
+            dsolve_sol = dsolve(eq, func, hint=our_hint)
             expect_sol_check = False
             if type(dsolve_sol)==list:
                 if any(sub_sol not in dsolve_sol for sub_sol in sol):
@@ -162,9 +166,9 @@ def _ode_solver_test(ode_examples):
             if checkodesol(eq, sol) != expected_checkodesol:
                 message = checkodesol.format(example=example, eq=eq)
                 raise AssertionError(message)
-        except Exception:
+        except Exception as e:
             if not xfail:
-                print("This should be marked as XFAIL")
+                print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
             xpass = False
         if xfail and xpass:
             print(example,"now pass for hint",our_hint)
@@ -194,6 +198,9 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         expected_sol = ode_example['sol']
         example = ode_example['example_name']
         xfail = our_hint in ode_example['XFAIL']
+        func = ode_example['func']
+        if xfail:
+            continue
         if our_hint.endswith('_Integral') or 'series' in our_hint:
             continue
         xpass = True
@@ -202,7 +209,7 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         if our_hint in classify_ode(eq):
             match_list.append(example)
             try:
-                dsolve_sol = dsolve(eq, hint=our_hint)
+                dsolve_sol = dsolve(eq, func, hint=our_hint)
                 expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
                 if len(expected_sol) == 1:
                     expected_checkodesol = (True, 0)
@@ -259,133 +266,7 @@ def test_SingleODESolver():
 
 
 def test_nth_algebraic():
-    eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
-    sol = Eq(f(x), C1 + g(x))
-    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='nth_algebraic'), dsolve(eqn, f(x), hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
-
-    eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
-    sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
-    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
-    assert set(sol) == set(dsolve(eqn, f(x)))
-
-    eqn = (1 - sin(f(x))) * f(x).diff(x)
-    sol = Eq(f(x), C1)
-    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
-
-    M, m, r, t = symbols('M m r t')
-    phi = Function('phi')
-    eqn = Eq(-M * phi(t).diff(t),
-             Rational(3, 2) * m * r**2 * phi(t).diff(t) * phi(t).diff(t,t))
-    solns = [Eq(phi(t), C1), Eq(phi(t), C1 + C2*t - M*t**2/(3*m*r**2))]
-    assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
-    assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
-    assert set(solns) == set(dsolve(eqn, phi(t), hint='nth_algebraic'))
-    assert set(solns) == set(dsolve(eqn, phi(t)))
-
-    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x)
-    sol = Eq(f(x), C1 + C2*x)
-    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
-
-    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1)
-    sol = Eq(f(x), C1 + C2*x)
-    assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
-
-    eqn = f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1) * (f(x).diff(x) - x)
-    solns = [Eq(f(x), C1 + x**2/2), Eq(f(x), C1 + C2*x)]
-    assert checkodesol(eqn, solns[0], order=2, solve_for_func=False)[0]
-    assert checkodesol(eqn, solns[1], order=2, solve_for_func=False)[0]
-    assert set(solns) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
-    assert set(solns) == set(dsolve(eqn, f(x)))
-
-
-def test_nth_algebraic_issue15999():
-    eqn = f(x).diff(x) - C1
-    sol = Eq(f(x), C1*x + C2) # Correct solution
-    assert checkodesol(eqn, sol, order=1, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x), hint='nth_algebraic') == sol
-    assert dsolve(eqn, f(x)) == sol
-
-
-def test_nth_algebraic_redundant_solutions():
-    # This one has a redundant solution that should be removed
-    eqn = f(x)*f(x).diff(x)
-    soln = Eq(f(x), C1)
-    assert checkodesol(eqn, soln, order=1, solve_for_func=False)[0]
-    assert soln == dsolve(eqn, f(x), hint='nth_algebraic')
-    assert soln == dsolve(eqn, f(x))
-
-    # This has two integral solutions and no algebraic solutions
-    eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
-    sol = [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
-    assert all(c[0] for c in checkodesol(eqn, sol, order=1, solve_for_func=False))
-    assert set(sol) == set(dsolve(eqn, f(x), hint='nth_algebraic'))
-    assert set(sol) == set(dsolve(eqn, f(x)))
-
-    eqn = f(x) + f(x)*f(x).diff(x)
-    solns = [Eq(f(x), 0),
-             Eq(f(x), C1 - x)]
-    assert all(c[0] for c in checkodesol(eqn, solns, order=1, solve_for_func=False))
-    assert set(solns) == set(dsolve(eqn, f(x)))
-
-    solns = [Eq(f(x), exp(x)),
-             Eq(f(x), C1*exp(C2*x))]
-    solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)
-    assert solns_final == [Eq(f(x), C1*exp(C2*x))]
-
-    # This one needs a substitution f' = g.
-    eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x))
-
-
-#
-# These tests can be combined with the above test if they get fixed
-# so that dsolve actually works in all these cases.
-#
-
-
-# prep = True breaks this
-def test_nth_algebraic_noprep1():
-    eqn = Derivative(x*f(x), x, x, x)
-    sol = Eq(f(x), (C1 + C2*x + C3*x**2) / x)
-    assert checkodesol(eqn, sol, order=3, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), prep=False, hint='nth_algebraic')
-
-
-@XFAIL
-def test_nth_algebraic_prep1():
-    eqn = Derivative(x*f(x), x, x, x)
-    sol = Eq(f(x), (C1 + C2*x + C3*x**2) / x)
-    assert checkodesol(eqn, sol, order=3, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
-
-
-# prep = True breaks this
-def test_nth_algebraic_noprep2():
-    eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), prep=False, hint='nth_algebraic')
-
-
-@XFAIL
-def test_nth_algebraic_prep2():
-    eqn = Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x))
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), prep=True, hint='nth_algebraic')
-    assert sol == dsolve(eqn, f(x))
+    _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
 
 
 def test_factorable():
@@ -427,21 +308,7 @@ def test_Riccati_special_minus2():
 
 
 def test_Bernoulli():
-    # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
-    eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0)
-    sol = dsolve(eq, f(x), hint='Bernoulli')
-    assert sol == Eq(f(x), 1/(C1*x + 1))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = f(x).diff(x) - y*f(x)
-    sol = dsolve(eq, hint='Bernoulli')
-    assert sol == Eq(f(x), C1*exp(x*y))
-    assert checkodesol(eq, sol)[0]
-
-    eq = f(x)*f(x).diff(x) - 1
-    sol = dsolve(eq,hint='Bernoulli')
-    assert sol == [Eq(f(x), -sqrt(C1 + 2*x)), Eq(f(x), sqrt(C1 + 2*x))]
-    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
+    _ode_solver_test(_get_examples_ode_sol_bernoulli())
 
 
 def test_nth_order_linear_euler_eq_homogeneous():
@@ -596,6 +463,30 @@ def _get_examples_ode_sol_euler_var_para():
     }
 
 
+def _get_examples_ode_sol_bernoulli():
+    # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
+    return {
+            'hint': "Bernoulli",
+            'func': f(x),
+            'examples':{
+    'bernoulli_01': {
+        'eq': Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0),
+        'sol': [Eq(f(x), 1/(C1*x + 1))],
+    },
+
+    'bernoulli_02': {
+        'eq': f(x).diff(x) - y*f(x),
+        'sol': [Eq(f(x), C1*exp(x*y))]
+    },
+
+    'bernoulli_03': {
+        'eq': f(x)*f(x).diff(x) - 1,
+        'sol': [Eq(f(x), -sqrt(C1 + 2*x)), Eq(f(x), sqrt(C1 + 2*x))]
+    },
+    }
+    }
+
+
 def _get_examples_ode_sol_factorable():
     """ some hints are marked as xfail for examples because they missed additional algebraic solution
     which could be found by Factorable hint. Fact_01 raise exception for
@@ -678,9 +569,93 @@ def _get_examples_ode_sol_factorable():
     }
     }
 
+def _get_examples_ode_sol_nth_algebraic():
+    M, m, r, t = symbols('M m r t')
+    phi = Function('phi')
+    # This one needs a substitution f' = g.
+    # 'algeb_12': {
+    #     'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
+    #     'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))],
+    # },
+    return {
+            'hint': "nth_algebraic",
+            'func': f(x),
+            'examples':{
+    'algeb_01': {
+        'eq': f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1) * (f(x).diff(x) - x),
+        'sol': [Eq(f(x), C1 + x**2/2), Eq(f(x), C1 + C2*x)]
+    },
+
+    'algeb_02': {
+        'eq': f(x) * f(x).diff(x) * f(x).diff(x, x) * (f(x) - 1),
+        'sol': [Eq(f(x), C1 + C2*x)]
+    },
+
+    'algeb_03': {
+        'eq': f(x) * f(x).diff(x) * f(x).diff(x, x),
+        'sol': [Eq(f(x), C1 + C2*x)]
+    },
+
+    'algeb_04': {
+        'eq': Eq(-M * phi(t).diff(t),
+         Rational(3, 2) * m * r**2 * phi(t).diff(t) * phi(t).diff(t,t)),
+        'sol': [Eq(phi(t), C1), Eq(phi(t), C1 + C2*t - M*t**2/(3*m*r**2))],
+        'func': phi(t)
+    },
+
+    'algeb_05': {
+        'eq': (1 - sin(f(x))) * f(x).diff(x),
+        'sol': [Eq(f(x), C1)]
+    },
+
+    'algeb_06': {
+        'eq': (diff(f(x)) - x)*(diff(f(x)) + x),
+        'sol': [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)]
+    },
+
+    'algeb_07': {
+        'eq': Eq(Derivative(f(x), x), Derivative(g(x), x)),
+        'sol': [Eq(f(x), C1 + g(x))],
+    },
+
+    'algeb_08': {
+        'eq': f(x).diff(x) - C1,   #this example is from issue 15999
+        'sol': [Eq(f(x), C1*x + C2)],
+    },
+
+    'algeb_09': {
+        'eq': f(x)*f(x).diff(x),
+        'sol': [Eq(f(x), C1)],
+    },
+
+    'algeb_10': {
+        'eq': (diff(f(x)) - x)*(diff(f(x)) + x),
+        'sol': [Eq(f(x), C1 - x**2/2), Eq(f(x), C1 + x**2/2)],
+    },
+
+    'algeb_11': {
+        'eq': f(x) + f(x)*f(x).diff(x),
+        'sol': [Eq(f(x), 0), Eq(f(x), C1 - x)],
+    },
+
+    'algeb_12': {
+        'eq': Derivative(x*f(x), x, x, x),
+        'sol': [Eq(f(x), (C1 + C2*x + C3*x**2) / x)],
+        'XFAIL': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
+    },
+
+    'algeb_13': {
+        'eq': Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x)),
+        'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))],
+        'XFAIL': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
+    },
+    }
+    }
+
 
 def _get_all_examples():
-    all_solvers = [_get_examples_ode_sol_euler_homogeneous(), _get_examples_ode_sol_euler_undetermined_coeff(), _get_examples_ode_sol_euler_var_para(), _get_examples_ode_sol_factorable()]
+    all_solvers = [_get_examples_ode_sol_euler_homogeneous(), _get_examples_ode_sol_euler_undetermined_coeff(), _get_examples_ode_sol_euler_var_para(),
+    _get_examples_ode_sol_factorable(), _get_examples_ode_sol_bernoulli()]
     all_examples = []
     for solver in all_solvers:
         for example in solver['examples']:
