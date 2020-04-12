@@ -1202,13 +1202,6 @@ def is_neq(lhs, rhs):
 
 
 def _cmp_eq(lhs, rhs):
-    """
-    Assumes lhs and rhs are already sympified
-    :param lhs:
-    :param rhs:
-    :param options:
-    :return:
-    """
     from sympy.core.add import Add
     from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
     from sympy.functions.elementary.complexes import arg
