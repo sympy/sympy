@@ -281,18 +281,6 @@ Linear, 2 equations, Order 2, Type 11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_2eq_order2_type11
 
-Linear, 3 equations, Order 1, Type 1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type1
-
-Linear, 3 equations, Order 1, Type 2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type2
-
-Linear, 3 equations, Order 1, Type 3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type3
-
 Linear, 3 equations, Order 1, Type 4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type4
