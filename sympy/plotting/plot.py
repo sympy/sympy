@@ -1231,7 +1231,8 @@ class MatplotlibBackend(BaseBackend):
             ylim = (float(i) for i in ylim)
             ax.set_ylim(ylim)
         if not isinstance(ax, Axes3D):
-            ax.autoscale_view()
+            ax.autoscale_view(scaley=ax.get_autoscalex_on(),
+                              scalex=ax.get_autoscaley_on())
 
 
     def process_series(self):
