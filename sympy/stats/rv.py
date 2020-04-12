@@ -25,7 +25,8 @@ from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
-import itertools
+from sympy.external import import_module
+
 
 x = Symbol('x')
 
@@ -1020,7 +1021,7 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, size=(1,), library='python', numsamples=1,
+def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
                                                                     **kwargs):
     """
     A realization of the random expression
@@ -1035,12 +1036,11 @@ def sample(expr, condition=None, size=(1,), library='python', numsamples=1,
     size : int, tuple
         Represents size of each sample in numsamples
     library : str
-        - 'python' : Sample using random module
         - 'scipy' : Sample using scipy
         - 'numpy' : Sample using numpy
         - 'pymc3' : Sample using PyMC3
         Choose any of the available options to sample from as string,
-        by default is 'python'
+        by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
 
@@ -1066,50 +1066,6 @@ def sample(expr, condition=None, size=(1,), library='python', numsamples=1,
     return sample_iter(expr, condition, size=size, library=library,
                                                         numsamples=numsamples)
 
-
-def sample_iter(expr, condition=None, size=(1,), library='python',
-                            numsamples=S.Infinity, **kwargs):
-    """
-    Returns an iterator of realizations from the expression given a condition
-
-    Parameters
-    ==========
-
-    expr: Expr
-        Random expression to be realized
-    condition: Expr, optional
-        A conditional expression
-    numsamples: integer, optional
-        Length of the iterator (defaults to infinity)
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Normal, sample_iter
-    >>> X = Normal('X', 0, 1)
-    >>> expr = X*X + 3
-    >>> iterator = sample_iter(expr, numsamples=3)
-    >>> list(iterator) # doctest: +SKIP
-    [12, 4, 7]
-
-    See Also
-    ========
-
-    sample
-    sampling_P
-    sampling_E
-    sample_iter_lambdify
-    sample_iter_subs
-
-    """
-    # lambdify is much faster but not as robust
-    try:
-        return sample_iter_lambdify(expr, condition, size=size, library=library,
-                        numsamples=numsamples, **kwargs)
-    # use subs when lambdify fails
-    except TypeError:
-        return sample_iter_subs(expr, condition, size=size, library=library,
-                        numsamples=numsamples, **kwargs)
 
 def quantile(expr, evaluate=True, **kwargs):
     r"""
@@ -1157,39 +1113,59 @@ def quantile(expr, evaluate=True, **kwargs):
     else:
         return result
 
-def sample_iter_lambdify(expr, condition=None, size=(1,), library='python',
+def sample_iter(expr, condition=None, size=(1,), library='scipy',
                     numsamples=S.Infinity, **kwargs):
+
     """
-    Uses lambdify for computation. This is fast but does not always work.
+    Returns an iterator of realizations from the expression given a condition
+
+    Parameters
+    ==========
+
+    expr: Expr
+        Random expression to be realized
+    condition: Expr, optional
+        A conditional expression
+    size : int, tuple
+        Represents size of each sample in numsamples
+    numsamples: integer, optional
+        Length of the iterator (defaults to infinity)
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, sample_iter
+    >>> X = Normal('X', 0, 1)
+    >>> expr = X*X + 3
+    >>> iterator = sample_iter(expr, numsamples=3)
+    >>> list(iterator) # doctest: +SKIP
+    [12, 4, 7]
 
     See Also
     ========
 
-    sample_iter
+    sample
+    sampling_P
+    sampling_E
 
     """
-    if condition:
+    if not import_module(library):
+        raise ValueError(ValueError("Failed to import %s" % library))
+
+    if condition is not None:
         ps = pspace(Tuple(expr, condition))
     else:
         ps = pspace(expr)
 
     rvs = list(ps.values)
-    if library in ['python', 'pymc3']:
+    if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
         fn = lambdify(rvs, expr, **kwargs)
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
-    if condition:
+    if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
-
-    # Check that lambdify can handle the expression
-    # Some operations like Sum can prove difficult
-    d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
-    args = [d[rv] for rv in rvs]
-    fn(*args)
-    if condition:
-        given_fn(*args)
 
     def return_generator():
         count = 0
@@ -1197,9 +1173,9 @@ def sample_iter_lambdify(expr, condition=None, size=(1,), library='python',
             d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
-            if condition:  # Check that these values satisfy the condition
+            if condition is not None:  # Check that these values satisfy the condition
                 gd = given_fn(*args)
-                if gd != True or gd != False:
+                if gd != True and gd != False:
                     raise ValueError(
                         "Conditions must not contain free symbols")
                 if not gd:  # If the values don't satisfy then try again
@@ -1210,48 +1186,7 @@ def sample_iter_lambdify(expr, condition=None, size=(1,), library='python',
     return return_generator()
 
 
-def sample_iter_subs(expr, condition=None, size=(1,), library='python',
-                numsamples=S.Infinity, **kwargs):
-    """
-    Uses subs for computation. This is slow but almost always works.
-
-    See Also
-    ========
-
-    sample_iter
-
-    """
-    if condition is not None:
-        ps = pspace(Tuple(expr, condition))
-    else:
-        ps = pspace(expr)
-
-    count = 0
-    while count < numsamples:
-        d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
-        values = (list(d[key]) for key in d.keys())
-        combinations = [dict(zip(d.keys(), combination))
-                    for combination in itertools.product(*values)]
-
-        if condition is not None:  # Check that these values satisfy the condition
-            gd = True
-            for comb in combinations:
-                gd = gd and condition.xreplace(comb)
-            if gd != True and gd != False:
-                raise ValueError("Conditions must not contain free symbols")
-            if not gd:  # If the values don't satisfy then try again
-                continue
-        if not isinstance(expr, (Relational, Boolean)):
-            yield expr.xreplace(d)
-        else:
-            bool_expr = True
-            for comb in combinations:
-                bool_expr = bool_expr and expr.xreplace(comb)
-            yield bool_expr
-        count += 1
-
-
-def sampling_P(condition, given_condition=None, library='python', numsamples=1,
+def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
                                                     evalf=True, **kwargs):
     """
     Sampling version of P
@@ -1284,7 +1219,7 @@ def sampling_P(condition, given_condition=None, library='python', numsamples=1,
         return result
 
 
-def sampling_E(expr, given_condition=None, library='python', numsamples=1,
+def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
                evalf=True, **kwargs):
     """
     Sampling version of E
@@ -1308,7 +1243,7 @@ def sampling_E(expr, given_condition=None, library='python', numsamples=1,
     else:
         return result
 
-def sampling_density(expr, given_condition=None, library='python',
+def sampling_density(expr, given_condition=None, library='scipy',
                     numsamples=1, **kwargs):
     """
     Sampling version of density
@@ -1323,7 +1258,10 @@ def sampling_density(expr, given_condition=None, library='python',
     results = {}
     for result in sample_iter(expr, given_condition, library=library,
                               numsamples=numsamples, **kwargs):
-        results[result[0]] = results.get(result[0], 0) + 1
+        try:
+            results[result[0]] = results.get(result[0], 0) + 1
+        except TypeError:
+            results[result] = results.get(result, 0) + 1
 
     return results
 

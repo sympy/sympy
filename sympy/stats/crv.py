@@ -15,7 +15,6 @@ from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial,
         lambdify)
 from sympy.core.function import PoleError
-from sympy.tensor.array import ArrayComprehensionMap
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -24,7 +23,6 @@ from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
-import random
 
 scipy = import_module('scipy')
 numpy = import_module('numpy')
@@ -151,7 +149,7 @@ class ContinuousDistribution(Basic):
         return self.pdf(*args)
 
 
-class SampleExternal:
+class SampleExternalContinuous:
     """Class consisting of the methods that are used to sample values of random
     variables from external libraries."""
 
@@ -181,8 +179,12 @@ class SampleExternal:
             mu=float(dist.mean)/float(dist.shape), scale=float(dist.shape), size=size),
         'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(b=float(dist.alpha),
             scale=float(dist.xm), size=size),
+        'StudentTDistribution': lambda dist, size: scipy.stats.t.rvs(df=float(dist.nu),
+            size=size),
         'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(loc=float(dist.left),
             scale=float(dist.right)-float(dist.left), size=size),
+        'WeibullDistribution': lambda dist, size: scipy.stats.weibull_min.rvs(loc=0,
+            c=float(dist.beta), scale=float(dist.alpha), size=size)
         }
 
     numpy_rv_map = {
@@ -203,27 +205,6 @@ class SampleExternal:
         'UniformDistribution': lambda dist, size: numpy.random.uniform(
             low=float(dist.left), high=float(dist.right), size=size)
     }
-
-    python_rv_map = {
-        'BetaDistribution': lambda dist:
-            random.betavariate(float(dist.alpha), float(dist.beta)),
-        'ExponentialDistribution': lambda dist:
-            random.expovariate(float(dist.rate)),
-        'GammaDistribution': lambda dist:
-            random.gammavariate(float(dist.k), float(dist.theta)),
-        'LogNormalDistribution': lambda dist:
-            random.lognormvariate(float(dist.mean), float(dist.std)),
-        'NormalDistribution': lambda dist:
-            random.normalvariate(float(dist.mean), float(dist.std)),
-        'ParetoDistribution': lambda dist:
-            random.paretovariate(float(dist.alpha)),
-        'UniformDistribution': lambda dist:
-            random.uniform(float(dist.left), float(dist.right)),
-        'WeibullDistribution': lambda dist:
-            random.weibullvariate(float(dist.alpha), float(dist.beta)),
-        'ContinuousDistributionHandmade': lambda dist:
-            dist._inverse_cdf_expression()(random.uniform(0, 1))
-        }
 
     pymc3_rv_map = {
         'BetaDistribution': lambda dist:
@@ -254,9 +235,6 @@ class SampleExternal:
 
         dist_list = cls.scipy_rv_map.keys()
 
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
         if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
             from scipy.stats import rv_continuous
             z = Dummy('z')
@@ -266,6 +244,9 @@ class SampleExternal:
                     return handmade_pdf(x)
             scipy_rv = scipy_pdf(a=dist.set._inf, b=dist.set._sup, name='scipy_pdf')
             return scipy_rv.rvs(size=size)
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
 
         return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
 
@@ -279,23 +260,6 @@ class SampleExternal:
             return None
 
         return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
-
-    @classmethod
-    def _sample_python(cls, dist, size):
-        """Sample from random."""
-
-        def _get_single_sample(dist):
-            if cls.python_rv_map.get(dist.__class__.__name__, None):
-                return cls.python_rv_map[dist.__class__.__name__](dist)
-            icdf = dist._inverse_cdf_expression()
-            return icdf(random.uniform(0, 1)).evalf()
-
-        x = Dummy('x')
-        if isinstance(size, int):
-              return ArrayComprehensionMap(lambda: _get_single_sample(dist),
-                                        (x, 0, size-1)).doit()
-        return ArrayComprehensionMap(lambda: _get_single_sample(dist),
-                                         *[(x, 0, i-1) for i in size]).doit()
 
     @classmethod
     def _sample_pymc3(cls, dist, size):
@@ -337,13 +301,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=1, library='python'):
+    def sample(self, size=1, library='scipy'):
         """ A random realization from the distribution """
-
-        if library == 'python':
-            samps = getattr(SampleExternal, '_sample_' + library)(self, size)
-            if samps is not None:
-                return samps
 
         libraries = ['scipy', 'numpy', 'pymc3']
         if library not in libraries:
@@ -352,7 +311,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = getattr(SampleExternal, '_sample_' + library)(self, size)
+        samps = getattr(SampleExternalContinuous, '_sample_' + library)(self, size)
+
         if samps is not None:
             return samps
         raise NotImplementedError(
@@ -360,27 +320,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 % (self.__class__.__name__, library)
                 )
 
-
-    @cacheit
-    def _inverse_cdf_expression(self):
-        """ Inverse of the CDF
-
-        Used by sample
-        """
-        x, z = symbols('x, z', positive=True, cls=Dummy)
-        # Invert CDF
-        try:
-            inverse_cdf = solveset(self.cdf(x) - z, x, S.Reals)
-            if isinstance(inverse_cdf, Intersection) and S.Reals in inverse_cdf.args:
-                inverse_cdf = list(inverse_cdf.args[1])
-        except NotImplementedError:
-            inverse_cdf = None
-        if not inverse_cdf or len(inverse_cdf) != 1:
-            raise NotImplementedError("Could not invert CDF")
-
-        (icdf,) = inverse_cdf
-
-        return Lambda(z, icdf)
 
     @cacheit
     def compute_cdf(self, **kwargs):
@@ -686,7 +625,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self, size=1, library='python'):
+    def sample(self, size=1, library='scipy'):
         """
         Internal sample method
 

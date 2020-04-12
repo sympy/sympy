@@ -8,7 +8,6 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace)
-from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.testing.pytest import raises
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -181,22 +180,21 @@ def test_H():
 def test_Sample():
     X = Die('X', 6)
     Y = Normal('Y', 0, 1)
-    z = Symbol('z')
+    z = Symbol('z', integer=True)
 
-    assert next(sample(X))[0] in [1, 2, 3, 4, 5, 6]
+    assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
     assert next(sample(X + Y))[0].is_Float
 
     P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
-    assert variance(X + Y, numsamples=10, evalf=False).has(ImmutableDenseNDimArray)
+    assert variance(X + Y, numsamples=10).is_number
 
     raises(TypeError, lambda: P(Y > z, numsamples=5))
 
     assert P(sin(Y) <= 1, numsamples=10) == 1
     assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
 
-    # TODO : Fixes required in ImmutableDenseNDimArray. This should not raise error.
-    raises(AttributeError, lambda: E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3))
+    raises(TypeError, lambda: E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3))
 
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))

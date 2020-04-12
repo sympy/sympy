@@ -19,7 +19,6 @@ from sympy.core.containers import Dict
 from sympy.core.logic import Logic
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
-from sympy.tensor.array import ArrayComprehensionMap
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
@@ -340,7 +339,7 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
-    def sample(self, size=(1,), library='python'):
+    def sample(self, size=(1,), library='scipy'):
         """
         Internal sample method
 
@@ -352,13 +351,10 @@ class FinitePSpace(PSpace):
         x = random.uniform(0, 1)
         # Find first occurrence with cumulative probability less than x
         # This should be replaced with binary search
-        z = Dummy('z')
         for value, cum_prob in cdf:
             if x < cum_prob:
                 # return dictionary mapping RandomSymbols to values
-                samp = ArrayComprehensionMap(lambda : value,
-                                        *[(z, 0, i-1) for i in size]).doit()
-                return {k : samp for k in expr}
+                return dict(list(zip(expr, value)))
 
         assert False, "We should never have gotten to this point"
 

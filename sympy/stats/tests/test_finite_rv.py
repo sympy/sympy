@@ -146,7 +146,7 @@ def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
-    assert next(sample(X, X > 5))[0] == 6
+    assert next(sample(X, X > 5)) == 6
 
 
 def test_domains():

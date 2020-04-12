@@ -47,7 +47,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=(1,), library='python'):
+    def sample(self, size=(1,), library='scipy'):
         """ A random realization from the distribution"""
         if hasattr(self,'_sample_scipy') and import_module('scipy'):
             return self._sample_scipy(size=size)
@@ -324,7 +324,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     def domain(self):
         return SingleDiscreteDomain(self.symbol, self.set)
 
-    def sample(self, size=(1,), library='python'):
+    def sample(self, size=(1,), library='scipy'):
         """
         Internal sample method
 

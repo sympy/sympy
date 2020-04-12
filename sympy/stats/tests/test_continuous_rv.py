@@ -1509,37 +1509,6 @@ def test_ContinuousDistributionHandmade():
     assert variance(space.value) == Rational(13, 12)
 
 
-def test_sample_python():
-    distribs_python = [
-        Beta("B", 1, 1),
-        Normal("N", 0, 1),
-        Gamma("G", 2, 7),
-        Exponential("E", 2),
-        LogNormal("LN", 0, 1),
-        Pareto("P", 1, 1),
-        Uniform("U", 0, 1),
-        Weibull("W", 1, 1),
-        Cauchy("C", 3, 4)
-    ]
-    size = 3
-    numsamples = 5
-    C = Cauchy('C', 3, 4)
-    c_sample = list(sample(C, size=size, numsamples=numsamples))
-    assert len(c_sample) == numsamples
-    for samp in c_sample:
-        for sam in samp:
-            assert C in C.pspace.domain.set
-
-    for X in distribs_python:
-        assert next(sample(X))[0] in X.pspace.domain.set
-        samps = next(sample(X, size=size))
-        samps2 = next(sample(X, size=[2, 2]))
-        for sam in samps:
-            assert sam in X.pspace.domain.set
-        for i in range(2):
-            for j in range(2):
-                assert samps2[i][j] in X.pspace.domain.set
-
 def test_sample_numpy():
     distribs_numpy = [
         Beta("B", 1, 1),
@@ -1575,18 +1544,26 @@ def test_sample_scipy():
         Exponential("E", 2),
         LogNormal("LN", 0, 1),
         Pareto("P", 1, 1),
+        StudentT("S", 2),
         ChiSquared("CS", 2),
         Uniform("U", 0, 1)
     ]
     size = 3
+    numsamples = 5
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
+        g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
+        assert len(g_sample) == numsamples
         for X in distribs_scipy:
             samps = next(sample(X, size=size, library='scipy'))
+            samps2 = next(sample(X, size=(2, 2), library='scipy'))
             for sam in samps:
                 assert sam in X.pspace.domain.set
+            for i in range(2):
+                for j in range(2):
+                    assert samps2[i][j] in X.pspace.domain.set
 
 def test_sample_pymc3():
     distribs_pymc3 = [
