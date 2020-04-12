@@ -12,26 +12,13 @@ from sympy.simplify import simplify
 
 
 def _get_func_order(eqs, funcs):
-    order = dict()
-    func_dict = dict()
+    order = {}
 
     for func in funcs:
         if not order.get(func, False):
             max_order = -1
-            eq_no = -1
             for i, eq in enumerate(eqs):
-                order_ = ode_order(eq, func)
-                if max_order < order_:
-                    max_order = order_
-                    eq_no = i
-            if eq_no in func_dict:
-                list_func = []
-                list_func.append(func_dict[eq_no])
-                list_func.append(func)
-                func_dict[eq_no] = list_func
-            else:
-                if eq_no >= 0:
-                    func_dict[eq_no] = func
+                max_order = max(max_order, ode_order(eq, func))
             if max_order >= 0:
                 order[func] = max_order
 
@@ -238,6 +225,11 @@ def _neq_linear_first_order_const_coeff_homogeneous(match_):
     return sol_dict
 
 
+def _matrix_is_constant(M, t):
+    """Checks if the matrix M is independent of t or not."""
+    return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
+
+
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
@@ -325,9 +317,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
 
-    rep = {func.diff(t, n): Dummy() for func in funcs for n in range(order[func] + 1)}
+    rep = {func.diff(t, n): Dummy() for func in order.keys() for n in range(order[func] + 1)}
     eqs_sub = [eq.subs(rep) for eq in eqs]
-
     # Linearity check
     try:
         A, b = linear_eq_to_matrix(eqs_sub, rep.values())
@@ -338,15 +329,10 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     is_linear = True
 
     # Constant coefficient check
-    is_constant = True
-    for coef in A:
-        if is_constant == True:
-            if coef.as_independent(t, as_Add=True)[1] != 0:
-                is_constant = False
+    is_constant = _matrix_is_constant(A, t)
 
     # Homogeneous check
     is_homogeneous = True if b.is_zero_matrix else False
-
     match = {
         'no_of_equation': len(eqs),
         'eq': eqs,
@@ -356,8 +342,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_constant': is_constant,
         'is_homogeneous': is_homogeneous,
     }
-
-    if match['is_linear'] and match['is_constant']:
+    if match['is_constant']:
 
         # Converting the equation into canonical form if the
         # equation is first order. There will be a separate

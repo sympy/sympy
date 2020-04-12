@@ -599,7 +599,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                if all([str in match and match[str] for str in ['is_constant', 'is_homogeneous']]):
+                if match.get('is_constant', False) and match.get('is_homogeneous', False):
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
                 else:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
@@ -1849,10 +1849,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                     max_order = order_
                     eq_no = i
             if eq_no in func_dict:
-                list_func = []
-                list_func.append(func_dict[eq_no])
-                list_func.append(func)
-                func_dict[eq_no] = list_func
+                func_dict[eq_no] = [func_dict[eq_no], func]
             else:
                 func_dict[eq_no] = func
             order[func] = max_order
