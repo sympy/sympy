@@ -996,12 +996,6 @@ class ZeroMatrix(MatrixExpr):
     def _entry(self, i, j, **kwargs):
         return S.Zero
 
-    def __nonzero__(self):
-        return False
-
-    __bool__ = __nonzero__
-
-
 class GenericZeroMatrix(ZeroMatrix):
     """
     A zero matrix without a specified shape
