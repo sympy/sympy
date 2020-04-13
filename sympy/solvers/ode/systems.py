@@ -142,7 +142,7 @@ def matrix_exp_jordan_form(A, t):
 
 def _neq_linear_first_order_const_coeff_homogeneous(match_):
     r"""
-    System of n first-order constant-coefficient linear nonhomogeneous differential equation
+    System of n first-order constant-coefficient linear homogeneous differential equations
 
     .. math:: y'_k = a_{k1} y_1 + a_{k2} y_2 +...+ a_{kn} y_n; k = 1,2,...,n
 
