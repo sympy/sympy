@@ -2484,8 +2484,6 @@ class MatrixArithmetic(MatrixRequired):
 
         if method is not None and method not in ['multiply', 'mulsimp', 'jordan', 'cayley']:
             raise TypeError('No such method')
-        if exp == S.One:
-            return self
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self

@@ -13,10 +13,10 @@ class MatPow(MatrixExpr):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("MatPow base should be a matrix")
-        exp = _sympify(exp)
-        if not base.is_square and exp not in [S.Zero, S.One]:
+        if not base.is_square:
             raise NonSquareMatrixError("Power of non-square matrix %s" % base)
 
+        exp = _sympify(exp)
         obj = Basic.__new__(cls, base, exp)
 
         if evaluate:
@@ -41,7 +41,7 @@ class MatPow(MatrixExpr):
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
-            if A.base.is_square and A.exp.is_Integer and A.exp.is_positive:
+            if A.exp.is_Integer and A.exp.is_positive:
                 A = MatMul(*[A.base for k in range(A.exp)])
             #elif A.exp.is_Integer and self.exp.is_negative:
             # Note: possible future improvement: in principle we can take
@@ -66,11 +66,6 @@ class MatPow(MatrixExpr):
             exp *= base.args[1]
             base = base.args[0]
 
-        if not base.is_square:
-            if exp in [S.Zero, S.One]:
-                return self
-            raise NonSquareMatrixError("Power of non-square matrix %s" % base)
-
         if isinstance(base, MatrixBase):
             # Delegate
             return base ** exp
@@ -91,8 +86,6 @@ class MatPow(MatrixExpr):
         return MatPow(base, exp)
 
     def as_explicit(self):
-        if not self.base.is_square:
-            raise NonSquareMatrixError("Non-square matrix power cannot be converted to explicit matrix")
         return super().as_explicit()
 
     def _eval_transpose(self):

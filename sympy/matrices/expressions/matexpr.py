@@ -129,10 +129,6 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        # Note: A ** 0 and A ** 1 are not allowed for non-square A, whereas MatPow(A, 0) and MatPow(A, 1) are
-        # allowed but remain unevaluated.
-        if not self.is_square:
-            raise NonSquareMatrixError("Power of non-square matrix %s" % self)
         return MatPow(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
@@ -186,8 +182,8 @@ class MatrixExpr(Expr):
 
     def _eval_power(self, exp):
         """
-        Override this in sub-classes to implement simplification of powers.  The cases where the base is non-square or
-        where exp is -1, 0, 1 are already covered in MatPow.doit(), so implementations can exclude these cases.
+        Override this in sub-classes to implement simplification of powers.  The cases where the exponent
+        is -1, 0, 1 are already covered in MatPow.doit(), so implementations can exclude these cases.
         """
         return MatPow(self, exp)
 

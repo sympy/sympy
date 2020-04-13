@@ -15,7 +15,7 @@ D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
 
-def test_entry_square_matrix():
+def test_entry_matrix():
     X = ImmutableMatrix([[1, 2], [3, 4]])
     assert MatPow(X, 0)[0, 0] == 1
     assert MatPow(X, 0)[0, 1] == 0
@@ -24,7 +24,7 @@ def test_entry_square_matrix():
     assert MatPow(X, 2)[0, 0] == 7
 
 
-def test_entry_square_symbol():
+def test_entry_symbol():
     from sympy.concrete import Sum
     assert MatPow(C, 0)[0, 0] == 1
     assert MatPow(C, 0)[0, 1] == 0
@@ -33,22 +33,7 @@ def test_entry_square_symbol():
     assert isinstance(MatPow(C, n)[0, 0], MatrixElement)
 
 
-def test_entry_nonsquare_matrix():
-    X = ImmutableMatrix([[1, 2, 3], [4, 5, 6]])
-    assert isinstance(MatPow(X, 0)[0, 0], MatrixElement)
-    assert isinstance(MatPow(X, 1)[0, 0], MatrixElement)
-    for r in [-1, 2, S.Half, S.Pi, n]:
-        raises(NonSquareMatrixError, lambda: MatPow(X, r)[0, 0])
-
-
-def test_entry_nonsquare_symbol():
-    assert isinstance(MatPow(A, 0)[0, 0], MatrixElement)
-    assert isinstance(MatPow(A, 1)[0, 0], MatrixElement)
-    for r in [-1, 2, S.Half, S.Pi, n]:
-        raises(NonSquareMatrixError, lambda: MatPow(A, r)[0, 0])
-
-
-def test_as_explicit_square_symbol():
+def test_as_explicit_symbol():
     X = MatrixSymbol('X', 2, 2)
     assert MatPow(X, 0).as_explicit() == ImmutableMatrix(Identity(2))
     assert MatPow(X, 1).as_explicit() == X.as_explicit()
@@ -59,13 +44,7 @@ def test_as_explicit_square_symbol():
     ])
 
 
-def test_as_explicit_nonsquare_symbol():
-    X = MatrixSymbol('X', 2, 3)
-    for r in [-1, 0, 1, 2, S.Half, S.Pi, n]:
-        raises(NonSquareMatrixError, lambda: MatPow(X, r).as_explicit())
-
-
-def test_as_explicit_square_matrix():
+def test_as_explicit_matrix():
     A = ImmutableMatrix([[1, 2], [3, 4]])
     assert MatPow(A, 0).as_explicit() == ImmutableMatrix(Identity(2))
     assert MatPow(A, 1).as_explicit() == A
@@ -77,13 +56,7 @@ def test_as_explicit_square_matrix():
     assert MatPow(A, S.Half).as_explicit() == A**S.Half
 
 
-def test_as_explicit_nonsquare_matrix():
-    A = ImmutableMatrix([[1, 2, 3], [4, 5, 6]])
-    for r in [-1, 0, 1, 2, S.Half, S.Pi, n]:
-        raises(NonSquareMatrixError, lambda: MatPow(A, r).as_explicit())
-
-
-def test_doit_square_symbol():
+def test_doit_symbol():
     assert MatPow(C, 0).doit() == Identity(n)
     assert MatPow(C, 1).doit() == C
     assert MatPow(C, -1).doit() == C.I
@@ -91,14 +64,7 @@ def test_doit_square_symbol():
         assert MatPow(C, r).doit() == MatPow(C, r)
 
 
-def test_doit_nonsquare_symbol():
-    assert MatPow(A, 0).doit() == MatPow(A, 0)
-    assert MatPow(A, 1).doit() == MatPow(A, 1)
-    for r in [-1, 2, S.Half, S.Pi, n]:
-        raises(NonSquareMatrixError, lambda: MatPow(A, r).doit())
-
-
-def test_doit_square_matrix():
+def test_doit_matrix():
     X = ImmutableMatrix([[1, 2], [3, 4]])
     assert MatPow(X, 0).doit() == ImmutableMatrix(Identity(2))
     assert MatPow(X, 1).doit() == X
@@ -112,12 +78,12 @@ def test_doit_square_matrix():
     raises(ValueError, lambda: MatPow(X,-2).doit())
 
 
-def test_doit_nonsquare_matrix():
-    X = ImmutableMatrix([[1, 2, 3], [4, 5, 6]])
-    assert MatPow(X, 0).doit() == MatPow(X, 0)
-    assert MatPow(X, 1).doit() == MatPow(X, 1)
-    for r in [-1, 2, S.Half, S.Pi, n]:
-        raises(NonSquareMatrixError, lambda: MatPow(X, r).doit())
+def test_nonsquare():
+    A = MatrixSymbol('A', 2, 3)
+    B = ImmutableMatrix([[1, 2, 3], [4, 5, 6]])
+    for r in [-1, 0, 1, 2, S.Half, S.Pi, n]:
+        raises(NonSquareMatrixError, lambda: MatPow(A, r))
+        raises(NonSquareMatrixError, lambda: MatPow(B, r))
 
 
 def test_doit_equals_pow(): #17179
