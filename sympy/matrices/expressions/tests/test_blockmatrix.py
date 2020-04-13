@@ -47,8 +47,9 @@ def test_block_plus_ident():
     C = MatrixSymbol('C', m, n)
     D = MatrixSymbol('D', m, m)
     X = BlockMatrix([[A, B], [C, D]])
-    assert bc_block_plus_ident(X+Identity(m+n)) == \
-            BlockDiagMatrix(Identity(n), Identity(m)) + X
+    Z = MatrixSymbol('Z', n + m, n + m)
+    assert bc_block_plus_ident(X + Identity(m + n) + Z) == \
+            BlockDiagMatrix(Identity(n), Identity(m)) + X + Z
 
 def test_BlockMatrix():
     A = MatrixSymbol('A', n, m)

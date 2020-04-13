@@ -488,7 +488,8 @@ def bc_block_plus_ident(expr):
                and blocks[0].is_structurally_symmetric):
         block_id = BlockDiagMatrix(*[Identity(k)
                                         for k in blocks[0].rowblocksizes])
-        return MatAdd(block_id * len(idents), *blocks).doit()
+        rest = [arg for arg in expr.args if not arg.is_Identity and not isinstance(arg, BlockMatrix)]
+        return MatAdd(block_id * len(idents), *blocks, *rest).doit()
 
     return expr
 
