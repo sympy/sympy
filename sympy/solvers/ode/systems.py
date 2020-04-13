@@ -12,17 +12,7 @@ from sympy.simplify import simplify
 
 
 def _get_func_order(eqs, funcs):
-    order = {}
-
-    for func in funcs:
-        if not order.get(func, False):
-            max_order = -1
-            for i, eq in enumerate(eqs):
-                max_order = max(max_order, ode_order(eq, func))
-            if max_order >= 0:
-                order[func] = max_order
-
-    return order
+    return {func: max(ode_order(eq, func) for eq in eqs) for func in funcs}
 
 
 def matrix_exp(A, t):
