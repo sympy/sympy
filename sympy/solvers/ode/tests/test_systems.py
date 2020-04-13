@@ -225,8 +225,8 @@ def test_matrix_exp():
 
 def test_sysode_linear_neq_order1():
 
-   x, y = symbols('x y', cls=Function)
-   a, b, c, t = symbols('a b c t')
+   f, g, x, y = symbols('f g x y', cls=Function)
+   a, b, c, t, u = symbols('a b c t u')
 
    # The 2x2 systems tested below are all handled by _linear_2eq_order1_type1
    # rather than _linear_neq_order1_type1. I'm adding the tests here because
@@ -450,3 +450,13 @@ def test_sysode_linear_neq_order1():
             Eq(y(t), C3*exp(t*(-k2 - k3)))]
    assert dsolve(eq12) == sol12
    assert checksysodesol(eq12, sol12) == (True, [0, 0, 0])
+
+   # Regression test case for issue #15474
+   # https://github.com/sympy/sympy/issues/15474
+   eq13 = [Eq(diff(f(t), t), 2 * f(t) + g(t)),
+         Eq(diff(g(t), t), u * f(t))]
+   sol13 = [Eq(f(t), -C1*exp(t*(1 - sqrt(u + 1)))/(sqrt(u + 1) + 1) + C2*exp(t*(sqrt(u + 1) + 1))/(sqrt(u + 1) - 1)),
+            Eq(g(t), C1*exp(t*(1 - sqrt(u + 1))) + C2*exp(t*(sqrt(u + 1) + 1)))]
+
+   assert dsolve(eq13) == sol13
+   assert checksysodesol(eq, s1) == (True, [0, 0])

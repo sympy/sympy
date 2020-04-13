@@ -643,17 +643,6 @@ def test_sysode_linear_2eq_order1_many_zeros():
 
 
 def test_dsolve_linsystem_symbol_piecewise():
-    u = Symbol('u')  # XXX it's more complicated with real u
-    eq = (Eq(diff(f(x), x), 2*f(x) + g(x)),
-           Eq(diff(g(x), x), u*f(x)))
-    s1 = [
-        Eq(f(x), -C1*exp(x*(1 - sqrt(u + 1)))/(sqrt(u + 1) + 1) + C2*exp(x*(sqrt(u + 1) + 1))/(sqrt(u + 1) - 1)),
-        Eq(g(x), C1*exp(x*(1 - sqrt(u + 1))) + C2*exp(x*(sqrt(u + 1) + 1)))
-    ]
-
-    assert dsolve(eq) == s1
-    # assert checksysodesol(eq, s) == (True, [0, 0]) is fixed
-    assert checksysodesol(eq, s1) == (True, [0, 0])
 
     # example from https://groups.google.com/d/msg/sympy/xmzoqW6tWaE/sf0bgQrlCgAJ
     i, r1, c1, r2, c2, t = symbols('i, r1, c1, r2, c2, t')
@@ -856,15 +845,23 @@ def test_linear_3eq_order1():
     f = t**3 + log(t)
     g = t**2 + sin(t)
     eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
+    # sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
+    # + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
+    # sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
+    # (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
+    # C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
+    # exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
+    # Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
     sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
-    + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
-    sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
-    (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
-    C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
-    exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
-    Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+            + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
+            + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
+            Eq(y(t), (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)* \
+            Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
+            + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
+            Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*Integral(t**3 + log(t), t)) - \
+            C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
     dsolve_sol = dsolve(eq4)
-    dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
+    # dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
     assert all(simplify(s4.rhs - ds4.rhs) == 0 for s4, ds4 in zip(sol4, dsolve_sol))
 
     eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))

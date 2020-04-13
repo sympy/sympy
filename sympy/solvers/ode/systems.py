@@ -342,6 +342,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_constant': is_constant,
         'is_homogeneous': is_homogeneous,
     }
+
+    # The match['is_linear'] check will be added in the future when this
+    # function becomes ready to deal with non-linear systems of ODEs
     if match['is_constant']:
 
         # Converting the equation into canonical form if the
