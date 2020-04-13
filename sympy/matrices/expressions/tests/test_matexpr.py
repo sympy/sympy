@@ -127,7 +127,7 @@ def test_ZeroMatrix():
     assert Z*A.T == ZeroMatrix(n, n)
     assert A - A == ZeroMatrix(*A.shape)
 
-    assert not Z
+    assert Z
 
     assert transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
