@@ -85,9 +85,6 @@ class MatPow(MatrixExpr):
 
         return MatPow(base, exp)
 
-    def as_explicit(self):
-        return super().as_explicit()
-
     def _eval_transpose(self):
         base, exp = self.args
         return MatPow(base.T, exp)
