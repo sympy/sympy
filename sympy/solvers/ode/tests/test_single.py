@@ -199,14 +199,12 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         example = ode_example['example_name']
         xfail = our_hint in ode_example['XFAIL']
         func = ode_example['func']
-        if xfail:
-            continue
         if our_hint.endswith('_Integral') or 'series' in our_hint:
             continue
         xpass = True
         if runxfail and not xfail:
             continue
-        if our_hint in classify_ode(eq):
+        if our_hint in classify_ode(eq, func):
             match_list.append(example)
             try:
                 dsolve_sol = dsolve(eq, func, hint=our_hint)
@@ -478,6 +476,7 @@ def _get_examples_ode_sol_bernoulli():
     'bernoulli_01': {
         'eq': Eq(x*f(x).diff(x) + f(x) - f(x)**2, 0),
         'sol': [Eq(f(x), 1/(C1*x + 1))],
+        'XFAIL': ['separable_reduced']
     },
 
     'bernoulli_02': {
@@ -611,7 +610,8 @@ def _get_examples_ode_sol_nth_algebraic():
 
     'algeb_05': {
         'eq': (1 - sin(f(x))) * f(x).diff(x),
-        'sol': [Eq(f(x), C1)]
+        'sol': [Eq(f(x), C1)],
+        'XFAIL': ['separable']  #It raised exception.
     },
 
     'algeb_06': {
@@ -642,6 +642,13 @@ def _get_examples_ode_sol_nth_algebraic():
     'algeb_11': {
         'eq': f(x) + f(x)*f(x).diff(x),
         'sol': [Eq(f(x), 0), Eq(f(x), C1 - x)],
+        'XFAIL': ['separable', '1st_exact', '1st_linear', 'Bernoulli', '1st_homogeneous_coeff_best',
+         '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
+         'lie_group', 'nth_linear_constant_coeff_undetermined_coefficients',
+         'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
+         'nth_linear_constant_coeff_variation_of_parameters',
+         'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters']
+         #nth_linear_constant_coeff_undetermined_coefficients raises exception rest all of them misses a solution.
     },
 
     'algeb_12': {
@@ -661,7 +668,7 @@ def _get_examples_ode_sol_nth_algebraic():
 
 def _get_all_examples():
     all_solvers = [_get_examples_ode_sol_euler_homogeneous(), _get_examples_ode_sol_euler_undetermined_coeff(), _get_examples_ode_sol_euler_var_para(),
-    _get_examples_ode_sol_factorable(), _get_examples_ode_sol_bernoulli()]
+    _get_examples_ode_sol_factorable(), _get_examples_ode_sol_bernoulli(), _get_examples_ode_sol_nth_algebraic()]
     all_examples = []
     for solver in all_solvers:
         for example in solver['examples']:

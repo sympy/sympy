@@ -1231,7 +1231,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     _, u = mul.as_independent(x, f(x))
                     break
             if u and u.has(f(x)):
-                h = x**(degree(Poly(u.subs(f(x), y)), gen=x))*f(x)
+                h = x**(degree(Poly(u.subs(f(x), y), gen=x)))*f(x)
                 p = Wild('p')
                 if (u/h == 1) or ((u/h).simplify().match(x**p)):
                     t = Dummy('t')
@@ -1240,8 +1240,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     test = factor.subs(((u, t), (1/u, 1/t)))
                     free = test.free_symbols
                     if len(free) == 1 and free.pop() == t:
-                        power = (degree(Poly(u.subs(f(x), y)), gen = x))
-                        r2.update({'power': power, 'u': test})
+                        r2.update({'power': xpart.as_base_exp()[1], 'u': test})
                         matching_hints["separable_reduced"] = r2
                         matching_hints["separable_reduced_Integral"] = r2
 
