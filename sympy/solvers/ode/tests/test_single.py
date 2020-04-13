@@ -667,8 +667,13 @@ def _get_examples_ode_sol_nth_algebraic():
 
 
 def _get_all_examples():
-    all_solvers = [_get_examples_ode_sol_euler_homogeneous(), _get_examples_ode_sol_euler_undetermined_coeff(), _get_examples_ode_sol_euler_var_para(),
-    _get_examples_ode_sol_factorable(), _get_examples_ode_sol_bernoulli(), _get_examples_ode_sol_nth_algebraic()]
+    all_solvers = [_get_examples_ode_sol_euler_homogeneous(),
+    _get_examples_ode_sol_euler_undetermined_coeff(),
+    _get_examples_ode_sol_euler_var_para(),
+    _get_examples_ode_sol_factorable(),
+    _get_examples_ode_sol_bernoulli(),
+    _get_examples_ode_sol_nth_algebraic()]
+
     all_examples = []
     for solver in all_solvers:
         for example in solver['examples']:
