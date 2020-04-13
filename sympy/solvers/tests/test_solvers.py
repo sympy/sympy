@@ -356,7 +356,7 @@ def test_solve_transcendental():
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
     assert solve(cos(x) - y, x) == [-acos(y) + 2*pi, acos(y)]
     assert solve(2*cos(x) - y, x) == [-acos(y/2) + 2*pi, acos(y/2)]
-    assert solve(Eq(cos(x), sin(x)), x) == [pi*Rational(-3, 4), pi/4]
+    assert solve(Eq(cos(x), sin(x)), x) == [pi/4]
 
     assert set(solve(exp(x) + exp(-x) - y, x)) in [set([
         log(y/2 - sqrt(y**2 - 4)/2),
@@ -509,6 +509,7 @@ def test_solve_for_functions_derivatives():
     soln = solve([f(x).diff(x, 2) + f(x).diff(x, 3) - 1, 1 - f(x).diff(x, 2) -
             f(x).diff(x, 3), 1 - f(x).diff(x,3)], f(x).diff(x, 2), f(x).diff(x, 3))
     assert soln == { f(x).diff(x, 2): 0, f(x).diff(x, 3): 1 }
+
 
 def test_issue_3725():
     f = Function('f')
@@ -734,8 +735,7 @@ def test_issue_4671_4463_4467():
     assert solve(1 - log(a + 4*x**2), x) in (
         [-sqrt(-a + E)/2, sqrt(-a + E)/2],
         [sqrt(-a + E)/2, -sqrt(-a + E)/2],)
-    assert set(solve((
-        a**2 + 1) * (sin(a*x) + cos(a*x)), x)) == set([-pi/(4*a), 3*pi/(4*a)])
+    assert solve((a**2 + 1)*(sin(a*x) + cos(a*x)), x) == [-pi/(4*a)]
     assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [log(3)/a]
     assert set(solve(3 - (sinh(a*x) + cosh(a*x)**2), x)) == \
         set([log(-2 + sqrt(5))/a, log(-sqrt(2) + 1)/a,
@@ -1160,6 +1160,7 @@ def test_checksol():
     raises(ValueError, lambda: checksol(x, 1))
     raises(ValueError, lambda: checksol([], x, 1))
 
+
 def test__invert():
     assert _invert(x - 2) == (2, x)
     assert _invert(2) == (2, 0)
@@ -1369,6 +1370,7 @@ def test_failing_assumptions():
     'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
     'extended_nonpositive': None, 'extended_nonzero': None,
     'extended_positive': None }
+
 
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
@@ -1692,8 +1694,7 @@ def test_rewrite_trig():
     assert solve(sinh(x) + tanh(x)) == [0, I*pi]
 
     # issue 6157
-    assert solve(2*sin(x) - cos(x), x) == [-2*atan(2 - sqrt(5)),
-                                           -2*atan(2 + sqrt(5))]
+    assert solve(2*sin(x) - cos(x), x) == [atan(S.Half)]
 
 
 @XFAIL
@@ -2057,6 +2058,7 @@ def test_issue_15307():
     eq2 = Eq(-2*x + 8, 2*x - 40)
     assert solve([eq1, eq2]) == {x:12, y:75}
 
+
 def test_issue_15415():
     assert solve(x - 3, x) == [3]
     assert solve([x - 3], x) == {x:3}
@@ -2152,6 +2154,7 @@ def test_issue_17949():
     assert solve(exp(+x-x**2), x) == []
     assert solve(exp(-x-x**2), x) == []
 
+
 def test_issue_10993():
     assert solve(Eq(binomial(x, 2), 3)) == [-2, 3]
     assert solve(Eq(pow(x, 2) + binomial(x, 3), x)) == [-4, 0, 1]
@@ -2160,9 +2163,25 @@ def test_issue_10993():
     assert solve(x-binomial(a, 3) + binomial(y, 2) + sin(a), x) == [-sin(a) + binomial(a, 3) - binomial(y, 2)]
     assert solve((x+1)-binomial(x+1, 3), x) == [-2, -1, 3]
 
+
 def test_issue_11553():
     eq1 = x + y + 1
     eq2 = x + GoldenRatio
     assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
     eq3 = x + 2 + TribonacciConstant
     assert solve([eq1, eq3], x, y) == {x: -2 - TribonacciConstant, y: 1 + TribonacciConstant}
+
+
+def test_issue_19113_19102():
+    t = S(1)/3
+    solve(cos(x)**5-sin(x)**5)
+    assert solve(4*cos(x)**3 - 2*sin(x)**3) == [
+        atan(2**(t)), -atan(2**(t)*(1 - sqrt(3)*I)/2),
+        -atan(2**(t)*(1 + sqrt(3)*I)/2)]
+    h = S.Half
+    assert solve(cos(x)**2 + sin(x)) == [
+        2*atan(-h + sqrt(5)/2 + sqrt(2)*sqrt(1 - sqrt(5))/2),
+        -2*atan(h + sqrt(5)/2 + sqrt(2)*sqrt(1 + sqrt(5))/2),
+        -2*atan(-sqrt(5)/2 + h + sqrt(2)*sqrt(1 - sqrt(5))/2),
+        -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2)]
+    assert solve(3*cos(x) - sin(x)) == [atan(3)]
