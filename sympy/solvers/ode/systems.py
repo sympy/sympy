@@ -1,18 +1,52 @@
 from sympy import (Matrix, Derivative, Symbol)
-from sympy.solvers.deutils import ode_order
+from sympy.core import Expr, Equality, Add
+from sympy.core.compatibility import is_sequence
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
 from sympy.functions import exp, im, cos, sin, re
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import zeros
+from sympy.matrices import zeros, Matrix, MatrixBase
+from sympy.simplify import simplify
+from sympy.solvers.deutils import ode_order
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import uniq
-from sympy.simplify import simplify
 
 
 def _get_func_order(eqs, funcs):
     return {func: max(ode_order(eq, func) for eq in eqs) for func in funcs}
+
+
+def linear_eq_to_matrix(eqs, variables, rep=None):
+    from sympy.solvers.solveset import linear_coeffs
+
+    if rep is None:
+        rep = {var: Dummy() for var in variables}
+
+    equations = [eq.subs(rep) for eq in eqs]
+    symbols = [rep[var] for var in variables]
+
+    equations = sympify(equations)
+    if isinstance(equations, MatrixBase):
+        equations = list(equations)
+    elif isinstance(equations, (Expr, Eq)):
+        equations = [equations]
+    elif not is_sequence(equations):
+        raise ValueError(filldedent('''
+            Equation(s) must be given as a sequence, Expr,
+            Eq or Matrix.
+            '''))
+
+    A, b = [], []
+    for i, f in enumerate(equations):
+        if isinstance(f, Equality):
+            f = f.rewrite(Add, evaluate=False)
+        coeff_list = linear_coeffs(f, *symbols)
+        b.append(-coeff_list.pop())
+        A.append(coeff_list)
+    A, b = map(Matrix, (A, b))
+    return A, b, rep
 
 
 def matrix_exp(A, t):
@@ -278,7 +312,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
     """
-    from sympy.solvers.solveset import linear_eq_to_matrix
     from sympy.solvers.solvers import solve
 
     # Error for i == 0 can be added but isn't for now
@@ -307,11 +340,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
 
-    rep = {func.diff(t, n): Dummy() for func in order.keys() for n in range(order[func] + 1)}
-    eqs_sub = [eq.subs(rep) for eq in eqs]
     # Linearity check
     try:
-        A, b = linear_eq_to_matrix(eqs_sub, rep.values())
+        A, b, rep = linear_eq_to_matrix(eqs, [func.diff(t, n) for func in funcs for n in range(order[func] + 1)])
 
     except ValueError:
         return None
@@ -343,8 +374,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
             canon_eqs = solve(eqs, *[func.diff(t) for func in funcs])
             canon_eqs = [func.diff(t) - canon_eqs[func.diff(t)] for func in funcs]
-            new_eqs = [canon_eq.subs(rep) for canon_eq in canon_eqs]
-            coef = linear_eq_to_matrix(new_eqs, [rep[func] for func in funcs])
+            coef = linear_eq_to_matrix(canon_eqs, funcs, rep)
             match['func_coeff'] = coef[0]
             match['type_of_equation'] = "type1"
 
