@@ -1,4 +1,4 @@
-from sympy import (Matrix, Derivative, Symbol)
+from sympy import (Derivative, Symbol)
 from sympy.core import Expr, Equality, Add
 from sympy.core.compatibility import is_sequence
 from sympy.core.numbers import I
@@ -10,7 +10,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.simplify import simplify
 from sympy.solvers.deutils import ode_order
-from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.utilities import numbered_symbols, default_sort_key, filldedent
 from sympy.utilities.iterables import uniq
 
 
