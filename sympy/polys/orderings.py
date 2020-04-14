@@ -113,12 +113,12 @@ class ProductOrder(MonomialOrder):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
     def __repr__(self):
-        from sympy.core import Tuple
-        return self.__class__.__name__ + repr(Tuple(*[x[0] for x in self.args]))
+        contents = [repr(x[0]) for x in self.args]
+        return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
     def __str__(self):
-        from sympy.core import Tuple
-        return self.__class__.__name__ + str(Tuple(*[x[0] for x in self.args]))
+        contents = [str(x[0]) for x in self.args]
+        return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
     def __eq__(self, other):
         if not isinstance(other, ProductOrder):

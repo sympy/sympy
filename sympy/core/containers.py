@@ -47,7 +47,7 @@ class Tuple(Basic):
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
-            args = ( sympify(arg) for arg in args )
+            args = (sympify(arg) for arg in args)
         obj = Basic.__new__(cls, *args)
         return obj
 

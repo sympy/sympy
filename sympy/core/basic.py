@@ -2042,7 +2042,7 @@ class preorder_traversal:
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""
     try:
-        query = sympify(query)
+        query = _sympify(query)
     except SympifyError:
         pass
     if isinstance(query, type):
