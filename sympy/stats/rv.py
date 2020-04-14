@@ -1050,16 +1050,16 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
     >>> from sympy.stats import Die, sample, Normal
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
-    >>> die_roll = sample(X + Y + Z) # A random realization of three dice
+    >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
     >>> N = Normal('N', 3, 4)
-    >>> samp = next(sample(N))[0]
-    >>> samp in N.pspace.domain.set
+    >>> samp = next(sample(N))[0] # doctest: +SKIP
+    >>> samp in N.pspace.domain.set # doctest: +SKIP
     True
-    >>> samp = next(sample(N, N>0))[0]
-    >>> samp > 0
+    >>> samp = next(sample(N, N>0))[0] # doctest: +SKIP
+    >>> samp > 0 # doctest: +SKIP
     True
-    >>> samp_list = next(sample(N, size=4))
-    >>> [sam in N.pspace.domain.set for sam in samp_list]
+    >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
+    >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
 
     """
@@ -1137,7 +1137,7 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
     >>> from sympy.stats import Normal, sample_iter
     >>> X = Normal('X', 0, 1)
     >>> expr = X*X + 3
-    >>> iterator = sample_iter(expr, numsamples=3)
+    >>> iterator = sample_iter(expr, numsamples=3) # doctest: +SKIP
     >>> list(iterator) # doctest: +SKIP
     [12, 4, 7]
 

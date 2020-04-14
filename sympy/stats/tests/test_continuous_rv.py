@@ -321,10 +321,14 @@ def test_moment_generating_function():
 
 def test_sample_continuous():
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
+    assert density(Z)(-1) == 0
+
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     assert next(sample(Z))[0] in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val[0] in Interval(0, oo)
-    assert density(Z)(-1) == 0
 
 
 def test_ContinuousRV():
@@ -849,7 +853,9 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     for i in range(3):
         X = LogNormal('x', i, 1)
         assert next(sample(X))[0] in X.pspace.domain.set
@@ -1258,6 +1264,9 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     size = 5
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     for var in variables:
         for i in range(niter):
             assert next(sample(var))[0] in var.pspace.domain.set

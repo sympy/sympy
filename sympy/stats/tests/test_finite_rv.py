@@ -146,6 +146,9 @@ def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     assert next(sample(X, X > 5)) == 6
 
 

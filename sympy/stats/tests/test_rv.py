@@ -8,7 +8,8 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
 
@@ -80,6 +81,9 @@ def test_sample_iter():
     Y = DiscreteUniform('Y', [1,2,7])
     Z = Poisson('Z', 2)
 
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     expr = X**2 + 3
     iterator = sample_iter(expr)
 
@@ -182,6 +186,9 @@ def test_Sample():
     Y = Normal('Y', 0, 1)
     z = Symbol('z', integer=True)
 
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
     assert next(sample(X + Y))[0].is_Float
 
