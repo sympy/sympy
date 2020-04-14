@@ -54,7 +54,6 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     _argnames = ('pdf',)
 
     def __new__(cls, pdf, set=S.Integers):
-        cls.check(pdf, set)
         return Basic.__new__(cls, pdf, set)
 
     @property
@@ -84,7 +83,7 @@ def DiscreteRV(symbol, density, set=S.Integers):
     Examples
     ========
 
-    >>> from sympy.stats import DiscreteRV
+    >>> from sympy.stats import DiscreteRV, P, E
     >>> from sympy import Rational, Symbol
     >>> x = Symbol('x')
     >>> n = 10
@@ -104,8 +103,7 @@ def DiscreteRV(symbol, density, set=S.Integers):
     set = sympify(set)
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    dist = DiscreteDistributionHandmade(pdf, set)
-    return SingleDiscretePSpace(symbol.name, dist).value
+    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set)
 
 
 #-------------------------------------------------------------------------------

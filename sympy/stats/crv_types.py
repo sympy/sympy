@@ -138,7 +138,6 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
-        cls.check(pdf, set)
         return Basic.__new__(cls, pdf, set)
 
     @property
@@ -193,8 +192,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    dist = ContinuousDistributionHandmade(pdf, set)
-    return SingleContinuousPSpace(symbol.name, dist).value
+    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set))
 
 ########################################
 # Continuous Probability Distributions #
