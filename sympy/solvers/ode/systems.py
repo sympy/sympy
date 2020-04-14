@@ -1,16 +1,13 @@
 from sympy import (Derivative, Symbol)
-from sympy.core import Expr, Equality, Add
-from sympy.core.compatibility import is_sequence
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import sympify
 from sympy.functions import exp, im, cos, sin, re
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import zeros, Matrix, MatrixBase
+from sympy.matrices import zeros, Matrix
 from sympy.simplify import simplify
 from sympy.solvers.deutils import ode_order
-from sympy.utilities import numbered_symbols, default_sort_key, filldedent
+from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import uniq
 
 
@@ -223,16 +220,16 @@ def matrix_exp_jordan_form(A, t):
     eigenchains = jordan_chains(A)
 
     # Needed for consistency across Python versions:
-    eigenchains = sorted(eigenchains.items(), key=default_sort_key)
+    eigenchains_iter = sorted(eigenchains.items(), key=default_sort_key)
     isreal = not A.has(I)
 
     blocks = []
     vectors = []
     seen_conjugate = set()
-    for e, chains in eigenchains:
+    for e, chains in eigenchains_iter:
         for chain in chains:
             n = len(chain)
-            if isreal and im(e).is_nonzero:
+            if isreal and e != e.conjugate() and e.conjugate() in eigenchains:
                 if e in seen_conjugate:
                     continue
                 seen_conjugate.add(e.conjugate())

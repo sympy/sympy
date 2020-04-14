@@ -546,3 +546,12 @@ def test_sysode_linear_neq_order1():
 
     assert dsolve(eq23) == sol23
     assert checksysodesol(eq23, sol23) == (True, [0, 0])
+
+    # Regression test case for issue #15474
+    # https://github.com/sympy/sympy/issues/15474
+    a = Symbol("a", real=True)
+    eq24 = [x(t).diff(t) - a*y(t), y(t).diff(t) + a*x(t)]
+    sol24 = [Eq(x(t), C1*sin(a*t) + C2*cos(a*t)), Eq(y(t), C1*cos(a*t) - C2*sin(a*t))]
+
+    assert dsolve(eq24) == sol24
+    assert checksysodesol(eq24, sol24) == (True, [0, 0])
