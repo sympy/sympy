@@ -636,6 +636,16 @@ class Add(Expr, AssocOp):
         if self.is_number:
             return super()._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
+        if not any(var.is_Dummy for var in list(self.free_symbols)):
+            monotonic_signs = [_monotonic_sign(s) for s in self.args]
+
+            # If we get pure expression without Dummy and all terms
+            # have monotonic signs we will check all terms. It will be
+            # easier for expressions, which have Pow
+
+            if None not in monotonic_signs:
+                if sum(monotonic_signs).is_positive and a.is_nonnegative:
+                    return True
         if not c.is_zero:
             v = _monotonic_sign(a)
             if v is not None:
