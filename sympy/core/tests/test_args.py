@@ -1291,14 +1291,14 @@ def test_sympy__stats__frv_types__FiniteDistributionHandmade():
 
 
 def test_sympy__stats__crv__ContinuousDistributionHandmade():
-    from sympy.stats.crv import ContinuousDistributionHandmade
+    from sympy.stats.crv_types import ContinuousDistributionHandmade
     from sympy import Symbol, Interval
     assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
                                                      Interval(0, 2)))
 
 
 def test_sympy__stats__drv__DiscreteDistributionHandmade():
-    from sympy.stats.drv import DiscreteDistributionHandmade
+    from sympy.stats.drv_types import DiscreteDistributionHandmade
     assert _test_args(DiscreteDistributionHandmade(x, S.Naturals))
 
 

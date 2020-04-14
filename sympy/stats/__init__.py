@@ -47,6 +47,7 @@ __all__ = [
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
     'BetaBinomial', 'Hypergeometric', 'Rademacher',
+    'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
     'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
@@ -56,10 +57,10 @@ __all__ = [
     'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
     'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
-    'Weibull', 'WignerSemicircle',
+    'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
     'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
-    'YuleSimon', 'Zeta',
+    'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
     'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
@@ -87,7 +88,8 @@ from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         moment_generating_function, smoment, quantile, coskewness)
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
-        Binomial, BetaBinomial, Hypergeometric, Rademacher)
+        Binomial, BetaBinomial, Hypergeometric, Rademacher,
+        FiniteDistributionHandmade)
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
@@ -96,10 +98,10 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         Levy, Logistic, LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal,
         GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
-        VonMises, Wald, Weibull, WignerSemicircle)
+        VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
 
 from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
-        Skellam, YuleSimon, Zeta)
+        Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
 
 from .joint_rv_types import (JointRV, Dirichlet,
         GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
