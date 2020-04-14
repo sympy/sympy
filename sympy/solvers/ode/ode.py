@@ -1231,7 +1231,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     _, u = mul.as_independent(x, f(x))
                     break
             if u and u.has(f(x)):
-                h = x**(degree(Poly(u.subs(f(x), y)), gen=x))*f(x)
+                h = x**(degree(Poly(u.subs(f(x), y), gen=x)))*f(x)
                 p = Wild('p')
                 if (u/h == 1) or ((u/h).simplify().match(x**p)):
                     t = Dummy('t')
