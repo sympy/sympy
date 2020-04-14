@@ -21,6 +21,7 @@ def test_neq_nth_linear_constant_coeff_match():
     eqs_1 = (5 * x1 + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     assert neq_nth_linear_constant_coeff_match(eqs_1, funcs, t) is None
 
+    # NOTE: Raises TypeError
     eqs_2 = (5 * (x1**2) + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     assert neq_nth_linear_constant_coeff_match(eqs_2, funcs, t) is None
 

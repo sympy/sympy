@@ -18,35 +18,132 @@ def _get_func_order(eqs, funcs):
     return {func: max(ode_order(eq, func) for eq in eqs) for func in funcs}
 
 
-def linear_eq_to_matrix(eqs, variables, rep=None):
-    from sympy.solvers.solveset import linear_coeffs
+class ODEOrderError(ValueError):
+    """Raised by linear_ode_to_matrix if the system has the wrong order"""
+    pass
 
-    if rep is None:
-        rep = {var: Dummy() for var in variables}
 
-    equations = [eq.subs(rep) for eq in eqs]
-    symbols = [rep[var] for var in variables]
+def linear_ode_to_matrix(eqs, funcs, t, order):
+    r"""
+    Convert a linear system of ODEs to matrix form
 
-    equations = sympify(equations)
-    if isinstance(equations, MatrixBase):
-        equations = list(equations)
-    elif isinstance(equations, (Expr, Eq)):
-        equations = [equations]
-    elif not is_sequence(equations):
-        raise ValueError(filldedent('''
-            Equation(s) must be given as a sequence, Expr,
-            Eq or Matrix.
-            '''))
+    Explanation
+    ===========
 
-    A, b = [], []
-    for i, f in enumerate(equations):
-        if isinstance(f, Equality):
-            f = f.rewrite(Add, evaluate=False)
-        coeff_list = linear_coeffs(f, *symbols)
-        b.append(-coeff_list.pop())
-        A.append(coeff_list)
-    A, b = map(Matrix, (A, b))
-    return A, b, rep
+    Express a system of linear ordinary differential equations as a single
+    matrix differential equation [1]. For example the system $x' = x + y + 1$
+    and $y' = x - y$ can be represented as
+
+    .. math::
+        A_1 X' + A_0 X = b
+
+    where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
+    $2 \times 1$ matrices with $X = [x, y]^T$.
+
+    Higher-order systems are represented with additional matrices e.g. a
+    second-order system would look like
+
+    .. math::
+        A_2 X'' + A_1 X' + A_0 X = b
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Symbol
+    >>> t = Symbol('t')
+    >>> x = Function('x')
+    >>> y = Function('y')
+
+    We can create a system of linear ODEs like
+
+    >>> eqs = [
+    ...     Eq(x(t).diff(t), x(t) + y(t) + 1),
+    ...     Eq(y(t).diff(t), x(t) - y(t)),
+    ... ]
+    >>> funcs = [x(t), y(t)]
+    >>> order = 1 # 1st order system
+
+    Now ``linear_ode_to_matrix`` can represent this as a matrix
+    differential equation.
+
+    >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, order)
+    >>> A1
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> A0
+    Matrix([
+    [-1, -1],
+    [-1,  1]])
+    >>> b
+    Matrix([
+    [1],
+    [0]])
+
+    The original equations can be recovered from these matrices:
+
+    >>> eqs_mat = Matrix([eq.lhs - eq.rhs for eq in eqs])
+    >>> X = Matrix(funcs)
+    >>> A1 * X.diff(t) + A0 * X - b == eqs_mat
+    True
+
+    Parameters
+    ==========
+
+    eqs : list of sympy expressions or equalities
+        The equations as expressions (assumed equal to zero).
+    funcs : list of applied functions
+        The dependent variables of the system of ODEs.
+    t : symbol
+        The independent variable.
+    order : int
+        The order of the system of ODEs.
+
+    Returns
+    =======
+
+    The tuple ``(As, b)`` where ``As`` is a tuple of matrices and ``b`` is the
+    the matrix representing the rhs of the matrix equation.
+
+    See Also
+    ========
+
+    linear_eq_to_matrix: for systems of linear algebraic equations.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Matrix_differential_equation
+
+    """
+    from sympy.solvers.solveset import linear_eq_to_matrix
+
+    if any(ode_order(eq, func) > order for eq in eqs for func in funcs):
+        msg = "Cannot represent system in {}-order form"
+        raise ODEOrderError(msg.format(order))
+
+    As = []
+
+    for o in range(order, -1, -1):
+        # Work from the highest derivative down
+        funcs_deriv = [func.diff(t, o) for func in funcs]
+
+        # linear_eq_to_matrix expects a proper symbol so substitute e.g.
+        # Derivative(x(t), t) for a Dummy.
+        rep = {func_deriv: Dummy() for func_deriv in funcs_deriv}
+        eqs = [eq.subs(rep) for eq in eqs]
+        syms = [rep[func_deriv] for func_deriv in funcs_deriv]
+
+        # Ai is the matrix for X(t).diff(t, o)
+        # eqs is minus the remainder of the equations.
+        Ai, b = linear_eq_to_matrix(eqs, syms)
+        As.append(Ai)
+        if o:
+            eqs = [-eq for eq in b]
+        else:
+            rhs = b
+
+    return As, rhs
 
 
 def matrix_exp(A, t):
@@ -337,16 +434,28 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # function
     order = _get_func_order(eqs, funcs)
 
+    if not all(order[func] == 1 for func in funcs):
+        return None
+    else:
+
+        # TO be changed when this function is updated
+        system_order = 1
+
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
 
     # Linearity check
     try:
-        A, b, rep = linear_eq_to_matrix(eqs, [func.diff(t, n) for func in funcs for n in range(order[func] + 1)])
+        canon_eqs = solve(eqs, *[func.diff(t) for func in funcs])
+        canon_eqs = [func.diff(t) - canon_eqs[func.diff(t)] for func in funcs]
+        As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
 
-    except ValueError:
+    # When the system of ODEs is non-linear, either TypeError or
+    # a ValueError is raised. For both of these cases, None is returned.
+    except (ValueError, TypeError):
         return None
 
+    A = As[1]
     is_linear = True
 
     # Constant coefficient check
@@ -354,6 +463,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Homogeneous check
     is_homogeneous = True if b.is_zero_matrix else False
+
     match = {
         'no_of_equation': len(eqs),
         'eq': eqs,
@@ -372,10 +482,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         # equation is first order. There will be a separate
         # function for this in the future.
         if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
-            canon_eqs = solve(eqs, *[func.diff(t) for func in funcs])
-            canon_eqs = [func.diff(t) - canon_eqs[func.diff(t)] for func in funcs]
-            coef = linear_eq_to_matrix(canon_eqs, funcs, rep)
-            match['func_coeff'] = coef[0]
+            match['func_coeff'] = A
             match['type_of_equation'] = "type1"
 
             return match
