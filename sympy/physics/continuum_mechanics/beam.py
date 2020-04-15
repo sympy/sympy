@@ -1556,7 +1556,6 @@ class Beam(object):
 
     def ild_reactions(self, val, Plot=True, *reactions):
         """
-
         Plots the influence line diagram of reaction forces under the effect
         of a moving load.
 
