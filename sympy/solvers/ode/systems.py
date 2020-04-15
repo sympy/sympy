@@ -46,7 +46,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Examples
     ========
 
-    >>> from sympy import Function, Symbol
+    >>> from sympy import (Function, Symbol, Matrix, Eq)
+    >>> from sympy.solvers.ode.systems import linear_ode_to_matrix
     >>> t = Symbol('t')
     >>> x = Function('x')
     >>> y = Function('y')
