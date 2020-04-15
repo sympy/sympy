@@ -1554,6 +1554,64 @@ class Beam(object):
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
+    def ild_reactions(self, val, Plot=True, *reactions):
+        """
+
+        Plots the influence line diagram of reaction forces under the effect
+        of a moving load.
+
+
+        Parameters
+        ==========
+        val : Integer
+            Magnitude of moving load
+        Plot : Boolean (default = True)
+            Setting ``Plot = True`` would print the reaction equations and
+            plot them.
+            Setting ``Plot = False`` would update the values in reaction_loads
+            dictionary without plotting them.
+        reactions :
+            The reaction forces applied on the beam.
+
+        """
+        x = self.variable
+        l = self.length
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+        X = symbols('X')
+
+        shear_curve = limit(self.shear_force(), x, l) + val
+        moment_curve = limit(self.bending_moment(), x, l) + val*(l-X)
+
+        slope_eqs = []
+        deflection_eqs = []
+
+        slope_curve = integrate(self.bending_moment(), x) + C3
+        for position, value in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - value
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - value
+            deflection_eqs.append(eqs)
+
+        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
+                            + deflection_eqs, (C3, C4) + reactions).args)[0])
+        solution = solution[2:]
+        # Determining the equations and solving them.
+        self._reaction_loads = dict(zip(reactions, solution))
+
+        if(Plot == True):
+            # Printing the reaction equations
+            print(self._reaction_loads)
+
+            # Plotting the equations
+            for i in self._reaction_loads:
+                p1 = plot(self._reaction_loads[i], (X, 0, self._length), title='I.L.D. for Reactions',
+                    xlabel=X, ylabel=i, line_color='B')
+
+
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
         """
