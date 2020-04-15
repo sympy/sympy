@@ -206,10 +206,10 @@ def test_randprime():
 
 def test_primorial():
     assert primorial(1) == 2
-    assert primorial(1, 0) == 1
+    assert primorial(1, nth=False) == 1
     assert primorial(2) == 6
-    assert primorial(2, 0) == 2
-    assert primorial(4, 0) == 6
+    assert primorial(2, nth=False) == 2
+    assert primorial(4, nth=False) == 6
 
     assert primorial(x).subs(x, 2) == 6
 

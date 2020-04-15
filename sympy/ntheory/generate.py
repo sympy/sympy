@@ -386,10 +386,8 @@ class prime(Function):
     """
     @classmethod
     def eval(cls, nth):
-        if isinstance(nth, Symbol):
+        if not nth.is_Number:
             return None
-        if not isinstance(nth, Integer):
-            return ValueError
 
         n = as_int(nth)
         if n < 1:
@@ -490,7 +488,7 @@ class primepi(Function):
             return S.Infinity
         if n is S.NegativeInfinity:
             return S.Zero
-        if isinstance(n, Symbol):
+        if not n.is_Number:
             return None
 
         try:
@@ -559,7 +557,7 @@ class nextprime(Function):
     """
     @classmethod
     def eval(cls, n, ith=1):
-        if isinstance(n, Symbol):
+        if not n.is_Number:
             return None
 
         n = int(n)
@@ -631,7 +629,7 @@ class prevprime(Function):
 
         # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        if isinstance(n, Symbol):
+        if not n.is_Number:
             return None
 
         n = as_int(ceiling(n))
@@ -834,8 +832,8 @@ class primorial(Function):
 
     """
     @classmethod
-    def eval(cls, n, nth=True):
-        if isinstance(n, Symbol):
+    def eval(cls, n, *, nth=True):
+        if not n.is_Number:
             return None
 
         if nth:
@@ -970,10 +968,8 @@ class composite(Function):
     """
     @classmethod
     def eval(cls, nth):
-        if isinstance(nth, Symbol):
-            return None
-        if not isinstance(nth, Integer):
-            return ValueError
+        if not nth.is_Number:
+            return None 
 
         n = as_int(nth)
         if n < 1:
@@ -1042,7 +1038,7 @@ class compositepi(Function):
     """
     @classmethod
     def eval(cls, n):
-        if not isinstance(n, Integer):
+        if not n.is_Number:
             return None
 
         n = int(n)
