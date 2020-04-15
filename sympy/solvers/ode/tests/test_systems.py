@@ -3,9 +3,46 @@ from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational
 from sympy.functions import exp, cos, sin
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
-from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
+from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
+                                       ODEOrderError)
+from sympy.testing.pytest import raises
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
+
+
+def test_linear_ode_to_matrix():
+    f, g, h = symbols("f, g, h", cls=Function)
+    t = Symbol("t")
+    funcs = [f(t), g(t), h(t)]
+    f1 = f(t).diff(t)
+    g1 = g(t).diff(t)
+    h1 = h(t).diff(t)
+    f2 = f(t).diff(t, 2)
+    g2 = g(t).diff(t, 2)
+    h2 = h(t).diff(t, 2)
+
+    eqs_1 = [Eq(f1, g(t)), Eq(g1, f(t))]
+    sol_1 = ([Matrix([[1, 0], [0, 1]]), Matrix([[ 0, -1], [-1,  0]])], Matrix([[0],[0]]))
+    assert linear_ode_to_matrix(eqs_1, funcs[:-1], t, 1) == sol_1
+
+    eqs_2 = [Eq(f1, f(t) + 2*g(t)), Eq(g1, h(t)), Eq(h1, g(t) + h(t) + f(t))]
+    sol_2 = ([Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]]), Matrix([[-1, -2,  0], [ 0,  0, -1], [-1, -1, -1]])],
+             Matrix([[0], [0], [0]]))
+    assert linear_ode_to_matrix(eqs_2, funcs, t, 1) == sol_2
+
+    eqs_3 = [Eq(2*f1 + 3*h1, f(t) + g(t)), Eq(4*h1 + 5*g1, f(t) + h(t)), Eq(5*f1 + 4*g1, g(t) + h(t))]
+    sol_3 = ([Matrix([[2, 0, 3], [0, 5, 4], [5, 4, 0]]), Matrix([[-1, -1,  0], [-1,  0, -1], [0, -1, -1]])],
+             Matrix([[0], [0], [0]]))
+    assert linear_ode_to_matrix(eqs_3, funcs, t, 1) == sol_3
+
+    eqs_4 = [Eq(f2 + h(t), f1 + g(t)), Eq(2*h2 + g2 + g1 + g(t), 0), Eq(3*h1, 4)]
+    sol_4 = ([Matrix([[1, 0, 0], [0, 1, 2], [0, 0, 0]]), Matrix([[-1, 0, 0], [0, 1, 0], [0, 0, 3]]),
+              Matrix([[0, -1, 1], [0,  1, 0], [0, 0, 0]])], Matrix([[0], [0], [4]]))
+    assert linear_ode_to_matrix(eqs_4, funcs, t, 2) == sol_4
+
+    eqs_5 = [Eq(f2, g(t)), Eq(f1 + g1, f(t))]
+    raises(ODEOrderError, lambda: linear_ode_to_matrix(eqs_5, funcs[:-1], t, 1))
+
 
 def test_neq_nth_linear_constant_coeff_match():
     x, y, z, w = symbols('x, y, z, w', cls=Function)
@@ -465,7 +502,7 @@ def test_sysode_linear_neq_order1():
     eq14 = [Eq(f(t).diff(t), 2 * g(t) - 3 * h(t)),
            Eq(g(t).diff(t), 4 * h(t) - 2 * f(t)),
            Eq(h(t).diff(t), 3 * f(t) - 4 * g(t))]
-    sol14 = [Eq(f(t), 2*C1 + C2*(-3*sqrt(29)*sin(sqrt(29)*t)/25 - 8*cos(sqrt(29)*t)/25) + C3*(8*sin(sqrt(29)*t)/25 - \
+    sol14 = [Eq(f(t), 2*C1 + C2*(-3*sqrt(29)*sin(sqrt(29)*t)/25 - 8*cos(sqrt(29)*t)/25) + C3*(8*sin(sqrt(29)*t)/25 -  \
             3*sqrt(29)*cos(sqrt(29)*t)/25)), Eq(g(t), 3*C1/2 + C2*(4*sqrt(29)*sin(sqrt(29)*t)/25 - 6*cos(sqrt(29)*t)/25) \
             + C3*(6*sin(sqrt(29)*t)/25 + 4*sqrt(29)*cos(sqrt(29)*t)/25)), Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))]
 
