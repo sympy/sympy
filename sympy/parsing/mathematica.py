@@ -60,7 +60,11 @@ class MathematicaParser(object):
         'LogIntegral[x]':' li(x)',
         'PrimePi[x]': 'primepi(x)',
         'Prime[x]': 'prime(x)',
-        'PrimeQ[x]': 'isprime(x)'
+        'PrimeQ[x]': 'isprime(x)',
+        'Factorial[x]': 'factorial(x)',
+        'FactorialPower[x,y]': 'ff(x,y)',
+        'Binomial[x,y]': 'binomial(x,y)',
+        'Multinomial[*x]': 'multinomial(*x)'
     }
 
     # trigonometric, e.t.c.

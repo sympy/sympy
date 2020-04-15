@@ -947,19 +947,15 @@ class binomial(CombinatorialFunction):
     def eval(cls, n, k):
         from sympy import Min
         n, k = map(sympify, (n, k))
-        if n.is_zero:   #
-            n = S.Zero  # XXX is this anti-SymPy?
-        if k.is_zero:   #
-            k = S.Zero  #
-        n_k = n - k
         if k == 1:
-            return k*n          #
-        if n_k == 1:            #
-            return n_k*n        # written to
-        if k.is_zero:           # retain Float
-            return S.One + k    # when present
-        if n_k.is_zero:         #
-            return S.One + n_k  #
+            return n
+        n_k = n - k
+        if n_k == 1:
+            return n
+        if k.is_zero:
+            return S.One
+        if n_k.is_zero:
+            return S.One
         if -1 in (k, n_k):
             if (n + 1).is_zero is False:
                 # includes n.is_integer=False, too
