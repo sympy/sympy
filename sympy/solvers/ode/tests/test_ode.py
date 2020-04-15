@@ -2916,7 +2916,7 @@ def test_separable_reduced():
 
     eq = Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0)
     sol = dsolve(eq, hint='separable_reduced')
-    assert sol = Eq(-log(x) - log(f(x) + 1) + log(f(x)) + 1/f(x), C1)
+    assert sol == Eq(-log(x) - log(f(x) + 1) + log(f(x)) + 1/f(x), C1)
     # FIXME: Raise NotImplementedError
     # checkodesol(eq, sol) = (True, 0)
 
