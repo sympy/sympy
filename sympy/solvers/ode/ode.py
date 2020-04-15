@@ -1247,24 +1247,34 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 # this function will return all the different relative power of x w.r.t f(x).
                 # expr = x**p * f(x)**q then it will return {p/q}.
                 pows = set()
-                for arg in expr.atoms(Mul):
+                if isinstance(expr, Add):
+                    exprs = expr.atoms(Add)
+                elif isinstance(expr, Mul):
+                    exprs = expr.atoms(Mul)
+                elif isinstance(expr, Pow):
+                    exprs = expr.atoms(Pow)
+                else:
+                    exprs = {expr}
+
+                for arg in exprs:
                     if arg.has(x):
                         _, u = arg.as_independent(x, f(x))
                         pow = _degree((u.subs(f(x), y), ), x)/_degree((u.subs(f(x), y), ), y)
                         pows.add(pow)
                 return pows
+
             pows = _powers(num)
             pows.update(_powers(dem))
-
-            if(len(pows)==1) and list(pows)[0]!=zoo:
+            pows = list(pows)
+            if(len(pows)==1) and pows[0]!=zoo:
                 t = Dummy('t')
                 r2 = {'t': t}
-                num = num.subs(x**list(pows)[0]*f(x), t)
-                dem = dem.subs(x**list(pows)[0]*f(x), t)
+                num = num.subs(x**pows[0]*f(x), t)
+                dem = dem.subs(x**pows[0]*f(x), t)
                 test = num/dem
                 free = test.free_symbols
                 if len(free) == 1 and free.pop() == t:
-                    r2.update({'power' : list(pows)[0], 'u' : test})
+                    r2.update({'power' : pows[0], 'u' : test})
                     matching_hints['separable_reduced'] = r2
                     matching_hints["separable_reduced_Integral"] = r2
 
