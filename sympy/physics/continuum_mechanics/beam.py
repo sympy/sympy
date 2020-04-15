@@ -1608,8 +1608,8 @@ class Beam(object):
 
             # Plotting the equations
             for i in self._reaction_loads:
-                p1 = plot(self._reaction_loads[i], (X, 0, self._length), title='I.L.D. for Reactions',
-                    xlabel=X, ylabel=i, line_color='B')
+                plot(self._reaction_loads[i], (X, 0, self._length), title='I.L.D. for Reactions',
+                xlabel=X, ylabel=i, line_color='blue')
 
 
     @doctest_depends_on(modules=('numpy',))
