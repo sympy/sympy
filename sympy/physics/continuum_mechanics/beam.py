@@ -1559,7 +1559,6 @@ class Beam(object):
         Plots the influence line diagram of reaction forces under the effect
         of a moving load.
 
-
         Parameters
         ==========
         val : Integer
