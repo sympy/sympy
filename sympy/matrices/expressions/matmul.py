@@ -337,12 +337,12 @@ def combine_powers(mul):
         elif not isinstance(B_base, MatrixBase):
             try:
                 B_base_inv = B_base.inverse()
-                if A_base == B_base_inv:
-                    new_exp = A_exp - B_exp
-                    new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-                    continue
             except NonInvertibleMatrixError:
-                pass
+                B_base_inv = None
+            if B_base_inv is not None and A_base == B_base_inv:
+                new_exp = A_exp - B_exp
+                new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+                continue
         new_args.append(B)
 
     return newmul(factor, *new_args)
