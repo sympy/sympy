@@ -5189,7 +5189,7 @@ class Coset(Basic):
 
     """
 
-    def __new__(cls, g, H, G=None, dir = "+"):
+    def __new__(cls, g, H, G=None, dir="+"):
         g = _sympify(g)
         if not isinstance(g, Permutation):
             raise NotImplementedError
@@ -5239,7 +5239,7 @@ class Coset(Basic):
         >>> a = Permutation(1, 2)
         >>> b = Permutation(0, 1)
         >>> G = PermutationGroup([a, b])
-        >>> cst = Coset(a, G, dir = "-")
+        >>> cst = Coset(a, G, dir="-")
         >>> cst.is_left_coset
         True
 
@@ -5258,7 +5258,7 @@ class Coset(Basic):
         >>> a = Permutation(1, 2)
         >>> b = Permutation(0, 1)
         >>> G = PermutationGroup([a, b])
-        >>> cst = Coset(a, G, dir = "+")
+        >>> cst = Coset(a, G, dir="+")
         >>> cst.is_right_coset
         True
 
