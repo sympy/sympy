@@ -177,6 +177,24 @@ def _ode_solver_test(ode_examples):
 def _test_all_hints(runxfail=False):
     all_hints = list(allhints)
     all_examples = _get_all_examples()
+    for ode_example in all_examples:
+        eq = ode_example['eq']
+        expected_sol = ode_example['sol']
+        example = ode_example['example_name']
+        func = ode_example['func']
+        try:
+            dsolve_sol = dsolve(eq, func)
+            expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
+            if len(expected_sol) == 1:
+                expected_checkodesol = (True, 0)
+
+            if checkodesol(eq, dsolve_sol) != expected_checkodesol:
+                message = dsol_incorrect_msg.format(hint="default", eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                print(message)
+        except Exception as e:
+            print(exception_msg.format(e=str(e), hint="default", example=example, eq=eq))
+            traceback.print_exc()
+
     for our_hint in all_hints:
         _test_all_examples_for_one_hint(our_hint, all_examples, runxfail)
 
@@ -214,6 +232,7 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
 
                 if checkodesol(eq, dsolve_sol) != expected_checkodesol:
                     unsolve_list.append(example)
+                    xpass = False
                     message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
                     if runxfail is not None:
                         print('AssertionError: ' +message)
