@@ -35,6 +35,69 @@ Examples
 35/6
 >>> simplify(P(Z>1)) # Probability of Z being greater than 1
 1/2 - erf(sqrt(2)/2)/2
+
+
+One could also create custom distribution and define custom random variables
+as follows:
+
+1. If the you want to create a Continuous Random Variable:
+
+>>> from sympy.stats import ContinuousRV, P, E
+>>> from sympy import exp, Symbol, Interval, oo
+>>> x = Symbol('x')
+>>> pdf = exp(-x) # pdf of the Continuous Distribution
+>>> Z = ContinuousRV(x, pdf, set=Interval(0, oo))
+>>> E(Z)
+1
+>>> P(Z > 5)
+exp(-5)
+
+1.1 To create an instance of Continuous Distribution:
+
+>>> from sympy.stats import ContinuousDistributionHandmade
+>>> from sympy import Lambda
+>>> dist = ContinuousDistributionHandmade(Lambda(x, pdf), set=Interval(0, oo))
+>>> dist.pdf(x)
+exp(-x)
+
+2. If you want to create a Discrete Random Variable:
+
+>>> from sympy.stats import DiscreteRV, P, E
+>>> from sympy import Symbol, S
+>>> p = S(1)/2
+>>> x = Symbol('x', integer=True, positive=True)
+>>> pdf = p*(1 - p)**(x - 1)
+>>> D = DiscreteRV(x, pdf, set=S.Naturals)
+>>> E(D)
+2
+>>> P(D > 3)
+1/8
+
+2.1 To create an instance of Discrete Distribution:
+
+>>> from sympy.stats import DiscreteDistributionHandmade
+>>> from sympy import Lambda
+>>> dist = DiscreteDistributionHandmade(Lambda(x, pdf), set=S.Naturals)
+>>> dist.pdf(x)
+2**(1 - x)/2
+
+3. If the you want to create a Finite Random Variable:
+
+>>> from sympy.stats import FiniteRV, P, E
+>>> from sympy import Rational
+>>> pmf = {1: Rational(1, 3), 2: Rational(1, 6), 3: Rational(1, 4), 4: Rational(1, 4)}
+>>> X = FiniteRV('X', pmf)
+>>> E(X)
+29/12
+>>> P(X > 3)
+1/4
+
+3.1 To create an instance of Finite Distribution:
+
+>>> from sympy.stats import FiniteDistributionHandmade
+>>> dist = FiniteDistributionHandmade(pmf)
+>>> dist.pmf(x)
+Lambda(x, Piecewise((1/3, Eq(x, 1)), (1/6, Eq(x, 2)), (1/4, Eq(x, 3) | Eq(x, 4)), (0, True)))
 """
 
 __all__ = [
