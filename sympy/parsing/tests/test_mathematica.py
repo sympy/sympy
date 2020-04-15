@@ -59,7 +59,11 @@ def test_mathematica():
         'LogIntegral[4]':' li(4)',
         'PrimePi[7]': 'primepi(7)',
         'Prime[5]': 'prime(5)',
-        'PrimeQ[5]': 'isprime(5)'
+        'PrimeQ[5]': 'isprime(5)',
+        'Factorial[x]': 'factorial(x)',
+        'FactorialPower[x,y]': 'ff(x,y)',
+        'Binomial[x,y]': 'binomial(x,y)',
+        'Multinomial[x,y,z]': 'multinomial(x,y,z)'
         }
 
     for e in d:
