@@ -1,5 +1,6 @@
-from sympy.simplify import simplify
+from sympy.simplify.powsimp import powsimp
 from sympy.testing.pytest import raises
+from sympy.core.expr import unchanged
 from sympy.core import symbols, S
 from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix, OneMatrix
 from sympy.matrices.common import NonSquareMatrixError
@@ -134,8 +135,8 @@ def test_OneMatrix_power():
 
     o = OneMatrix(n, n)
     assert o * o == o ** 2 == n * o
-    # simplify currently necessary as n ** (n - 2) * n does not produce n ** (n - 1)
-    assert simplify(o ** (n - 1) * o) == o ** n == n ** (n - 1) * o
+    # powsimp necessary as n ** (n - 2) * n does not produce n ** (n - 1)
+    assert powsimp(o ** (n - 1) * o) == o ** n == n ** (n - 1) * o
 
 
 def test_transpose_power():
@@ -174,3 +175,12 @@ def test_combine_powers():
     assert (C ** -1) ** -1 == C
     assert (((C ** 2) ** 3) ** 4) ** 5 == MatPow(C, 120)
     assert (C ** n) ** n == C ** (n ** 2)
+
+
+def test_unchanged():
+    assert unchanged(MatPow, C, 0)
+    assert unchanged(MatPow, C, 1)
+    assert unchanged(MatPow, Inverse(C), -1)
+    assert unchanged(Inverse, MatPow(C, -1), -1)
+    assert unchanged(MatPow, MatPow(C, -1), -1)
+    assert unchanged(MatPow, MatPow(C, 1), 1)

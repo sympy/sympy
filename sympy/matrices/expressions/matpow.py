@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.matrices.common import NonSquareMatrixError
 from .matexpr import MatrixExpr, Identity
-from sympy.core import S, Basic
+from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 
@@ -17,7 +17,7 @@ class MatPow(MatrixExpr):
             raise NonSquareMatrixError("Power of non-square matrix %s" % base)
 
         exp = _sympify(exp)
-        obj = Basic.__new__(cls, base, exp)
+        obj = super().__new__(cls, base, exp)
 
         if evaluate:
             obj = obj.doit(deep=False)
