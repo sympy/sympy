@@ -7,7 +7,7 @@ from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
-        SparseMatrix, Transpose, Adjoint)
+        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
                                                 GenericZeroMatrix, GenericIdentity, OneMatrix)
 from sympy.testing.pytest import raises, XFAIL
@@ -133,9 +133,11 @@ def test_ZeroMatrix():
     assert Z.conjugate() == Z
 
     assert ZeroMatrix(n, n)**0 == Identity(n)
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
         Z**0
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
+        Z**1
+    with raises(NonSquareMatrixError):
         Z**2
 
 
@@ -157,9 +159,11 @@ def test_OneMatrix():
     assert U.conjugate() == U
 
     assert OneMatrix(n, n) ** 0 == Identity(n)
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
         U ** 0
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
+        U ** 1
+    with raises(NonSquareMatrixError):
         U ** 2
     with raises(ShapeError):
         a + U
@@ -290,7 +294,7 @@ def test_MatPow():
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
     assert A**Rational(1, 3) == cbrt(A)
-    raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
+    raises(NonSquareMatrixError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
 def test_MatrixSymbol():

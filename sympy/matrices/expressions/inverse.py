@@ -67,10 +67,7 @@ class Inverse(MatPow):
         if hints.get('deep', True):
             arg = arg.doit(**hints)
 
-        if isinstance(arg, MatPow):
-            return MatPow(arg.base, self.exp * arg.exp)
         return arg.inverse()
-
 
     def _eval_derivative_matrix_lines(self, x):
         arg = self.args[0]
