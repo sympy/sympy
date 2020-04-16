@@ -145,7 +145,23 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
 
 def matrix_exp(A, t):
-    '''Matrix exponential exp(A*t) for the matrix A and scalar t.
+    r"""
+    Matrix exponential $\exp(A*t)$ for the matrix A and scalar t.
+
+    Explanation
+    ===========
+
+    This functions returns the $\exp(A*t)$ by doing a simple
+    matrix multiplication:
+
+    .. math::
+        \exp(A*t) = P * expJ * P^{-1}
+
+    where $expJ$ is $\exp(J*t)$. $J$ is the Jordan normal
+    form of $A$ and $P$ is matrix such that:
+
+    .. math::
+        A = P * J * P^{-1}
 
     The matrix exponential exp(A*t) appears in the solution of linear
     differential equations. For example if x is a vector and A is a matrix
@@ -157,25 +173,48 @@ def matrix_exp(A, t):
 
         x(t) = exp(A t) x0
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Symbol, Matrix, pprint
     >>> from sympy.solvers.ode.systems import matrix_exp
     >>> t = Symbol('t')
+
     >>> A = Matrix([[2, -5], [2, -4]])
     >>> pprint(A)
     [2  -5]
     [     ]
     [2  -4]
+
     >>> pprint(matrix_exp(A, t))
     [   -t           -t                    -t              ]
     [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
     [                                                      ]
     [         -t                     -t           -t       ]
     [      2*e  *sin(t)         - 3*e  *sin(t) + e  *cos(t)]
-    '''
-    P, J = matrix_exp_jordan_form(A, t)
-    return P * J * P.inv()
+
+    Parameters
+    ==========
+
+    A : Matrix
+        The matrix $A$ in the expression $\exp(A*t)$
+    t : Symbol
+        The independent variable
+
+    See Also
+    ========
+
+    matrix_exp_jordan_form: For exponential of Jordan normal form
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Jordan_normal_form
+    .. [2] https://en.wikipedia.org/wiki/Matrix_exponential
+
+    """
+    P, expJ = matrix_exp_jordan_form(A, t)
+    return P * expJ * P.inv()
 
 
 def matrix_exp_jordan_form(A, t):
