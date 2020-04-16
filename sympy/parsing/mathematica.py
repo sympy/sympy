@@ -48,6 +48,7 @@ class MathematicaParser(object):
         'Mod[x,y]': 'Mod(x,y)',
         'Max[*x]': 'Max(*x)',
         'Min[*x]': 'Min(*x)',
+        'Pochhammer[x,y]':'rf(x,y)'
     }
 
     # trigonometric, e.t.c.
