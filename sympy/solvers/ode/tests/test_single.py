@@ -117,7 +117,7 @@ You can test this with:
 
 from sympy.solvers.ode.tests.test_single import _test_particular_example
 
-_test_particular_example('{hint}', '{example}')
+_test_particular_example('{hint}', example_name = '{example}')
 
 The ODE is:
 {eq}
@@ -142,69 +142,84 @@ Examples which raised exceptions are {exceptions}
 def _ode_solver_test(ode_examples):
     our_hint = ode_examples['hint']
     for example in ode_examples['examples']:
-        eq = ode_examples['examples'][example]['eq']
-        sol = ode_examples['examples'][example]['sol']
-        xfail = our_hint in ode_examples['examples'][example].get('XFAIL', [])
-        func = ode_examples['examples'][example].get('func',ode_examples['func'])
-        xpass = True
-        if our_hint not in classify_ode(eq, func):
-            message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
-            raise AssertionError(message)
-        try:
-            dsolve_sol = dsolve(eq, func, hint=our_hint)
-            expect_sol_check = False
-            if type(dsolve_sol)==list:
-                if any(sub_sol not in dsolve_sol for sub_sol in sol):
-                    expect_sol_check = True
-            else:
-                expect_sol_check = dsolve_sol not in sol
-            if expect_sol_check:
-                message = expected_sol_message.format(example=example, eq=eq, sol=sol, dsolve_sol=dsolve_sol)
-                raise AssertionError(message)
+        temp = {
+            'eq': ode_examples['examples'][example]['eq'],
+            'sol': ode_examples['examples'][example]['sol'],
+            'XFAIL': ode_examples['examples'][example].get('XFAIL', []),
+            'func': ode_examples['examples'][example].get('func',ode_examples['func']),
+            'example_name': example,
+        }
 
-            expected_checkodesol = [(True, 0) for i in range(len(sol))]
-            if checkodesol(eq, sol) != expected_checkodesol:
-                message = checkodesol.format(example=example, eq=eq)
-                raise AssertionError(message)
-        except Exception as e:
-            if not xfail:
-                print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
-            xpass = False
-        if xfail and xpass:
-            print(example,"now pass for hint",our_hint)
+        result = _test_particular_example(our_hint, temp, solver_flag=True)
+        if result['xpass_msg'] != "":
+            print(result['xpass_msg'])
 
 
 def _test_all_hints(runxfail=False):
-    all_hints = list(allhints)
+    all_hints = list(allhints)+["default"]
     all_examples = _get_all_examples()
-    for ode_example in all_examples:
-        eq = ode_example['eq']
-        expected_sol = ode_example['sol']
-        example = ode_example['example_name']
-        func = ode_example['func']
-        try:
-            dsolve_sol = dsolve(eq, func)
-            expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
-            if len(expected_sol) == 1:
-                expected_checkodesol = (True, 0)
-
-            if checkodesol(eq, dsolve_sol) != expected_checkodesol:
-                message = dsol_incorrect_msg.format(hint="default", eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-                print(message)
-        except Exception as e:
-            print(exception_msg.format(e=str(e), hint="default", example=example, eq=eq))
-            traceback.print_exc()
 
     for our_hint in all_hints:
         _test_all_examples_for_one_hint(our_hint, all_examples, runxfail)
 
 
-def _test_particular_example(our_hint, example_name):
-    all_examples = _get_all_examples()
-    for example in all_examples:
-        if example['example_name'] == example_name:
-            eq = example['eq']
-            dsolve(eq, hint=our_hint)
+def _test_particular_example(our_hint, ode_example=None,solver_flag=False, example_name=None):
+    if example_name is not None:
+        all_examples = _get_all_examples()
+        for example in all_examples:
+            if example['example_name'] == example_name:
+                eq = example['eq']
+                dsolve(eq, hint=our_hint)
+    else:
+        eq = ode_example['eq']
+        expected_sol = ode_example['sol']
+        example = ode_example['example_name']
+        xfail = our_hint in ode_example['XFAIL']
+        func = ode_example['func']
+        result = {'msg': '', 'xpass_msg': ''}
+        xpass = True
+        if solver_flag:
+            if our_hint not in classify_ode(eq, func):
+                message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
+                raise AssertionError(message)
+
+        if our_hint in classify_ode(eq, func):
+            result['match_list'] = example
+            try:
+                dsolve_sol = dsolve(eq, func, hint=our_hint)
+                if solver_flag:
+                    expect_sol_check = False
+                    if type(dsolve_sol)==list:
+                        if any(sub_sol not in dsolve_sol for sub_sol in expected_sol):
+                            expect_sol_check = True
+                    else:
+                        expect_sol_check = dsolve_sol not in expected_sol
+                    if expect_sol_check:
+                        message = expected_sol_message.format(example=example, eq=eq, sol=expected_sol, dsolve_sol=dsolve_sol)
+                        raise AssertionError(message)
+
+                expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
+                if len(expected_sol) == 1:
+                    expected_checkodesol = (True, 0)
+
+                if checkodesol(eq, dsolve_sol) != expected_checkodesol:
+                    result['unsolve_list'] = example
+                    xpass = False
+                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                    if solver_flag:
+                        message = checkodesol.format(example=example, eq=eq)
+                        raise AssertionError(message)
+                    else:
+                        result['msg'] = 'AssertionError: ' + message
+            except Exception as e:
+                result['exception_list'] = example
+                if not solver_flag:
+                    traceback.print_exc()
+                    result['msg'] = exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq)
+                xpass = False
+        if xpass and xfail:
+            result['xpass_msg'] = example + "is now passing for the hint" + our_hint
+        return result
 
 
 def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
@@ -212,38 +227,20 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         all_examples = _get_all_examples()
     match_list, unsolve_list, exception_list = [], [], []
     for ode_example in all_examples:
-        eq = ode_example['eq']
-        expected_sol = ode_example['sol']
-        example = ode_example['example_name']
-        xfail = our_hint in ode_example['XFAIL']
-        func = ode_example['func']
         if our_hint.endswith('_Integral') or 'series' in our_hint:
             continue
-        xpass = True
+        xfail = our_hint in ode_example['XFAIL']
         if runxfail and not xfail:
             continue
-        if our_hint in classify_ode(eq, func):
-            match_list.append(example)
-            try:
-                dsolve_sol = dsolve(eq, func, hint=our_hint)
-                expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
-                if len(expected_sol) == 1:
-                    expected_checkodesol = (True, 0)
-
-                if checkodesol(eq, dsolve_sol) != expected_checkodesol:
-                    unsolve_list.append(example)
-                    xpass = False
-                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-                    if runxfail is not None:
-                        print('AssertionError: ' +message)
-            except Exception as e:
-                exception_list.append(example)
-                if runxfail is not None:
-                    print(exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq))
-                    traceback.print_exc()
-                xpass = False
-        if xpass and xfail:
-            print(example,"is now passing for the hint",our_hint)
+        result = _test_particular_example(our_hint, ode_example)
+        match_list += result.get('match_list',[])
+        unsolve_list += result.get('unsolve_list',[])
+        exception_list += result.get('exception_list',[])
+        if runxfail is not None:
+            msg = result['msg']
+            if msg!='':
+                print(result['msg'])
+            # print(result.get('xpass_msg',''))
     if runxfail is None:
         match_count = len(match_list)
         solved = len(match_list)-len(unsolve_list)-len(exception_list)
