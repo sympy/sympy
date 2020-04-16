@@ -1634,7 +1634,7 @@ class AccumulationBounds(AtomicExpr):
 AccumBounds = AccumulationBounds
 
 
-def argmax_real(f, symbol = None, domain = S.Reals):
+def argmax_real(f, symbol=None, domain=S.Reals):
     """
     Returns the set of arguments of maxima, i.e., values of `symbol`
     for which the `f` attains the maximum value in the given domain.
@@ -1673,7 +1673,7 @@ def argmax_real(f, symbol = None, domain = S.Reals):
     return _argMaxMin(f, symbol, domain, is_max=True)
 
 
-def argmin_real(f, symbol = None, domain = S.Reals):
+def argmin_real(f, symbol=None, domain=S.Reals):
     """
     Returns the set of arguments of minima, i.e., values of `symbol`
     for which the `f` attains the minimum value in the given domain.
@@ -1717,20 +1717,22 @@ def return_piecewise_solutions(f, x):
 
     solutions = []
     if type(f) == Piecewise:
-      for arg in f.args:
-          values = []
-          if isinstance(arg[1], (And, Or)):
-              for a in arg[1].args:
-                  a = a.simplify()
-                  values += a.args
-          else:
-              values = arg[1].simplify().args
-          for v in values:
-              if v.is_Number:
-                  solutions.append(v)
-    elif type(f) == Add or type(f) == Mul:
-      for arg in f.args:
-          solutions += return_piecewise_solutions(arg, x)
+        for arg in f.args:
+           values = []
+           solutions += return_piecewise_solutions(arg[0], x)
+           if isinstance(arg[1], (And, Or)):
+               for a in arg[1].args:
+                   a = a.simplify()
+                   values += a.args
+           else:
+               values = arg[1].simplify().args
+           for v in values:
+               if v.is_Number:
+                   solutions.append(v)
+
+    elif type(f) == Add or type(f) == Mul or type(f) == Pow:
+        for arg in f.args:
+           solutions += return_piecewise_solutions(arg, x)
 
     return FiniteSet(*solutions)
 
@@ -1741,6 +1743,7 @@ def _argMaxMin(f, symbol, domain, is_max):
     """
     from sympy.solvers.solveset import solveset
     from sympy.core.facts import InconsistentAssumptions
+    from sympy.logic.boolalg import BooleanTrue
 
     f = _sympify(f)
     task_name = "argmax" if is_max else "argmin"
@@ -1790,11 +1793,12 @@ def _argMaxMin(f, symbol, domain, is_max):
     extremum = -oo if is_max else oo
     complement_last_domain = S.EmptySet
     frange = S.EmptySet
+    bool_true = BooleanTrue()
 
     for arg in functions:
         if is_piecewise:
             f_ = arg[0]
-            if arg[1] is True:
+            if arg[1] is bool_true:
                 domain_ = Complement(domain, complement_last_domain)
             else:
                 domain_ = solveset(arg[1], symbol, S.Reals)

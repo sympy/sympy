@@ -544,9 +544,9 @@ def test_argmax_real():
 
     raises (ValueError, lambda : argmax_real(y, x, S.Reals))
     raises (ValueError, lambda: argmax_real(x*y, domain = S.Reals))
-    assert argmax_real(x - 2, domain = Interval(2, 3)) == FiniteSet(3)
-    assert argmax_real(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == S.EmptySet
-    assert argmax_real(x**2, domain = Interval(-oo, 4)) == S.EmptySet
+    assert argmax_real(x - 2, domain=Interval(2, 3)) == FiniteSet(3)
+    assert argmax_real(x**2 - 2*x + 1, domain=Interval(-oo, -3)) == S.EmptySet
+    assert argmax_real(x**2, domain=Interval(-oo, 4)) == S.EmptySet
     assert argmax_real(-(log(x)), x, Interval(0.02, 10)) == FiniteSet(0.02)
     assert argmax_real(sin(x), x, S.Reals) == \
         ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers)
@@ -571,6 +571,10 @@ def test_argmin_real():
     assert argmin_real(exp(y), y, Interval(-10, 10)) == FiniteSet(-10)
     assert argmin_real(-x**2 + 4, x, Interval(-2, 2)) == FiniteSet(-2, 2)
     assert argmin_real(exp(y)) == S.EmptySet
+    assert argmin_real(abs(x), x, S.Reals) == FiniteSet(0)
+    assert argmin_real(abs(2*x-1), domain=S.Reals) == FiniteSet(1/2)
+    ## Cases like abs(x) + 2 is still not solved using this method and
+    ## this will be updated in later PRs
 
 
 def test_issue_18747():
