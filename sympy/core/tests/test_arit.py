@@ -363,16 +363,30 @@ def test_Add_Mul_is_integer():
 
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
+    nk = Symbol('nk', integer=False)
+    nr = Symbol('nr', rational=False)
+    nz = Symbol('nz', integer=True, zero=False)
+    e = Symbol('e', even=True)
+    o = Symbol('e', odd=True)
 
+    assert (-nk).is_integer is None
+    assert (-nr).is_integer is False
     assert (2*k).is_integer is True
     assert (-k).is_integer is True
     assert (k/3).is_integer is None
+    assert (nz/3).is_integer is None
+    assert (nr/3).is_integer is False
     assert (x*k*n).is_integer is None
+    assert (e/o).is_integer is None
+    assert (o/e).is_integer is False
 
+    assert (k + nk).is_integer is False
     assert (k + n).is_integer is True
     assert (k + x).is_integer is None
     assert (k + n*x).is_integer is None
     assert (k + n/3).is_integer is None
+    assert (k + nz/3).is_integer is None
+    assert (k + nr/3).is_integer is False
 
     assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
@@ -1481,7 +1495,7 @@ def test_Mul_is_irrational():
     expr = Mul(1, 2, 3, evaluate=False)
     assert expr.is_irrational is False
     expr = Mul(1, I, I, evaluate=False)
-    assert expr.is_irrational is not False
+    assert expr.is_rational is True # I * I = -1
     expr = Mul(sqrt(2), I, I, evaluate=False)
     assert expr.is_irrational is not True
 
