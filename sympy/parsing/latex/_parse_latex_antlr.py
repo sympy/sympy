@@ -369,6 +369,7 @@ def convert_frac(frac):
 
 
 def convert_func(func):
+    print("convert func: ", func.func_normal().start.text)
     if func.func_normal():
         if func.L_PAREN():  # function called with parenthesis
             arg = convert_func_arg(func.func_arg())
@@ -388,6 +389,7 @@ def convert_func(func):
             expr = getattr(sympy.functions, name)(arg, evaluate=False)
 
         if (name == "log" or name == "ln"):
+            print("_parse_latex_antlr_log")
             if func.subexpr():
                 base = convert_expr(func.subexpr().expr())
             elif name == "log":
@@ -395,6 +397,10 @@ def convert_func(func):
             elif name == "ln":
                 base = sympy.E
             expr = sympy.log(arg, base, evaluate=False)
+        
+        if name == "max":
+            print("_parse_latex_antlr_max")
+            expr = sympy.Max(arg, evaluate=False)
 
         func_pow = None
         should_pow = True

@@ -64,6 +64,7 @@ FUNC_ARCOSH: '\\arcosh';
 FUNC_ARTANH: '\\artanh';
 
 FUNC_SQRT: '\\sqrt';
+FUNC_MAX:  '\\max';
 
 CMD_TIMES: '\\times';
 CMD_CDOT:  '\\cdot';
@@ -191,7 +192,8 @@ func_normal:
     | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN
     | FUNC_ARCCSC | FUNC_ARCSEC | FUNC_ARCCOT
     | FUNC_SINH | FUNC_COSH | FUNC_TANH
-    | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH;
+    | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH
+    | FUNC_MAX;
 
 func:
     func_normal

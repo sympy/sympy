@@ -237,10 +237,11 @@ class LaTeXParser ( Parser ):
                      u"'\\arcsin'", u"'\\arccos'", u"'\\arctan'", u"'\\arccsc'",
                      u"'\\arcsec'", u"'\\arccot'", u"'\\sinh'", u"'\\cosh'",
                      u"'\\tanh'", u"'\\arsinh'", u"'\\arcosh'", u"'\\artanh'",
-                     u"'\\sqrt'", u"'\\times'", u"'\\cdot'", u"'\\div'",
-                     u"'\\frac'", u"'\\mathit'", u"'_'", u"'^'", u"':'",
-                     u"<INVALID>", u"<INVALID>", u"<INVALID>", u"'='", u"'<'",
-                     u"'\\leq'", u"'>'", u"'\\geq'", u"'!'" ]
+                     u"'\\sqrt'", u"'\\times'",
+                     u"'\\cdot'", u"'\\div'", u"'\\frac'", u"'\\mathit'",
+                     u"'_'", u"'^'", u"':'", u"<INVALID>", u"<INVALID>",
+                     u"<INVALID>", u"'='", u"'<'", u"'\\leq'", u"'>'",
+                     u"'\\geq'", u"'!'", u"'\\max'" ]
 
     symbolicNames = [ u"<INVALID>", u"<INVALID>", u"WS", u"ADD", u"SUB",
                       u"MUL", u"DIV", u"L_PAREN", u"R_PAREN", u"L_BRACE",
@@ -254,7 +255,7 @@ class LaTeXParser ( Parser ):
                       u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV",
                       u"CMD_FRAC", u"CMD_MATHIT", u"UNDERSCORE", u"CARET",
                       u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL",
-                      u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
+                      u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL", u"FUNC_MAX" ]
 
     RULE_math = 0
     RULE_relation = 1
@@ -359,6 +360,7 @@ class LaTeXParser ( Parser ):
     GTE=55
     BANG=56
     SYMBOL=57
+    FUNC_MAX=58
 
     def __init__(self, input, output=sys.stdout):
         super(LaTeXParser, self).__init__(input, output=output)
@@ -861,7 +863,7 @@ class LaTeXParser ( Parser ):
                 self.state = 123
                 self.unary()
                 pass
-            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL]:
+            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL, LaTeXParser.FUNC_MAX]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 125
                 self._errHandler.sync(self)
@@ -943,7 +945,7 @@ class LaTeXParser ( Parser ):
                 self.state = 132
                 self.unary_nofunc()
                 pass
-            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL]:
+            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL, LaTeXParser.FUNC_MAX]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 133
                 self.postfix()
@@ -2030,9 +2032,11 @@ class LaTeXParser ( Parser ):
             self.parser = parser
 
         def FUNC_LOG(self):
+            print("log")
             return self.getToken(LaTeXParser.FUNC_LOG, 0)
 
         def FUNC_LN(self):
+            print("log")
             return self.getToken(LaTeXParser.FUNC_LN, 0)
 
         def FUNC_SIN(self):
@@ -2088,6 +2092,10 @@ class LaTeXParser ( Parser ):
 
         def FUNC_ARTANH(self):
             return self.getToken(LaTeXParser.FUNC_ARTANH, 0)
+        
+        def FUNC_MAX(self):
+            print("func max")
+            return self.getToken(LaTeXParser.FUNC_MAX, 0)
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_func_normal
@@ -2104,7 +2112,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 283
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << LaTeXParser.FUNC_LOG) | (1 << LaTeXParser.FUNC_LN) | (1 << LaTeXParser.FUNC_SIN) | (1 << LaTeXParser.FUNC_COS) | (1 << LaTeXParser.FUNC_TAN) | (1 << LaTeXParser.FUNC_CSC) | (1 << LaTeXParser.FUNC_SEC) | (1 << LaTeXParser.FUNC_COT) | (1 << LaTeXParser.FUNC_ARCSIN) | (1 << LaTeXParser.FUNC_ARCCOS) | (1 << LaTeXParser.FUNC_ARCTAN) | (1 << LaTeXParser.FUNC_ARCCSC) | (1 << LaTeXParser.FUNC_ARCSEC) | (1 << LaTeXParser.FUNC_ARCCOT) | (1 << LaTeXParser.FUNC_SINH) | (1 << LaTeXParser.FUNC_COSH) | (1 << LaTeXParser.FUNC_TANH) | (1 << LaTeXParser.FUNC_ARSINH) | (1 << LaTeXParser.FUNC_ARCOSH) | (1 << LaTeXParser.FUNC_ARTANH))) != 0)):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << LaTeXParser.FUNC_LOG) | (1 << LaTeXParser.FUNC_LN) | (1 << LaTeXParser.FUNC_SIN) | (1 << LaTeXParser.FUNC_COS) | (1 << LaTeXParser.FUNC_TAN) | (1 << LaTeXParser.FUNC_CSC) | (1 << LaTeXParser.FUNC_SEC) | (1 << LaTeXParser.FUNC_COT) | (1 << LaTeXParser.FUNC_ARCSIN) | (1 << LaTeXParser.FUNC_ARCCOS) | (1 << LaTeXParser.FUNC_ARCTAN) | (1 << LaTeXParser.FUNC_ARCCSC) | (1 << LaTeXParser.FUNC_ARCSEC) | (1 << LaTeXParser.FUNC_ARCCOT) | (1 << LaTeXParser.FUNC_SINH) | (1 << LaTeXParser.FUNC_COSH) | (1 << LaTeXParser.FUNC_TANH) | (1 << LaTeXParser.FUNC_ARSINH) | (1 << LaTeXParser.FUNC_ARCOSH) | (1 << LaTeXParser.FUNC_ARTANH) | (1 << LaTeXParser.FUNC_MAX))) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2233,7 +2241,7 @@ class LaTeXParser ( Parser ):
             self.state = 358
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH]:
+            if token in [LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_MAX]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 285
                 self.func_normal()
@@ -2341,7 +2349,7 @@ class LaTeXParser ( Parser ):
                     self.state = 320
                     self.subexpr()
                     pass
-                elif token in [LaTeXParser.ADD, LaTeXParser.SUB, LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL]:
+                elif token in [LaTeXParser.ADD, LaTeXParser.SUB, LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.FUNC_SQRT, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.NUMBER, LaTeXParser.SYMBOL, LaTeXParser.FUNC_MAX]:
                     pass
                 else:
                     pass
