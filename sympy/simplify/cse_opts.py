@@ -26,7 +26,7 @@ def sub_pre(e):
             if a in reps:
                 negs[a] = reps[a]
             elif a.could_extract_minus_sign():
-                negs[a] = Mul(S.One, S.NegativeOne, -a, evaluate=False)
+                negs[a] = Mul._from_args([S.One, S.NegativeOne, -a])
         e = e.xreplace(negs)
     return e
 
