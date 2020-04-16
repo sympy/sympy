@@ -11,7 +11,7 @@ from itertools import count
 # memory consumption
 from array import array as _array
 
-from sympy import Function, S
+from sympy import Function, S, Q, ask
 from sympy.core.compatibility import as_int
 from .primetest import isprime
 
@@ -721,6 +721,39 @@ def primerange(a, b):
         else:
             return
 
+def primes(n):
+    """ Generate a list of first n prime numbers.
+
+        This function is equivalent to primerange(2, prime(n) + 1)
+
+        If the range exists in the default sieve, the values will
+        be returned from there; otherwise values will be returned
+        but will not modify the sieve.
+
+        Examples
+        ========
+
+        >>> from sympy import primes, Symbol
+        >>> print([i for i in primes(10)])
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        See Also
+        ========
+
+        nextprime : Return the ith prime greater than n
+        prevprime : Return the largest prime smaller than n
+        randprime : Returns a random prime in a given range
+        primorial : Returns the product of primes based on condition
+        primerange : Generate a list of all prime numbers in the range [a, b)
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Prime_number
+    """
+    if ask(Q.nonpositive(n)):
+        return primerange(0, 0)
+    return primerange(2, prime(n) + 1)
 
 def randprime(a, b):
     """ Return a random prime number in the range [a, b).
