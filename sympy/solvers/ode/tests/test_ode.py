@@ -2903,6 +2903,7 @@ def test_separable_reduced():
     sol = dsolve(eq, hint = 'separable_reduced')
     assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/2),\
                   Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/2)]
+    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
 
     eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/(x*(f(x)+2)), 0)
     sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
