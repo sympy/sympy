@@ -218,18 +218,45 @@ def matrix_exp(A, t):
 
 
 def matrix_exp_jordan_form(A, t):
-    '''Matrix exponential exp(A*t) for the matrix A and scalar t.
+    r"""
+    Matrix exponential $\exp(A*t)$ for the matrix A and scalar t.
 
-    Returns the Jordan form of the exp(A t).
+    Explanation
+    ===========
+
+    Returns the Jordan form of the $\exp(A*t)$ along with the matrix $P$ such that:
+
+    .. math::
+        \exp(A*t) = P * expJ * P^{-1}
+
+    Examples
+    ========
 
     >>> from sympy import Matrix, Symbol
     >>> from sympy.solvers.ode.systems import matrix_exp, matrix_exp_jordan_form
     >>> t = Symbol('t')
+
     >>> A = Matrix([[1, 1], [0, 1]])
+
     >>> P, J = matrix_exp_jordan_form(A, t)
     >>> P * J * P.inv() == matrix_exp(A, t)
     True
-    '''
+
+    Parameters
+    ==========
+
+    A : Matrix
+        The matrix $A$ in the expression $\exp(A*t)$
+    t : Symbol
+        The independent variable
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
+    .. [2] https://en.wikipedia.org/wiki/Jordan_normal_form
+
+    """
 
     N, M = A.shape
     if N != M:
