@@ -1122,7 +1122,7 @@ def test_coset_class():
     b = Permutation(0, 1)
     G = PermutationGroup([a, b])
     #Creating right coset
-    rht_coset = Coset(a, G, dir='+')
+    rht_coset = G*a
     #Checking whether it is left coset or right coset
     assert rht_coset.is_right_coset
     assert not rht_coset.is_left_coset
@@ -1132,7 +1132,7 @@ def test_coset_class():
     for ele in list_repr:
         assert ele in expected
     #Creating left coset
-    left_coset = Coset(a, G, dir='-')
+    left_coset = a*G
     #Checking whether it is left coset or right coset
     assert not left_coset.is_right_coset
     assert left_coset.is_left_coset
