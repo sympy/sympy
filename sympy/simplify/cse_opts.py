@@ -19,7 +19,7 @@ def sub_pre(e):
     for a in adds:
         na = -a
         if na.is_Mul:  # e.g. MatExpr
-            set.add(a)
+            ignore.add(a)
             continue
         reps[a] = Mul._from_args([S.NegativeOne, na])
 
