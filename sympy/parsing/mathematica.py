@@ -428,3 +428,20 @@ class MathematicaParser(object):
 #        s = cls._replace(s, '}')
 
         return s
+
+if __name__ == "__main__":
+    testlist = [
+        'Sqrt[x]',
+        'Exp[x]',
+        'Log[x]',
+        'Log[x,y]',
+        'Log2[x]',
+        'Log10[x]',
+        'Mod[x,y]',
+        'Max[x,y,z]',
+        'Min[x,y,z]',
+        'Pochhammer[x,y]',
+        'ArcTan[x,y]'
+    ]
+    for i in testlist:
+        print(mathematica(i))
