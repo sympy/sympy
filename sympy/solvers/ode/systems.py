@@ -146,7 +146,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
 def matrix_exp(A, t):
     r"""
-    Matrix exponential $\exp(A*t)$ for the matrix A and scalar t.
+    Matrix exponential $\exp(A*t)$ for the matrix *A* and scalar *t*.
 
     Explanation
     ===========
@@ -163,15 +163,17 @@ def matrix_exp(A, t):
     .. math::
         A = P * J * P^{-1}
 
-    The matrix exponential exp(A*t) appears in the solution of linear
-    differential equations. For example if x is a vector and A is a matrix
+    The matrix exponential $\exp(A*t)$ appears in the solution of linear
+    differential equations. For example if $x$ is a vector and $A$ is a matrix
     then the initial value problem
 
-        dx(t)/dt = A x(t),   x(0) = x0
+    .. math::
+        \frac{dx(t)}{dt} = A \times x(t),   x(0) = x0
 
     has the unique solution
 
-        x(t) = exp(A t) x0
+    .. math::
+        x(t) = \exp(A t) x0
 
     Examples
     ========
@@ -180,12 +182,14 @@ def matrix_exp(A, t):
     >>> from sympy.solvers.ode.systems import matrix_exp
     >>> t = Symbol('t')
 
+    We will consider a 2x2 matrix for comupting the exponential
     >>> A = Matrix([[2, -5], [2, -4]])
     >>> pprint(A)
     [2  -5]
     [     ]
     [2  -4]
 
+    Now, exp(A*t) is given as follows:
     >>> pprint(matrix_exp(A, t))
     [   -t           -t                    -t              ]
     [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
@@ -219,7 +223,7 @@ def matrix_exp(A, t):
 
 def matrix_exp_jordan_form(A, t):
     r"""
-    Matrix exponential $\exp(A*t)$ for the matrix A and scalar t.
+    Matrix exponential $\exp(A*t)$ for the matrix *A* and scalar *t*.
 
     Explanation
     ===========
@@ -236,10 +240,17 @@ def matrix_exp_jordan_form(A, t):
     >>> from sympy.solvers.ode.systems import matrix_exp, matrix_exp_jordan_form
     >>> t = Symbol('t')
 
+    We will consider a 2x2 defective matrix. This shows that our method
+    works even for defective matrices.
     >>> A = Matrix([[1, 1], [0, 1]])
 
-    >>> P, J = matrix_exp_jordan_form(A, t)
-    >>> P * J * P.inv() == matrix_exp(A, t)
+    It can be observed that this function gives us the Jordan normal form
+    and the required invertible matrix P.
+    >>> P, expJ = matrix_exp_jordan_form(A, t)
+
+    Here, it is shown that P and expJ returned by this function is correct
+    as they satisfy the formula: P * expJ * P_inverse = exp(A*t)
+    >>> P * expJ * P.inv() == matrix_exp(A, t)
     True
 
     Parameters
@@ -253,8 +264,9 @@ def matrix_exp_jordan_form(A, t):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
-    .. [2] https://en.wikipedia.org/wiki/Jordan_normal_form
+    .. [1] https://en.wikipedia.org/wiki/Defective_matrix
+    .. [2] https://en.wikipedia.org/wiki/Jordan_matrix
+    .. [3] https://en.wikipedia.org/wiki/Jordan_normal_form
 
     """
 
@@ -266,7 +278,6 @@ def matrix_exp_jordan_form(A, t):
 
     def jordan_chains(A):
         '''Chains from Jordan normal form analogous to M.eigenvects().
-
         Returns a dict with eignevalues as keys like:
             {e1: [[v111,v112,...], [v121, v122,...]], e2:...}
         where vijk is the kth vector in the jth chain for eigenvalue i.
@@ -472,6 +483,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                           equations are homogeneous or not.
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
+
     """
     from sympy.solvers.solvers import solve
 
