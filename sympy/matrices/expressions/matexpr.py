@@ -342,8 +342,9 @@ class MatrixExpr(Expr):
         """
         if (not isinstance(self.rows, (SYMPY_INTS, Integer))
             or not isinstance(self.cols, (SYMPY_INTS, Integer))):
-            raise ValueError('Matrix with symbolic shape ' \
-                'cannot be represented explicitly')
+            raise ValueError(
+                'Matrix with symbolic shape '
+                'cannot be represented explicitly.')
         from sympy.matrices.immutable import ImmutableDenseMatrix
         return ImmutableDenseMatrix([[self[i, j]
                             for j in range(self.cols)]
