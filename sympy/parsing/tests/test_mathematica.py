@@ -47,6 +47,8 @@ def test_mathematica():
         'Max[1,-2,3,-4]': 'Max(1,-2,3,-4)',
         'Min[1,-2,3]': 'Min(1,-2,3)',
         'Exp[I Pi/2]': 'exp(I*pi/2)',
+        'ArcTan[x,y]': 'atan2(y,x)',
+        'Pochhammer[x,y]': 'rf(x,y)'
         }
 
     for e in d:
