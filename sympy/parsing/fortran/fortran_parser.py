@@ -8,10 +8,7 @@ if lfortran:
     from sympy.core import Add, Mul, Integer, Float
     from sympy import Symbol
 
-    asr_mod = lfortran.asr
     asr = lfortran.asr.asr
-    src_to_ast = lfortran.ast.src_to_ast
-    ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
 
     """
     This module contains all the necessary Classes and Function used to Parse
@@ -74,11 +71,11 @@ if lfortran:
             Function to visit all the elements of the Translation Unit
             created by LFortran ASR
             """
-            for s in node.global_scope.symbols:
-                sym = node.global_scope.symbols[s]
-                self.visit(sym)
+
+            for sym in node.global_scope.symbols.values():
+                self._py_ast.append(self.visit(sym))
             for item in node.items:
-                self.visit(item)
+                self._py_ast.append(self.visit(item))
 
         def visit_Assignment(self, node):
             """Visitor Function for Assignment
@@ -104,26 +101,24 @@ if lfortran:
                 target = node.target
                 value = node.value
                 if isinstance(value, asr.Variable):
-                    new_node = Assignment(
-                            Variable(
-                                    target.name
-                                ),
-                            Variable(
-                                    value.name
-                                )
-                        )
-                elif (type(value) == asr.BinOp):
-                    exp_ast = call_visitor(value)
-                    for expr in exp_ast:
-                        new_node = Assignment(
-                                Variable(target.name),
-                                expr
+                    return Assignment(
+                        Variable(
+                                target.name
+                            ),
+                        Variable(
+                                value.name
                             )
+                    )
+                elif (type(value) == asr.BinOp):
+                    expr = self.visit(value)
+                    return Assignment(
+                        Variable(target.name),
+                        expr
+                    )
                 else:
                     raise NotImplementedError("Numeric assignments not supported")
             else:
                 raise NotImplementedError("Arrays not supported")
-            self._py_ast.append(new_node)
 
         def visit_BinOp(self, node):
             """Visitor Function for Binary Operations
@@ -156,31 +151,25 @@ if lfortran:
             if (type(lhs) == asr.Variable):
                 left_value = Symbol(lhs.name)
             elif(type(lhs) == asr.BinOp):
-                l_exp_ast = call_visitor(lhs)
-                for exp in l_exp_ast:
-                    left_value = exp
+                left_value = self.visit(lhs)
             else:
                 raise NotImplementedError("Numbers Currently not supported")
 
             if (type(rhs) == asr.Variable):
                 right_value = Symbol(rhs.name)
             elif(type(rhs) == asr.BinOp):
-                r_exp_ast = call_visitor(rhs)
-                for exp in r_exp_ast:
-                    right_value = exp
+                right_value = self.visit(rhs)
             else:
                 raise NotImplementedError("Numbers Currently not supported")
 
             if isinstance(op, asr.Add):
-                new_node = Add(left_value, right_value)
+                return Add(left_value, right_value)
             elif isinstance(op, asr.Sub):
-                new_node = Add(left_value, -right_value)
+                return Add(left_value, -right_value)
             elif isinstance(op, asr.Div):
-                new_node = Mul(left_value, 1/right_value)
+                return Mul(left_value, 1/right_value)
             elif isinstance(op, asr.Mul):
-                new_node = Mul(left_value, right_value)
-
-            self._py_ast.append(new_node)
+                return Mul(left_value, right_value)
 
         def visit_Variable(self, node):
             """Visitor Function for Variable Declaration
@@ -209,14 +198,12 @@ if lfortran:
             else:
                 raise NotImplementedError("Data type not supported")
 
-            if not (node.intent == 'in'):
-                new_node = Variable(
-                    node.name
-                ).as_Declaration(
-                    type = var_type,
-                    value = value
-                )
-                self._py_ast.append(new_node)
+            return Variable(
+                node.name
+            ).as_Declaration(
+                type = var_type,
+                value = value
+            )
 
         def visit_Sequence(self, seq):
             """Visitor Function for code sequence
@@ -225,9 +212,11 @@ if lfortran:
             children of the code block to create corresponding code in python
 
             """
+            ls = []
             if seq is not None:
                 for node in seq:
-                    self._py_ast.append(call_visitor(node))
+                    ls.append(self.visit(node))
+            return ls
 
         def visit_Num(self, node):
             """Visitor Function for Numbers in ASR
@@ -237,7 +226,7 @@ if lfortran:
 
             """
             # TODO:Numbers when the LFortran ASR is updated
-            # self._py_ast.append(Integer(node.n))
+            # return Integer(node.n)
             pass
 
         def visit_Function(self, node):
@@ -264,18 +253,11 @@ if lfortran:
                         arg_iter.name
                     )
                 )
-            for i in node.body:
-                fn_ast = call_visitor(i)
-            try:
-                fn_body_expr = fn_ast
-            except UnboundLocalError:
-                fn_body_expr = []
-            for sym in node.symtab.symbols:
-                decl = call_visitor(node.symtab.symbols[sym])
-                for symbols in decl:
-                    fn_body.append(symbols)
-            for elem in fn_body_expr:
-                fn_body.append(elem)
+            for sym in node.symtab.symbols.values():
+                if sym.intent != 'in':
+                    fn_body.append(self.visit(sym))
+            for elem in node.body:
+                fn_body.append(self.visit(elem))
             fn_body.append(
                 Return(
                     Variable(
@@ -289,13 +271,12 @@ if lfortran:
                 ret_type = FloatBaseType(String('real'))
             else:
                 raise NotImplementedError("Data type not supported")
-            new_node = FunctionDefinition(
+            return FunctionDefinition(
                         return_type = ret_type,
                         name = fn_name,
                         parameters = fn_args,
                         body = fn_body
                     )
-            self._py_ast.append(new_node)
 
         def ret_ast(self):
             """Returns the AST nodes"""
@@ -303,51 +284,4 @@ if lfortran:
 else:
     class ASR2PyVisitor():  # type: ignore
         def __init__(self, *args, **kwargs):
-            raise ImportError('lfortran not available')
-
-def call_visitor(fort_node):
-    """Calls the AST Visitor on the Module
-
-    This function is used to call the AST visitor for a program or module
-    It imports all the required modules and calls the visit() function
-    on the given node
-
-    Parameters
-    ==========
-
-    fort_node : LFortran ASR object
-        Node for the operation for which the NodeVisitor is called
-
-    Returns
-    =======
-
-    res_ast : list
-        list of sympy AST Nodes
-
-    """
-    v = ASR2PyVisitor()
-    v.visit(fort_node)
-    res_ast = v.ret_ast()
-    return res_ast
-
-
-def src_to_sympy(src):
-    """Wrapper function to convert the given Fortran source code to SymPy Expressions
-
-    Parameters
-    ==========
-
-    src : string
-        A string with the Fortran source code
-
-    Returns
-    =======
-
-    py_src : string
-        A string with the python source code compatible with SymPy
-
-    """
-    a_ast = src_to_ast(src, translation_unit=False)
-    a = ast_to_asr(a_ast)
-    py_src = call_visitor(a)
-    return py_src
+            raise ImportError('LFortran is not installed, cannot parse Fortran code')
