@@ -47,7 +47,8 @@ if cin:
     from sympy.core import Add, Mod, Mul, Pow, Rel
     from sympy.logic.boolalg import And, as_Boolean, Or
     from sympy import Symbol, sympify, true, false
-    import sys, os
+    import os
+    import sys
 
     class BaseParser(object):
         """Base Class for the C parser"""
