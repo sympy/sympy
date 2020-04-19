@@ -70,6 +70,8 @@ CMD_CDOT:  '\\cdot';
 CMD_DIV:   '\\div';
 CMD_FRAC:  '\\frac';
 CMD_BINOM: '\\binom';
+CMD_DBINOM: '\\dbinom';
+CMD_TBINOM: '\\tbinom';
 
 CMD_MATHIT: '\\mathit';
 
@@ -188,7 +190,7 @@ frac:
     R_BRACE;
 
 binom:
-    CMD_BINOM L_BRACE
+    (CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE
     n=expr
     R_BRACE L_BRACE
     k=expr

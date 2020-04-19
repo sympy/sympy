@@ -179,7 +179,9 @@ GOOD_PAIRS = [
     ("[a + b]", _Add(a, b)),
     ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x)),
     ("\\binom{n}{k}", _binomial(n, k)),
-    ("\\binom{n}{0}", _binomial(n, 0))    
+    ("\\tbinom{n}{k}", _binomial(n, k)),
+    ("\\dbinom{n}{k}", _binomial(n, k)),
+    ("\\binom{n}{0}", _binomial(n, 0))
 ]
 
 def test_parseable():
