@@ -1240,8 +1240,6 @@ def cmp(lhs, rhs, op):
     return None
 
 
-
-
 def _cmp_eq(lhs, rhs):
     from sympy.core.add import Add
     from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
