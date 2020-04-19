@@ -7,6 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix
 from sympy.simplify import simplify
 from sympy.solvers.deutils import ode_order
+from sympy.solvers.solveset import NonLinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -528,7 +529,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # When the system of ODEs is non-linear, either TypeError or
     # a ValueError is raised. For both of these cases, None is returned.
-    except (ValueError, TypeError):
+    # NOTE: Soon ValueError, TypeError and NonLinearError, will be removed
+    except (ValueError, TypeError, ODEOrderError, NonLinearError):
         return None
 
     A = As[1]
