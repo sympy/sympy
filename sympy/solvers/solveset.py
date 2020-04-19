@@ -2522,8 +2522,8 @@ def linsolve(system, *symbols):
     >>> linsolve([x**2 - 1], x)
     Traceback (most recent call last):
     ...
-    NonLinearError+-:
-    The term x**2 is nonlinear in {x}
+    NonLinearError:
+    nonlinear term encountered: x**2
     """
     if not system:
         return S.EmptySet
