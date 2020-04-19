@@ -35,8 +35,8 @@ class SymPyExpression(object):  # type: ignore
 
     The module also depends on external dependencies:
 
-    - LFortran which is required to use the Fortran parser
-    - Clang which is required for the C parser
+    - LFortran which is required to use the Fortran parsing
+    - Clang which is required for the C/C++ parsing
 
     Examples
     ========
@@ -121,7 +121,13 @@ class SymPyExpression(object):  # type: ignore
             the mode to determine which parser is to be used according to
             the language of the source code
             f or F for Fortran
-            c or C for C/C++
+            c or C for C Parsing
+            cpp or CPP for C++ Parsing
+            
+        flags: List
+            List of command line arguments to be passed to Clang while parsing
+            These can be used to specify include paths, warnings, etc.
+            e.g. ["-Wall", "-I/path/to/include"]
 
         Examples
         ========
@@ -143,9 +149,6 @@ class SymPyExpression(object):  # type: ignore
         Assignment(Variable(r), a + b - x),
         Return(Variable(r))
         ))]
-
-
-
 
         """
         if mode.lower() == 'f':
