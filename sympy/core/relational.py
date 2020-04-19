@@ -1051,7 +1051,7 @@ def fuzzy_resolve(lhs, rhs, op, cls):
     """
     Resolves cmp(lhs, rhs) to S.true if cmp returns true.
     or to S.false if cmp returns false
-    or to None if cmp returns none.
+    or to an unevaluated if cmp returns none.
     """
     val = cmp(lhs, rhs, op)
     if val is None:
@@ -1063,6 +1063,55 @@ def fuzzy_resolve(lhs, rhs, op, cls):
             return S.false
     else:
         return val
+
+
+def fuzzy_not(val):
+    if val is None:
+        return val
+    else:
+        return not val
+
+
+
+def eval_dispatch(lhs, rhs, op):
+    """
+    Dipatches to the appropriate equality operator on Expr/Basic
+    objects.
+    """
+    # if one of the either the lhs, or the rhs has an _eval_is_X method
+    # return the result, otherwise do nothing
+    retval = None
+    eval_str = "_eval_"
+    negate_op = False
+    if op == "<":
+        eval_str = eval_str + "is_ge"
+        negate_op = True
+    elif op == ">":
+        eval_str = eval_str + "is_gt"
+    elif op == "<=":
+        eval_str = eval_str + "is_gt"
+        negate_op = True
+    elif op == ">=":
+        eval_str = eval_str + "is_ge"
+    elif op == "=":
+        eval_str = eval_str + "Eq"
+    elif op == "!=":
+        eval_str = eval_str + "Eq"
+        negate_op = True
+
+    if hasattr(lhs, eval_str):
+        retval = getattr(lhs, eval_str)(rhs)
+    elif hasattr(rhs, eval_str):
+        retval = getattr(rhs, eval_str)(lhs)
+
+    # ensure that we are out of boolean atoms
+    if isinstance(retval, BooleanAtom):
+        retval = retval is S.true
+
+    if negate_op:
+        return fuzzy_not(retval)
+    else:
+        return retval
 
 
 def cmp(lhs, rhs, op):
@@ -1106,34 +1155,10 @@ def cmp(lhs, rhs, op):
     """
     assert op in ("<", ">", "<=", ">=", "=",'!=')
 
-    # if one of the either the lhs, or the rhs has an _eval_is_X method
-    # return the result, otherwise do nothing
-    retval = None
-    eval_str = "_eval_"
-    if op == "<":
-      eval_str = eval_str + "is_lt"
-    elif op == ">":
-        eval_str = eval_str + "is_gt"
-    elif op == "<=":
-        eval_str = eval_str + "is_le"
-    elif op == ">=":
-        eval_str = eval_str + "is_ge"
-    elif op == "=" or op == '!=':
-        eval_str = eval_str + "Eq"
-
-    if hasattr(lhs, eval_str):
-        retval = getattr(lhs, eval_str)(rhs)
-    elif hasattr(rhs, eval_str):
-        retval = getattr(rhs, eval_str)(lhs)
-
-    if isinstance(retval, BooleanAtom):
-        if op == "!=":
-            return retval is not S.true
-        else:
-            return retval is S.true
-    elif retval is not None and op == "!=":
-        return not retval
-    elif retval is not None:
+    retval = eval_dispatch(lhs, rhs, op)
+    # if it's not none then the object knew how to evaluate themselves
+    # hence, we can stop trying
+    if retval is not None:
         return retval
 
     # if the operation is equality, then return the results of equality
@@ -1142,11 +1167,7 @@ def cmp(lhs, rhs, op):
 
     # if the operation is inequality, then return the results of equality, negated
     elif op == '!=':
-        is_eq = _cmp_eq(lhs, rhs)
-        if is_eq is not None:
-            return not is_eq
-        else:
-            return is_eq
+        return fuzzy_not(_cmp_eq(lhs, rhs))
 
     for me in (lhs, rhs):
         if me.is_extended_real is False:

@@ -751,7 +751,6 @@ class Idx(Expr):
     def free_symbols(self):
         return {self}
 
-
     def _eval_is_ge(self, other):
         if isinstance(other, Idx):
             other_upper = other if other.upper is None else other.upper
@@ -763,34 +762,6 @@ class Idx(Expr):
         if self.lower is not None and (self.lower >= other_upper) == True:
             return True
         if self.upper is not None and (self.upper < other_lower) == True:
-            return False
-        return None
-
-    def _eval_is_le(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
-
-        if self.upper is not None and (self.upper <= other_lower) == True:
-            return True
-        if self.lower is not None and (self.lower > other_upper) == True:
-            return False
-        return None
-
-    def _eval_is_lt(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
-
-        if self.upper is not None and (self.upper < other_lower) == True:
-            return True
-        if self.lower is not None and (self.lower >= other_upper) == True:
             return False
         return None
 
