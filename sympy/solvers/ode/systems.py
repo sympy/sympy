@@ -263,14 +263,17 @@ def matrix_exp_jordan_form(A, t):
 
     We will consider a 2x2 defective matrix. This shows that our method
     works even for defective matrices.
+
     >>> A = Matrix([[1, 1], [0, 1]])
 
     It can be observed that this function gives us the Jordan normal form
     and the required invertible matrix P.
+
     >>> P, expJ = matrix_exp_jordan_form(A, t)
 
     Here, it is shown that P and expJ returned by this function is correct
-    as they satisfy the formula: P * expJ * P_inverse = exp(A*t)
+    as they satisfy the formula: P * expJ * P_inverse = exp(A*t).
+
     >>> P * expJ * P.inv() == matrix_exp(A, t)
     True
 
@@ -447,6 +450,120 @@ def _matrix_is_constant(M, t):
     return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
 
 
+def canonical_equations(eqs, funcs, t):
+    r"""
+    Returns system of linear first order ODEs in its canonical form.
+
+    Explanation
+    ===========
+
+    Given a system of first order linear ODEs *eqs* of the form:
+
+    .. math ::
+        f(x1, y1, z1, ..., x, y, z, ..., t) = g(x1, y1, z1, ..., x, y, z, ..., t)
+
+    Where $f$ and $g$ are list of expressions in terms of $x1$, $y1$, $z1$, ... which
+    are the first order derivatives of depedent variables $x$, $y$, $z$, ... from the
+    list *funcs* dependent on the independent variable $t$.
+
+    This function takes the above system of equations and converts it into:
+
+    .. math::
+        x1 = f1(x, y, z, ..., t)
+        y1 = f2(x, y, z, ..., t)
+        z1 = f3(x, y, z, ..., t)
+        ...
+
+    Where $f1$, $f2$, $f3$, ... are functions dependent on $x$, $y$, $z$, ..., $t$.
+
+    The above converted system of equations is then returned by this function.
+
+    Parameters
+    ==========
+
+    eqs: List
+        List of ODEs
+    funcs: List
+        List of dependent variables
+    t: Symbol
+        Independent variable of the equations in eqs
+
+    Raises
+    ======
+
+    ODENonLinearError
+        When the system of equations is nonlinear
+    ODEOrderError
+        When the system of equations have an order greater than 1
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Eq, Function
+    >>> from sympy.solvers.ode.systems import canonical_equations
+    >>> from sympy.abc import t
+
+    >>> x, y = symbols("x y", cls=Function)
+    >>> x1 = x(t).diff(t)
+    >>> y1 = y(t).diff(t)
+
+    Now, we will look at a system of ODEs which is not in canonical form:
+
+    >>> eqs = [Eq(2*x1 + y1, x(t) + t), Eq(y1, y(t) + x1)]
+
+    The canonical form of the equation is given as:
+
+    >>> canonical_equations(eqs, [x(t), y(t)], t)
+    [Eq(Derivative(x(t), t), t/3 + x(t)/3 - y(t)/3),
+     Eq(Derivative(y(t), t), t/3 + x(t)/3 + 2*y(t)/3)]
+
+
+    The function raises an ODEOrderError since it only deals with
+    system of ODEs in their first order.
+
+    >>> eqs = [Eq(x1.diff(t), y(t)), Eq(y1, x(t))]
+
+    >>> canonical_equations(eqs, [x(t), y(t)], t)
+    Traceback (most recent call last):
+    ...
+    ODEOrderError: Cannot represent system in 1-order canonical form
+
+
+    This function raises an ODENonLinearError when one of the first order
+    terms is nonlinear.
+
+    >>> eqs = [Eq(x1**2, x(t) + y(t) + t), Eq(y1 + x1, x(t) + 2*y(t))]
+
+    >>> canonical_equations(eqs, [x(t), y(t)], t)
+    Traceback (most recent call last):
+    ...
+    ODENonLinearError: System of ODEs is nonlinear
+
+    See Also
+    ========
+
+    solve: Solves for the first order dependent variables
+
+    """
+    from sympy.solvers.solvers import solve
+
+    # For now the system of ODEs dealt by this function can have a
+    # maximum order of 1.
+    if any(ode_order(eq, func) > 1 for eq in eqs for func in funcs):
+        msg = "Cannot represent system in {}-order canonical form"
+        raise ODEOrderError(msg.format(1))
+
+    canon_eqs = solve(eqs, *[func.diff(t) for func in funcs], dict=True)
+
+    if len(canon_eqs) != 1:
+        raise ODENonLinearError("System of ODEs is nonlinear")
+
+    canon_eqs = canon_eqs[0]
+    canon_eqs = [Eq(func.diff(t), canon_eqs[func.diff(t)]) for func in funcs]
+
+    return canon_eqs
+
+
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
@@ -506,7 +623,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         coefficient. Otherwise, None is returned.
 
     """
-    from sympy.solvers.solvers import solve
 
     # Error for i == 0 can be added but isn't for now
 
@@ -545,16 +661,14 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Linearity check
     try:
-        canon_eqs = solve(eqs, *[func.diff(t) for func in funcs])
-        canon_eqs = [func.diff(t) - canon_eqs[func.diff(t)] for func in funcs]
+        canon_eqs = canonical_equations(eqs, funcs, t)
         As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
 
-    # When the system of ODEs is non-linear, either TypeError or
-    # a ODENonLinearError is raised. For both of these cases, None is returned.
+    # When the system of ODEs is non-linear, an ODENonLinearError is raised.
     # When system has an order greater than what is specified in system_order,
     # ODEOrderError is raised.
-    # NOTE: Soon ValueError, TypeError and NonLinearError, will be removed
-    except (TypeError, ODEOrderError, ODENonLinearError):
+    # This function catches these errors and None is returned
+    except (ODEOrderError, ODENonLinearError):
         return None
 
     A = As[1]
