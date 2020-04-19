@@ -85,6 +85,9 @@ class PermutationMatrix(MatrixExpr):
         perm = self.args[0]
         return KroneckerDelta(perm.apply(i), j)
 
+    def _eval_power(self, exp):
+        return PermutationMatrix(self.args[0] ** exp).doit()
+
     def _eval_inverse(self):
         return PermutationMatrix(self.args[0] ** -1)
 

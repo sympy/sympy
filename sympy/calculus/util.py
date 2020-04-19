@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm_list, Abs, im, re, Dummy
+from sympy import Order, S, log, limit, lcm_list, im, re, Dummy
 from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
@@ -8,13 +8,12 @@ from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
-from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
 from sympy.sets.fancysets import ImageSet
-from sympy.simplify.radsimp import denom
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+
 
 def continuous_domain(f, symbol, domain):
     """
@@ -64,7 +63,8 @@ def continuous_domain(f, symbol, domain):
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
-    from sympy.solvers.solveset import solveset, _has_rational_power
+    from sympy.solvers.solveset import _has_rational_power
+    from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
@@ -82,28 +82,8 @@ def continuous_domain(f, symbol, domain):
             constrained_interval = Intersection(constraint,
                                                 constrained_interval)
 
-        domain = constrained_interval
 
-    try:
-        if f.has(Abs):
-            sings = solveset(1/f, symbol, domain) + \
-                solveset(denom(together(f)), symbol, domain)
-        else:
-            for atom in f.atoms(Pow):
-                predicate, denomin = _has_rational_power(atom, symbol)
-                if predicate and denomin == 2:
-                    sings = solveset(1/f, symbol, domain) +\
-                        solveset(denom(together(f)), symbol, domain)
-                    break
-            else:
-                sings = Intersection(solveset(1/f, symbol), domain) + \
-                    solveset(denom(together(f)), symbol, domain)
-
-    except NotImplementedError:
-        raise NotImplementedError("Methods for determining the continuous domains"
-                                  " of this function have not been developed.")
-
-    return domain - sings
+    return constrained_interval - singularities(f, symbol, domain)
 
 
 def function_range(f, symbol, domain):
@@ -1393,8 +1373,8 @@ class AccumulationBounds(AtomicExpr):
             return self
 
 
+
     def _eval_is_gt(self, other):
-        """
         Returns True if range of values attained by `self` AccumulationBounds
         object is greater than the range of values attained by `other`,
         where other may be any value of type AccumulationBounds object or
@@ -1430,8 +1410,9 @@ class AccumulationBounds(AtomicExpr):
                 return False
         return None
 
+
     def _eval_is_ge(self, other):
-        """
+      """
       Returns True if range of values attained by `self` AccumulationBounds
       object is less that the range of values attained by `other`, where
       other may be any value of type AccumulationBounds object or extended
@@ -1465,8 +1446,8 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other:
                 return False
-        return None
 
+        return None
 
 
     def __contains__(self, other):

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.free_groups import free_group
 from sympy.printing.defaults import DefaultPrinting
 
@@ -836,7 +834,7 @@ class CosetTable(DefaultPrinting):
             R_set = R_set.union(conjugate)
         R_c_list = []
         for x in self.A:
-            r = set([word for word in R_set if word[0] == x])
+            r = {word for word in R_set if word[0] == x}
             R_c_list.append(r)
             R_set.difference_update(r)
         return R_c_list
@@ -1232,7 +1230,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
     # a list of subsets of R_c whose words start with "x".
     R_c_list = []
     for x in C.A:
-        r = set([word for word in R_set if word[0] == x])
+        r = {word for word in R_set if word[0] == x}
         R_c_list.append(r)
         R_set.difference_update(r)
     for w in Y:
