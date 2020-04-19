@@ -334,6 +334,29 @@ def refine_sign(expr, assumptions):
     return expr
 
 
+def refine_matrixelement(expr, assumptions):
+    """
+    Handler for symmetric part
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_matrixelement
+    >>> from sympy import Q
+    >>> from sympy.matrices.expressions.matexpr import MatrixSymbol
+    >>> X = MatrixSymbol('X', 3, 3)
+    >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
+    X[0, 1]
+    >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
+    X[0, 1]
+    """
+    from sympy.matrices.expressions.matexpr import MatrixElement
+    matrix, i, j = expr.args
+    if ask(Q.symmetric(matrix), assumptions):
+        if (i - j).could_extract_minus_sign():
+            return expr
+        return MatrixElement(matrix, j, i)
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -346,5 +369,6 @@ handlers_dict = {
     'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
-    'sign': refine_sign
+    'sign': refine_sign,
+    'MatrixElement': refine_matrixelement
 }  # type: Dict[str, Callable[[Expr, Boolean], Expr]]

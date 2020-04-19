@@ -49,8 +49,8 @@ def plot_and_save_1(name):
     # Examples from the 'introduction' notebook
     ###
 
-    p = plot(x)
-    p = plot(x*sin(x), x*cos(x))
+    p = plot(x, legend=True, label='f1')
+    p = plot(x*sin(x), x*cos(x), label='f2')
     p.extend(p)
     p[0].line_color = lambda a: a
     p[1].line_color = 'b'
@@ -120,7 +120,7 @@ def plot_and_save_2(name):
     plot_parametric(sin(x), cos(x)).save(tmp_file())
 
     #Single plot with range.
-    p = plot_parametric(sin(x), cos(x), (x, -5, 5))
+    p = plot_parametric(sin(x), cos(x), (x, -5, 5), legend=True, label='parametric_plot')
     p.save(tmp_file('%s_parametric_range' % name))
     p._backend.close()
 
@@ -145,7 +145,7 @@ def plot_and_save_2(name):
     p._backend.close()
 
     #3d parametric plots
-    p = plot3d_parametric_line(sin(x), cos(x), x)
+    p = plot3d_parametric_line(sin(x), cos(x), x, legend=True, label='3d_parametric_plot')
     p.save(tmp_file('%s_3d_line' % name))
     p._backend.close()
 

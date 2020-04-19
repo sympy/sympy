@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
+from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, ShapeError, OneMatrix, ZeroMatrix
+    MatrixExpr, OneMatrix, ZeroMatrix
 )
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort

@@ -1,10 +1,8 @@
-from __future__ import print_function, division
-
 from typing import Dict, Type, Union
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
-from .basic import S
+from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
 from .expr import Expr
@@ -20,6 +18,10 @@ __all__ = (
     'StrictGreaterThan', 'GreaterThan',
 )
 
+
+def _nontrivBool(side):
+    return isinstance(side, Boolean) and \
+        not isinstance(side, (BooleanAtom, Atom))
 
 
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
@@ -78,27 +80,18 @@ class Relational(Boolean, EvalfMixin):
         if cls is None:
             raise ValueError("Invalid relational operator symbol: %r" % rop)
 
-        # XXX: Why should the below be removed when Py2 is not supported?
-        #
-        # /// drop when Py2 is no longer supported
         if not issubclass(cls, (Eq, Ne)):
             # validate that Booleans are not being used in a relational
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            from sympy.core.symbol import Symbol
-            from sympy.logic.boolalg import Boolean
-            def unacceptable(side):
-                return isinstance(side, Boolean) and not isinstance(side, Symbol)
-
-            if unacceptable(lhs) or unacceptable(rhs):
+            if any(map(_nontrivBool, (lhs, rhs))):
                 from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
                     real expressions.
                 '''))
-        # \\\
 
         return cls(lhs, rhs, **assumptions)
 
@@ -455,6 +448,12 @@ class Equality(Relational):
     Notes
     =====
 
+    Python treats 1 and True (and 0 and False) as being equal; SymPy
+    does not. And integer will always compare as unequal to a Boolean:
+
+    >>> Eq(True, 1), True == 1
+    (False, True)
+
     This class is not the same as the == operator.  The == operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
@@ -498,6 +497,10 @@ class Equality(Relational):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
+            if isinstance(lhs, Boolean) != isinstance(lhs, Boolean):
+                # e.g. 0/1 not recognized as Boolean in SymPy
+                return S.false
+
             # If one expression has an _eval_Eq, return its results.
             if hasattr(lhs, '_eval_Eq'):
                 r = lhs._eval_Eq(rhs)
@@ -637,15 +640,15 @@ class Equality(Relational):
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
-                return set([self.lhs])
+                return {self.lhs}
             elif self.rhs.is_Symbol:
-                return set([self.rhs])
+                return {self.rhs}
         return set()
 
     def _eval_simplify(self, **kwargs):
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        e = super(Equality, self)._eval_simplify(**kwargs)
+        e = super()._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
         free = self.free_symbols
@@ -728,6 +731,10 @@ class Unequality(Relational):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate:
+            if isinstance(lhs, Boolean) != isinstance(lhs, Boolean):
+                # e.g. 0/1 not recognized as Boolean in SymPy
+                return S.true
+
             is_equal = Equality(lhs, rhs)
             if isinstance(is_equal, BooleanAtom):
                 return is_equal.negated
@@ -742,9 +749,9 @@ class Unequality(Relational):
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
-                return set([self.lhs])
+                return {self.lhs}
             elif self.rhs.is_Symbol:
-                return set([self.rhs])
+                return {self.rhs}
         return set()
 
     def _eval_simplify(self, **kwargs):

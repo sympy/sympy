@@ -6,8 +6,6 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
-from __future__ import print_function, division
-
 from collections import OrderedDict
 
 from sympy.core import S
@@ -49,7 +47,7 @@ class Tuple(Basic):
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
-            args = ( sympify(arg) for arg in args )
+            args = (sympify(arg) for arg in args)
         obj = Basic.__new__(cls, *args)
         return obj
 
@@ -95,12 +93,12 @@ class Tuple(Basic):
 
     def __eq__(self, other):
         if isinstance(other, Basic):
-            return super(Tuple, self).__eq__(other)
+            return super().__eq__(other)
         return self.args == other
 
     def __ne__(self, other):
         if isinstance(other, Basic):
-            return super(Tuple, self).__ne__(other)
+            return super().__ne__(other)
         return self.args != other
 
     def __hash__(self):
@@ -122,8 +120,7 @@ class Tuple(Basic):
         return self.args.count(value)
 
     def index(self, value, start=None, stop=None):
-        """T.index(value, [start, [stop]]) -> integer -- return first index of value.
-           Raises ValueError if the value is not present."""
+        """Searches and returns the first index of the value."""
         # XXX: One would expect:
         #
         # return self.args.index(value, start, stop)
@@ -259,15 +256,16 @@ class Dict(Basic):
         return tuple(self.elements)
 
     def items(self):
-        '''D.items() -> list of D's (key, value) pairs, as 2-tuples'''
+        '''Returns a set-like object providing a view on dict's items.
+        '''
         return self._dict.items()
 
     def keys(self):
-        '''D.keys() -> list of D's keys'''
+        '''Returns the list of the dict's keys.'''
         return self._dict.keys()
 
     def values(self):
-        '''D.values() -> list of D's values'''
+        '''Returns the list of the dict's values.'''
         return self._dict.values()
 
     def __iter__(self):
@@ -279,7 +277,7 @@ class Dict(Basic):
         return self._dict.__len__()
 
     def get(self, key, default=None):
-        '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
+        '''Returns the value for key if the key is in the dictionary.'''
         return self._dict.get(sympify(key), default)
 
     def __contains__(self, key):
@@ -321,8 +319,7 @@ class OrderedSet(MutableSet):
         return self.map.popitem(last=last)[0]
 
     def __iter__(self):
-        for key in self.map.keys():
-            yield key
+        yield from self.map.keys()
 
     def __repr__(self):
         if not self.map:
