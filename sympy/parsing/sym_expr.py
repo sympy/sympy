@@ -1,14 +1,17 @@
 from sympy.printing import pycode, ccode, fcode
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.parsing.c.c_parser import CCodeConverter
+from sympy.parsing.fortran.fortran_parser import ASR2PyVisitor
+import os
 
 lfortran = import_module('lfortran')
 cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if lfortran:
-    from sympy.parsing.fortran.fortran_parser import src_to_sympy
-if cin:
-    from sympy.parsing.c.c_parser import parse_c
+    src_to_ast = lfortran.ast.src_to_ast
+    ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
+
 
 @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
 class SymPyExpression(object):  # type: ignore
@@ -91,33 +94,20 @@ class SymPyExpression(object):  # type: ignore
 
     """
 
-    def __init__(self, source_code = None, mode = None):
+    def __init__(self, source_code = None, mode = None, *args, **kwargs):
         """Constructor for SymPyExpression class"""
         super(SymPyExpression, self).__init__()
         if not(mode or source_code):
             self._expr = []
         elif mode:
             if source_code:
-                if mode.lower() == 'f':
-                    if lfortran:
-                        self._expr = src_to_sympy(source_code)
-                    else:
-                        raise ImportError("LFortran is not installed, cannot parse Fortran code")
-                elif mode.lower() == 'c':
-                    if cin:
-                        self._expr = parse_c(source_code)
-                    else:
-                        raise ImportError("Clang is not installed, cannot parse C code")
-                else:
-                    raise NotImplementedError(
-                        'Parser for specified language is not implemented'
-                    )
+                self.convert_to_expr(src_code = source_code, mode = mode, *args, **kwargs)
             else:
                 raise ValueError('Source code not present')
         else:
             raise ValueError('Please specify a mode for conversion')
 
-    def convert_to_expr(self, src_code, mode):
+    def convert_to_expr(self, src_code, mode, *args, **kwargs):
         """Converts the given source code to sympy Expressions
 
         Attributes
@@ -159,18 +149,25 @@ class SymPyExpression(object):  # type: ignore
 
         """
         if mode.lower() == 'f':
-            if lfortran:
-                self._expr = src_to_sympy(src_code)
+            vis = ASR2PyVisitor()
+            vis.visit(ast_to_asr(src_to_ast(src_code, translation_unit=False)))
+            self._expr = vis.ret_ast()
+        elif mode.lower() in ['c', 'cpp']:
+            converter = CCodeConverter()
+            if 'flags' in kwargs:
+                flags = kwargs['flags']
             else:
-                raise ImportError("LFortran is not installed, cannot parse Fortran code")
-        elif mode.lower() == 'c':
-            if cin:
-                self._expr = parse_c(src_code)
+                flags = []
+            if os.path.exists(src_code):
+                self._expr = converter.parse(src_code, flags = flags)
             else:
-                raise ImportError("Clang is not installed, cannot parse C code")
+                if mode.lower() == 'c':
+                    self._expr = converter.parse_c_str(src_code, flags = flags)
+                elif mode.lower == 'cpp':
+                    self._expr = converter.parse_cpp_str(src_code, flags = flags)
         else:
             raise NotImplementedError(
-                "Parser for specified language has not been implemented"
+                'Parser for specified language is not implemented'
             )
 
     def convert_to_python(self):
@@ -271,6 +268,7 @@ class SymPyExpression(object):  # type: ignore
         [FunctionDefinition(integer, name=f, parameters=(Variable(a), Variable(b)), body=CodeBlock(
         Declaration(Variable(f, type=integer, value=0)),
         Declaration(Variable(r, type=integer, value=0)),
+        Assignment(Variable(r), a + b),
         Assignment(Variable(f), Variable(r)),
         Return(Variable(f))
         ))]
