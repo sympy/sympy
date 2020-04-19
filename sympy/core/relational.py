@@ -23,7 +23,7 @@ __all__ = (
 
 def _nontrivBool(side):
     return isinstance(side, Boolean) and \
-        not isinstance(side, (BooleanAtom, Atom))
+        not isinstance(side, Atom)
 
 
 
@@ -494,7 +494,7 @@ class Equality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if evaluate:
-            return fuzzy_resolve(lhs, rhs, "=", Equality)
+            return fuzzy_resolve(lhs, rhs, is_eq, Equality)
 
         return Relational.__new__(cls, lhs, rhs)
 
@@ -629,7 +629,7 @@ class Unequality(Relational):
         rhs = _sympify(rhs)
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         if evaluate:
-            return fuzzy_resolve(lhs, rhs, "!=", Unequality)
+            return fuzzy_resolve(lhs, rhs, is_neq, Unequality)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -675,6 +675,7 @@ class _Inequality(Relational):
         except SympifyError:
             return NotImplemented
 
+
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         if evaluate:
             # First we invoke the appropriate inequality method of `lhs`
@@ -692,13 +693,8 @@ class _Inequality(Relational):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs, **options):
-        val = cls._eval_fuzzy_relation(lhs, rhs)
-        if val is None:
-            return Relational.__new__(cls, lhs, rhs, **options)
-        elif val is True:
-            return S.true
-        else:
-            return S.false
+        return cls._eval_fuzzy_relation(lhs, rhs)
+
 
 
 class _Greater(_Inequality):
@@ -968,7 +964,7 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        return cmp(lhs, rhs, ">=")
+        return fuzzy_resolve(lhs, rhs, is_ge, cls)
 
 
 Ge = GreaterThan
@@ -983,7 +979,7 @@ class LessThan(_Less):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
-        return cmp(lhs, rhs, "<=")
+        return fuzzy_resolve(lhs, rhs, is_le, cls)
 
 
 Le = LessThan
@@ -998,7 +994,7 @@ class StrictGreaterThan(_Greater):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
-        return cmp(lhs, rhs, ">")
+        return fuzzy_resolve(lhs, rhs, is_gt, cls)
 
 
 Gt = StrictGreaterThan
@@ -1013,7 +1009,7 @@ class StrictLessThan(_Less):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
-        return cmp(lhs, rhs, "<")
+        return fuzzy_resolve(lhs, rhs, is_lt, cls)
 
 
 Lt = StrictLessThan
@@ -1053,11 +1049,11 @@ def _n2(a, b):
 
 def fuzzy_resolve(lhs, rhs, op, cls):
     """
-    Resolves cmp(lhs, rhs) to S.true if cmp returns true.
+    Resolves op to S.true if cmp returns true.
     or to S.false if cmp returns false
     or to an unevaluated if cmp returns none.
     """
-    val = cmp(lhs, rhs, op)
+    val = op(lhs, rhs)
     if val is None:
         return cls(lhs, rhs, evaluate=False)
     elif isinstance(val,bool):
@@ -1116,6 +1112,31 @@ def eval_dispatch(lhs, rhs, op):
         return fuzzy_not(retval)
     else:
         return retval
+
+
+def is_neq(lhs, rhs):
+    return cmp(lhs, rhs, "!=")
+
+
+def is_lt(lhs, rhs):
+    return cmp(lhs, rhs, "<")
+
+
+def is_le(lhs, rhs):
+    return cmp(lhs, rhs, "<=")
+
+
+def is_gt(lhs, rhs):
+    return cmp(lhs, rhs, ">")
+
+
+def is_ge(lhs, rhs):
+    return cmp(lhs, rhs, ">=")
+
+
+def is_eq(lhs, rhs):
+    return cmp(lhs, rhs, "=")
+
 
 
 def cmp(lhs, rhs, op):
@@ -1219,11 +1240,6 @@ def cmp(lhs, rhs, op):
     return None
 
 
-def is_neq(lhs, rhs):
-    eq = _cmp_eq(lhs, rhs)
-    if isinstance(eq, bool):
-        return not eq
-    return eq
 
 
 def _cmp_eq(lhs, rhs):

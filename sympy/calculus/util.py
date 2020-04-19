@@ -1375,6 +1375,8 @@ class AccumulationBounds(AtomicExpr):
 
 
     def _eval_is_gt(self, other):
+
+        """""
         Returns True if range of values attained by `self` AccumulationBounds
         object is greater than the range of values attained by `other`,
         where other may be any value of type AccumulationBounds object or
@@ -1412,25 +1414,24 @@ class AccumulationBounds(AtomicExpr):
 
 
     def _eval_is_ge(self, other):
-      """
-      Returns True if range of values attained by `self` AccumulationBounds
-      object is less that the range of values attained by `other`, where
-      other may be any value of type AccumulationBounds object or extended
-      real number value, False if `other` satisfies the same
-      property, else an unevaluated Relational.
+        """
+        Returns True if range of values attained by `self` AccumulationBounds
+        object is less that the range of values attained by `other`, where
+        other may be any value of type AccumulationBounds object or extended
+        real number value, False if `other` satisfies the same
+        property, else an unevaluated Relational.
 
-      Examples
-      ========
+        Examples
+        ========
 
-      >>> from sympy import AccumBounds, oo
-      >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
-      False
-      >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
-      AccumBounds(1, 4) >= AccumBounds(3, 4)
-      >>> AccumBounds(1, oo) >= 1
-      True
-
-      """
+        >>> from sympy import AccumBounds, oo
+        >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
+        False
+        >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
+        AccumBounds(1, 4) >= AccumBounds(3, 4)
+        >>> AccumBounds(1, oo) >= 1
+        True
+        """
         other = _sympify(other)
         if isinstance(other, AccumBounds):
             if self.min >= other.max:
@@ -1446,7 +1447,6 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other:
                 return False
-
         return None
 
 
