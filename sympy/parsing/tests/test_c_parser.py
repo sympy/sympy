@@ -880,6 +880,8 @@ if cin:
 
 
     def test_parse():
+        import tempfile
+
         c_src1 = (
             'int a;' + '\n' +
             'int b;' + '\n'
@@ -891,20 +893,20 @@ if cin:
             '}'
         )
 
-        f1 = open('..a.h', 'w')
-        f2 = open('..b.h', 'w')
+        f1 = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.c')
+        f2 = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
 
         f1.write(c_src1)
         f2. write(c_src2)
 
+        f1.seek(0)
+        f2.seek(0)
+
+        res1 = SymPyExpression(f1.name, 'c').return_expr()
+        res2 = SymPyExpression(f2.name, 'cpp').return_expr()
+
         f1.close()
         f2.close()
-
-        res1 = SymPyExpression('..a.h', 'c').return_expr()
-        res2 = SymPyExpression('..b.h', 'c').return_expr()
-
-        os.remove('..a.h')
-        os.remove('..b.h')
 
         assert res1[0] == Declaration(
             Variable(
