@@ -14,7 +14,6 @@ if cin:
                             Equality, Unequality)
     from sympy.logic.boolalg import And, Or
     from sympy import Symbol, true, false
-    import os
 
     def test_variable():
         c_src1 = (
