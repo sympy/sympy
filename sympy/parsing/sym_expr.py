@@ -123,7 +123,7 @@ class SymPyExpression(object):  # type: ignore
             f or F for Fortran
             c or C for C Parsing
             cpp or CPP for C++ Parsing
-            
+
         flags: List
             List of command line arguments to be passed to Clang while parsing
             These can be used to specify include paths, warnings, etc.
