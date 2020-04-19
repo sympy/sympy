@@ -21,6 +21,11 @@ class ODEOrderError(ValueError):
     pass
 
 
+class ODENonLinearError(NonLinearError):
+    """Raised by linear_ode_to_matrix if the system is nonlinear"""
+    pass
+
+
 def linear_ode_to_matrix(eqs, funcs, t, order):
     r"""
     Convert a linear system of ODEs to matrix form
@@ -86,6 +91,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     >>> A1 * X.diff(t) + A0 * X - b == eqs_mat
     True
 
+    If the system of
+
     Parameters
     ==========
 
@@ -103,6 +110,15 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     The tuple ``(As, b)`` where ``As`` is a tuple of matrices and ``b`` is the
     the matrix representing the rhs of the matrix equation.
+
+    Raises
+    ======
+
+    ODEOrderError
+        When the system of ODEs have an order greater than what was specified
+
+    ODENonLinearError
+        When the system of ODEs is nonlinear
 
     See Also
     ========
@@ -135,7 +151,11 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
         # Ai is the matrix for X(t).diff(t, o)
         # eqs is minus the remainder of the equations.
-        Ai, b = linear_eq_to_matrix(eqs, syms)
+        try:
+            Ai, b = linear_eq_to_matrix(eqs, syms)
+        except NonLinearError:
+            raise ODENonLinearError("The system of ODEs is nonlinear.")
+
         As.append(Ai)
         if o:
             eqs = [-eq for eq in b]
@@ -515,7 +535,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         return None
     else:
 
-        # TO be changed when this function is updated
+        # TO be changed when this function is updated.
+        # This will in future be updated as the maximum
+        # order in the system found.
         system_order = 1
 
     # Not adding the check if the len(func.args) for
@@ -528,9 +550,11 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
 
     # When the system of ODEs is non-linear, either TypeError or
-    # a ValueError is raised. For both of these cases, None is returned.
+    # a ODENonLinearError is raised. For both of these cases, None is returned.
+    # When system has an order greater than what is specified in system_order,
+    # ODEOrderError is raised.
     # NOTE: Soon ValueError, TypeError and NonLinearError, will be removed
-    except (ValueError, TypeError, ODEOrderError, NonLinearError):
+    except (TypeError, ODEOrderError, ODENonLinearError):
         return None
 
     A = As[1]
