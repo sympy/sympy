@@ -629,10 +629,10 @@ class Mul(Expr, AssocOp):
 
         return c_part, nc_part, order_symbols
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
-        cargs, nc = b.args_cnc(split_1=False)
+        cargs, nc = self.args_cnc(split_1=False)
 
         if e.is_Integer:
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
@@ -640,8 +640,8 @@ class Mul(Expr, AssocOp):
         if e.is_Rational and e.q == 2:
             from sympy.core.power import integer_nthroot
             from sympy.functions.elementary.complexes import sign
-            if b.is_imaginary:
-                a = b.as_real_imag()[1]
+            if self.is_imaginary:
+                a = self.as_real_imag()[1]
                 if a.is_Rational:
                     n, d = abs(a/2).as_numer_denom()
                     n, t = integer_nthroot(n, 2)
@@ -651,7 +651,7 @@ class Mul(Expr, AssocOp):
                             r = sympify(n)/d
                             return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
-        p = Pow(b, e, evaluate=False)
+        p = Pow(self, e, evaluate=False)
 
         if e.is_Rational or e.is_Float:
             return p._eval_expand_power_base()
