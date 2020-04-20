@@ -5,11 +5,11 @@ from sympy.core.symbol import Dummy
 from sympy.functions import exp, im, cos, sin, re
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix
-from sympy.simplify import simplify
+from sympy.simplify import simplify, collect
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import ordered, uniq
 
 
 def _get_func_order(eqs, funcs):
@@ -438,7 +438,9 @@ def _neq_linear_first_order_const_coeff_homogeneous(match_):
     P, J = matrix_exp_jordan_form(M, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
-    sol_vector = P * J * Cvect
+    sol_vector = P * (J * Cvect)
+
+    sol_vector = [collect(s, ordered(J.atoms(exp)), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
     return sol_dict

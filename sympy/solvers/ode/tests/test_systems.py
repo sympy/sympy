@@ -329,8 +329,8 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq10, sol10) == (True, [0, 0])
 
     eq11 = [Eq(x(t).diff(t), 2*x(t) + y(t)), Eq(y(t).diff(t), -x(t) + 2*y(t))]
-    sol11 = [Eq(x(t), C1*exp(2*t)*sin(t) + C2*exp(2*t)*cos(t)),
-            Eq(y(t), C1*exp(2*t)*cos(t) - C2*exp(2*t)*sin(t))]
+    sol11 = [Eq(x(t), (C1*sin(t) + C2*cos(t))*exp(2*t)),
+            Eq(y(t), (C1*cos(t) - C2*sin(t))*exp(2*t))]
     assert dsolve(eq11) == sol11
     assert checksysodesol(eq11, sol11) == (True, [0, 0])
 
@@ -340,8 +340,7 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq12, sol12) == (True, [0, 0])
 
     eq13 = [Eq(x(t).diff(t), 4*x(t) + y(t)), Eq(y(t).diff(t), -x(t) + 2*y(t))]
-    sol13 = [Eq(x(t), C1*exp(3*t) + C2*(t*exp(3*t) + exp(3*t))),
-            Eq(y(t), -C1*exp(3*t) - C2*t*exp(3*t))]
+    sol13 = [Eq(x(t), (C1 + C2*t + C2)*exp(3*t)), Eq(y(t), (-C1 - C2*t)*exp(3*t))]
     assert dsolve(eq13) == sol13
     assert checksysodesol(eq13, sol13) == (True, [0, 0])
 
@@ -398,12 +397,10 @@ def test_sysode_linear_neq_order1():
     eq3 = [4 * u(t) - v(t) - 2 * w(t) + Derivative(u(t), t),
           2 * u(t) + v(t) - 2 * w(t) + Derivative(v(t), t),
           5 * u(t) + v(t) - 3 * w(t) + Derivative(w(t), t)]
-    sol3 = {Eq(u(t), C1 * exp(-2 * t) + C2 * (sqrt(3) * sin(sqrt(3) * t) / 6 + cos(sqrt(3) * t) / 2)
-              + C3 * (-sin(sqrt(3) * t) / 2 + sqrt(3) * cos(sqrt(3) * t) / 6)),
-           Eq(v(t), C2 * (sqrt(3) * sin(sqrt(3) * t) / 6 + cos(sqrt(3) * t) / 2)
-              + C3 * (-sin(sqrt(3) * t) / 2 + sqrt(3) * cos(sqrt(3) * t) / 6)),
-           Eq(w(t), C1 * exp(-2 * t) + C2 * cos(sqrt(3) * t) - C3 * sin(sqrt(3) * t))}
-    assert set(dsolve(eq3)) == sol3
+    sol3 = [Eq(u(t), C1*exp(-2*t) + C2*cos(sqrt(3)*t)/2 - C3*sin(sqrt(3)*t)/2 + sqrt(3)*(C2*sin(sqrt(3)*t)
+            + C3*cos(sqrt(3)*t))/6), Eq(v(t), C2*cos(sqrt(3)*t)/2 - C3*sin(sqrt(3)*t)/2 + sqrt(3)*(C2*sin(sqrt(3)*t)
+            + C3*cos(sqrt(3)*t))/6), Eq(w(t), C1*exp(-2*t) + C2*cos(sqrt(3)*t) - C3*sin(sqrt(3)*t))]
+    assert dsolve(eq3) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0, 0])
 
     tw = Rational(2, 9)
@@ -411,10 +408,10 @@ def test_sysode_linear_neq_order1():
           Eq(y(t).diff(t), 2 * y(t) + 8 * tw * z(t) + 2 * tw * w(t)),
           Eq(z(t).diff(t), Rational(37, 9) * z(t) - tw * w(t)), Eq(w(t).diff(t), 22 * tw * w(t) - 2 * tw * z(t))]
 
-    sol4 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t)),
-           Eq(y(t), C2*exp(2*t) + 2*C3*exp(4*t)),
-           Eq(z(t), 2*C3*exp(4*t) - C4*exp(5*t)/4),
-           Eq(w(t), C3*exp(4*t) + C4*exp(5*t))]
+    sol4 = [Eq(x(t), (C1 + C2*t)*exp(2*t)),
+            Eq(y(t), C2*exp(2*t) + 2*C3*exp(4*t)),
+            Eq(z(t), 2*C3*exp(4*t) - C4*exp(5*t)/4),
+            Eq(w(t), C3*exp(4*t) + C4*exp(5*t))]
 
     assert dsolve(eq4) == sol4
     assert checksysodesol(eq4, sol4) == (True, [0, 0, 0, 0])
@@ -430,10 +427,10 @@ def test_sysode_linear_neq_order1():
           Eq(z(t).diff(t), z(t) + Rational(-1, 8) * w(t)),
           Eq(w(t).diff(t), Rational(1, 2) * (w(t) + z(t)))]
 
-    sol6 = [Eq(x(t), 4*C1*exp(3*t/4) + C2*(4*t*exp(3*t/4) + 48*exp(3*t/4)) + C3*exp(t) + C4*t*exp(t)),
-           Eq(y(t), -C1*exp(3*t/4) + C2*(-t*exp(3*t/4) - 8*exp(3*t/4)) + C4*exp(t)),
-           Eq(z(t), C1*exp(3*t/4)/4 + C2*(t*exp(3*t/4)/4 + exp(3*t/4))),
-           Eq(w(t), C1*exp(3*t/4)/2 + C2*t*exp(3*t/4)/2)]
+    sol6 = [Eq(x(t), (C3 + C4*t)*exp(t) + (4*C1 + 4*C2*t + 48*C2)*exp(t)**Rational(3,4)),
+            Eq(y(t), C4*exp(t) + (-C1 - C2*t - 8*C2)*exp(t)**Rational(3,4)),
+            Eq(z(t), (C1/4 + C2*t/4 + C2)*exp(t)**Rational(3,4)),
+            Eq(w(t), (C1/2 + C2*t/2)*exp(t)**Rational(3,4))]
 
     assert dsolve(eq6) == sol6
     assert checksysodesol(eq6, sol6) == (True, [0, 0, 0, 0])
@@ -453,8 +450,8 @@ def test_sysode_linear_neq_order1():
           Eq(z(t).diff(t), 4 * z(t)), Eq(w(t).diff(t), 5 * w(t) + u(t)),
           Eq(u(t).diff(t), 5 * u(t))]
 
-    sol8 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t)), Eq(y(t), C2*exp(2*t)), Eq(z(t), C3*exp(4*t)),
-           Eq(w(t), C4*exp(5*t) + C5*t*exp(5*t)), Eq(u(t), C5*exp(5*t))]
+    sol8 = [Eq(x(t), (C1 + C2*t)*exp(2*t)), Eq(y(t), C2*exp(2*t)), Eq(z(t), C3*exp(4*t)), Eq(w(t), (C4 + C5*t)*exp(5*t)),
+            Eq(u(t), C5*exp(5*t))]
 
     assert dsolve(eq8) == sol8
     assert checksysodesol(eq8, sol8) == (True, [0, 0, 0, 0, 0])
@@ -505,9 +502,10 @@ def test_sysode_linear_neq_order1():
     eq14 = [Eq(f(t).diff(t), 2 * g(t) - 3 * h(t)),
            Eq(g(t).diff(t), 4 * h(t) - 2 * f(t)),
            Eq(h(t).diff(t), 3 * f(t) - 4 * g(t))]
-    sol14 = [Eq(f(t), 2*C1 + C2*(-3*sqrt(29)*sin(sqrt(29)*t)/25 - 8*cos(sqrt(29)*t)/25) + C3*(8*sin(sqrt(29)*t)/25 -  \
-            3*sqrt(29)*cos(sqrt(29)*t)/25)), Eq(g(t), 3*C1/2 + C2*(4*sqrt(29)*sin(sqrt(29)*t)/25 - 6*cos(sqrt(29)*t)/25) \
-            + C3*(6*sin(sqrt(29)*t)/25 + 4*sqrt(29)*cos(sqrt(29)*t)/25)), Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))]
+    sol14 = [Eq(f(t), 2*C1 - 8*C2*cos(sqrt(29)*t)/25 + 8*C3*sin(sqrt(29)*t)/25 - 3*sqrt(29)*(C2*sin(sqrt(29)*t)
+            + C3*cos(sqrt(29)*t))/25), Eq(g(t), 3*C1/2 - 6*C2*cos(sqrt(29)*t)/25 + 6*C3*sin(sqrt(29)*t)/25
+            + 4*sqrt(29)*(C2*sin(sqrt(29)*t) + C3*cos(sqrt(29)*t))/25), Eq(h(t), C1 + C2*cos(sqrt(29)*t)
+            - C3*sin(sqrt(29)*t))]
 
     assert dsolve(eq14) == sol14
     assert checksysodesol(eq14, sol14) == (True, [0, 0, 0])
@@ -515,9 +513,9 @@ def test_sysode_linear_neq_order1():
     eq15 = [Eq(2 * f(t).diff(t), 3 * 4 * (g(t) - h(t))),
           Eq(3 * g(t).diff(t), 2 * 4 * (h(t) - f(t))),
           Eq(4 * h(t).diff(t), 2 * 3 * (f(t) - g(t)))]
-    sol15 = [Eq(f(t), C1 + C2*(-6*sqrt(29)*sin(sqrt(29)*t)/13 - 16*cos(sqrt(29)*t)/13) + C3*(16*sin(sqrt(29)*t)/13 \
-            - 6*sqrt(29)*cos(sqrt(29)*t)/13)), Eq(g(t), C1 + C2*(8*sqrt(29)*sin(sqrt(29)*t)/39 - 16*cos(sqrt(29)*t)/13) \
-            + C3*(16*sin(sqrt(29)*t)/13 + 8*sqrt(29)*cos(sqrt(29)*t)/39)), Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))]
+    sol15 = [Eq(f(t), C1 - 16*C2*cos(sqrt(29)*t)/13 + 16*C3*sin(sqrt(29)*t)/13 - 6*sqrt(29)*(C2*sin(sqrt(29)*t)
+            + C3*cos(sqrt(29)*t))/13), Eq(g(t), C1 - 16*C2*cos(sqrt(29)*t)/13 + 16*C3*sin(sqrt(29)*t)/13
+            + 8*sqrt(29)*(C2*sin(sqrt(29)*t) + C3*cos(sqrt(29)*t))/39), Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))]
 
     assert dsolve(eq15) == sol15
     assert checksysodesol(eq15, sol15) == (True, [0, 0, 0])
@@ -531,35 +529,34 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq16, sol16) == (True, [0, 0, 0])
 
     eq17 = (Eq(diff(x(t),t),3*y(t)-11*z(t)),Eq(diff(y(t),t),7*z(t)-3*x(t)),Eq(diff(z(t),t),11*x(t)-7*y(t)))
-    sol17 = [Eq(x(t), 7*C1/3 + C2*(-11*sqrt(179)*sin(sqrt(179)*t)/170 - 21*cos(sqrt(179)*t)/170) \
-            + C3*(21*sin(sqrt(179)*t)/170 - 11*sqrt(179)*cos(sqrt(179)*t)/170)),
-            Eq(y(t), 11*C1/3 + C2*(7*sqrt(179)*sin(sqrt(179)*t)/170 - 33*cos(sqrt(179)*t)/170) \
-            + C3*(33*sin(sqrt(179)*t)/170 + 7*sqrt(179)*cos(sqrt(179)*t)/170)),
-            Eq(z(t), C1 + C2*cos(sqrt(179)*t) - C3*sin(sqrt(179)*t))]
+    sol17 = [Eq(x(t), 7*C1/3 - 21*C2*cos(sqrt(179)*t)/170 + 21*C3*sin(sqrt(179)*t)/170 - 11*sqrt(179)*(C2*sin(sqrt(179)*t)
+            + C3*cos(sqrt(179)*t))/170), Eq(y(t), 11*C1/3 - 33*C2*cos(sqrt(179)*t)/170 + 33*C3*sin(sqrt(179)*t)/170
+            + 7*sqrt(179)*(C2*sin(sqrt(179)*t) + C3*cos(sqrt(179)*t))/170), Eq(z(t), C1 + C2*cos(sqrt(179)*t)
+            - C3*sin(sqrt(179)*t))]
 
     assert dsolve(eq17) == sol17
     assert checksysodesol(eq17, sol17) == (True, [0, 0, 0])
 
     eq18 = (Eq(3*diff(x(t),t),4*5*(y(t)-z(t))),Eq(4*diff(y(t),t),3*5*(z(t)-x(t))),Eq(5*diff(z(t),t),3*4*(x(t)-y(t))))
-    sol18 = [Eq(x(t), C1 + C2*(-4*sqrt(2)*sin(5*sqrt(2)*t)/3 - cos(5*sqrt(2)*t)) + C3*(sin(5*sqrt(2)*t) - 4*sqrt(2)*cos(5*sqrt(2)*t)/3)),
-            Eq(y(t), C1 + C2*(3*sqrt(2)*sin(5*sqrt(2)*t)/4 - cos(5*sqrt(2)*t)) + C3*(sin(5*sqrt(2)*t) + 3*sqrt(2)*cos(5*sqrt(2)*t)/4)),
+    sol18 = [Eq(x(t), C1 - C2*cos(5*sqrt(2)*t) + C3*sin(5*sqrt(2)*t) - 4*sqrt(2)*(C2*sin(5*sqrt(2)*t) + C3*cos(5*sqrt(2)*t))/3),
+            Eq(y(t), C1 - C2*cos(5*sqrt(2)*t) + C3*sin(5*sqrt(2)*t) + 3*sqrt(2)*(C2*sin(5*sqrt(2)*t) + C3*cos(5*sqrt(2)*t))/4),
             Eq(z(t), C1 + C2*cos(5*sqrt(2)*t) - C3*sin(5*sqrt(2)*t))]
 
     assert dsolve(eq18) == sol18
     assert checksysodesol(eq18, sol18) == (True, [0, 0, 0])
 
     eq19 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
-    sol19 = [Eq(x(t), C1*exp(2*t) + C2*(t*exp(2*t) + 2*exp(2*t)) + C3*(t**2*exp(2*t)/2 + 2*t*exp(2*t) + exp(2*t))),
-            Eq(y(t), C1*exp(2*t) + C2*(t*exp(2*t) + 2*exp(2*t)) + C3*(t**2*exp(2*t)/2 + 2*t*exp(2*t))),
-            Eq(z(t), 2*C1*exp(2*t) + C2*(2*t*exp(2*t) + 3*exp(2*t)) + C3*(t**2*exp(2*t) + 3*t*exp(2*t)))]
+    sol19 = [Eq(x(t), (C1 + C2*t + 2*C2 + C3*t**2/2 + 2*C3*t + C3)*exp(2*t)),
+            Eq(y(t), (C1 + C2*t + 2*C2 + C3*t**2/2 + 2*C3*t)*exp(2*t)),
+            Eq(z(t), (2*C1 + 2*C2*t + 3*C2 + C3*t**2 + 3*C3*t)*exp(2*t))]
 
     assert dsolve(eq19) == sol19
     assert checksysodesol(eq19, sol19) == (True, [0, 0, 0])
 
     eq20 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
-    sol20 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(-3*sin(t)/5 - cos(t)/5)),
-            Eq(y(t), C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(-3*sin(t)/5 - cos(t)/5)),
-            Eq(z(t), C1*exp(2*t) + C2*cos(t) - C3*sin(t))]
+    sol20 = [Eq(x(t), C1*exp(2*t) - C2*sin(t)/5 + 3*C2*cos(t)/5 - 3*C3*sin(t)/5 - C3*cos(t)/5),
+             Eq(y(t), -C2*sin(t)/5 + 3*C2*cos(t)/5 - 3*C3*sin(t)/5 - C3*cos(t)/5),
+             Eq(z(t), C1*exp(2*t) + C2*cos(t) - C3*sin(t))]
 
     assert dsolve(eq20) == sol20
     assert checksysodesol(eq20, sol20) == (True, [0, 0, 0])
@@ -580,9 +577,9 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq22, sol22) == (True, [0, 0])
 
     eq23 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
-    sol23 = [Eq(x(t), C1*(sqrt(7)*exp(3*t/2)*sin(sqrt(7)*t/2)/4 + exp(3*t/2)*cos(sqrt(7)*t/2)/4) \
-            + C2*(-exp(3*t/2)*sin(sqrt(7)*t/2)/4 + sqrt(7)*exp(3*t/2)*cos(sqrt(7)*t/2)/4)),
-            Eq(y(t), C1*exp(3*t/2)*cos(sqrt(7)*t/2) - C2*exp(3*t/2)*sin(sqrt(7)*t/2))]
+    sol23 = [Eq(x(t), (C1*cos(sqrt(7)*t/2)/4 - C2*sin(sqrt(7)*t/2)/4 + sqrt(7)*(C1*sin(sqrt(7)*t/2)
+            + C2*cos(sqrt(7)*t/2))/4)*exp(t)**Rational(3,2)),
+            Eq(y(t), (C1*cos(sqrt(7)*t/2) - C2*sin(sqrt(7)*t/2))*exp(t)**Rational(3,2))]
 
     assert dsolve(eq23) == sol23
     assert checksysodesol(eq23, sol23) == (True, [0, 0])
