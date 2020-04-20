@@ -293,6 +293,7 @@ class LaTeXLexer(Lexer):
     GTE = 55
     BANG = 56
     SYMBOL = 57
+    MAX = 58
 
     channelNames = [ u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN" ]
 
@@ -307,7 +308,7 @@ class LaTeXLexer(Lexer):
             u"'\\arccot'", u"'\\sinh'", u"'\\cosh'", u"'\\tanh'", u"'\\arsinh'",
             u"'\\arcosh'", u"'\\artanh'", u"'\\sqrt'", u"'\\times'", u"'\\cdot'",
             u"'\\div'", u"'\\frac'", u"'\\mathit'", u"'_'", u"'^'", u"':'",
-            u"'='", u"'<'", u"'\\leq'", u"'>'", u"'\\geq'", u"'!'" ]
+            u"'='", u"'<'", u"'\\leq'", u"'>'", u"'\\geq'", u"'!'", u"'\\max'" ]
 
     symbolicNames = [ u"<INVALID>",
             u"WS", u"ADD", u"SUB", u"MUL", u"DIV", u"L_PAREN", u"R_PAREN",
@@ -320,7 +321,7 @@ class LaTeXLexer(Lexer):
             u"FUNC_ARCOSH", u"FUNC_ARTANH", u"FUNC_SQRT", u"CMD_TIMES",
             u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC", u"CMD_MATHIT", u"UNDERSCORE",
             u"CARET", u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL",
-            u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
+            u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL", u"FUNC_MAX" ]
 
     ruleNames = [ u"T__0", u"WS", u"ADD", u"SUB", u"MUL", u"DIV", u"L_PAREN",
                   u"R_PAREN", u"L_BRACE", u"R_BRACE", u"L_BRACKET", u"R_BRACKET",
@@ -333,7 +334,7 @@ class LaTeXLexer(Lexer):
                   u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC",
                   u"CMD_MATHIT", u"UNDERSCORE", u"CARET", u"COLON", u"WS_CHAR",
                   u"DIFFERENTIAL", u"LETTER", u"DIGIT", u"NUMBER", u"EQUAL",
-                  u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
+                  u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL", u"FUNC_MAX" ]
 
     grammarFileName = u"LaTeX.g4"
 
