@@ -11,7 +11,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (
     ff, rf, binomial, factorial, factorial2,
-    )
+    multinomial)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -733,6 +733,73 @@ def test_binomial_rewrite():
                         rw = u.rewrite(F)
                     assert Eq(rw, binomial(x, y)), (x, y, F)
 
+
+def test_multinomial():
+    from sympy import I, Rational
+    n, k = symbols('n k', integer=True)
+    z = Symbol('z', zero=True)
+    nt = Symbol('nt', integer=False)
+    kp = Symbol('kp', integer=True, positive=True)
+    x = Symbol('x')
+
+    raises(ValueError, lambda: multinomial())
+    assert multinomial(n, k, k).is_integer
+    assert multinomial(n, k, nt).is_integer is False
+    assert multinomial(1000) == 1
+    assert multinomial(0, 0) == 1
+    assert multinomial(1, 2) == 3
+    assert multinomial(1, 2.5, 1) == 15.75
+    assert multinomial(1, -2) == -1
+    assert multinomial(-1, -2) == 0
+    assert multinomial(1, Rational(-1, 3)) == Rational(2, 3)
+    assert multinomial(1, 1, 1) == 6
+    assert multinomial(S.Half, S.Half).equals(4/pi)
+    assert multinomial(3, S.Exp1, pi).args == (3, S.Exp1, pi)
+    assert multinomial(pi, S.Exp1, 3).round() == 1442
+
+    assert multinomial(k, n + k) == binomial(2*k + n, k)
+    assert multinomial(k, n + k).rewrite(binomial
+        ) == binomial(2*k + n, k)
+    m = multinomial(k, n - k)
+    assert m.rewrite(binomial) == m
+
+    assert multinomial(n, n).is_integer
+    assert multinomial(nt, k).is_integer is None
+    assert multinomial(sqrt(11)*I, 3) == -10
+
+    assert multinomial(n, -2) == binomial(n - 2, -2)
+    assert multinomial(n, -pi).rewrite(gamma
+        ) == gamma(n - pi + 1)/(gamma(1 - pi)*gamma(n + 1)), multinomial(n, -pi)
+    assert expand_func(multinomial(n, 2)) == (n + 1)*(n + 2)/2
+    assert expand_func(multinomial(n, 2, 3)) == (n + 1)*(
+        n + 2)*(n + 3)*(n + 4)*(n + 5)/12
+    assert multinomial(n, n + 3) == binomial(2*n + 3, n)
+
+    assert multinomial(n, 3).expand(func=True) ==  n**3/6 + n**2 + 11*n/6 + 1
+
+    assert multinomial(kp, kp + 1) == binomial(2*kp + 1, kp)
+
+    assert multinomial(n, z) == 1
+    assert multinomial(z) == 1
+    assert multinomial(z, n, k) == binomial(k + n, k)
+    assert unchanged(multinomial, z, z, n, k, k) is False
+    assert multinomial(*[x]*5) == factorial(5*x)/factorial(x)**5
+
+    assert multinomial(I, 1) == 1 + I
+    assert multinomial(I, 2) == (1 + 3*I)/2
+
+
+def test_multinomial_rewrite():
+    n, k = symbols('n k', integer=True, nonnegative=True)
+    assert multinomial(n, k, k).rewrite(binomial) == binomial(
+        k + n, k)*binomial(2*k + n, k)
+    assert multinomial(n, k, k).rewrite(factorial) == factorial(
+        2*k + n)/(factorial(k)**2*factorial(n))
+    assert multinomial(n, k, k).rewrite(gamma) == gamma(
+        2*k + n + 1)/(gamma(k + 1)**2*gamma(n + 1))
+    assert multinomial(n, k, k).rewrite('tractable') == exp(
+        -2*loggamma(k + 1))*exp(
+            -loggamma(n + 1))*exp(loggamma(2*k + n + 1))
 
 
 @XFAIL
