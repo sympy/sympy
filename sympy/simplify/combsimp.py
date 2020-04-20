@@ -51,7 +51,7 @@ def combsimp(expr):
         for node in preorder_traversal(expr)):
         return gammasimp(expr);
 
-    expr = _gammasimp(expr, as_comb = True)
+    expr = _gammasimp(expr, as_comb=True)
     expr = _gamma_as_comb(expr)
     return expr
 

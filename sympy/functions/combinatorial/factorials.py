@@ -257,7 +257,7 @@ class factorial(CombinatorialFunction):
                     if isprime and (d - 1 < n):
                         fc = self._facmod(d - 1, aq)
                         fc = pow(fc, aq - 2, aq)
-                        if d%2:
+                        if d % 2:
                             fc = -fc
                     else:
                         fc = self._facmod(n, aq)
@@ -318,7 +318,7 @@ class factorial(CombinatorialFunction):
             return self.func(arg_1)
         ####################################################
         # The correct result here should be 'None'.        #
-        # Indeed arg in not bounded as x tends to 0.       #
+        # Indeed arg is not bounded as x tends to 0.       #
         # Consequently the series expansion does not admit #
         # the leading term.                                #
         # For compatibility reasons, the return value here #
@@ -376,7 +376,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     @cacheit
-    def _eval(self, n):
+    def _eval(cls, n):
         if not n:
             return S.One
         elif n == 1:
@@ -472,12 +472,10 @@ class factorial2(CombinatorialFunction):
                     return 2**k * factorial(k)
                 return factorial(arg) / factorial2(arg - 1)
 
-
             if arg.is_odd:
                 return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
             raise ValueError("argument must be nonnegative integer "
                                 "or negative odd integer")
-
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input

@@ -58,7 +58,7 @@ def gammasimp(expr):
     """
 
     expr = expr.rewrite(gamma)
-    return _gammasimp(expr, as_comb = False)
+    return _gammasimp(expr, as_comb=False)
 
 
 def _gammasimp(expr, as_comb):

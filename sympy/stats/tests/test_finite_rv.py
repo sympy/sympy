@@ -142,6 +142,7 @@ def test_dice():
     Sum(Piecewise((exp(ki*t)/n, (ki >= 1) & (ki <= n)), (0, True)), (ki, 1, n)))
     assert mgf.subs(n, 3).doit() == exp(3*t)/3 + exp(2*t)/3 + exp(t)/3
 
+
 def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
