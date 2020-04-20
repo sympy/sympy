@@ -209,7 +209,6 @@ def test_Sample():
 
 @XFAIL
 def test_samplingE():
-    X = Die('X', 6)
     Y = Normal('Y', 0, 1)
     z = Symbol('z', integer=True)
     scipy = import_module('scipy')
