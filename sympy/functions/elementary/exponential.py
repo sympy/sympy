@@ -74,8 +74,14 @@ class ExpBase(Function):
         """
         return self.func(1), Mul(*self.args)
 
+    def _eval_adjoint(self):
+        return self.func(self.args[0].adjoint())
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
+
+    def _eval_transpose(self):
+        return self.func(self.args[0].transpose())
 
     def _eval_is_finite(self):
         arg = self.args[0]

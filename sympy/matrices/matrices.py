@@ -2141,7 +2141,7 @@ class MatrixBase(MatrixDeprecated,
 
         c = self.cols
         if c != self.rows:
-            raise ShapeError("Matrix must be square")
+            raise NonSquareMatrixError("Matrix must be square")
         if check_symmetry:
             self.simplify()
             if self != self.transpose():

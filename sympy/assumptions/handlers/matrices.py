@@ -78,6 +78,8 @@ class AskSymmetricHandler(CommonHandler):
     def ZeroMatrix(expr, assumptions):
         return ask(Q.square(expr), assumptions)
 
+    OneMatrix = ZeroMatrix
+
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.symmetric(expr.arg), assumptions)
@@ -137,6 +139,10 @@ class AskInvertibleHandler(CommonHandler):
     Identity, Inverse = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
+
+    @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
 
     @staticmethod
     def Transpose(expr, assumptions):
@@ -287,6 +293,10 @@ class AskFullRankHandler(CommonHandler):
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.fullrank(expr.arg), assumptions)
 
@@ -338,6 +348,10 @@ class AskPositiveDefiniteHandler(CommonHandler):
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.positive_definite(expr.arg), assumptions)
 
@@ -385,6 +399,10 @@ class AskUpperTriangularHandler(CommonHandler):
             return True
 
     Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
+    @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
 
     @staticmethod
     def Transpose(expr, assumptions):
@@ -438,6 +456,10 @@ class AskLowerTriangularHandler(CommonHandler):
             return True
 
     Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
+    @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
 
     @staticmethod
     def Transpose(expr, assumptions):
@@ -501,6 +523,10 @@ class AskDiagonalHandler(CommonHandler):
     @staticmethod
     def ZeroMatrix(expr, assumptions):
         return True
+
+    @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
 
     @staticmethod
     def Transpose(expr, assumptions):
@@ -567,7 +593,7 @@ class AskIntegerElementsHandler(CommonHandler):
 
     HadamardProduct, Determinant, Trace, Transpose = [MatAdd]*4
 
-    ZeroMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    ZeroMatrix, OneMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*3
 
     MatMul = staticmethod(partial(MatMul_elements, Q.integer_elements,
                                                    Q.integer))

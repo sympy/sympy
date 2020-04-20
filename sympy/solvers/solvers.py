@@ -40,7 +40,8 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1
+from sympy.simplify.fu import TR1, TR2i
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, degree
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
@@ -262,9 +263,9 @@ def checksol(f, symbol, sol=None, **flags):
         if f.rhs in (S.true, S.false):
             f = f.reversed
         B, E = f.args
-        if B in (S.true, S.false):
+        if isinstance(B, BooleanAtom):
             f = f.subs(sol)
-            if f not in (S.true, S.false):
+            if not f.is_Boolean:
                 return
         else:
             f = f.rewrite(Add, evaluate=False)
@@ -364,8 +365,6 @@ def checksol(f, symbol, sol=None, **flags):
         elif val.is_Rational:
             return val == 0
         if numerical and val.is_number:
-            if val in (S.true, S.false):
-                return bool(val)
             return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
@@ -792,8 +791,8 @@ def solve(f, *symbols, **flags):
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
         >>> solve(eq)  # this gives 2 solutions but misses a 3rd
-        [CRootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
-        CRootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
+        [CRootOf(7*x**5 - 7*x**3 + 1, 1)**15,
+        CRootOf(7*x**5 - 7*x**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
@@ -977,11 +976,10 @@ def solve(f, *symbols, **flags):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
                 fi = fi.lhs - fi.rhs
             else:
-                args = fi.args
-                if args[1] in (S.true, S.false):
-                    args = args[1], args[0]
-                L, R = args
-                if L in (S.false, S.true):
+                L, R = fi.args
+                if isinstance(R, BooleanAtom):
+                    L, R = R, L
+                if isinstance(L, BooleanAtom):
                     if isinstance(fi, Unequality):
                         L = ~L
                     if R.is_Relational:
@@ -1598,7 +1596,26 @@ def _solve(f, *symbols, **flags):
                     isinstance(_, TrigonometricFunction)])
                 other = funcs - trig
                 if not other and len(funcs.intersection(trig)) > 1:
-                    newf = TR1(f_num).rewrite(tan)
+                    newf = None
+                    if f_num.is_Add and len(f_num.args) == 2:
+                        # check for sin(x)**p = cos(x)**p
+                        _args = f_num.args
+                        t = a, b = [i.atoms(Function).intersection(
+                            trig) for i in _args]
+                        if all(len(i) == 1 for i in t):
+                            a, b = [i.pop() for i in t]
+                            if isinstance(a, cos):
+                                a, b = b, a
+                                _args = _args[::-1]
+                            if isinstance(a, sin) and isinstance(b, cos
+                                    ) and a.args[0] == b.args[0]:
+                                # sin(x) + cos(x) = 0 -> tan(x) + 1 = 0
+                                newf, _d = (TR2i(_args[0]/_args[1]) + 1
+                                    ).as_numer_denom()
+                                if not _d.is_Number:
+                                    newf = None
+                    if newf is None:
+                        newf = TR1(f_num).rewrite(tan)
                     if newf != f_num:
                         # don't check the rewritten form --check
                         # solutions in the un-rewritten form below
@@ -2645,7 +2662,7 @@ def inv_quick(M):
     n = M.rows
     d = det(M)
     if d == S.Zero:
-        raise ValueError("Matrix det == 0; not invertible.")
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
     ret = zeros(n)
     s1 = -1
     for i in range(n):

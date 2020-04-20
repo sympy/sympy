@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Basic, Add
+from sympy.core import Basic, Add, Mul, S
+from sympy.core.sympify import _sympify
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
@@ -12,7 +14,7 @@ from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose, transpose
-from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.trace import trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
@@ -186,12 +188,14 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[Trace(self.blocks[i, i])
+            return Add(*[trace(self.blocks[i, i])
                         for i in range(self.blockshape[0])])
         raise NotImplementedError(
             "Can't perform trace of irregular blockshape")
 
     def _eval_determinant(self):
+        if self.blockshape == (1, 1):
+            return det(self.blocks[0, 0])
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
@@ -306,7 +310,7 @@ class BlockDiagMatrix(BlockMatrix):
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
-        return Basic.__new__(BlockDiagMatrix, *mats)
+        return Basic.__new__(BlockDiagMatrix, *[_sympify(m) for m in mats])
 
     @property
     def diag(self):
@@ -339,8 +343,22 @@ class BlockDiagMatrix(BlockMatrix):
     def colblocksizes(self):
         return [block.cols for block in self.args]
 
+    def _all_square_blocks(self):
+        """Returns true if all blocks are square"""
+        return all(mat.is_square for mat in self.args)
+
+    def _eval_determinant(self):
+        if self._all_square_blocks():
+            return Mul(*[det(mat) for mat in self.args])
+        # At least one block is non-square.  Since the entire matrix must be square we know there must
+        # be at least two blocks in this matrix, in which case the entire matrix is necessarily rank-deficient
+        return S.Zero
+
     def _eval_inverse(self, expand='ignored'):
-        return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
+        if self._all_square_blocks():
+            return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
+        # See comment in _eval_determinant()
+        raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
 
     def _eval_transpose(self):
         return BlockDiagMatrix(*[mat.transpose() for mat in self.args])
@@ -470,7 +488,8 @@ def bc_block_plus_ident(expr):
                and blocks[0].is_structurally_symmetric):
         block_id = BlockDiagMatrix(*[Identity(k)
                                         for k in blocks[0].rowblocksizes])
-        return MatAdd(block_id * len(idents), *blocks).doit()
+        rest = [arg for arg in expr.args if not arg.is_Identity and not isinstance(arg, BlockMatrix)]
+        return MatAdd(block_id * len(idents), *blocks, *rest).doit()
 
     return expr
 
@@ -526,7 +545,7 @@ def bc_transpose(expr):
 
 def bc_inverse(expr):
     if isinstance(expr.arg, BlockDiagMatrix):
-        return expr._eval_inverse()
+        return expr.inverse()
 
     expr2 = blockinverse_1x1(expr)
     if expr != expr2:
@@ -540,15 +559,36 @@ def blockinverse_1x1(expr):
     return expr
 
 def blockinverse_2x2(expr):
-    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2) and expr.arg.blocks[0, 0].is_square:
         # Cite: The Matrix Cookbook Section 9.1.3
         [[A, B],
          [C, D]] = expr.arg.blocks.tolist()
 
-        return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
-                            [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
-    else:
-        return expr
+        # Use one or the other formula, depending on whether A or D is known to be invertible or at least not known
+        # to not be invertible.  Note that invertAbility of the other expressions M is not checked.
+        A_invertible = ask(Q.invertible(A))
+        D_invertible = ask(Q.invertible(D))
+        if A_invertible == True:
+            invert_A = True
+        elif D_invertible == True:
+            invert_A = False
+        elif A_invertible != False:
+            invert_A = True
+        elif D_invertible != False:
+            invert_A = False
+        else:
+            invert_A = True
+
+        if invert_A:
+            AI = A.I
+            MI = (D - C * AI * B).I
+            return BlockMatrix([[AI + AI * B * MI * C * AI, -AI * B * MI], [-MI * C * AI, MI]])
+        else:
+            DI = D.I
+            MI = (A - B * DI * C).I
+            return BlockMatrix([[MI, -MI * B * DI], [-DI * C * MI, DI + DI * C * MI * B * DI]])
+
+    return expr
 
 def deblock(B):
     """ Flatten a BlockMatrix of BlockMatrices """

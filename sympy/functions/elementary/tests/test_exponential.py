@@ -1,6 +1,7 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-    LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
+    LambertW, sqrt, Rational, expand_log, S, sign,
+    adjoint, conjugate, transpose, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
 from sympy.functions.elementary.exponential import match_real_imag
@@ -131,8 +132,16 @@ def test_exp_subs():
     assert exp(3).subs(E, sin) == sin(3)
 
 
+def test_exp_adjoint():
+    assert adjoint(exp(x)) == exp(adjoint(x))
+
+
 def test_exp_conjugate():
     assert conjugate(exp(x)) == exp(conjugate(x))
+
+
+def test_exp_transpose():
+    assert transpose(exp(x)) == exp(transpose(x))
 
 
 def test_exp_rewrite():
