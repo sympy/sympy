@@ -4,7 +4,7 @@ from sympy.functions import exp, cos, sin
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
-                                       ODEOrderError, ODENonLinearError)
+                                       ODEOrderError, ODENonlinearError)
 from sympy.testing.pytest import raises
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -44,7 +44,7 @@ def test_linear_ode_to_matrix():
     raises(ODEOrderError, lambda: linear_ode_to_matrix(eqs_5, funcs[:-1], t, 1))
 
     eqs_6 = [Eq(f1, f(t)**2), Eq(g1, f(t) + g(t))]
-    raises(ODENonLinearError, lambda: linear_ode_to_matrix(eqs_6, funcs[:-1], t, 1))
+    raises(ODENonlinearError, lambda: linear_ode_to_matrix(eqs_6, funcs[:-1], t, 1))
 
 
 def test_neq_nth_linear_constant_coeff_match():

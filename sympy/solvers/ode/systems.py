@@ -7,7 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix
 from sympy.simplify import simplify
 from sympy.solvers.deutils import ode_order
-from sympy.solvers.solveset import NonLinearError
+from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -21,7 +21,7 @@ class ODEOrderError(ValueError):
     pass
 
 
-class ODENonLinearError(NonLinearError):
+class ODENonlinearError(NonlinearError):
     """Raised by linear_ode_to_matrix if the system is nonlinear"""
     pass
 
@@ -116,8 +116,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     ODEOrderError
         When the system of ODEs have an order greater than what was specified
-
-    ODENonLinearError
+    ODENonlinearError
         When the system of ODEs is nonlinear
 
     See Also
@@ -153,8 +152,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
         # eqs is minus the remainder of the equations.
         try:
             Ai, b = linear_eq_to_matrix(eqs, syms)
-        except NonLinearError:
-            raise ODENonLinearError("The system of ODEs is nonlinear.")
+        except NonlinearError:
+            raise ODENonlinearError("The system of ODEs is nonlinear.")
 
         As.append(Ai)
         if o:
@@ -491,7 +490,7 @@ def canonical_equations(eqs, funcs, t):
     Raises
     ======
 
-    ODENonLinearError
+    ODENonlinearError
         When the system of equations is nonlinear
     ODEOrderError
         When the system of equations have an order greater than 1
@@ -529,7 +528,7 @@ def canonical_equations(eqs, funcs, t):
     ODEOrderError: Cannot represent system in 1-order canonical form
 
 
-    This function raises an ODENonLinearError when one of the first order
+    This function raises an ODENonlinearError when one of the first order
     terms is nonlinear.
 
     >>> eqs = [Eq(x1**2, x(t) + y(t) + t), Eq(y1 + x1, x(t) + 2*y(t))]
@@ -537,7 +536,7 @@ def canonical_equations(eqs, funcs, t):
     >>> canonical_equations(eqs, [x(t), y(t)], t)
     Traceback (most recent call last):
     ...
-    ODENonLinearError: System of ODEs is nonlinear
+    ODENonlinearError: System of ODEs is nonlinear
 
     See Also
     ========
@@ -556,7 +555,7 @@ def canonical_equations(eqs, funcs, t):
     canon_eqs = solve(eqs, *[func.diff(t) for func in funcs], dict=True)
 
     if len(canon_eqs) != 1:
-        raise ODENonLinearError("System of ODEs is nonlinear")
+        raise ODENonlinearError("System of ODEs is nonlinear")
 
     canon_eqs = canon_eqs[0]
     canon_eqs = [Eq(func.diff(t), canon_eqs[func.diff(t)]) for func in funcs]
@@ -664,11 +663,11 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         canon_eqs = canonical_equations(eqs, funcs, t)
         As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
 
-    # When the system of ODEs is non-linear, an ODENonLinearError is raised.
+    # When the system of ODEs is non-linear, an ODENonlinearError is raised.
     # When system has an order greater than what is specified in system_order,
     # ODEOrderError is raised.
     # This function catches these errors and None is returned
-    except (ODEOrderError, ODENonLinearError):
+    except (ODEOrderError, ODENonlinearError):
         return None
 
     A = As[1]
