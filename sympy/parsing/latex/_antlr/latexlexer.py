@@ -16,7 +16,6 @@ from io import StringIO
 import sys
 
 
-
 def serializedATN():
     with StringIO() as buf:
         buf.write(u"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2")
@@ -358,7 +357,7 @@ class LaTeXLexer(Lexer):
 
     def __init__(self, input=None, output=sys.stdout):
         super(LaTeXLexer, self).__init__(input, output=output)
-        self.checkVersion("4.7.2")
+        self.checkVersion("4.7.1")
         self._interp = LexerATNSimulator(self, self.atn, self.decisionsToDFA, PredictionContextCache())
         self._actions = None
         self._predicates = None
