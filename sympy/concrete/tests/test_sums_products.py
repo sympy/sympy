@@ -314,6 +314,7 @@ def test_composite_sums():
 
 
 def test_hypergeometric_sums():
+    n, k = symbols('n k', integer=True, nonnegative=True)
     assert summation(
         binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
     assert summation(binomial(2*k, k)/5**k, (k, -oo, oo)) == sqrt(5)
@@ -1132,6 +1133,7 @@ def test_issue_14640():
 
 
 def test_issue_15943():
+    n, k = symbols('n k', integer=True, nonnegative=True)
     s = Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit().rewrite(gamma)
     assert s == -E*(n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
         ) + E*gamma(n + 1)
@@ -1303,12 +1305,11 @@ def test_empty_sequence():
 
 
 def test_issue_8016():
-    k = Symbol('k', integer=True)
-    n, m = symbols('n, m', integer=True, positive=True)
+    k = Symbol('k', integer=True, nonnegative=True)
+    n, m = symbols('n m', integer=True, positive=True)
     s = Sum(binomial(m, k)*binomial(m, n - k)*(-1)**k, (k, 0, n))
-    assert s.doit().simplify() == \
-        cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
-
+    assert s.doit().simplify(
+        ) == cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
 
 @XFAIL
 def test_issue_14313():

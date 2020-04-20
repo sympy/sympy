@@ -1525,7 +1525,10 @@ def test_Mul_is_irrational():
     # this can't be determined without evaluating the
     # expression and the eval_is routines shouldn't do that
     expr = Mul(sqrt(2), I, I, evaluate=False)
-    assert expr.is_irrational is None
+    assert expr.is_irrational is not True
+    nk = Symbol('nk', integer=False)
+    nr = Symbol('nr', rational=False)
+    assert (nk*nr).is_rational is None
 
 
 def test_issue_3531():
