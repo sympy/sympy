@@ -1,5 +1,5 @@
 from sympy import Trace
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
@@ -161,34 +161,97 @@ def test_squareBlockMatrix():
     Z = BlockMatrix([[Identity(n), B], [C, D]])
     assert not Z.is_Identity
 
-def test_BlockMatrix_inverse():
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', n, n)
-    C = MatrixSymbol('C', m, m)
-    D = MatrixSymbol('D', m, n)
-    X = BlockMatrix([[A, B], [C, D]])
-    assert X.is_square
-    assert isinstance(block_collapse(X.inverse()), Inverse)  # Can't inverse when A, D aren't square
 
-    # test code path for non-invertible D matrix
+def test_BlockMatrix_2x2_inverse_symbolic():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', n, k - m)
+    C = MatrixSymbol('C', k - n, m)
+    D = MatrixSymbol('D', k - n, k - m)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert X.is_square and X.shape == (k, k)
+    assert isinstance(block_collapse(X.I), Inverse)  # Can't invert when none of the blocks is square
+
+    # test code path where only A is invertible
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, m)
     C = MatrixSymbol('C', m, n)
-    D = OneMatrix(m, m)
+    D = ZeroMatrix(m, m)
     X = BlockMatrix([[A, B], [C, D]])
     assert block_collapse(X.inverse()) == BlockMatrix([
         [A.I + A.I * B * (D - C * A.I * B).I * C * A.I, -A.I * B * (D - C * A.I * B).I],
         [-(D - C * A.I * B).I * C * A.I, (D - C * A.I * B).I],
     ])
 
-    # test code path for non-invertible A matrix
-    A = OneMatrix(n, n)
+    # test code path where only B is invertible
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', n, n)
+    C = ZeroMatrix(m, m)
+    D = MatrixSymbol('D', m, n)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix(([
+        [-(C - D * B.I * A).I * D * B.I, (C - D * B.I * A).I],
+        [B.I + B.I * A * (C - D * B.I * A).I * D * B.I, -B.I * A * (C - D * B.I * A).I],
+    ]))
+
+    # test code path where only C is invertible
+    A = MatrixSymbol('A', n, m)
+    B = ZeroMatrix(n, n)
+    C = MatrixSymbol('C', m, m)
+    D = MatrixSymbol('D', m, n)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix([
+        [-C.I * D * (B - A * C.I * D).I, C.I + C.I * D * (B - A * C.I * D).I * A * C.I],
+        [(B - A * C.I * D).I, -(B - A * C.I * D).I * A * C.I],
+    ])
+
+    # test code path where only D is invertible
+    A = ZeroMatrix(n, n)
+    B = MatrixSymbol('B', n, m)
+    C = MatrixSymbol('C', m, n)
     D = MatrixSymbol('D', m, m)
     X = BlockMatrix([[A, B], [C, D]])
     assert block_collapse(X.inverse()) == BlockMatrix([
         [(A - B * D.I * C).I, -(A - B * D.I * C).I * B * D.I],
         [-D.I * C * (A - B * D.I * C).I, D.I + D.I * C * (A - B * D.I * C).I * B * D.I],
     ])
+
+
+def test_BlockMatrix_2x2_inverse_numeric():
+    """Test 2x2 block matrix inversion numerically for all 4 formulas"""
+    M = Matrix([[1, 2], [3, 4]])
+    # rank deficient matrices that have full rank when two of them combined
+    D1 = Matrix([[1, 2], [2, 4]])
+    D2 = Matrix([[1, 3], [3, 9]])
+    D3 = Matrix([[1, 4], [4, 16]])
+    assert D1.rank() == D2.rank() == D3.rank() == 1
+    assert (D1 + D2).rank() == (D2 + D3).rank() == (D3 + D1).rank() == 2
+
+    # Only A is invertible
+    K = BlockMatrix([[M, D1], [D2, D3]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+    # Only B is invertible
+    K = BlockMatrix([[D1, M], [D2, D3]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+    # Only C is invertible
+    K = BlockMatrix([[D1, D2], [M, D3]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+    # Only D is invertible
+    K = BlockMatrix([[D1, D2], [D3, M]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+
+
+@slow
+def test_BlockMatrix_3x3_symbolic():
+    # Only test one of these, instead of all permutations, because it's slow
+    rowblocksizes = (n, m, k)
+    colblocksizes = (m, k, n)
+    K = BlockMatrix([
+        [MatrixSymbol('M%s%s' % (rows, cols), rows, cols) for cols in colblocksizes]
+        for rows in rowblocksizes
+    ])
+    collapse = block_collapse(K.I)
+    assert isinstance(collapse, BlockMatrix)
+
 
 def test_BlockDiagMatrix():
     A = MatrixSymbol('A', n, n)
