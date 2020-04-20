@@ -129,9 +129,51 @@ See Also
 Notes
 =====
 
-Assumption values are stored in obj._assumptions dictionary or
-are returned by getter methods (with property decorators) or are
-attributes of objects/classes.
+The fully-resolved assumptions for any SymPy expression
+can be obtained as follows:
+
+    >>> from sympy.core.assumptions import assumptions
+    >>> x = Symbol('x',positive=True)
+    >>> assumptions(x + I)
+    {'commutative': True, 'complex': True, 'composite': False, 'even':
+    False, 'extended_negative': False, 'extended_nonnegative': False,
+    'extended_nonpositive': False, 'extended_nonzero': False,
+    'extended_positive': False, 'extended_real': False, 'finite': True,
+    'imaginary': False, 'infinite': False, 'integer': False, 'irrational':
+    False, 'negative': False, 'noninteger': False, 'nonnegative': False,
+    'nonpositive': False, 'nonzero': False, 'odd': False, 'positive':
+    False, 'prime': False, 'rational': False, 'real': False, 'zero':
+    False}
+
+Developers Notes
+================
+
+The current (and possibly incomplete) values are stored
+in the ``obj._assumptions dictionary``; queries to getter methods
+(with property decorators) or attributes of objects/classes
+will return values and update the dictionary.
+
+    >>> eq = x**2 + I
+    >>> eq._assumptions
+    {}
+    >>> eq.is_finite
+    True
+    >>> eq._assumptions
+    {'finite': True, 'infinite': False}
+
+For a Symbol, there are two locations for assumptions that may
+be of interest. The ``assumptions0`` attribute gives the full set of
+assumptions derived from a given set of initial assumptions. The
+latter assumptions are stored as ``Symbol._assumptions.generator``
+
+    >>> Symbol('x', prime=True, even=True)._assumptions.generator
+    {'even': True, 'prime': True}
+
+The ``generator`` is not necessarily canonical nor is it filtered
+in any way: it records the assumptions used to instantiate a Symbol
+and (for storage purposes) represents a more compact representation
+of the assumptions needed to recreate the full set in
+`Symbol.assumptions0`.
 
 
 References
