@@ -1069,7 +1069,7 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
         elif isinstance(result,list):
-            for _ in range(len(result)-1):
+            for _ in range(len(result) - 1):
                 result = result[_] + result[_+1]
             if len(result) == 1:
                 return result[0]
