@@ -2883,6 +2883,43 @@ def test_separable_reduced():
     assert sol == Eq(log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2, C1 + log(x))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
+    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x**(S(2)/3)*f(x))**2), 0)
+    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
+    assert sol == Eq(-3*log(x**(S(2)/3)*f(x)) + 3*log(3*x**(S(4)/3)*f(x)**2 + 1)/2, C1 + log(x))
+    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x*f(x))**2), 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x)),\
+                   Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x))]
+    assert checkodesol(eq, sol) == [(True, 0)]*2
+
+    eq = Eq(f(x).diff(x) + (x**4*f(x)**2 + x**2*f(x))*f(x)/(x*(x**6*f(x)**3 + x**4*f(x)**2)), 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == Eq(f(x), C1 + 1/(2*x**2))
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + (f(x)**2)*f(x)/(x), 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/2),\
+                  Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/2)]
+    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
+
+    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/(x*(f(x)+2)), 0)
+    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
+    assert sol == Eq(-log(f(x) + 3)/3 - 2*log(f(x))/3, C1 + log(x))
+    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/x, 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == Eq(f(x), 3/(C1*x**3 - 1))
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0)
+    sol = dsolve(eq, hint='separable_reduced', simplify=False)
+    assert sol == Eq(-log(f(x) + 1) + log(f(x)) + 1/f(x), C1 + log(x))
+    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
+
 
 def test_homogeneous_function():
     f = Function('f')

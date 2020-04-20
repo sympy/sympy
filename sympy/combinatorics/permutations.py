@@ -1304,6 +1304,9 @@ class Permutation(Atom):
         (1 3 2)
 
         """
+        from sympy.combinatorics.perm_groups import PermutationGroup, Coset
+        if isinstance(other, PermutationGroup):
+            return Coset(self, other, dir='-')
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
         b = other.array_form

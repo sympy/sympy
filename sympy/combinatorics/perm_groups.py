@@ -266,6 +266,8 @@ class PermutationGroup(Basic):
         25
 
         """
+        if isinstance(other, Permutation):
+            return Coset(other, self, dir='+')
         gens1 = [perm._array_form for perm in self.generators]
         gens2 = [perm._array_form for perm in other.generators]
         n1 = self._degree
