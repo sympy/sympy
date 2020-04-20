@@ -1,6 +1,6 @@
 from sympy import (
-    Rational, gammasimp, factorial, gamma, binomial, pi, S,
-    sin, exp, powsimp, sqrt, simplify, symbols, cos, rf)
+    Rational, gammasimp, factorial, gamma, binomial, multinomial, pi,
+    S, sin, exp, powsimp, sqrt, simplify, symbols, cos, rf)
 
 from sympy.abc import x, y
 
@@ -40,9 +40,11 @@ def test_gammasimp():
     assert simplify(
         gamma(S.Half + x/2)*gamma(1 + x/2)/gamma(1 + x)/sqrt(pi)*2**x) == 1
     assert gammasimp(gamma(Rational(-1, 4))*gamma(Rational(-3, 4))) == 16*sqrt(2)*pi/3
-
     assert powsimp(gammasimp(gamma(2*x)/gamma(x))) == \
         2**(2*x - 1)*gamma(x + S.Half)/sqrt(pi)
+
+    assert gammasimp(multinomial(n, k, k)) == \
+        gamma(2*k + n + 1)/(gamma(k + 1)**2*gamma(n + 1))
 
     # issue 6792
     e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
