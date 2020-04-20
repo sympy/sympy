@@ -1,0 +1,4 @@
+print('hello world')
+prompt('what's your name)
+answer == ('answer')
+print('i am just testing and i am a newbie just this time please?')
