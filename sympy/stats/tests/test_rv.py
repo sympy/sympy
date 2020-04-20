@@ -8,7 +8,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace)
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, XFAIL
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -192,8 +192,10 @@ def test_Sample():
     assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
     assert next(sample(X + Y))[0].is_Float
 
-    P(X + Y > 0, Y < 0, numsamples=10).is_number
+    assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
+    assert E(X**2 + Y, numsamples=10).is_number
+    assert E((X + Y)**2, numsamples=10).is_number
     assert variance(X + Y, numsamples=10).is_number
 
     raises(TypeError, lambda: P(Y > z, numsamples=5))
@@ -201,11 +203,19 @@ def test_Sample():
     assert P(sin(Y) <= 1, numsamples=10) == 1
     assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
 
-    raises(TypeError, lambda: E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3))
-
-
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+
+@XFAIL
+def test_samplingE():
+    X = Die('X', 6)
+    Y = Normal('Y', 0, 1)
+    z = Symbol('z', integer=True)
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    assert E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3).is_number
 
 
 def test_given():
