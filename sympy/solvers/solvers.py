@@ -15,6 +15,7 @@ This module contain solvers for all kinds of equations:
 from __future__ import print_function, division
 
 from sympy import divisors, binomial, expand_func
+from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
@@ -27,7 +28,7 @@ from sympy.core.function import (expand_mul, expand_log,
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational
-from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.core.logic import fuzzy_not
 from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
@@ -372,100 +373,6 @@ def checksol(f, symbol, sol=None, **flags):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
-
-
-def failing_assumptions(expr, **assumptions):
-    """
-    Return a dictionary containing assumptions with values not
-    matching those of the passed assumptions.
-
-    Examples
-    ========
-
-    >>> from sympy import failing_assumptions, Symbol
-
-    >>> x = Symbol('x', real=True, positive=True)
-    >>> y = Symbol('y')
-    >>> failing_assumptions(6*x + y, real=True, positive=True)
-    {'positive': None, 'real': None}
-
-    >>> failing_assumptions(x**2 - 1, positive=True)
-    {'positive': None}
-
-    If *expr* satisfies all of the assumptions, an empty dictionary is returned.
-
-    >>> failing_assumptions(x**2, positive=True)
-    {}
-
-    """
-    expr = sympify(expr)
-    failed = {}
-    for key in list(assumptions.keys()):
-        test = getattr(expr, 'is_%s' % key, None)
-        if test is not assumptions[key]:
-            failed[key] = test
-    return failed  # {} or {assumption: value != desired}
-
-
-def check_assumptions(expr, against=None, **assumptions):
-    """
-    Checks whether expression *expr* satisfies all assumptions.
-
-    Explanation
-    ===========
-
-    *assumptions* is a dict of assumptions: {'assumption': True|False, ...}.
-
-    Examples
-    ========
-
-       >>> from sympy import Symbol, pi, I, exp, check_assumptions
-
-       >>> check_assumptions(-5, integer=True)
-       True
-       >>> check_assumptions(pi, real=True, integer=False)
-       True
-       >>> check_assumptions(pi, real=True, negative=True)
-       False
-       >>> check_assumptions(exp(I*pi/7), real=False)
-       True
-
-       >>> x = Symbol('x', real=True, positive=True)
-       >>> check_assumptions(2*x + 1, real=True, positive=True)
-       True
-       >>> check_assumptions(-2*x - 5, real=True, positive=True)
-       False
-
-       To check assumptions of *expr* against another variable or expression,
-       pass the expression or variable as ``against``.
-
-       >>> check_assumptions(2*x + 1, x)
-       True
-
-       ``None`` is returned if ``check_assumptions()`` could not conclude.
-
-       >>> check_assumptions(2*x - 1, real=True, positive=True)
-       >>> z = Symbol('z')
-       >>> check_assumptions(z, real=True)
-
-    See Also
-    ========
-
-    failing_assumptions
-
-    """
-    expr = sympify(expr)
-    if against:
-        if not isinstance(against, Symbol):
-            raise TypeError('against should be of type Symbol')
-        if assumptions:
-            raise AssertionError('No assumptions should be specified')
-        assumptions = against.assumptions0
-    def _test(key):
-        v = getattr(expr, 'is_' + key, None)
-        if v is not None:
-            return assumptions[key] is v
-    return fuzzy_and(_test(key) for key in assumptions)
 
 
 def solve(f, *symbols, **flags):
