@@ -590,6 +590,10 @@ class Pow(Expr):
         if b.is_Number and e.is_Number:
             check = self.func(*self.args)
             return check.is_Integer
+        if e.is_negative and b.is_positive and (b - 1).is_positive:
+            return False
+        if e.is_negative and b.is_negative and (b + 1).is_negative:
+            return False
 
     def _eval_is_extended_real(self):
         from sympy import arg, exp, log, Mul

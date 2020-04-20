@@ -995,8 +995,14 @@ def test_Pow_is_integer():
 
     assert ((-1)**k).is_integer
 
+    # issue 8641
     x = Symbol('x', real=True, integer=False)
-    assert (x**2).is_integer is None  # issue 8641
+    assert (x**2).is_integer is None
+
+    # issue 10458
+    x = Symbol('x', positive=True)
+    assert (1/(x + 1)).is_integer is False
+    assert (1/(-x - 1)).is_integer is False
 
 
 def test_Pow_is_real():
