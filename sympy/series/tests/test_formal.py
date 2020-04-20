@@ -1,4 +1,4 @@
-from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
+from sympy import (symbols, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
                    airyai, acos, acosh, gamma, erf, asech, Add, Mul,
                    integrate)
@@ -16,7 +16,7 @@ f, r = Function('f'), Function('r')
 def test_rational_algorithm():
     f = 1 / ((x - 1)**2 * (x - 2))
     assert rational_algorithm(f, x, k) == \
-        (-2**(-k - 1) + 1 - (factorial(k + 1) / factorial(k)), 0, 0)
+        (-2**(-k - 1) - k, 0, 0)
 
     f = (1 + x + x**2 + x**3) / ((x - 1) * (x - 2))
     assert rational_algorithm(f, x, k) == \

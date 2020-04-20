@@ -1,12 +1,13 @@
 from sympy import (
-    Rational, gammasimp, factorial, gamma, binomial, pi, S,
+    Rational, gammasimp, factorial, gamma, binomial, multinomial, pi, S,
     sin, exp, powsimp, sqrt, simplify, symbols, cos, rf)
 
-from sympy.abc import x, y, n, k
+from sympy.abc import x, y
 
 
 def test_gammasimp():
     R = Rational
+    n, k = symbols('n k', nonnegative=True)
 
     # was part of test_combsimp_gamma() in test_combsimp.py
     assert gammasimp(gamma(x)) == gamma(x)
@@ -31,7 +32,8 @@ def test_gammasimp():
     assert gammasimp(factorial(n + 2)) == gamma(n + 3)
     assert gammasimp(binomial(n, k)) == \
         gamma(n + 1)/(gamma(k + 1)*gamma(-k + n + 1))
-
+    assert gammasimp(multinomial(n, k, k)) == \
+        gamma(2*k + n + 1)/(gamma(k + 1)**2*gamma(n + 1))
     assert powsimp(gammasimp(
         gamma(x)*gamma(x + S.Half)*gamma(y)/gamma(x + y))) == \
         2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
@@ -86,7 +88,7 @@ def test_gammasimp():
         gamma(n + 3)/(gamma(k + 3.0)*gamma(-k + n + 1))
 
     # issue 11548
-    assert gammasimp(binomial(0, x)) == sin(pi*x)/(pi*x)
+    assert gammasimp(binomial(0, k)) == sin(pi*k)/(pi*k)
 
     e = gamma(n + Rational(1, 3))*gamma(n + R(2, 3))
     assert gammasimp(e) == e

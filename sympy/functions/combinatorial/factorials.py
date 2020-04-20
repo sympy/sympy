@@ -1,17 +1,48 @@
 from typing import List
 
-from sympy.core import S, sympify, Dummy, Mod
+from sympy.core import S, sympify, Mod
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, HAS_GMPY
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer, pi
+from sympy.core.compatibility import reduce, HAS_GMPY, ordered, as_int
+from sympy.core.function import Function, ArgumentIndexError, _mexpand
+from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.mul import Mul
+from sympy.core.numbers import Float, Integer, pi
 from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol, Dummy
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.integers import floor
+from sympy.logic.boolalg import Or, And
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
+from sympy.utilities.iterables import numbered_symbols
 
 from math import sqrt as _sqrt
 
+
+def int_like(x):
+    if x.is_integer is False:
+        if x.is_Float and int(x) == x:
+            return True
+        return False
+    return x.is_integer
+
+
+def igen(i='i'):
+    """return unnumbered symbol and then numbered versions
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.factorials import igen
+    >>> [i for j,i in zip((1, 2, 3), igen())]
+    [i, i_0, i_1]
+    >>> [i for j,i in zip((1, 2, 3), igen('x1'))]
+    [x1, x1_0, x1_1]
+    """
+    yield Symbol(i)
+    i += '_'
+    for ii in numbered_symbols(i):
+        yield ii
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
@@ -238,32 +269,43 @@ class factorial(CombinatorialFunction):
         return gamma(n + 1)
 
     def _eval_rewrite_as_Product(self, n, **kwargs):
-        from sympy import Product
-        if n.is_nonnegative and n.is_integer:
-            i = Dummy('i', integer=True)
+        from sympy.concrete.products import Product
+        if n.is_nonnegative and int_like(n):
+            for i in igen():
+                if not n.has(i):
+                    break
             return Product(i, (i, 1, n))
 
     def _eval_is_integer(self):
-        if self.args[0].is_integer and self.args[0].is_nonnegative:
-            return True
+        x = self.args[0]
+        if x.is_nonnegative:
+            if x.is_integer:
+                return True
+            if int_like(x):
+                # this handles is_even and is_composite, too
+                # because neither of those is T if self is
+                # not an integer
+                return False
 
     def _eval_is_positive(self):
-        if self.args[0].is_integer and self.args[0].is_nonnegative:
+        if int_like(self.args[0]) and self.args[0].is_nonnegative:
             return True
 
     def _eval_is_even(self):
         x = self.args[0]
-        if x.is_integer and x.is_nonnegative:
-            return (x - 2).is_nonnegative
+        if x.is_nonnegative:
+            if x.is_integer:
+                return (x - 2).is_nonnegative
 
     def _eval_is_composite(self):
         x = self.args[0]
-        if x.is_integer and x.is_nonnegative:
-            return (x - 3).is_nonnegative
+        if x.is_nonnegative:
+            if x.is_integer:
+                return (x - 3).is_nonnegative
 
     def _eval_is_real(self):
         x = self.args[0]
-        if x.is_nonnegative or x.is_noninteger:
+        if x.is_nonnegative or x.is_real and int_like(x) is False:
             return True
 
     def _eval_as_leading_term(self, x):
@@ -455,6 +497,7 @@ class factorial2(CombinatorialFunction):
         n = self.args[0]
         if n.is_integer:
             if (n + 1).is_nonnegative:
+                # -1, 0, 1, ...
                 return True
             if n.is_odd:
                 return (n + 3).is_nonnegative
@@ -466,8 +509,6 @@ class factorial2(CombinatorialFunction):
         if n.is_odd:
             return (n + 3).is_nonnegative
         if n.is_even:
-            if n.is_positive:
-                return False
             if n.is_zero:
                 return True
 
@@ -773,29 +814,31 @@ ff = FallingFactorial
 
 
 class binomial(CombinatorialFunction):
-    r"""Implementation of the binomial coefficient. It can be defined
-    in two ways depending on its desired interpretation:
+    r"""Implementation of the binomial coefficient.
 
-    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}\ \text{or}\
-                \binom{n}{k} = \frac{ff(n, k)}{k!}
+    In a strict combinatorial sense, the binomial coefficient gives
+    the number of ways we can choose ``k`` elements from a set of
+    ``n`` elements. In this case both arguments are nonnegative
+    integers and the value of the binomial can be computed in terms
+    of factorials::
 
-    First, in a strict combinatorial sense it defines the
-    number of ways we can choose `k` elements from a set of
-    `n` elements. In this case both arguments are nonnegative
-    integers and binomial is computed using an efficient
-    algorithm based on prime factorization.
+    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}
 
-    The other definition is generalization for arbitrary `n`,
-    however `k` must also be nonnegative. This case is very
-    useful when evaluating summations.
+    For arbitrary ``n`` and a nonnegative, integer ``k``, the following
+    definition can be used (and is useful when evaluating summations)::
 
-    For the sake of convenience for negative integer `k` this function
-    will return zero no matter what valued is the other argument.
+    .. math:: \binom{n}{k} = \frac{ff(n, k)}{k!}
 
-    To expand the binomial when `n` is a symbol, use either
-    ``expand_func()`` or ``expand(func=True)``. The former will keep
-    the polynomial in factored form while the latter will expand the
-    polynomial itself. See examples for details.
+    When ``k`` is negative but ``n - k`` is a non-negative integer then
+    the following identity can be used::
+
+    .. math:: \binom{n}{k} = \binom{n}{n - k}
+
+    If neither ``k`` nor ``n - k`` is a nonnegative integer then
+    the binomial is expressed in terms of the gamma function:
+
+    .. math:: \binom{n}{k} = \frac{\gamma(n + 1)}{\gamma(k + 1)\gamma(n - k + 1)}
+
 
     Examples
     ========
@@ -834,19 +877,30 @@ class binomial(CombinatorialFunction):
     >>> binomial(Rational(-5, 4), 3)
     -195/128
 
-    >>> binomial(n, 3)
+    >>> b = binomial(n, 3); b
     binomial(n, 3)
 
-    >>> binomial(n, 3).expand(func=True)
+    When ``k`` is positive the polynomial expression
+    can be viewed in either expanded or factored form:
+
+    >>> b.expand(func=True)
     n**3/6 - n**2/2 + n/3
 
-    >>> expand_func(binomial(n, 3))
+    >>> expand_func(b)
     n*(n - 2)*(n - 1)/6
+
 
     References
     ==========
 
     .. [1] https://www.johndcook.com/blog/binomial_coefficients/
+
+    .. [2] http://functions.wolfram.com/GammaBetaErf/Binomial/02/
+
+    See Also
+    ========
+
+    sympy.ntheory.multinomial.binomial_coefficients
 
     """
 
@@ -866,192 +920,304 @@ class binomial(CombinatorialFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval(self, n, k):
+    def _eval(cls, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
+        # and k > 0 (and, if n is positive, k < n - k)
+        Ntype = Float if k.has(Float) or n.has(Float) else Integer
+        k = as_int(k, strict=False)
+        direct = n.is_nonnegative
+        if direct:
+            try:
+                n = as_int(n, strict=False)
+            except ValueError:
+                direct = False
+        if direct:
 
-        if k.is_Integer:
-            if n.is_Integer and n >= 0:
-                n, k = int(n), int(k)
+            if HAS_GMPY:
+                from sympy.core.compatibility import gmpy
+                return Ntype(gmpy.bincoef(n, k))
 
-                if k > n:
-                    return S.Zero
-                elif k > n // 2:
-                    k = n - k
-
-                if HAS_GMPY:
-                    from sympy.core.compatibility import gmpy
-                    return Integer(gmpy.bincoef(n, k))
-
-                d, result = n - k, 1
-                for i in range(1, k + 1):
-                    d += 1
-                    result = result * d // i
-                return Integer(result)
-            else:
-                d, result = n - k, 1
-                for i in range(1, k + 1):
-                    d += 1
-                    result *= d
-                    result /= i
-                return result
+            d, result = n - k, 1
+            for i in range(1, k + 1):
+                d += 1
+                result = result * d // i
+            return Ntype(result)
+        else:
+            return Mul(*[n + i for i in range(1 - k, 1)])/factorial(k)
 
     @classmethod
     def eval(cls, n, k):
+        from sympy import Min
         n, k = map(sympify, (n, k))
-        d = n - k
-        n_nonneg, n_isint = n.is_nonnegative, n.is_integer
-        if k.is_zero or ((n_nonneg or n_isint is False)
-                and d.is_zero):
-            return S.One
-        if (k - 1).is_zero or ((n_nonneg or n_isint is False)
-                and (d - 1).is_zero):
-            return n
-        if k.is_integer:
-            if k.is_negative or (n_nonneg and n_isint and d.is_negative):
+        if n.is_zero:   #
+            n = S.Zero  # XXX is this anti-SymPy?
+        if k.is_zero:   #
+            k = S.Zero  #
+        n_k = n - k
+        if k == 1:
+            return k*n          #
+        if n_k == 1:            #
+            return n_k*n        # written to
+        if k.is_zero:           # retain Float
+            return S.One + k    # when present
+        if n_k.is_zero:         #
+            return S.One + n_k  #
+        if -1 in (k, n_k):
+            if (n + 1).is_zero is False:
+                # includes n.is_integer=False, too
+                # since adding 1 to it cannot give 0
                 return S.Zero
-            elif n.is_number:
+        if all(int_like(x) for x in (n, k)):
+            if (n*k).is_positive and n_k.is_negative:
+                return S.Zero
+            if n.is_nonnegative and k.is_negative:
+                return S.Zero
+            if n.is_zero and k.is_nonzero:
+                return S.Zero
+        elif n.is_negative:
+            if int_like(n) and int_like(k) is False:
+                return S.ComplexInfinity
+            elif int_like(n) is False:
+                if k.is_negative and int_like(k):
+                    return S.Zero
+                if n_k.is_negative and int_like(n_k):
+                    return S.Zero
+
+        if n.is_positive and k.is_positive:
+            kk = Min(k, n_k)
+            if kk.is_positive:
+                k = kk
+        elif n.is_nonzero and k.is_negative:
+            k = n_k
+
+        if k.is_number:
+            if int_like(k) and n.is_number:
                 res = cls._eval(n, k)
-                return res.expand(basic=True) if res else res
-        elif n_nonneg is False and n_isint:
-            # a special case when binomial evaluates to complex infinity
-            return S.ComplexInfinity
-        elif k.is_number:
-            from sympy import gamma
-            return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+                return _mexpand(res) if res else res
+            elif int_like(k) is False:
+                from sympy import gamma
+                rv = gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+                if not rv.has(gamma):
+                     return rv
 
     def _eval_Mod(self, q):
         n, k = self.args
 
-        if any(x.is_integer is False for x in (n, k, q)):
+        if any(int_like(x) is False for x in (n, k, q)):
             raise ValueError("Integers expected for binomial Mod")
 
-        if all(x.is_Integer for x in (n, k, q)):
+        Ntype = Integer if not any(i.atoms(Float) for i in (n,k,q)) else Float
+
+        if all(int_like(x) and x.is_number for x in (n, k)):
             n, k = map(int, (n, k))
-            aq, res = abs(q), 1
 
             # handle negative integers k or n
             if k < 0:
-                return S.Zero
+                if n > -1 or k > n:
+                    return S.Zero
+                k = n - k  # nonneg since n <= -1 and k <= n
+
             if n < 0:
+                neg = True
                 n = -n + k - 1
                 res = -1 if k%2 else 1
+            else:
+                neg = False
+                res = 1
 
-            # non negative integers k and n
+            # nonnegative n and k
             if k > n:
                 return S.Zero
+            if n == k:
+                return Ntype(-1 if neg else 1) % q
+            if k == 1:
+                return Ntype(-1 if neg else 1)*n % q
 
-            isprime = aq.is_prime
-            aq = int(aq)
-            if isprime:
-                if aq < n:
-                    # use Lucas Theorem
-                    N, K = n, k
-                    while N or K:
-                        res = res*binomial(N % aq, K % aq) % aq
-                        N, K = N // aq, K // aq
+            # nonnegative n and k and res
+            if int_like(q) and q.is_number:
+                aq = abs(q)
+                isprime = aq.is_prime
+                aq = int(aq)
+                if isprime:
+                    if aq < n:
+                        # use Lucas Theorem
+                        N, K = n, k
+                        while N or K:
+                            res = res*binomial(N % aq, K % aq) % aq
+                            N, K = N // aq, K // aq
+                    else:
+                        # use Factorial Modulo
+                        d = n - k
+                        kf = 1
+                        for i in range(2, k + 1):
+                            kf = kf*i % aq
+                        df = kf
+                        for i in range(k + 1, d + 1):
+                            df = df*i % aq
+                        res *= df
+                        for i in range(d + 1, n + 1):
+                            res = res*i % aq
+
+                        res *= pow(kf*df % aq, aq - 2, aq)
+                        res %= aq
 
                 else:
-                    # use Factorial Modulo
-                    d = n - k
-                    if k > d:
-                        k, d = d, k
-                    kf = 1
-                    for i in range(2, k + 1):
-                        kf = kf*i % aq
-                    df = kf
-                    for i in range(k + 1, d + 1):
-                        df = df*i % aq
-                    res *= df
-                    for i in range(d + 1, n + 1):
-                        res = res*i % aq
-
-                    res *= pow(kf*df % aq, aq - 2, aq)
-                    res %= aq
-
-            else:
-                # Binomial Factorization is performed by calculating the
-                # exponents of primes <= n in `n! /(k! (n - k)!)`,
-                # for non-negative integers n and k. As the exponent of
-                # prime in n! is e_p(n) = [n/p] + [n/p**2] + ...
-                # the exponent of prime in binomial(n, k) would be
-                # e_p(n) - e_p(k) - e_p(n - k)
-                M = int(_sqrt(n))
-                for prime in sieve.primerange(2, n + 1):
-                    if prime > n - k:
-                        res = res*prime % aq
-                    elif prime > n // 2:
-                        continue
-                    elif prime > M:
-                        if n % prime < k % prime:
+                    # Binomial Factorization is performed by calculating the
+                    # exponents of primes <= n in `n! /(k! (n - k)!)`,
+                    # for non-negative integers n and k. As the exponent of
+                    # prime in n! is e_p(n) = [n/p] + [n/p**2] + ...
+                    # the exponent of prime in binomial(n, k) would be
+                    # e_p(n) - e_p(k) - e_p(n - k)
+                    M = int(_sqrt(n))
+                    if n - k < k:
+                        k = n - k
+                    for prime in sieve.primerange(2, n + 1):
+                        if prime > n - k:
                             res = res*prime % aq
-                    else:
-                        N, K = n, k
-                        exp = a = 0
+                        elif prime > n // 2:
+                            continue
+                        elif prime > M:
+                            if n % prime < k % prime:
+                                res = res*prime % aq
+                        else:
+                            N, K = n, k
+                            exp = a = 0
 
-                        while N > 0:
-                            a = int((N % prime) < (K % prime + a))
-                            N, K = N // prime, K // prime
-                            exp += a
+                            while N > 0:
+                                a = int((N % prime) < (K % prime + a))
+                                N, K = N // prime, K // prime
+                                exp += a
 
-                        if exp > 0:
-                            res *= pow(prime, exp, aq)
-                            res %= aq
+                            if exp > 0:
+                                res *= pow(prime, exp, aq)
+                                res %= aq
 
-            return S(res % q)
+            return Ntype(res % q)  # not sure how to track precision
 
     def _eval_expand_func(self, **hints):
+        """return binomial(n, k) as a number or a product
+        if the summation limit is a nonnegative integer.
         """
-        Function to expand binomial(n, k) when m is positive integer
-        Also,
-        n is self.args[0] and k is self.args[1] while using binomial(n, k)
-        """
-        n = self.args[0]
-        if n.is_Number:
-            return binomial(*self.args)
+        from sympy import Product
+        n, k = self.args
+        # see if re-evaluation evaluates
+        e = self.func(n, k)
+        if e.func != self.func:
+            return e
 
-        k = self.args[1]
-        if (n-k).is_Integer:
+        # see if there is a non-negative k or n - k
+        if k.is_number and int_like(k) and k.is_nonnegative:
+            pass
+        elif (n - k).is_number and int_like(n - k) and (n - k).is_nonnegative:
             k = n - k
-
-        if k.is_Integer:
-            if k.is_zero:
-                return S.One
-            elif k.is_negative:
-                return S.Zero
-            else:
-                n, result = self.args[0], 1
-                for i in range(1, k + 1):
-                    result *= n - k + i
-                    result /= i
-                return result
         else:
-            return binomial(*self.args)
+            return self
+        i = Dummy('never_seen')
+        return (Product(n - k + i, (i, 1, k))/factorial(k)).doit()
+
+    def _eval_rewrite_as_Piecewise(self, n, k, **kwargs):
+        from sympy import gamma, Abs, Lt
+        isint = lambda x: Eq(x, floor(x))
+        nneg = lambda x: Or(Eq(x, 0), Eq(x/Abs(x), 1))
+        for i in igen():
+            if not n.has(i) and not k.has(i):
+                break
+        return Piecewise(
+            (factorial(n)/factorial(k)/factorial(n - k),
+                And(isint(n), isint(k),
+                nneg(n), nneg(k), nneg(n - k))),
+            (ff(n, k)/factorial(k),
+                And(isint(k), nneg(k))),
+            (ff(n, n - k)/factorial(n - k),
+                And(isint(n - k), nneg(n - k))),
+            (0, And(*[i for x in (n, k, n - k)
+                for i in [isint(x), Lt(x, 0)]])),
+            (gamma(n + 1)/gamma(k + 1)/gamma(n - k + 1),
+                True))
 
     def _eval_rewrite_as_factorial(self, n, k, **kwargs):
-        return factorial(n)/(factorial(k)*factorial(n - k))
+        if (k.is_integer and (
+                    n.is_integer and n.is_nonnegative or
+                    k.is_nonpositive and n.is_integer is False) or
+                k.is_integer is False and n.is_integer and
+                    n.is_negative):
+            return factorial(n)/(factorial(k)*factorial(n - k))
 
     def _eval_rewrite_as_gamma(self, n, k, **kwargs):
         from sympy import gamma
-        return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+        if all(x.is_negative and int_like(x) for x in (n, k, n - k)):
+            return S.Zero  # because either n < k or n < (n - k)
+        if n.is_negative and int_like(n):
+            if k.is_negative and int_like(k):
+                return
+            if (n - k).is_negative and int_like(n - k):
+                return
+        ok = False
+        if (n + 1).is_zero is False or n.is_nonnegative:
+            ok = True
+        elif k.is_nonnegative and (n - k).is_nonnegative:
+            # if n is -1 then neither k nor n - k can be -1
+            # so if they are both non-negative then the rewrite
+            # is ok
+            ok = True
+        if ok:
+            return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
     def _eval_rewrite_as_tractable(self, n, k, **kwargs):
-        return self._eval_rewrite_as_gamma(n, k).rewrite('tractable')
+        g = self._eval_rewrite_as_gamma(n, k)
+        if g is not None:
+            return g.rewrite('tractable')
 
     def _eval_rewrite_as_FallingFactorial(self, n, k, **kwargs):
-        if k.is_integer:
+        if int_like(k) and k.is_nonnegative:
             return ff(n, k) / factorial(k)
+        if int_like(n - k) and (n - k).is_nonnegative:
+            return ff(n, n - k) / factorial(n - k)
 
     def _eval_is_integer(self):
         n, k = self.args
-        if n.is_integer and k.is_integer:
+        if k.is_integer:
+            if n.is_integer or k.is_negative:
+                return True
+                # and if not, it *may* be true but it might
+                # only be obvious after expansion, e.g.
+                # (3 + sqrt(11)*I, 3) = -10
+        elif (n - k).is_integer and (n - k).is_negative:
+            # (x, -int) == 0
             return True
-        elif k.is_integer is False:
+        elif k.is_infinite:
+            if k.is_extended_positive:
+                if (n + 1).is_zero:
+                    # (-1, oo) -> zoo
+                    return False
+                elif (n + 1).is_zero is False:
+                    if n.is_infinite:
+                        if n.is_extended_negative:
+                            return True
+                        elif n.is_extended_positive:
+                            return False
+                    elif n.is_finite:
+                        return True
+        elif k.is_real and k.is_integer is False and (
+                n - k).is_integer is False:
             return False
 
     def _eval_is_nonnegative(self):
         n, k = self.args
-        if n.is_integer and k.is_integer:
-            if n.is_nonnegative or k.is_negative or k.is_even:
-                return True
-            elif k.is_even is False:
-                return  False
+        if (n - k).is_zero or k.is_zero or n.is_nonnegative:
+            return True
+        if n.is_negative:
+            if k.is_negative:
+                if (n - k).is_positive:
+                    if (k.is_even == n.is_even) and k.is_even is not None:
+                        return True
+                    elif (k.is_even != n.is_even) and (
+                        k.is_even is not None) and (n.is_even is not None):
+                        return False
+                else:
+                    return True
+            elif k.is_positive:
+                if k.is_odd:
+                    return False
+                elif k.is_even:
+                    return True

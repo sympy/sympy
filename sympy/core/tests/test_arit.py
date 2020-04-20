@@ -542,6 +542,14 @@ def test_Mul_is_rational():
     assert (z*i).is_rational is True
     bi = Symbol('i', imaginary=True, finite=True)
     assert (z*bi).is_zero is True
+    # I * I = -1 is rational but
+    # this can't be determined without evaluating the
+    # expression and the eval_is routines shouldn't do that;
+    # it could be resolved by counting literal I but that
+    # seems to be a pretty small corner case and would make
+    # the routine slower for all non-corner cases
+    expr = Mul(I, I, evaluate=False)
+    assert expr.is_rational is None
 
 
 def test_Add_is_rational():
@@ -1519,13 +1527,17 @@ def test_Add_is_irrational():
 def test_Mul_is_irrational():
     expr = Mul(1, 2, 3, evaluate=False)
     assert expr.is_irrational is False
-    expr = Mul(1, I, I, evaluate=False)
-    assert expr.is_rational is None # I * I = -1 but *no evaluation allowed*
     # sqrt(2) * I * I = -sqrt(2) is irrational but
     # this can't be determined without evaluating the
-    # expression and the eval_is routines shouldn't do that
+    # expression and the eval_is routines shouldn't do that;
+    # it could be resolved by counting literal I but that
+    # seems to be a pretty small corner case and would make
+    # the routine slower for all non-corner cases
     expr = Mul(sqrt(2), I, I, evaluate=False)
     assert expr.is_irrational is None
+    nk = Symbol('nk', integer=False)
+    nr = Symbol('nr', rational=False)
+    assert (nk*nr).is_rational is None
 
 
 def test_issue_3531():
