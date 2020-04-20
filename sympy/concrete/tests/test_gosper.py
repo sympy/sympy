@@ -1,10 +1,11 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
 from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, \
-    log, Symbol, pi, Rational
-from sympy.abc import a, b, j, k, m, n, r, x
+    log, Symbol, pi, Rational, symbols
+from sympy.abc import a, b, m, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
+n, k = symbols('n k', nonnegative=True)
 
 def test_gosper_normal():
     eq = 4*n + 5, 2*(4*n + 1)*(2*n + 3), n
@@ -63,9 +64,10 @@ def test_gosper_sum_indefinite():
 
 
 def test_gosper_sum_parametric():
-    assert gosper_sum(binomial(S.Half, m - j + 1)*binomial(S.Half, m + j), (j, 1, n)) == \
-        n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S.Half, 1 + m - n)* \
-        binomial(S.Half, m + n)/(m*(1 + 2*m))
+    n, k = symbols('n k')
+    assert gosper_sum(binomial(S.Half, n - k + 1)*binomial(S.Half, n + k), (k, 1, n)) == \
+        n*(1 + n - n)*(-1 + 2*n + 2*n)*binomial(S.Half, 1 + n - n)* \
+        binomial(S.Half, n + n)/(n*(1 + 2*n))
 
 
 def test_gosper_sum_algebraic():
@@ -133,21 +135,21 @@ def test_gosper_sum_AeqB_part1():
 
 def test_gosper_sum_AeqB_part2():
     f2a = n**2*a**n
-    f2b = (n - r/2)*binomial(r, n)
+    f2b = (n - k/2)*binomial(k, n)
     f2c = factorial(n - 1)**2/(factorial(n - x)*factorial(n + x))
 
     g2a = -a*(a + 1)/(a - 1)**3 + a**(
-        m + 1)*(a**2*m**2 - 2*a*m**2 + m**2 - 2*a*m + 2*m + a + 1)/(a - 1)**3
-    g2b = (m - r)*binomial(r, m)/2
+        n + 1)*(a**2*n**2 - 2*a*n**2 + n**2 - 2*a*n + 2*n + a + 1)/(a - 1)**3
+    g2b = (n - k)*binomial(k, n)/2
     ff = factorial(1 - x)*factorial(1 + x)
     g2c = 1/ff*(
-        1 - 1/x**2) + factorial(m)**2/(x**2*factorial(m - x)*factorial(m + x))
+        1 - 1/x**2) + factorial(n)**2/(x**2*factorial(n - x)*factorial(n + x))
 
-    g = gosper_sum(f2a, (n, 0, m))
+    g = gosper_sum(f2a, (n, 0, n))
     assert g is not None and simplify(g - g2a) == 0
-    g = gosper_sum(f2b, (n, 0, m))
+    g = gosper_sum(f2b, (n, 0, n))
     assert g is not None and simplify(g - g2b) == 0
-    g = gosper_sum(f2c, (n, 1, m))
+    g = gosper_sum(f2c, (n, 1, n))
     assert g is not None and simplify(g - g2c) == 0
 
 

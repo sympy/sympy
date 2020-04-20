@@ -1,12 +1,29 @@
-from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
-                   rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
-                   Mod, Eq, sqrt, Poly, Dummy, I, Rational)
+from sympy.concrete.products import Product
 from sympy.core.expr import unchanged
-from sympy.core.function import ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, expand_func
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (EulerGamma, Float, I, Rational, nan,
+    oo, pi, zoo)
+EulerGamma = EulerGamma()  # no EulerGamma = S.EulerGamma in numbers
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (
+    ff, rf, binomial, factorial, factorial2,
+    )
 from sympy.functions.combinatorial.factorials import subfactorial
-from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import (
+    gamma, loggamma, polygamma, uppergamma)
+from sympy.polys.polytools import Poly
+from sympy.series.order import O
+from sympy.sets.fancysets import Range
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import XFAIL, raises, slow
+from sympy.utilities.iterables import cartes
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
@@ -73,6 +90,7 @@ def test_rf_eval_apply():
         factorial(n + k - 1) / factorial(n - 1)
     assert rf(x, y).rewrite(factorial) == rf(x, y)
     assert rf(x, y).rewrite(binomial) == rf(x, y)
+    assert rf(x, y).rewrite(gamma) == gamma(x + y)/gamma(x)
 
     import random
     from mpmath import rf as mpmath_rf
@@ -176,6 +194,7 @@ def test_rf_lambdify_mpmath():
 
 
 def test_factorial():
+    i = Symbol('i')
     x = Symbol('x')
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, nonnegative=True)
@@ -192,6 +211,13 @@ def test_factorial():
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
+    f3 = factorial(3., evaluate=False)
+    assert f3.rewrite(Product) == Product(i, (i, 1, 3.0))
+    assert f3.is_integer is False
+    assert f3.is_positive
+    assert f3.is_even is False
+    assert f3.is_composite is False
+
     assert factorial(x).is_integer is None
     assert factorial(n).is_integer is None
     assert factorial(k).is_integer
@@ -206,7 +232,7 @@ def test_factorial():
     assert factorial(r).is_real is None
     assert factorial(s).is_real is True
     assert factorial(t).is_real is True
-    assert factorial(u).is_real is True
+    assert factorial(u).is_real is None  # e.g. I!
 
     assert factorial(x).is_composite is None
     assert factorial(n).is_composite is None
@@ -236,6 +262,8 @@ def test_factorial_Mod():
     assert Mod(factorial(255, evaluate=False), s) == Mod(factorial(255), s)
     assert Mod(factorial(4, evaluate=False), 3) == S.Zero
     assert Mod(factorial(5, evaluate=False), 6) == S.Zero
+    assert factorial(6, evaluate=False) % 11 == 5
+    assert factorial(5, evaluate=False) % 15 == 0
 
 
 def test_factorial_diff():
@@ -351,61 +379,119 @@ def test_factorial2_rewrite():
     assert factorial2(2*n + 1).rewrite(gamma) == \
         sqrt(2)*2**(n + S.Half)*gamma(n + Rational(3, 2))/sqrt(pi)
 
+@XFAIL
+def test_binomial_fail1():
+    i, j = symbols('i, j', integer=True)
+    # doesn't hold for (i, j) == (0, 0)
+    assert binomial(i, j).equals(
+        binomial(i - 1, j - 1) + binomial(i - 1, j)) is not True
+
+
+@XFAIL
+def test_binomial_fail2():
+    i, j = symbols('i, j', integer=True)
+    # gives None but should be True
+    assert binomial(2*j, j).equals(
+        (-4)**j*binomial(-S.Half, j)) is True
+
+
+@slow
+@XFAIL
+def test_binomial_fail3():
+    i, j = symbols('i j', integer=True, zero=False)
+    # gives None but should be Tru
+    assert binomial(i, j).equals(
+        binomial(i - 1, j - 1) + binomial(i - 1, j))
+
 
 def test_binomial():
     x = Symbol('x')
-    n = Symbol('n', integer=True)
-    nz = Symbol('nz', integer=True, nonzero=True)
-    k = Symbol('k', integer=True)
+
+    n, k = symbols('n k', integer=True)
     kp = Symbol('kp', integer=True, positive=True)
     kn = Symbol('kn', integer=True, negative=True)
+    kne = Symbol('kn', integer=True, negative=True, even=True)
+    nt, kt = symbols('nt kt', integer=False)
+    ntr = symbols('ntr', rational=False, real=True)
+    a, b = symbols('a b', integer=True, nonnegative=True)
     u = Symbol('u', negative=True)
     v = Symbol('v', nonnegative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
-    nt = Symbol('nt', integer=False)
-    kt = Symbol('kt', integer=False)
-    a = Symbol('a', integer=True, nonnegative=True)
-    b = Symbol('b', integer=True, nonnegative=True)
+    nz = Symbol('z', zero=False)
 
-    assert binomial(0, 0) == 1
-    assert binomial(1, 1) == 1
-    assert binomial(10, 10) == 1
-    assert binomial(n, z) == 1
+    i, j = symbols('i, j', finite=True)
+    assert binomial(i, i - j).equals(binomial(i, j))
+    # Consecutive Neighbours
+    assert binomial(i, j).equals((i/(i - j))* binomial(i - 1, j))
+    assert binomial(i, j).equals(((i - j + 1)/(i + 1))* binomial(i + 1, j))
+    assert binomial(i, j).equals(((i - j + 1)/j)* binomial(i, j - 1))
+    # Relations between Contiguous functions
+    assert (binomial(i, j) + binomial(i, j + 1)).equals(binomial(i + 1, j + 1))
+
+    # if not (i == j == 0) check Identity
+    i, j = symbols('i', positive=True, integer=True), symbols('i', negative=True, integer=True)
+    assert binomial(i, j).equals(binomial(i - 1, j - 1) + binomial(i - 1, j))
+    i, j = j, i
+    assert binomial(i, j).equals(binomial(i - 1, j - 1) + binomial(i - 1, j))
+
+    i, j = symbols('i, j', positive=True, integer=True)
+
+    # issues 14529 and 14625
+    assert binomial(x, z) == binomial(x, x) == 1
+    assert binomial(x, 1) == binomial(x, x - 1) == x
+    assert binomial(x, 1.) == binomial(x, x - 1.) == 1.*x
+    assert binomial(x + 1, x) == x + 1
+
+    assert unchanged(binomial, x, -1)
+    assert binomial(-1 + nz, -1) == 0
+    assert binomial(v, v + 1) == 0
+    assert binomial(nt, nt + 1) == 0
+    assert unchanged(binomial, x, x + 1)  # Piecewise((0, Ne(n, -1)), (1, True))
+
+    assert unchanged(binomial, kp, -kn)
+    assert binomial(kp, 2*kp) == 0
+    assert unchanged(binomial, n, u)
+    assert unchanged(binomial, kp, u)
+    assert unchanged(binomial, n, p)
+    assert unchanged(binomial, n, k)
+    assert unchanged(binomial, n, n + p)
+
+    assert unchanged(binomial, n, 3)
+    assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
+    assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
+    assert expand_func(binomial(n, 2)) == n*(n - 1)/2
+    assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
+    assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
+    #issue #18802
+    assert expand_func(binomial(x + 1, x - 1)) == x*(x + 1)/2
+    assert expand_func(binomial(x**2 + 1, x**2)) == x**2 + 1
+
+    assert binomial(n, k).is_integer
+    assert binomial(nt, k).is_integer is None
+    assert binomial(k, nt).is_integer is None
+    assert binomial(k, ntr).is_integer is False
+    assert binomial(x, nt).is_integer is None  # see next,
+    assert binomial(S.Half, S.Half*3) == 0     #<--------+
+    assert binomial(n, a).is_integer
+    assert binomial(x, x + kp).is_integer
+    assert not binomial(0, sqrt(3) + sqrt(11)*I).is_integer
+    assert binomial(3, oo, evaluate=False).is_integer
+
+    assert binomial(-oo, oo) == 0
+    assert binomial(-1, oo) is S.ComplexInfinity
+    assert binomial(oo, oo) is S.NaN
+    assert binomial(-oo, oo, evaluate=False).is_integer
+    assert binomial(-1, oo, evaluate=False).is_integer is False
+    assert binomial(oo, oo, evaluate=False).is_integer is False
     assert binomial(1, 2) == 0
     assert binomial(-1, 2) == 1
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
-    assert binomial(-1, -1) == 0
-    assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
-    assert binomial(n, -1) == 0 # holds for all integers (negative, zero, positive)
-    assert binomial(kp, -1) == 0
-    assert binomial(nz, 0) == 1
-    assert expand_func(binomial(n, 1)) == n
-    assert expand_func(binomial(n, 2)) == n*(n - 1)/2
-    assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
-    assert expand_func(binomial(n, n - 1)) == n
-    assert binomial(n, 3).func == binomial
-    assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
-    assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
-    assert binomial(n, n).func == binomial # e.g. (-1, -1) == 0, (2, 2) == 1
-    assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
-    assert binomial(kp, kp + 1) == 0
-    assert binomial(kn, kn) == 0 # issue #14529
-    assert binomial(n, u).func == binomial
-    assert binomial(kp, u).func == binomial
-    assert binomial(n, p).func == binomial
-    assert binomial(n, k).func == binomial
-    assert binomial(n, n + p).func == binomial
-    assert binomial(kp, kp + p).func == binomial
-
-    assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
-
-    assert binomial(n, k).is_integer
-    assert binomial(nt, k).is_integer is None
-    assert binomial(x, nt).is_integer is False
+    assert binomial(-S.Half, S(5)/2) == 0
+    assert binomial(-S.Half, -3.) == 0
 
     assert binomial(gamma(25), 6) == 79232165267303928292058750056084441948572511312165380965440075720159859792344339983120618959044048198214221915637090855535036339620413440000
     assert binomial(1324, 47) == 906266255662694632984994480774946083064699457235920708992926525848438478406790323869952
@@ -415,6 +501,9 @@ def test_binomial():
     assert binomial(4321, 51) == 124595639629264868916081001263541480185227731958274383287107643816863897851139048158022599533438936036467601690983780576
 
     assert binomial(a, b).is_nonnegative is True
+    assert binomial(kne, kne - 1).is_zero is False
+    assert binomial(kne, kne - 2).is_nonnegative is True
+    assert binomial(kne, kne - 3).is_nonnegative is False
     assert binomial(-1, 2, evaluate=False).is_nonnegative is True
     assert binomial(10, 5, evaluate=False).is_nonnegative is True
     assert binomial(10, -3, evaluate=False).is_nonnegative is True
@@ -423,26 +512,11 @@ def test_binomial():
     assert binomial(-10, 1, evaluate=False).is_nonnegative is False
     assert binomial(-10, 7, evaluate=False).is_nonnegative is False
 
-    # issue #14625
-    for _ in (pi, -pi, nt, v, a):
-        assert binomial(_, _) == 1
-        assert binomial(_, _ - 1) == _
-    assert isinstance(binomial(u, u), binomial)
-    assert isinstance(binomial(u, u - 1), binomial)
-    assert isinstance(binomial(x, x), binomial)
-    assert isinstance(binomial(x, x - 1), binomial)
-
-    #issue #18802
-    assert expand_func(binomial(x + 1, x)) == x + 1
-    assert expand_func(binomial(x, x - 1)) == x
-    assert expand_func(binomial(x + 1, x - 1)) == x*(x + 1)/2
-    assert expand_func(binomial(x**2 + 1, x**2)) == x**2 + 1
-
     # issue #13980 and #13981
     assert binomial(-7, -5) == 0
     assert binomial(-23, -12) == 0
     assert binomial(Rational(13, 2), -10) == 0
-    assert binomial(-49, -51) == 0
+    assert binomial(-49, -51) == 1225
 
     assert binomial(19, Rational(-7, 2)) == S(-68719476736)/(911337863661225*pi)
     assert binomial(0, Rational(3, 2)) == S(-2)/(3*pi)
@@ -450,77 +524,141 @@ def test_binomial():
     assert binomial(kn, kt) is zoo
 
     assert binomial(nt, kt).func == binomial
-    assert binomial(nt, Rational(15, 6)) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
-    assert binomial(Rational(20, 3), Rational(-10, 8)) == gamma(Rational(23, 3))/(gamma(Rational(-1, 4))*gamma(Rational(107, 12)))
-    assert binomial(Rational(19, 2), Rational(-7, 2)) == Rational(-1615, 8388608)
-    assert binomial(Rational(-13, 5), Rational(-7, 8)) == gamma(Rational(-8, 5))/(gamma(Rational(-29, 40))*gamma(Rational(1, 8)))
-    assert binomial(Rational(-19, 8), Rational(-13, 5)) == gamma(Rational(-11, 8))/(gamma(Rational(-8, 5))*gamma(Rational(49, 40)))
+    assert unchanged(binomial, nt, Rational(15, 6))
+    assert binomial(kn - 3, kn - 1, evaluate=False).rewrite(gamma) == 0
+    assert binomial(nt, Rational(15, 6)).rewrite(gamma
+        ) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
+    assert binomial(Rational(20, 3), Rational(-10, 8)
+        ).rewrite(gamma) == gamma(Rational(23, 3)
+        )/(gamma(Rational(-1, 4))*gamma(Rational(107, 12)))
+    assert binomial(Rational(19, 2), Rational(-7, 2)
+        ).rewrite(gamma) == Rational(-1615, 8388608)
+    assert binomial(Rational(-13, 5), Rational(-7, 8)
+        ).rewrite(gamma) == gamma(Rational(-8, 5))/(gamma(Rational(-29, 40))*gamma(Rational(1,8)))
+    assert binomial(Rational(-19, 8), Rational(-13, 5)
+        ).rewrite(gamma) == gamma(Rational(-11, 8)
+        )/(gamma(Rational(-8, 5))*gamma(Rational(49, 40)))
 
     # binomial for complexes
-    from sympy import I
-    assert binomial(I, Rational(-89, 8)) == gamma(1 + I)/(gamma(Rational(-81, 8))*gamma(Rational(97, 8) + I))
-    assert binomial(I, 2*I) == gamma(1 + I)/(gamma(1 - I)*gamma(1 + 2*I))
+    assert binomial(I, Rational(-89, 8)).rewrite(gamma
+        ) == gamma(1 + I)/(gamma(Rational(-81, 8)
+        )*gamma(Rational(97, 8) + I))
+    assert binomial(I, 2*I).rewrite(gamma
+        ) == gamma(1 + I)/(gamma(1 - I)*gamma(1 + 2*I))
     assert binomial(-7, I) is zoo
-    assert binomial(Rational(-7, 6), I) == gamma(Rational(-1, 6))/(gamma(Rational(-1, 6) - I)*gamma(1 + I))
-    assert binomial((1+2*I), (1+3*I)) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
+    assert binomial(Rational(-7, 6), I).rewrite(gamma
+        ) == gamma(Rational(-1, 6))/(gamma(Rational(-1, 6) - I)*gamma(1 + I))
+    assert binomial(1 + 2*I, 1 + 3*I).rewrite(gamma
+        ) == gamma(2 + 2*I)/(gamma(1 - I)*gamma(2 + 3*I))
     assert binomial(I, 5) == Rational(1, 3) - I/S(12)
-    assert binomial((2*I + 3), 7) == -13*I/S(63)
+    assert binomial(2*I + 3, 7) == -13*I/S(63)
     assert isinstance(binomial(I, n), binomial)
     assert expand_func(binomial(3, 2, evaluate=False)) == 3
     assert expand_func(binomial(n, 0, evaluate=False)) == 1
-    assert expand_func(binomial(n, -2, evaluate=False)) == 0
+    assert expand_func(binomial(n, -2, evaluate=False)) == binomial(n, -2)
     assert expand_func(binomial(n, k)) == binomial(n, k)
+    # expansion of numerical results is automatic
+    assert binomial(3 + sqrt(11)*I, 3) == -10
 
 
 def test_binomial_Mod():
+    # positive k
+
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
     r = 10**7 + 5 # composite modulo
 
-    # A few tests to get coverage
     # Lucas Theorem
-    assert Mod(binomial(156675, 4433, evaluate=False), p) == Mod(binomial(156675, 4433), p)
+    assert Mod(binomial(156675, 4433, evaluate=False), p
+        ) == Mod(binomial(156675, 4433), p)
 
     # factorial Mod
-    assert Mod(binomial(1234, 432, evaluate=False), q) == Mod(binomial(1234, 432), q)
+    assert Mod(binomial(1234, 432, evaluate=False), q
+        ) == Mod(binomial(1234, 432), q)
 
     # binomial factorize
-    assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
+    assert Mod(binomial(253, 113, evaluate=False), r
+        ) == Mod(binomial(253, 113), r)
 
+    # postive n
+    lucas = 0
+    fac = 0
+    binfac = 0
+    for k in range(1, 5):
+        for n in range(k, k + 4):
+            for i in Range(2, n*2 + 1):
+                assert binomial(n, k, evaluate=False)%i == \
+                    binomial(n, k)%i, (k, n, i)
+                if i.is_prime:
+                    if i <= n:
+                        lucas += 1
+                    else:
+                        fac += 1
+                else:
+                    binfac += 1
+    assert lucas
+    assert fac
+    assert binfac
 
+    # negative n
+    lucas = 0
+    fac = 0
+    binfac = 0
+    for k in range(1, 5):
+        for n in range(-k - 4, 1):
+            for i in Range(2, -n*2 + 1):
+                assert binomial(n, k, evaluate=False)%i == \
+                    binomial(n, k)%i, (n, k, i,
+                    binomial(n, k, evaluate=False)%i,
+                    binomial(n, k)%i)
+                if i.is_prime:
+                    if i <= abs(n):
+                        lucas += 1
+                    else:
+                        fac += 1
+                else:
+                    binfac += 1
 
-@slow
-def test_binomial_Mod_slow():
-    p, q = 10**5 + 3, 10**9 + 33 # prime modulo
-    r, s = 10**7 + 5, 33333333 # composite modulo
+    assert lucas
+    assert fac
+    assert binfac
 
-    n, k, m = symbols('n k m')
-    assert (binomial(n, k) % q).subs({n: s, k: p}) == Mod(binomial(s, p), q)
-    assert (binomial(n, k) % m).subs({n: 8, k: 5, m: 13}) == 4
-    assert (binomial(9, k) % 7).subs(k, 2) == 1
+    x = Symbol('x', zero=False)
+    assert binomial(3, 4, evaluate=False) % x == 0
+    assert binomial(3, 3, evaluate=False) % x == 1 % x
+    assert binomial(-1, 3, evaluate=False) % x == -1 % x
+    assert binomial(3, 1, evaluate=False) % x == 3 % x
+    assert binomial(-3, 1, evaluate=False) % x == -3 % x
+    assert binomial(0, -5, evaluate=False) % x == 0
+    assert binomial(-3, -2, evaluate=False) % x == 0
+    a = binomial(-3, -4, evaluate=False) % 3
+    b = binomial(-3, 1, evaluate=False) % 3
+    assert a == b
 
-    # Lucas Theorem
-    assert Mod(binomial(123456, 43253, evaluate=False), p) == Mod(binomial(123456, 43253), p)
-    assert Mod(binomial(-178911, 237, evaluate=False), p) == Mod(-binomial(178911 + 237 - 1, 237), p)
-    assert Mod(binomial(-178911, 238, evaluate=False), p) == Mod(binomial(178911 + 238 - 1, 238), p)
+    # check int-like handling
+    assert binomial(5, 2, evaluate=False) % 7 == 3
+    a = binomial(5., 2, evaluate=False) % 7
+    assert a == 3 and a.is_Float
+    a = binomial(5, 2., evaluate=False) % 7
+    assert a == 3 and a.is_Float
+    a = binomial(5, 2, evaluate=False) % 7.
+    assert a == 3 and a.is_Float
+    assert (binomial(5, 5., evaluate=False) % 7).is_Float
+    assert (binomial(5., 5, evaluate=False) % 7).is_Float
+    assert (binomial(5, 5, evaluate=False) % 7.).is_Float
+    assert (binomial(5, 1., evaluate=False) % 7).is_Float
+    assert (binomial(5., 1, evaluate=False) % 7).is_Float
+    assert (binomial(5, 1, evaluate=False) % 7.).is_Float
 
-    # factorial Mod
-    assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
-    assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
-    assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
-    assert Mod(binomial(23, -38, evaluate=False), q) is S.Zero
-    assert Mod(binomial(23, 38, evaluate=False), q) is S.Zero
+    raises(ValueError, lambda: binomial(pi, 2, evaluate=False) % 3)
+    raises(ValueError, lambda: binomial(4, pi, evaluate=False) % 3)
+    raises(ValueError, lambda: binomial(3, 2, evaluate=False) % pi)
 
-    # binomial factorize
-    assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)
-    assert Mod(binomial(3781, 948, evaluate=False), s) == Mod(binomial(3781, 948), s)
-    assert Mod(binomial(25773, 1793, evaluate=False), s) == Mod(binomial(25773, 1793), s)
-    assert Mod(binomial(-753, 118, evaluate=False), r) == Mod(binomial(-753, 118), r)
-    assert Mod(binomial(-25773, 1793, evaluate=False), s) == Mod(binomial(-25773, 1793), s)
+    n = symbols('n', integer=True)
+    assert unchanged(Mod, binomial(n, 2), 7)
 
 
 def test_binomial_diff():
-    n = Symbol('n', integer=True)
-    k = Symbol('k', integer=True)
+    n, k = symbols('n k', integer=True)
 
     assert binomial(n, k).diff(n) == \
         (-polygamma(0, 1 + n - k) + polygamma(0, 1 + n))*binomial(n, k)
@@ -536,17 +674,65 @@ def test_binomial_diff():
     raises(ArgumentIndexError, lambda: binomial(n, k).fdiff(3))
 
 
-def test_binomial_rewrite():
-    n = Symbol('n', integer=True)
-    k = Symbol('k', integer=True)
-    x = Symbol('x')
+def test_simplify():
+    n, k = symbols('n k', integer=True)
+    assert factorial(factorial(n)/(factorial(k)*factorial(
+        -k + n))).simplify() == gamma(1 + gamma(n + 1)/(
+            gamma(k + 1)*gamma(-k + n + 1)))
+    assert factorial(n**3 + k).as_leading_term(n) == factorial(k)
 
-    assert binomial(n, k).rewrite(
-        factorial) == factorial(n)/(factorial(k)*factorial(n - k))
-    assert binomial(
-        n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+
+def test_binomial_rewrite():
+    n, k = symbols('n k', integer=True, nonnegative=True)
+    x, y = symbols('x y')
+    i, i_0 = symbols('i i_0')
+
+    assert binomial(n, k).rewrite(factorial) == factorial(n)/(
+        factorial(k)*factorial(n - k))
+    assert binomial(n, k).rewrite(gamma) == gamma(
+        n + 1)/(gamma(k + 1)*gamma(n - k + 1))
     assert binomial(n, k).rewrite(ff) == ff(n, k) / factorial(k)
     assert binomial(n, x).rewrite(ff) == binomial(n, x)
+    assert binomial(n, k).rewrite('tractable') == exp(
+        -loggamma(k + 1))*exp(loggamma(n + 1))*exp(-loggamma(-k + n + 1))
+    assert binomial(n, k).rewrite(factorial) == factorial(n)/(
+        factorial(k)*factorial(n - k))
+    assert binomial(n, k).rewrite(gamma) == gamma(
+        n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+    assert binomial(n, k).rewrite(ff) == ff(n, k) / factorial(k)
+    assert binomial(n, x).rewrite(ff) == binomial(n, x)
+    assert binomial(n, k).rewrite('tractable') == exp(
+        -loggamma(k + 1))*exp(loggamma(n + 1))*exp(-loggamma(-k + n + 1))
+
+    y, i = i, i_0  # tests igen, too
+    h = S.Half
+    v = [-1, 0, zoo, -h, 1, 0, zoo, 1, 1, 1, zoo, 0, 0, 0, 2/pi,
+        h, 1, 1, 2/pi, 1, 0, h, -2/(3*pi), 0, 1, 1, 4/pi, S(3)/2, 1,
+        S(3)/2, 4/(3*pi), 1, 0, S(3)/8, -4/(15*pi), 0]
+    ix = 0
+    for i in range(-1, 2):
+        for j in range(i - 1, i + 2):
+            assert v[ix] == binomial(i, j)
+            assert v[ix + 1] == binomial(i + h, j)
+            assert v[ix + 2] == binomial(i, j + h)
+            assert v[ix + 3] == binomial(i + h, j + h)
+            ix += 4
+    rw = binomial(x, y).rewrite(Piecewise)
+    # make sure that special cases produce Float
+    assert rw.xreplace({x: 2, y: 1.}).is_Float
+    assert rw.xreplace({x: 3., y: 2}).is_Float
+    for F in (Piecewise, factorial, ff, gamma, 'tractable', 'expand'):
+        for i in range(-2, 2):
+            for j in range(i - 1, i + 2):
+                for hi, hj in cartes((0, S.Half), (0, S.Half)):
+                    x, y = i + hi, j + hj
+                    u = binomial(x, y, evaluate=False)
+                    if F == 'expand':
+                        rw = expand_func(u)
+                    else:
+                        rw = u.rewrite(F)
+                    assert Eq(rw, binomial(x, y)), (x, y, F)
+
 
 
 @XFAIL
