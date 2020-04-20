@@ -1151,7 +1151,7 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
 
     """
     if not import_module(library):
-        raise ValueError(ValueError("Failed to import %s" % library))
+        raise ValueError("Failed to import %s" % library)
 
     if condition is not None:
         ps = pspace(Tuple(expr, condition))
