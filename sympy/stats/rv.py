@@ -388,7 +388,7 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(1,), library='python'):
+    def sample(self, size=(1,), library='scipy'):
         return {k: v for space in self.spaces
             for k, v in space.sample(size=size, library=library).items()}
 
@@ -1039,6 +1039,7 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
         - 'scipy' : Sample using scipy
         - 'numpy' : Sample using numpy
         - 'pymc3' : Sample using PyMC3
+
         Choose any of the available options to sample from as string,
         by default is 'scipy'
     numsamples : int
