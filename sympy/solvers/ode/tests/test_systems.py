@@ -592,3 +592,20 @@ def test_sysode_linear_neq_order1():
 
     assert dsolve(eq24) == sol24
     assert checksysodesol(eq24, sol24) == (True, [0, 0])
+
+    # Regression test case for issue #19150
+    # https://github.com/sympy/sympy/issues/19150
+    eq25 = [Eq(Derivative(f(t), t), 0),
+           Eq(Derivative(g(t), t), 1/(c*b)* ( -2*g(t)+x(t)+f(t) )  ),
+           Eq(Derivative(x(t), t), 1/(c*b)* ( -2*x(t)+g(t)+y(t) ) ),
+           Eq(Derivative(y(t), t), 1/(c*b)* ( -2*y(t)+x(t)+h(t) ) ),
+           Eq(Derivative(h(t), t), 0)]
+
+    sol25 = [Eq(f(t), 4*C1 - 3*C2),
+             Eq(g(t), 3*C1 - 2*C2 - C3*exp(-2*t/(b*c)) + C4*exp(t*(-2 - sqrt(2))/(b*c)) + C5*exp(t*(-2 + sqrt(2))/(b*c))),
+             Eq(x(t), 2*C1 - C2 - sqrt(2)*C4*exp(t*(-2 - sqrt(2))/(b*c)) + sqrt(2)*C5*exp(t*(-2 + sqrt(2))/(b*c))),
+             Eq(y(t), C1 + C3*exp(-2*t/(b*c)) + C4*exp(t*(-2 - sqrt(2))/(b*c)) + C5*exp(t*(-2 + sqrt(2))/(b*c))),
+             Eq(h(t), C2)]
+
+    assert dsolve(eq25) == sol25
+    assert checksysodesol(eq25, sol25)
