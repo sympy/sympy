@@ -449,101 +449,8 @@ def _matrix_is_constant(M, t):
     return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
 
 
-def canonical_equations(eqs, funcs, t):
-    r"""
-    Returns system of linear first order ODEs in its canonical form.
-
-    Explanation
-    ===========
-
-    Given a system of first order linear ODEs *eqs* of the form:
-
-    .. math ::
-        f(x1, y1, z1, ..., x, y, z, ..., t) = g(x1, y1, z1, ..., x, y, z, ..., t)
-
-    Where $f$ and $g$ are list of expressions in terms of $x1$, $y1$, $z1$, ... which
-    are the first order derivatives of depedent variables $x$, $y$, $z$, ... from the
-    list *funcs* dependent on the independent variable $t$.
-
-    This function takes the above system of equations and converts it into:
-
-    .. math::
-        x1 = f1(x, y, z, ..., t)
-        y1 = f2(x, y, z, ..., t)
-        z1 = f3(x, y, z, ..., t)
-        ...
-
-    Where $f1$, $f2$, $f3$, ... are functions dependent on $x$, $y$, $z$, ..., $t$.
-
-    The above converted system of equations is then returned by this function.
-
-    Parameters
-    ==========
-
-    eqs: List
-        List of ODEs
-    funcs: List
-        List of dependent variables
-    t: Symbol
-        Independent variable of the equations in eqs
-
-    Raises
-    ======
-
-    ODENonlinearError
-        When the system of equations is nonlinear
-    ODEOrderError
-        When the system of equations have an order greater than 1
-
-    Examples
-    ========
-
-    >>> from sympy import symbols, Eq, Function
-    >>> from sympy.solvers.ode.systems import canonical_equations
-    >>> from sympy.abc import t
-
-    >>> x, y = symbols("x y", cls=Function)
-    >>> x1 = x(t).diff(t)
-    >>> y1 = y(t).diff(t)
-
-    Now, we will look at a system of ODEs which is not in canonical form:
-
-    >>> eqs = [Eq(2*x1 + y1, x(t) + t), Eq(y1, y(t) + x1)]
-
-    The canonical form of the equation is given as:
-
-    >>> canonical_equations(eqs, [x(t), y(t)], t)
-    [Eq(Derivative(x(t), t), t/3 + x(t)/3 - y(t)/3),
-     Eq(Derivative(y(t), t), t/3 + x(t)/3 + 2*y(t)/3)]
-
-
-    The function raises an ODEOrderError since it only deals with
-    system of ODEs in their first order.
-
-    >>> eqs = [Eq(x1.diff(t), y(t)), Eq(y1, x(t))]
-
-    >>> canonical_equations(eqs, [x(t), y(t)], t)
-    Traceback (most recent call last):
-    ...
-    ODEOrderError: Cannot represent system in 1-order canonical form
-
-
-    This function raises an ODENonlinearError when one of the first order
-    terms is nonlinear.
-
-    >>> eqs = [Eq(x1**2, x(t) + y(t) + t), Eq(y1 + x1, x(t) + 2*y(t))]
-
-    >>> canonical_equations(eqs, [x(t), y(t)], t)
-    Traceback (most recent call last):
-    ...
-    ODENonlinearError: System of ODEs is nonlinear
-
-    See Also
-    ========
-
-    solve: Solves for the first order dependent variables
-
-    """
+def _canonical_equations(eqs, funcs, t):
+    """Helper function that solves for first order derivatives in a system"""
     from sympy.solvers.solvers import solve
 
     # For now the system of ODEs dealt by this function can have a
@@ -660,7 +567,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Linearity check
     try:
-        canon_eqs = canonical_equations(eqs, funcs, t)
+        canon_eqs = _canonical_equations(eqs, funcs, t)
         As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
 
     # When the system of ODEs is non-linear, an ODENonlinearError is raised.
