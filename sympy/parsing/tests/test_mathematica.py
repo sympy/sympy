@@ -57,6 +57,9 @@ def test_mathematica():
         'AiryBi[x]' :'airybi(x)',
         'AiryBiPrime[7]' :'airybiprime(7)',
         'LogIntegral[4]':' li(4)',
+        'PrimePi[7]': 'primepi(7)',
+        'Prime[x]': 'prime(x)',
+        'PrimeQ[5]': 'isprime(5)'
         }
 
     for e in d:
