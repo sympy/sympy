@@ -4898,10 +4898,10 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     >>> pprint(dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) -
     ... 4*exp(-x)*x**2 + cos(2*x), f(x),
     ... hint='nth_linear_constant_coeff_undetermined_coefficients'))
-           /             4\
-           |            x |  -x   4*sin(2*x)   3*cos(2*x)
-    f(x) = |C1 + C2*x + --|*e   - ---------- + ----------
-           \            3 /           25           25
+           /       /      3\\
+           |       |     x ||  -x   4*sin(2*x)   3*cos(2*x)
+    f(x) = |C1 + x*|C2 + --||*e   - ---------- + ----------
+           \       \     3 //           25           25
 
     References
     ==========
@@ -5202,10 +5202,9 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
     ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
     ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-           /                     3                \
-           |                2   x *(6*log(x) - 11)|  x
-    f(x) = |C1 + C2*x + C3*x  + ------------------|*e
-           \                            36        /
+           /       /       /     x*log(x)   11*x\\\  x
+    f(x) = |C1 + x*|C2 + x*|C3 + -------- - ----|||*e
+           \       \       \        6        36 ///
 
     References
     ==========
