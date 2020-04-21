@@ -427,6 +427,7 @@ def test_sysode_linear_neq_order1():
           Eq(z(t).diff(t), z(t) + Rational(-1, 8) * w(t)),
           Eq(w(t).diff(t), Rational(1, 2) * (w(t) + z(t)))]
 
+    # NOTE: The solution returned is to be simplified in future.
     sol6 = [Eq(x(t), (C3 + C4*t)*exp(t) + (4*C1 + 4*C2*t + 48*C2)*exp(t)**Rational(3,4)),
             Eq(y(t), C4*exp(t) + (-C1 - C2*t - 8*C2)*exp(t)**Rational(3,4)),
             Eq(z(t), (C1/4 + C2*t/4 + C2)*exp(t)**Rational(3,4)),

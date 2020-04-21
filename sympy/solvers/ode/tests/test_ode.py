@@ -39,9 +39,6 @@ def test_get_numbered_constants():
 
 
 def test_dsolve_system():
-    eqs = [-f(x).diff(x), g(x).diff(x)]
-    sols = {Eq(f(x), C1), Eq(g(x), C2)}
-    assert set(dsolve(eqs)) == sols
 
     eqs = [f(x).diff(x, 2), g(x).diff(x)]
     with raises(ValueError):
@@ -203,15 +200,12 @@ def test_linear_2eq_order1_type5():
     eqs = [Eq(diff(f(x), x),  x*f(x) + x**2*g(x)),
            Eq(diff(g(x), x),  2*x**2*f(x) + (x + 3*x**2)*g(x))]
     sol = [
-        Eq(f(x), (C1*exp(x**3*(S(3)/2 + sqrt(17)/2)/3)
-                + C2*exp(x**3*(-sqrt(17)/2 + S(3)/2)/3))*exp(x**2/2)),
-        Eq(g(x), (C1*(S(3)/2 + sqrt(17)/2)*exp(x**3*(S(3)/2 + sqrt(17)/2)/3)
-                + C2*(-sqrt(17)/2 + S(3)/2)*exp(x**3*(-sqrt(17)/2 + S(3)/2)/3))*exp(x**2/2))
-        ]
-    dsolve_sol = dsolve(eqs)
-    # FIXME: This should probably be fixed so that this happens in the solver:
-    dsolve_sol = [s.doit() for s in sol]
-    assert dsolve_sol == sol
+        Eq(f(x), (C1*(-sqrt(17)/4 - Rational(3,4))*exp((Rational(3,2) - sqrt(17)/2)*Integral(x**2, x)) + C2*(Rational(-3,4) + sqrt(17)/4) *
+                exp((Rational(3,2) + sqrt(17)/2)*Integral(x**2, x)))*exp(Integral(x, x))),
+        Eq(g(x), (C1*exp((Rational(3,2) - sqrt(17)/2)*Integral(x**2, x)) + C2*exp((Rational(3,2) + sqrt(17)/2)*Integral(x**2, x))) *
+                exp(Integral(x, x)))]
+
+    assert dsolve(eqs) == sol
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
@@ -1348,10 +1342,9 @@ def test_solve_ics():
 
     # Test cases where dsolve returns two solutions.
     eq = (x**2*f(x)**2 - x).diff(x)
-    assert dsolve(eq, f(x), ics={f(1): 0}) == [Eq(f(x),
-        -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
-    assert dsolve(eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
-        -sqrt(x - S.Half)/x), Eq(f(x), sqrt(x - S.Half)/x)]
+    sol = [Eq(f(x), -sqrt(C1 + x)/x), Eq(f(x), sqrt(C1 + x)/x)]
+    assert dsolve(eq) == sol
+    assert checksysodesol(eq, sol) == (True, [0])
 
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     assert dsolve(eq, f(x),
@@ -3415,106 +3408,6 @@ def test_issue_14395():
         - 2*log(cos(x)**2)/3 + 2*cos(x)**2/3)*cos(3*x))
     assert dsolve(eq, f(x)) == sol
     # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
-
-
-def test_matrix_exp():
-    from sympy.matrices.dense import Matrix, eye, zeros
-    from sympy.solvers.ode.systems import matrix_exp
-    t = Symbol('t')
-
-    for n in range(1, 6+1):
-        assert matrix_exp(zeros(n), t) == eye(n)
-
-    for n in range(1, 6+1):
-        A = eye(n)
-        expAt = exp(t) * eye(n)
-        assert matrix_exp(A, t) == expAt
-
-    for n in range(1, 6+1):
-        A = Matrix(n, n, lambda i,j: i+1 if i==j else 0)
-        expAt = Matrix(n, n, lambda i,j: exp((i+1)*t) if i==j else 0)
-        assert matrix_exp(A, t) == expAt
-
-    A = Matrix([[0, 1], [-1, 0]])
-    expAt = Matrix([[cos(t), sin(t)], [-sin(t), cos(t)]])
-    assert matrix_exp(A, t) == expAt
-
-    A = Matrix([[2, -5], [2, -4]])
-    expAt = Matrix([
-            [3*exp(-t)*sin(t) + exp(-t)*cos(t), -5*exp(-t)*sin(t)],
-            [2*exp(-t)*sin(t), -3*exp(-t)*sin(t) + exp(-t)*cos(t)]
-            ])
-    assert matrix_exp(A, t) == expAt
-
-    A = Matrix([[21, 17, 6], [-5, -1, -6], [4, 4, 16]])
-    # TO update this.
-    # expAt = Matrix([
-    #     [(8*t*exp(12*t) + 5*exp(12*t) - 1)*exp(4*t)/4,
-    #      (8*t*exp(12*t) + 5*exp(12*t) - 5)*exp(4*t)/4,
-    #      (exp(12*t) - 1)*exp(4*t)/2],
-    #     [(-8*t*exp(12*t) - exp(12*t) + 1)*exp(4*t)/4,
-    #      (-8*t*exp(12*t) - exp(12*t) + 5)*exp(4*t)/4,
-    #      (-exp(12*t) + 1)*exp(4*t)/2],
-    #     [4*t*exp(16*t), 4*t*exp(16*t), exp(16*t)]])
-    expAt = Matrix([
-        [2*t*exp(16*t) + 5*exp(16*t)/4 - exp(4*t)/4, 2*t*exp(16*t) + 5*exp(16*t)/4 - 5*exp(4*t)/4,  exp(16*t)/2 - exp(4*t)/2],
-        [ -2*t*exp(16*t) - exp(16*t)/4 + exp(4*t)/4,  -2*t*exp(16*t) - exp(16*t)/4 + 5*exp(4*t)/4, -exp(16*t)/2 + exp(4*t)/2],
-        [                             4*t*exp(16*t),                                4*t*exp(16*t),                 exp(16*t)]
-        ])
-    assert matrix_exp(A, t) == expAt
-
-    A = Matrix([[1, 1, 0, 0],
-                [0, 1, 1, 0],
-                [0, 0, 1, -S(1)/8],
-                [0, 0, S(1)/2, S(1)/2]])
-    expAt = Matrix([
-        [exp(t), t*exp(t), 4*t*exp(3*t/4) + 8*t*exp(t) + 48*exp(3*t/4) - 48*exp(t),
-                            -2*t*exp(3*t/4) - 2*t*exp(t) - 16*exp(3*t/4) + 16*exp(t)],
-        [0, exp(t), -t*exp(3*t/4) - 8*exp(3*t/4) + 8*exp(t), t*exp(3*t/4)/2 + 2*exp(3*t/4) - 2*exp(t)],
-        [0, 0, t*exp(3*t/4)/4 + exp(3*t/4), -t*exp(3*t/4)/8],
-        [0, 0, t*exp(3*t/4)/2, -t*exp(3*t/4)/4 + exp(3*t/4)]
-        ])
-    assert matrix_exp(A, t) == expAt
-
-    A = Matrix([
-    [ 0, 1,  0, 0],
-    [-1, 0,  0, 0],
-    [ 0, 0,  0, 1],
-    [ 0, 0, -1, 0]])
-
-    expAt = Matrix([
-    [ cos(t), sin(t),         0,        0],
-    [-sin(t), cos(t),         0,        0],
-    [      0,      0,    cos(t),   sin(t)],
-    [      0,      0,   -sin(t),   cos(t)]])
-    assert matrix_exp(A, t) == expAt
-
-    A = Matrix([
-    [ 0, 1,  1, 0],
-    [-1, 0,  0, 1],
-    [ 0, 0,  0, 1],
-    [ 0, 0, -1, 0]])
-
-    expAt = Matrix([
-    [ cos(t), sin(t),  t*cos(t), t*sin(t)],
-    [-sin(t), cos(t), -t*sin(t), t*cos(t)],
-    [      0,      0,    cos(t),   sin(t)],
-    [      0,      0,   -sin(t),   cos(t)]])
-    assert matrix_exp(A, t) == expAt
-
-    # This case is unacceptably slow right now but should be solvable...
-    #a, b, c, d, e, f = symbols('a b c d e f')
-    #A = Matrix([
-    #[-a,  b,          c,  d],
-    #[ a, -b,          e,  0],
-    #[ 0,  0, -c - e - f,  0],
-    #[ 0,  0,          f, -d]])
-
-    A = Matrix([[0, I], [I, 0]])
-    expAt = Matrix([
-    [exp(I*t)/2 + exp(-I*t)/2, exp(I*t)/2 - exp(-I*t)/2],
-    [exp(I*t)/2 - exp(-I*t)/2, exp(I*t)/2 + exp(-I*t)/2]])
-    assert matrix_exp(A, t) == expAt
 
 
 @slow
