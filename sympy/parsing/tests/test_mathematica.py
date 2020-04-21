@@ -48,7 +48,15 @@ def test_mathematica():
         'Min[1,-2,3]': 'Min(1,-2,3)',
         'Exp[I Pi/2]': 'exp(I*pi/2)',
         'ArcTan[x,y]': 'atan2(y,x)',
-        'Pochhammer[x,y]': 'rf(x,y)'
+        'Pochhammer[x,y]': 'rf(x,y)',
+        'ExpIntegralEi[x]': 'Ei(x)',
+        'SinIntegral[x]': 'Si(x)',
+        'CosIntegral[x]': 'Ci(x)',
+        'AiryAi[x]': 'airyai(x)',
+        'AiryAiPrime[5]': 'airyaiprime(5)',
+        'AiryBi[x]' :'airybi(x)',
+        'AiryBiPrime[7]' :'airybiprime(7)',
+        'LogIntegral[4]':' li(4)',
         }
 
     for e in d:
