@@ -12,8 +12,7 @@ from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, _lambert
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
-    failing_assumptions
+    det_quick, det_perm, det_minor, _simple_dens, denoms
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1355,21 +1354,6 @@ def test_float_handling():
 def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
-    assert check_assumptions(1, x) == True
-    raises(AssertionError, lambda: check_assumptions(2*x, x, positive=True))
-    raises(TypeError, lambda: check_assumptions(1, 1))
-
-
-def test_failing_assumptions():
-    x = Symbol('x', real=True, positive=True)
-    y = Symbol('y')
-    assert failing_assumptions(6*x + y, **x.assumptions0) == \
-    {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
-    'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
-    'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
-    'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
-    'extended_nonpositive': None, 'extended_nonzero': None,
-    'extended_positive': None }
 
 
 def test_issue_6056():

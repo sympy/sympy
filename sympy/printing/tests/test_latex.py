@@ -102,6 +102,7 @@ def test_latex_basic():
     assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
     assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
         r"\frac{2 x}{3} \sqrt{2}"
+    assert latex(binomial(x, y)) == r"{\binom{x}{y}}"
 
     x_star = Symbol('x^*')
     f = Function('f')
