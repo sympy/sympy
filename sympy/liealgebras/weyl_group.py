@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .cartan_type import CartanType
 from mpmath import fac
 from sympy.core.backend import Matrix, eye, Rational, Basic, igcd
