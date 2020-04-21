@@ -440,7 +440,7 @@ def test_binomial():
     # issues 14529 and 14625
     assert binomial(x, z) == binomial(x, x) == 1
     assert binomial(x, 1) == binomial(x, x - 1) == x
-    assert binomial(x, 1.) == binomial(x, x - 1.) == 1.*x
+    assert binomial(x, 1.) == binomial(x, x - 1.) == x
     assert binomial(x + 1, x) == x + 1
 
     assert unchanged(binomial, x, -1)
