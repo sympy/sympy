@@ -49,7 +49,15 @@ class MathematicaParser(object):
         'Max[*x]': 'Max(*x)',
         'Min[*x]': 'Min(*x)',
         'Pochhammer[x,y]':'rf(x,y)',
-        'ArcTan[x,y]':'atan2(y,x)'
+        'ArcTan[x,y]':'atan2(y,x)',
+        'ExpIntegralEi[x]': 'Ei(x)',
+        'SinIntegral[x]': 'Si(x)',
+        'CosIntegral[x]': 'Ci(x)',
+        'AiryAi[x]': 'airyai(x)',
+        'AiryAiPrime[x]': 'airyaiprime(x)',
+        'AiryBi[x]' :'airybi(x)',
+        'AiryBiPrime[x]' :'airybiprime(x)',
+        'LogIntegral[x]':' li(x)',
     }
 
     # trigonometric, e.t.c.
