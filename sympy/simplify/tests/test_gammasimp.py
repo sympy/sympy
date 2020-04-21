@@ -1,5 +1,5 @@
 from sympy import (
-    Rational, gammasimp, factorial, gamma, binomial, multinomial, pi, S,
+    Rational, gammasimp, factorial, gamma, binomial, pi, S,
     sin, exp, powsimp, sqrt, simplify, symbols, cos, rf)
 
 from sympy.abc import x, y
@@ -32,8 +32,6 @@ def test_gammasimp():
     assert gammasimp(factorial(n + 2)) == gamma(n + 3)
     assert gammasimp(binomial(n, k)) == \
         gamma(n + 1)/(gamma(k + 1)*gamma(-k + n + 1))
-    assert gammasimp(multinomial(n, k, k)) == \
-        gamma(2*k + n + 1)/(gamma(k + 1)**2*gamma(n + 1))
     assert powsimp(gammasimp(
         gamma(x)*gamma(x + S.Half)*gamma(y)/gamma(x + y))) == \
         2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)

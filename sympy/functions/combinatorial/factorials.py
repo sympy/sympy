@@ -2,9 +2,9 @@ from typing import List
 
 from sympy.core import S, sympify, Mod
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, HAS_GMPY, ordered, as_int
+from sympy.core.compatibility import reduce, HAS_GMPY, as_int
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
-from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, Integer, pi
 from sympy.core.relational import Eq
