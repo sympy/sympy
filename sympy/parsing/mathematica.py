@@ -58,6 +58,9 @@ class MathematicaParser(object):
         'AiryBi[x]' :'airybi(x)',
         'AiryBiPrime[x]' :'airybiprime(x)',
         'LogIntegral[x]':' li(x)',
+        'PrimePi[x]': 'primepi(x)',
+        'Prime[x]': 'prime(x)',
+        'PrimeQ[x]': 'isprime(x)'
     }
 
     # trigonometric, e.t.c.
