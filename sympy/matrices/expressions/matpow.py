@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.matrices.common import NonSquareMatrixError
 from .matexpr import MatrixExpr, Identity
 from sympy.core import S

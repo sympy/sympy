@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from typing import Any
 import mpmath as mp
 
@@ -194,10 +192,10 @@ class MatrixReductions(MatrixDeterminant):
             # we need two cols to swap. It doesn't matter
             # how they were specified, so gather them together and
             # remove `None`
-            cols = set((col, k, col1, col2)).difference([None])
+            cols = {col, k, col1, col2}.difference([None])
             if len(cols) > 2:
                 # maybe the user left `k` by mistake?
-                cols = set((col, col1, col2)).difference([None])
+                cols = {col, col1, col2}.difference([None])
             if len(cols) != 2:
                 raise ValueError("For a {0} operation 'n<->m' you must provide the "
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
@@ -1033,7 +1031,7 @@ class MatrixBase(MatrixDeprecated,
                     cols = 1 if rows else 0
                 elif evaluate and all(ismat(i) for i in dat):
                     # a column as a list of matrices
-                    ncol = set(i.cols for i in dat if any(i.shape))
+                    ncol = {i.cols for i in dat if any(i.shape)}
                     if ncol:
                         if len(ncol) != 1:
                             raise ValueError('mismatched dimensions')
