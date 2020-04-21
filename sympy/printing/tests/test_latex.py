@@ -102,6 +102,14 @@ def test_latex_basic():
     assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
     assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
         r"\frac{2 x}{3} \sqrt{2}"
+    assert latex(binomial(x, y)) == r"{\binom{x}{y}}"
+
+    x_star = Symbol('x^*')
+    f = Function('f')
+    assert latex(x_star**2) == r"\left(x^{*}\right)^{2}"
+    assert latex(x_star**2, parenthesize_super=False) == r"{x^{*}}^{2}"
+    assert latex(Derivative(f(x_star), x_star,2)) == r"\frac{d^{2}}{d \left(x^{*}\right)^{2}} f{\left(x^{*} \right)}"
+    assert latex(Derivative(f(x_star), x_star,2), parenthesize_super=False) == r"\frac{d^{2}}{d {x^{*}}^{2}} f{\left(x^{*} \right)}"
 
     assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
@@ -1418,7 +1426,8 @@ def test_latex_Lambda():
         r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
         r"\left( \left( x, \  y\right) \mapsto x + 1 \right)"
-
+    assert latex(Lambda(x, x)) == \
+        r"\left( x \mapsto x \right)"
 
 def test_latex_PolyElement():
     Ruv, u, v = ring("u,v", ZZ)

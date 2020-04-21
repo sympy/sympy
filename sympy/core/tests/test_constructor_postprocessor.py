@@ -50,7 +50,7 @@ def test_constructor_postprocessors1():
     w = SymbolRemovesOtherSymbols("w")
     assert x*w == w
     assert (3*w).args == (3, w)
-    assert set((w + x).args) == set((x, w))
+    assert set((w + x).args) == {x, w}
 
 def test_constructor_postprocessors2():
     x = SubclassSymbolInMulOnce("x")
@@ -66,7 +66,7 @@ def test_constructor_postprocessors2():
     w = SubclassSymbolRemovesOtherSymbols("w")
     assert x*w == w
     assert (3*w).args == (3, w)
-    assert set((w + x).args) == set((x, w))
+    assert set((w + x).args) == {x, w}
 
 
 @XFAIL

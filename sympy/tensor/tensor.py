@@ -2084,8 +2084,18 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         return recursor(self, ())
 
     @staticmethod
-    def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
+    def _contract_and_permute_with_metric(metric, array, pos, dim):
+        # TODO: add possibility of metric after (spinors)
         from .array import tensorcontraction, tensorproduct, permutedims
+
+        array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
+        permu = list(range(dim))
+        permu[0], permu[pos] = permu[pos], permu[0]
+        return permutedims(array, permu)
+
+    @staticmethod
+    def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
+        from .array import permutedims
 
         index_types1 = [i.tensor_index_type for i in free_ind1]
 
@@ -2121,13 +2131,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
             raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
 
-        # TODO: add possibility of metric after (spinors)
-        def contract_and_permute(metric, array, pos):
-            array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
-            permu = list(range(len(free_ind1)))
-            permu[0], permu[pos] = permu[pos], permu[0]
-            return permutedims(array, permu)
-
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]  # type: TensorIndexType
@@ -2135,14 +2138,14 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
             metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
-            array = contract_and_permute(metric_inverse, array, pos)
+            array = TensExpr._contract_and_permute_with_metric(metric_inverse, array, pos, len(free_ind1))
         # Lower indices:
         for pos in pos2down:
             index_type_pos = index_types1[pos]  # type: TensorIndexType
             if index_type_pos not in replacement_dict:
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
-            array = contract_and_permute(metric, array, pos)
+            array = TensExpr._contract_and_permute_with_metric(metric, array, pos, len(free_ind1))
 
         if free_ind1:
             permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
@@ -2920,10 +2923,17 @@ class Tensor(TensExpr):
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
         if len(dum1) > 0:
+            indices1 = self.get_indices()
             indices2 = other.get_indices()
             repl = {}
             for p1, p2 in dum1:
                 repl[indices2[p2]] = -indices2[p1]
+                for pos in (p1, p2):
+                    if indices1[pos].is_up ^ indices2[pos].is_up:
+                        metric = replacement_dict[indices1[pos].tensor_index_type]
+                        if indices1[pos].is_up:
+                            metric = _TensorDataLazyEvaluator.inverse_matrix(metric)
+                        array = self._contract_and_permute_with_metric(metric, array, pos, len(indices2))
             other = other.xreplace(repl).doit()
             array = _TensorDataLazyEvaluator.data_contract_dum([array], dum1, len(indices2))
 

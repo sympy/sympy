@@ -585,9 +585,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B - 1 + degree_offset)))
     else:
-        monoms = tuple(itermonomials(V, A + B + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B + degree_offset)))
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -658,12 +658,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
-        for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
+        for poly, b in reversed(list(zip(ordered(irreducibles), B))):
             if poly.has(*V):
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
-        for poly, c in reversed(list(ordered(zip(atans, C)))):
+        for poly, c in reversed(list(zip(ordered(atans), C))):
             if poly.has(*V):
                 poly_coeffs.append(c)
                 atan_part.append(c * poly)
