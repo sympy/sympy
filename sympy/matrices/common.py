@@ -2118,6 +2118,10 @@ class MatrixOperations(MatrixRequired):
         >>> Matrix(_).subs(y, x)
         Matrix([[x]])
         """
+
+        if isinstance(args[0], zip):
+            args = (list(args[0]),)
+
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
     def trace(self):
