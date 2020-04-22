@@ -91,7 +91,23 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     >>> A1 * X.diff(t) + A0 * X - b == eqs_mat
     True
 
-    If the system of
+    If the system of equations has a maximum order greater than the
+    order of the system specified, a ODEOrderError exception is raised.
+
+    >>> eqs = [Eq(x(t).diff(t, 2), x(t).diff(t) + x(t)), Eq(y(t).diff(t), y(t) + x(t))]
+    >>> linear_ode_to_matrix(eqs, funcs, t, 1)
+    Traceback (most recent call last):
+    ...
+    ODEOrderError: Cannot represent system in 1-order form
+
+    If the system of equations is nonlinear, then ODENonlinearError is
+    raised.
+
+    >>> eqs = [Eq(x(t).diff(t), x(t) + y(t)), Eq(y(t).diff(t), y(t)**2 + x(t))]
+    >>> linear_ode_to_matrix(eqs, funcs, t, 1)
+    Traceback (most recent call last):
+    ...
+    ODENonlinearError: The system of ODEs is nonlinear.
 
     Parameters
     ==========
