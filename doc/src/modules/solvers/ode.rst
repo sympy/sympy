@@ -285,6 +285,18 @@ Linear, 3 equations, Order 1, Type 4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type4
 
+Linear ODE to matrix
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.linear_ode_to_matrix
+
+Matrix Exponential Jordan Form
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.matrix_exp_jordan_form
+
+Matrix Exponential
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.matrix_exp
+
 Linear, n equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems._neq_linear_first_order_const_coeff_homogeneous

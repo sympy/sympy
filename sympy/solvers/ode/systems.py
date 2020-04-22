@@ -9,7 +9,7 @@ from sympy.simplify import simplify, collect
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
-from sympy.utilities.iterables import ordered, uniq
+from sympy.utilities.iterables import uniq
 
 
 def _get_func_order(eqs, funcs):
@@ -461,7 +461,6 @@ def _neq_linear_first_order_const_coeff_homogeneous(match_):
     # collect function doesn't work properly for exponentials with rational exponents
     # To handle this issue, a workaround is added here
     # https://github.com/sympy/sympy/issues/19149
-
     exps = [s.atoms(exp) for s in sol_vector]
     reps = [{collect(e, [e]): e for e in expr} for expr in exps]
     sol_vector = [collect(s, expr, exact=True).subs(rep) for s, rep, expr in zip(sol_vector, reps, exps)]
