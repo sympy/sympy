@@ -1012,4 +1012,3 @@ def test_issue_10589():
     M2 = Matrix([[x, x, x, x, x], [x, x, x, x, x], [x, x, x, x, x]])
     M2 = M2.subs(zip([x], [1]))
     assert M2 == Matrix([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
-
