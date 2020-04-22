@@ -424,10 +424,11 @@ def test_sysode_linear_neq_order1():
 
     # There is a problem with collect splitting rationals from the exponent:
     # https://github.com/sympy/sympy/issues/19149
-    sol6 = [Eq(x(t), (C3 + C4*t)*exp(t) + (4*C1 + 4*C2*t + 48*C2)*exp(t)**Rational(3,4)),
-            Eq(y(t), C4*exp(t) + (-C1 - C2*t - 8*C2)*exp(t)**Rational(3,4)),
-            Eq(z(t), (C1/4 + C2*t/4 + C2)*exp(t)**Rational(3,4)),
-            Eq(w(t), (C1/2 + C2*t/2)*exp(t)**Rational(3,4))]
+    # A workaround is added in systems.py
+    sol6 = [Eq(x(t), (C3 + C4*t)*exp(t) + (4*C1 + 4*C2*t + 48*C2)*exp(3*t/4)),
+            Eq(y(t), C4*exp(t) + (-C1 - C2*t - 8*C2)*exp(3*t/4)),
+            Eq(z(t), (C1/4 + C2*t/4 + C2)*exp(3*t/4)),
+            Eq(w(t), (C1/2 + C2*t/2)*exp(3*t/4))]
 
     assert dsolve(eq6) == sol6
     assert checksysodesol(eq6, sol6) == (True, [0, 0, 0, 0])
@@ -573,10 +574,13 @@ def test_sysode_linear_neq_order1():
     assert dsolve(eq22) == sol22
     assert checksysodesol(eq22, sol22) == (True, [0, 0])
 
+    # There is a problem with collect splitting rationals from the exponent:
+    # https://github.com/sympy/sympy/issues/19149
+    # A workaround is added in systems.py
     eq23 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
     sol23 = [Eq(x(t), (C1*cos(sqrt(7)*t/2)/4 - C2*sin(sqrt(7)*t/2)/4 + sqrt(7)*(C1*sin(sqrt(7)*t/2)
-            + C2*cos(sqrt(7)*t/2))/4)*exp(t)**Rational(3,2)),
-            Eq(y(t), (C1*cos(sqrt(7)*t/2) - C2*sin(sqrt(7)*t/2))*exp(t)**Rational(3,2))]
+                        + C2*cos(sqrt(7)*t/2))/4)*exp(3*t/2)),
+            Eq(y(t), (C1*cos(sqrt(7)*t/2) - C2*sin(sqrt(7)*t/2))*exp(3*t/2))]
 
     assert dsolve(eq23) == sol23
     assert checksysodesol(eq23, sol23) == (True, [0, 0])
