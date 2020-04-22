@@ -450,7 +450,9 @@ def _neq_linear_first_order_const_coeff_homogeneous(match_):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
+    # This needs to be modified in future so that fc is only of type Matrix
     M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
     P, J = matrix_exp_jordan_form(M, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))

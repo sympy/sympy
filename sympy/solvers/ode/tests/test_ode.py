@@ -1342,9 +1342,10 @@ def test_solve_ics():
 
     # Test cases where dsolve returns two solutions.
     eq = (x**2*f(x)**2 - x).diff(x)
-    sol = [Eq(f(x), -sqrt(C1 + x)/x), Eq(f(x), sqrt(C1 + x)/x)]
-    assert dsolve(eq) == sol
-    assert checksysodesol(eq, sol) == (True, [0])
+    assert dsolve(eq, f(x), ics={f(1): 0}) == [Eq(f(x),
+        -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
+    assert dsolve(eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
+        -sqrt(x - S.Half)/x), Eq(f(x), sqrt(x - S.Half)/x)]
 
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     assert dsolve(eq, f(x),
