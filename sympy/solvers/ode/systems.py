@@ -37,8 +37,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math::
-        A_1 X' + A_0 X = b
+    .. math:: A_1 X' + A_0 X = b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -46,8 +45,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Higher-order systems are represented with additional matrices e.g. a
     second-order system would look like
 
-    .. math::
-        A_2 X'' + A_1 X' + A_0 X = b
+    .. math:: A_2 X'' + A_1 X' + A_0 X = b
 
     Examples
     ========
@@ -182,7 +180,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
 def matrix_exp(A, t):
     r"""
-    Matrix exponential $\exp(A*t)$ for the matrix *A* and scalar *t*.
+    Matrix exponential $\exp(A*t)$ for the matrix ``A`` and scalar ``t``.
 
     Explanation
     ===========
@@ -190,26 +188,22 @@ def matrix_exp(A, t):
     This functions returns the $\exp(A*t)$ by doing a simple
     matrix multiplication:
 
-    .. math::
-        \exp(A*t) = P * expJ * P^{-1}
+    .. math:: \exp(A*t) = P * expJ * P^{-1}
 
     where $expJ$ is $\exp(J*t)$. $J$ is the Jordan normal
     form of $A$ and $P$ is matrix such that:
 
-    .. math::
-        A = P * J * P^{-1}
+    .. math:: A = P * J * P^{-1}
 
     The matrix exponential $\exp(A*t)$ appears in the solution of linear
     differential equations. For example if $x$ is a vector and $A$ is a matrix
     then the initial value problem
 
-    .. math::
-        \frac{dx(t)}{dt} = A \times x(t),   x(0) = x0
+    .. math:: \frac{dx(t)}{dt} = A \times x(t),   x(0) = x0
 
     has the unique solution
 
-    .. math::
-        x(t) = \exp(A t) x0
+    .. math:: x(t) = \exp(A t) x0
 
     Examples
     ========
@@ -219,6 +213,7 @@ def matrix_exp(A, t):
     >>> t = Symbol('t')
 
     We will consider a 2x2 matrix for comupting the exponential
+
     >>> A = Matrix([[2, -5], [2, -4]])
     >>> pprint(A)
     [2  -5]
@@ -226,6 +221,7 @@ def matrix_exp(A, t):
     [2  -4]
 
     Now, exp(A*t) is given as follows:
+
     >>> pprint(matrix_exp(A, t))
     [   -t           -t                    -t              ]
     [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
