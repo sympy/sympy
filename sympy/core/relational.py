@@ -1,13 +1,11 @@
 from typing import Dict, Type, Union
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-from .basic import S
-from .add import _unevaluated_Add, Add
 from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
 from .evalf import EvalfMixin
+from .logic import fuzzy_not
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 
@@ -503,8 +501,8 @@ class Equality(Relational):
         return _sympify(lhs == rhs)
 
     def _eval_rewrite_as_Add(self, *args, **kwargs):
-        from .add import _unevaluated_Add, Add
-        """return Eq(L, R) as L - R. To control the evaluation of
+        """
+        return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
         if `evaluate=None` then terms in L and R will not cancel
         but they will be listed in canonical order; otherwise
@@ -523,6 +521,7 @@ class Equality(Relational):
         >>> eq.rewrite(Add, evaluate=False).args
         (b, x, b, -x)
         """
+        from .add import _unevaluated_Add, Add
         L, R = args
         evaluate = kwargs.get('evaluate', True)
         if evaluate:
@@ -1065,77 +1064,58 @@ def fuzzy_resolve(lhs, rhs, op, cls):
         return val
 
 
-def fuzzy_not(val):
-    if val is None:
-        return val
+def is_lt(lhs, rhs):
+    if lhs.is_extended_real and rhs.is_extended_real:
+        eval_str = "_eval_is_ge"
     else:
-        return not val
+        eval_str = "_eval_is_lt"
+    return _eval_cmp(lhs, rhs, eval_str, True, lambda a, b: cmp(a, b, "<"))
 
 
+def is_le(lhs, rhs):
+    return _eval_cmp(lhs, rhs, "_eval_is_gt", True, lambda a, b: cmp(a, b, "<="))
 
-def eval_dispatch(lhs, rhs, op):
+
+def is_gt(lhs, rhs):
+    return _eval_cmp(lhs, rhs, "_eval_is_gt", False, lambda a, b: cmp(a, b, ">"))
+
+
+def is_ge(lhs, rhs):
+    return _eval_cmp(lhs, rhs, "_eval_is_ge", False, lambda a, b: cmp(a, b, ">="))
+
+
+def is_eq(lhs, rhs):
+    return _eval_cmp(lhs, rhs, "_eval_Eq", False, lambda a, b: _cmp_eq(a, b))
+
+
+def is_neq(lhs, rhs):
+    return _eval_cmp(lhs, rhs, "_eval_Eq", True, lambda a, b: fuzzy_not(_cmp_eq(a, b)))
+
+
+def _eval_cmp(lhs, rhs, op, negate_op, basic_cmp):
     """
-    Dipatches to the appropriate equality operator on Expr/Basic
-    objects.
+    Evaluates eval_dispatch with an argument of op. If op returns None, then uses basic_cmp(lhs, rhs).
+    Negates eval_dispatch
+
     """
-    # if one of the either the lhs, or the rhs has an _eval_is_X method
-    # return the result, otherwise do nothing
+    retval = _eval_dispatch(lhs, rhs, op)
+    if negate_op:
+        retval = fuzzy_not(retval)
+
+    if retval is None:
+        retval = basic_cmp(lhs, rhs)
+
+    return retval
+
+
+def _eval_dispatch(lhs, rhs, eval_str):
     retval = None
-    eval_str = "_eval_"
-    negate_op = False
-    if op == "<":
-        eval_str = eval_str + "is_ge"
-        negate_op = True
-    elif op == ">":
-        eval_str = eval_str + "is_gt"
-    elif op == "<=":
-        eval_str = eval_str + "is_gt"
-        negate_op = True
-    elif op == ">=":
-        eval_str = eval_str + "is_ge"
-    elif op == "=":
-        eval_str = eval_str + "Eq"
-    elif op == "!=":
-        eval_str = eval_str + "Eq"
-        negate_op = True
-
     if hasattr(lhs, eval_str):
         retval = getattr(lhs, eval_str)(rhs)
     elif hasattr(rhs, eval_str):
         retval = getattr(rhs, eval_str)(lhs)
 
-    # ensure that we are out of boolean atoms
-    if isinstance(retval, BooleanAtom):
-        retval = retval is S.true
-
-    if negate_op:
-        return fuzzy_not(retval)
-    else:
-        return retval
-
-
-def is_neq(lhs, rhs):
-    return cmp(lhs, rhs, "!=")
-
-
-def is_lt(lhs, rhs):
-    return cmp(lhs, rhs, "<")
-
-
-def is_le(lhs, rhs):
-    return cmp(lhs, rhs, "<=")
-
-
-def is_gt(lhs, rhs):
-    return cmp(lhs, rhs, ">")
-
-
-def is_ge(lhs, rhs):
-    return cmp(lhs, rhs, ">=")
-
-
-def is_eq(lhs, rhs):
-    return cmp(lhs, rhs, "=")
+    return retval
 
 
 
@@ -1143,10 +1123,6 @@ def cmp(lhs, rhs, op):
     """
     Returns Fuzzy-Valued (True, False,None) truth-values, of a lhs and a rhs.
     None-means that lhs cannot be compared against lhs.
-
-    To Override the default comparison, implement _eval_is_X, except for Equality which should override
-    _eval_Eq, for legacy reasons
-    Assumes, lhs and rhs are sympified
 
     Examples:
     >>> from sympy.core.relational import cmp
@@ -1178,21 +1154,7 @@ def cmp(lhs, rhs, op):
     >>> cmp(three,two, ">") is True
 
     """
-    assert op in ("<", ">", "<=", ">=", "=",'!=')
-
-    retval = eval_dispatch(lhs, rhs, op)
-    # if it's not none then the object knew how to evaluate themselves
-    # hence, we can stop trying
-    if retval is not None:
-        return retval
-
-    # if the operation is equality, then return the results of equality
-    if op == "=":
-        return _cmp_eq(lhs, rhs)
-
-    # if the operation is inequality, then return the results of equality, negated
-    elif op == '!=':
-        return fuzzy_not(_cmp_eq(lhs, rhs))
+    assert op in ("<", ">", "<=", ">=")
 
     for me in (lhs, rhs):
         if me.is_extended_real is False:

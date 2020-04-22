@@ -2,7 +2,6 @@ import numbers
 import decimal
 import fractions
 import math
-import operator
 import re as regex
 
 from .containers import Tuple
