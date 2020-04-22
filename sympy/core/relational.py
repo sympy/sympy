@@ -294,7 +294,7 @@ class Relational(Boolean, EvalfMixin):
                 return left
 
     def _eval_simplify(self, **kwargs):
-        from .add import _unevaluated_Add, Add
+        from .add import Add
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:

@@ -354,7 +354,6 @@ class Expr(Basic, EvalfMixin):
         return self._cmp(other, StrictLessThan)
 
     def _cmp(self, other, cls):
-        from .relational import Relational
         try:
             other = _sympify(other)
         except SympifyError:
