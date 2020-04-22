@@ -1,5 +1,4 @@
 '''Functions returning normal forms of matrices'''
-from __future__ import division, print_function
 
 from sympy.matrices.dense import diag, zeros
 

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
