@@ -3323,17 +3323,30 @@ def test_issue_15669():
         2*2**Rational(4, 5)*x*(-x**2 + sqrt(8*x**2 + (x**2 - 2)**2) + 2)**Rational(3, 5) + 10*x)
     assert factor(expr, deep=True) == x*(x**2 + 2)
 
+
 def test_issue_17988():
     x = Symbol('x')
     p = poly(x - 1)
     M = Matrix([[poly(x + 1), poly(x + 1)]])
     assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
 
+
 def test_issue_18205():
     assert cancel((2 + I)*(3 - I)) == 7 + I
     assert cancel((2 + I)*(2 - I)) == 5
+
 
 def test_issue_8695():
     p = (x**2 + 1) * (x - 1)**2 * (x - 2)**3 * (x - 3)**3
     result = (1, [(x**2 + 1, 1), (x - 1, 2), (x**2 - 5*x + 6, 3)])
     assert sqf_list(p) == result
+
+
+def test_issue_19113():
+    eq = sin(x)**3 - sin(x) + 1
+    raises(PolynomialError, lambda: refine_root(eq, 1, 2, 1e-2))
+    raises(PolynomialError, lambda: count_roots(eq, -1, 1))
+    raises(PolynomialError, lambda: real_roots(eq))
+    raises(PolynomialError, lambda: nroots(eq))
+    raises(PolynomialError, lambda: ground_roots(eq))
+    raises(PolynomialError, lambda: nth_power_roots_poly(eq, 2))

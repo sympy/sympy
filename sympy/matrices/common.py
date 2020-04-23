@@ -4,8 +4,6 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import division, print_function
-
 from sympy.core.logic import FuzzyBool
 
 from collections import defaultdict
@@ -53,7 +51,7 @@ class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
     pass
 
 
-class MatrixRequired(object):
+class MatrixRequired:
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
     rows = None  # type: int
@@ -2612,7 +2610,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
     _diff_wrt = True  # type: bool
 
 
-class _MinimalMatrix(object):
+class _MinimalMatrix:
     """Class providing the minimum functionality
     for a matrix-like object and implementing every method
     required for a `MatrixRequired`.  This class does not have everything
@@ -2723,7 +2721,7 @@ class _CastableMatrix: # this is needed here ONLY FOR TESTS.
         return self
 
 
-class _MatrixWrapper(object):
+class _MatrixWrapper:
     """Wrapper class providing the minimum functionality for a matrix-like
     object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
     math operations should work on matrix-like objects. This one is intended for

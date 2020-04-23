@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
-
 from sympy import And, Gt, Lt, Abs, Dummy, oo, Tuple, Symbol
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, CodeBlock, Declaration, FunctionDefinition,
@@ -62,7 +60,7 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
     delta_expr = -expr/expr.diff(wrt)
     whl_bdy = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
     if debug:
-        prnt = Print([wrt, delta], r"{0}=%12.5g {1}=%12.5g\n".format(wrt.name, name_d))
+        prnt = Print([wrt, delta], r"{}=%12.5g {}=%12.5g\n".format(wrt.name, name_d))
         whl_bdy = [whl_bdy[0], prnt] + whl_bdy[1:]
     req = Gt(Abs(delta), atol)
     declars = [Declaration(Variable(delta, type=real, value=oo))]
@@ -139,7 +137,7 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     algo = newtons_method(expr, wrt, delta=delta, **kwargs).xreplace(pointer_subs)
     if isinstance(algo, Scope):
         algo = algo.body
-    not_in_params = expr.free_symbols.difference(set(_symbol_of(p) for p in params))
+    not_in_params = expr.free_symbols.difference({_symbol_of(p) for p in params})
     if not_in_params:
         raise ValueError("Missing symbols in params: %s" % ', '.join(map(str, not_in_params)))
     declars = tuple(Variable(p, real) for p in params)

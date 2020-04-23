@@ -100,8 +100,8 @@ def test_dsolve_ics():
         dsolve(f(x).diff(x) - sqrt(f(x)), ics={f(1):1})
 
 
-@XFAIL
 @slow
+@XFAIL
 def test_nonlinear_3eq_order1_type1():
     if ON_TRAVIS:
         skip("Too slow for travis.")
@@ -1908,12 +1908,9 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol4 = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
     sol5 = Eq(f(x), C1*exp(x/2) + C2*exp(x*Rational(4, 3)))
     sol6 = Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(x*(-sqrt(2) - 1)))
-    sol7 = Eq(f(x),
-        C1*exp(3*x) + C2*exp(x*(-2 - sqrt(2))) + C3*exp(x*(-2 + sqrt(2))))
+    sol7 = Eq(f(x), C3*exp(3*x) + (C1*exp(-sqrt(2)*x) + C2*exp(sqrt(2)*x))*exp(-2*x))
     sol8 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
-    sol9 = Eq(f(x),
-        C1*exp(x) + C2*exp(-x) + C3*exp(x*(-2 + sqrt(2))) +
-        C4*exp(x*(-2 - sqrt(2))))
+    sol9 = Eq(f(x), C3*exp(-x) + C4*exp(x) + (C1*exp(-sqrt(2)*x) + C2*exp(sqrt(2)*x))*exp(-2*x))
     sol10 = Eq(f(x),
         C1*sin(x*sqrt(a)) + C2*cos(x*sqrt(a)) + C3*exp(x*sqrt(a)) +
         C4*exp(-x*sqrt(a)))
@@ -1923,7 +1920,7 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
     sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))
-    sol16 = Eq(f(x), (C1 + C2*x + C3*x**2)*exp(2*x))
+    sol16 = Eq(f(x), (C1 + x*(C2 + C3*x))*exp(2*x))
     sol17 = Eq(f(x), (C1 + C2*x)*exp(a*x))
     sol18 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
     sol19 = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
@@ -1981,16 +1978,19 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert dsolve(eq4) in (sol4, sol4s)
     assert dsolve(eq5) in (sol5, sol5s)
     assert dsolve(eq6) in (sol6, sol6s)
-    assert dsolve(eq7) in (sol7, sol7s)
+    got = dsolve(eq7)
+    assert got in (sol7, sol7s), got
     assert dsolve(eq8) in (sol8, sol8s)
-    assert dsolve(eq9) in (sol9, sol9s)
+    got = dsolve(eq9)
+    assert got in (sol9, sol9s), got
     assert dsolve(eq10) in (sol10, sol10s)
     assert dsolve(eq11) in (sol11, sol11s)
     assert dsolve(eq12) in (sol12, sol12s)
     assert dsolve(eq13) in (sol13, sol13s)
     assert dsolve(eq14) in (sol14, sol14s)
     assert dsolve(eq15) in (sol15, sol15s)
-    assert dsolve(eq16) in (sol16, sol16s)
+    got = dsolve(eq16)
+    assert got in (sol16, sol16s), got
     assert dsolve(eq17) in (sol17, sol17s)
     assert dsolve(eq18) in (sol18, sol18s)
     assert dsolve(eq19) in (sol19, sol19s)
@@ -2091,12 +2091,11 @@ def test_nth_linear_constant_coeff_homogeneous_rootof():
     # Five double roots (this is (x**5 - x + 1)**2)
     eq = f(x).diff(x, 10) - 2*f(x).diff(x, 6) + 2*f(x).diff(x, 5) + f(x).diff(x, 2) - 2*f(x).diff(x, 1) + f(x)
     r1, r2, r3, r4, r5 = [rootof(x**5 - x + 1, n) for n in range(5)]
-    sol = Eq(f(x),
-              (C1 + C2 *x)*exp(r1*x)
-            + exp(re(r2)*x) * ((C3 + C4*x)*sin(im(r2)*x) + (C5 + C6 *x)*cos(im(r2)*x))
-            + exp(re(r4)*x) * ((C7 + C8*x)*sin(im(r4)*x) + (C9 + C10*x)*cos(im(r4)*x))
-            )
-    assert dsolve(eq) == sol
+    sol = Eq(f(x), (C1 + C2*x)*exp(x*r1) + (C10*sin(x*im(r4)) + C7*x*sin(x*im(r4)) + (
+        C8 + C9*x)*cos(x*im(r4)))*exp(x*re(r4)) + (C3*x*sin(x*im(r2)) + C6*sin(x*im(r2)
+        ) + (C4 + C5*x)*cos(x*im(r2)))*exp(x*re(r2)))
+    got = dsolve(eq)
+    assert sol == got, got
     # FIXME: assert checkodesol(eq, sol) == (True, [0])  # Hangs...
 
 
@@ -2318,9 +2317,8 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     # sin(2*x)*sin(x), skip 3127 for now, match bug
     eq27 = f2 + f(x) - cos(x)/2 + cos(3*x)/2
     eq28 = f(x).diff(x) - 1
-    sol1 = Eq(f(x),
-        -1 - x + (C1 + C2*x - 3*x**2/32 - x**3/24)*exp(-x) + C3*exp(x/3))
-    sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
+    sol1 = Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x**2/24 - 3*x/32))*exp(-x) - 1)
+    sol2 = Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x/8))*exp(-x) - 1)
     sol3 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol4 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
     sol5 = Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + exp(I*x)/10 - 3*I*exp(I*x)/10)
@@ -2337,18 +2335,17 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol14 = Eq(f(x), C1 - x - sin(2*x)/5 - cos(2*x)/10 + x**2/2 + C2*exp(-x))
     sol15 = Eq(f(x), (C1 + x)*sin(x) + (C2 - x**2)*cos(x))
     sol16 = Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))
-    sol17 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
-    sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 - x**5/60 + x**3/3)*exp(-x))
+    sol17 = Eq(f(x), (C1 + x*(C2 + x**3/12))*exp(-x))
+    sol18 = Eq(f(x), (C1 + x*(C2 + x*(C3 - x**3/60 + x/3)))*exp(-x))
     sol19 = Eq(f(x), Rational(7, 4) - x*Rational(3, 2) + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
     sol20 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol21 = Eq(f(x), Rational(-1, 36) - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
     sol22 = Eq(f(x), C1*sin(x) + (C2 - x/2)*cos(x) + exp(-x)/2)
-    sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
+    sol23 = Eq(f(x), (C1 + x*(C2 + x*(C3 + x/6)))*exp(x))
     sol24 = Eq(f(x), S.Half - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
     sol25 = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) +
                (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)
-    sol26 = Eq(f(x),
-        C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
+    sol26 = Eq(f(x), C1 + x**2 + (C2 + x*(C3 - x/8))*sin(x) + (C4 + x*(C5 + x/8))*cos(x))
     sol27 = Eq(f(x), cos(3*x)/16 + C1*cos(x) + (C2 + x/4)*sin(x))
     sol28 = Eq(f(x), C1 + x)
     sol1s = constant_renumber(sol1)
@@ -2378,8 +2375,10 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol25s = constant_renumber(sol25)
     sol26s = constant_renumber(sol26)
     sol27s = constant_renumber(sol27)
-    assert dsolve(eq1, hint=hint) in (sol1, sol1s)
-    assert dsolve(eq2, hint=hint) in (sol2, sol2s)
+    got = dsolve(eq1, hint=hint)
+    assert got in (sol1, sol1s), got
+    got = dsolve(eq2, hint=hint)
+    assert got in (sol2, sol2s), got
     assert dsolve(eq3, hint=hint) in (sol3, sol3s)
     assert dsolve(eq4, hint=hint) in (sol4, sol4s)
     assert dsolve(eq5, hint=hint) in (sol5, sol5s)
@@ -2394,16 +2393,21 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert dsolve(eq14, hint=hint) in (sol14, sol14s)
     assert dsolve(eq15, hint=hint) in (sol15, sol15s)
     assert dsolve(eq16, hint=hint) in (sol16, sol16s)
-    assert dsolve(eq17, hint=hint) in (sol17, sol17s)
-    assert dsolve(eq18, hint=hint) in (sol18, sol18s)
+    got = dsolve(eq17, hint=hint)
+    assert got in (sol17, sol17s), got
+    got = dsolve(eq18, hint=hint)
+    assert got in (sol18, sol18s), got
     assert dsolve(eq19, hint=hint) in (sol19, sol19s)
     assert dsolve(eq20, hint=hint) in (sol20, sol20s)
     assert dsolve(eq21, hint=hint) in (sol21, sol21s)
     assert dsolve(eq22, hint=hint) in (sol22, sol22s)
-    assert dsolve(eq23, hint=hint) in (sol23, sol23s)
+    got = dsolve(eq23, hint=hint)
+    assert got in (sol23, sol23s), got
     assert dsolve(eq24, hint=hint) in (sol24, sol24s)
-    assert dsolve(eq25, hint=hint) in (sol25, sol25s)
-    assert dsolve(eq26, hint=hint) in (sol26, sol26s)
+    got = dsolve(eq25, hint=hint)
+    assert got in (sol25, sol25s), got
+    got = dsolve(eq26, hint=hint)
+    assert got in (sol26, sol26s), got
     assert dsolve(eq27, hint=hint) in (sol27, sol27s)
     assert dsolve(eq28, hint=hint) == sol28
     assert checkodesol(eq1, sol1, order=3, solve_for_func=False)[0]
@@ -2493,16 +2497,15 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     eq10 = f2 + 2*f(x).diff(x) + f(x) - exp(-x)/x
     eq11 = f2 + f(x) - 1/sin(x)*1/cos(x)
     eq12 = f(x).diff(x, 4) - 1/x
-    sol1 = Eq(f(x),
-        -1 - x + (C1 + C2*x - 3*x**2/32 - x**3/24)*exp(-x) + C3*exp(x/3))
-    sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
+    sol1 = Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x**2/24 - 3*x/32))*exp(-x) - 1)
+    sol2 = Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x/8))*exp(-x) - 1)
     sol3 = Eq(f(x), C1 + x)
     sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
     sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
-    sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
+    sol7 = Eq(f(x), (C1 + x*(C2 + x**3/12))*exp(-x))
     sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
-    sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
+    sol9 = Eq(f(x), (C1 + x*(C2 + x*(C3 + x/6)))*exp(x))
     sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
     sol11 = Eq(f(x), (C1 + log(sin(x) - 1)/2 - log(sin(x) + 1)/2
         )*cos(x) + (C2 + log(cos(x) - 1)/2 - log(cos(x) + 1)/2)*sin(x))
@@ -2519,15 +2522,19 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol10s = constant_renumber(sol10)
     sol11s = constant_renumber(sol11)
     sol12s = constant_renumber(sol12)
-    assert dsolve(eq1, hint=hint) in (sol1, sol1s)
-    assert dsolve(eq2, hint=hint) in (sol2, sol2s)
+    got = dsolve(eq1, hint=hint)
+    assert got in (sol1, sol1s), got
+    got = dsolve(eq2, hint=hint)
+    assert got in (sol2, sol2s), got
     assert dsolve(eq3, hint=hint) in (sol3, sol3s)
     assert dsolve(eq4, hint=hint) in (sol4, sol4s)
     assert dsolve(eq5, hint=hint) in (sol5, sol5s)
     assert dsolve(eq6, hint=hint) in (sol6, sol6s)
-    assert dsolve(eq7, hint=hint) in (sol7, sol7s)
+    got = dsolve(eq7, hint=hint)
+    assert got in (sol7, sol7s), got
     assert dsolve(eq8, hint=hint) in (sol8, sol8s)
-    assert dsolve(eq9, hint=hint) in (sol9, sol9s)
+    got = dsolve(eq9, hint=hint)
+    assert got in (sol9, sol9s), got
     assert dsolve(eq10, hint=hint) in (sol10, sol10s)
     assert dsolve(eq11, hint=hint + '_Integral').doit() in (sol11, sol11s)
     assert dsolve(eq12, hint=hint) in (sol12, sol12s)
@@ -2766,6 +2773,43 @@ def test_separable_reduced():
     sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
     assert sol == Eq(log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2, C1 + log(x))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x**(S(2)/3)*f(x))**2), 0)
+    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
+    assert sol == Eq(-3*log(x**(S(2)/3)*f(x)) + 3*log(3*x**(S(4)/3)*f(x)**2 + 1)/2, C1 + log(x))
+    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x*f(x))**2), 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x)),\
+                   Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x))]
+    assert checkodesol(eq, sol) == [(True, 0)]*2
+
+    eq = Eq(f(x).diff(x) + (x**4*f(x)**2 + x**2*f(x))*f(x)/(x*(x**6*f(x)**3 + x**4*f(x)**2)), 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == Eq(f(x), C1 + 1/(2*x**2))
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + (f(x)**2)*f(x)/(x), 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/2),\
+                  Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/2)]
+    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
+
+    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/(x*(f(x)+2)), 0)
+    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
+    assert sol == Eq(-log(f(x) + 3)/3 - 2*log(f(x))/3, C1 + log(x))
+    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/x, 0)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol == Eq(f(x), 3/(C1*x**3 - 1))
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0)
+    sol = dsolve(eq, hint='separable_reduced', simplify=False)
+    assert sol == Eq(-log(f(x) + 1) + log(f(x)) + 1/f(x), C1 + log(x))
+    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
 
 
 def test_homogeneous_function():
@@ -3616,8 +3660,9 @@ def test_issue_5096():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) - f(x) - exp(x - 1)
-    sol = Eq(f(x), C1*exp(-x) + C2*exp(x) + x*exp(x - 1)/2)
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    sol = Eq(f(x), C2*exp(-x) + (C1 + x*exp(-1)/2)*exp(x))
+    got = dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
+    assert sol == got, got
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2)+f(x)-(sin(x-2)+1)
@@ -3638,13 +3683,15 @@ def test_issue_5096():
 
 def test_issue_15996():
     eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
-    sol = Eq(f(x), C1 + x**2 + (C2 - x**2/8 + x*(C3 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x))*sin(x) + (C4 + I*x**2/8 + x*(C5 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x))*cos(x) - I*exp(I*x))
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    sol = Eq(f(x), C1 + x**2 + (C2 + x*(C3 - x/8 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x))*sin(x) + (C4 + x*(C5 + I*x/8 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x))*cos(x) - I*exp(I*x))
+    got = dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert sol == got, got
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x)
-    sol = Eq(f(x), C1 + (C2 + C3*x - x**2/8 + 5*exp(2*I*x)/16)*sin(x) + (C4 + C5*x + I*x**2/8 + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    sol = Eq(f(x), C1 + (C2 + x*(C3 - x/8) + 5*exp(2*I*x)/16)*sin(x) + (C4 + x*(C5 + I*x/8) + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
+    got = dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
+    assert sol == got, got
     assert checkodesol(eq, sol) == (True, 0)
 
 

@@ -79,7 +79,7 @@ From this directory, start Python and:
     >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
     >>> e = 1/cos(x)
-    >>> print e.series(x, 0, 10)
+    >>> print(e.series(x, 0, 10))
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 SymPy also comes with a console that is a simple wrapper around the

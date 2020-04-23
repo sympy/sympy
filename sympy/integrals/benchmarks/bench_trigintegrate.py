@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Symbol, sin
 from sympy.integrals.trigonometry import trigintegrate
 

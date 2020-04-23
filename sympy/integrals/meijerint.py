@@ -25,7 +25,6 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
-from __future__ import print_function, division
 
 from typing import Dict, Tuple
 
@@ -372,7 +371,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
+    return {e.func for e in expr.atoms(Function) if x in e.free_symbols}
 
 
 def _find_splitting_points(expr, x):

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.numbers import Integer, Rational, integer_nthroot, igcd
 from sympy import S, pi, oo
 

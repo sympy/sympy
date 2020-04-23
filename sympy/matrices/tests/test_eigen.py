@@ -463,7 +463,7 @@ def test_singular_values():
     A[2, 2] = 5
     vals = A.singular_values()
     # since Abs(x) cannot be sorted, test set equality
-    assert set(vals) == set([5, 1, Abs(x)])
+    assert set(vals) == {5, 1, Abs(x)}
 
     A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
     vals = [sv.trigsimp() for sv in A.singular_values()]

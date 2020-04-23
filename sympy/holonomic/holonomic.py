@@ -3,8 +3,6 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from __future__ import print_function, division
-
 from sympy import (Symbol, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
 from sympy.core.compatibility import ordered
@@ -66,7 +64,7 @@ def DifferentialOperators(base, generator):
     return (ring, ring.derivative_operator)
 
 
-class DifferentialOperatorAlgebra(object):
+class DifferentialOperatorAlgebra:
     r"""
     An Ore Algebra is a set of noncommutative polynomials in the
     intermediate ``Dx`` and coefficients in a base polynomial ring :math:`A`.
@@ -136,7 +134,7 @@ class DifferentialOperatorAlgebra(object):
             return False
 
 
-class DifferentialOperator(object):
+class DifferentialOperator:
     """
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the
@@ -373,7 +371,7 @@ class DifferentialOperator(object):
         return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
 
-class HolonomicFunction(object):
+class HolonomicFunction:
     r"""
     A Holonomic Function is a solution to a linear homogeneous ordinary
     differential equation with polynomial coefficients. This differential

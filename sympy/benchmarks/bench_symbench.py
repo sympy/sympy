@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function, division
-
 from random import random
 from sympy import factor, I, Integer, pi, simplify, sin, sqrt, Symbol, sympify
 from sympy.abc import x, y, z

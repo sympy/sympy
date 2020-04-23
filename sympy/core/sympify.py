@@ -1,7 +1,5 @@
 """sympify -- convert objects SymPy internal format"""
 
-from __future__ import print_function, division
-
 from typing import Dict, Type, Callable, Any
 
 from inspect import getmro
@@ -28,7 +26,7 @@ class SympifyError(ValueError):
 converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
-class CantSympify(object):
+class CantSympify:
     """
     Mix in this trait to a class to disallow sympification of its instances.
 
@@ -376,19 +374,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             # Not all iterables are rebuildable with their type.
             pass
 
-    # At this point we were given an arbitrary expression
-    # which does not inherit from Basic and doesn't implement
-    # _sympy_ (which is a canonical and robust way to convert
-    # anything to SymPy expression).
-    #
-    # As a last chance, we try to take "a"'s normal form via unicode()
-    # and try to parse it. If it fails, then we have no luck and
-    # return an exception
-    try:
-        from .compatibility import unicode
-        a = unicode(a)
-    except Exception as exc:
-        raise SympifyError(a, exc)
+    if not isinstance(a, str):
+        try:
+            a = str(a)
+        except Exception as exc:
+            raise SympifyError(a, exc)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(
+            feature="String fallback in sympify",
+            useinstead= \
+                'sympify(str(obj)) or ' + \
+                'sympy.core.sympify.converter or obj._sympy_',
+            issue=18066,
+            deprecated_since_version='1.6'
+        ).warn()
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)

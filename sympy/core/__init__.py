@@ -3,6 +3,7 @@
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
+from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
 from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
@@ -38,6 +39,9 @@ __all__ = [
     'sympify', 'SympifyError',
 
     'cacheit',
+
+    'assumptions', 'check_assumptions', 'failing_assumptions',
+    'common_assumptions',
 
     'Basic', 'Atom', 'preorder_traversal',
 

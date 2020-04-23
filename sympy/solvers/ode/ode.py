@@ -1225,24 +1225,58 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             # Try representing factor in terms of x^n*y
             # where n is lowest power of x in factor;
             # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
-            u = None
-            for mul in ordered(factor.atoms(Mul)):
-                if mul.has(x):
-                    _, u = mul.as_independent(x, f(x))
-                    break
-            if u and u.has(f(x)):
-                h = x**(degree(Poly(u.subs(f(x), y), gen=x)))*f(x)
-                p = Wild('p')
-                if (u/h == 1) or ((u/h).simplify().match(x**p)):
-                    t = Dummy('t')
-                    r2 = {'t': t}
-                    xpart, ypart = u.as_independent(f(x))
-                    test = factor.subs(((u, t), (1/u, 1/t)))
-                    free = test.free_symbols
-                    if len(free) == 1 and free.pop() == t:
-                        r2.update({'power': xpart.as_base_exp()[1], 'u': test})
-                        matching_hints["separable_reduced"] = r2
-                        matching_hints["separable_reduced_Integral"] = r2
+            num, dem = factor.as_numer_denom()
+            num = expand(num)
+            dem = expand(dem)
+            def _degree(expr, x):
+                # Made this function to calculate the degree of
+                # x in an expression. If expr will be of form
+                # x**p*y, (wheare p can be variables/rationals) then it
+                # will return p.
+                for val in expr:
+                    if val.has(x):
+                        if isinstance(val, Pow) and val.as_base_exp()[0] == x:
+                            return (val.as_base_exp()[1])
+                        elif val == x:
+                            return (val.as_base_exp()[1])
+                        else:
+                            return _degree(val.args, x)
+                return 0
+
+            def _powers(expr):
+                # this function will return all the different relative power of x w.r.t f(x).
+                # expr = x**p * f(x)**q then it will return {p/q}.
+                pows = set()
+                if isinstance(expr, Add):
+                    exprs = expr.atoms(Add)
+                elif isinstance(expr, Mul):
+                    exprs = expr.atoms(Mul)
+                elif isinstance(expr, Pow):
+                    exprs = expr.atoms(Pow)
+                else:
+                    exprs = {expr}
+
+                for arg in exprs:
+                    if arg.has(x):
+                        _, u = arg.as_independent(x, f(x))
+                        pow = _degree((u.subs(f(x), y), ), x)/_degree((u.subs(f(x), y), ), y)
+                        pows.add(pow)
+                return pows
+
+            pows = _powers(num)
+            pows.update(_powers(dem))
+            pows = list(pows)
+            if(len(pows)==1) and pows[0]!=zoo:
+                t = Dummy('t')
+                r2 = {'t': t}
+                num = num.subs(x**pows[0]*f(x), t)
+                dem = dem.subs(x**pows[0]*f(x), t)
+                test = num/dem
+                free = test.free_symbols
+                if len(free) == 1 and free.pop() == t:
+                    r2.update({'power' : pows[0], 'u' : test})
+                    matching_hints['separable_reduced'] = r2
+                    matching_hints["separable_reduced_Integral"] = r2
 
 
     elif order == 2:
@@ -4885,10 +4919,10 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     >>> pprint(dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) -
     ... 4*exp(-x)*x**2 + cos(2*x), f(x),
     ... hint='nth_linear_constant_coeff_undetermined_coefficients'))
-           /             4\
-           |            x |  -x   4*sin(2*x)   3*cos(2*x)
-    f(x) = |C1 + C2*x + --|*e   - ---------- + ----------
-           \            3 /           25           25
+           /       /      3\\
+           |       |     x ||  -x   4*sin(2*x)   3*cos(2*x)
+    f(x) = |C1 + x*|C2 + --||*e   - ---------- + ----------
+           \       \     3 //           25           25
 
     References
     ==========
@@ -5189,10 +5223,9 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
     ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
     ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-           /                     3                \
-           |                2   x *(6*log(x) - 11)|  x
-    f(x) = |C1 + C2*x + C3*x  + ------------------|*e
-           \                            36        /
+           /       /       /     x*log(x)   11*x\\\  x
+    f(x) = |C1 + x*|C2 + x*|C3 + -------- - ----|||*e
+           \       \       \        6        36 ///
 
     References
     ==========
