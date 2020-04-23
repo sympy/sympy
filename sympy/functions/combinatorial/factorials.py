@@ -986,11 +986,11 @@ class binomial(CombinatorialFunction):
                 # since adding 1 to it cannot give 0
                 return S.Zero
         if all(int_like(x) for x in (n, k)):
-            if (n*k).is_positive and n_k.is_negative:
+            if (n*k).is_positive and n_k.is_negative: # 0 > k > n
                 return S.Zero
-            if n.is_nonnegative and k.is_negative:
+            if n.is_nonnegative and k.is_negative: # n >= 0 > k
                 return S.Zero
-            if n.is_zero and k.is_nonzero:
+            if n.is_nonnegative and n_k.is_negative: # k > n >= 0
                 return S.Zero
         elif n.is_negative:
             if int_like(n) and int_like(k) is False:
