@@ -820,20 +820,39 @@ class binomial(CombinatorialFunction):
     integers and the value of the binomial can be computed in terms
     of factorials::
 
-    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}
+    .. math:: \binom{n}{k} = \frac{n!}{k!(n - k)!}
 
-    For arbitrary ``n`` and a nonnegative, integer ``k``, the following
-    definition can be used (and is useful when evaluating summations)::
+    For arbitrary ``n`` and integer ``k``, we use Newton's Generalized
+    Binomial Theorem. See [4]_ ::
 
     .. math:: \binom{n}{k} = \frac{ff(n, k)}{k!}
 
-    When ``k`` is negative but ``n - k`` is a non-negative integer then
-    the following identity can be used::
+    .. math:: (x+y)^n & =\sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
+
+    Using the aforementioned theorem, one can interpret the binomial
+    coefficient :math:`\binom{n}{k}` as the coefficient
+    of :math:`x^k, y^k, x^(n - k), y^(n - k)` in the Series expansion
+    of :math:`(x + y)^n`.
+
+    When ``k`` is negative and ``n - k`` is a non-negative integer
+    then the following identity is used before the coefficient is
+    calculated::
 
     .. math:: \binom{n}{k} = \binom{n}{n - k}
 
+    .. math:: \binom{n}{k} = \frac{ff(n, n - k)}{(n - k)!}
+
+    The binomial coefficient is zero in the following cases, provided
+    both ``n`` and ``k`` are integers. See [3]_ ::
+
+    .. math:: k > n \geq 0
+
+    .. math:: n \geq 0 > k
+
+    .. math:: 0 > k > n
+
     If neither ``k`` nor ``n - k`` is a nonnegative integer then
-    the binomial is expressed in terms of the gamma function:
+    the binomial is expressed in terms of the gamma function. See [2]_ ::
 
     .. math:: \binom{n}{k} = \frac{\gamma(n + 1)}{\gamma(k + 1)\gamma(n - k + 1)}
 
@@ -894,6 +913,10 @@ class binomial(CombinatorialFunction):
     .. [1] https://www.johndcook.com/blog/binomial_coefficients/
 
     .. [2] http://functions.wolfram.com/GammaBetaErf/Binomial/02/
+
+    .. [3] https://core.ac.uk/download/pdf/82732883.pdf#page=9
+
+    .. [4] https://en.wikipedia.org/wiki/Binomial_theorem#Newton%27s_generalized_binomial_theorem
 
     See Also
     ========
