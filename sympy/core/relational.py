@@ -544,7 +544,7 @@ class Equality(Relational):
         return set()
 
     def _eval_simplify(self, **kwargs):
-        from .add import _unevaluated_Add, Add
+        from .add import Add
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
         e = super()._eval_simplify(**kwargs)
@@ -1069,27 +1069,46 @@ def is_lt(lhs, rhs):
         eval_str = "_eval_is_ge"
     else:
         eval_str = "_eval_is_lt"
-    return _eval_cmp(lhs, rhs, eval_str, True, lambda a, b: cmp(a, b, "<"))
+    retval = fuzzy_not(_eval_dispatch(lhs, rhs, eval_str))
+    if retval is None:
+        retval = cmp(lhs, rhs, "<")
+    return retval
 
 
 def is_le(lhs, rhs):
-    return _eval_cmp(lhs, rhs, "_eval_is_gt", True, lambda a, b: cmp(a, b, "<="))
+    retval = fuzzy_not(_eval_dispatch(lhs, rhs, "_eval_is_gt"))
+    if retval is None:
+        retval = cmp(lhs, rhs, "<=")
+    return retval
 
 
 def is_gt(lhs, rhs):
-    return _eval_cmp(lhs, rhs, "_eval_is_gt", False, lambda a, b: cmp(a, b, ">"))
+    retval = _eval_dispatch(lhs, rhs, "_eval_is_gt")
+    if retval is None:
+        retval = cmp(lhs, rhs, ">")
+    return retval
 
 
 def is_ge(lhs, rhs):
-    return _eval_cmp(lhs, rhs, "_eval_is_ge", False, lambda a, b: cmp(a, b, ">="))
+    retval = _eval_dispatch(lhs, rhs, "_eval_is_ge")
+    if retval is None:
+        retval = cmp(lhs, rhs, ">=")
+    return retval
 
 
 def is_eq(lhs, rhs):
-    return _eval_cmp(lhs, rhs, "_eval_Eq", False, lambda a, b: _cmp_eq(a, b))
+    retval = _eval_dispatch(lhs, rhs, "_eval_Eq")
+    if retval is None:
+        retval = _cmp_eq(lhs, rhs)
+    return retval
 
 
 def is_neq(lhs, rhs):
-    return _eval_cmp(lhs, rhs, "_eval_Eq", True, lambda a, b: fuzzy_not(_cmp_eq(a, b)))
+    retval = fuzzy_not(_eval_dispatch(lhs, rhs, "_eval_Eq"))
+    if retval is None:
+        retval = fuzzy_not(_cmp_eq(lhs, rhs))
+    return retval
+
 
 
 def _eval_cmp(lhs, rhs, op, negate_op, basic_cmp):
