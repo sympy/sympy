@@ -33,7 +33,7 @@ Functions that are for internal use:
 
 """
 from sympy import (cos, Derivative, diff,
-    Eq, exp, log, pi, Rational, sin,
+    Eq, exp, log, pi, Rational, sin, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
@@ -321,10 +321,7 @@ def test_issue_15889():
 
 
 def test_Riccati_special_minus2():
-    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
-    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
-    sol = dsolve(eq, f(x), hint='Riccati_special_minus2')
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+    _ode_solver_test(_get_examples_ode_sol_riccati())
 
 
 def test_Bernoulli():
@@ -508,6 +505,20 @@ def _get_examples_ode_sol_bernoulli():
     }
 
 
+def _get_examples_ode_sol_riccati():
+    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
+    return {
+            'hint': "Riccati_special_minus2",
+            'func': f(x),
+            'examples':{
+    'riccati_01': {
+        'eq': 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2),
+        'sol': [Eq(f(x), (-sqrt(3)*tan(C1 + sqrt(3)*log(x)/4) + 3)/(2*x))],
+    },
+    },
+    }
+
+
 def _get_examples_ode_sol_factorable():
     """ some hints are marked as xfail for examples because they missed additional algebraic solution
     which could be found by Factorable hint. Fact_01 raise exception for
@@ -688,7 +699,8 @@ def _get_all_examples():
     _get_examples_ode_sol_euler_var_para(),
     _get_examples_ode_sol_factorable(),
     _get_examples_ode_sol_bernoulli(),
-    _get_examples_ode_sol_nth_algebraic()]
+    _get_examples_ode_sol_nth_algebraic(),
+    _get_examples_ode_sol_riccati()]
 
     all_examples = []
     for solver in all_solvers:
