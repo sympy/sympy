@@ -1255,10 +1255,6 @@ class Mul(Expr, AssocOp):
             return False
 
         n, d = fraction(self)
-        if not is_rational:
-            _self = n/d
-            if _self != self:
-                return _self.is_integer
         if is_rational:
             if d is S.One:
                 return True
@@ -1268,6 +1264,13 @@ class Mul(Expr, AssocOp):
         # result is not an integer
         if n.is_odd and d.is_even:
             return False
+        if not is_rational:
+            if n.has(d):
+                _self = Mul(n, Pow(d, -1))
+                if _self != self:
+                    return _self.is_integer
+            elif n.is_rational is True and d == S.One:
+                return True
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
