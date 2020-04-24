@@ -518,7 +518,7 @@ def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
 
     sol_vector = B.exp() * Cvect
 
-    sol_vector = [collect(s, ordered(J.atoms(exp)), exact=True) for s in sol_vector]
+    sol_vector = [collect(s, ordered(s.atoms(exp)), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
     return sol_dict
