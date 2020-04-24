@@ -293,33 +293,6 @@ def test_factorable():
     _ode_solver_test(_get_examples_ode_sol_factorable())
 
 
-def test_issue_15889():
-    eq = exp(f(x).diff(x))-f(x)**2
-    sol = Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)
-    assert sol.dummy_eq(dsolve(eq))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)
-    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**2
-    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-
 def test_Riccati_special_minus2():
     _ode_solver_test(_get_examples_ode_sol_riccati())
 
@@ -598,8 +571,35 @@ def _get_examples_ode_sol_factorable():
         'sol': [], #currently dsolve doesn't return any solution for this example
         'XFAIL': ['factorable']
     },
+
+    #Below examples were added for the issue: https://github.com/sympy/sympy/issues/15889
+    'fact_12': {
+        'eq': exp(f(x).diff(x))-f(x)**2,
+        'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)]
+    },
+
+    'fact_13': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))]
+    },
+
+    'fact_14': {
+        'eq': f(x).diff(x)**2 - f(x),
+        'sol': [Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)]
+    },
+
+    'fact_15': {
+        'eq': f(x).diff(x)**2 - f(x)**2,
+        'sol': [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    },
+
+    'fact_16': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))]
+    },
     }
     }
+
 
 def _get_examples_ode_sol_nth_algebraic():
     M, m, r, t = symbols('M m r t')
@@ -700,7 +700,8 @@ def _get_all_examples():
     _get_examples_ode_sol_factorable(),
     _get_examples_ode_sol_bernoulli(),
     _get_examples_ode_sol_nth_algebraic(),
-    _get_examples_ode_sol_riccati()]
+    _get_examples_ode_sol_riccati(),
+    ]
 
     all_examples = []
     for solver in all_solvers:
