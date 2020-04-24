@@ -10,6 +10,7 @@ from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import ordered, uniq
+from sympy.integrals.integrals import integrate
 
 
 def _get_func_order(eqs, funcs):
@@ -484,6 +485,43 @@ def _canonical_equations(eqs, funcs, t):
     canon_eqs = [Eq(func.diff(t), canon_eqs[func.diff(t)]) for func in funcs]
 
     return canon_eqs
+
+
+def _is_commutative_anti_derivative(A, t):
+    B = integrate(A, t)
+
+    return B, B*A == A*B
+
+
+def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
+
+    # Some parts of code is repeated, this needs to be taken care of
+    # The constant vector obtained here can be done so in the match
+    # function itself.
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # This needs to be modified in future so that fc is only of type Matrix
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+
+    B, is_commuting = _is_commutative_anti_derivative(M, t)
+
+    # This course is subject to change
+    if not is_commuting:
+        return None
+
+    sol_vector = B.exp() * Cvect
+
+    sol_vector = [collect(s, ordered(J.atoms(exp)), exact=True) for s in sol_vector]
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
