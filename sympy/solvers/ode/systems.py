@@ -506,15 +506,21 @@ def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
     # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+    M = fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
 
     Cvect = Matrix(list(next(constants) for _ in range(n)))
 
-    B, is_commuting = _is_commutative_anti_derivative(M, t)
+    # The code in if block will be removed when it is made sure
+    # that the code works without the statements in if block.
+    if "commutative_antiderivative" not in match_:
+        B, is_commuting = _is_commutative_anti_derivative(M, t)
 
-    # This course is subject to change
-    if not is_commuting:
-        return None
+        # This course is subject to change
+        if not is_commuting:
+            return None
+
+    else:
+        B = match_['commutative_antiderivative']
 
     sol_vector = B.exp() * Cvect
 
@@ -579,6 +585,10 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                           equations have constant coefficients or not.
             7. is_homogeneous: Boolean value indicating if the set of
                           equations are homogeneous or not.
+            8. commutative_antiderivative: Antiderivative of the coefficient
+                          matrix if the coefficient matrix is non-constant
+                          and commutative with its antiderivative. This key
+                          may or may not exist.
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
 
@@ -652,15 +662,21 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # The match['is_linear'] check will be added in the future when this
     # function becomes ready to deal with non-linear systems of ODEs
-    if match['is_constant']:
 
-        # Converting the equation into canonical form if the
-        # equation is first order. There will be a separate
-        # function for this in the future.
-        if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
-            match['func_coeff'] = A
+    # Converting the equation into canonical form if the
+    # equation is first order. There will be a separate
+    # function for this in the future.
+    if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
+        match['func_coeff'] = -A
+        if match['is_constant']:
             match['type_of_equation'] = "type1"
+        else:
+            B, is_commuting = _is_commutative_anti_derivative(-A, t)
+            if not is_commuting:
+                return None
+            match['commutative_antiderivative'] = B
+            match['type_of_equation'] = "type3"
 
-            return match
+        return match
 
     return None

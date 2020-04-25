@@ -571,6 +571,8 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
+    from sympy.solvers.ode.systems import _neq_linear_first_order_nonconst_coeff_homogeneous
+
     if iterable(eq):
         match = classify_sysode(eq, func)
         eq = match['eq']
@@ -599,8 +601,12 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
+                # These conditions have to be improved upon in future for the new solvers
+                # added in systems.py
                 if match.get('is_constant', False) and match.get('is_homogeneous', False):
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                elif match.get('is_homogeneous', False) and "commutative_antiderivative" in match:
+                    solvefunc = _neq_linear_first_order_nonconst_coeff_homogeneous
                 else:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
