@@ -61,7 +61,6 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
                    hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
-from sympy.external import import_module
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
