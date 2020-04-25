@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import random
 
 from sympy.core import SympifyError, Add

@@ -16,7 +16,6 @@ Ray3D
 Segment3D
 
 """
-from __future__ import division, print_function
 
 from sympy import Expr
 from sympy.core import S, sympify
@@ -1388,8 +1387,8 @@ class Ray(LinearEntity):
         from sympy.core.evalf import N
 
         verts = (N(self.p1), N(self.p2))
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
 
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
@@ -2038,8 +2037,8 @@ class Line2D(LinearEntity2D, Line):
         from sympy.core.evalf import N
 
         verts = (N(self.p1), N(self.p2))
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
 
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
@@ -2390,8 +2389,8 @@ class Segment2D(LinearEntity2D, Segment):
         from sympy.core.evalf import N
 
         verts = (N(self.p1), N(self.p2))
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1}".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'

@@ -27,6 +27,7 @@ def _filter_assumptions(kwargs):
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
 
+
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
     the matching_symbol if the names are the same or else a new symbol

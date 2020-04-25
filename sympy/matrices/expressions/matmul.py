@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
 from sympy.functions import adjoint

@@ -339,6 +339,11 @@ def test_ContinuousRV():
 
     assert variance(X) == variance(Y)
     assert P(X > 0) == P(Y > 0)
+    Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
+    assert Z.pspace.domain.set == Interval(0, oo)
+    assert E(Z) == 1
+    assert P(Z > 5) == exp(-5)
+    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
 
 
 def test_arcsin():

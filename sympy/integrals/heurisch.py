@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Dict, List
 
 from itertools import permutations
@@ -192,7 +190,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                               True))
     return Piecewise(*pairs)
 
-class BesselTable(object):
+class BesselTable:
     """
     Derivatives of Bessel functions of orders n and n-1
     in terms of each other.
@@ -234,7 +232,7 @@ class BesselTable(object):
 
 _bessel_table = None
 
-class DiffCache(object):
+class DiffCache:
     """
     Store for derivatives of expressions.
 
@@ -450,8 +448,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             if M[a].is_positive:
                                 terms.add(acosh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
-                                terms.add((-M[b]/2*sqrt(-M[a])*
-                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b]))))
+                                terms.add(-M[b]/2*sqrt(-M[a])*
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
 
         else:
             terms |= set(hints)
@@ -682,7 +680,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.
         syms = set(poly_coeffs) | set(V)
-        non_syms = set([])
+        non_syms = set()
 
         def find_non_syms(expr):
             if expr.is_Integer or expr.is_Rational:
