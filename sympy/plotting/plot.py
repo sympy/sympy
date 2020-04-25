@@ -1713,9 +1713,10 @@ def plot_parametric(*args, **kwargs):
     =====
 
     The plotting uses an adaptive algorithm which samples recursively to
-    accurately plot the plot. The adaptive algorithm uses a random point
+    accurately plot the curve. The adaptive algorithm uses a random point
     near the midpoint of two points that has to be further sampled.
-    Hence the same plots can appear slightly different.
+    Hence, repeating the same plot command can give slightly different
+    results because of the random sampling.
 
     If there are multiple plots, then the same optional arguments are
     applied to all the plots drawn in the same canvas. If you want to
