@@ -1496,15 +1496,6 @@ def test_old_ode_tests():
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 
-def test_1st_linear():
-    # Type: first order linear form f'(x)+p(x)f(x)=q(x)
-    eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    sol = Eq(f(x), (C1 + x*exp(x**2/2)
-                    - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2)*exp(-x**2/2))
-    assert dsolve(eq, hint='1st_linear') == sol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
 @slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
@@ -2684,43 +2675,6 @@ def test_issue_5112_5430():
 def test_issue_5095():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
-
-
-def test_almost_linear():
-    from sympy import Ei
-    A = Symbol('A', positive=True)
-    our_hint = 'almost_linear'
-    f = Function('f')
-    d = f(x).diff(x)
-    eq = x**2*f(x)**2*d + f(x)**3 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == (C1*exp(3/x) - 1)**Rational(1, 3)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    sol = [
-        Eq(f(x), -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))),
-        Eq(f(x), sqrt((C1 - 2*Ei(4*x))*exp(-4*x)))
-    ]
-    assert set(dsolve(eq, f(x), hint = 'almost_linear')) == set(sol)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = x*d + x*f(x) + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 - Ei(x))*exp(-x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-    assert our_hint in classify_ode(eq, f(x))
-
-    eq = x*exp(f(x))*d + exp(f(x)) + 3*x
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == log(C1/x - x*Rational(3, 2))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 + Piecewise(
-        (x, Eq(A + 1, 0)), ((-A*x + A - x - 1)*exp(x)/(A + 1), True)))*exp(-x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
 def test_exact_enhancement():
