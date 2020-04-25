@@ -2770,18 +2770,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         final_result = []
         for res in result:
             res_copy = res
-            feasible = True
             for key_res, value_res in res.items():
                 intersect_set, complement_set = None, None
-
                 for key_sym, value_sym in intersection_dict.items():
                     if key_sym == key_res:
                         intersect_set = value_sym
-
                 for key_sym, value_sym in complement_dict.items():
                     if key_sym == key_res:
                         complement_set = value_sym
-
                 if intersect_set or complement_set:
                     new_value = FiniteSet(value_res)
                     if intersect_set and intersect_set != S.Complexes:
@@ -2789,14 +2785,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     if complement_set:
                         new_value = Complement(new_value, complement_set)
                     if new_value is S.EmptySet:
-                        feasible = False
+                        res_copy = None
                         break
                     elif new_value.is_FiniteSet and len(new_value) == 1:
                         res_copy[key_res] = set(new_value).pop()
                     else:
                         res_copy[key_res] = new_value
 
-            if feasible:
+            if res_copy is not None:
                 final_result.append(res_copy)
         return final_result
     # end of def add_intersection_complement()
