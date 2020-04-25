@@ -1723,6 +1723,30 @@ def plot_parametric(*args, **kwargs):
     set these options separately, you can index the returned ``Plot``
     object and set it.
 
+    For example, when you specify ``line_color`` once, it would be
+    applied simultaneously to both series.
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> from sympy import pi
+        >>> expr1 = (u, cos(2*pi*u)/2 + 1/2)
+        >>> expr2 = (u, sin(2*pi*u)/2 + 1/2)
+        >>> p = plot_parametric(expr1, expr2, (u, 0, 1), line_color='blue')
+
+    If you want to specify the line color for the specific series, you
+    should index each item and apply the property manually.
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> p[0].line_color = 'red'
+        >>> p.show()
+
     See Also
     ========
 
