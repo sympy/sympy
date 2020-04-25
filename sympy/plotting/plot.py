@@ -1577,91 +1577,89 @@ def plot(*args, **kwargs):
 
 def plot_parametric(*args, **kwargs):
     """
-    Plots a 2D parametric plot.
+    Plots a 2D parametric curve.
 
-    The plotting uses an adaptive algorithm which samples recursively to
-    accurately plot the plot. The adaptive algorithm uses a random point near
-    the midpoint of two points that has to be further sampled. Hence the same
-    plots can appear slightly different.
+    Parameters
+    ==========
 
-    Usage
-    =====
+    args
+        Common specifications are:
 
-    Single plot.
+        - Plotting a single parametric curve with a range
+            ``plot_parametric((expr_x, expr_y), range)``
+        - Plotting multiple parametric curves with the same range
+            ``plot_parametric((expr_x, expr_y), ..., range)``
+        - Plotting multiple parametric curves with different ranges
+            ``plot_parametric((expr_x, expr_y, range), ...)``
 
-    ``plot_parametric(expr_x, expr_y, range, **kwargs)``
+        ``expr_x`` is the expression representing $x$ component of the
+        parametric function.
 
-    If the range is not specified, then a default range of (-10, 10) is used.
+        ``expr_y`` is the expression representing $y$ component of the
+        parametric function.
 
-    Multiple plots with same range.
+        ``range`` is a 3-tuple denoting the parameter symbol, start and
+        stop. For example, ``(u, 0, 5)``.
 
-    ``plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)``
+        If the range is not specified, then a default range of (-10, 10)
+        is used.
 
-    If the range is not specified, then a default range of (-10, 10) is used.
+        However, if the arguments are specified as
+        ``(expr_x, expr_y, range), ...``, you must specify the ranges
+        for each expressions manually.
 
-    Multiple plots with different ranges.
+        Default range may change in the future if a more advanced
+        algorithm is implemented.
 
-    ``plot_parametric((expr_x, expr_y, range), ..., **kwargs)``
+    adaptive : bool, optional
+        Specifies whether to use the adaptive sampling or not.
 
-    Range has to be specified for every expression.
+        The default value is set to ``True``. Set adaptive to ``False``
+        and specify ``nb_of_points`` if uniform sampling is required.
 
-    Default range may change in the future if a more advanced default range
-    detection algorithm is implemented.
+    depth :  int, optional
+        The recursion depth of the adaptive algorithm. A depth of
+        value $n$ samples a maximum of $2^n$ points.
 
-    Arguments
-    =========
+    nb_of_points : int, optional
+        Used when the ``adaptive`` flag is set to ``False``.
 
-    ``expr_x`` : Expression representing the function along x.
+        Specifies the numher of the points used for the uniform
+        sampling.
 
-    ``expr_y`` : Expression representing the function along y.
+    line_color : function
+        A function which returns a float.
 
-    ``range``: (u, 0, 5), A 3-tuple denoting the range of the parameter
-    variable.
+        Specifies the color of the plot.
 
-    Keyword Arguments
-    =================
+        See :class:`Plot` for more details.
 
-    Arguments for ``Parametric2DLineSeries`` class:
+    label : str, optional
+        The label of the expression in the plot. It will be used when
+        called with ``legend``. Default is the name of the expression.
+        e.g. ``sin(x)``
 
-    ``adaptive``: Boolean. The default value is set to True. Set adaptive to
-    False and specify ``nb_of_points`` if uniform sampling is required.
+    xlabel : str, optional
+        Label for the x-axis.
 
-    ``depth``: int Recursion depth of the adaptive algorithm. A depth of
-    value ``n`` samples a maximum of `2^{n}` points.
+    ylabel : str, optional
+        Label for the y-axis.
 
-    ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
-    function is uniformly sampled at ``nb_of_points`` number of points.
+    xscale : 'linear' or 'log', optional
+        Sets the scaling of the x-axis.
 
-    Aesthetics
-    ----------
+    yscale : 'linear' or 'log', optional
+        Sets the scaling of the y-axis.
 
-    ``line_color``: function which returns a float. Specifies the color for the
-    plot. See ``sympy.plotting.Plot`` for more details.
+    axis_center : (float, float), optional
+        Tuple of two floats denoting the coordinates of the center or
+        {'center', 'auto'}
 
-    ``label``: str
-        The label to the plot. It will be used when called with ``legend=True``
-        to denote the function with the given label in the plot.
+    xlim : (float, float), optional
+        Denotes the x-axis limits.
 
-    If there are multiple plots, then the same Series arguments are applied to
-    all the plots. If you want to set these options separately, you can index
-    the returned ``Plot`` object and set it.
-
-    Arguments for ``Plot`` class:
-
-    ``xlabel`` : str. Label for the x-axis.
-
-    ``ylabel`` : str. Label for the y-axis.
-
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x-axis.
-
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y-axis.
-
-    ``axis_center``: tuple of two floats denoting the coordinates of the center
-    or {'center', 'auto'}
-
-    ``xlim`` : tuple of two floats, denoting the x-axis limits.
-
-    ``ylim`` : tuple of two floats, denoting the y-axis limits.
+    ylim : (float, float), optional
+        Denotes the y-axis limits.
 
     Examples
     ========
@@ -1675,31 +1673,30 @@ def plot_parametric(*args, **kwargs):
        >>> from sympy.plotting import plot_parametric
        >>> u = symbols('u')
 
-    Single Parametric plot
+    A parametric plot with a single expression:
 
     .. plot::
        :context: close-figs
        :format: doctest
        :include-source: True
 
-       >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
+       >>> plot_parametric((cos(u), sin(u)), (u, -5, 5))
        Plot object containing:
        [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
 
-
-    Multiple parametric plot with single range.
+    A parametric plot with multiple expressions with the same range:
 
     .. plot::
        :context: close-figs
        :format: doctest
        :include-source: True
 
-       >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
+       >>> plot_parametric((cos(u), sin(u)), (u, cos(u)), (u, -10, 10))
        Plot object containing:
        [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
        [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
 
-    Multiple parametric plots.
+    A parametric plot with multiple expressions with different ranges:
 
     .. plot::
        :context: close-figs
@@ -1712,11 +1709,23 @@ def plot_parametric(*args, **kwargs):
        [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
        [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
 
+    Notes
+    =====
+
+    The plotting uses an adaptive algorithm which samples recursively to
+    accurately plot the plot. The adaptive algorithm uses a random point
+    near the midpoint of two points that has to be further sampled.
+    Hence the same plots can appear slightly different.
+
+    If there are multiple plots, then the same optional arguments are
+    applied to all the plots drawn in the same canvas. If you want to
+    set these options separately, you can index the returned ``Plot``
+    object and set it.
 
     See Also
     ========
-    Plot, Parametric2DLineSeries
 
+    Plot, Parametric2DLineSeries
     """
     args = list(map(sympify, args))
     show = kwargs.pop('show', True)
