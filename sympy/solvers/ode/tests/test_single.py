@@ -648,7 +648,6 @@ def _get_examples_ode_sol_factorable():
 def _get_examples_ode_sol_almost_linear():
     from sympy import Ei
     A = Symbol('A', positive=True)
-    our_hint = ''
     f = Function('f')
     d = f(x).diff(x)
 

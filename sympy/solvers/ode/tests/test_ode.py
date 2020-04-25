@@ -1,5 +1,5 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
-    Dummy, Eq, Ne, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
+    Dummy, Eq, Ne, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, simplify, integrate)
 from sympy.solvers.ode import (classify_ode,
