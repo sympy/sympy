@@ -1,6 +1,6 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
                    zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
-                   floor)
+                   floor, FiniteSet)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
@@ -10,7 +10,8 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Hermite, Logarithmic,
-                                    NegativeBinomial, Skellam, YuleSimon, Zeta)
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta,
+                                    DiscreteRV)
 from sympy.stats.rv import sample
 from sympy.testing.pytest import slow, nocache_fail, raises, skip
 from sympy.external import import_module
@@ -163,6 +164,16 @@ def test_discrete_probability():
     assert P(G < 3) == x*(2-x)
     assert P(Eq(G, 3)) == x*(-x + 1)**2
 
+
+def test_DiscreteRV():
+    p = S(1)/2
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    D = DiscreteRV(x, pdf, set=S.Naturals)
+    assert E(D) == E(Geometric('G', S(1)/2)) == 2
+    assert P(D > 3) == S(1)/8
+    assert D.pspace.domain.set == S.Naturals
+    raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4))))
 
 def test_precomputed_characteristic_functions():
     import mpmath
