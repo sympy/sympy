@@ -2783,7 +2783,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         complement_set = value_sym
 
                 if intersect_set or complement_set:
-                    print(key_res, value_res)
                     new_value = FiniteSet(value_res)
                     if intersect_set and intersect_set != S.Complexes:
                         new_value = Intersection(new_value, intersect_set)
