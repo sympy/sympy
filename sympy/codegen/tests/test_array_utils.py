@@ -1,11 +1,11 @@
 from sympy import symbols, IndexedBase, Identity, cos, Inverse
 from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayDiagonal,
-        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
-        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
-        _RecognizeMatMulLines, _unfold_recognized_expr,
-        parse_indexed_expression, recognize_matrix_expression,
-        _parse_matrix_expression)
+                                       CodegenArrayTensorProduct, CodegenArrayDiagonal,
+                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
+                                       _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
+                                       _RecognizeMatMulLines, _unfold_recognized_expr,
+                                       parse_indexed_expression, recognize_matrix_expression,
+                                       _parse_matrix_expression, parse_matrix_expression)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -36,13 +36,13 @@ def test_codegen_array_contraction_construction():
 
     expr = M*N
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
-    assert CodegenArrayContraction.from_MatMul(expr) == result
+    assert parse_matrix_expression(expr) == result
     elem = expr[i, j]
     assert parse_indexed_expression(elem) == result
 
     expr = M*N*M
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, M), (1, 2), (3, 4))
-    assert CodegenArrayContraction.from_MatMul(expr) == result
+    assert parse_matrix_expression(expr) == result
     elem = expr[i, j]
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (1, 4), (2, 5))
     cg = parse_indexed_expression(elem)
@@ -82,12 +82,12 @@ def test_codegen_array_recognize_matrix_mul_lines():
 
     cg = parse_indexed_expression((M*N*P)[i,j])
     assert recognize_matrix_expression(cg) == M*N*P
-    cg = CodegenArrayContraction.from_MatMul(M*N*P)
+    cg = parse_matrix_expression(M*N*P)
     assert recognize_matrix_expression(cg) == M*N*P
 
     cg = parse_indexed_expression((M*N.T*P)[i,j])
     assert recognize_matrix_expression(cg) == M*N.T*P
-    cg = CodegenArrayContraction.from_MatMul(M*N.T*P)
+    cg = parse_matrix_expression(M*N.T*P)
     assert recognize_matrix_expression(cg) == M*N.T*P
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M,N,P,Q), (1, 2), (5, 6))
