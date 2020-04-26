@@ -14,8 +14,7 @@ from sympy.polys import roots
 from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from .common import (MatrixError, NonSquareMatrixError,
-    NonPositiveDefiniteMatrixError)
+from .common import MatrixError, NonSquareMatrixError
 
 from .utilities import _iszero
 
