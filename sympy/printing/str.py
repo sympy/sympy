@@ -257,15 +257,12 @@ class StrPrinter(Printer):
     def _print_MatrixSlice(self, expr):
         def strslice(x, dim):
             x = list(x)
-            if x[0] + 1 == x[1]:
-                x = [x[0]]
-            else:
-                if x[2] == 1:
-                    del x[2]
-                if x[0] == 0:
-                    x[0] = ''
-                if x[1] == dim:
-                    x[1] = ''
+            if x[2] == 1:
+                del x[2]
+            if x[0] == 0:
+                x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return ':'.join(map(lambda arg: self._print(arg), x))
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
                 strslice(expr.rowslice, expr.parent.rows) + ', ' +

@@ -3176,9 +3176,9 @@ def test_MatrixSlice():
     expr = MatrixSlice(X, (None, None, None), (None, None, None))
     assert pretty(expr) == upretty(expr) == 'X[:, :]'
     expr = X[x:x + 1, y:y + 1]
-    assert pretty(expr) == upretty(expr) == 'X[x, y]'
+    assert pretty(expr) == upretty(expr) == 'X[x:x + 1, y:y + 1]'
     expr = X[x:x + 1:2, y:y + 1:2]
-    assert pretty(expr) == upretty(expr) == 'X[x, y]'
+    assert pretty(expr) == upretty(expr) == 'X[x:x + 1:2, y:y + 1:2]'
     expr = X[:x, y:]
     assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
     expr = X[:x, y:]
@@ -3204,7 +3204,7 @@ def test_MatrixSlice():
     expr = MatrixSlice(X, (0, n, 2), (0, n, 2))
     assert pretty(expr) == upretty(expr) == 'X[::2, ::2]'
     expr = X[1:2:3, 4:5:6]
-    assert pretty(expr) == upretty(expr) == 'X[1, 4]'
+    assert pretty(expr) == upretty(expr) == 'X[1:2:3, 4:5:6]'
     expr = X[1:3:5, 4:6:8]
     assert pretty(expr) == upretty(expr) == 'X[1:3:5, 4:6:8]'
     expr = X[1:10:2]
@@ -3214,11 +3214,11 @@ def test_MatrixSlice():
     expr = Y[:5, 1:10:2]
     assert pretty(expr) == upretty(expr) == 'Y[:5, 1::2]'
     expr = Y[5, :5:2]
-    assert pretty(expr) == upretty(expr) == 'Y[5, :5:2]'
+    assert pretty(expr) == upretty(expr) == 'Y[5:6, :5:2]'
     expr = X[0:1, 0:1]
-    assert pretty(expr) == upretty(expr) == 'X[0, 0]'
+    assert pretty(expr) == upretty(expr) == 'X[:1, :1]'
     expr = X[0:1:2, 0:1:2]
-    assert pretty(expr) == upretty(expr) == 'X[0, 0]'
+    assert pretty(expr) == upretty(expr) == 'X[:1:2, :1:2]'
     expr = (Y + Z)[2:, 2:]
     assert pretty(expr) == upretty(expr) == '(Y + Z)[2:, 2:]'
 

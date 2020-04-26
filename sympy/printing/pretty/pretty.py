@@ -816,15 +816,12 @@ class PrettyPrinter(Printer):
             prettyFunc = prettyForm(*prettyFunc.parens())
         def ppslice(x, dim):
             x = list(x)
-            if x[0] + 1 == x[1]:
-                x = [x[0]]
-            else:
-                if x[2] == 1:
-                    del x[2]
-                if x[0] == 0:
-                    x[0] = ''
-                if x[1] == dim:
-                    x[1] = ''
+            if x[2] == 1:
+                del x[2]
+            if x[0] == 0:
+                x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return prettyForm(*self._print_seq(x, delimiter=':'))
         prettyArgs = self._print_seq((ppslice(m.rowslice, m.parent.rows),
             ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']')[0]
