@@ -264,7 +264,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         all_inner = [j for i in inner_contraction_indices for j in i]
         all_inner.sort()
         # TODO: add API for total rank and cumulative rank:
-        total_rank = get_rank(expr)
+        total_rank = _get_subrank(expr)
         inner_rank = len(all_inner)
         outer_rank = total_rank - inner_rank
         shifts = [0 for i in range(outer_rank)]
@@ -465,7 +465,7 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
         args = cls._flatten(args)
-        ranks = [get_rank(arg) for arg in args]
+        ranks = [_get_subrank(arg) for arg in args]
 
         if len(args) == 1:
             return args[0]
@@ -708,7 +708,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         all_inner = [j for i in inner_diagonal_indices for j in i]
         all_inner.sort()
         # TODO: add API for total rank and cumulative rank:
-        total_rank = get_rank(expr)
+        total_rank = _get_subrank(expr)
         inner_rank = len(all_inner)
         outer_rank = total_rank - inner_rank
         shifts = [0 for i in range(outer_rank)]
@@ -832,7 +832,7 @@ def get_rank(expr):
     if isinstance(expr, (MatrixExpr, MatrixElement)):
         return 2
     if isinstance(expr, _CodegenArrayAbstract):
-        return expr.subrank()
+        return len(expr.shape)
     if isinstance(expr, NDimArray):
         return expr.rank()
     if isinstance(expr, Indexed):
@@ -848,6 +848,12 @@ def get_rank(expr):
     if isinstance(expr, _RecognizeMatMulLines):
         return expr.rank()
     return 0
+
+
+def _get_subrank(expr):
+    if isinstance(expr, _CodegenArrayAbstract):
+        return expr.subrank()
+    return get_rank(expr)
 
 
 def _get_subranks(expr):
@@ -1026,22 +1032,28 @@ def _codegen_array_parse(expr):
             args[i] = CodegenArrayPermuteDims(args[i], permutation)
         return CodegenArrayElementwiseAdd(*args), index0
     return expr, ()
-    raise NotImplementedError("could not recognize expression %s" % expr)
 
 
-def _parse_matrix_expression(expr):
+def _parse_matrix_expression(expr: MatrixExpr) -> Basic:
     if isinstance(expr, MatMul):
         args_nonmat = []
         args = []
-        contractions = []
         for arg in expr.args:
             if isinstance(arg, MatrixExpr):
                 args.append(arg)
             else:
                 args_nonmat.append(arg)
         contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
-        return Mul.fromiter(args_nonmat)*CodegenArrayContraction(
-                CodegenArrayTensorProduct(*[_parse_matrix_expression(arg) for arg in args]),
+        scalar = Mul.fromiter(args_nonmat)
+        if scalar == 1:
+            tprod = CodegenArrayTensorProduct(
+                *[_parse_matrix_expression(arg) for arg in args])
+        else:
+            tprod = CodegenArrayTensorProduct(
+                scalar,
+                *[_parse_matrix_expression(arg) for arg in args])
+        return CodegenArrayContraction(
+                tprod,
                 *contractions
         )
     elif isinstance(expr, MatAdd):
