@@ -1,8 +1,8 @@
 import random
 from sympy import symbols, Derivative
 from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
-        CodegenArrayPermuteDims, CodegenArrayDiagonal)
+                                       CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
+                                       CodegenArrayPermuteDims, CodegenArrayDiagonal, parse_matrix_expression)
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
@@ -362,7 +362,7 @@ def test_codegen_einsum():
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
 
-        cg = CodegenArrayContraction.from_MatMul(M*N)
+        cg = parse_matrix_expression(M*N)
         f = lambdify((M, N), cg, 'tensorflow')
 
         ma = tf.constant([[1, 2], [3, 4]])
