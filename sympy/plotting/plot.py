@@ -1624,7 +1624,7 @@ def plot_parametric(*args, **kwargs):
     nb_of_points : int, optional
         Used when the ``adaptive`` flag is set to ``False``.
 
-        Specifies the numher of the points used for the uniform
+        Specifies the number of the points used for the uniform
         sampling.
 
     line_color : function
