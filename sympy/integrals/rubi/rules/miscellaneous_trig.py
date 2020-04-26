@@ -1839,9 +1839,7 @@ def With4822(u, x):
         res = And(Not(FalseQ(v)), FunctionOfQ(NonfreeFactors(S(1)/tan(v), x), u, x, True), TryPureTanSubst(ActivateTrig(u), x))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4822(u, x):
@@ -1860,9 +1858,7 @@ def With4823(u, x):
         res = And(Not(FalseQ(v)), FunctionOfQ(NonfreeFactors(tan(v), x), u, x, True), TryPureTanSubst(ActivateTrig(u), x))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4823(u, x):
@@ -2069,9 +2065,7 @@ def With4838(u, x):
         res = And(Not(FalseQ(v)), FunctionOfQ(NonfreeFactors(sin(v), x), u/cos(v), x))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4838(u, x):
@@ -2090,9 +2084,7 @@ def With4839(u, x):
         res = And(Not(FalseQ(v)), FunctionOfQ(NonfreeFactors(cos(v), x), u/sin(v), x))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4839(u, x):
@@ -2122,9 +2114,7 @@ def With4843(u, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4843(u, x, y):
@@ -2141,9 +2131,7 @@ def With4844(u, w, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4844(u, w, x, y):
@@ -2160,9 +2148,7 @@ def With4845(m, u, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4845(m, u, x, y):
@@ -2179,9 +2165,7 @@ def With4846(m, n, u, x, y, z):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4846(m, n, u, x, y, z):
@@ -2209,9 +2193,7 @@ def With4849(u, x):
         res = And(Not(FalseQ(v)), FunctionOfQ(NonfreeFactors(tan(v), x), u, x))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4849(u, x):
@@ -2293,9 +2275,7 @@ def With4861(u, x):
         res = FreeQ(w, Int)
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement4861(u, x):

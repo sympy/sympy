@@ -384,9 +384,7 @@ def With6941(u, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6941(u, x, y):
@@ -403,9 +401,7 @@ def With6942(u, w, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6942(u, w, x, y):
@@ -422,9 +418,7 @@ def With6943(m, u, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6943(m, u, x, y):
@@ -441,9 +435,7 @@ def With6944(m, n, u, x, y, z):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6944(m, n, u, x, y, z):
@@ -487,9 +479,7 @@ def With6949(a, b, c, d, m, n, u, v, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6949(a, b, c, d, m, n, u, v, x, y):
@@ -506,9 +496,7 @@ def With6950(a, b, c, d, e, f, m, n, p, u, v, w, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6950(a, b, c, d, e, f, m, n, p, u, v, w, x, y):
@@ -525,9 +513,7 @@ def With6951(a, b, c, d, e, f, g, h, m, n, p, q, u, v, w, x, y, z):
         res = Not(FalseQ(r))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6951(a, b, c, d, e, f, g, h, m, n, p, q, u, v, w, x, y, z):
@@ -544,9 +530,7 @@ def With6952(a, b, n, u, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6952(a, b, n, u, x, y):
@@ -563,9 +547,7 @@ def With6953(a, b, n, p, u, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6953(a, b, n, p, u, x, y):
@@ -585,9 +567,7 @@ def With6954(a, b, m, n, p, u, v, x, y):
         res = And(Not(FalseQ(Set(r, Divides(y**m, v**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6954(a, b, m, n, p, u, v, x, y):
@@ -607,9 +587,7 @@ def With6955(a, b, c, n, n2, p, u, v, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6955(a, b, c, n, n2, p, u, v, x, y):
@@ -626,9 +604,7 @@ def With6956(A, B, a, b, c, n, n2, p, u, v, w, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6956(A, B, a, b, c, n, n2, p, u, v, w, x, y):
@@ -645,9 +621,7 @@ def With6957(A, B, a, c, n, n2, p, u, w, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6957(A, B, a, c, n, n2, p, u, w, x, y):
@@ -667,9 +641,7 @@ def With6958(a, b, c, m, n, n2, p, u, v, w, x, y):
         res = And(Not(FalseQ(Set(r, Divides(y**m, v**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6958(a, b, c, m, n, n2, p, u, v, w, x, y):
@@ -692,9 +664,7 @@ def With6959(A, B, a, b, c, m, n, n2, p, u, v, w, x, y, z):
         res = And(Not(FalseQ(Set(r, Divides(y**m, z**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6959(A, B, a, b, c, m, n, n2, p, u, v, w, x, y, z):
@@ -717,9 +687,7 @@ def With6960(A, B, a, c, m, n, n2, p, u, w, x, y, z):
         res = And(Not(FalseQ(Set(r, Divides(y**m, z**m, x)))), Not(FalseQ(Set(q, DerivativeDivides(y, u, x)))))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6960(A, B, a, c, m, n, n2, p, u, w, x, y, z):
@@ -739,9 +707,7 @@ def With6961(a, b, c, d, m, n, p, u, v, x, y):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6961(a, b, c, d, m, n, p, u, v, x, y):
@@ -758,9 +724,7 @@ def With6962(a, b, c, d, e, f, m, n, p, q, u, v, w, x, y):
         res = Not(FalseQ(r))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6962(a, b, c, d, e, f, m, n, p, q, u, v, w, x, y):
@@ -777,9 +741,7 @@ def With6963(F, u, v, x):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6963(F, u, v, x):
@@ -796,9 +758,7 @@ def With6964(F, m, u, v, w, x):
         res = Not(FalseQ(q))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6964(F, m, u, v, w, x):
@@ -924,9 +884,7 @@ def With6973(u, x):
         res = And(Not(FalseQ(lst)), SubstForFractionalPowerQ(u, Part(lst, S(3)), x))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6973(u, x):
@@ -943,9 +901,7 @@ def With6974(u, x):
         res = Not(FalseQ(lst))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6974(u, x):
@@ -1043,9 +999,7 @@ def With6987(u, x):
         res = Not(FalseQ(lst))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6987(u, x):
@@ -1062,9 +1016,7 @@ def With6988(u, x):
         res = And(Not(FalseQ(lst)), NonzeroQ(Part(lst, S(2))))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6988(u, x):
@@ -1081,9 +1033,7 @@ def With6989(m, u, x):
         res = And(Not(FalseQ(lst)), NonzeroQ(-m + Part(lst, S(2)) + S(-1)))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6989(m, u, x):
@@ -1105,9 +1055,7 @@ def With6991(u, x):
         res = Not(FalseQ(lst))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6991(u, x):
@@ -1178,9 +1126,7 @@ def With7000(u, x):
         res = Not(FalseQ(lst))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement7000(u, x):

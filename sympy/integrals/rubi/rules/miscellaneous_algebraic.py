@@ -3727,9 +3727,7 @@ def With1884(p, u, v, x):
         res = And(Inequality(S(1), Less, n, LessEqual, m + S(1)), Less(m + n*p, S(-1)), FalseQ(DerivativeDivides(v, u, x)))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement1884(p, u, v, x):

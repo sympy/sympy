@@ -4463,9 +4463,7 @@ def With6632(n, u, v, x):
         res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcTanh), ZeroQ(-D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6632(n, u, v, x):
@@ -4482,9 +4480,7 @@ def With6633(n, u, v, x):
         res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcCoth), ZeroQ(-D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6633(n, u, v, x):

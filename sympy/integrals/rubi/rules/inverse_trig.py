@@ -4172,9 +4172,7 @@ def With5539(n, u, v, x):
         res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcTan), ZeroQ(D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement5539(n, u, v, x):
@@ -4191,9 +4189,7 @@ def With5540(n, u, v, x):
         res = And(Not(FalseQ(tmp)), SameQ(Head(tmp), ArcCot), ZeroQ(D(v, x)**S(2) + Discriminant(v, x)*Part(tmp, S(1))**S(2)))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement5540(n, u, v, x):

@@ -1178,9 +1178,7 @@ def With2130(u, v, x):
         res = Not(FalseQ(w))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement2130(u, v, x):
@@ -1197,9 +1195,7 @@ def With2131(a, b, u, v, w, x):
         res = Not(FalseQ(z))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement2131(a, b, u, v, w, x):
@@ -1280,9 +1276,7 @@ def With2142(RFx, a, b, u, x):
         res = Not(FalseQ(lst))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement2142(RFx, a, b, u, x):
@@ -1402,9 +1396,7 @@ def With2163(u, x):
         res = Not(FalseQ(lst))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement2163(u, x):

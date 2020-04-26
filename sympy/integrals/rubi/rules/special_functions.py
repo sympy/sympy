@@ -1313,9 +1313,7 @@ def With6888(n, u, v, x):
         res = Not(FalseQ(w))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6888(n, u, v, x):
@@ -1332,9 +1330,7 @@ def With6889(n, u, v, w, x):
         res = Not(FalseQ(z))
     except (TypeError, AttributeError):
         return False
-    if res:
-        return True
-    return False
+    return bool(res)
 
 
 def replacement6889(n, u, v, w, x):
