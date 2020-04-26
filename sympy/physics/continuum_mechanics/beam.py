@@ -2234,3 +2234,77 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
+    def plot_shear_force(self, dir="all", subs=None):
+        """
+        Returns a plot for Shear force along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which shear force plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+        """
+
+        shear_force = self.shear_force()
+
+        if subs is None:
+            subs = {}
+        subsx = subs
+        subsy = subs
+        subsz = subs
+
+        # For shear force along x direction
+        for sym in shear_force[0].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subsx:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subsx:
+            length = subsx[self.length]
+        else:
+            length = self.length
+        Px = plot(shear_force[0].subs(subsx), (self.variable, 0, length),
+                show = False, title='Shear Force along x direction',
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V[x]}$', line_color='g')
+
+        # For shear force along y direction
+        for sym in shear_force[1].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subsy:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subsy:
+            length = subsy[self.length]
+        else:
+            length = self.length
+        Py = plot(shear_force[1].subs(subsy), (self.variable, 0, length),
+                show = False, title='Shear Force along y direction',
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V[y]}$', line_color='g')
+
+        # For shear force along z direction
+        for sym in shear_force[2].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subsz:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subsz:
+            length = subsz[self.length]
+        else:
+            length = self.length
+        Pz = plot(shear_force[2].subs(subsz), (self.variable, 0, length),
+                show = False, title='Shear Force along z direction',
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V[z]}$', line_color='g')
+
+        if(dir == "x"):
+            return Px.show()
+        elif(dir == "y"):
+            return Py.show()
+        elif(dir == "z"):
+            return Pz.show()
+        else:
+            return {Px.show(),Py.show(),Pz.show()}
