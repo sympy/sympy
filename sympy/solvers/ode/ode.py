@@ -1039,6 +1039,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     ode = SingleODEProblem(eq_orig, func, x, prep=prep)
     solvers = {
         NthAlgebraic: ('nth_algebraic',),
+        FirstExact:('1st_exact',),
         FirstLinear: ('1st_linear',),
         AlmostLinear: ('almost_linear',),
         Bernoulli: ('Bernoulli',),
@@ -1052,7 +1053,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 matching_hints[hints] = solver
                 if solvercls.has_integral:
                     matching_hints[hints + "_Integral"] = solver
-
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -1096,46 +1096,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     matching_hints["1st_power_series"] = rseries
 
             r3.update(r)
-            ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
-            # dP/dy == dQ/dx
-            try:
-                if r[d] != 0:
-                    numerator = simplify(r[d].diff(y) - r[e].diff(x))
-                    # The following few conditions try to convert a non-exact
-                    # differential equation into an exact one.
-                    # References : Differential equations with applications
-                    # and historical notes - George E. Simmons
-
-                    if numerator:
-                        # If (dP/dy - dQ/dx) / Q = f(x)
-                        # then exp(integral(f(x))*equation becomes exact
-                        factor = simplify(numerator/r[e])
-                        variables = factor.free_symbols
-                        if len(variables) == 1 and x == variables.pop():
-                            factor = exp(Integral(factor).doit())
-                            r[d] *= factor
-                            r[e] *= factor
-                            matching_hints["1st_exact"] = r
-                            matching_hints["1st_exact_Integral"] = r
-                        else:
-                            # If (dP/dy - dQ/dx) / -P = f(y)
-                            # then exp(integral(f(y))*equation becomes exact
-                            factor = simplify(-numerator/r[d])
-                            variables = factor.free_symbols
-                            if len(variables) == 1 and y == variables.pop():
-                                factor = exp(Integral(factor).doit())
-                                r[d] *= factor
-                                r[e] *= factor
-                                matching_hints["1st_exact"] = r
-                                matching_hints["1st_exact_Integral"] = r
-                    else:
-                        matching_hints["1st_exact"] = r
-                        matching_hints["1st_exact_Integral"] = r
-
-            except NotImplementedError:
-                # Differentiating the coefficients might fail because of things
-                # like f(2*x).diff(x).  See issue 4624 and issue 4719.
-                pass
 
         # Any first order ODE can be ideally solved by the Lie Group
         # method
@@ -3011,97 +2971,13 @@ def _handle_Integral(expr, func, hint):
     For most hints, this simply runs ``expr.doit()``.
 
     """
-    # XXX: This global y hack should be removed
-    global y
-    x = func.args[0]
-    f = func.func
-    if hint == "1st_exact":
-        sol = (expr.doit()).subs(y, f(x))
-        del y
-    elif hint == "1st_exact_Integral":
-        sol = Eq(Subs(expr.lhs, y, f(x)), expr.rhs)
-        del y
-    elif hint == "nth_linear_constant_coeff_homogeneous":
+    if hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif not hint.endswith("_Integral"):
         sol = expr.doit()
     else:
         sol = expr
     return sol
-
-
-# FIXME: replace the general solution in the docstring with
-# dsolve(equation, hint='1st_exact_Integral').  You will need to be able
-# to have assumptions on P and Q that dP/dy = dQ/dx.
-def ode_1st_exact(eq, func, order, match):
-    r"""
-    Solves 1st order exact ordinary differential equations.
-
-    A 1st order differential equation is called exact if it is the total
-    differential of a function. That is, the differential equation
-
-    .. math:: P(x, y) \,\partial{}x + Q(x, y) \,\partial{}y = 0
-
-    is exact if there is some function `F(x, y)` such that `P(x, y) =
-    \partial{}F/\partial{}x` and `Q(x, y) = \partial{}F/\partial{}y`.  It can
-    be shown that a necessary and sufficient condition for a first order ODE
-    to be exact is that `\partial{}P/\partial{}y = \partial{}Q/\partial{}x`.
-    Then, the solution will be as given below::
-
-        >>> from sympy import Function, Eq, Integral, symbols, pprint
-        >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
-        >>> P, Q, F= map(Function, ['P', 'Q', 'F'])
-        >>> pprint(Eq(Eq(F(x, y), Integral(P(t, y), (t, x0, x)) +
-        ... Integral(Q(x0, t), (t, y0, y))), C1))
-                    x                y
-                    /                /
-                   |                |
-        F(x, y) =  |  P(t, y) dt +  |  Q(x0, t) dt = C1
-                   |                |
-                  /                /
-                  x0               y0
-
-    Where the first partials of `P` and `Q` exist and are continuous in a
-    simply connected region.
-
-    A note: SymPy currently has no way to represent inert substitution on an
-    expression, so the hint ``1st_exact_Integral`` will return an integral
-    with `dy`.  This is supposed to represent the function that you are
-    solving for.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, cos, sin
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
-    ... f(x), hint='1st_exact')
-    Eq(x*cos(f(x)) + f(x)**3/3, C1)
-
-    References
-    ==========
-
-    - https://en.wikipedia.org/wiki/Exact_differential_equation
-    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-      Dover 1963, pp. 73
-
-    # indirect doctest
-
-    """
-    x = func.args[0]
-    r = match  # d+e*diff(f(x),x)
-    e = r[r['e']]
-    d = r[r['d']]
-    # XXX: This global y hack should be removed
-    global y  # This is the only way to pass dummy y to _handle_Integral
-    y = r['y']
-    C1 = get_numbered_constants(eq, num=1)
-    # Refer Joel Moses, "Symbolic Integration - The Stormy Decade",
-    # Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    # which gives the method to solve an exact differential equation.
-    sol = Integral(d, x) + Integral((e - (Integral(d, x).diff(y))), y)
-    return Eq(sol, C1)
 
 
 def ode_1st_homogeneous_coeff_best(eq, func, order, match):
@@ -8319,5 +8195,5 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+from .single import (FirstExact,NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
         Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial)
