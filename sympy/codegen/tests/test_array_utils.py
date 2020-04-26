@@ -1,4 +1,4 @@
-from sympy import symbols, IndexedBase, Identity, cos
+from sympy import symbols, IndexedBase, Identity, cos, Inverse
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
@@ -334,6 +334,29 @@ def test_parsing_of_matrix_expressions():
 
     expr = M*Transpose(N)
     assert _parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
+
+    expr = 3*M*N
+    res = _parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = 3*M + N*M.T*M + 4*k*N
+    res = _parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = Inverse(M)*N
+    rexpr = recognize_matrix_expression(_parse_matrix_expression(expr))
+    assert expr == rexpr
+
+    expr = M**2
+    rexpr = recognize_matrix_expression(_parse_matrix_expression(expr))
+    assert expr == rexpr
+
+    expr = M*(2*N + 3*M)
+    res = _parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr.expand() == rexpr.doit()
 
 
 def test_special_matrices():
