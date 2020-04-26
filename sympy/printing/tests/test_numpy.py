@@ -7,8 +7,7 @@ from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-                                       CodegenArrayTensorProduct, CodegenArrayDiagonal,
+from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
                                        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
 from sympy.printing.lambdarepr import NumPyPrinter
 

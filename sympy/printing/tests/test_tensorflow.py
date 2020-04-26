@@ -1,7 +1,6 @@
 import random
 from sympy import symbols, Derivative
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-                                       CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
+from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
                                        CodegenArrayPermuteDims, CodegenArrayDiagonal, parse_matrix_expression)
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
