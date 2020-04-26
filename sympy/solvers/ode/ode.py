@@ -1871,7 +1871,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
             for func_ in  func:
                 funcs.append(func_)
 
-    match = neq_nth_linear_constant_coeff_match(eq, funcs, t)
+    temp_eqs = eq
+    match = neq_nth_linear_constant_coeff_match(temp_eqs, funcs, t)
     if match is not None:
         return match
 

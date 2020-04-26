@@ -1,4 +1,4 @@
-from sympy import (Derivative, Symbol)
+from sympy import (Derivative, Symbol, expand, factor_terms)
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
@@ -170,7 +170,12 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
         except NonlinearError:
             raise ODENonlinearError("The system of ODEs is nonlinear.")
 
+        # 19185: To be changed when we have figured out why the minus
+        # sign isn't expanded.
+        Ai = Ai.applyfunc(expand)
+
         As.append(Ai)
+
         if o:
             eqs = [-eq for eq in b]
         else:
@@ -489,12 +494,15 @@ def _canonical_equations(eqs, funcs, t):
 
 def _is_commutative_anti_derivative(A, t):
     B = integrate(A, t)
+    is_commuting = (B*A - A*B).applyfunc(expand).applyfunc(factor_terms).is_zero_matrix
 
-    return B, B*A == A*B
+    return B, is_commuting
 
 
+# To add docstring in future commits.
 def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
 
+    print("This function is used....")
     # Some parts of code is repeated, this needs to be taken care of
     # The constant vector obtained here can be done so in the match
     # function itself.
@@ -506,7 +514,7 @@ def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
     # This needs to be modified in future so that fc is only of type Matrix
-    M = fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
 
     Cvect = Matrix(list(next(constants) for _ in range(n)))
 
@@ -667,7 +675,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # equation is first order. There will be a separate
     # function for this in the future.
     if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
-        match['func_coeff'] = -A
+        match['func_coeff'] = A
         if match['is_constant']:
             match['type_of_equation'] = "type1"
         else:

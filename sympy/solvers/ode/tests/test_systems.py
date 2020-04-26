@@ -163,6 +163,66 @@ def test_neq_nth_linear_constant_coeff_match():
                 'type_of_equation': 'type1'}
     assert neq_nth_linear_constant_coeff_match(eqs_10, funcs_2[:-1], t) == answer_10
 
+    eq11 = (Eq(x1,3*y(t)-11*z(t)),Eq(y1,7*z(t)-3*x(t)),Eq(z1,11*x(t)-7*y(t)))
+    sol11 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 3*y(t) - 11*z(t)), Eq(Derivative(y(t), t), -3*x(t) + 7*z(t)),
+            Eq(Derivative(z(t), t), 11*x(t) - 7*y(t))), 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1},
+            'is_linear': True, 'is_constant': True, 'is_homogeneous': True, 'func_coeff': Matrix([
+            [  0, -3, 11], [  3,  0, -7], [-11,  7,  0]]), 'type_of_equation': 'type1'}
+    assert neq_nth_linear_constant_coeff_match(eq11, funcs_2[:-1], t) == sol11
+
+    eq12 = (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t)))
+    sol12 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
+             'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': True,
+             'is_homogeneous': True, 'func_coeff': Matrix([
+            [0, -1],
+            [-1, 0]]), 'type_of_equation': 'type1'}
+    assert neq_nth_linear_constant_coeff_match(eq12, [x(t), y(t)], t) == sol12
+
+    eq13 = (Eq(Derivative(x(t), t), 21 * x(t)), Eq(Derivative(y(t), t), 17 * x(t) + 3 * y(t)),
+            Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t)))
+    sol13 = {'no_of_equation': 3, 'eq': (
+    Eq(Derivative(x(t), t), 21 * x(t)), Eq(Derivative(y(t), t), 17 * x(t) + 3 * y(t)),
+    Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t))), 'func': [x(t), y(t), z(t)],
+             'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous': True,
+             'func_coeff': Matrix([
+                 [-21, 0, 0],
+                 [-17, -3, 0],
+                 [-5, -7, -9]]), 'type_of_equation': 'type1'}
+    assert neq_nth_linear_constant_coeff_match(eq13, [x(t), y(t), z(t)], t) == sol13
+
+    eq14 = (
+    Eq(Derivative(x(t), t), 4 * x(t) + 5 * y(t) + 2 * z(t)), Eq(Derivative(y(t), t), x(t) + 13 * y(t) + 9 * z(t)),
+    Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t)))
+    sol14 = {'no_of_equation': 3, 'eq': (
+    Eq(Derivative(x(t), t), 4 * x(t) + 5 * y(t) + 2 * z(t)), Eq(Derivative(y(t), t), x(t) + 13 * y(t) + 9 * z(t)),
+    Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t))), 'func': [x(t), y(t), z(t)],
+             'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous': True,
+             'func_coeff': Matrix([
+                 [-4, -5, -2],
+                 [-1, -13, -9],
+                 [-32, -41, -11]]), 'type_of_equation': 'type1'}
+    assert neq_nth_linear_constant_coeff_match(eq14, [x(t), y(t), z(t)], t) == sol14
+
+    eq15 = (Eq(3 * Derivative(x(t), t), 20 * y(t) - 20 * z(t)), Eq(4 * Derivative(y(t), t), -15 * x(t) + 15 * z(t)),
+            Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t)))
+    sol15 = {'no_of_equation': 3, 'eq': (
+    Eq(3 * Derivative(x(t), t), 20 * y(t) - 20 * z(t)), Eq(4 * Derivative(y(t), t), -15 * x(t) + 15 * z(t)),
+    Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t))), 'func': [x(t), y(t), z(t)],
+             'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous': True,
+             'func_coeff': Matrix([
+                 [0, Rational(-20, 3), Rational(20, 3)],
+                 [Rational(15, 4), 0, Rational(-15, 4)],
+                 [Rational(-12, 5), Rational(12, 5), 0]]), 'type_of_equation': 'type1'}
+    assert neq_nth_linear_constant_coeff_match(eq15, [x(t), y(t), z(t)], t) == sol15
+
+    # Non constant coefficient non-homogeneous ODEs
+    eq1 = (Eq(diff(x(t), t), 5 * t * x(t) + 2 * y(t)), Eq(diff(y(t), t), 2 * x(t) + 5 * t * y(t)))
+    sol1 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), 5*t*x(t) + 2*y(t)), Eq(Derivative(y(t), t), 5*t*y(t) + 2*x(t))),
+            'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': False,
+            'is_homogeneous': True, 'func_coeff': Matrix([ [-5*t,   -2], [  -2, -5*t]]), 'commutative_antiderivative': Matrix([
+            [5*t**2/2,      2*t], [     2*t, 5*t**2/2]]), 'type_of_equation': 'type3'}
+    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+
 
 def test_matrix_exp():
     from sympy.matrices.dense import Matrix, eye, zeros
@@ -604,3 +664,36 @@ def test_sysode_linear_neq_order1():
 
     assert dsolve(eq25) == sol25
     assert checksysodesol(eq25, sol25)
+
+
+def test_neq_linear_first_order_nonconst_coeff_homogeneous():
+    f, g = symbols('f g', cls=Function)
+    x = symbols('x')
+    r = symbols('r', real=True)
+
+    eqs1 = [Eq(diff(f(r), r),  f(r) + r*g(r)),
+           Eq(diff(g(r), r),-r*f(r) + g(r))]
+    sol1 = [Eq(f(r), (C1*cos(r**2/2) + C2*sin(r**2/2))*exp(r)),
+           Eq(g(r), (-C1*sin(r**2/2) + C2*cos(r**2/2))*exp(r))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+    eqs2 = [Eq(diff(f(x), x),  x*f(x) + x**2*g(x)),
+           Eq(diff(g(x), x),  2*x**2*f(x) + (x + 3*x**2)*g(x))]
+    sol2 = [
+        Eq(f(x), C1 * ((-187 + 45 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
+                -34 + 6 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
+                    -221 + 51 * sqrt(17)) + C2 * (
+                    (13 - 3 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
+                        -13 + 3 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
+                    -51 + 13 * sqrt(17))),
+        Eq(g(x), -C1 * ((-102 + 26 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
+                 102 - 26 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
+                    -221 + 51 * sqrt(17)) + C2 * (
+                    (-34 + 6 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
+                        -187 + 45 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
+                    -221 + 51 * sqrt(17)))
+        ]
+
+    assert dsolve(eqs2) == sol2
+    assert checksysodesol(eqs2, sol2) == (True, [0, 0])
