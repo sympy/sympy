@@ -1405,8 +1405,8 @@ class MatrixProperties(MatrixRequired):
             summation = self.zero
             for j in range(cols):
                 if i != j:
-                    summation += self[i, j]
-            return (Abs(self[i, i]) - Abs(summation)).is_nonnegative
+                    summation += Abs(self[i, j])
+            return (Abs(self[i, i]) - summation).is_nonnegative
 
         return fuzzy_and((test_row(i) for i in range(rows)))
 
@@ -1452,8 +1452,8 @@ class MatrixProperties(MatrixRequired):
             summation = self.zero
             for j in range(cols):
                 if i != j:
-                    summation += self[i, j]
-            return (Abs(self[i, i]) - Abs(summation)).is_positive
+                    summation += Abs(self[i, j])
+            return (Abs(self[i, i]) - summation).is_positive
 
         return fuzzy_and((test_row(i) for i in range(rows)))
 
