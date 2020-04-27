@@ -622,7 +622,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
 def _is_positive_definite(M):
     if not M.is_hermitian:
         if not M.is_square:
-            return None
+            return False
         M = M + M.H
 
     positive_diagonals = M._has_positive_diagonals()
@@ -638,7 +638,7 @@ def _is_positive_definite(M):
 def _is_positive_semidefinite(M):
     if not M.is_hermitian:
         if not M.is_square:
-            return None
+            return False
         M = M + M.H
 
     nonnegative_diagonals = M._has_nonnegative_diagonals()
@@ -672,7 +672,7 @@ def _is_indefinite(M):
     elif M.is_square:
         return (M + M.H).is_indefinite
 
-    return None
+    return False
 
 
 def _is_positive_definite_GE(M):

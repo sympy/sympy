@@ -1399,6 +1399,9 @@ class MatrixProperties(MatrixRequired):
         If you want to test whether a matrix is column diagonally
         dominant, you can apply the test after transposing the matrix.
         """
+        if not self.is_square:
+            return False
+
         rows, cols = self.shape
 
         def test_row(i):
@@ -1446,6 +1449,9 @@ class MatrixProperties(MatrixRequired):
         If you want to test whether a matrix is column diagonally
         dominant, you can apply the test after transposing the matrix.
         """
+        if not self.is_square:
+            return False
+
         rows, cols = self.shape
 
         def test_row(i):
