@@ -620,19 +620,35 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
 
 
 def _is_positive_definite(M):
-    if M.is_hermitian:
-        return _is_positive_definite_GE(M)
-    elif M.is_square:
-        return _is_positive_definite_GE(M + M.H)
-    return None
+    if not M.is_hermitian:
+        if not M.is_square:
+            return None
+        M = M + M.H
+
+    positive_diagonals = M._has_positive_diagonals()
+    if not positive_diagonals:
+        return False
+
+    if positive_diagonals and M.is_strongly_diagonally_dominant:
+        return True
+
+    return _is_positive_definite_GE(M)
 
 
 def _is_positive_semidefinite(M):
-    if M.is_hermitian:
-        return _is_positive_semidefinite_minors(M)
-    elif M.is_square:
-        return _is_positive_semidefinite_minors(M + M.H)
-    return None
+    if not M.is_hermitian:
+        if not M.is_square:
+            return None
+        M = M + M.H
+
+    nonnegative_diagonals = M._has_nonnegative_diagonals()
+    if not nonnegative_diagonals:
+        return False
+
+    if nonnegative_diagonals and M.is_diagonally_dominant:
+        return True
+
+    return _is_positive_semidefinite_minors(M)
 
 
 def _is_negative_definite(M):
