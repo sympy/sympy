@@ -412,7 +412,7 @@ def test_binomial():
     kn = Symbol('kn', integer=True, negative=True)
     kne = Symbol('kn', integer=True, negative=True, even=True)
     nt, kt = symbols('nt kt', integer=False)
-    ntr = symbols('ntr', rational=False, real=True)
+    nr = symbols('nr', rational=False, real=True)
     a, b = symbols('a b', integer=True, nonnegative=True)
     u = Symbol('u', negative=True)
     v = Symbol('v', nonnegative=True)
@@ -470,7 +470,7 @@ def test_binomial():
     assert binomial(n, k).is_integer
     assert binomial(nt, k).is_integer is None
     assert binomial(k, nt).is_integer is None
-    assert binomial(k, ntr).is_integer is False
+    assert binomial(k, nr).is_integer is False
     assert binomial(x, nt).is_integer is None  # see next,
     assert binomial(S.Half, S.Half*3) == 0     #<--------+
     assert binomial(n, a).is_integer
@@ -524,17 +524,19 @@ def test_binomial():
     assert binomial(kn, kt) is zoo
 
     assert binomial(nt, kt).func == binomial
-    assert unchanged(binomial, nt, Rational(15, 6))
+    assert unchanged(binomial, nt, Rational(5, 2))
     assert binomial(kn - 3, kn - 1, evaluate=False).rewrite(gamma) == 0
-    assert binomial(nt, Rational(15, 6)).rewrite(gamma
-        ) == 8*gamma(nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
-    assert binomial(Rational(20, 3), Rational(-10, 8)
+    b = binomial(nt, Rational(5, 2))
+    assert b.rewrite(gamma) == b  # nt could be 3/2
+    assert binomial(nr, Rational(5, 2)).rewrite(gamma
+        ) == 8*gamma(nr + 1)/(15*sqrt(pi)*gamma(nr - Rational(3, 2)))
+    assert binomial(Rational(20, 3), Rational(-5, 4)
         ).rewrite(gamma) == gamma(Rational(23, 3)
         )/(gamma(Rational(-1, 4))*gamma(Rational(107, 12)))
     assert binomial(Rational(19, 2), Rational(-7, 2)
         ).rewrite(gamma) == Rational(-1615, 8388608)
     assert binomial(Rational(-13, 5), Rational(-7, 8)
-        ).rewrite(gamma) == gamma(Rational(-8, 5))/(gamma(Rational(-29, 40))*gamma(Rational(1,8)))
+        ).rewrite(gamma) == gamma(Rational(-8, 5))/(gamma(Rational(-29, 40))*gamma(Rational(1, 8)))
     assert binomial(Rational(-19, 8), Rational(-13, 5)
         ).rewrite(gamma) == gamma(Rational(-11, 8)
         )/(gamma(Rational(-8, 5))*gamma(Rational(49, 40)))
@@ -732,7 +734,6 @@ def test_binomial_rewrite():
                     else:
                         rw = u.rewrite(F)
                     assert Eq(rw, binomial(x, y)), (x, y, F)
-
 
 
 @XFAIL

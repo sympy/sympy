@@ -257,7 +257,7 @@ class factorial(CombinatorialFunction):
                     if isprime and (d - 1 < n):
                         fc = self._facmod(d - 1, aq)
                         fc = pow(fc, aq - 2, aq)
-                        if d%2:
+                        if d % 2:
                             fc = -fc
                     else:
                         fc = self._facmod(n, aq)
@@ -318,7 +318,7 @@ class factorial(CombinatorialFunction):
             return self.func(arg_1)
         ####################################################
         # The correct result here should be 'None'.        #
-        # Indeed arg in not bounded as x tends to 0.       #
+        # Indeed arg is not bounded as x tends to 0.       #
         # Consequently the series expansion does not admit #
         # the leading term.                                #
         # For compatibility reasons, the return value here #
@@ -376,7 +376,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     @cacheit
-    def _eval(self, n):
+    def _eval(cls, n):
         if not n:
             return S.One
         elif n == 1:
@@ -472,12 +472,10 @@ class factorial2(CombinatorialFunction):
                     return 2**k * factorial(k)
                 return factorial(arg) / factorial2(arg - 1)
 
-
             if arg.is_odd:
                 return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
             raise ValueError("argument must be nonnegative integer "
                                 "or negative odd integer")
-
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
@@ -822,20 +820,39 @@ class binomial(CombinatorialFunction):
     integers and the value of the binomial can be computed in terms
     of factorials::
 
-    .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}
+    .. math:: \binom{n}{k} = \frac{n!}{k!(n - k)!}
 
-    For arbitrary ``n`` and a nonnegative, integer ``k``, the following
-    definition can be used (and is useful when evaluating summations)::
+    For arbitrary ``n`` and integer ``k``, we use Newton's Generalized
+    Binomial Theorem. See [4]_ ::
 
     .. math:: \binom{n}{k} = \frac{ff(n, k)}{k!}
 
-    When ``k`` is negative but ``n - k`` is a non-negative integer then
-    the following identity can be used::
+    .. math:: (x+y)^n & =\sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
+
+    Using the aforementioned theorem, one can interpret the binomial
+    coefficient :math:`\binom{n}{k}` as the coefficient
+    of :math:`x^k, y^k, x^(n - k), y^(n - k)` in the Series expansion
+    of :math:`(x + y)^n`.
+
+    When ``k`` is negative and ``n - k`` is a non-negative integer
+    then the following identity is used before the coefficient is
+    calculated::
 
     .. math:: \binom{n}{k} = \binom{n}{n - k}
 
+    .. math:: \binom{n}{k} = \frac{ff(n, n - k)}{(n - k)!}
+
+    The binomial coefficient is zero in the following cases, provided
+    both ``n`` and ``k`` are integers. See [3]_ ::
+
+    .. math:: k > n \geq 0
+
+    .. math:: n \geq 0 > k
+
+    .. math:: 0 > k > n
+
     If neither ``k`` nor ``n - k`` is a nonnegative integer then
-    the binomial is expressed in terms of the gamma function:
+    the binomial is expressed in terms of the gamma function. See [2]_ ::
 
     .. math:: \binom{n}{k} = \frac{\gamma(n + 1)}{\gamma(k + 1)\gamma(n - k + 1)}
 
@@ -896,6 +913,10 @@ class binomial(CombinatorialFunction):
     .. [1] https://www.johndcook.com/blog/binomial_coefficients/
 
     .. [2] http://functions.wolfram.com/GammaBetaErf/Binomial/02/
+
+    .. [3] https://core.ac.uk/download/pdf/82732883.pdf#page=9
+
+    .. [4] https://en.wikipedia.org/wiki/Binomial_theorem#Newton%27s_generalized_binomial_theorem
 
     See Also
     ========
@@ -964,11 +985,11 @@ class binomial(CombinatorialFunction):
                 # since adding 1 to it cannot give 0
                 return S.Zero
         if all(int_like(x) for x in (n, k)):
-            if (n*k).is_positive and n_k.is_negative:
+            if (n*k).is_positive and n_k.is_negative: # 0 > k > n
                 return S.Zero
-            if n.is_nonnegative and k.is_negative:
+            if n.is_nonnegative and k.is_negative: # n >= 0 > k
                 return S.Zero
-            if n.is_zero and k.is_nonzero:
+            if n.is_nonnegative and n_k.is_negative: # k > n >= 0
                 return S.Zero
         elif n.is_negative:
             if int_like(n) and int_like(k) is False:
@@ -1132,32 +1153,35 @@ class binomial(CombinatorialFunction):
                 True))
 
     def _eval_rewrite_as_factorial(self, n, k, **kwargs):
-        if (k.is_integer and (
-                    n.is_integer and n.is_nonnegative or
-                    k.is_nonpositive and n.is_integer is False) or
-                k.is_integer is False and n.is_integer and
-                    n.is_negative):
-            return factorial(n)/(factorial(k)*factorial(n - k))
+        rv = self._eval_rewrite_as_gamma(n, k)
+        if rv is not None:
+            return rv.rewrite(factorial)
 
     def _eval_rewrite_as_gamma(self, n, k, **kwargs):
-        from sympy import gamma
-        if all(x.is_negative and int_like(x) for x in (n, k, n - k)):
-            return S.Zero  # because either n < k or n < (n - k)
-        if n.is_negative and int_like(n):
-            if k.is_negative and int_like(k):
-                return
-            if (n - k).is_negative and int_like(n - k):
-                return
-        ok = False
-        if (n + 1).is_zero is False or n.is_nonnegative:
-            ok = True
-        elif k.is_nonnegative and (n - k).is_nonnegative:
-            # if n is -1 then neither k nor n - k can be -1
-            # so if they are both non-negative then the rewrite
-            # is ok
-            ok = True
-        if ok:
-            return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+        from sympy import gamma, Pow
+        ki = k.is_integer
+        nki = (n - k).is_integer
+        if ki is None:
+            return
+        if nki is None:
+            return
+        if n.is_integer and k.is_integer:
+            if n.is_negative:
+                if k.is_nonnegative:
+                    return(Pow(-1, k)*gamma(k - n)/(gamma(-n)*gamma(k + 1)))
+                if k.is_negative:
+                    return (Pow(-1, n - k)*gamma(-k)/(gamma(-n)*gamma(n - k + 1)))
+            elif n.is_nonnegative:
+                if k.is_negative:
+                    return S.Zero
+                if k.is_nonnegative:
+                    return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
+        elif ki is False and nki is False:
+            return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
+        elif ki and (k + 1).is_positive:
+            return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
+        elif nki and (n - k + 1).is_positive:
+            return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
 
     def _eval_rewrite_as_tractable(self, n, k, **kwargs):
         g = self._eval_rewrite_as_gamma(n, k)
