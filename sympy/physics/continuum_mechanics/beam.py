@@ -2301,11 +2301,11 @@ class Beam3D(Beam):
                 show = False, title='Shear Force along z direction',
                 xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V[z]}$', line_color='g')
 
-        if(dir == "x"):
+        if dir == "x":
             return Px.show()
-        elif(dir == "y"):
+        elif dir == "y":
             return Py.show()
-        elif(dir == "z"):
+        elif dir == "z":
             return Pz.show()
         else:
             return {Px.show(),Py.show(),Pz.show()}
