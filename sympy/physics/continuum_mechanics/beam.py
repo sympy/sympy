@@ -2242,6 +2242,7 @@ class Beam3D(Beam):
 
         Parameters
         ==========
+
         dir : string (default : "all")
             Direction along which shear force plot is required.
             If no direction is specified, all plots are displayed.
