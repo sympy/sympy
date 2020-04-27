@@ -7,7 +7,7 @@ from sympy.abc import x, y
 
 def test_gammasimp():
     R = Rational
-    n, k = symbols('n k', integer=False)
+    n, k = symbols('n k', nonnegative=True)
 
     # was part of test_combsimp_gamma() in test_combsimp.py
     assert gammasimp(gamma(x)) == gamma(x)

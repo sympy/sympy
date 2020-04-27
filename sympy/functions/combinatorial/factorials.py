@@ -1,5 +1,6 @@
 from typing import List
 
+from sympy.assumptions import ask, Q
 from sympy.core import S, sympify, Mod
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, HAS_GMPY, ordered, as_int
@@ -1155,40 +1156,53 @@ class binomial(CombinatorialFunction):
 
     def _eval_rewrite_as_factorial(self, n, k, **kwargs):
         from sympy import Pow
+        isint = lambda x: ask(Q.integer(x))
+        isneg = lambda x: ask(Q.negative(x))
+        isnneg = lambda x: ask(Q.nonnegative(x))
+        iszero = lambda x: ask(Q.zero(x))
 
-        if fuzzy_and([n.is_integer, k.is_integer]):
-            if n.is_negative:
-                if k.is_nonnegative:
+        if isnneg(n) and isnneg(k) or any(x is False for x in [isint(n), isint(k)]):
+            if iszero(n - k + 1):
+                return S.Zero
+            else:
+                return factorial(n)/(factorial(k)*factorial(n - k))
+        if fuzzy_and([isint(n), isint(k)]):
+            if isneg(n):
+                if isnneg(k):
                     return(Pow(-1, k)*factorial(k - n - 1)/(
                         factorial(k)*factorial(-n - 1)))
-                if k.is_negative:
+                if isneg(k):
                     return (Pow(-1, n - k)*factorial(-k - 1)/(
                         factorial(n - k)*factorial(-n - 1)))
-            elif n.is_nonnegative:
-                if k.is_negative:
+            elif isnneg(n):
+                if isneg(k):
                     return S.Zero
-                if k.is_nonnegative:
+                if isnneg(k):
                     return factorial(n)/(factorial(k)*factorial(n - k))
-        if fuzzy_and([n.is_integer, k.is_integer]) is False:
-            return factorial(n)/(factorial(k)*factorial(n - k))
 
     def _eval_rewrite_as_gamma(self, n, k, **kwargs):
         from sympy import gamma, Pow
+        isint = lambda x: ask(Q.integer(x))
+        isneg = lambda x: ask(Q.negative(x))
+        isnneg = lambda x: ask(Q.nonnegative(x))
+        iszero = lambda x: ask(Q.zero(x))
 
-        if fuzzy_and([n.is_integer, k.is_integer]):
-            if n.is_negative:
-                if k.is_nonnegative:
+        if isnneg(n) and isnneg(k) or any(x is False for x in [isint(n), isint(k)]):
+            if iszero(n - k + 1):
+                return S.Zero
+            else:
+                return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
+        if isint(n) and isint(k):
+            if isneg(n):
+                if isnneg(k):
                     return(Pow(-1, k)*gamma(k - n)/(gamma(-n)*gamma(k + 1)))
-                if k.is_negative:
-                    return (Pow(-1, n - k)*gamma(-k)/(
-                        gamma(-n)*gamma(n - k + 1)))
-            elif n.is_nonnegative:
-                if k.is_negative:
+                if isneg(k):
+                    return (Pow(-1, n - k)*gamma(-k)/(gamma(-n)*gamma(n - k + 1)))
+            if isnneg(n):
+                if isneg(k):
                     return S.Zero
-                if k.is_nonnegative:
+                if isnneg(k):
                     return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
-        if fuzzy_and([n.is_integer, k.is_integer]) is False:
-            return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
 
     def _eval_rewrite_as_tractable(self, n, k, **kwargs):
         g = self._eval_rewrite_as_gamma(n, k)
