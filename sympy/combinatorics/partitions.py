@@ -1,3 +1,5 @@
+from abc import ABC
+
 from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key
 from sympy.core.sympify import _sympify
@@ -9,7 +11,7 @@ from sympy.utilities.iterables import flatten, group
 from collections import defaultdict
 
 
-class Partition(FiniteSet):
+class Partition(FiniteSet, ABC):
     """
     This class represents an abstract partition.
 
@@ -149,7 +151,7 @@ class Partition(FiniteSet):
         """
         other = as_int(other)
         offset = self.rank + other
-        result = RGS_unrank((offset) %
+        result = RGS_unrank(offset %
                             RGS_enum(self.size),
                             self.size)
         return Partition.from_rgs(result, self.members)
@@ -593,7 +595,7 @@ def random_integer_partition(n, seed=None):
     randint = _randint(seed)
 
     partition = []
-    while (n > 0):
+    while n > 0:
         k = randint(1, n)
         mult = randint(1, n//k)
         partition.append((k, mult))
@@ -664,9 +666,9 @@ def RGS_enum(m):
     >>> assert len(s) == 15
 
     """
-    if (m < 1):
+    if m < 1:
         return 0
-    elif (m == 1):
+    elif m == 1:
         return 1
     else:
         return bell(m)

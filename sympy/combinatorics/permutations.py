@@ -12,7 +12,7 @@ from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
-    has_dups, runs)
+                                       has_dups, runs)
 from mpmath.libmp.libintmath import ifac
 
 
@@ -105,8 +105,8 @@ def _af_rmuln(*abc):
         return [a[i] for i in b]
     if m == 0:
         raise ValueError("String must not be empty")
-    p0 = _af_rmuln(*a[:m//2])
-    p1 = _af_rmuln(*a[m//2:])
+    p0 = _af_rmuln(*a[:m // 2])
+    p1 = _af_rmuln(*a[m // 2:])
     return [p0[i] for i in p1]
 
 
@@ -308,6 +308,7 @@ class Cycle(dict):
 
     Permutation
     """
+
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
         return as_int(arg)
@@ -876,13 +877,13 @@ class Permutation(Atom):
         if size is not None:
             size = int(size)
 
-        #a) ()
-        #b) (1) = identity
-        #c) (1, 2) = cycle
-        #d) ([1, 2, 3]) = array form
-        #e) ([[1, 2]]) = cyclic form
-        #f) (Cycle) = conversion to permutation
-        #g) (Permutation) = adjust size or return copy
+        # a) ()
+        # b) (1) = identity
+        # c) (1, 2) = cycle
+        # d) ([1, 2, 3]) = array form
+        # e) ([[1, 2]]) = cyclic form
+        # f) (Cycle) = conversion to permutation
+        # g) (Permutation) = adjust size or return copy
         ok = True
         if not args:  # a
             return cls._af_new(list(range(size or 0)))
@@ -931,7 +932,7 @@ class Permutation(Atom):
         if not is_cycle:
             if any(i not in temp for i in range(len(temp))):
                 raise ValueError('Integers 0 through %s must be present.' %
-                max(temp))
+                                 max(temp))
             if size is not None and temp and max(temp) + 1 > size:
                 raise ValueError('max element should not exceed %s' % (size - 1))
 
@@ -1226,7 +1227,7 @@ class Permutation(Atom):
         """
         rv = args[0]
         for i in range(1, len(args)):
-            rv = args[i]*rv
+            rv = args[i] * rv
         return rv
 
     @classmethod
@@ -1250,7 +1251,7 @@ class Permutation(Atom):
     def __rmul__(self, other):
         """This is needed to coerce other to Permutation in rmul."""
         cls = type(self)
-        return cls(other)*self
+        return cls(other) * self
 
     def __mul__(self, other):
         """
@@ -1446,7 +1447,7 @@ class Permutation(Atom):
 
         if self.size != h.size:
             raise ValueError("The permutations must be of equal size.")
-        a = [None]*self.size
+        a = [None] * self.size
         h = h._array_form
         p = self._array_form
         for i in range(self.size):
@@ -1584,7 +1585,7 @@ class Permutation(Atom):
                 if i < 0 or i > self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
-                        .format(i, self.size-1))
+                            .format(i, self.size - 1))
                 return self._array_form[i]
             # P([a, b, c])
             if len(i) != self.size:
@@ -1592,7 +1593,7 @@ class Permutation(Atom):
                     "{} should have the length {}.".format(i, self.size))
             return [i[j] for j in self._array_form]
         # P(1, 2, 3)
-        return self*Permutation(Cycle(*i), size=self.size)
+        return self * Permutation(Cycle(*i), size=self.size)
 
     def atoms(self):
         """
@@ -1652,7 +1653,7 @@ class Permutation(Atom):
         n = self.size
         if (i < 0) == True or (i >= n) == True:
             raise NotImplementedError(
-                "{} should be an integer between 0 and {}".format(i, n-1))
+                "{} should be an integer between 0 and {}".format(i, n - 1))
 
         if i.is_Integer:
             return Integer(self._array_form[i])
@@ -1723,10 +1724,11 @@ class Permutation(Atom):
 
         next_nonlex, rank_nonlex
         """
+
         def _unrank1(n, r, a):
             if n > 0:
                 a[n - 1], a[r % n] = a[r % n], a[n - 1]
-                _unrank1(n - 1, r//n, a)
+                _unrank1(n - 1, r // n, a)
 
         id_perm = list(range(n))
         n = int(n)
@@ -1753,6 +1755,7 @@ class Permutation(Atom):
 
         next_nonlex, unrank_nonlex
         """
+
         def _rank1(n, perm, inv_perm):
             if n == 1:
                 return 0
@@ -1760,7 +1763,7 @@ class Permutation(Atom):
             t = inv_perm[n - 1]
             perm[n - 1], perm[t] = perm[t], s
             inv_perm[n - 1], inv_perm[s] = inv_perm[s], t
-            return s + n*_rank1(n - 1, perm, inv_perm)
+            return s + n * _rank1(n - 1, perm, inv_perm)
 
         if inv_perm is None:
             inv_perm = (~self).array_form
@@ -1826,7 +1829,7 @@ class Permutation(Atom):
         size = n + 1
         psize = int(ifac(n))
         for j in range(size - 1):
-            rank += rho[j]*psize
+            rank += rho[j] * psize
             for i in range(j + 1, size):
                 if rho[i] > rho[j]:
                     rho[i] -= 1
@@ -2197,10 +2200,10 @@ class Permutation(Atom):
         n = len(a)
         if len(b) != n:
             raise ValueError("The permutations must be of equal size.")
-        inva = [None]*n
+        inva = [None] * n
         for i in range(n):
             inva[a[i]] = i
-        invb = [None]*n
+        invb = [None] * n
         for i in range(n):
             invb[b[i]] = i
         return self._af_new([a[b[inva[i]]] for i in invb])
@@ -2462,9 +2465,9 @@ class Permutation(Atom):
                 i += 1
             j1 = j + 1
             if rank % 2 == 0:
-                rank = j1*rank + j1 - k
+                rank = j1 * rank + j1 - k
             else:
-                rank = j1*rank + k - 1
+                rank = j1 * rank + k - 1
         return rank
 
     @classmethod
@@ -2486,14 +2489,14 @@ class Permutation(Atom):
 
         rank_trotterjohnson, next_trotterjohnson
         """
-        perm = [0]*size
+        perm = [0] * size
         r2 = 0
         n = ifac(size)
         pj = 1
         for j in range(2, size + 1):
             pj *= j
             r1 = (rank * pj) // n
-            k = r1 - j*r2
+            k = r1 - j * r2
             if r2 % 2 == 0:
                 for i in range(j - 1, j - k - 1, -1):
                     perm[i] = perm[i - 1]
@@ -2537,7 +2540,7 @@ class Permutation(Atom):
         st = 0
         rho = pi[:]
         done = False
-        m = n-1
+        m = n - 1
         while m > 0 and not done:
             d = rho.index(m)
             for i in range(d, m):
@@ -2630,7 +2633,7 @@ class Permutation(Atom):
                     continue
                 if self_prec_mat[i, j] * other_prec_mat[i, j] == 1:
                     n_prec += 1
-        d = self.size * (self.size - 1)//2 - n_prec
+        d = self.size * (self.size - 1) // 2 - n_prec
         return d
 
     def get_adjacency_matrix(self):
@@ -2864,9 +2867,9 @@ class Permutation(Atom):
         perm_array = [0] * size
         psize = 1
         for i in range(size):
-            new_psize = psize*(i + 1)
+            new_psize = psize * (i + 1)
             d = (rank % new_psize) // psize
-            rank -= d*psize
+            rank -= d * psize
             perm_array[size - i - 1] = d
             for j in range(size - i, size):
                 if perm_array[j] > d - 1:
@@ -2929,12 +2932,12 @@ class Permutation(Atom):
             for cycle in cyclic_form:
                 cycle_min = min(cycle)
                 cycle_max = max(cycle)
-                if cycle_min <= n-1:
-                    if cycle_max > n-1:
+                if cycle_min <= n - 1:
+                    if cycle_max > n - 1:
                         raise ValueError(
                             "The permutation can not be resized to {} "
                             "because the cycle {} may break."
-                            .format(n, tuple(cycle)))
+                                .format(n, tuple(cycle)))
 
                     new_cyclic_form.append(cycle)
             return Permutation(new_cyclic_form)
@@ -2964,7 +2967,7 @@ def _merge(arr, temp, left, mid, right):
             temp[k] = arr[j]
             k += 1
             j += 1
-            inv_count += (mid -i)
+            inv_count += (mid - i)
     while i < mid:
         temp[k] = arr[i]
         k += 1
@@ -2976,6 +2979,7 @@ def _merge(arr, temp, left, mid, right):
     else:
         arr[left:right + 1] = temp[left:right + 1]
     return inv_count
+
 
 Perm = Permutation
 _af_new = Perm._af_new
@@ -3005,6 +3009,7 @@ class AppliedPermutation(Expr):
     >>> _.subs(x, 1)
     2
     """
+
     def __new__(cls, perm, x, evaluate=None):
         if evaluate is None:
             evaluate = global_parameters.evaluate
@@ -3014,7 +3019,7 @@ class AppliedPermutation(Expr):
 
         if not isinstance(perm, Permutation):
             raise ValueError("{} must be a Permutation instance."
-                .format(perm))
+                             .format(perm))
 
         if evaluate:
             if x.is_Integer:

@@ -1,7 +1,7 @@
 """Module for querying SymPy objects about assumptions."""
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
+                                      AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
@@ -346,7 +346,6 @@ class AssumptionKeys:
         """
         return Predicate('finite')
 
-
     @memoize_property
     def infinite(self):
         """
@@ -358,7 +357,6 @@ class AssumptionKeys:
         """
         # TODO: Add examples
         return Predicate('infinite')
-
 
     @memoize_property
     def positive(self):
@@ -1147,6 +1145,7 @@ class AssumptionKeys:
 
 Q = AssumptionKeys()
 
+
 def _extract_facts(expr, symbol, check_reversed_rel=True):
     """
     Helper for ask().
@@ -1267,7 +1266,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
         if len(local_facts.clauses) == 1:
             cl, = local_facts.clauses
-            f, = cl if len(cl)==1 else [None]
+            f, = cl if len(cl) == 1 else [None]
             if f and f.is_Not and f.arg in known_facts_dict.get(key, []):
                 return False
 
@@ -1394,67 +1393,70 @@ def compute_known_facts(known_facts, known_facts_keys):
     ''')
     # Compute the known facts in CNF form for logical inference
     LINE = ",\n        "
-    HANG = ' '*8
+    HANG = ' ' * 8
     cnf = to_cnf(known_facts)
     cnf_ = CNF.to_CNF(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
 
-    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
+    p = LINE.join(sorted(
+        ['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) + '))' for clause in cnf_.clauses]))
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]
     values = ['set(%s)' % sorted(i[1], key=str) for i in items]
     m = LINE.join(['\n'.join(
         wrap("{}: {}".format(k, v),
-            subsequent_indent=HANG,
-            break_long_words=False))
+             subsequent_indent=HANG,
+             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
     return fact_string % (p, c, m)
+
 
 # handlers tells us what ask handler we should use
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
-    ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("finite",           "calculus.AskFiniteHandler"),
-    ("commutative",       "AskCommutativeHandler"),
-    ("complex",           "sets.AskComplexHandler"),
-    ("composite",         "ntheory.AskCompositeHandler"),
-    ("even",              "ntheory.AskEvenHandler"),
-    ("extended_real",     "sets.AskExtendedRealHandler"),
-    ("hermitian",         "sets.AskHermitianHandler"),
-    ("imaginary",         "sets.AskImaginaryHandler"),
-    ("integer",           "sets.AskIntegerHandler"),
-    ("irrational",        "sets.AskIrrationalHandler"),
-    ("rational",          "sets.AskRationalHandler"),
-    ("negative",          "order.AskNegativeHandler"),
-    ("nonzero",           "order.AskNonZeroHandler"),
-    ("nonpositive",       "order.AskNonPositiveHandler"),
-    ("nonnegative",       "order.AskNonNegativeHandler"),
-    ("zero",              "order.AskZeroHandler"),
-    ("positive",          "order.AskPositiveHandler"),
-    ("prime",             "ntheory.AskPrimeHandler"),
-    ("real",              "sets.AskRealHandler"),
-    ("odd",               "ntheory.AskOddHandler"),
-    ("algebraic",         "sets.AskAlgebraicHandler"),
-    ("is_true",           "common.TautologicalHandler"),
-    ("symmetric",         "matrices.AskSymmetricHandler"),
-    ("invertible",        "matrices.AskInvertibleHandler"),
-    ("orthogonal",        "matrices.AskOrthogonalHandler"),
-    ("unitary",           "matrices.AskUnitaryHandler"),
+    ("antihermitian", "sets.AskAntiHermitianHandler"),
+    ("finite", "calculus.AskFiniteHandler"),
+    ("commutative", "AskCommutativeHandler"),
+    ("complex", "sets.AskComplexHandler"),
+    ("composite", "ntheory.AskCompositeHandler"),
+    ("even", "ntheory.AskEvenHandler"),
+    ("extended_real", "sets.AskExtendedRealHandler"),
+    ("hermitian", "sets.AskHermitianHandler"),
+    ("imaginary", "sets.AskImaginaryHandler"),
+    ("integer", "sets.AskIntegerHandler"),
+    ("irrational", "sets.AskIrrationalHandler"),
+    ("rational", "sets.AskRationalHandler"),
+    ("negative", "order.AskNegativeHandler"),
+    ("nonzero", "order.AskNonZeroHandler"),
+    ("nonpositive", "order.AskNonPositiveHandler"),
+    ("nonnegative", "order.AskNonNegativeHandler"),
+    ("zero", "order.AskZeroHandler"),
+    ("positive", "order.AskPositiveHandler"),
+    ("prime", "ntheory.AskPrimeHandler"),
+    ("real", "sets.AskRealHandler"),
+    ("odd", "ntheory.AskOddHandler"),
+    ("algebraic", "sets.AskAlgebraicHandler"),
+    ("is_true", "common.TautologicalHandler"),
+    ("symmetric", "matrices.AskSymmetricHandler"),
+    ("invertible", "matrices.AskInvertibleHandler"),
+    ("orthogonal", "matrices.AskOrthogonalHandler"),
+    ("unitary", "matrices.AskUnitaryHandler"),
     ("positive_definite", "matrices.AskPositiveDefiniteHandler"),
-    ("upper_triangular",  "matrices.AskUpperTriangularHandler"),
-    ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
-    ("diagonal",          "matrices.AskDiagonalHandler"),
-    ("fullrank",          "matrices.AskFullRankHandler"),
-    ("square",            "matrices.AskSquareHandler"),
-    ("integer_elements",  "matrices.AskIntegerElementsHandler"),
-    ("real_elements",     "matrices.AskRealElementsHandler"),
-    ("complex_elements",  "matrices.AskComplexElementsHandler"),
+    ("upper_triangular", "matrices.AskUpperTriangularHandler"),
+    ("lower_triangular", "matrices.AskLowerTriangularHandler"),
+    ("diagonal", "matrices.AskDiagonalHandler"),
+    ("fullrank", "matrices.AskFullRankHandler"),
+    ("square", "matrices.AskSquareHandler"),
+    ("integer_elements", "matrices.AskIntegerElementsHandler"),
+    ("real_elements", "matrices.AskRealElementsHandler"),
+    ("complex_elements", "matrices.AskComplexElementsHandler"),
 ]
 
 for name, value in _handlers:
     register_handler(name, _val_template % value)
+
 
 @cacheit
 def get_known_facts_keys():
@@ -1462,6 +1464,7 @@ def get_known_facts_keys():
         getattr(Q, attr)
         for attr in Q.__class__.__dict__
         if not attr.startswith('__')]
+
 
 @cacheit
 def get_known_facts():
@@ -1518,6 +1521,7 @@ def get_known_facts():
         Implies(Q.integer_elements, Q.real_elements),
         Implies(Q.real_elements, Q.complex_elements),
     )
+
 
 from sympy.assumptions.ask_generated import (
     get_known_facts_dict, get_all_known_facts)

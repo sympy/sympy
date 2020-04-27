@@ -61,6 +61,7 @@ class OR:
     """
     A low-level implementation for Or
     """
+
     def __init__(self, *args):
         self._args = args
 
@@ -93,6 +94,7 @@ class AND:
     """
     A low-level implementation for And
     """
+
     def __init__(self, *args):
         self._args = args
 
@@ -115,7 +117,7 @@ class AND:
         return self.args == other.args
 
     def __str__(self):
-        s = '('+' & '.join([str(arg) for arg in self.args])+')'
+        s = '(' + ' & '.join([str(arg) for arg in self.args]) + ')'
         return s
 
     __repr__ = __str__
@@ -212,6 +214,7 @@ class CNF:
     Consists of set of clauses, which themselves are stored as
     frozenset of Literal objects.
     """
+
     def __init__(self, clauses=None):
         if not clauses:
             clauses = set()
@@ -223,8 +226,8 @@ class CNF:
 
     def __str__(self):
         s = ' & '.join(
-            ['(' + ' | '.join([str(lit) for lit in clause]) +')'
-            for clause in self.clauses]
+            ['(' + ' | '.join([str(lit) for lit in clause]) + ')'
+             for clause in self.clauses]
         )
         return s
 
@@ -290,8 +293,6 @@ class CNF:
         expr = AND(*clause_list)
         return distribute_AND_over_OR(expr)
 
-
-
     @classmethod
     def all_or(cls, *cnfs):
         b = cnfs[0].copy()
@@ -318,6 +319,7 @@ class CNF:
         Converts CNF object to SymPy's boolean expression
         retaining the form of expression.
         """
+
         def remove_literal(arg):
             return Not(arg.lit) if arg.is_Not else arg.lit
 
@@ -328,6 +330,7 @@ class EncodedCNF:
     """
     Class for encoding the CNF expression.
     """
+
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
             data = list()

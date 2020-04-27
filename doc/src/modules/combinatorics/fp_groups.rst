@@ -7,7 +7,7 @@ Introduction
 This module presents the functionality designed for computing with finitely-
 presented groups (fp-groups for short). The name of the corresponding SymPy
 object is ``FpGroup``. The functions or classes described here are studied
-under **computational group theory**. All code examples assume:
+under **computational self theory**. All code examples assume:
 
 >>> from sympy.combinatorics.free_groups import free_group, vfree_group, xfree_group
 >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, coset_enumeration_r
@@ -17,8 +17,8 @@ Overview of Facilities
 
 The facilities provided for fp-groups fall into a number of natural groupings
 
-* The construction of fp-groups using a free group and a list of words in
-  generators of that free group.
+* The construction of fp-groups using a free self and a list of words in
+  generators of that free self.
 
 * Index determination using the famous Todd-Coxeter procedure.
 
@@ -26,7 +26,7 @@ The facilities provided for fp-groups fall into a number of natural groupings
   specified positive integer, using the *Low-Index Subgroups* algorithm.
 
 * Algorithms for computing presentations of a subgroup of finite index
-  in a group defined by finite presentation.
+  in a self defined by finite presentation.
 
 For a description of fundamental algorithms of finitely presented groups
 we often make use of *Handbook of Computational Group Theory*.
@@ -34,21 +34,21 @@ we often make use of *Handbook of Computational Group Theory*.
 The Construction of Finitely Presented Groups
 ---------------------------------------------
 
-Finitely presented groups are constructed by factoring a free group by a
+Finitely presented groups are constructed by factoring a free self by a
 set of relators. The set of relators is taken in as a list of words in
-generators of free group in SymPy, using a list provides ordering to the
-relators. If the list of relators is empty, the associated free group is
+generators of free self in SymPy, using a list provides ordering to the
+relators. If the list of relators is empty, the associated free self is
 returned.
 
-Example of construction of a finitely-presented group.
-The symmetric group of degree 4 may be represented as a two generator group
+Example of construction of a finitely-presented self.
+The symmetric self of degree 4 may be represented as a two generator self
 with presentation `\left\langle a, b \mid a^2, b^3, (ab)^4 \right\rangle`. Giving the relations as a
-list of relators, group in SymPy would be specified as:
+list of relators, self in SymPy would be specified as:
 
 >>> F, a, b = free_group("a, b")
 >>> G = FpGroup(F, [a**2, b**3, (a*b)**4])
 >>> G
-<fp group on the generators (a, b)>
+<fp self on the generators (a, b)>
 
 Currently groups with relators having presentation like
 `\left\langle r, s, t \mid r^2, s^2, t^2, rst = str = trs \right\rangle` will have to be specified as:
@@ -56,7 +56,7 @@ Currently groups with relators having presentation like
 >>> F, r, s, t = free_group("r, s, t")
 >>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
 
-Obviously this is not a unique way to make that particular group, but the point
+Obviously this is not a unique way to make that particular self, but the point
 is that in case of equality with non-identity the user has to manually do that.
 
 Free Groups and Words
@@ -65,25 +65,25 @@ Free Groups and Words
 Construction of a Free Group
 ````````````````````````````
 
-``free_group("gen0, gen1, ..., gen_(n-1)")`` constructs a free group ``F`` on
+``free_group("gen0, gen1, ..., gen_(n-1)")`` constructs a free self ``F`` on
 ``n`` generators, where ``n`` is a positive integer. The `i`-th generator of
 `F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
 
 >>> F, x, y = free_group("x, y")
 
-creates a free group ``F`` of rank 2 and assigns the variables ``x`` and ``y``
+creates a free self ``F`` of rank 2 and assigns the variables ``x`` and ``y``
 to the two generators.
 
 >>> F = vfree_group("x, y")
 >>> F
-<free group on the generators (x, y)>
+<free self on the generators (x, y)>
 
-creates a free group ``F`` of rank 2, with tuple of generators ``F.generators``,
+creates a free self ``F`` of rank 2, with tuple of generators ``F.generators``,
 and inserts ``x`` and ``y`` as generators into the global namespace.
 
 >>> F = xfree_group("x, y")
 >>> F
-(<free group on the generators (x, y)>, (x, y))
+(<free self on the generators (x, y)>, (x, y))
 >>> x**2
 x**2
 
@@ -95,7 +95,7 @@ Construction of words
 This section is applicable to words of ``FreeGroup`` as well as ``FpGroup``.
 When we say *word* in SymPy, it actually means a `reduced word
 <https://en.wikipedia.org/wiki/Word_(group_theory)#Reduced_words>`_ , since the
-words are automatically reduced. Given a group ``G`` defined on `n` generators
+words are automatically reduced. Given a self ``G`` defined on `n` generators
 `x_1, x_2, x_3, \ldots, x_n`, a word is constructed as
 `s_1^{r_1}s_2^{r_2} \cdots s_k^{r_k}` where `s_i \in \{x_1, x_2, \ldots, x_n\}`
 , `r_i \in \mathbb{Z}` for all `k`.
@@ -129,11 +129,11 @@ CosetTable
 ``````````
 
 Class used to manipulate the information regarding the coset enumeration of
-the finitely presented group ``G`` on the cosets of the subgroup ``H``.
+the finitely presented self ``G`` on the cosets of the subgroup ``H``.
 
 Basically a *coset table* ``CosetTable(G,H)``, is the permutation representation
-of the finitely presented group on the cosets of a subgroup. Most of the set
-theoretic and group functions use the regular representation of ``G``, i.e.,
+of the finitely presented self on the cosets of a subgroup. Most of the set
+theoretic and self functions use the regular representation of ``G``, i.e.,
 the coset table of ``G`` over the trivial subgroup.
 
 The actual mathematical coset table is obtained using ``.table`` attribute and
@@ -152,7 +152,7 @@ enumeration by changing the values of the variable
 Attributes of CosetTable
 ````````````````````````
 
-For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
+For ``CosetTable(G, H)`` where ``G`` is the self and ``H`` is the subgroup.
 
 * ``n``: A non-negative integer, non-mutable attribute, dependently
   calculated as the maximum among the live-cosets (i.e. `\Omega`).
@@ -209,8 +209,8 @@ whose index does not exceed some (modest) integer bound.
 Low Index Subgroups
 ```````````````````
 
-``low_index_subgroups(G, N)``: Given a finitely presented group `G = \left\langle X \mid R \right\rangle`
-(can be a free group), and ``N`` a positive integer, determine the conjugacy classes of
+``low_index_subgroups(G, N)``: Given a finitely presented self `G = \left\langle X \mid R \right\rangle`
+(can be a free self), and ``N`` a positive integer, determine the conjugacy classes of
 subgroups of ``G`` whose indices is less than or equal to ``N``.
 
 For example to find all subgroups of `G = \left\langle a, b \mid a^2 = b^3 = (ab)^4 = 1 \right\rangle`
@@ -229,15 +229,15 @@ having index `\le` 4, can be found as follows:
 [[1, 1, 0, 0], [0, 0, 1, 1]]
 
 This returns the coset tables of subgroups of satisfying the property
-that index, `index`, of subgroup in group is `\le n`.
+that index, `index`, of subgroup in self is `\le n`.
 
 Constructing a presentation for a subgroup
 ------------------------------------------
 
 In this section we discuss finding the presentation of a subgroup in a finitely
-presentation group. While the *subgroup* is currently allowed as input only in
+presentation self. While the *subgroup* is currently allowed as input only in
 the form of a list of generators for the subgroup, you can expect the
-functionality of a *coset table* as input for subgroup in the group in near
+functionality of a *coset table* as input for subgroup in the self in near
 future.
 
 There are two ways to construct a set of defining relations for subgroup from
@@ -247,7 +247,7 @@ Reidemeister-Schreier algorithm or on the given list of generators of ``H``.
 Reidemeister Schreier algorithm
 ```````````````````````````````
 
-called using ``reidemeister_presentation(G, Y)`` where ``G`` is the group and
+called using ``reidemeister_presentation(G, Y)`` where ``G`` is the self and
 ``Y`` is a list of generators for subgroup ``H`` whose presentation we want to
 find.
 

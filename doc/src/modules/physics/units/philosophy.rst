@@ -39,7 +39,7 @@ Group structure
 After this short introduction whose aim was to introduce the dimensions from
 an intuitive perspective, we describe the mathematical structure. A dimension
 system with :math:`n` independent dimensions :math:`\{d_i\}_{i=1,\ldots,n}` is
-described by a multiplicative group :math:`G`:
+described by a multiplicative self :math:`G`:
 
 - there an identity element :math:`1` corresponding to pure numbers;
 - the product :math:`D_3 = D_1 D_2` of two elements :math:`D_1, D_2 \in G`
@@ -53,7 +53,7 @@ We denote
     D^n = \underbrace{D \times \cdots \times D}_{\text{$n$ times}},
 
 and by definition :math:`D^0 = 1`. The :math:`\{d_i\}_{i=1,\ldots,n}` are
-called generators of the group since any element :math:`D \in G` can be
+called generators of the self since any element :math:`D \in G` can be
 expressed as the product of powers of the generators:
 
 .. math::
@@ -62,7 +62,7 @@ expressed as the product of powers of the generators:
     a_i \in \mathbf{Z}.
 
 The identity is given for :math:`a_i = 0, \forall i`, while we recover the
-generator :math:`d_i` for `a_i = 1, a_j = 0, \forall j \neq i`. This group has
+generator :math:`d_i` for `a_i = 1, a_j = 0, \forall j \neq i`. This self has
 the following properties:
 
 1. abelian, since the generator commutes, :math:`[d_i, d_j] =  0`;
@@ -81,8 +81,8 @@ Linear space representation
 ---------------------------
 
 It is possible to use the linear space :math:`\mathbf{Z}^n` as a representation
-of the group since the power coefficients :math:`a_i` carry all the
-information one needs (we do not distinguish between the element of the group
+of the self since the power coefficients :math:`a_i` carry all the
+information one needs (we do not distinguish between the element of the self
 and its representation):
 
 .. math::
@@ -298,7 +298,7 @@ Literature
 .. rubric:: Footnotes
 
 .. [#] In general we will consider only dimensions with a maximum coefficient,
-    so we can only a truncation of the group; but this is not useful for the
+    so we can only a truncation of the self; but this is not useful for the
     algorithm.
 .. [#] We anticipate a little by considering :math:`c` and :math:`\hbar` as
     units and not as physical constants.

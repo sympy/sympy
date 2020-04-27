@@ -59,6 +59,7 @@ import mpmath.libmp as mlib
 import inspect
 from collections import Counter
 
+
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
 
@@ -100,7 +101,7 @@ class PoleError(Exception):
 class ArgumentIndexError(ValueError):
     def __str__(self):
         return ("Invalid operation with argument number %s for Function %s" %
-               (self.args[1], self.args[0]))
+                (self.args[1], self.args[0]))
 
 
 class BadSignatureError(TypeError):
@@ -140,8 +141,9 @@ def arity(cls):
     p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
     # how many have no default and how many have a default value
     no, yes = map(len, sift(p_or_k,
-        lambda p:p.default == p.empty, binary=True))
+                            lambda p: p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -453,12 +455,12 @@ class Function(Application, Expr):
             # The ideal solution would be just to attach metadata to
             # the exception and change NumPy to take advantage of this.
             temp = ('%(name)s takes %(qual)s %(args)s '
-                   'argument%(plural)s (%(given)s given)')
+                    'argument%(plural)s (%(given)s given)')
             raise TypeError(temp % {
                 'name': cls,
                 'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
                 'args': min(cls.nargs),
-                'plural': 's'*(min(cls.nargs) != 1),
+                'plural': 's' * (min(cls.nargs) != 1),
                 'given': n})
 
         evaluate = options.get('evaluate', global_parameters.evaluate)
@@ -556,6 +558,7 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+
             def bad(m):
                 from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
@@ -567,13 +570,14 @@ class Function(Application, Expr):
                 # pass
                 if isinstance(m, mpf):
                     m = m._mpf_
-                    return m[1] !=1 and m[-1] == 1
+                    return m[1] != 1 and m[-1] == 1
                 elif isinstance(m, mpc):
                     m, n = m._mpc_
-                    return m[1] !=1 and m[-1] == 1 and \
-                        n[1] !=1 and n[-1] == 1
+                    return m[1] != 1 and m[-1] == 1 and \
+                           n[1] != 1 and n[-1] == 1
                 else:
                     return False
+
             if any(bad(a) for a in args):
                 raise ValueError  # one or more args failed to compute with significance
         except ValueError:
@@ -684,13 +688,13 @@ class Function(Application, Expr):
             s = s.subs(v, zi).expand() + Order(o.expr.subs(v, zi), x)
             return s
         if (self.func.nargs is S.Naturals0
-                or (self.func.nargs == FiniteSet(1) and args0[0])
-                or any(c > 1 for c in self.func.nargs)):
+            or (self.func.nargs == FiniteSet(1) and args0[0])
+            or any(c > 1 for c in self.func.nargs)):
             e = self
             e1 = e.expand()
             if e == e1:
-                #for example when e = sin(x+1) or e = sin(cos(x))
-                #let's try the general algorithm
+                # for example when e = sin(x+1) or e = sin(cos(x))
+                # let's try the general algorithm
                 if len(e.args) == 1:
                     # issue 14411
                     e = e.func(e.args[0].cancel())
@@ -711,10 +715,10 @@ class Function(Application, Expr):
                         subs = e.limit(_x, S.Zero)
                     if subs.is_finite is False:
                         raise PoleError("Cannot expand %s around 0" % (self))
-                    term = subs*(x**i)/fact
+                    term = subs * (x ** i) / fact
                     term = term.expand()
                     series += term
-                return series + Order(x**n, x)
+                return series + Order(x ** n, x)
             return e1.nseries(x, n=n, logx=logx)
         arg = self.args[0]
         l = []
@@ -723,12 +727,12 @@ class Function(Application, Expr):
         nterms = n + 2
         cf = Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
-            nterms = (n/cf).ceiling()
+            nterms = (n / cf).ceiling()
         for i in range(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
-        return Add(*l) + Order(x**n, x)
+        return Add(*l) + Order(x ** n, x)
 
     def fdiff(self, argindex=1):
         """
@@ -747,7 +751,7 @@ class Function(Application, Expr):
                     # issue 8510
                     break
             else:
-                    return Derivative(self, A)
+                return Derivative(self, A)
 
         # See issue 4624 and issue 4719, 5600 and 8510
         D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
@@ -816,7 +820,7 @@ class AppliedUndef(Function):
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
         if u:
             raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
-                's'*(len(u) > 1), ', '.join(u)))
+                's' * (len(u) > 1), ', '.join(u)))
         obj = super().__new__(cls, *args, **options)
         return obj
 
@@ -853,20 +857,24 @@ class UndefSageHelper:
     """
     Helper to facilitate Sage conversion.
     """
+
     def __get__(self, ins, typ):
         import sage.all as sage
         if ins is None:
             return lambda: sage.function(typ.__name__)
         else:
             args = [arg._sage_() for arg in ins.args]
-            return lambda : sage.function(ins.__class__.__name__)(*args)
+            return lambda: sage.function(ins.__class__.__name__)(*args)
+
 
 _undef_sage_helper = UndefSageHelper()
+
 
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
+
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         from .symbol import _filter_assumptions
         # Allow Function('f', real=True)
@@ -910,8 +918,8 @@ class UndefinedFunction(FunctionClass):
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
-            self.class_key() == other.class_key() and
-            self._kwargs == other._kwargs)
+                self.class_key() == other.class_key() and
+                self._kwargs == other._kwargs)
 
     def __ne__(self, other):
         return not self == other
@@ -1327,7 +1335,7 @@ class Derivative(Expr):
                 __ = ''  # filler to make error message neater
                 raise ValueError(filldedent('''
                     Can't calculate derivative wrt %s.%s''' % (v,
-                    __)))
+                                                               __)))
 
         # We make a special case for 0th derivative, because there is no
         # good way to unambiguously print this.
@@ -1381,7 +1389,7 @@ class Derivative(Expr):
                     return S.Zero
 
             # make the order of symbols canonical
-            #TODO: check if assumption of discontinuous derivatives exist
+            # TODO: check if assumption of discontinuous derivatives exist
             variable_count = cls._sort_variable_count(variable_count)
 
         # denest
@@ -1412,7 +1420,7 @@ class Derivative(Expr):
             old_v = None
 
             is_symbol = v.is_symbol or isinstance(v,
-                (Iterable, Tuple, MatrixCommon, NDimArray))
+                                                  (Iterable, Tuple, MatrixCommon, NDimArray))
 
             if not is_symbol:
                 old_v = v
@@ -1421,11 +1429,11 @@ class Derivative(Expr):
                 # Derivatives and UndefinedFunctions are independent
                 # of all others
                 clashing = not (isinstance(old_v, Derivative) or \
-                    isinstance(old_v, AppliedUndef))
+                                isinstance(old_v, AppliedUndef))
                 if not v in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
-                        old_v, '_eval_derivative'):
+                    old_v, '_eval_derivative'):
                     # special hack providing evaluation for classes
                     # that have defined is_scalar=True but have no
                     # _eval_derivative defined
@@ -1479,7 +1487,7 @@ class Derivative(Expr):
     @property
     def canonical(cls):
         return cls.func(cls.expr,
-            *Derivative._sort_variable_count(cls.variable_count))
+                        *Derivative._sort_variable_count(cls.variable_count))
 
     @classmethod
     def _sort_variable_count(cls, vc):
@@ -1540,6 +1548,7 @@ class Derivative(Expr):
         E = []
         v = lambda i: vc[i][0]
         D = Dummy()
+
         def _block(d, v, wrt=False):
             # return True if v should not come before d else False
             if d == v:
@@ -1552,7 +1561,7 @@ class Derivative(Expr):
                 # and will cause an AppliedUndef to block if v is in
                 # the arguments
                 if any(_block(k, v, wrt=True)
-                        for k in d._wrt_variables):
+                       for k in d._wrt_variables):
                     return True
                 return False
             if not wrt and isinstance(d, AppliedUndef):
@@ -1562,10 +1571,11 @@ class Derivative(Expr):
             if isinstance(v, AppliedUndef):
                 return _block(d.xreplace({v: D}), D)
             return d.free_symbols & v.free_symbols
+
         for i in range(len(vc)):
             for j in range(i):
                 if _block(v(j), v(i)):
-                    E.append((j,i))
+                    E.append((j, i))
         # this is the default ordering to use in case of ties
         O = dict(zip(ordered(uniq([i for i, c in vc])), range(len(vc))))
         ix = topological_sort((V, E), key=lambda i: O[v(i)])
@@ -1607,8 +1617,8 @@ class Derivative(Expr):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
         rv = self.func(expr, *self.variable_count, **hints)
-        if rv!= self and rv.has(Derivative):
-            rv =  rv.doit(**hints)
+        if rv != self and rv.has(Derivative):
+            rv = rv.doit(**hints)
         return rv
 
     @_sympifyit('z0', NotImplementedError)
@@ -1627,6 +1637,7 @@ class Derivative(Expr):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
             f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
             return f0._to_mpmath(mpmath.mp.prec)
+
         return Expr._from_mpmath(mpmath.diff(eval,
                                              z0._to_mpmath(mpmath.mp.prec)),
                                  mpmath.mp.prec)
@@ -1653,7 +1664,7 @@ class Derivative(Expr):
                 Cannot give expansion for symbolic count. If you just
                 want a list of all variables of differentiation, use
                 _wrt_variables.'''))
-            rv.extend([v]*count)
+            rv.extend([v] * count)
         return tuple(rv)
 
     @property
@@ -1679,7 +1690,7 @@ class Derivative(Expr):
         if old in self._wrt_variables:
             # first handle the counts
             expr = self.func(self.expr, *[(v, c.subs(old, new))
-                for v, c in self.variable_count])
+                                          for v, c in self.variable_count])
             if expr != self:
                 return expr._eval_subs(old, new)
             # quick exit case
@@ -1724,7 +1735,7 @@ class Derivative(Expr):
             # anything that has y in it; for f(g(x), g(y)).diff(g(y))
             # g(x) cannot be replaced with anything that has g(y)
             syms = {vi: Dummy() for vi in self._wrt_variables
-                if not vi.is_Symbol}
+                    if not vi.is_Symbol}
             wrt = {syms.get(vi, vi) for vi in self._wrt_variables}
             forbidden = args[0].xreplace(syms).free_symbols & wrt
             nfree = new.xreplace(syms).free_symbols
@@ -1782,7 +1793,7 @@ class Derivative(Expr):
         dx = self.variables
         rv = [self.func(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
-            rv.append(o/x)
+            rv.append(o / x)
         return Add(*rv)
 
     def _eval_as_leading_term(self, x):
@@ -1953,7 +1964,7 @@ class Lambda(Expr):
                     rcheck(a)
                 else:
                     raise BadSignatureError("Lambda signature should be only tuples"
-                        " and symbols, not %s" % a)
+                                            " and symbols, not %s" % a)
 
         if not isinstance(sig, Tuple):
             raise BadSignatureError("Lambda signature should be a tuple not %s" % sig)
@@ -1973,12 +1984,14 @@ class Lambda(Expr):
     @property
     def variables(self):
         """The variables used in the internal representation of the function"""
+
         def _variables(args):
             if isinstance(args, Tuple):
                 for arg in args:
                     yield from _variables(arg)
             else:
                 yield args
+
         return tuple(_variables(self.signature))
 
     @property
@@ -2002,11 +2015,11 @@ class Lambda(Expr):
             # the exception and change NumPy to take advantage of this.
             ## XXX does this apply to Lambda? If not, remove this comment.
             temp = ('%(name)s takes exactly %(args)s '
-                   'argument%(plural)s (%(given)s given)')
+                    'argument%(plural)s (%(given)s given)')
             raise BadArgumentsError(temp % {
                 'name': self,
                 'args': list(self.nargs)[0],
-                'plural': 's'*(list(self.nargs)[0] != 1),
+                'plural': 's' * (list(self.nargs)[0] != 1),
                 'given': n})
 
         d = self._match_signature(self.signature, args)
@@ -2127,6 +2140,7 @@ class Subs(Expr):
     >>> s, ss
     (Subs(x, x, 0), Subs(y, y, 0))
     """
+
     def __new__(cls, expr, variables, point, **assumptions):
         from sympy import Symbol
 
@@ -2166,13 +2180,15 @@ class Subs(Expr):
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
                 return str(expr) + str(expr.dummy_index)
+
         def mystr(expr, **settings):
             p = CustomStrPrinter(settings)
             return p.doprint(expr)
+
         while 1:
             s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
-                for v, p in zip(variables, point)]
+                    for v, p in zip(variables, point)]
             # if any underscore-prepended symbol is already a free symbol
             # and is a variable with a different point value, then there
             # is a clash, e.g. _0 clashes in Subs(_0 + _1, (_0, _1), (1, 0))
@@ -2277,12 +2293,12 @@ class Subs(Expr):
     @property
     def free_symbols(self):
         return (self.expr.free_symbols - set(self.variables) |
-            set(self.point.free_symbols))
+                set(self.point.free_symbols))
 
     @property
     def expr_free_symbols(self):
         return (self.expr.expr_free_symbols - set(self.variables) |
-            set(self.point.expr_free_symbols))
+                set(self.point.expr_free_symbols))
 
     def __eq__(self, other):
         if not isinstance(other, Subs):
@@ -2290,15 +2306,15 @@ class Subs(Expr):
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
-        return not(self == other)
+        return not (self == other)
 
     def __hash__(self):
         return super().__hash__()
 
     def _hashable_content(self):
         return (self._expr.xreplace(self.canonical_variables),
-            ) + tuple(ordered([(v, p) for v, p in
-            zip(self.variables, self.point) if not self.expr.has(v)]))
+                ) + tuple(ordered([(v, p) for v, p in
+                                   zip(self.variables, self.point) if not self.expr.has(v)]))
 
     def _eval_subs(self, old, new):
         # Subs doit will do the variables in order; the semantics
@@ -2308,7 +2324,7 @@ class Subs(Expr):
         pt = list(self.point)
         if old in self.variables:
             if _atomic(new) == {new} and not any(
-                    i.has(new) for i in self.args):
+                i.has(new) for i in self.args):
                 # the substitution is neutral
                 return self.xreplace({old: new})
             # any occurrence of old before this point will get
@@ -2326,7 +2342,8 @@ class Subs(Expr):
 
     def _eval_derivative(self, s):
         # Apply the chain rule of the derivative on the substitution variables:
-        val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in zip(self.variables, self.point))
+        val = Add.fromiter(p.diff(s) * Subs(self.expr.diff(v), self.variables, self.point).doit() for v, p in
+                           zip(self.variables, self.point))
 
         # Check if there are free symbols in `self.expr`:
         # First get the `expr_free_symbols`, which returns the free symbols
@@ -2435,7 +2452,7 @@ def diff(f, *symbols, **kwargs):
 
 
 def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
-        mul=True, log=True, multinomial=True, basic=True, **hints):
+           mul=True, log=True, multinomial=True, basic=True, **hints):
     r"""
     Expand an expression using methods given as hints.
 
@@ -2763,6 +2780,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     hints['basic'] = basic
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
+
 # This is a special application of two hints
 
 def _mexpand(expr, recursive=False):
@@ -2797,7 +2815,7 @@ def expand_mul(expr, deep=True):
 
     """
     return sympify(expr).expand(deep=deep, mul=True, power_exp=False,
-    power_base=False, basic=False, multinomial=False, log=False)
+                                power_base=False, basic=False, multinomial=False, log=False)
 
 
 def expand_multinomial(expr, deep=True):
@@ -2815,7 +2833,7 @@ def expand_multinomial(expr, deep=True):
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,
-    power_base=False, basic=False, multinomial=True, log=False)
+                                power_base=False, basic=False, multinomial=True, log=False)
 
 
 def expand_log(expr, deep=True, force=False, factor=False):
@@ -2841,13 +2859,13 @@ def expand_log(expr, deep=True, force=False, factor=False):
             return x
 
         expr = expr.replace(
-        lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
-        for i in Mul.make_args(j)) for j in x.as_numer_denom()),
-        lambda x: _handle(x))
+            lambda x: x.is_Mul and all(any(isinstance(i, log) and i.args[0].is_Rational
+                                           for i in Mul.make_args(j)) for j in x.as_numer_denom()),
+            lambda x: _handle(x))
 
     return sympify(expr).expand(deep=deep, log=True, mul=False,
-        power_exp=False, power_base=False, multinomial=False,
-        basic=False, force=force, factor=factor)
+                                power_exp=False, power_base=False, multinomial=False,
+                                basic=False, force=force, factor=factor)
 
 
 def expand_func(expr, deep=True):
@@ -2865,7 +2883,7 @@ def expand_func(expr, deep=True):
 
     """
     return sympify(expr).expand(deep=deep, func=True, basic=False,
-    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+                                log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
 def expand_trig(expr, deep=True):
@@ -2883,7 +2901,7 @@ def expand_trig(expr, deep=True):
 
     """
     return sympify(expr).expand(deep=deep, trig=True, basic=False,
-    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+                                log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
 def expand_complex(expr, deep=True):
@@ -2907,7 +2925,7 @@ def expand_complex(expr, deep=True):
     sympy.core.expr.Expr.as_real_imag
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,
-    log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+                                log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
 def expand_power_base(expr, deep=True, force=False):
@@ -2971,8 +2989,8 @@ def expand_power_base(expr, deep=True, force=False):
 
     """
     return sympify(expr).expand(deep=deep, log=False, mul=False,
-        power_exp=False, power_base=True, multinomial=False,
-        basic=False, force=force)
+                                power_exp=False, power_base=True, multinomial=False,
+                                basic=False, force=force)
 
 
 def expand_power_exp(expr, deep=True):
@@ -2990,7 +3008,7 @@ def expand_power_exp(expr, deep=True):
     x**2*x**y
     """
     return sympify(expr).expand(deep=deep, complex=False, basic=False,
-    log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
+                                log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
 
 
 def count_ops(expr, visual=False):
@@ -3080,7 +3098,7 @@ def count_ops(expr, visual=False):
             a = args.pop()
 
             if a.is_Rational:
-                #-1/3 = NEG + DIV
+                # -1/3 = NEG + DIV
                 if a is not S.One:
                     if a.p < 0:
                         ops.append(NEG)
@@ -3133,12 +3151,12 @@ def count_ops(expr, visual=False):
                 a.is_Pow or
                 a.is_Function or
                 isinstance(a, Derivative) or
-                    isinstance(a, Integral)):
+                isinstance(a, Integral)):
 
                 o = Symbol(a.func.__name__.upper())
                 # count the args
                 if (a.is_Mul or isinstance(a, LatticeOp)):
-                    ops.append(o*(len(a.args) - 1))
+                    ops.append(o * (len(a.args) - 1))
                 else:
                     ops.append(o)
             if not a.is_Symbol:
@@ -3169,7 +3187,7 @@ def count_ops(expr, visual=False):
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
                     if a.is_Boolean:
-                        ops.append(o*(len(a.args)-1))
+                        ops.append(o * (len(a.args) - 1))
                     else:
                         ops.append(o)
                     args.extend(a.args)
@@ -3225,7 +3243,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
                 args = [tuple(map(lambda i: nfloat(i, **kw), a))
-                    for a in expr.items()]
+                        for a in expr.items()]
             else:
                 args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
             if isinstance(expr, dict):
@@ -3253,7 +3271,6 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     elif rv.is_Relational:
         args_nfloat = (nfloat(arg, **kw) for arg in rv.args)
         return rv.func(*args_nfloat)
-
 
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have

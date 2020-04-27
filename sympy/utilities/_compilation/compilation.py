@@ -378,7 +378,7 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
 
     runner = Runner([srcpath], objpath, include_dirs=include_dirs,
                     run_linker=run_linker, cwd=cwd, flags=flags, **kwargs)
-    runner.run()
+    run()
     return objpath
 
 

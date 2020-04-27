@@ -389,7 +389,7 @@ class Polyhedron(Basic):
             raise ValueError("Permutation size unequal to number of corners.")
         # use the identity permutation if none are given
         obj._pgroup = PermutationGroup(
-            pgroup or [Perm(range(len(corners)))] )
+        )
         return obj
 
     @property
@@ -414,6 +414,7 @@ class Polyhedron(Basic):
         array_form, cyclic_form
         """
         return self._corners
+
     vertices = corners
 
     @property
@@ -668,6 +669,7 @@ def _pgroup_calcs():
 
     http://dogschool.tripod.com/trianglegroup.html
     """
+
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])
         # the vertices of the double which sits inside a give polyhedron
@@ -687,7 +689,7 @@ def _pgroup_calcs():
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
             reorder = [tuple(map(as_int,
-                       minlex(f, directed=False, is_set=True)))
+                                 minlex(f, directed=False, is_set=True)))
                        for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double
@@ -724,23 +726,23 @@ def _pgroup_calcs():
 
     # U, D, F, B, L, R = up, down, front, back, left, right
     _c_pgroup = [Perm(p) for p in
-        [
-        [1, 2, 3, 0, 5, 6, 7, 4],  # cw from top, U
-        [4, 0, 3, 7, 5, 1, 2, 6],  # cw from F face
-        [4, 5, 1, 0, 7, 6, 2, 3],  # cw from R face
+                 [
+                     [1, 2, 3, 0, 5, 6, 7, 4],  # cw from top, U
+                     [4, 0, 3, 7, 5, 1, 2, 6],  # cw from F face
+                     [4, 5, 1, 0, 7, 6, 2, 3],  # cw from R face
 
-        [1, 0, 4, 5, 2, 3, 7, 6],  # cw through UF edge
-        [6, 2, 1, 5, 7, 3, 0, 4],  # cw through UR edge
-        [6, 7, 3, 2, 5, 4, 0, 1],  # cw through UB edge
-        [3, 7, 4, 0, 2, 6, 5, 1],  # cw through UL edge
-        [4, 7, 6, 5, 0, 3, 2, 1],  # cw through FL edge
-        [6, 5, 4, 7, 2, 1, 0, 3],  # cw through FR edge
+                     [1, 0, 4, 5, 2, 3, 7, 6],  # cw through UF edge
+                     [6, 2, 1, 5, 7, 3, 0, 4],  # cw through UR edge
+                     [6, 7, 3, 2, 5, 4, 0, 1],  # cw through UB edge
+                     [3, 7, 4, 0, 2, 6, 5, 1],  # cw through UL edge
+                     [4, 7, 6, 5, 0, 3, 2, 1],  # cw through FL edge
+                     [6, 5, 4, 7, 2, 1, 0, 3],  # cw through FR edge
 
-        [0, 3, 7, 4, 1, 2, 6, 5],  # cw through UFL vertex
-        [5, 1, 0, 4, 6, 2, 3, 7],  # cw through UFR vertex
-        [5, 6, 2, 1, 4, 7, 3, 0],  # cw through UBR vertex
-        [7, 4, 0, 3, 6, 5, 1, 2],  # cw through UBL
-        ]]
+                     [0, 3, 7, 4, 1, 2, 6, 5],  # cw through UFL vertex
+                     [5, 1, 0, 4, 6, 2, 3, 7],  # cw through UFR vertex
+                     [5, 6, 2, 1, 4, 7, 3, 0],  # cw through UBR vertex
+                     [7, 4, 0, 3, 6, 5, 1, 2],  # cw through UBL
+                 ]]
 
     cube = Polyhedron(
         range(8),
@@ -762,7 +764,7 @@ def _pgroup_calcs():
         (0, 1, 6, 10, 5), (1, 2, 7, 11, 6), (2, 3, 8, 12, 7),  # upper 5
         (3, 4, 9, 13, 8), (0, 4, 9, 14, 5),
         (5, 10, 16, 15, 14), (6, 10, 16, 17, 11), (7, 11, 17, 18,
-          12),  # lower 5
+                                                   12),  # lower 5
         (8, 12, 18, 19, 13), (9, 13, 19, 15, 14),
         (15, 16, 17, 18, 19)  # bottom
     ]
@@ -779,7 +781,7 @@ def _pgroup_calcs():
                     p = _f0
                 elif si == '1':
                     p = _f1
-            rv.extend([p]*count)
+            rv.extend([p] * count)
         return Perm.rmul(*rv)
 
     # top face cw
@@ -818,8 +820,9 @@ def _pgroup_calcs():
             dodecahedron, dodecahedron_faces, _dodeca_pgroup))
 
     return (tetrahedron, cube, octahedron, dodecahedron, icosahedron,
-        tetrahedron_faces, cube_faces, octahedron_faces,
-        dodecahedron_faces, icosahedron_faces)
+            tetrahedron_faces, cube_faces, octahedron_faces,
+            dodecahedron_faces, icosahedron_faces)
+
 
 # -----------------------------------------------------------------------
 #   Standard Polyhedron groups

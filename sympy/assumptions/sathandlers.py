@@ -3,7 +3,7 @@ from collections import defaultdict
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
+from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol, )
 from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
@@ -11,6 +11,7 @@ from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, Implies, BooleanFunction)
 from sympy.matrices.expressions import MatMul
+
 
 # APIs here may be subject to change
 
@@ -46,6 +47,7 @@ class UnevaluatedOnFree(BooleanFunction):
     evaluate it using .rcall().
 
     """
+
     def __new__(cls, arg):
         # Mostly type checking here
         arg = _sympify(arg)
@@ -64,7 +66,7 @@ class UnevaluatedOnFree(BooleanFunction):
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
         obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
-            isinstance(e, AppliedPredicate)))
+                                isinstance(e, AppliedPredicate)))
         applied = obj.apply(obj.expr)
         if applied is None:
             return obj
@@ -167,7 +169,7 @@ class ExactlyOneArg(UnevaluatedOnFree):
         # it is not possible for the remainder to be true, so regular or is
         # fine in this case.
         res = OR(*[AND(pred_args[i], *[~lit for lit in pred_args[:i] +
-            pred_args[i+1:]]) for i in range(len(pred_args))])
+                                       pred_args[i + 1:]]) for i in range(len(pred_args))])
         return res
         # Note: this is the equivalent cnf form. The above is more efficient
         # as the first argument of an implication, since p >> q is the same as
@@ -245,12 +247,14 @@ class CheckIsPrime(UnevaluatedOnFree):
         res = Equivalent(arg, isprime(expr))
         return to_NNF(res)
 
+
 class CustomLambda:
     """
     Interface to lambda with rcall
 
     Workaround until we get a better way to represent certain facts.
     """
+
     def __init__(self, lamda):
         self.lamda = lamda
 
@@ -266,6 +270,7 @@ class ClassFactRegistry(MutableMapping):
     ``C``. ``registry[C]`` returns a set of handlers for class ``C``, or any
     of its superclasses.
     """
+
     def __init__(self, d=None):
         d = d or {}
         self.d = defaultdict(frozenset, d)
@@ -311,9 +316,11 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.real), Q.commutative)),
 
     (Pow, CustomLambda(lambda power: Implies(Q.real(power.base) &
-    Q.even(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
-    (Pow, CustomLambda(lambda power: Implies(Q.nonnegative(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
-    (Pow, CustomLambda(lambda power: Implies(Q.nonpositive(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonpositive(power)))),
+                                             Q.even(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
+    (Pow, CustomLambda(lambda power: Implies(Q.nonnegative(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp),
+                                             Q.nonnegative(power)))),
+    (Pow, CustomLambda(lambda power: Implies(Q.nonpositive(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp),
+                                             Q.nonpositive(power)))),
 
     # This one can still be made easier to read. I think we need basic pattern
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
@@ -330,9 +337,9 @@ for klass, fact in [
     (Add, Implies(AllArgs(Q.real), Q.real)),
     # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
-        Q.irrational))),
+                                           Q.irrational))),
     (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
-        Q.irrational))),
+                                           Q.irrational))),
     (Mul, Implies(AllArgs(Q.rational), Q.rational)),
     (Add, Implies(AllArgs(Q.rational), Q.rational)),
 
@@ -384,6 +391,5 @@ for klass, fact in [
     (ImaginaryUnit, CheckOldAssump(Q.rational)),
     (ImaginaryUnit, CheckOldAssump(Q.irrational)),
     (ImaginaryUnit, CheckOldAssump(Q.imaginary))
-    ]:
-
+]:
     register_fact(klass, fact)

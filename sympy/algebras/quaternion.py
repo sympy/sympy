@@ -72,6 +72,7 @@ class Quaternion(Expr):
     @property
     def d(self):
         return self._d
+
     @property
     def real_field(self):
         return self._real_field
@@ -104,7 +105,7 @@ class Quaternion(Expr):
         1/2 + 1/2*i + 1/2*j + 1/2*k
         """
         (x, y, z) = vector
-        norm = sqrt(x**2 + y**2 + z**2)
+        norm = sqrt(x ** 2 + y ** 2 + z ** 2)
         (x, y, z) = (x / norm, y / norm, z / norm)
         s = sin(angle * S.Half)
         a = cos(angle * S.Half)
@@ -144,7 +145,7 @@ class Quaternion(Expr):
         sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))*sign(sin(x))/2*k
         """
 
-        absQ = M.det()**Rational(1, 3)
+        absQ = M.det() ** Rational(1, 3)
 
         a = sqrt(absQ + M[0, 0] + M[1, 1] + M[2, 2]) / 2
         b = sqrt(absQ + M[0, 0] - M[1, 1] - M[2, 2]) / 2
@@ -164,7 +165,7 @@ class Quaternion(Expr):
         return self.add(other)
 
     def __sub__(self, other):
-        return self.add(other*-1)
+        return self.add(other * -1)
 
     def __mul__(self, other):
         return self._generic_mul(self, other)
@@ -179,12 +180,12 @@ class Quaternion(Expr):
         return Quaternion(-self._a, -self._b, -self._c, -self.d)
 
     def __truediv__(self, other):
-        return self * sympify(other)**-1
+        return self * sympify(other) ** -1
 
     __div__ = __truediv__
 
     def __rtruediv__(self, other):
-        return sympify(other) * self**-1
+        return sympify(other) * self ** -1
 
     __rdiv__ = __rtruediv__
 
@@ -193,7 +194,7 @@ class Quaternion(Expr):
 
     def diff(self, *symbols, **kwargs):
         kwargs.setdefault('evaluate', True)
-        return self.func(*[a.diff(*symbols, **kwargs) for a  in self.args])
+        return self.func(*[a.diff(*symbols, **kwargs) for a in self.args])
 
     def add(self, other):
         """Adds quaternions.
@@ -355,10 +356,10 @@ class Quaternion(Expr):
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
-        return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
-                          q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
-                          -q1.b*q2.d + q1.c*q2.a + q1.d*q2.b + q1.a*q2.c,
-                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d)
+        return Quaternion(-q1.b * q2.b - q1.c * q2.c - q1.d * q2.d + q1.a * q2.a,
+                          q1.b * q2.a + q1.c * q2.d - q1.d * q2.c + q1.a * q2.b,
+                          -q1.b * q2.d + q1.c * q2.a + q1.d * q2.b + q1.a * q2.c,
+                          q1.b * q2.c - q1.c * q2.b + q1.d * q2.a + q1.a * q2.d)
 
     def _eval_conjugate(self):
         """Returns the conjugate of the quaternion."""
@@ -370,19 +371,19 @@ class Quaternion(Expr):
         q = self
         # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
         # arise when from_axis_angle is used).
-        return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+        return sqrt(trigsimp(q.a ** 2 + q.b ** 2 + q.c ** 2 + q.d ** 2))
 
     def normalize(self):
         """Returns the normalized form of the quaternion."""
         q = self
-        return q * (1/q.norm())
+        return q * (1 / q.norm())
 
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a quaternion with zero norm")
-        return conjugate(q) * (1/q.norm()**2)
+        return conjugate(q) * (1 / q.norm() ** 2)
 
     def pow(self, p):
         """Finds the pth power of the quaternion.
@@ -424,7 +425,7 @@ class Quaternion(Expr):
             if p % 2 == 1:
                 res = q * res
 
-            p = p//2
+            p = p // 2
             q = q * q
 
         return res
@@ -451,7 +452,7 @@ class Quaternion(Expr):
         """
         # exp(q) = e^a(cos||v|| + v/||v||*sin||v||)
         q = self
-        vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
+        vector_norm = sqrt(q.b ** 2 + q.c ** 2 + q.d ** 2)
         a = exp(q.a) * cos(vector_norm)
         b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
         c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
@@ -475,7 +476,7 @@ class Quaternion(Expr):
         """
         # _ln(q) = _ln||q|| + v/||v||*arccos(a/||q||)
         q = self
-        vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
+        vector_norm = sqrt(q.b ** 2 + q.c ** 2 + q.d ** 2)
         q_norm = q.norm()
         a = ln(q_norm)
         b = q.b * acos(q.a / q_norm) / vector_norm
@@ -516,7 +517,7 @@ class Quaternion(Expr):
         q = self
         (v, angle) = q.to_axis_angle()
         q2 = Quaternion.from_axis_angle(v, p * angle)
-        return q2 * (q.norm()**p)
+        return q2 * (q.norm() ** p)
 
     def integrate(self, *args):
         # TODO: is this expression correct?
@@ -595,7 +596,7 @@ class Quaternion(Expr):
         angle = trigsimp(2 * acos(q.a))
 
         # Since quaternion is normalised, q.a is less than 1.
-        s = sqrt(1 - q.a*q.a)
+        s = sqrt(1 - q.a * q.a)
 
         x = trigsimp(q.b / s)
         y = trigsimp(q.c / s)
@@ -655,18 +656,18 @@ class Quaternion(Expr):
         """
 
         q = self
-        s = q.norm()**-2
-        m00 = 1 - 2*s*(q.c**2 + q.d**2)
-        m01 = 2*s*(q.b*q.c - q.d*q.a)
-        m02 = 2*s*(q.b*q.d + q.c*q.a)
+        s = q.norm() ** -2
+        m00 = 1 - 2 * s * (q.c ** 2 + q.d ** 2)
+        m01 = 2 * s * (q.b * q.c - q.d * q.a)
+        m02 = 2 * s * (q.b * q.d + q.c * q.a)
 
-        m10 = 2*s*(q.b*q.c + q.d*q.a)
-        m11 = 1 - 2*s*(q.b**2 + q.d**2)
-        m12 = 2*s*(q.c*q.d - q.b*q.a)
+        m10 = 2 * s * (q.b * q.c + q.d * q.a)
+        m11 = 1 - 2 * s * (q.b ** 2 + q.d ** 2)
+        m12 = 2 * s * (q.c * q.d - q.b * q.a)
 
-        m20 = 2*s*(q.b*q.d - q.c*q.a)
-        m21 = 2*s*(q.c*q.d + q.b*q.a)
-        m22 = 1 - 2*s*(q.b**2 + q.c**2)
+        m20 = 2 * s * (q.b * q.d - q.c * q.a)
+        m21 = 2 * s * (q.c * q.d + q.b * q.a)
+        m22 = 1 - 2 * s * (q.b ** 2 + q.c ** 2)
 
         if not v:
             return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]])
@@ -674,11 +675,11 @@ class Quaternion(Expr):
         else:
             (x, y, z) = v
 
-            m03 = x - x*m00 - y*m01 - z*m02
-            m13 = y - x*m10 - y*m11 - z*m12
-            m23 = z - x*m20 - y*m21 - z*m22
+            m03 = x - x * m00 - y * m01 - z * m02
+            m13 = y - x * m10 - y * m11 - z * m12
+            m23 = z - x * m20 - y * m21 - z * m22
             m30 = m31 = m32 = 0
             m33 = 1
 
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
-                          [m20, m21, m22, m23], [m30, m31, m32, m33]])
+                           [m20, m21, m22, m23], [m30, m31, m32, m33]])

@@ -269,7 +269,7 @@ class LLVMJitCode(object):
 
         pmb = llvm.create_pass_manager_builder()
         pmb.opt_level = 2
-        pass_manager = llvm.create_module_pass_manager()
+        pass_manager = llvm
         pmb.populate(pass_manager)
 
         pass_manager.run(llmod)

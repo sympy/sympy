@@ -21,10 +21,10 @@ Overview of functionalities
 
 * Implementation of class Collector which can be treated as a base for polycylic groups.
 
-* Implementation of polycyclic group presentation(pc_presentation for short).
+* Implementation of polycyclic self presentation(pc_presentation for short).
 
 * Computation of exponent vector, depth and leading exponent for a given element
-  of a polycyclic group.
+  of a polycyclic self.
 
 For a description of fundamental algorithms of polycyclic groups, we
 often make use of *Handbook of Computational Group Theory*.
@@ -40,9 +40,9 @@ relative order.
 Attributes of PolycyclicGroup
 `````````````````````````````
 
-* ``pc_sequence`` : Polycyclic sequence is formed by collecting all the missing 
+* ``pc_sequence`` : Polycyclic sequence is formed by collecting all the missing
   generators between the adjacent groups in the derived series of given
-  permutation group.
+  permutation self.
 
 * ``pc_series`` : Polycyclic series is formed by adding all the missing generators
   of ``der[i+1]`` in ``der[i]``, where ``der`` represents derived series.
@@ -78,7 +78,7 @@ Collector posses all the attributes of PolycyclicGroup, In addition there are
 few more attributes which are defined below:
 
 * ``free_group`` : free_group provides the mapping of polycyclic generating sequence with
-  the free group elements.
+  the free self elements.
 
 * ``pc_presentation`` : Provides the presentation of polycyclic groups with the
   help of power and conjugate relators.
@@ -88,7 +88,7 @@ few more attributes which are defined below:
 >>> PcGroup = G.polycyclic_group()
 >>> Collector = PcGroup.collector
 >>> Collector.free_group
-<free group on the generators (x0, x1)>
+<free self on the generators (x0, x1)>
 >>> Collector.pc_presentation
 {x0**2: (), x1**3: (), x0**-1*x1*x0: x1**2}
 
@@ -207,7 +207,7 @@ using `[x_3, x_2, x_1]` from ``pcgs`` and ``pc_series[1]`` compute:
 * `x_0^{-1}x_1x_0`
 
 
-One thing to note is same group can have different pcgs due to variying derived_series which,
+One thing to note is same self can have different pcgs due to variying derived_series which,
 results in different polycyclic presentations.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup
@@ -246,12 +246,12 @@ results in different polycyclic presentations.
 Computation of Exponent Vector
 ------------------------------
 
-Any generator of the polycyclic group can be represented with the help of it's
+Any generator of the polycyclic self can be represented with the help of it's
 polycyclic generating sequence. Hence, the length of exponent vector is equal to
 the length of the pcgs.
 
-A given generator ``g`` of the polycyclic group, can be represented as
-`g = x_1^{e_1} \ldots x_n^{e_n}`, where `x_i` represents polycyclic generators 
+A given generator ``g`` of the polycyclic self, can be represented as
+`g = x_1^{e_1} \ldots x_n^{e_n}`, where `x_i` represents polycyclic generators
 and ``n`` is the number of generators in the free_group equal to the length of pcgs.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup

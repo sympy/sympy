@@ -90,11 +90,11 @@ class GrayCode(Basic):
             obj._current = kw_args["start"]
             if len(obj._current) > n:
                 raise ValueError('Gray code start has length %i but '
-                'should not be greater than %i' % (len(obj._current), n))
+                                 'should not be greater than %i' % (len(obj._current), n))
         elif 'rank' in kw_args:
             if int(kw_args["rank"]) != kw_args["rank"]:
                 raise ValueError('Gray code rank must be a positive integer, '
-                'not %i' % kw_args["rank"])
+                                 'not %i' % kw_args["rank"])
             obj._rank = int(kw_args["rank"]) % obj.selections
             obj._current = obj.unrank(n, obj._rank)
         return obj
@@ -130,7 +130,7 @@ class GrayCode(Basic):
         >>> a.selections
         8
         """
-        return 2**self.n
+        return 2 ** self.n
 
     @property
     def n(self):
@@ -187,7 +187,7 @@ class GrayCode(Basic):
         graycode_bin = gray_to_bin(current)
         if len(graycode_bin) > self.n:
             raise ValueError('Gray code start has length %i but should '
-            'not be greater than %i' % (len(graycode_bin), bits))
+                             'not be greater than %i' % (len(graycode_bin), bits))
         self._current = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
         for i in range(graycode_int, 1 << bits):
@@ -309,13 +309,15 @@ class GrayCode(Basic):
 
         rank
         """
+
         def _unrank(k, n):
             if n == 1:
                 return str(k % 2)
-            m = 2**(n - 1)
+            m = 2 ** (n - 1)
             if k < m:
                 return '0' + _unrank(k, n - 1)
             return '1' + _unrank(m - (k % m) - 1, n - 1)
+
         return _unrank(rank, n)
 
 

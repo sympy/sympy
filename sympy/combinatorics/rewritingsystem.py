@@ -1,7 +1,31 @@
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
-class RewritingSystem:
+
+def _compute_inverse_rules(rules):
     '''
+    Compute the inverse rules for a given set of rules.
+    The inverse rules are used in the automaton for word reduction.
+
+    Arguments:
+        rules (dictionary): Rules for which the inverse rules are to computed.
+
+    Returns:
+        Dictionary of inverse_rules.
+
+    '''
+    inverse_rules = {}
+    for r in rules:
+        rule_key_inverse = r ** -1
+        rule_value_inverse = (rules[r]) ** -1
+        if (rule_value_inverse < rule_key_inverse):
+            inverse_rules[rule_key_inverse] = rule_value_inverse
+        else:
+            inverse_rules[rule_value_inverse] = rule_key_inverse
+    return inverse_rules
+
+
+class RewritingSystem:
+    """
     A class implementing rewriting systems for `FpGroup`s.
 
     References
@@ -13,7 +37,8 @@ class RewritingSystem:
     .. [2] GAP's Manual on its KBMAG package
            https://www.gap-system.org/Manuals/pkg/kbmag-1.5.3/doc/manual.pdf
 
-    '''
+    """
+
     def __init__(self, group):
         from collections import deque
         self.group = group
@@ -21,8 +46,8 @@ class RewritingSystem:
         self._is_confluent = None
 
         # these values are taken from [2]
-        self.maxeqns = 32767 # max rules
-        self.tidyint = 100 # rules before tidying
+        self.maxeqns = 32767  # max rules
+        self.tidyint = 100  # rules before tidying
 
         # _max_exceeded is True if maxeqns is exceeded
         # at any point
@@ -37,19 +62,18 @@ class RewritingSystem:
         self.rules_cache = deque([], 50)
         self._init_rules()
 
-
         # All the transition symbols in the automaton
         generators = list(self.alphabet)
-        generators += [gen**-1 for gen in generators]
+        generators += [gen ** -1 for gen in generators]
         # Create a finite state machine as an instance of the StateMachine object
-        self.reduction_automaton = StateMachine('Reduction automaton for '+ repr(self.group), generators)
+        self.reduction_automaton = StateMachine('Reduction automaton for ' + repr(self.group), generators)
         self.construct_automaton()
 
     def set_max(self, n):
-        '''
+        """
         Set the maximum number of rules that can be defined
 
-        '''
+        """
         if n > self.maxeqns:
             self._max_exceeded = False
         self.maxeqns = n
@@ -57,10 +81,10 @@ class RewritingSystem:
 
     @property
     def is_confluent(self):
-        '''
+        """
         Return `True` if the system is confluent
 
-        '''
+        """
         if self._is_confluent is None:
             self._is_confluent = self._check_confluence()
         return self._is_confluent
@@ -73,11 +97,11 @@ class RewritingSystem:
         return
 
     def _add_rule(self, r1, r2):
-        '''
+        """
         Add the rule r1 -> r2 with no checking or further
         deductions
 
-        '''
+        """
         if len(self.rules) + 1 > self.maxeqns:
             self._is_confluent = self._check_confluence()
             self._max_exceeded = True
@@ -114,16 +138,16 @@ class RewritingSystem:
                 new_keys.add(s1)
                 if not check:
                     self._add_rule(s1, s2)
-            if s2**-1 > s1**-1 and s2**-1 not in self.rules:
-                new_keys.add(s2**-1)
+            if s2 ** -1 > s1 ** -1 and s2 ** -1 not in self.rules:
+                new_keys.add(s2 ** -1)
                 if not check:
-                    self._add_rule(s2**-1, s1**-1)
+                    self._add_rule(s2 ** -1, s1 ** -1)
 
         # overlaps on the right
         while len(s1) - len(s2) > -1:
-            g = s1[len(s1)-1]
-            s1 = s1.subword(0, len(s1)-1)
-            s2 = s2*g**-1
+            g = s1[len(s1) - 1]
+            s1 = s1.subword(0, len(s1) - 1)
+            s2 = s2 * g ** -1
             if len(s1) - len(s2) < 0:
                 if s2 not in self.rules:
                     if not check:
@@ -137,7 +161,7 @@ class RewritingSystem:
         while len(w1) - len(w2) > -1:
             g = w1[0]
             w1 = w1.subword(1, len(w1))
-            w2 = g**-1*w2
+            w2 = g ** -1 * w2
             if len(w1) - len(w2) < 0:
                 if w2 not in self.rules:
                     if not check:
@@ -150,14 +174,14 @@ class RewritingSystem:
         return new_keys
 
     def _remove_redundancies(self, changes=False):
-        '''
+        """
         Reduce left- and right-hand sides of reduction rules
         and remove redundant equations (i.e. those for which
         lhs == rhs). If `changes` is `True`, return a set
         containing the removed keys and a set containing the
         added keys
 
-        '''
+        """
         removed = set()
         added = set()
         rules = self.rules.copy()
@@ -180,11 +204,11 @@ class RewritingSystem:
         return
 
     def make_confluent(self, check=False):
-        '''
+        """
         Try to make the system confluent using the Knuth-Bendix
         completion algorithm
 
-        '''
+        """
         if self._max_exceeded:
             return self._is_confluent
         lhs = list(self.rules.keys())
@@ -195,30 +219,30 @@ class RewritingSystem:
             result = []
             for j in range(1, len1 + len2):
                 if (r1.subword(len1 - j, len1 + len2 - j, strict=False)
-                       == r2.subword(j - len1, j, strict=False)):
-                    a = r1.subword(0, len1-j, strict=False)
-                    a = a*r2.subword(0, j-len1, strict=False)
-                    b = r2.subword(j-len1, j, strict=False)
+                    == r2.subword(j - len1, j, strict=False)):
+                    a = r1.subword(0, len1 - j, strict=False)
+                    a = a * r2.subword(0, j - len1, strict=False)
+                    b = r2.subword(j - len1, j, strict=False)
                     c = r2.subword(j, len2, strict=False)
-                    c = c*r1.subword(len1 + len2 - j, len1, strict=False)
-                    result.append(a*b*c)
+                    c = c * r1.subword(len1 + len2 - j, len1, strict=False)
+                    result.append(a * b * c)
             return result
 
         def _process_overlap(w, r1, r2, check):
-                s = w.eliminate_word(r1, self.rules[r1])
-                s = self.reduce(s)
-                t = w.eliminate_word(r2, self.rules[r2])
-                t = self.reduce(t)
-                if s != t:
-                    if check:
-                        # system not confluent
-                        return [0]
-                    try:
-                        new_keys = self.add_rule(t, s, check)
-                        return new_keys
-                    except RuntimeError:
-                        return False
-                return
+            s = w.eliminate_word(r1, self.rules[r1])
+            s = self.reduce(s)
+            t = w.eliminate_word(r2, self.rules[r2])
+            t = self.reduce(t)
+            if s != t:
+                if check:
+                    # system not confluent
+                    return [0]
+                try:
+                    new_keys = self.add_rule(t, s, check)
+                    return new_keys
+                except RuntimeError:
+                    return False
+            return
 
         added = 0
         i = 0
@@ -238,7 +262,7 @@ class RewritingSystem:
                 if r1 == r2:
                     continue
                 overlaps = _overlaps(r1, r2)
-                overlaps.extend(_overlaps(r1**-1, r2))
+                overlaps.extend(_overlaps(r1 ** -1, r2))
                 if not overlaps:
                     continue
                 for w in overlaps:
@@ -248,7 +272,7 @@ class RewritingSystem:
                             return False
                         lhs.extend(new_keys)
                         added += len(new_keys)
-                    elif new_keys == False:
+                    elif not new_keys:
                         # too many rules were added so the process
                         # couldn't complete
                         return self._is_confluent
@@ -275,11 +299,11 @@ class RewritingSystem:
         return self.make_confluent(check=True)
 
     def reduce(self, word, exclude=None):
-        '''
+        """
         Apply reduction rules to `word` excluding the reduction rule
         for the lhs equal to `exclude`
 
-        '''
+        """
         rules = {r: self.rules[r] for r in self.rules if r != exclude}
         # the following is essentially `eliminate_words()` code from the
         # `FreeGroupElement` class, the only difference being the first
@@ -290,7 +314,7 @@ class RewritingSystem:
             again = False
             for r in rules:
                 prev = new
-                if rules[r]**-1 > r**-1:
+                if rules[r] ** -1 > r ** -1:
                     new = new.eliminate_word(r, rules[r], _all=True, inverse=False)
                 else:
                     new = new.eliminate_word(r, rules[r], _all=True)
@@ -298,41 +322,19 @@ class RewritingSystem:
                     again = True
         return new
 
-    def _compute_inverse_rules(self, rules):
-        '''
-        Compute the inverse rules for a given set of rules.
-        The inverse rules are used in the automaton for word reduction.
-
-        Arguments:
-            rules (dictionary): Rules for which the inverse rules are to computed.
-
-        Returns:
-            Dictionary of inverse_rules.
-
-        '''
-        inverse_rules = {}
-        for r in rules:
-            rule_key_inverse = r**-1
-            rule_value_inverse = (rules[r])**-1
-            if (rule_value_inverse < rule_key_inverse):
-                inverse_rules[rule_key_inverse] = rule_value_inverse
-            else:
-                inverse_rules[rule_value_inverse] = rule_key_inverse
-        return inverse_rules
-
     def construct_automaton(self):
-        '''
+        """
         Construct the automaton based on the set of reduction rules of the system.
 
         Automata Design:
         The accept states of the automaton are the proper prefixes of the left hand side of the rules.
         The complete left hand side of the rules are the dead states of the automaton.
 
-        '''
+        """
         self._add_to_automaton(self.rules)
 
     def _add_to_automaton(self, rules):
-        '''
+        """
         Add new states and transitions to the automaton.
 
         Summary:
@@ -342,14 +344,14 @@ class RewritingSystem:
         Arguments:
             rules (dictionary) -- Dictionary of the newly added rules.
 
-        '''
+        """
         # Automaton variables
         automaton_alphabet = []
         proper_prefixes = {}
 
         # compute the inverses of all the new rules added
         all_rules = rules
-        inverse_rules = self._compute_inverse_rules(all_rules)
+        inverse_rules = _compute_inverse_rules(all_rules)
         all_rules.update(inverse_rules)
 
         # Keep track of the accept_states.
@@ -363,10 +365,10 @@ class RewritingSystem:
             proper_prefixes[rule] = []
             letter_word_array = [s for s in rule.letter_form_elm]
             len_letter_word_array = len(letter_word_array)
-            for i in range (1, len_letter_word_array):
-                letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
+            for i in range(1, len_letter_word_array):
+                letter_word_array[i] = letter_word_array[i - 1] * letter_word_array[i]
                 # Add accept states.
-                elem = letter_word_array[i-1]
+                elem = letter_word_array[i - 1]
                 if not elem in self.reduction_automaton.states:
                     self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
@@ -398,7 +400,7 @@ class RewritingSystem:
             elif current_state_type == 'a':
                 # Check if the transition to any new state in possible.
                 for letter in automaton_alphabet:
-                    _next = current_state_name*letter
+                    _next = current_state_name * letter
                     while len(_next) and _next not in self.reduction_automaton.states:
                         _next = _next.subword(1, len(_next))
                     if not len(_next):
@@ -411,7 +413,7 @@ class RewritingSystem:
             for state in accept_states:
                 current_state_name = state
                 for letter in self.reduction_automaton.automaton_alphabet:
-                    _next = current_state_name*letter
+                    _next = current_state_name * letter
                     while len(_next) and _next not in self.reduction_automaton.states:
                         _next = _next.subword(1, len(_next))
                     if not len(_next):
@@ -419,7 +421,7 @@ class RewritingSystem:
                     self.reduction_automaton.states[state].add_transition(letter, _next)
 
     def reduce_using_automaton(self, word):
-        '''
+        """
         Reduce a word using an automaton.
 
         Summary:
@@ -431,7 +433,7 @@ class RewritingSystem:
         Arguments:
             word (instance of FreeGroupElement) -- Word that needs to be reduced.
 
-        '''
+        """
         # Modify the automaton if new rules are found.
         if self._new_rules:
             self._add_to_automaton(self._new_rules)
@@ -442,12 +444,12 @@ class RewritingSystem:
             flag = 0
             current_state = self.reduction_automaton.states['start']
             word_array = [s for s in word.letter_form_elm]
-            for i in range (0, len(word_array)):
+            for i in range(0, len(word_array)):
                 next_state_name = current_state.transitions[word_array[i]]
                 next_state = self.reduction_automaton.states[next_state_name]
                 if next_state.state_type == 'd':
                     subst = next_state.rh_rule
-                    word = word.substituted_word(i - len(next_state_name) + 1, i+1, subst)
+                    word = word.substituted_word(i - len(next_state_name) + 1, i + 1, subst)
                     flag = 1
                     break
                 current_state = next_state

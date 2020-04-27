@@ -8,7 +8,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
-        use_known_facts=True, iterations=oo):
+           use_known_facts=True, iterations=oo):
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
     if context:
@@ -17,7 +17,7 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     assumptions = CNF.from_prop(assumptions)
 
     sat = get_all_relevant_facts(props, assumptions, context,
-        use_known_facts=use_known_facts, iterations=iterations)
+                                 use_known_facts=use_known_facts, iterations=iterations)
     if context:
         sat.add_from_cnf(context)
     sat.add_from_cnf(assumptions)
@@ -50,9 +50,8 @@ def check_satisfiability(prop, _prop, factbase):
 
 
 def get_relevant_facts(proposition, assumptions=None,
-    context=None, exprs=None,
-    relevant_facts=None):
-
+                       context=None, exprs=None,
+                       relevant_facts=None):
     newexprs = set()
 
     if not assumptions:
@@ -101,13 +100,13 @@ def get_relevant_facts(proposition, assumptions=None,
             newfact = cnf_fact.rcall(expr)
             relevant_facts = relevant_facts._and(newfact)
             newexprs |= {key.args[0] for key in newfact.all_predicates()
-                             if isinstance(key, AppliedPredicate)}
+                         if isinstance(key, AppliedPredicate)}
 
     return newexprs - exprs, relevant_facts
 
 
 def get_all_relevant_facts(proposition, assumptions=True,
-    context=global_assumptions, use_known_facts=True, iterations=oo):
+                           context=global_assumptions, use_known_facts=True, iterations=oo):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things. Hopefully this strategy won't lead to an
@@ -118,8 +117,8 @@ def get_all_relevant_facts(proposition, assumptions=True,
     all_exprs = set()
     while exprs != set():
         exprs, relevant_facts = get_relevant_facts(proposition,
-                assumptions, context, exprs=exprs,
-                relevant_facts=relevant_facts)
+                                                   assumptions, context, exprs=exprs,
+                                                   relevant_facts=relevant_facts)
         all_exprs |= exprs
         i += 1
         if i >= iterations:
@@ -139,6 +138,7 @@ def get_all_relevant_facts(proposition, assumptions=True,
 
         def translate_data(data, delta):
             return [{translate_literal(i, delta) for i in clause} for clause in data]
+
         data = []
         symbols = []
         n_lit = len(kf_encoded.symbols)
@@ -146,7 +146,7 @@ def get_all_relevant_facts(proposition, assumptions=True,
             symbols += [pred(expr) for pred in kf_encoded.symbols]
             data += translate_data(kf_encoded.data, i * n_lit)
 
-        encoding = dict(list(zip(symbols, range(1, len(symbols)+1))))
+        encoding = dict(list(zip(symbols, range(1, len(symbols) + 1))))
         ctx = EncodedCNF(data, encoding)
     else:
         ctx = EncodedCNF()

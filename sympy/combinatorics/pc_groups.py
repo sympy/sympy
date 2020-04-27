@@ -5,7 +5,6 @@ from sympy.combinatorics.free_groups import free_group
 
 
 class PolycyclicGroup(DefaultPrinting):
-
     is_group = True
     is_solvable = True
 
@@ -39,8 +38,58 @@ class PolycyclicGroup(DefaultPrinting):
         return len(self.pcgs)
 
 
-class Collector(DefaultPrinting):
+def subword_index(word, w):
+    """
+    Returns the start and ending index of a given
+    subword in a word.
 
+    Parameters
+    ==========
+
+    word : FreeGroupElement
+        word defined on free group elements for a
+        polycyclic group.
+    w : FreeGroupElement
+        subword of a given word, whose starting and
+        ending index to be computed.
+
+    Returns
+    =======
+
+    (i, j)
+        A tuple containing starting and ending index of ``w``
+        in the given word.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> G = SymmetricGroup(4)
+    >>> PcGroup = G.polycyclic_group()
+    >>> collector = PcGroup.collector
+    >>> F, x1, x2 = free_group("x1, x2")
+    >>> word = x2**2*x1**7
+    >>> w = x2**2*x1
+    >>> collector.subword_index(word, w)
+    (0, 3)
+    >>> w = x1**7
+    >>> collector.subword_index(word, w)
+    (2, 9)
+
+    """
+    low = -1
+    high = -1
+    for i in range(len(word) - len(w) + 1):
+        if word.subword(i, i + len(w)) == w:
+            low = i
+            high = i + len(w)
+            break
+    if low == high == -1:
+        return -1, -1
+    return low, high
+
+
+class Collector(DefaultPrinting):
     """
     References
     ==========
@@ -120,16 +169,16 @@ class Collector(DefaultPrinting):
         for i in range(len(array)):
             s1, e1 = array[i]
 
-            if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
-                return ((s1, e1), )
+            if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]] - 1):
+                return (s1, e1),
 
-        for i in range(len(array)-1):
+        for i in range(len(array) - 1):
             s1, e1 = array[i]
-            s2, e2 = array[i+1]
+            s2, e2 = array[i + 1]
 
             if index[s1] > index[s2]:
                 e = 1 if e2 > 0 else -1
-                return ((s1, e1), (s2, e))
+                return (s1, e1), (s2, e)
 
         return None
 
@@ -171,56 +220,6 @@ class Collector(DefaultPrinting):
                 conjugate_relators[key] = value
         return power_relators, conjugate_relators
 
-    def subword_index(self, word, w):
-        """
-        Returns the start and ending index of a given
-        subword in a word.
-
-        Parameters
-        ==========
-
-        word : FreeGroupElement
-            word defined on free group elements for a
-            polycyclic group.
-        w : FreeGroupElement
-            subword of a given word, whose starting and
-            ending index to be computed.
-
-        Returns
-        =======
-
-        (i, j)
-            A tuple containing starting and ending index of ``w``
-            in the given word.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> G = SymmetricGroup(4)
-        >>> PcGroup = G.polycyclic_group()
-        >>> collector = PcGroup.collector
-        >>> F, x1, x2 = free_group("x1, x2")
-        >>> word = x2**2*x1**7
-        >>> w = x2**2*x1
-        >>> collector.subword_index(word, w)
-        (0, 3)
-        >>> w = x1**7
-        >>> collector.subword_index(word, w)
-        (2, 9)
-
-        """
-        low = -1
-        high = -1
-        for i in range(len(word)-len(w)+1):
-            if word.subword(i, i+len(w)) == w:
-                low = i
-                high = i+len(w)
-                break
-        if low == high == -1:
-            return -1, -1
-        return low, high
-
     def map_relation(self, w):
         """
         Return a conjugate relation.
@@ -253,7 +252,6 @@ class Collector(DefaultPrinting):
         key = ((s2, -1), (s1, 1), (s2, 1))
         key = self.free_group.dtype(key)
         return self.pc_presentation[key]
-
 
     def collected_word(self, word):
         r"""
@@ -319,7 +317,7 @@ class Collector(DefaultPrinting):
             if not w:
                 break
 
-            low, high = self.subword_index(word, free_group.dtype(w))
+            low, high = subword_index(word, free_group.dtype(w))
             if low == -1:
                 continue
 
@@ -327,18 +325,18 @@ class Collector(DefaultPrinting):
             if len(w) == 1:
                 re = self.relative_order[self.index[s1]]
                 q = e1 // re
-                r = e1-q*re
+                r = e1 - q * re
 
-                key = ((w[0][0], re), )
+                key = ((w[0][0], re),)
                 key = free_group.dtype(key)
                 if self.pc_presentation[key]:
                     presentation = self.pc_presentation[key].array_form
                     sym, exp = presentation[0]
-                    word_ = ((w[0][0], r), (sym, q*exp))
+                    word_ = ((w[0][0], r), (sym, q * exp))
                     word_ = free_group.dtype(word_)
                 else:
                     if r != 0:
-                        word_ = ((w[0][0], r), )
+                        word_ = ((w[0][0], r),)
                         word_ = free_group.dtype(word_)
                     else:
                         word_ = None
@@ -346,24 +344,23 @@ class Collector(DefaultPrinting):
 
             if len(w) == 2 and w[1][1] > 0:
                 s2, e2 = w[1]
-                s2 = ((s2, 1), )
+                s2 = ((s2, 1),)
                 s2 = free_group.dtype(s2)
                 word_ = self.map_relation(free_group.dtype(w))
-                word_ = s2*word_**e1
+                word_ = s2 * word_ ** e1
                 word_ = free_group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
             elif len(w) == 2 and w[1][1] < 0:
                 s2, e2 = w[1]
-                s2 = ((s2, 1), )
+                s2 = ((s2, 1),)
                 s2 = free_group.dtype(s2)
                 word_ = self.map_relation(free_group.dtype(w))
-                word_ = s2**-1*word_**e1
+                word_ = s2 ** -1 * word_ ** e1
                 word_ = free_group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
         return word
-
 
     def pc_relators(self):
         r"""
@@ -435,7 +432,7 @@ class Collector(DefaultPrinting):
         pcgs = self.pcgs
 
         for gen, s in zip(pcgs, free_group.generators):
-            perm_to_free[gen**-1] = s**-1
+            perm_to_free[gen ** -1] = s ** -1
             perm_to_free[gen] = s
 
         pcgs = pcgs[::-1]
@@ -445,15 +442,15 @@ class Collector(DefaultPrinting):
 
         for i, gen in enumerate(pcgs):
             re = rel_order[i]
-            relation = perm_to_free[gen]**re
+            relation = perm_to_free[gen] ** re
             G = series[i]
 
-            l = G.generator_product(gen**re, original = True)
+            l = G.generator_product(gen ** re, original=True)
             l.reverse()
 
             word = free_group.identity
             for g in l:
-                word = word*perm_to_free[g]
+                word = word * perm_to_free[g]
 
             word = self.collected_word(word)
             pc_relators[relation] = word if word else ()
@@ -461,20 +458,20 @@ class Collector(DefaultPrinting):
 
             collected_gens.append(gen)
             if len(collected_gens) > 1:
-                conj = collected_gens[len(collected_gens)-1]
+                conj = collected_gens[len(collected_gens) - 1]
                 conjugator = perm_to_free[conj]
 
-                for j in range(len(collected_gens)-1):
+                for j in range(len(collected_gens) - 1):
                     conjugated = perm_to_free[collected_gens[j]]
 
-                    relation = conjugator**-1*conjugated*conjugator
-                    gens = conj**-1*collected_gens[j]*conj
+                    relation = conjugator ** -1 * conjugated * conjugator
+                    gens = conj ** -1 * collected_gens[j] * conj
 
-                    l = G.generator_product(gens, original = True)
+                    l = G.generator_product(gens, original=True)
                     l.reverse()
                     word = free_group.identity
                     for g in l:
-                        word = word*perm_to_free[g]
+                        word = word * perm_to_free[g]
 
                     word = self.collected_word(word)
                     pc_relators[relation] = word if word else ()
@@ -527,21 +524,21 @@ class Collector(DefaultPrinting):
         G = PermutationGroup()
         for g in self.pcgs:
             G = PermutationGroup([g] + G.generators)
-        gens = G.generator_product(element, original = True)
+        gens = G.generator_product(element, original=True)
         gens.reverse()
 
         perm_to_free = {}
         for sym, g in zip(free_group.generators, self.pcgs):
-            perm_to_free[g**-1] = sym**-1
+            perm_to_free[g ** -1] = sym ** -1
             perm_to_free[g] = sym
         w = free_group.identity
         for g in gens:
-            w = w*perm_to_free[g]
+            w = w * perm_to_free[g]
 
         word = self.collected_word(w)
 
         index = self.index
-        exp_vector = [0]*len(free_group)
+        exp_vector = [0] * len(free_group)
         word = word.array_form
         for t in word:
             exp_vector[index[t[0]]] = t[1]
@@ -575,7 +572,7 @@ class Collector(DefaultPrinting):
 
         """
         exp_vector = self.exponent_vector(element)
-        return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
+        return next((i + 1 for i, x in enumerate(exp_vector) if x), len(self.pcgs) + 1)
 
     def leading_exponent(self, element):
         r"""
@@ -596,18 +593,18 @@ class Collector(DefaultPrinting):
         """
         exp_vector = self.exponent_vector(element)
         depth = self.depth(element)
-        if depth != len(self.pcgs)+1:
-            return exp_vector[depth-1]
+        if depth != len(self.pcgs) + 1:
+            return exp_vector[depth - 1]
         return None
 
     def _sift(self, z, g):
         h = g
         d = self.depth(h)
-        while d < len(self.pcgs) and z[d-1] != 1:
-            k = z[d-1]
-            e = self.leading_exponent(h)*(self.leading_exponent(k))**-1
-            e = e % self.relative_order[d-1]
-            h = k**-e*h
+        while d < len(self.pcgs) and z[d - 1] != 1:
+            k = z[d - 1]
+            e = self.leading_exponent(h) * (self.leading_exponent(k)) ** -1
+            e = e % self.relative_order[d - 1]
+            h = k ** -e * h
             d = self.depth(h)
         return h
 
@@ -641,7 +638,7 @@ class Collector(DefaultPrinting):
         [3]
 
         """
-        z = [1]*len(self.pcgs)
+        z = [1] * len(self.pcgs)
         G = gens
         while G:
             g = G.pop(0)
@@ -650,8 +647,8 @@ class Collector(DefaultPrinting):
             if d < len(self.pcgs):
                 for gen in z:
                     if gen != 1:
-                        G.append(h**-1*gen**-1*h*gen)
-                z[d-1] = h;
+                        G.append(h ** -1 * gen ** -1 * h * gen)
+                z[d - 1] = h
         z = [gen for gen in z if gen != 1]
         return z
 
@@ -659,14 +656,14 @@ class Collector(DefaultPrinting):
         """
         Return the exponent vector for induced pcgs.
         """
-        e = [0]*len(ipcgs)
+        e = [0] * len(ipcgs)
         h = g
         d = self.depth(h)
         for i, gen in enumerate(ipcgs):
             while self.depth(gen) == d:
-                f = self.leading_exponent(h)*self.leading_exponent(gen)
-                f = f % self.relative_order[d-1]
-                h = gen**(-f)*h
+                f = self.leading_exponent(h) * self.leading_exponent(gen)
+                f = f % self.relative_order[d - 1]
+                h = gen ** (-f) * h
                 e[i] = f
                 d = self.depth(h)
         if h == 1:

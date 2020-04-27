@@ -5,11 +5,11 @@ from sympy import multiplicity, factorint, Symbol
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_rmul, _af_rmuln, _af_pow, Cycle)
+                                              _af_rmul, _af_rmuln, _af_pow, Cycle)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
-    _distribute_gens_by_base, _orbits_transversals_from_bsgs,
-    _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
-    _strip, _strip_af)
+                                      _distribute_gens_by_base, _orbits_transversals_from_bsgs,
+                                      _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
+                                      _strip, _strip_af)
 from sympy.core import Basic
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
@@ -17,6 +17,7 @@ from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.testing.randtest import _randrange
 from itertools import islice
 from sympy.core.sympify import _sympify
+
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -117,6 +118,19 @@ class PermutationGroup(Basic):
 
     """
     is_group = True
+
+    def __init__(self):
+        G._fp_presentation = simplify_presentation(G_p)
+        self._transitivity_degree = n
+        self._max_div = d
+        self._is_trivial = len(self) == 1 and self[0].is_Identity
+        self._is_transitive = ans
+        self._is_solvable = False
+        self._is_nilpotent = False
+        self._is_solvable = True
+        self._is_sym, self._is_alt = False, False
+        self._is_perfect = self == self.derived_subgroup()
+        self._order = len(element_list)
 
     def __new__(cls, *args, **kwargs):
         """The default constructor. Accepts Cycle and Permutation forms.
@@ -536,13 +550,13 @@ class PermutationGroup(Basic):
         # and transversal elements from whatever was provided
         transversals, basic_orbits, strong_gens_distr = \
             _handle_precomputed_bsgs(base, strong_gens, transversals,
-                                 basic_orbits, strong_gens_distr)
+                                     basic_orbits, strong_gens_distr)
         base_len = len(base)
         degree = self.degree
         # size of orbit of base[pos] under the stabilizer we seek to insert
         # in the stabilizer chain at position pos + 1
-        size = len(basic_orbits[pos])*len(basic_orbits[pos + 1]) \
-            //len(_orbit(degree, strong_gens_distr[pos], base[pos + 1]))
+        size = len(basic_orbits[pos]) * len(basic_orbits[pos + 1]) \
+               // len(_orbit(degree, strong_gens_distr[pos], base[pos + 1]))
         # initialize the wanted stabilizer by a subgroup
         if pos + 2 > base_len - 1:
             T = []
@@ -568,7 +582,7 @@ class PermutationGroup(Basic):
             while len(_orbit(degree, T, base[pos])) != size:
                 gamma = next(iter(Gamma))
                 x = transversals[pos][gamma]
-                temp = x._array_form.index(base[pos + 1]) # (~x)(base[pos + 1])
+                temp = x._array_form.index(base[pos + 1])  # (~x)(base[pos + 1])
                 if temp not in basic_orbits[pos + 1]:
                     Gamma = Gamma - _orbit(degree, T, gamma)
                 else:
@@ -651,11 +665,11 @@ class PermutationGroup(Basic):
 
         """
 
-        if self._transversals == []:
+        if not self._transversals:
             self.schreier_sims()
         strong_gens = self._strong_gens
         base = self._base
-        if not base: # e.g. if self is trivial
+        if not base:  # e.g. if self is trivial
             return []
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_stabilizers = []
@@ -689,7 +703,7 @@ class PermutationGroup(Basic):
 
         """
 
-        if self._transversals == []:
+        if not self._transversals:
             self.schreier_sims()
         return self._transversals
 
@@ -746,8 +760,8 @@ class PermutationGroup(Basic):
             raise NotImplementedError('Group should be solvable')
         series = []
 
-        for i in range(len(der)-1):
-            H = der[i+1]
+        for i in range(len(der) - 1):
+            H = der[i + 1]
             up_seg = []
             for g in der[i].generators:
                 K = PermutationGroup([g] + H.generators)
@@ -756,7 +770,7 @@ class PermutationGroup(Basic):
                 for p, e in factorint(order).items():
                     for j in range(e):
                         down_seg.append(PermutationGroup([g] + H.generators))
-                        g = g**p
+                        g = g ** p
                 up_seg = down_seg + up_seg
                 H = K
             up_seg[0] = der[i]
@@ -776,7 +790,7 @@ class PermutationGroup(Basic):
         if H.order() == 1:
             return self._elements
 
-        self._schreier_sims(base=H.base) # make G.base an extension of H.base
+        self._schreier_sims(base=H.base)  # make G.base an extension of H.base
 
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
@@ -788,13 +802,13 @@ class PermutationGroup(Basic):
         # the increasing order of base[l]^x
         for l, t in enumerate(transversals):
             transversals[l] = sorted(t.values(),
-                                key = lambda x: base_ordering[base[l]^x])
+                                     key=lambda x: base_ordering[base[l] ^ x])
 
         orbits = H.basic_orbits
         h_stabs = H.basic_stabilizers
         g_stabs = self.basic_stabilizers
 
-        indices = [x.order()//y.order() for x, y in zip(g_stabs, h_stabs)]
+        indices = [x.order() // y.order() for x, y in zip(g_stabs, h_stabs)]
 
         # T^(l) should be a right transversal of H^(l) in G^(l) for
         # 1<=l<=len(base). While H^(l) is the trivial group, T^(l)
@@ -804,17 +818,17 @@ class PermutationGroup(Basic):
             T = g_stabs[len(h_stabs)]._elements
         else:
             T = [identity]
-        l = len(h_stabs)-1
+        l = len(h_stabs) - 1
         t_len = len(T)
         while l > -1:
             T_next = []
             for u in transversals[l]:
                 if u == identity:
                     continue
-                b = base_ordering[base[l]^u]
+                b = base_ordering[base[l] ^ u]
                 for t in T:
-                    p = t*u
-                    if all([base_ordering[h^p] >= b for h in orbits[l]]):
+                    p = t * u
+                    if all([base_ordering[h ^ p] >= b for h in orbits[l]]):
                         T_next.append(p)
                     if t_len + len(T_next) == indices[l]:
                         break
@@ -835,23 +849,25 @@ class PermutationGroup(Basic):
         if H.order() == 1:
             return g
         # The base of self must be an extension of H.base.
-        if not(self.base[:len(H.base)] == H.base):
+        if not (self.base[:len(H.base)] == H.base):
             self._schreier_sims(base=H.base)
         orbits = H.basic_orbits[:]
         h_transversals = [list(_.values()) for _ in H.basic_transversals]
         transversals = [list(_.values()) for _ in self.basic_transversals]
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
+
         def step(l, x):
-            gamma = sorted(orbits[l], key = lambda y: base_ordering[y^x])[0]
-            i = [base[l]^h for h in h_transversals[l]].index(gamma)
-            x = h_transversals[l][i]*x
-            if l < len(orbits)-1:
+            gamma = sorted(orbits[l], key=lambda y: base_ordering[y ^ x])[0]
+            i = [base[l] ^ h for h in h_transversals[l]].index(gamma)
+            x = h_transversals[l][i] * x
+            if l < len(orbits) - 1:
                 for u in transversals[l]:
-                    if base[l]^u == base[l]^x:
+                    if base[l] ^ u == base[l] ^ x:
                         break
-                x = step(l+1, x*u**-1)*u
+                x = step(l + 1, x * u ** -1) * u
             return x
+
         return step(0, g)
 
     def coset_table(self, H):
@@ -868,12 +884,12 @@ class PermutationGroup(Basic):
         T = self.coset_transversal(H)
         n = len(T)
 
-        A = list(chain.from_iterable((gen, gen**-1)
-                    for gen in self.generators))
+        A = list(chain.from_iterable((gen, gen ** -1)
+                                     for gen in self.generators))
 
         table = []
         for i in range(n):
-            row = [self._coset_representative(T[i]*x, H) for x in A]
+            row = [self._coset_representative(T[i] * x, H) for x in A]
             row = [T.index(r) for r in row]
             table.append(row)
 
@@ -896,7 +912,7 @@ class PermutationGroup(Basic):
                             elif table[i][x] == gamma:
                                 table[i][x] = beta
                 gamma += 1
-            if gamma >= n-1:
+            if gamma >= n - 1:
                 return table
 
     def center(self):
@@ -990,9 +1006,9 @@ class PermutationGroup(Basic):
             num_orbits = len(orbits)
             orbits.sort(key=lambda x: -len(x))
             long_base = []
-            orbit_reps = [None]*num_orbits
-            orbit_reps_indices = [None]*num_orbits
-            orbit_descr = [None]*degree
+            orbit_reps = [None] * num_orbits
+            orbit_reps_indices = [None] * num_orbits
+            orbit_descr = [None] * degree
             for i in range(num_orbits):
                 orbit = list(orbits[i])
                 orbit_reps[i] = orbit[0]
@@ -1013,13 +1029,13 @@ class PermutationGroup(Basic):
                     break
             rel_orbits = orbits[: j + 1]
             num_rel_orbits = len(rel_orbits)
-            transversals = [None]*num_rel_orbits
+            transversals = [None] * num_rel_orbits
             for j in range(num_rel_orbits):
                 rep = orbit_reps[j]
                 transversals[j] = dict(
                     other.orbit_transversal(rep, pairs=True))
             trivial_test = lambda x: True
-            tests = [None]*base_len
+            tests = [None] * base_len
             for l in range(base_len):
                 if base[l] in orbit_reps:
                     tests[l] = trivial_test
@@ -1036,11 +1052,13 @@ class PermutationGroup(Basic):
                         # if g belongs to the centralizer, then
                         # base[l]^g = (rep^g)^tr_el
                         return im == tr_el._array_form[im_rep]
+
                     tests[l] = test
 
             def prop(g):
                 return [rmul(g, gen) for gen in other.generators] == \
                        [rmul(gen, g) for gen in other.generators]
+
             return self.subgroup_search(prop, base=base,
                                         strong_gens=strong_gens, tests=tests)
         elif hasattr(other, '__getitem__'):
@@ -1182,12 +1200,12 @@ class PermutationGroup(Basic):
         return factors
 
     def generator_product(self, g, original=False):
-        '''
+        """
         Return a list of strong generators `[s1, ..., sn]`
         s.t `g = sn*...*s1`. If `original=True`, make the list
         contain only the original group generators
 
-        '''
+        """
         product = []
         if g.is_identity:
             return []
@@ -1199,16 +1217,16 @@ class PermutationGroup(Basic):
                 for s in slp:
                     product.extend(self.generator_product(s, original=True))
                 return product
-        elif g**-1 in self.strong_gens:
-            g = g**-1
+        elif g ** -1 in self.strong_gens:
+            g = g ** -1
             if not original or g in self.generators:
-                return [g**-1]
+                return [g ** -1]
             else:
                 slp = self._strong_gens_slp[g]
                 for s in slp:
                     product.extend(self.generator_product(s, original=True))
                 l = len(product)
-                product = [product[l-i-1]**-1 for i in range(l)]
+                product = [product[l - i - 1] ** -1 for i in range(l)]
                 return product
 
         f = self.coset_factor(g, True)
@@ -1263,8 +1281,8 @@ class PermutationGroup(Basic):
         for i in range(len(base)):
             k = factors[i]
             j = basic_orbits[i].index(k)
-            rank += b*j
-            b = b*len(transversals[i])
+            rank += b * j
+            b = b * len(transversals[i])
         return rank
 
     def coset_unrank(self, rank, af=False):
@@ -1280,7 +1298,7 @@ class PermutationGroup(Basic):
         transversals = self.basic_transversals
         basic_orbits = self.basic_orbits
         m = len(base)
-        v = [0]*m
+        v = [0] * m
         for i in range(m):
             rank, c = divmod(rank, len(transversals[i]))
             v[i] = basic_orbits[i][c]
@@ -1324,10 +1342,10 @@ class PermutationGroup(Basic):
 
     @property
     def identity(self):
-        '''
+        """
         Return the identity element of the permutation group.
 
-        '''
+        """
         return _af_new(list(range(self.degree)))
 
     @property
@@ -1559,7 +1577,6 @@ class PermutationGroup(Basic):
                                 element_list.append(ap)
                                 set_element_list.add(tuple(ap))
                                 N.append(ap)
-        self._order = len(element_list)
 
     def generate_schreier_sims(self, af=False):
         """Yield group elements using the Schreier-Sims representation
@@ -1604,7 +1621,7 @@ class PermutationGroup(Basic):
         stg = [list(range(n))]
         posmax = [len(x) for x in u]
         n1 = len(posmax) - 1
-        pos = [0]*n1
+        pos = [0] * n1
         h = 0
         while 1:
             # backtrack when finished iterating over coset
@@ -1728,7 +1745,7 @@ class PermutationGroup(Basic):
 
         """
         if self._is_perfect is None:
-            self._is_perfect = self == self.derived_subgroup()
+            pass
         return self._is_perfect
 
     @property
@@ -1817,22 +1834,22 @@ class PermutationGroup(Basic):
             while True:
                 pows = []
                 for g in gns:
-                    elm = g**p
+                    elm = g ** p
                     if not H.contains(elm):
                         pows.append(elm)
                 K = PermutationGroup(Hgens + pows) if pows else H
-                r = G.order()//K.order()
+                r = G.order() // K.order()
                 G = K
                 gns = pows
                 if r == 1:
-                    break;
+                    break
                 ranks.append(multiplicity(p, r))
 
             if ranks:
-                pows = [1]*ranks[0]
+                pows = [1] * ranks[0]
                 for i in ranks:
                     for j in range(0, i):
-                        pows[j] = pows[j]*p
+                        pows[j] = pows[j] * p
                 inv.extend(pows)
         inv.sort()
         return inv
@@ -1867,11 +1884,11 @@ class PermutationGroup(Basic):
         if only_sym and only_alt:
             raise ValueError(
                 "Both {} and {} cannot be set to True"
-                .format(only_sym, only_alt))
+                    .format(only_sym, only_alt))
 
         n = self.degree
         sym_order = 1
-        for i in range(2, n+1):
+        for i in range(2, n + 1):
             sym_order *= i
         order = self.order()
 
@@ -1882,7 +1899,7 @@ class PermutationGroup(Basic):
                 return False
             return True
 
-        elif 2*order == sym_order:
+        elif 2 * order == sym_order:
             self._is_sym = False
             self._is_alt = True
             if only_sym:
@@ -1918,8 +1935,8 @@ class PermutationGroup(Basic):
                 c_n = 0.34
             else:
                 c_n = 0.57
-            d_n = (c_n*log(2))/log(n)
-            N_eps = int(-log(eps)/d_n)
+            d_n = (c_n * log(2)) / log(n)
+            N_eps = int(-log(eps) / d_n)
 
             perms = (self.random_pr() for i in range(N_eps))
             return self._eval_is_alt_sym_monte_carlo(perms=perms)
@@ -1971,7 +1988,7 @@ class PermutationGroup(Basic):
         """
         if _random_prec is not None:
             N_eps = _random_prec['N_eps']
-            perms= (_random_prec[i] for i in range(N_eps))
+            perms = (_random_prec[i] for i in range(N_eps))
             return self._eval_is_alt_sym_monte_carlo(perms=perms)
 
         if self._is_sym or self._is_alt:
@@ -1985,7 +2002,6 @@ class PermutationGroup(Basic):
         elif self.is_transitive():
             return self._eval_is_alt_sym_monte_carlo(eps=eps)
 
-        self._is_sym, self._is_alt = False, False
         return False
 
     @property
@@ -2022,11 +2038,9 @@ class PermutationGroup(Basic):
             degree = self.degree
             identity = _af_new(list(range(degree)))
             if all(g == identity for g in gens):
-                self._is_solvable = True
                 self._is_nilpotent = True
                 return True
             else:
-                self._is_nilpotent = False
                 return False
         else:
             return self._is_nilpotent
@@ -2137,7 +2151,7 @@ class PermutationGroup(Basic):
         return True
 
     def minimal_blocks(self, randomized=True):
-        '''
+        """
         For a transitive group, return the list of all minimal
         block systems. If a group is intransitive, return `False`.
 
@@ -2157,7 +2171,8 @@ class PermutationGroup(Basic):
 
         minimal_block, is_transitive, is_primitive
 
-        '''
+        """
+
         def _number_blocks(blocks):
             # number the blocks of a block system
             # in order and return the number of
@@ -2166,7 +2181,7 @@ class PermutationGroup(Basic):
             n = len(blocks)
             appeared = {}
             m = 0
-            b = [None]*n
+            b = [None] * n
             for i in range(n):
                 if blocks[i] not in appeared:
                     appeared[blocks[i]] = m
@@ -2252,7 +2267,6 @@ class PermutationGroup(Basic):
                 self._is_solvable = True
                 return True
             else:
-                self._is_solvable = False
                 return False
         else:
             return self._is_solvable
@@ -2307,12 +2321,12 @@ class PermutationGroup(Basic):
             return True
         if not isinstance(G, PermutationGroup):
             return False
-        if self == G or self.generators[0]==Permutation():
+        if self == G or self.generators[0] == Permutation():
             return True
         if G.order() % self.order() != 0:
             return False
         if self.degree == G.degree or \
-                (self.degree < G.degree and not strict):
+            (self.degree < G.degree and not strict):
             gens = self.generators
         else:
             return False
@@ -2375,7 +2389,6 @@ class PermutationGroup(Basic):
                 return self._is_transitive
 
             ans = len(self.orbit(0)) == self.degree
-            self._is_transitive = ans
             return ans
 
         got_orb = False
@@ -2403,7 +2416,7 @@ class PermutationGroup(Basic):
 
         """
         if self._is_trivial is None:
-            self._is_trivial = len(self) == 1 and self[0].is_Identity
+            pass
         return self._is_trivial
 
     def lower_central_series(self):
@@ -2480,8 +2493,7 @@ class PermutationGroup(Basic):
             return 1
         for x in sieve:
             if n % x == 0:
-                d = n//x
-                self._max_div = d
+                d = n // x
                 return d
 
     def minimal_block(self, points):
@@ -2536,12 +2548,12 @@ class PermutationGroup(Basic):
         gens = self.generators
         # initialize the list of equivalence class representatives
         parents = list(range(n))
-        ranks = [1]*n
+        ranks = [1] * n
         not_rep = []
         k = len(points)
         # the block size must divide the degree of the group
         if k > self.max_div:
-            return [0]*n
+            return [0] * n
         for i in range(k - 1):
             parents[points[i + 1]] = points[0]
             not_rep.append(points[i + 1])
@@ -2560,7 +2572,7 @@ class PermutationGroup(Basic):
                 temp = self._union_find_merge(gen(gamma), gen(delta), ranks,
                                               parents, not_rep)
                 if temp == -1:
-                    return [0]*n
+                    return [0] * n
                 len_not_rep += temp
         for i in range(n):
             # force path compression to get the final state of the equivalence
@@ -2627,7 +2639,6 @@ class PermutationGroup(Basic):
             last_iteration = this_iteration
 
         return new_class
-
 
     def conjugacy_classes(self):
         r"""Return the conjugacy classes of the group.
@@ -2723,7 +2734,7 @@ class PermutationGroup(Basic):
                 for i in range(k):
                     g = self.random_pr()
                     h = Z.random_pr()
-                    conj = h^g
+                    conj = h ^ g
                     res = _strip(conj, base, basic_orbits, basic_transversals)
                     if res[0] != identity or res[1] != len(base) + 1:
                         gens = Z.generators
@@ -2737,11 +2748,11 @@ class PermutationGroup(Basic):
                             _distribute_gens_by_base(base, strong_gens)
                         basic_orbits, basic_transversals = \
                             _orbits_transversals_from_bsgs(base,
-                                strong_gens_distr)
+                                                           strong_gens_distr)
                 _loop = False
                 for g in self.generators:
                     for h in Z.generators:
-                        conj = h^g
+                        conj = h ^ g
                         res = _strip(conj, base, basic_orbits,
                                      basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
@@ -2823,7 +2834,7 @@ class PermutationGroup(Basic):
         a = []
         while k != -1:
             a.append(gens[k])
-            beta = gens[k].index(beta) # beta = (~gens[k])(beta)
+            beta = gens[k].index(beta)  # beta = (~gens[k])(beta)
             k = schreier_vector[beta]
         if a:
             return _af_new(_af_rmuln(*a))
@@ -2920,7 +2931,7 @@ class PermutationGroup(Basic):
             return self._order
         if self._is_alt:
             n = self._degree
-            self._order = factorial(n)/2
+            self._order = factorial(n) / 2
             return self._order
 
         basic_transversals = self.basic_transversals
@@ -2948,7 +2959,7 @@ class PermutationGroup(Basic):
 
         """
         if H.is_subgroup(self):
-            return self.order()//H.order()
+            return self.order() // H.order()
 
     @property
     def is_symmetric(self):
@@ -3007,7 +3018,6 @@ class PermutationGroup(Basic):
             return False
 
         return self._eval_is_alt_sym_naive(only_sym=True)
-
 
     @property
     def is_alternating(self):
@@ -3074,7 +3084,7 @@ class PermutationGroup(Basic):
         primes = sorted(primes)
         l = len(primes)
         for i in range(l):
-            for j in range(i+1, l):
+            for j in range(i + 1, l):
                 if primes[j] % primes[i] == 1:
                     return None
         return True
@@ -3159,7 +3169,7 @@ class PermutationGroup(Basic):
         for p in factors:
             pgens = []
             for g in self.generators:
-                pgens.append(g**p)
+                pgens.append(g ** p)
             if self.index(self.subgroup(pgens)) != p:
                 self._is_cyclic = False
                 return False
@@ -3383,8 +3393,8 @@ class PermutationGroup(Basic):
             return
 
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-        basic_orbits, transversals, slps = _orbits_transversals_from_bsgs(base,\
-                strong_gens_distr, slp=True)
+        basic_orbits, transversals, slps = _orbits_transversals_from_bsgs(base, \
+                                                                          strong_gens_distr, slp=True)
 
         # rewrite the indices stored in slps in terms of strong_gens
         for i, slp in enumerate(slps):
@@ -3491,7 +3501,7 @@ class PermutationGroup(Basic):
         base_len = len(_base)
         for i in range(base_len):
             transversals[i], slps[i] = _orbit_transversal(degree, strong_gens_distr[i],
-                _base[i], pairs=True, af=True, slp=True)
+                                                          _base[i], pairs=True, af=True, slp=True)
             transversals[i] = dict(transversals[i])
             orbs[i] = list(transversals[i].keys())
         # main loop: amend the stabilizer chain until we have generators
@@ -3543,9 +3553,9 @@ class PermutationGroup(Basic):
                             strong_gens_slp.append((h, slp))
                             for l in range(i + 1, j):
                                 strong_gens_distr[l].append(h)
-                                transversals[l], slps[l] =\
-                                _orbit_transversal(degree, strong_gens_distr[l],
-                                    _base[l], pairs=True, af=True, slp=True)
+                                transversals[l], slps[l] = \
+                                    _orbit_transversal(degree, strong_gens_distr[l],
+                                                       _base[l], pairs=True, af=True, slp=True)
                                 transversals[l] = dict(transversals[l])
                                 orbs[l] = list(transversals[l].keys())
                             i = j - 1
@@ -3570,14 +3580,14 @@ class PermutationGroup(Basic):
                 for i in range(len(slp)):
                     s = slp[i]
                     if isinstance(s[1], tuple):
-                        slp[i] = strong_gens_distr[s[0]][s[1][0]]**-1
+                        slp[i] = strong_gens_distr[s[0]][s[1][0]] ** -1
                     else:
                         slp[i] = strong_gens_distr[s[0]][s[1]]
             strong_gens_slp = dict(strong_gens_slp)
             # add the original generators
             for g in _gens:
                 strong_gens_slp[g] = [g]
-            return (_base, strong_gens, strong_gens_slp)
+            return _base, strong_gens, strong_gens_slp
 
         strong_gens.extend([k for k, _ in strong_gens_slp])
         return _base, strong_gens
@@ -3670,7 +3680,7 @@ class PermutationGroup(Basic):
         orbs = {}
         for i in range(base_len):
             transversals[i] = dict(_orbit_transversal(n, strong_gens_distr[i],
-                base[i], pairs=True))
+                                                      base[i], pairs=True))
             orbs[i] = list(transversals[i].keys())
         # initialize the number of consecutive elements sifted
         c = 0
@@ -3700,7 +3710,7 @@ class PermutationGroup(Basic):
                 for l in range(1, j):
                     strong_gens_distr[l].append(h)
                     transversals[l] = dict(_orbit_transversal(n,
-                        strong_gens_distr[l], base[l], pairs=True))
+                                                              strong_gens_distr[l], base[l], pairs=True))
                     orbs[l] = list(transversals[l].keys())
                 c = 0
             else:
@@ -3743,10 +3753,10 @@ class PermutationGroup(Basic):
 
         """
         n = self.degree
-        v = [None]*n
+        v = [None] * n
         v[alpha] = -1
         orb = [alpha]
-        used = [False]*n
+        used = [False] * n
         used[alpha] = True
         gens = self.generators
         r = len(gens)
@@ -3905,14 +3915,15 @@ class PermutationGroup(Basic):
         function ``.stabilizer(...)`` on the previous basic stabilizer.
 
         """
+
         # initialize BSGS and basic group properties
         def get_reps(orbits):
             # get the minimal element in the base ordering
-            return [min(orbit, key = lambda x: base_ordering[x]) \
-              for orbit in orbits]
+            return [min(orbit, key=lambda x: base_ordering[x]) \
+                    for orbit in orbits]
 
         def update_nu(l):
-            temp_index = len(basic_orbits[l]) + 1 -\
+            temp_index = len(basic_orbits[l]) + 1 - \
                          len(res_basic_orbits_init_base[l])
             # this corresponds to the element larger than all points
             if temp_index >= len(sorted_orbits[l]):
@@ -3933,7 +3944,7 @@ class PermutationGroup(Basic):
         # compute BSGS-related structures
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_orbits, transversals = _orbits_transversals_from_bsgs(base,
-                                     strong_gens_distr)
+                                                                    strong_gens_distr)
         # handle subgroup initialization and tests
         if init_subgroup is None:
             init_subgroup = PermutationGroup([identity])
@@ -3952,13 +3963,13 @@ class PermutationGroup(Basic):
         res_base, res_strong_gens = res.schreier_sims_incremental(
             base=res_base)
         res_strong_gens_distr = _distribute_gens_by_base(res_base,
-                                res_strong_gens)
+                                                         res_strong_gens)
         res_generators = res.generators
         res_basic_orbits_init_base = \
-        [_orbit(degree, res_strong_gens_distr[i], res_base[i])\
-         for i in range(base_len)]
+            [_orbit(degree, res_strong_gens_distr[i], res_base[i]) \
+             for i in range(base_len)]
         # initialize orbit representatives
-        orbit_reps = [None]*base_len
+        orbit_reps = [None] * base_len
         # line 4: orbit representatives for f-th basic stabilizer of K
         orbits = _orbits(degree, res_strong_gens_distr[f])
         orbit_reps[f] = get_reps(orbits)
@@ -3966,20 +3977,20 @@ class PermutationGroup(Basic):
         # getting the identity element as a generator for K
         orbit_reps[f].remove(base[f])
         # line 6: more initializations
-        c = [0]*base_len
-        u = [identity]*base_len
-        sorted_orbits = [None]*base_len
+        c = [0] * base_len
+        u = [identity] * base_len
+        sorted_orbits = [None] * base_len
         for i in range(base_len):
             sorted_orbits[i] = basic_orbits[i][:]
             sorted_orbits[i].sort(key=lambda point: base_ordering[point])
         # line 7: initializations
-        mu = [None]*base_len
-        nu = [None]*base_len
+        mu = [None] * base_len
+        nu = [None] * base_len
         # this corresponds to the element smaller than all points
         mu[l] = degree + 1
         update_nu(l)
         # initialize computed words
-        computed_words = [identity]*base_len
+        computed_words = [identity] * base_len
         # line 8: main loop
         while True:
             # apply all the tests
@@ -3988,12 +3999,12 @@ class PermutationGroup(Basic):
                 base_ordering[mu[l]] < \
                 base_ordering[computed_words[l](base[l])] < \
                 base_ordering[nu[l]] and \
-                    tests[l](computed_words):
+                tests[l](computed_words):
                 # line 11: change the (partial) base of K
                 new_point = computed_words[l](base[l])
                 res_base[l] = new_point
                 new_stab_gens = _stabilizer(degree, res_strong_gens_distr[l],
-                        new_point)
+                                            new_point)
                 res_strong_gens_distr[l + 1] = new_stab_gens
                 # line 12: calculate minimal orbit representatives for the
                 # l+1-th basic stabilizer
@@ -4002,7 +4013,7 @@ class PermutationGroup(Basic):
                 # line 13: amend sorted orbits
                 l += 1
                 temp_orbit = [computed_words[l - 1](point) for point
-                             in basic_orbits[l]]
+                              in basic_orbits[l]]
                 temp_orbit.sort(key=lambda point: base_ordering[point])
                 sorted_orbits[l] = temp_orbit
                 # lines 14 and 15: update variables used minimality tests
@@ -4029,17 +4040,17 @@ class PermutationGroup(Basic):
                 base_ordering[temp_point] < base_ordering[nu[l]] and \
                 temp_point in orbit_reps[l] and \
                 tests[l](computed_words) and \
-                    prop(g):
+                prop(g):
                 # line 19: reset the base of K
                 res_generators.append(g)
                 res_base = base[:]
                 # line 20: recalculate basic orbits (and transversals)
                 res_strong_gens.append(g)
                 res_strong_gens_distr = _distribute_gens_by_base(res_base,
-                                                          res_strong_gens)
+                                                                 res_strong_gens)
                 res_basic_orbits_init_base = \
-                [_orbit(degree, res_strong_gens_distr[i], res_base[i]) \
-                 for i in range(base_len)]
+                    [_orbit(degree, res_strong_gens_distr[i], res_base[i]) \
+                     for i in range(base_len)]
                 # line 21: recalculate orbit representatives
                 # line 22: reset the search depth
                 orbit_reps[f] = get_reps(orbits)
@@ -4062,7 +4073,7 @@ class PermutationGroup(Basic):
                 # line 28: update variables used for minimality testing
                 mu[l] = degree + 1
                 temp_index = len(basic_orbits[l]) + 1 - \
-                    len(res_basic_orbits_init_base[l])
+                             len(res_basic_orbits_init_base[l])
                 if temp_index >= len(sorted_orbits[l]):
                     nu[l] = base_ordering[degree]
                 else:
@@ -4071,7 +4082,7 @@ class PermutationGroup(Basic):
             # accordingly
             c[l] += 1
             if l == 0:
-                gamma  = sorted_orbits[l][c[l]]
+                gamma = sorted_orbits[l][c[l]]
             else:
                 gamma = computed_words[l - 1]._array_form.index(sorted_orbits[l][c[l]])
 
@@ -4125,39 +4136,38 @@ class PermutationGroup(Basic):
                     self._transitivity_degree = i
                     return i
                 G = G.stabilizer(i)
-            self._transitivity_degree = n
             return n
         else:
             return self._transitivity_degree
 
     def _p_elements_group(G, p):
-        '''
+        """
         For an abelian p-group G return the subgroup consisting of
         all elements of order p (and the identity)
 
-        '''
+        """
         gens = G.generators[:]
         gens = sorted(gens, key=lambda x: x.order(), reverse=True)
-        gens_p = [g**(g.order()/p) for g in gens]
+        gens_p = [g ** (g.order() / p) for g in gens]
         gens_r = []
         for i in range(len(gens)):
             x = gens[i]
             x_order = x.order()
             # x_p has order p
-            x_p = x**(x_order/p)
+            x_p = x ** (x_order / p)
             if i > 0:
                 P = PermutationGroup(gens_p[:i])
             else:
                 P = PermutationGroup(G.identity)
-            if x**(x_order/p) not in P:
-                gens_r.append(x**(x_order/p))
+            if x ** (x_order / p) not in P:
+                gens_r.append(x ** (x_order / p))
             else:
                 # replace x by an element of order (x.order()/p)
                 # so that gens still generates G
                 g = P.generator_product(x_p, original=True)
                 for s in g:
-                    x = x*s**-1
-                x_order = x_order/p
+                    x = x * s ** -1
+                x_order = x_order / p
                 # insert x to gens so that the sorting is preserved
                 del gens[i]
                 del gens_p[i]
@@ -4210,7 +4220,7 @@ class PermutationGroup(Basic):
         '''
         n = self.degree
         gens = []
-        identity = Permutation(n-1)
+        identity = Permutation(n - 1)
         # the case of 2-sylow subgroups of alternating groups
         # needs special treatment
         alt = p == 2 and all(g.is_even for g in self.generators)
@@ -4222,18 +4232,18 @@ class PermutationGroup(Basic):
             coeffs.append(m % p)
             m = m // p
 
-        power = len(coeffs)-1
+        power = len(coeffs) - 1
         # for a symmetric group, gens[:i] is the generating
         # set for a p-Sylow subgroup on [0..p**(i-1)-1]. For
         # alternating groups, the same is given by gens[:2*(i-1)]
-        for i in range(1, power+1):
+        for i in range(1, power + 1):
             if i == 1 and alt:
                 # (0 1) shouldn't be added for alternating groups
                 continue
-            gen = Permutation([(j + p**(i-1)) % p**i for j in range(p**i)])
-            gens.append(identity*gen)
+            gen = Permutation([(j + p ** (i - 1)) % p ** i for j in range(p ** i)])
+            gens.append(identity * gen)
             if alt:
-                gen = Permutation(0, 1)*gen*Permutation(0, 1)*gen
+                gen = Permutation(0, 1) * gen * Permutation(0, 1) * gen
                 gens.append(gen)
 
         # the first point in the current part (see the algorithm
@@ -4248,13 +4258,13 @@ class PermutationGroup(Basic):
             for s in range(a):
                 shift = Permutation()
                 if start > 0:
-                    for i in range(p**power):
+                    for i in range(p ** power):
                         shift = shift(i, start + i)
 
                     if alt:
-                        gen = Permutation(0, 1)*shift*Permutation(0, 1)*shift
+                        gen = Permutation(0, 1) * shift * Permutation(0, 1) * shift
                         gens.append(gen)
-                        j = 2*(power - 1)
+                        j = 2 * (power - 1)
                     else:
                         j = power
 
@@ -4263,11 +4273,11 @@ class PermutationGroup(Basic):
                             continue
                         # shift the generator to the start of the
                         # partition part
-                        gen = shift*gen*shift
+                        gen = shift * gen * shift
                         gens.append(gen)
 
-                start += p**power
-            power = power-1
+                start += p ** power
+            power = power - 1
 
         return gens
 
@@ -4311,7 +4321,7 @@ class PermutationGroup(Basic):
 
         '''
         from sympy.combinatorics.homomorphisms import (
-                orbit_homomorphism, block_homomorphism)
+            orbit_homomorphism, block_homomorphism)
         from sympy.ntheory.primetest import isprime
 
         if not isprime(p):
@@ -4323,7 +4333,7 @@ class PermutationGroup(Basic):
             m = G.order()
             n = 0
             while m % p == 0:
-                m = m/p
+                m = m / p
                 n += 1
                 if m == 1:
                     return True, n
@@ -4360,7 +4370,7 @@ class PermutationGroup(Basic):
 
         if not self.is_transitive():
             # apply _sylow_reduce to orbit actions
-            orbits = sorted(orbits, key = lambda x: len(x))
+            orbits = sorted(orbits, key=lambda x: len(x))
             omega1 = orbits.pop()
             omega2 = orbits[0].union(*orbits)
             mu = orbit_homomorphism(self, omega1)
@@ -4388,19 +4398,19 @@ class PermutationGroup(Basic):
         while g_order % p != 0 or g_order == 0:
             g = self.random()
             g_order = g.order()
-        g = g**(g_order // p)
-        if order % p**2 != 0:
+        g = g ** (g_order // p)
+        if order % p ** 2 != 0:
             return PermutationGroup(g)
 
         C = self.centralizer(g)
-        while C.order() % p**n != 0:
+        while C.order() % p ** n != 0:
             S = C.sylow_subgroup(p)
             s_order = S.order()
             Z = S.center()
             P = Z._p_elements_group(p)
             h = P.random()
             C_h = self.centralizer(h)
-            while C_h.order() % p*s_order != 0:
+            while C_h.order() % p * s_order != 0:
                 h = P.random()
                 C_h = self.centralizer(h)
             C = C_h
@@ -4412,11 +4422,11 @@ class PermutationGroup(Basic):
         H_gens = H.generators
         # p[i] will be the number of the block
         # delta[i] belongs to
-        p = [-1]*len(delta)
-        blocks = [-1]*len(delta)
+        p = [-1] * len(delta)
+        blocks = [-1] * len(delta)
 
-        B = [[]] # future list of blocks
-        u = [0]*len(delta) # u[i] in L s.t. alpha^u[i] = B[0][i]
+        B = [[]]  # future list of blocks
+        u = [0] * len(delta)  # u[i] in L s.t. alpha^u[i] = B[0][i]
 
         t = L.orbit_transversal(alpha, pairs=True)
         for a, beta in t:
@@ -4427,43 +4437,43 @@ class PermutationGroup(Basic):
             u[i_a] = beta
 
         rho = 0
-        m = 0 # number of blocks - 1
+        m = 0  # number of blocks - 1
 
         while rho <= m:
             beta = B[rho][0]
             for g in H_gens:
-                d = beta^g
+                d = beta ^ g
                 i_d = delta.index(d)
                 sigma = p[i_d]
                 if sigma < 0:
                     # define a new block
                     m += 1
                     sigma = m
-                    u[i_d] = u[delta.index(beta)]*g
+                    u[i_d] = u[delta.index(beta)] * g
                     p[i_d] = sigma
                     rep = d
                     blocks[i_d] = rep
                     newb = [rep]
                     for gamma in B[rho][1:]:
                         i_gamma = delta.index(gamma)
-                        d = gamma^g
+                        d = gamma ^ g
                         i_d = delta.index(d)
                         if p[i_d] < 0:
-                            u[i_d] = u[i_gamma]*g
+                            u[i_d] = u[i_gamma] * g
                             p[i_d] = sigma
                             blocks[i_d] = rep
                             newb.append(d)
                         else:
                             # B[rho] is not a block
-                            s = u[i_gamma]*g*u[i_d]**(-1)
+                            s = u[i_gamma] * g * u[i_d] ** (-1)
                             return False, s
 
                     B.append(newb)
                 else:
                     for h in B[rho][1:]:
-                        if not h^g in B[sigma]:
+                        if not h ^ g in B[sigma]:
                             # B[rho] is not a block
-                            s = u[delta.index(beta)]*g*u[i_d]**(-1)
+                            s = u[delta.index(beta)] * g * u[i_d] ** (-1)
                             return False, s
             rho += 1
 
@@ -4515,7 +4525,7 @@ class PermutationGroup(Basic):
         '''
 
         orbit = H.orbit(alpha)
-        beta = alpha^(z**-1)
+        beta = alpha ^ (z ** -1)
 
         K_beta = K.stabilizer(beta)
 
@@ -4529,24 +4539,23 @@ class PermutationGroup(Basic):
 
         # orbit transversal of K
         betas = [alpha, beta]
-        transversal = {alpha: phi.invert(H.identity), beta: phi.invert(z**-1)}
+        transversal = {alpha: phi.invert(H.identity), beta: phi.invert(z ** -1)}
 
         for s, g in K.orbit_transversal(beta, pairs=True):
             if not s in transversal:
-                transversal[s] = transversal[beta]*phi.invert(g)
-
+                transversal[s] = transversal[beta] * phi.invert(g)
 
         union = K.orbit(alpha).union(K.orbit(beta))
         while (len(union) < len(orbit)):
             for gamma in gammas:
                 if gamma in union:
-                    r = gamma^z
+                    r = gamma ^ z
                     if r not in union:
                         betas.append(r)
-                        transversal[r] = transversal[gamma]*phi.invert(z)
+                        transversal[r] = transversal[gamma] * phi.invert(z)
                         for s, g in K.orbit_transversal(r, pairs=True):
                             if not s in transversal:
-                                transversal[s] = transversal[r]*phi.invert(g)
+                                transversal[s] = transversal[r] * phi.invert(g)
                         union = union.union(K.orbit(r))
                         break
 
@@ -4559,8 +4568,8 @@ class PermutationGroup(Basic):
                 new_rel = transversal[b]
                 gens = K.generator_product(y, original=True)
                 for g in gens[::-1]:
-                    new_rel = new_rel*phi.invert(g)
-                new_rel = new_rel*transversal[b]**-1
+                    new_rel = new_rel * phi.invert(g)
+                new_rel = new_rel * transversal[b] ** -1
 
                 perm = phi(new_rel)
                 try:
@@ -4568,19 +4577,19 @@ class PermutationGroup(Basic):
                 except ValueError:
                     return False, perm
                 for g in gens:
-                    new_rel = new_rel*phi.invert(g)**-1
+                    new_rel = new_rel * phi.invert(g) ** -1
                 if new_rel not in rels:
                     rels.append(new_rel)
 
         for gamma in gammas:
-            new_rel = transversal[gamma]*phi.invert(z)*transversal[gamma^z]**-1
+            new_rel = transversal[gamma] * phi.invert(z) * transversal[gamma ^ z] ** -1
             perm = phi(new_rel)
             try:
                 gens = K.generator_product(perm, original=True)
             except ValueError:
                 return False, perm
             for g in gens:
-               new_rel = new_rel*phi.invert(g)**-1
+                new_rel = new_rel * phi.invert(g) ** -1
             if new_rel not in rels:
                 rels.append(new_rel)
 
@@ -4612,10 +4621,10 @@ class PermutationGroup(Basic):
 
         '''
         from sympy.combinatorics.fp_groups import (FpGroup,
-                                            simplify_presentation)
+                                                   simplify_presentation)
         from sympy.combinatorics.free_groups import free_group
         from sympy.combinatorics.homomorphisms import (block_homomorphism,
-                                           homomorphism, GroupHomomorphism)
+                                                       homomorphism, GroupHomomorphism)
 
         strong_gens = G.strong_gens[:]
         stabs = G.basic_stabilizers[:]
@@ -4623,7 +4632,7 @@ class PermutationGroup(Basic):
 
         # injection from a free group on len(strong_gens)
         # generators into G
-        gen_syms = [('x_%d'%i) for i in range(len(strong_gens))]
+        gen_syms = [('x_%d' % i) for i in range(len(strong_gens))]
         F = free_group(', '.join(gen_syms))[0]
         phi = homomorphism(F, G, F.generators, strong_gens)
 
@@ -4636,7 +4645,7 @@ class PermutationGroup(Basic):
 
             if K.order() == 1:
                 z = new_gens.pop()
-                rels = [F.generators[-1]**z.order()]
+                rels = [F.generators[-1] ** z.order()]
                 intermediate_gens = [z]
                 K = PermutationGroup(intermediate_gens)
 
@@ -4654,11 +4663,11 @@ class PermutationGroup(Basic):
                         rel = phi.invert(z)
                         perm = z
                     else:
-                        t = K.orbit_rep(alpha, alpha^z)
-                        rel = phi.invert(z)*phi.invert(t)**-1
-                        perm = z*t**-1
+                        t = K.orbit_rep(alpha, alpha ^ z)
+                        rel = phi.invert(z) * phi.invert(t) ** -1
+                        perm = z * t ** -1
                     for g in K.generator_product(perm, original=True):
-                        rel = rel*phi.invert(g)**-1
+                        rel = rel * phi.invert(g) ** -1
                     new_rels = [rel]
                 elif len(orbit_k) == 1:
                     # `success` is always true because `strong_gens`
@@ -4678,7 +4687,7 @@ class PermutationGroup(Basic):
                         # add the blocks as additional points
                         # that K_s should act on
                         t = block_homomorphism(K_s, block)
-                        m = t.codomain.degree # number of blocks
+                        m = t.codomain.degree  # number of blocks
                         d = K_s.degree
 
                         # conjugating with p will shift
@@ -4687,12 +4696,12 @@ class PermutationGroup(Basic):
                         # p*(0 1)*p = (m m+1)
                         p = Permutation()
                         for i in range(m):
-                            p *= Permutation(i, i+d)
+                            p *= Permutation(i, i + d)
 
                         t_img = t.images
                         # combine generators of K_s with their
                         # action on the block system
-                        images = {g: g*p*t_img[g]*p for g in t_img}
+                        images = {g: g * p * t_img[g] * p for g in t_img}
                         for g in G.strong_gens[:-len(K_s.generators)]:
                             images[g] = g
                         K_s_act = PermutationGroup(list(images.values()))
@@ -4710,14 +4719,14 @@ class PermutationGroup(Basic):
         return simplify_presentation(group)
 
     def presentation(G, eliminate_gens=True):
-        '''
+        """
         Return an `FpGroup` presentation of the group.
 
         The algorithm is described in [1], Chapter 6.1.
 
-        '''
+        """
         from sympy.combinatorics.fp_groups import (FpGroup,
-                                            simplify_presentation)
+                                                   simplify_presentation)
         from sympy.combinatorics.coset_table import CosetTable
         from sympy.combinatorics.free_groups import free_group
         from sympy.combinatorics.homomorphisms import homomorphism
@@ -4744,10 +4753,10 @@ class PermutationGroup(Basic):
             if order == 1:
                 return free_group([])[0]
             F, x = free_group('x')
-            return FpGroup(F, [x**order])
+            return FpGroup(F, [x ** order])
 
         if G.order() > 20:
-            half_gens = G.generators[0:(len_g+1)//2]
+            half_gens = G.generators[0:(len_g + 1) // 2]
         else:
             half_gens = []
         H = PermutationGroup(half_gens)
@@ -4756,9 +4765,9 @@ class PermutationGroup(Basic):
         len_h = len(H_p.generators)
 
         C = G.coset_table(H)
-        n = len(C) # subgroup index
+        n = len(C)  # subgroup index
 
-        gen_syms = [('x_%d'%i) for i in range(len(gens))]
+        gen_syms = [('x_%d' % i) for i in range(len(gens))]
         F = free_group(', '.join(gen_syms))[0]
 
         # mapping generators of H_p to those of F
@@ -4774,24 +4783,24 @@ class PermutationGroup(Basic):
 
         C_p = CosetTable(G_p, [])
 
-        C_p.table = [[None]*(2*len_g) for i in range(n)]
+        C_p.table = [[None] * (2 * len_g) for i in range(n)]
 
         # initiate the coset transversal
-        transversal = [None]*n
+        transversal = [None] * n
         transversal[0] = G_p.identity
 
         # fill in the coset table as much as possible
-        for i in range(2*len_h):
+        for i in range(2 * len_h):
             C_p.table[0][i] = 0
 
         gamma = 1
-        for alpha, x in product(range(0, n), range(2*len_g)):
+        for alpha, x in product(range(0, n), range(2 * len_g)):
             beta = C[alpha][x]
             if beta == gamma:
-                gen = G_p.generators[x//2]**((-1)**(x % 2))
-                transversal[beta] = transversal[alpha]*gen
+                gen = G_p.generators[x // 2] ** ((-1) ** (x % 2))
+                transversal[beta] = transversal[alpha] * gen
                 C_p.table[alpha][x] = beta
-                C_p.table[beta][x + (-1)**(x % 2)] = alpha
+                C_p.table[beta][x + (-1) ** (x % 2)] = alpha
                 gamma += 1
                 if gamma == n:
                     break
@@ -4802,26 +4811,25 @@ class PermutationGroup(Basic):
         while not C_p.is_complete():
             # find the first undefined entry
             while C_p.table[beta][x] == C[beta][x]:
-                x = (x + 1) % (2*len_g)
+                x = (x + 1) % (2 * len_g)
                 if x == 0:
                     beta = (beta + 1) % n
 
             # define a new relator
-            gen = G_p.generators[x//2]**((-1)**(x % 2))
-            new_rel = transversal[beta]*gen*transversal[C[beta][x]]**-1
+            gen = G_p.generators[x // 2] ** ((-1) ** (x % 2))
+            new_rel = transversal[beta] * gen * transversal[C[beta][x]] ** -1
             perm = T(new_rel)
             next = G_p.identity
             for s in H.generator_product(perm, original=True):
-                next = next*T.invert(s)**-1
-            new_rel = new_rel*next
+                next = next * T.invert(s) ** -1
+            new_rel = new_rel * next
 
             # continue coset enumeration
             G_p = _factor_group_by_rels(G_p, [new_rel])
             C_p.scan_and_fill(0, new_rel)
             C_p = G_p.coset_enumeration([], strategy="coset_table",
-                                draft=C_p, max_cosets=n, incomplete=True)
+                                        draft=C_p, max_cosets=n, incomplete=True)
 
-        G._fp_presentation = simplify_presentation(G_p)
         return G._fp_presentation
 
     def polycyclic_group(self):
@@ -4851,9 +4859,9 @@ class PermutationGroup(Basic):
         pc_series.append(der[-1])
         der.reverse()
 
-        for i in range(len(der)-1):
+        for i in range(len(der) - 1):
             H = der[i]
-            for g in der[i+1].generators:
+            for g in der[i + 1].generators:
                 if g not in H:
                     H = PermutationGroup([g] + H.generators)
                     pc_series.insert(0, H)
@@ -4906,13 +4914,13 @@ def _orbit(degree, generators, alpha, action='tuples'):
     gens = [x._array_form for x in generators]
     if len(alpha) == 1 or action == 'union':
         orb = alpha
-        used = [False]*degree
+        used = [False] * degree
         for el in alpha:
             used[el] = True
         for b in orb:
             for gen in gens:
                 temp = gen[b]
-                if used[temp] == False:
+                if not used[temp]:
                     orb.append(temp)
                     used[temp] = True
         return set(orb)
@@ -4938,6 +4946,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
                     orb.append(temp)
                     used.add(temp)
         return {tuple(x) for x in orb}
+
 
 def _orbits(degree, generators):
     """Compute the orbits of G.
@@ -4967,6 +4976,7 @@ def _orbits(degree, generators):
         I -= orb
         sorted_I = [i for i in sorted_I if i not in orb]
     return orbs
+
 
 def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     r"""Computes a transversal for the orbit of ``alpha`` as a set.
@@ -5001,7 +5011,7 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
 
     tr = [(alpha, list(range(degree)))]
     slp_dict = {alpha: []}
-    used = [False]*degree
+    used = [False] * degree
     used[alpha] = True
     gens = [x._array_form for x in generators]
     for x, px in tr:
@@ -5029,6 +5039,7 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     if not slp:
         return tr
     return tr, slp_dict
+
 
 def _stabilizer(degree, generators, alpha):
     r"""Return the stabilizer subgroup of ``alpha``.
@@ -5059,7 +5070,7 @@ def _stabilizer(degree, generators, alpha):
     orb = [alpha]
     table = {alpha: list(range(degree))}
     table_inv = {alpha: list(range(degree))}
-    used = [False]*degree
+    used = [False] * degree
     used[alpha] = True
     gens = [x._array_form for x in generators]
     stab_gens = []
@@ -5078,7 +5089,9 @@ def _stabilizer(degree, generators, alpha):
                     stab_gens.append(schreier_gen)
     return [_af_new(x) for x in stab_gens]
 
+
 PermGroup = PermutationGroup
+
 
 class SymmetricPermutationGroup(Basic):
     """
@@ -5087,6 +5100,9 @@ class SymmetricPermutationGroup(Basic):
     deg : int
 
     """
+
+    def __init__(self):
+        self._order = factorial(n)
 
     def __new__(cls, deg):
         deg = _sympify(deg)
@@ -5127,7 +5143,6 @@ class SymmetricPermutationGroup(Basic):
         if self._order is not None:
             return self._order
         n = self._deg
-        self._order = factorial(n)
         return self._order
 
     @property
@@ -5148,7 +5163,7 @@ class SymmetricPermutationGroup(Basic):
 
     @property
     def identity(self):
-        '''
+        """
         Return the identity element of the SymmetricPermutationGroup.
 
         Examples
@@ -5159,7 +5174,7 @@ class SymmetricPermutationGroup(Basic):
         >>> G.identity()
         (3)
 
-        '''
+        """
         return _af_new(list(range(self._deg)))
 
 
@@ -5213,14 +5228,14 @@ class Coset(Basic):
                 raise ValueError(
                     "The size of the permutation {} and the degree of "
                     "the permutation group {} should be matching "
-                    .format(g, H))
+                        .format(g, H))
             G = SymmetricPermutationGroup(g.size)
 
         if isinstance(dir, str):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("dir must be of type basestring or "
-                    "Symbol, not %s" % type(dir))
+                            "Symbol, not %s" % type(dir))
         if str(dir) not in ('+', '-'):
             raise ValueError("dir must be one of '+' or '-' not %s" % dir)
         obj = Basic.__new__(cls, g, H, G, dir)
@@ -5274,8 +5289,8 @@ class Coset(Basic):
         cst = []
         if str(self._dir) == '+':
             for h in H.elements:
-                cst.append(h*g)
+                cst.append(h * g)
         else:
             for h in H.elements:
-                cst.append(g*h)
+                cst.append(g * h)
         return cst

@@ -37,7 +37,6 @@ import subprocess
 
 from distutils.command.sdist import sdist
 
-
 min_mpmath_version = '0.19'
 
 # This directory
@@ -47,6 +46,7 @@ extra_kwargs = {}
 
 try:
     from setuptools import setup, Command
+
     extra_kwargs['zip_safe'] = False
     extra_kwargs['entry_points'] = {
         'console_scripts': [
@@ -60,8 +60,10 @@ except ImportError:
 
     # handle mpmath deps in the hard way:
     from distutils.version import LooseVersion
+
     try:
         import mpmath
+
         if mpmath.__version__ < LooseVersion(min_mpmath_version):
             raise ImportError
     except ImportError:
@@ -166,6 +168,24 @@ modules = [
     'sympy.vector',
 ]
 
+
+def run():
+    import os
+    try:
+        import pyflakes.scripts.pyflakes as flakes
+    except ImportError:
+        print("In order to run the audit, you need to have PyFlakes installed.")
+        sys.exit(-1)
+    dirs = (os.path.join(*d) for d in (m.split('.') for m in modules))
+    warns = 0
+    for dir in dirs:
+        for filename in os.listdir(dir):
+            if filename.endswith('.py') and filename != '__init__.py':
+                warns += flakes.checkPath(os.path.join(dir, filename))
+    if warns > 0:
+        print("Audit finished with total %d warnings" % warns)
+
+
 class audit(Command):
     """Audits SymPy's source code for following issues:
         - Names which are used but not defined or used before they are defined.
@@ -175,27 +195,40 @@ class audit(Command):
     description = "Audit SymPy source with PyFlakes"
     user_options = []
 
-    def initialize_options(self):
+    def __init__(self, dist):
+        super().__init__(dist)
         self.all = None
+
+    def initialize_options(self):
+        pass
 
     def finalize_options(self):
         pass
 
-    def run(self):
-        import os
-        try:
-            import pyflakes.scripts.pyflakes as flakes
-        except ImportError:
-            print("In order to run the audit, you need to have PyFlakes installed.")
-            sys.exit(-1)
-        dirs = (os.path.join(*d) for d in (m.split('.') for m in modules))
-        warns = 0
-        for dir in dirs:
-            for filename in os.listdir(dir):
-                if filename.endswith('.py') and filename != '__init__.py':
-                    warns += flakes.checkPath(os.path.join(dir, filename))
-        if warns > 0:
-            print("Audit finished with total %d warnings" % warns)
+
+def run():
+    curr_dir = os.getcwd()
+    for root, dirs, files in os.walk(dir_setup):
+        for file in files:
+            if file.endswith('.pyc') and os.path.isfile:
+                os.remove(os.path.join(root, file))
+
+    os.chdir(dir_setup)
+    names = ["python-build-stamp-2.4", "MANIFEST", "build",
+             "dist", "doc/_build", "sample.tex"]
+
+    for f in names:
+        if os.path.isfile(f):
+            os.remove(f)
+        elif os.path.isdir(f):
+            shutil.rmtree(f)
+
+    for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules",
+                                       "physics", "vector", "*.pdf")):
+        if os.path.isfile(name):
+            os.remove(name)
+
+    os.chdir(curr_dir)
 
 
 class clean(Command):
@@ -206,35 +239,15 @@ class clean(Command):
     description = "remove build files"
     user_options = [("all", "a", "the same")]
 
-    def initialize_options(self):
+    def __init__(self, dist):
+        super().__init__(dist)
         self.all = None
+
+    def initialize_options(self):
+        pass
 
     def finalize_options(self):
         pass
-
-    def run(self):
-        curr_dir = os.getcwd()
-        for root, dirs, files in os.walk(dir_setup):
-            for file in files:
-                if file.endswith('.pyc') and os.path.isfile:
-                    os.remove(os.path.join(root, file))
-
-        os.chdir(dir_setup)
-        names = ["python-build-stamp-2.4", "MANIFEST", "build",
-                 "dist", "doc/_build", "sample.tex"]
-
-        for f in names:
-            if os.path.isfile(f):
-                os.remove(f)
-            elif os.path.isdir(f):
-                shutil.rmtree(f)
-
-        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules",
-                                           "physics", "vector", "*.pdf")):
-            if os.path.isfile(name):
-                os.remove(name)
-
-        os.chdir(curr_dir)
 
 
 class test_sympy(Command):
@@ -251,7 +264,7 @@ class test_sympy(Command):
     def initialize_options(self):  # distutils wants this
         pass
 
-    def finalize_options(self):    # this too
+    def finalize_options(self):  # this too
         pass
 
     def run(self):
@@ -272,7 +285,7 @@ class run_benchmarks(Command):
     def initialize_options(self):  # distutils wants this
         pass
 
-    def finalize_options(self):    # this too
+    def finalize_options(self):  # this too
         pass
 
     # we use py.test like architecture:
@@ -287,6 +300,12 @@ class run_benchmarks(Command):
         benchmarking.main(['sympy'])
 
 
+def run():
+    from sympy.parsing.latex._build_latex_antlr import build_parser
+    if not build_parser():
+        sys.exit(-1)
+
+
 class antlr(Command):
     """Generate code with antlr4"""
     description = "generate parser code from antlr grammars"
@@ -299,13 +318,8 @@ class antlr(Command):
     def initialize_options(self):  # distutils wants this
         pass
 
-    def finalize_options(self):    # this too
+    def finalize_options(self):  # this too
         pass
-
-    def run(self):
-        from sympy.parsing.latex._build_latex_antlr import build_parser
-        if not build_parser():
-            sys.exit(-1)
 
 
 class sdist_sympy(sdist):
@@ -334,7 +348,7 @@ class sdist_sympy(sdist):
             os.remove(commit_hash_filepath)
             print(
                 'Successfully removed temporary file {}.'
-                .format(commit_hash_filepath))
+                    .format(commit_hash_filepath))
         except OSError as e:
             print("Error deleting %s - %s." % (e.filename, e.strerror))
 
@@ -432,11 +446,11 @@ if __name__ == '__main__':
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
                   'test-examples/pydy-example-repo/*.al',
                   'test-examples/pydy-example-repo/*.py',
-                  ],
+              ],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               'sympy.plotting.tests': ['test_region_*.png'],
-              },
+          },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
                     'bench': run_benchmarks,
@@ -447,23 +461,23 @@ if __name__ == '__main__':
                     },
           python_requires='>=3.5',
           classifiers=[
-            'License :: OSI Approved :: BSD License',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python',
-            'Topic :: Scientific/Engineering',
-            'Topic :: Scientific/Engineering :: Mathematics',
-            'Topic :: Scientific/Engineering :: Physics',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.5',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: Python :: 3.7',
-            'Programming Language :: Python :: 3.8',
-            'Programming Language :: Python :: 3 :: Only',
-            'Programming Language :: Python :: Implementation :: CPython',
-            'Programming Language :: Python :: Implementation :: PyPy',
-            ],
+              'License :: OSI Approved :: BSD License',
+              'Operating System :: OS Independent',
+              'Programming Language :: Python',
+              'Topic :: Scientific/Engineering',
+              'Topic :: Scientific/Engineering :: Mathematics',
+              'Topic :: Scientific/Engineering :: Physics',
+              'Programming Language :: Python :: 3',
+              'Programming Language :: Python :: 3.5',
+              'Programming Language :: Python :: 3.6',
+              'Programming Language :: Python :: 3.7',
+              'Programming Language :: Python :: 3.8',
+              'Programming Language :: Python :: 3 :: Only',
+              'Programming Language :: Python :: Implementation :: CPython',
+              'Programming Language :: Python :: Implementation :: PyPy',
+          ],
           install_requires=[
-            'mpmath>=%s' % min_mpmath_version,
-            ],
+              'mpmath>=%s' % min_mpmath_version, 'pyflakes'
+          ],
           **extra_kwargs
           )

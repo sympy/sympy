@@ -42,6 +42,7 @@ class AssumptionsContext(set):
             return "%s()" % self.__class__.__name__
         return "{}({})".format(self.__class__.__name__, printer._print_set(self))
 
+
 global_assumptions = AssumptionsContext()
 
 
@@ -156,10 +157,10 @@ class Predicate(Boolean):
         return obj
 
     def _hashable_content(self):
-        return (self.name,)
+        return self.name,
 
     def __getnewargs__(self):
-        return (self.name,)
+        return self.name,
 
     def __call__(self, expr):
         return AppliedPredicate(self, expr)

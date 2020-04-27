@@ -53,9 +53,10 @@ class Optimization:
     priority : number
 
     """
+
     def __init__(self, cost_function=None, priority=1):
         self.cost_function = cost_function
-        self.priority=priority
+        self.priority = priority
 
 
 class ReplaceOptim(Optimization):
@@ -135,15 +136,14 @@ _u = Wild('u', properties=[lambda x: not x.is_number and not x.is_Add])
 _v = Wild('v')
 _w = Wild('w')
 
-
-log2_opt = ReplaceOptim(_v*log(_w)/log(2), _v*log2(_w), cost_function=lambda expr: expr.count(
+log2_opt = ReplaceOptim(_v * log(_w) / log(2), _v * log2(_w), cost_function=lambda expr: expr.count(
     lambda e: (  # division & eval of transcendentals are expensive floating point operations...
         e.is_Pow and e.exp.is_negative  # division
         or (isinstance(e, (log, log2)) and not e.args[0].is_number))  # transcendental
-    )
 )
+                        )
 
-log2const_opt = ReplaceOptim(log(2)*log2(_w), log(_w))
+log2const_opt = ReplaceOptim(log(2) * log2(_w), log(_w))
 
 logsumexp_2terms_opt = ReplaceOptim(
     lambda l: (isinstance(l, log)
@@ -158,7 +158,7 @@ logsumexp_2terms_opt = ReplaceOptim(
 
 
 def _try_expm1(expr):
-    protected, old_new =  expr.replace(exp, lambda arg: Dummy(), map=True)
+    protected, old_new = expr.replace(exp, lambda arg: Dummy(), map=True)
     factored = protected.factor()
     new_old = {v: k for k, v in old_new.items()}
     return factored.replace(_d - 1, lambda d: expm1(new_old[d].args[0])).xreplace(new_old)
@@ -167,7 +167,7 @@ def _try_expm1(expr):
 def _expm1_value(e):
     numbers, non_num = sift(e.args, lambda arg: arg.is_number, binary=True)
     non_num_exp, non_num_other = sift(non_num, lambda arg: arg.has(exp),
-        binary=True)
+                                      binary=True)
     numsum = sum(numbers)
     new_exp_terms, done = [], False
     for exp_term in non_num_exp:
@@ -188,13 +188,13 @@ def _expm1_value(e):
 
 expm1_opt = ReplaceOptim(lambda e: e.is_Add, _expm1_value)
 
-
 log1p_opt = ReplaceOptim(
     lambda e: isinstance(e, log),
     lambda l: expand_log(l.replace(
         log, lambda arg: log(arg.factor())
-    )).replace(log(_u+1), log1p(_u))
+    )).replace(log(_u + 1), log1p(_u))
 )
+
 
 def create_expand_pow_optimization(limit):
     """ Creates an instance of :class:`ReplaceOptim` for expanding ``Pow``.
@@ -225,9 +225,10 @@ def create_expand_pow_optimization(limit):
     return ReplaceOptim(
         lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_Integer and abs(e.exp) <= limit,
         lambda p: (
-            UnevaluatedExpr(Mul(*([p.base]*+p.exp), evaluate=False)) if p.exp > 0 else
-            1/UnevaluatedExpr(Mul(*([p.base]*-p.exp), evaluate=False))
+            UnevaluatedExpr(Mul(*([p.base] * +p.exp), evaluate=False)) if p.exp > 0 else
+            1 / UnevaluatedExpr(Mul(*([p.base] * -p.exp), evaluate=False))
         ))
+
 
 # Optimization procedures for turning A**(-1) * x into MatrixSolve(A, x)
 def _matinv_predicate(expr):
@@ -241,6 +242,7 @@ def _matinv_predicate(expr):
 
     return False
 
+
 def _matinv_transform(expr):
     left, right = expr.args
     inv_arg = left.arg
@@ -248,7 +250,6 @@ def _matinv_transform(expr):
 
 
 matinv_opt = ReplaceOptim(_matinv_predicate, _matinv_transform)
-
 
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)

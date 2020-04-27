@@ -156,7 +156,7 @@ exp_nofunc:
     | comp_nofunc;
 
 comp:
-    group
+    self
     | abs_group
     | func
     | atom
@@ -164,13 +164,13 @@ comp:
     | binom;
 
 comp_nofunc:
-    group
+    self
     | abs_group
     | atom
     | frac
     | binom;
 
-group:
+self:
     L_PAREN expr R_PAREN
     | L_BRACKET expr R_BRACKET
     | L_BRACE expr R_BRACE;

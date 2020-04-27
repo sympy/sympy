@@ -6,8 +6,9 @@ from sympy.core.numbers import igcd
 from sympy.ntheory.factor_ import totient
 from sympy import S
 
+
 class GroupHomomorphism:
-    '''
+    """
     A class representing group homomorphisms. Instantiate using `homomorphism()`.
 
     References
@@ -15,7 +16,7 @@ class GroupHomomorphism:
 
     .. [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
 
-    '''
+    """
 
     def __init__(self, domain, codomain, images):
         self.domain = domain
@@ -26,12 +27,12 @@ class GroupHomomorphism:
         self._image = None
 
     def _invs(self):
-        '''
+        """
         Return a dictionary with `{gen: inverse}` where `gen` is a rewriting
         generator of `codomain` (e.g. strong generator for permutation groups)
         and `inverse` is an element of its preimage
 
-        '''
+        """
         image = self.image()
         inverses = {}
         for k in list(self.images.keys()):
@@ -53,15 +54,15 @@ class GroupHomomorphism:
                 parts = g
             for s in parts:
                 if s in inverses:
-                    w = w*inverses[s]
+                    w = w * inverses[s]
                 else:
-                    w = w*inverses[s**-1]**-1
+                    w = w * inverses[s ** -1] ** -1
             inverses[g] = w
 
         return inverses
 
     def invert(self, g):
-        '''
+        """
         Return an element of the preimage of `g` or of each element
         of `g` if `g` is a list.
         NOTE: If the codomain is an FpGroup, the inverse for equal
@@ -70,7 +71,7 @@ class GroupHomomorphism:
         confluent can be time-consuming. If it's important, try
         `self.codomain.make_confluent()` first.
 
-        '''
+        """
         from sympy.combinatorics import Permutation
         from sympy.combinatorics.free_groups import FreeGroupElement
         if isinstance(g, (Permutation, FreeGroupElement)):
@@ -95,18 +96,18 @@ class GroupHomomorphism:
                 if s.is_identity:
                     continue
                 if s in self._inverses:
-                    w = w*self._inverses[s]
+                    w = w * self._inverses[s]
                 else:
-                    w = w*self._inverses[s**-1]**-1
+                    w = w * self._inverses[s ** -1] ** -1
             return w
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
 
     def kernel(self):
-        '''
+        """
         Compute the kernel of `self`.
 
-        '''
+        """
         if self._kernel is None:
             self._kernel = self._compute_kernel()
         return self._kernel
@@ -124,9 +125,9 @@ class GroupHomomorphism:
         else:
             K = FpSubgroup(G, gens, normal=True)
         i = self.image().order()
-        while K.order()*i != G_order:
+        while K.order() * i != G_order:
             r = G.random()
-            k = r*self.invert(self(r))**-1
+            k = r * self.invert(self(r)) ** -1
             if not k in K:
                 gens.append(k)
                 if isinstance(G, PermutationGroup):
@@ -136,10 +137,10 @@ class GroupHomomorphism:
         return K
 
     def image(self):
-        '''
+        """
         Compute the image of `self`.
 
-        '''
+        """
         if self._image is None:
             values = list(set(self.images.values()))
             if isinstance(self.codomain, PermutationGroup):
@@ -149,10 +150,10 @@ class GroupHomomorphism:
         return self._image
 
     def _apply(self, elem):
-        '''
+        """
         Apply `self` to `elem`.
 
-        '''
+        """
         if not elem in self.domain:
             if isinstance(elem, (list, tuple)):
                 return [self._apply(e) for e in elem]
@@ -166,17 +167,17 @@ class GroupHomomorphism:
                 gens = self.domain.generator_product(elem, original=True)
                 for g in gens:
                     if g in self.images:
-                        value = images[g]*value
+                        value = images[g] * value
                     else:
-                        value = images[g**-1]**-1*value
+                        value = images[g ** -1] ** -1 * value
             else:
                 i = 0
                 for _, p in elem.array_form:
                     if p < 0:
-                        g = elem[i]**-1
+                        g = elem[i] ** -1
                     else:
                         g = elem[i]
-                    value = value*images[g]**p
+                    value = value * images[g] ** p
                     i += abs(p)
         return value
 
@@ -191,10 +192,10 @@ class GroupHomomorphism:
         return self.kernel().order() == 1
 
     def is_surjective(self):
-        '''
+        """
         Check if the homomorphism is surjective
 
-        '''
+        """
         from sympy import S
         im = self.image().order()
         oth = self.codomain.order()
@@ -204,39 +205,39 @@ class GroupHomomorphism:
             return im == oth
 
     def is_isomorphism(self):
-        '''
+        """
         Check if `self` is an isomorphism.
 
-        '''
+        """
         return self.is_injective() and self.is_surjective()
 
     def is_trivial(self):
-        '''
+        """
         Check is `self` is a trivial homomorphism, i.e. all elements
         are mapped to the identity.
 
-        '''
+        """
         return self.image().order() == 1
 
     def compose(self, other):
-        '''
+        """
         Return the composition of `self` and `other`, i.e.
         the homomorphism phi such that for all g in the domain
         of `other`, phi(g) = self(other(g))
 
-        '''
+        """
         if not other.image().is_subgroup(self.domain):
             raise ValueError("The image of `other` must be a subgroup of "
-                    "the domain of `self`")
+                             "the domain of `self`")
         images = {g: self(other(g)) for g in other.images}
         return GroupHomomorphism(other.domain, self.codomain, images)
 
     def restrict_to(self, H):
-        '''
+        """
         Return the restriction of the homomorphism to the subgroup `H`
         of the domain.
 
-        '''
+        """
         if not isinstance(H, PermutationGroup) or not H.is_subgroup(self.domain):
             raise ValueError("Given H is not a subgroup of the domain")
         domain = H
@@ -244,11 +245,11 @@ class GroupHomomorphism:
         return GroupHomomorphism(domain, self.codomain, images)
 
     def invert_subgroup(self, H):
-        '''
+        """
         Return the subgroup of the domain that is the inverse image
         of the subgroup `H` of the homomorphism image
 
-        '''
+        """
         if not H.is_subgroup(self.image()):
             raise ValueError("Given H is not a subgroup of the image")
         gens = []
@@ -259,13 +260,14 @@ class GroupHomomorphism:
                 gens.append(h_i)
                 P = PermutationGroup(gens)
             for k in self.kernel().generators:
-                if k*h_i not in P:
-                    gens.append(k*h_i)
+                if k * h_i not in P:
+                    gens.append(k * h_i)
                     P = PermutationGroup(gens)
         return P
 
+
 def homomorphism(domain, codomain, gens, images=[], check=True):
-    '''
+    """
     Create (if possible) a group homomorphism from the group `domain`
     to the group `codomain` defined by the images of the domain's
     generators `gens`. `gens` and `images` can be either lists or tuples
@@ -279,7 +281,7 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
     If `check` is `False`, don't check whether the given images actually
     define a homomorphism.
 
-    '''
+    """
     if not isinstance(domain, (PermutationGroup, FpGroup, FreeGroup)):
         raise TypeError("The domain must be a group")
     if not isinstance(codomain, (PermutationGroup, FpGroup, FreeGroup)):
@@ -297,13 +299,14 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
     gens = list(gens)
     images = list(images)
 
-    images.extend([codomain.identity]*(len(generators)-len(images)))
+    images.extend([codomain.identity] * (len(generators) - len(images)))
     gens.extend([g for g in generators if g not in gens])
-    images = dict(zip(gens,images))
+    images = dict(zip(gens, images))
 
     if check and not _check_homomorphism(domain, codomain, images):
         raise ValueError("The given images do not define a homomorphism")
     return GroupHomomorphism(domain, codomain, images)
+
 
 def _check_homomorphism(domain, codomain, images):
     if hasattr(domain, 'relators'):
@@ -336,9 +339,9 @@ def _check_homomorphism(domain, codomain, images):
                 else:
                     s = r[i]
                 if s in images:
-                    w = w*images[s]**power
-                elif s**-1 in images:
-                    w = w*images[s**-1]**power
+                    w = w * images[s] ** power
+                elif s ** -1 in images:
+                    w = w * images[s ** -1] ** power
                 i += abs(power)
                 j += 1
             return w
@@ -354,29 +357,30 @@ def _check_homomorphism(domain, codomain, images):
                 s = codomain.equals(_image(r), identity)
                 if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
-                        "define a homomorphism. Try increasing "
-                        "the maximum number of rewriting rules "
-                        "(group._rewriting_system.set_max(new_value); "
-                        "the current value is stored in group._rewriting"
-                        "_system.maxeqns)")
+                                       "define a homomorphism. Try increasing "
+                                       "the maximum number of rewriting rules "
+                                       "(group._rewriting_system.set_max(new_value); "
+                                       "the current value is stored in group._rewriting"
+                                       "_system.maxeqns)")
         else:
             s = _image(r).is_identity
         if not s:
             return False
     return True
 
+
 def orbit_homomorphism(group, omega):
-    '''
+    """
     Return the homomorphism induced by the action of the permutation
     group `group` on the set `omega` that is closed under the action.
 
-    '''
+    """
     from sympy.combinatorics import Permutation
     from sympy.combinatorics.named_groups import SymmetricGroup
     codomain = SymmetricGroup(len(omega))
     identity = codomain.identity
     omega = list(omega)
-    images = {g: identity*Permutation([omega.index(o^g) for o in omega]) for g in group.generators}
+    images = {g: identity * Permutation([omega.index(o ^ g) for o in omega]) for g in group.generators}
     group._schreier_sims(base=omega)
     H = GroupHomomorphism(group, codomain, images)
     if len(group.basic_stabilizers) > len(omega):
@@ -385,15 +389,16 @@ def orbit_homomorphism(group, omega):
         H._kernel = PermutationGroup([group.identity])
     return H
 
+
 def block_homomorphism(group, blocks):
-    '''
+    """
     Return the homomorphism induced by the action of the permutation
     group `group` on the block system `blocks`. The latter should be
     of the same form as returned by the `minimal_block` method for
     permutation groups, namely a list of length `group.degree` where
     the i-th entry is a representative of the block i belongs to.
 
-    '''
+    """
     from sympy.combinatorics import Permutation
     from sympy.combinatorics.named_groups import SymmetricGroup
 
@@ -405,7 +410,7 @@ def block_homomorphism(group, blocks):
     # of the i-th block
     m = 0
     p = []
-    b = [None]*n
+    b = [None] * n
     for i in range(n):
         if blocks[i] == i:
             p.append(i)
@@ -417,12 +422,13 @@ def block_homomorphism(group, blocks):
     codomain = SymmetricGroup(m)
     # the list corresponding to the identity permutation in codomain
     identity = range(m)
-    images = {g: Permutation([b[p[i]^g] for i in identity]) for g in group.generators}
+    images = {g: Permutation([b[p[i] ^ g] for i in identity]) for g in group.generators}
     H = GroupHomomorphism(group, codomain, images)
     return H
 
+
 def group_isomorphism(G, H, isomorphism=True):
-    '''
+    """
     Compute an isomorphism between 2 given groups.
 
     Parameters
@@ -472,7 +478,7 @@ def group_isomorphism(G, H, isomorphism=True):
     First, the generators of `G` are mapped to the elements of `H` and
     we check if the mapping induces an isomorphism.
 
-    '''
+    """
     if not isinstance(G, (PermutationGroup, FpGroup)):
         raise TypeError("The group must be a PermutationGroup or an FpGroup")
     if not isinstance(H, (PermutationGroup, FpGroup)):
@@ -486,7 +492,7 @@ def group_isomorphism(G, H, isomorphism=True):
         if G.generators == H.generators and (G.relators).sort() == (H.relators).sort():
             if not isomorphism:
                 return True
-            return (True, homomorphism(G, H, G.generators, H.generators))
+            return True, homomorphism(G, H, G.generators, H.generators)
 
     #  `_H` is the permutation group isomorphic to `H`.
     _H = H
@@ -504,7 +510,7 @@ def group_isomorphism(G, H, isomorphism=True):
     if (g_order != h_order) or (G.is_abelian != H.is_abelian):
         if not isomorphism:
             return False
-        return (False, None)
+        return False, None
 
     if not isomorphism:
         # Two groups of the same cyclic numbered order
@@ -517,24 +523,25 @@ def group_isomorphism(G, H, isomorphism=True):
     gens = list(G.generators)
     for subset in itertools.permutations(_H, len(gens)):
         images = list(subset)
-        images.extend([_H.identity]*(len(G.generators)-len(images)))
-        _images = dict(zip(gens,images))
+        images.extend([_H.identity] * (len(G.generators) - len(images)))
+        _images = dict(zip(gens, images))
         if _check_homomorphism(G, _H, _images):
             if isinstance(H, FpGroup):
                 images = h_isomorphism.invert(images)
-            T =  homomorphism(G, H, G.generators, images, check=False)
+            T = homomorphism(G, H, G.generators, images, check=False)
             if T.is_isomorphism():
                 # It is a valid isomorphism
                 if not isomorphism:
                     return True
-                return (True, T)
+                return True, T
 
     if not isomorphism:
         return False
-    return (False, None)
+    return False, None
+
 
 def is_isomorphic(G, H):
-    '''
+    """
     Check if the groups are isomorphic to each other
 
     Parameters
@@ -547,5 +554,5 @@ def is_isomorphic(G, H):
     =======
 
     boolean
-    '''
+    """
     return group_isomorphism(G, H, isomorphism=False)

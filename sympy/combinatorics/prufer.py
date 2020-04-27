@@ -157,6 +157,7 @@ class Prufer(Basic):
         prufer_repr: returns Prufer sequence of a Prufer object.
 
         """
+        global x
         d = defaultdict(int)
         L = []
         for edge in tree:
@@ -220,7 +221,7 @@ class Prufer(Basic):
             d[p] += 1
         for i in prufer:
             for j in range(n):
-            # find the smallest leaf (degree = 1)
+                # find the smallest leaf (degree = 1)
                 if d[j] == 1:
                     break
             # (i, j) is the new edge that we append to the tree
@@ -308,7 +309,7 @@ class Prufer(Basic):
         r = 0
         p = 1
         for i in range(self.nodes - 3, -1, -1):
-            r += p*self.prufer_repr[i]
+            r += p * self.prufer_repr[i]
             p *= self.nodes
         return r
 
@@ -328,7 +329,7 @@ class Prufer(Basic):
         L = defaultdict(int)
         for i in range(n - 3, -1, -1):
             L[i] = rank % n
-            rank = (rank - L[i])//n
+            rank = (rank - L[i]) // n
         return Prufer([L[i] for i in range(len(L))])
 
     def __new__(cls, *args, **kw_args):
@@ -359,7 +360,7 @@ class Prufer(Basic):
         [[0, 1], [1, 3], [2, 3]]
 
         """
-        ret_obj = Basic.__new__(cls, *args, **kw_args)
+        ret_obj = Basic.__new__(cls, *args)
         args = [list(args[0])]
         if args[0] and iterable(args[0][0]):
             if not args[0][0]:
@@ -428,4 +429,4 @@ class Prufer(Basic):
         prufer_rank, rank, next, size
 
         """
-        return Prufer.unrank(self.rank -delta, self.nodes)
+        return Prufer.unrank(self.rank - delta, self.nodes)

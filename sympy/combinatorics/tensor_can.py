@@ -592,7 +592,7 @@ def canonical_free(base, gens, g, num_free):
             base.append(x)
     h = g
     for i, transv in enumerate(transversals):
-        h_i = [size]*num_free
+        h_i = [size] * num_free
         # find the element s in transversals[i] such that
         # _af_rmul(h, s) has its free elements with the lowest position in h
         s = None
@@ -962,6 +962,7 @@ def get_symmetric_group_sgs(n, antisym=False):
     base = list(range(n - 1))
     return base, [_af_new(h) for h in gens]
 
+
 riemann_bsgs = [0, 2], [Permutation(0, 1)(4, 5), Permutation(2, 3)(4, 5),
                         Permutation(5)(0, 2)(1, 3)]
 
@@ -1068,6 +1069,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     four symmetric tensors with 3 indices, two of which with free indices
 
     """
+
     def _get_bsgs(G, base, gens, free_indices):
         """
         return the BSGS for G.pointwise_stabilizer(free_indices)

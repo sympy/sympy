@@ -50,8 +50,9 @@ class Morphism(Basic):
 
     IdentityMorphism, NamedMorphism, CompositeMorphism
     """
+
     def __new__(cls, domain, codomain):
-        raise(NotImplementedError(
+        raise (NotImplementedError(
             "Cannot instantiate Morphism.  Use derived classes instead."))
 
     @property
@@ -159,6 +160,7 @@ class IdentityMorphism(Morphism):
 
     Morphism
     """
+
     def __new__(cls, domain):
         return Basic.__new__(cls, domain)
 
@@ -192,6 +194,7 @@ class NamedMorphism(Morphism):
 
     Morphism
     """
+
     def __new__(cls, domain, codomain, name):
         if not name:
             raise ValueError("Empty morphism names not allowed.")
@@ -249,6 +252,7 @@ class CompositeMorphism(Morphism):
     True
 
     """
+
     @staticmethod
     def _add_morphism(t, morphism):
         """
@@ -280,7 +284,7 @@ class CompositeMorphism(Morphism):
 
         for current, following in zip(components, components[1:]):
             if not isinstance(current, Morphism) or \
-                    not isinstance(following, Morphism):
+                not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")
 
             if current.codomain != following.domain:
@@ -449,6 +453,7 @@ class Category(Basic):
     ========
     Diagram
     """
+
     def __new__(cls, symbol, objects=EmptySet, commutative_diagrams=EmptySet):
         if not symbol:
             raise ValueError("A Category cannot have an empty name.")
@@ -585,6 +590,7 @@ class Diagram(Basic):
     [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
     1970.
     """
+
     @staticmethod
     def _set_dict_union(dictionary, key, value):
         """
@@ -737,13 +743,13 @@ class Diagram(Basic):
                             conclusions, morphism, empty, add_identities=False,
                             recurse_composites=False)
             elif isinstance(conclusions_arg, dict) or \
-                    isinstance(conclusions_arg, Dict):
+                isinstance(conclusions_arg, Dict):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in conclusions_arg.items():
                     # Check that no new objects appear in conclusions.
                     if (morphism.domain in objects) and \
-                       (morphism.codomain in objects):
+                        (morphism.codomain in objects):
                         # No need to add identities and recurse
                         # composites this time.
                         Diagram._add_morphism_closure(
@@ -894,7 +900,7 @@ class Diagram(Basic):
 
         conclusions = all([(m in self.conclusions) and
                            (diagram.conclusions[m] == self.conclusions[m])
-                        for m in diagram.conclusions])
+                           for m in diagram.conclusions])
 
         # Premises is surely ``True`` here.
         return conclusions

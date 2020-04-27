@@ -50,7 +50,7 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
     r = None
     with graph.as_default():
         random_variables = [eval(tensorflow_code(i)) for i in random_matrices]
-        session = tf.compat.v1.Session(graph=graph)
+        session = tf.compat.v1
         r = session.run(f(*random_variables))
 
     e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
@@ -82,7 +82,7 @@ def _compare_tensorflow_matrix_inverse(variables, expr, use_float=False):
     r = None
     with graph.as_default():
         random_variables = [eval(tensorflow_code(i)) for i in random_matrices]
-        session = tf.compat.v1.Session(graph=graph)
+        session = tf.compat.v1
         r = session.run(f(*random_variables))
 
     e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
@@ -110,7 +110,7 @@ def _compare_tensorflow_matrix_scalar(variables, expr):
     r = None
     with graph.as_default():
         random_variables = [eval(tensorflow_code(i)) for i in random_matrices]
-        session = tf.compat.v1.Session(graph=graph)
+        session = tf.compat.v1
         r = session.run(f(*random_variables))
 
     e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
@@ -127,7 +127,7 @@ def _compare_tensorflow_scalar(
     r = None
     with graph.as_default():
         tf_rvs = [eval(tensorflow_code(i)) for i in rvs]
-        session = tf.compat.v1.Session(graph=graph)
+        session = tf.compat.v1
         r = session.run(f(*tf_rvs))
 
     e = expr.subs({k: v for k, v in zip(variables, rvs)}).evalf().doit()
@@ -143,7 +143,7 @@ def _compare_tensorflow_relational(
     r = None
     with graph.as_default():
         tf_rvs = [eval(tensorflow_code(i)) for i in rvs]
-        session = tf.compat.v1.Session(graph=graph)
+        session = tf.compat.v1
         r = session.run(f(*tf_rvs))
 
     e = expr.subs({k: v for k, v in zip(variables, rvs)}).doit()
@@ -357,7 +357,7 @@ def test_codegen_einsum():
 
     graph = tf.Graph()
     with graph.as_default():
-        session = tf.compat.v1.Session(graph=graph)
+        session = tf.compat.v1
 
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
@@ -378,7 +378,7 @@ def test_codegen_extra():
 
     graph = tf.Graph()
     with graph.as_default():
-        session = tf.compat.v1.Session()
+        session = tf.compat.v1
 
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
