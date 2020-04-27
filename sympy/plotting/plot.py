@@ -1436,10 +1436,10 @@ def plot(*args, **kwargs):
         {'center', 'auto'}
 
     xlim : (float, float), optional
-        Denotes the x-axis limits.
+        Denotes the x-axis limits, ``(min, max)```.
 
     ylim : (float, float), optional
-        Denotes the y-axis limits.
+        Denotes the y-axis limits, ``(min, max)```.
 
     annotations : list, optional
         A list of dictionaries specifying the type of annotation
@@ -1656,10 +1656,10 @@ def plot_parametric(*args, **kwargs):
         {'center', 'auto'}
 
     xlim : (float, float), optional
-        Denotes the x-axis limits.
+        Denotes the x-axis limits, ``(min, max)```.
 
     ylim : (float, float), optional
-        Denotes the y-axis limits.
+        Denotes the y-axis limits, ``(min, max)```.
 
     Examples
     ========
