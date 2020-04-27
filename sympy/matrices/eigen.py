@@ -645,7 +645,7 @@ def _is_positive_semidefinite(M):
     if not nonnegative_diagonals:
         return False
 
-    if nonnegative_diagonals and M.is_diagonally_dominant:
+    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
         return True
 
     return _is_positive_semidefinite_minors(M)
