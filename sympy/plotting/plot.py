@@ -1696,7 +1696,8 @@ def plot_parametric(*args, **kwargs):
        [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
        [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
 
-    A parametric plot with multiple expressions with different ranges:
+    A parametric plot with multiple expressions with different ranges
+    for each curve:
 
     .. plot::
        :context: close-figs
