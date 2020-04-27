@@ -12,7 +12,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.testing.pytest import XFAIL, raises, nocache_fail
+from sympy.testing.pytest import XFAIL, raises, nocache_fail, slow
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -479,9 +479,10 @@ def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
 
+@slow
 def test_issue_10801():
     # make sure limits work with binomial
-    k = symbols('k', nonnegative=True)
+    k = symbols('k', nonnegative=True, integer=False)
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
 
 

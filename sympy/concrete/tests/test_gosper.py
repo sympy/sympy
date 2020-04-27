@@ -21,6 +21,8 @@ def test_gosper_term():
 
 
 def test_gosper_sum():
+    n, k = symbols('n k', nonnegative=True, integer=True)
+
     assert gosper_sum(1, (k, 0, n)) == 1 + n
     assert gosper_sum(k, (k, 0, n)) == n*(1 + n)/2
     assert gosper_sum(k**2, (k, 0, n)) == n*(1 + n)*(1 + 2*n)/6
@@ -76,6 +78,8 @@ def test_gosper_sum_algebraic():
 
 
 def test_gosper_sum_iterated():
+    n, k = symbols('n k', nonnegative=True, integer=True)
+
     f1 = binomial(2*k, k)/4**k
     f2 = (1 + 2*n)*binomial(2*n, n)/4**n
     f3 = (1 + 2*n)*(3 + 2*n)*binomial(2*n, n)/(3*4**n)
@@ -92,6 +96,8 @@ def test_gosper_sum_iterated():
 
 
 def test_gosper_sum_AeqB_part1():
+    n, k = symbols('n k', nonnegative=True, integer=True)
+
     f1a = n**4
     f1b = n**3*2**n
     f1c = 1/(n**2 + sqrt(5)*n - 1)
@@ -134,6 +140,8 @@ def test_gosper_sum_AeqB_part1():
 
 
 def test_gosper_sum_AeqB_part2():
+    n, k = symbols('n k', nonnegative=True, integer=True)
+
     f2a = n**2*a**n
     f2b = (n - k/2)*binomial(k, n)
     f2c = factorial(n - 1)**2/(factorial(n - x)*factorial(n + x))
