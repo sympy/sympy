@@ -623,7 +623,7 @@ def _is_positive_definite(M):
     if M.is_hermitian:
         return _is_positive_definite_GE(M)
     elif M.is_square:
-        return _is_positive_definite_GE((M + M.H) / 2)
+        return _is_positive_definite_GE(M + M.H)
     return None
 
 
@@ -631,7 +631,7 @@ def _is_positive_semidefinite(M):
     if M.is_hermitian:
         return _is_positive_semidefinite_minors(M)
     elif M.is_square:
-        return _is_positive_semidefinite_minors((M + M.H) / 2)
+        return _is_positive_semidefinite_minors(M + M.H)
     return None
 
 
@@ -654,7 +654,7 @@ def _is_indefinite(M):
         return fuzzy_and([any_positive, any_negative])
 
     elif M.is_square:
-        return ((M + M.H) / 2).is_indefinite
+        return (M + M.H).is_indefinite
 
     return None
 
