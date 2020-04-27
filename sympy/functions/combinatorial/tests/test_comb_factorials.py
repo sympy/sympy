@@ -527,7 +527,8 @@ def test_binomial():
     assert unchanged(binomial, nt, Rational(5, 2))
     assert binomial(kn - 3, kn - 1, evaluate=False).rewrite(gamma) == 0
     b = binomial(nt, Rational(5, 2))
-    assert b.rewrite(gamma) == b  # nt could be 3/2
+    assert b.rewrite(gamma) == 8*gamma(
+        nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
     assert binomial(nr, Rational(5, 2)).rewrite(gamma
         ) == 8*gamma(nr + 1)/(15*sqrt(pi)*gamma(nr - Rational(3, 2)))
     assert binomial(Rational(20, 3), Rational(-5, 4)
@@ -733,7 +734,7 @@ def test_binomial_rewrite():
                         rw = expand_func(u)
                     else:
                         rw = u.rewrite(F)
-                    assert Eq(rw, binomial(x, y)), (x, y, F)
+                    assert Eq(rw.n(), binomial(x, y).n()), (x, y, F)
 
 
 def test_multinomial():
@@ -770,11 +771,9 @@ def test_multinomial():
     assert multinomial(sqrt(11)*I, 3) == -10
 
     assert multinomial(n, -2) == binomial(n - 2, -2)
-    # don't know if n is -1 (in which case the right answer
-    # would be obtained -- 0 -- but left in symbolic form
-    # the denominator term `gamma(n + 1)` might cancel with
-    # the same term in the numerator of a multiplicative factor)
-    assert multinomial(n, -pi).rewrite(gamma) == multinomial(n, -pi)
+
+    assert multinomial(n, -pi).rewrite(gamma) == gamma(
+        n - pi + 1)/(gamma(1 - pi)*gamma(n + 1)), multinomial(n, -pi)
     assert expand_func(multinomial(n, 2)) == (n + 1)*(n + 2)/2
     assert expand_func(multinomial(n, 2, 3)) == (n + 1)*(
         n + 2)*(n + 3)*(n + 4)*(n + 5)/12
