@@ -1175,7 +1175,6 @@ def test_classify_ode_ics():
     classify_ode(eq, f(x), ics=ics)
 
 def test_classify_sysode():
-    from sympy.matrices.dense import Matrix
     # Here x is assumed to be x(t) and y as y(t) for simplicity.
     # Similarly diff(x,t) and diff(y,y) is assumed to be x1 and y1 respectively.
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -1184,7 +1183,7 @@ def test_classify_sysode():
     P1, P2, P3, Q1, Q2, R1, R2 = symbols('P1, P2, P3, Q1, Q2, R1, R2', cls=Function)
     x, y, z = symbols('x, y, z', cls=Function)
     t = symbols('t')
-    x1 = diff(x(t),t) ; y1 = diff(y(t),t) ; z1 = diff(z(t),t)
+    x1 = diff(x(t),t) ; y1 = diff(y(t),t) ;
     x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t)
 
     eq2 = (Eq(x2, k*x(t) - l*y1), Eq(y2, l*x1 + k*y(t)))
