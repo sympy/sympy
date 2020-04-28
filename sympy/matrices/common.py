@@ -1370,12 +1370,12 @@ class MatrixProperties(MatrixRequired):
         Explanation
         ===========
 
-        A $m, n$ matrix $A$ is row weakly diagonally dominant if
+        A $n, n$ matrix $A$ is row weakly diagonally dominant if
 
         .. math::
             \left|A_{i, i}\right| \ge \sum_{j = 0, j \neq i}^{n-1}
             \left|A_{i, j}\right| \quad {\text{for all }}
-            i \in \{ 0, ..., m-1 \}
+            i \in \{ 0, ..., n-1 \}
 
         Examples
         ========
@@ -1420,12 +1420,12 @@ class MatrixProperties(MatrixRequired):
         Explanation
         ===========
 
-        A $m, n$ matrix $A$ is row strongly diagonally dominant if
+        A $n, n$ matrix $A$ is row strongly diagonally dominant if
 
         .. math::
             \left|A_{i, i}\right| > \sum_{j = 0, j \neq i}^{n-1}
             \left|A_{i, j}\right| \quad {\text{for all }}
-            i \in \{ 0, ..., m-1 \}
+            i \in \{ 0, ..., n-1 \}
 
         Examples
         ========
