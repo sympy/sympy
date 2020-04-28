@@ -387,63 +387,16 @@ def _neq_linear_first_order_const_coeff_homogeneous(match_):
     or that can be written as `\vec{y'} = A . \vec{y}`
     where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
 
-    Since these equations are equivalent to a first order homogeneous linear
-    differential equation. So the general solution will contain `n` linearly
-    independent parts and solution will consist some type of exponential
-    functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
-    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
-    `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
+    These equations are equivalent to a first order homogeneous linear
+    differential equation.
 
-    .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
+    The system of ODEs described above has a unique solution, namely:
 
-    .. math:: r \vec{v} = A \vec{v}
+    .. math ::
+        \vec{y} = \exp(A t) C
 
-    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
-    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
-
-    - `n` distinct real eigenvalues
-    - complex conjugate eigenvalues
-    - eigenvalues with multiplicity `k`
-
-    1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
-    `v_1,...v_n` then the solution is given by
-
-    .. math:: \vec{y} = C_1 e^{r_1 t} \vec{v_1} + C_2 e^{r_2 t} \vec{v_2} +...+ C_n e^{r_n t} \vec{v_n}
-
-    where `C_1,C_2,...,C_n` are arbitrary constants.
-
-    2. When some eigenvalues are complex then in order to make the solution real,
-    we take a linear combination: if `r = a + bi` has an eigenvector
-    `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
-    the system, replace the complex-valued solutions `e^{rx} \vec{v}`
-    with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
-    and for `r = a - bi` replace the solution `e^{-r x} \vec{v}` with
-    `e^{ax} (\vec{w_1} \sin(bx) + \vec{w_2} \cos(bx))`
-
-    3. If some eigenvalues are repeated. Then we get fewer than `n` linearly
-    independent eigenvectors, we miss some of the solutions and need to
-    construct the missing ones. We do this via generalized eigenvectors, vectors
-    which are not eigenvectors but are close enough that we can use to write
-    down the remaining solutions. For a eigenvalue `r` with eigenvector `\vec{w}`
-    we obtain `\vec{w_2},...,\vec{w_k}` using
-
-    .. math:: (A - r I) . \vec{w_2} = \vec{w}
-
-    .. math:: (A - r I) . \vec{w_3} = \vec{w_2}
-
-    .. math:: \vdots
-
-    .. math:: (A - r I) . \vec{w_k} = \vec{w_{k-1}}
-
-    Then the solutions to the system for the eigenspace are `e^{rt} [\vec{w}],
-    e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
-    ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
-    + \vec{w_k}]`
-
-    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
-    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
-
-    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
+    where $t$ is the independent variable and $C$ is a vector of n constants. These are constants
+    from the integration.
 
     """
     eq = match_['eq']
