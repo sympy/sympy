@@ -270,7 +270,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self):
         return Dummy(self.name)
