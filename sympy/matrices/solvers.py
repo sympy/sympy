@@ -3,6 +3,7 @@ from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
 
 
@@ -232,7 +233,7 @@ def _cholesky_solve(M, rhs):
     elif not M.is_hermitian:
         reform = True
 
-    if reform or M.is_positive_definite is False:
+    if reform or _fuzzy_positive_definite(M) is False:
         H         = M.H
         M         = H.multiply(M)
         rhs       = H.multiply(rhs)
@@ -289,7 +290,7 @@ def _LDLsolve(M, rhs):
     elif not M.is_hermitian:
         reform = True
 
-    if reform or M.is_positive_definite is False:
+    if reform or _fuzzy_positive_definite(M) is False:
         H         = M.H
         M         = H.multiply(M)
         rhs       = H.multiply(rhs)

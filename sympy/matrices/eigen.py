@@ -619,18 +619,26 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     return M.hstack(*p_cols), M.diag(*diag)
 
 
-def _is_positive_definite(M):
-    if not M.is_hermitian:
-        if not M.is_square:
-            return False
-        M = M + M.H
-
+def _fuzzy_positive_definite(M):
     positive_diagonals = M._has_positive_diagonals()
     if positive_diagonals is False:
         return False
 
     if positive_diagonals and M.is_strongly_diagonally_dominant:
         return True
+
+    return None
+
+
+def _is_positive_definite(M):
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
+
+    fuzzy = _fuzzy_positive_definite(M)
+    if fuzzy is not None:
+        return fuzzy
 
     return _is_positive_definite_GE(M)
 
