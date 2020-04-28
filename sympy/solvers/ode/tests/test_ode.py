@@ -743,6 +743,7 @@ def test_linear_2eq_order2():
     assert dsolve(eq10) == sol10
     # FIXME: assert checksysodesol(eq10, sol10) == (True, [0, 0]) # this hangs or at least takes a while...
 
+
 # 19185: This test case has to be updated in future when a proper
 # technique to handle complicated solutions has been found for
 # non constant coefficient solver.

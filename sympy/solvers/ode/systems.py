@@ -377,6 +377,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
+# 19185: To update this docstring in future commits.
 def _neq_linear_first_order_const_coeff_homogeneous(match_):
     r"""
     System of n first-order constant-coefficient linear homogeneous differential equations
@@ -499,10 +500,9 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-# To add docstring in future commits.
+# 19185: To add docstring in future commits.
 def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
 
-    print("This function is used....")
     # Some parts of code is repeated, this needs to be taken care of
     # The constant vector obtained here can be done so in the match
     # function itself.
