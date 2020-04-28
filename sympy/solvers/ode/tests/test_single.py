@@ -176,8 +176,7 @@ def _test_an_example(our_hint, example_name):
     all_examples = _get_all_examples()
     for example in all_examples:
         if example['example_name'] == example_name:
-            eq = example['eq']
-            dsolve(eq, hint=our_hint)
+            _test_particular_example(our_hint, example)
 
 
 def _test_particular_example(our_hint, ode_example, solver_flag=False):
