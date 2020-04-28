@@ -1423,7 +1423,7 @@ class MatrixProperties(MatrixRequired):
         A $m, n$ matrix $A$ is row strongly diagonally dominant if
 
         .. math::
-            \left|A_{i, i}\right| \gt \sum_{j = 0, j \neq i}^{n-1}
+            \left|A_{i, i}\right| > \sum_{j = 0, j \neq i}^{n-1}
             \left|A_{i, j}\right| \quad {\text{for all }}
             i \in \{ 0, ..., m-1 \}
 
