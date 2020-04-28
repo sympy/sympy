@@ -15,6 +15,8 @@ import sys
 import inspect
 import os
 import subprocess
+from datetime import datetime
+
 import sympy
 
 # If your extensions are in another directory, add it here.
@@ -65,7 +67,7 @@ suppress_warnings = ['ref.citation', 'ref.footnote']
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2019 SymPy Development Team'
+copyright = '{} SymPy Development Team'.format(datetime.utcnow().year)
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
