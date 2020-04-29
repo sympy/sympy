@@ -768,9 +768,6 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
-    # Mutable:
-    __hash__ = None  # type: ignore
-
     # Defined here the same as on Basic.
 
     # We don't define _repr_png_ here because it would add a large amount of

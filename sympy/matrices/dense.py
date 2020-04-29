@@ -42,6 +42,8 @@ class DenseMatrix(MatrixBase):
     _op_priority = 10.01
     _class_priority = 4
 
+    __hash__ = None
+
     def __eq__(self, other):
         other = sympify(other)
         self_shape = getattr(self, 'shape', None)
