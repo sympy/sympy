@@ -55,10 +55,6 @@ class AskNegativeHandler(CommonHandler):
 
     @staticmethod
     def Add(expr, assumptions):
-        """
-        Positive + Positive -> Positive,
-        Negative + Negative -> Negative
-        """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
 
@@ -66,32 +62,88 @@ class AskNegativeHandler(CommonHandler):
         if r is not True:
             return r
 
-        nonpos = 0
-        for arg in expr.args:
-            if ask(Q.negative(arg), assumptions) is not True:
-                if ask(Q.positive(arg), assumptions) is False:
-                    nonpos += 1
-                else:
-                    break
-        else:
-            if nonpos < len(expr.args):
-                return True
+
+        args = [arg for arg in expr.args if not ask(Q.zero(arg), assumptions)]
+        if not args:
+            return False
+
+        inf = neg_inf = pos_inf = neg = npos = nneg = False
+
+        for arg in args:
+            if pos_inf and neg_inf:
+                return None
+
+            _inf = ask(Q.infinite(arg), assumptions)
+            if _inf:
+                inf = True
+
+            n = ask(Q.negative(arg), assumptions)
+            if n:
+                if _inf is not False:
+                    neg_inf = True
+                neg = True
+                continue
+
+            np = ask(Q.nonpositive(arg), assumptions)
+            if np:
+                if _inf is True:
+                    neg_inf = True
+                npos = True
+                continue
+
+            nn = ask(Q.nonnegative(arg), assumptions)
+            if nn:
+                if _inf or (_inf is None and nn is False):
+                    pos_inf = True
+                nneg = True
+                continue
+            else:
+                return None
+        if pos_inf and neg_inf:
+            return None
+        elif inf and pos_inf:
+            return False
+        elif inf and neg_inf:
+            return True
+        elif neg and not nneg:
+            return True
+        elif not neg and not npos:
+            return False
 
     @staticmethod
     def Mul(expr, assumptions):
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
-        result = None
+        result = False  # assumed to be positive initially
+        non = False
+
+        # Handle if the expression is non-real
+        r = ask(Q.real(expr), assumptions)
+        if not r:
+            return r
+
         for arg in expr.args:
-            if result is None:
-                result = False
             if ask(Q.negative(arg), assumptions):
                 result = not result
             elif ask(Q.positive(arg), assumptions):
-                pass
+                continue
+            elif ask(Q.zero(arg), assumptions):
+                if all(ask(Q.finite(a), assumptions) for a in expr.args):
+                    return False
+                return None
+            elif ask(Q.nonnegitive(arg), assumptions):
+                non = True
+            elif ask(Q.nonpositive(arg), assumptions):
+                non = True
+                result = not result
             else:
-                return
-        return result
+                return None
+        if result is False:
+            return False
+        elif non is False:
+            return True
+        else:
+            return None
 
     @staticmethod
     def Pow(expr, assumptions):
@@ -134,6 +186,20 @@ class AskNonNegativeHandler(CommonHandler):
             else:
                 return notnegative
 
+    @staticmethod
+    def Mul(expr, assumptions):
+        if expr.is_number:
+            nneg = fuzzy_not(AskNegativeHandler._number(expr, assumptions))
+            if nneg:
+                return ask(Q.real(expr), assumptions)
+            else:
+                return nneg
+        else:
+            r = ask(Q.real(expr), assumptions)
+            if r is not True:
+                return r
+            nneg = fuzzy_not(AskNegativeHandler.Mul(expr,assumptions))
+            return nneg
 
 class AskNonZeroHandler(CommonHandler):
     """
@@ -200,6 +266,8 @@ class AskZeroHandler(CommonHandler):
         # TODO: This should be deducible from the nonzero handler
         return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
+        NaN = staticmethod(CommonHandler.AlwaysNone)
+
 class AskNonPositiveHandler(CommonHandler):
 
     @staticmethod
@@ -214,6 +282,18 @@ class AskNonPositiveHandler(CommonHandler):
                 return ask(Q.real(expr), assumptions)
             else:
                 return notpositive
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+        if expr.is_number:
+            npos = fuzzy_not(AskPositiveHandler._number(expr, assumptions))
+            return npos
+        else:
+            npos = fuzzy_not(AskPositiveHandler.Mul(expr, assumptions))
+            return npos
 
 class AskPositiveHandler(CommonHandler):
     """
@@ -255,14 +335,36 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         result = True
+        non = False
+        non_real = False
+
+        # Handle if the expression is non-real
+        r = ask(Q.real(expr), assumptions)
+        if not r:
+            return r
+
         for arg in expr.args:
             if ask(Q.positive(arg), assumptions):
                 continue
             elif ask(Q.negative(arg), assumptions):
-                result = result ^ True
+                result = not result
+            elif ask(Q.zero(arg), assumptions):
+                if all(ask(Q.finite(a), assumptions) for a in expr.args):
+                    return False
+                return None
+            elif ask(Q.nonpositive(arg), assumptions):
+                non = True
+                result = not result
+            elif ask(Q.nonnegative(arg), assumptions):
+                non = True
             else:
-                return
-        return result
+                return None
+        if result is False:
+            return False
+        elif non is False:
+            return True
+        else:
+            return None
 
     @staticmethod
     def Add(expr, assumptions):
@@ -273,28 +375,68 @@ class AskPositiveHandler(CommonHandler):
         if r is not True:
             return r
 
-        nonneg = 0
-        for arg in expr.args:
-            if ask(Q.positive(arg), assumptions) is not True:
-                if ask(Q.negative(arg), assumptions) is False:
-                    nonneg += 1
-                else:
-                    break
-        else:
-            if nonneg < len(expr.args):
-                return True
+        args = [arg for arg in expr.args if not ask(Q.zero(arg), assumptions)]
+        if not args:
+            return False
+
+        inf = neg_inf = pos_inf = pos = npos = nneg = False
+
+        for arg in args:
+            if pos_inf and neg_inf:
+                return None
+
+            _inf = ask(Q.infinite(arg), assumptions)
+            if _inf:
+                inf = True
+
+            p = ask(Q.positive(arg), assumptions)
+            if p:
+                if _inf is not False:
+                    pos_inf = True
+                pos = True
+                continue
+
+            nn = ask(Q.nonnegative(arg), assumptions)
+            if nn:
+                if _inf is True:
+                    pos_inf = True
+                nneg = True
+                continue
+
+            np = ask(Q.nonpositive(arg), assumptions)
+            if np:
+                if _inf or (_inf is None and np is False):
+                    neg_inf = True
+                npos = True
+                continue
+            else:
+                return None
+        if pos_inf and neg_inf:
+            return None
+        elif inf and pos_inf:
+            return True
+        elif inf and neg_inf:
+            return False
+        elif pos and not npos:
+            return True
+        elif not pos and not nneg:
+            return False
 
     @staticmethod
     def Pow(expr, assumptions):
+
+        base = expr.base
+        exp  = expr.exp
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
-        if ask(Q.positive(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
+        elif base == exp and ask(Q.nonnegative(base), assumptions):
+            return True
+        elif ask(Q.positive(base), assumptions) and ask(Q.real(exp), assumptions):
                 return True
-        if ask(Q.negative(expr.base), assumptions):
-            if ask(Q.even(expr.exp), assumptions):
+        elif ask(Q.negative(base), assumptions):
+            if ask(Q.even(exp), assumptions):
                 return True
-            if ask(Q.odd(expr.exp), assumptions):
+            if ask(Q.odd(exp), assumptions):
                 return False
 
     @staticmethod
