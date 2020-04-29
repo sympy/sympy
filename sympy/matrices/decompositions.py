@@ -248,7 +248,7 @@ def _cholesky(M, hermitian=True):
     QRdecomposition
     """
 
-    from .dense import MutableDenseMatrix
+    from .dense import zeros
 
     if not M.is_square:
         raise NonSquareMatrixError("Matrix must be square.")
@@ -257,34 +257,27 @@ def _cholesky(M, hermitian=True):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _get_intermediate_simp(expand_mul, expand_mul)
-    L   = MutableDenseMatrix.zeros(M.rows, M.rows)
-
+    L = zeros(M.rows, M.rows)
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / L[j, j])*(M[i, j] -
-                    sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
-
-            Lii2 = dps(M[i, i] -
+                L[i, j] = (1 / L[j, j])*expand_mul(M[i, j] -
+                    sum(L[i, k]*L[j, k].conjugate() for k in range(j)))
+            Lii2 = expand_mul(M[i, i] -
                 sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
-
             if Lii2.is_positive is False:
                 raise NonPositiveDefiniteMatrixError(
                     "Matrix must be positive-definite")
-
             L[i, i] = sqrt(Lii2)
-
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / L[j, j])*(M[i, j] -
-                    sum(L[i, k]*L[j, k] for k in range(j))))
-
-            L[i, i] = sqrt(dps(M[i, i] -
-                sum(L[i, k]**2 for k in range(i))))
-
+                L[i, j] = (1 / L[j, j])*(M[i, j] -
+                    sum(L[i, k]*L[j, k] for k in range(j)))
+            L[i, i] = sqrt(M[i, i] -
+                sum(L[i, k]**2 for k in range(i)))
     return M._new(L)
+
 
 def _cholesky_sparse(M, hermitian=True):
     """
