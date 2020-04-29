@@ -330,6 +330,21 @@ def test_1st_linear():
 def test_almost_linear():
    _ode_solver_test(_get_examples_ode_sol_almost_linear())
 
+
+def test_Liouville_ODE():
+    hint = 'Liouville'
+    not_Liouville1 = classify_ode(diff(f(x), x)/x + f(x)*diff(f(x), x, x)/2 -
+        diff(f(x), x)**2/2, f(x))
+    not_Liouville2 = classify_ode(diff(f(x), x)/x + diff(f(x), x, x)/2 -
+        x*diff(f(x), x)**2/2, f(x))
+    assert hint not in not_Liouville1
+    assert hint not in not_Liouville2
+    assert hint + '_Integral' not in not_Liouville1
+    assert hint + '_Integral' not in not_Liouville2
+
+    _ode_solver_test(_get_examples_ode_sol_liouville())
+
+
 def test_nth_order_linear_euler_eq_homogeneous():
     x, t, a, b, c = symbols('x t a b c')
     y = Function('y')
@@ -685,6 +700,45 @@ def _get_examples_ode_sol_almost_linear():
         'eq': x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2,
         'sol': [Eq(f(x), (C1 + Piecewise(
         (x, Eq(A + 1, 0)), ((-A*x + A - x - 1)*exp(x)/(A + 1), True)))*exp(-x))],
+    },
+    }
+    }
+
+
+def _get_examples_ode_sol_liouville():
+    return {
+            'hint': "Liouville",
+            'func': f(x),
+            'examples':{
+    'liouville_01': {
+        'eq': diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2,
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))],
+
+    },
+
+    'liouville_02': {
+        'eq': diff(x*exp(-f(x)), x, x),
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))]
+    },
+
+    'liouville_03': {
+        'eq':  ((diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2)*exp(-f(x))/exp(f(x))).expand(),
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))]
+    },
+
+    'liouville_04': {
+        'eq': diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x),
+        'sol': [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))],
+    },
+
+    'liouville_05': {
+        'eq': x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x),
+        'sol': [Eq(f(x), -sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(C1 + C2*exp(-x)))],
+    },
+
+    'liouville_06': {
+        'eq': Eq((x*exp(f(x))).diff(x, x), 0),
+        'sol': [Eq(f(x), log(C1 + C2/x))],
     },
     }
     }
