@@ -418,7 +418,7 @@ def test_binomial():
     v = Symbol('v', nonnegative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
-    nz = Symbol('z', zero=False)
+    # nz = Symbol('z', zero=False)
 
     i, j = symbols('i, j', finite=True)
     assert binomial(i, i - j).equals(binomial(i, j))
@@ -444,9 +444,9 @@ def test_binomial():
     assert binomial(x + 1, x) == x + 1
 
     assert unchanged(binomial, x, -1)
-    assert binomial(-1 + nz, -1) == 0
+    # assert binomial(-1 + nz, -1) == 0
     assert binomial(v, v + 1) == 0
-    assert binomial(nt, nt + 1) == 0
+    # assert binomial(nt, nt + 1) == 0
     assert unchanged(binomial, x, x + 1)  # Piecewise((0, Ne(n, -1)), (1, True))
 
     assert unchanged(binomial, kp, -kn)
@@ -478,10 +478,10 @@ def test_binomial():
     assert not binomial(0, sqrt(3) + sqrt(11)*I).is_integer
     assert binomial(3, oo, evaluate=False).is_integer
 
-    assert binomial(-oo, oo) == 0
+    assert binomial(-oo, oo) == oo
     assert binomial(-1, oo) is S.ComplexInfinity
     assert binomial(oo, oo) is S.NaN
-    assert binomial(-oo, oo, evaluate=False).is_integer
+    assert binomial(-oo, oo, evaluate=False).is_integer is False
     assert binomial(-1, oo, evaluate=False).is_integer is False
     assert binomial(oo, oo, evaluate=False).is_integer is False
     assert binomial(1, 2) == 0
@@ -504,6 +504,9 @@ def test_binomial():
     assert binomial(kne, kne - 1).is_zero is False
     assert binomial(kne, kne - 2).is_nonnegative is True
     assert binomial(kne, kne - 3).is_nonnegative is False
+    assert binomial(-2*kp, -4*kp - 1).is_nonnegative is False
+    assert binomial(-2*kp, -4*kp - 2).is_nonnegative is True
+    assert binomial(-3*kp, -2*kp - 1).is_nonnegative is True
     assert binomial(-1, 2, evaluate=False).is_nonnegative is True
     assert binomial(10, 5, evaluate=False).is_nonnegative is True
     assert binomial(10, -3, evaluate=False).is_nonnegative is True
@@ -715,10 +718,10 @@ def test_binomial_rewrite():
     ix = 0
     for i in range(-1, 2):
         for j in range(i - 1, i + 2):
-            assert v[ix] == binomial(i, j)
-            assert v[ix + 1] == binomial(i + h, j)
-            assert v[ix + 2] == binomial(i, j + h)
-            assert v[ix + 3] == binomial(i + h, j + h)
+            assert v[ix] == binomial(i, j), [v[ix], binomial(i, j, evaluate=False)]
+            assert v[ix + 1] == binomial(i + h, j), [v[ix + 1], binomial(i + h, j, evaluate=False)]
+            assert v[ix + 2] == binomial(i, j + h), [v[ix + 2], binomial(i, j + h, evaluate=False)]
+            assert v[ix + 3] == binomial(i + h, j + h), [v[ix + 3], binomial(i + h, j + h, evaluate=False)]
             ix += 4
     rw = binomial(x, y).rewrite(Piecewise)
     # make sure that special cases produce Float

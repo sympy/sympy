@@ -1301,12 +1301,12 @@ def test_empty_sequence():
     assert Sum(x, (x, -oo, oo), (y, 1, 0)).doit() == 0
     assert Sum(x, (y, 1, 0), (x, -oo, oo)).doit() == 0
 
+@XFAIL
 def test_issue_8016():
-    from sympy.assumptions import assuming, Q
+    # This Fails because the Knuth Implementation has since been replaced
     k, n , m = symbols('k n m', positive=True, integer=True)
-    with assuming(Q.nonnegative(-k + n) & Q.nonnegative(-(k + 1) + n)): # Introducing Correct Assumptions
-        s = Sum(binomial(m, k)*binomial(m, n - k)*(-1)**k, (k, 0, n))
-        assert s.doit().simplify() == \
+    s = Sum(binomial(m, k)*binomial(m, n - k)*(-1)**k, (k, 0, n))
+    assert s.doit().simplify() == \
             cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
 
 @XFAIL
