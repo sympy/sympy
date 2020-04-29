@@ -58,7 +58,7 @@ def test_mathematica():
         'AiryBiPrime[7]' :'airybiprime(7)',
         'LogIntegral[4]':' li(4)',
         'PrimePi[7]': 'primepi(7)',
-        'Prime[x]': 'prime(x)',
+        'Prime[5]': 'prime(5)',
         'PrimeQ[5]': 'isprime(5)'
         }
 
