@@ -21,7 +21,8 @@ def test_creation():
 def test_immutability():
     with raises(TypeError):
         IM[2, 2] = 5
-        ISM[2, 2]
+    with raises(TypeError):
+        ISM[2, 2] = 5
 
 
 def test_slicing():
