@@ -266,7 +266,6 @@ class AskZeroHandler(CommonHandler):
         # TODO: This should be deducible from the nonzero handler
         return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
-        NaN = staticmethod(CommonHandler.AlwaysNone)
 
 class AskNonPositiveHandler(CommonHandler):
 
@@ -336,7 +335,6 @@ class AskPositiveHandler(CommonHandler):
             return AskPositiveHandler._number(expr, assumptions)
         result = True
         non = False
-        non_real = False
 
         # Handle if the expression is non-real
         r = ask(Q.real(expr), assumptions)
