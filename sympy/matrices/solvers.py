@@ -220,25 +220,21 @@ def _cholesky_solve(M, rhs):
     pinv_solve
     """
 
-    if M.rows < M.cols:
-        raise NotImplementedError(
-            'Under-determined System. Try M.gauss_jordan_solve(rhs)')
-
     hermitian = True
-    reform    = False
 
     if M.is_symmetric():
         hermitian = False
-    elif not M.is_hermitian:
-        reform = True
+        L = M.cholesky(hermitian=hermitian)
+    elif M.is_hermitian:
+        L = M.cholesky(hermitian=hermitian)
+    elif M.rows >= M.cols:
+        L = M.H.multiply(M).cholesky(
+                hermitian=hermitian)
+        rhs = M.H.multiply(rhs)
+    else:
+        raise NotImplementedError('Under-determined System. '
+                                    'Try M.gauss_jordan_solve(rhs)')
 
-    if reform or M.is_positive_definite is False:
-        H         = M.H
-        M         = H.multiply(M)
-        rhs       = H.multiply(rhs)
-        hermitian = not M.is_symmetric()
-
-    L = M.cholesky(hermitian=hermitian)
     Y = L.lower_triangular_solve(rhs)
 
     if hermitian:
@@ -277,27 +273,23 @@ def _LDLsolve(M, rhs):
     pinv_solve
     """
 
-    if M.rows < M.cols:
-        raise NotImplementedError(
-            'Under-determined System. Try M.gauss_jordan_solve(rhs)')
-
     hermitian = True
-    reform    = False
 
     if M.is_symmetric():
         hermitian = False
-    elif not M.is_hermitian:
-        reform = True
+        L, D = M.LDLdecomposition(hermitian=hermitian)
+    elif M.is_hermitian:
+        L, D = M.LDLdecomposition(hermitian=hermitian)
+    elif M.rows >= M.cols:
+        L, D = M.H.multiply(M) \
+                .LDLdecomposition(hermitian=hermitian)
+        rhs = M.H.multiply(rhs)
+    else:
+        raise NotImplementedError('Under-determined System. '
+                                    'Try M.gauss_jordan_solve(rhs)')
 
-    if reform or M.is_positive_definite is False:
-        H         = M.H
-        M         = H.multiply(M)
-        rhs       = H.multiply(rhs)
-        hermitian = not M.is_symmetric()
-
-    L, D = M.LDLdecomposition(hermitian=hermitian)
-    Y    = L.lower_triangular_solve(rhs)
-    Z    = D.diagonal_solve(Y)
+    Y = L.lower_triangular_solve(rhs)
+    Z = D.diagonal_solve(Y)
 
     if hermitian:
         return (L.H).upper_triangular_solve(Z)
