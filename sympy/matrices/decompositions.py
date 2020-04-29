@@ -444,7 +444,7 @@ def _LDLdecomposition(M, hermitian=True):
     QRdecomposition
     """
 
-    from .dense import MutableDenseMatrix
+    from .dense import zeros, eye
 
     if not M.is_square:
         raise NonSquareMatrixError("Matrix must be square.")
@@ -453,32 +453,26 @@ def _LDLdecomposition(M, hermitian=True):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _get_intermediate_simp(expand_mul, expand_mul)
-    D   = MutableDenseMatrix.zeros(M.rows, M.rows)
-    L   = MutableDenseMatrix.eye(M.rows)
-
+    D = zeros(M.rows, M.rows)
+    L = eye(M.rows)
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j))))
-
-            D[i, i] = dps(M[i, i] -
+                L[i, j] = (1 / D[j, j])*expand_mul(M[i, j] - sum(
+                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
+            D[i, i] = expand_mul(M[i, i] -
                 sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
-
             if D[i, i].is_positive is False:
                 raise NonPositiveDefiniteMatrixError(
                     "Matrix must be positive-definite")
-
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j))))
-
-            D[i, i] = dps(M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
-
+                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
+                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
+            D[i, i] = M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
     return M._new(L), M._new(D)
+
 
 def _LDLdecomposition_sparse(M, hermitian=True):
     """
