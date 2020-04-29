@@ -782,7 +782,7 @@ def test_laplace():
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
-    X = Laplace('x', [1, 2], [1, 1])
+    X = Laplace('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateLaplaceDistribution)
 
 def test_levy():
@@ -1343,7 +1343,7 @@ def test_random_parameters():
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
     assert isinstance(pspace(meas), JointPSpace)
-    X = Normal('x', [1, 2], [1, 1])
+    X = Normal('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
