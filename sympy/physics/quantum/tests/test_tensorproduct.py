@@ -1,4 +1,6 @@
-from sympy import I, symbols, Matrix
+from sympy import I, symbols
+from sympy.core.expr import unchanged
+from sympy.matrices import Matrix, SparseMatrix
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -15,6 +17,11 @@ x = symbols('x')
 
 mat1 = Matrix([[1, 2*I], [1 + I, 3]])
 mat2 = Matrix([[2*I, 3], [4*I, 2]])
+
+
+def test_sparse_matrices():
+    spm = SparseMatrix.diag(1, 0)
+    assert unchanged(TensorProduct, spm, spm)
 
 
 def test_tensor_product_dagger():

@@ -20,7 +20,7 @@ def sympify_mpmath_matrix(arg):
 sympify_converter[_matrix] = sympify_mpmath_matrix
 
 
-class ImmutableDenseMatrix(MatrixExpr, DenseMatrix):
+class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     """Create an immutable version of a matrix.
 
     Examples
@@ -47,6 +47,8 @@ class ImmutableDenseMatrix(MatrixExpr, DenseMatrix):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
+
+    __hash__ = MatrixExpr.__hash__
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -131,7 +133,7 @@ class ImmutableDenseMatrix(MatrixExpr, DenseMatrix):
 ImmutableMatrix = ImmutableDenseMatrix
 
 
-class ImmutableSparseMatrix(MatrixExpr, SparseMatrix):
+class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     """Create an immutable version of a sparse matrix.
 
     Examples
@@ -158,6 +160,8 @@ class ImmutableSparseMatrix(MatrixExpr, SparseMatrix):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
+
+    __hash__ = MatrixExpr.__hash__
 
     @classmethod
     def _new(cls, *args, **kwargs):

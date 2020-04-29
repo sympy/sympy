@@ -42,8 +42,6 @@ class DenseMatrix(MatrixBase):
     _op_priority = 10.01
     _class_priority = 4
 
-    __hash__ = None
-
     def __eq__(self, other):
         other = sympify(other)
         self_shape = getattr(self, 'shape', None)
@@ -292,6 +290,8 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
+    __hash__ = None
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 

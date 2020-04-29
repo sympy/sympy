@@ -1265,10 +1265,12 @@ class MatrixBase(MatrixDeprecated,
         multiply
         multiply_elementwise
         """
-        if not is_sequence(b):
+        from sympy.matrices.expressions.matexpr import MatrixExpr
+
+        if not isinstance(b, MatrixBase) and not isinstance(b, MatrixExpr):
             raise TypeError(
-                "`b` must be an ordered iterable or Matrix, not %s." %
-                type(b))
+                "{} must be a Matrix, not {}.".format(b, type(b)))
+
         if not (self.rows * self.cols == b.rows * b.cols == 3):
             raise ShapeError("Dimensions incorrect for cross product: %s x %s" %
                              ((self.rows, self.cols), (b.rows, b.cols)))
