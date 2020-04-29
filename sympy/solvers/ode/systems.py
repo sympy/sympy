@@ -172,7 +172,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
         # 19185: To be changed when we have figured out why the minus
         # sign isn't expanded.
-        Ai = Ai.applyfunc(expand)
+        # Note: The below statement has been commented for an experiment.
+        # Ai = Ai.applyfunc(expand)
 
         As.append(Ai)
 
@@ -377,7 +378,6 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-# 19185: To update this docstring in future commits.
 def _neq_linear_first_order_const_coeff_homogeneous(match_):
     r"""
     System of n first-order constant-coefficient linear homogeneous differential equations
@@ -453,8 +453,31 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-# 19185: To add docstring in future commits.
 def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
+    r"""
+    System of n first-order nonconstant-coefficient linear homogeneous differential equations
+
+    .. math::
+        X' = A(t) X
+
+    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
+    is the first order differential of $X$ with respect to $t$ and $A(t)$ is a $n \times n$
+    coefficient matrix.
+
+    Let us define $B$ as antiderivative of coefficient matrix $A$:
+
+    .. math::
+        B(t) = \int A(t) dt
+
+    If the system of ODEs defined above is such that its antiderivative $B(t)$ commutes with
+    $A(t)$ itself, then, the solution of the above system is given as:
+
+    .. math::
+        X = \exp(B(t)) C
+
+    where $C$ is the vector of constants.
+
+    """
 
     # Some parts of code is repeated, this needs to be taken care of
     # The constant vector obtained here can be done so in the match
