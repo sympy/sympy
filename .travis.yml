@@ -1,4 +1,7 @@
 language: python
+os:
+  - linux
+
 stages:
 - quality
 - baseline
@@ -6,7 +9,7 @@ stages:
 - allowed_failures
 
 env:
-  matrix:
+  jobs:
   - TEST_SYMPY="true" SPLIT="1/2"
   - TEST_SYMPY="true" SPLIT="2/2"
   - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
@@ -15,36 +18,31 @@ dist: trusty
 python:
   - 3.5
 
-matrix:
+jobs:
   fast_finish: true
   include:
     - stage: quality
       python: 3.8
       dist: xenial
-      sudo: true
       script: bin/test quality
       env:
         - TEST_QUALITY="true"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_FLAKE8="true"
 
     - stage: baseline
       python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true" SPLIT="1/2"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true" SPLIT="2/2"
     - python: 3.7
@@ -69,7 +67,6 @@ matrix:
     - stage: test
       python: 2.7
       dist: xenial
-      sudo: true
       env:
         - TEST_PY2_IMPORT="true"
     - python: 3.7
