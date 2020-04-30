@@ -816,61 +816,62 @@ class binomial(CombinatorialFunction):
     r"""Implementation of the binomial coefficient.
 
     In a strict combinatorial sense, the binomial coefficient gives
-    the number of ways we can choose ``k`` elements from a set of
-    ``n`` elements. In this case both arguments are nonnegative
+    the number of ways we can choose $k$ elements from a set of
+    $n$ elements. In this case both arguments are nonnegative
     integers and the value of the binomial can be computed in terms
-    of factorials::
+    of factorials :
 
     .. math:: \binom{n}{k} = \frac{n!}{k!(n - k)!}
        :label: 1
 
     We've implemented Newton's Generalized Binomial Theorem :eq:`2`
-    here. It agrees with :eq:`1` when r is a nonnegative integer.
-    It also extends to arbitrary ``n``. See [4]_ ::
+    here. It agrees with :eq:`1` when $k$ is a nonnegative integer
+    and also extends to arbitrary $n$. See [4]_ :
 
     .. math:: \binom{n}{k} = \frac{ff(n, k)}{k!}
        :label: 2
 
-    .. math:: (x+y)^n & =\sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
+    Using :eq:`2`, one can interpret the binomial coefficient
+    $\binom{n}{k}$ as the coefficient of $x^k, y^k, x^{(n - k)}, y^{(n - k)}$
+    in the Series expansion of $(x + y)^n$ :
 
-    Using the aforementioned theorem, one can interpret the binomial
-    coefficient :math:`\binom{n}{k}` as the coefficient
-    of :math:`x^k, y^k, x^(n - k), y^(n - k)` in the Series expansion
-    of :math:`(x + y)^n`.
+    .. math:: (x+y)^n = \sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
+       :label: 3
 
-    When ``n`` and ``k`` are integers, the Cartestian Plane is divided
-    into six regions. See [3]_ and [5]_::
+    When $n$ and $k$ are integers, the Cartestian Plane can be divided
+    into six regions. See [3]_ and [5]_ :
 
     .. math::
 
         \binom{n}{k} =
-        \begin{cases}
-          \binom{n}{k} & \qquad 0 \leq k \leq n \\
-          (-1)^k\binom{-n + k - 1}{k} & \qquad n < 0 \leq k \\
-          (-1)^{n + k}\binom{-k - 1}{n - k} & \qquad k \leq n < 0 \\
-          0 & \qquad 0 \leq n < k \\
-          0 & \qquad k < 0 \leq n \\
-          0 & \qquad n < k < 0 \\
-        \end{cases}
+            \begin{cases}
+                \binom{n}{k} & \qquad 0 \leq k \leq n \\
+                (-1)^k\binom{-n + k - 1}{k} & \qquad n < 0 \leq k \\
+                (-1)^{n + k}\binom{-k - 1}{n - k} & \qquad k \leq n < 0 \\
+                0 & \qquad 0 \leq n < k \\
+                0 & \qquad k < 0 \leq n \\
+                0 & \qquad n < k < 0 \\
+            \end{cases}
 
     Extension for non-integers is done using the gamma function.
-    See [2]_ and [5]_ ::
+    See [2]_ and [5]_ :
 
     .. math::
 
         \binom{n}{k} =
-        \begin{cases}
-          \begin{cases}
-          (-1)^k\frac{\Gamma(k - n)}{\Gamma(-n)\Gamma(k + 1)} & \qquad n \leq 0 \land k \geq 0 \\
-          (-1)^{n + k}\frac{\Gamma(-k)}{\Gamma(-n)\Gamma(n - k + 1))} & \qquad k \leq n < 0 \\
-          \end{cases} \qquad \{n, k\} \subset \mathbb{Z} \\
-          \frac{\Gamma(n + 1)}{\Gamma(k + 1)\Gamma(n - k + 1)} & \qquad otherwise
-        \end{cases}
+            \begin{cases}
+                \begin{cases}
+                (-1)^k\frac{\Gamma(k - n)}{\Gamma(-n)\Gamma(k + 1)} & \qquad n \leq 0 \land k \geq 0 \\
+                (-1)^{n + k}\frac{\Gamma(-k)}{\Gamma(-n)\Gamma(n - k + 1))} & \qquad k \leq n < 0 \\
+                \end{cases} \qquad \{n, k\} \subset \mathbb{Z} \\
+            \frac{\Gamma(n + 1)}{\Gamma(k + 1)\Gamma(n - k + 1)} & \qquad otherwise \\
+            \end{cases}
 
-    This Implementation agrees with the Knuth Gamma Coefficients [3]_
-    when :math:`\{n, k\} \subset \mathbb{Z}`, The Classical Extended
-    Binomial Theorem [2]_ when :math:`\{n\} \subset \mathbb{C}`, and
-    Agrees with the Loeb[Loe92] and Sprugnoli [Spr08] adaptation [5]_
+    This Implementation agrees with the Knuth Gamma
+    Coefficients [3]_ when $\{n, k\} \subset \mathbb{Z}$,
+    The Classical Extended Binomial Theorem [2]_ when
+    $\{n\} \subset \mathbb{C}$, and with the Loeb and
+    Sprugnoli adaptation for $\{n, k\} \subset \mathbb{C}$ [5]_.
 
 
     Examples
@@ -936,13 +937,13 @@ class binomial(CombinatorialFunction):
 
     .. [5] https://arxiv.org/pdf/1802.02684.pdf#section.3
 
+
     See Also
     ========
 
     sympy.ntheory.multinomial.binomial_coefficients
 
     """
-
     def fdiff(self, argindex=1):
         from sympy import polygamma
         if argindex == 1:
