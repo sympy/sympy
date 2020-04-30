@@ -1,6 +1,3 @@
-
-from __future__ import absolute_import
-
 import numbers as nums
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
