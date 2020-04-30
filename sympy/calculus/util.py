@@ -1442,7 +1442,6 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max <= other:
                 return False
-        return None
 
 
     def _eval_is_ge(self, other):
