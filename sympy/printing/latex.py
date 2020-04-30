@@ -1588,9 +1588,9 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
-    _print_ImmutableMatrix = _print_ImmutableDenseMatrix \
-                           = _print_Matrix \
-                           = _print_MatrixBase
+
+    _print_ImmutableDenseMatrix = _print_MatrixBase
+    _print_ImmutableSparseMatrix = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
