@@ -3820,7 +3820,6 @@ class UnevaluatedExpr(Expr):
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
-
     def doit(self, **kwargs):
         if kwargs.get("deep", True):
             return self.args[0].doit(**kwargs)
