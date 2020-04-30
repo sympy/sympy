@@ -2601,8 +2601,11 @@ def test_from_ndarray():
     assert Matrix(array([[1, 2, 3], [4, 5, 6]])) == \
         Matrix([[1, 2, 3], [4, 5, 6]])
     assert Matrix(array([x, y, z])) == Matrix([x, y, z])
-    raises(NotImplementedError, lambda: Matrix(array([[
-        [1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+    raises(NotImplementedError,
+        lambda: Matrix(array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+    assert Matrix([array([1, 2]), array([3, 4])]) == Matrix([[1, 2], [3, 4]])
+    assert Matrix([array([1, 2]), [3, 4]]) == Matrix([[1, 2], [3, 4]])
+    assert Matrix([array([]), array([])]) == Matrix([])
 
 def test_17522_numpy():
     from sympy.matrices.common import _matrixify
