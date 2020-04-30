@@ -200,6 +200,8 @@ if cin:
         res_type4 = SymPyExpression(c_src_type4, 'c').return_expr()
         res_type5 = SymPyExpression(c_src_type5, 'c').return_expr()
         res_type6 = SymPyExpression(c_src_type6, 'c').return_expr()
+        res_type7 = SymPyExpression(c_src_type7, 'c').return_expr()
+        res_type8 = SymPyExpression(c_src_type8, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -535,6 +537,72 @@ if cin:
                 type=UnsignedIntType(
                     String('uint16'),
                     nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type7[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint32'),
+                    nbits=Integer(32)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type7[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint32'),
+                    nbits=Integer(32)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type8[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type8[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type8[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type8[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
                     ),
                 value=Integer(5)
                 )
