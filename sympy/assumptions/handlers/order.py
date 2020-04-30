@@ -131,7 +131,7 @@ class AskNegativeHandler(CommonHandler):
                 if all(ask(Q.finite(a), assumptions) for a in expr.args):
                     return False
                 return None
-            elif ask(Q.nonnegitive(arg), assumptions):
+            elif ask(Q.nonnegative(arg), assumptions):
                 non = True
             elif ask(Q.nonpositive(arg), assumptions):
                 non = True
