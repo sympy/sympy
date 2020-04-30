@@ -901,6 +901,23 @@ class MatrixBase(MatrixDeprecated,
       return cls._new(rows)
 
     @classmethod
+    def _handle_ndarray(cls, arg):
+        # NumPy array or matrix or some other object that implements
+        # __array__. So let's first use this method to get a
+        # numpy.array() and then make a python list out of it.
+        arr = arg.__array__()
+        if len(arr.shape) == 2:
+            rows, cols = arr.shape[0], arr.shape[1]
+            flat_list = [cls._sympify(i) for i in arr.ravel()]
+            return rows, cols, flat_list
+        elif len(arr.shape) == 1:
+            flat_list = [cls._sympify(i) for i in arr]
+            return arr.shape[0], 1, flat_list
+        else:
+            raise NotImplementedError(
+                "SymPy supports just 1D and 2D matrices")
+
+    @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
 
@@ -973,23 +990,7 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
-                # NumPy array or matrix or some other object that implements
-                # __array__. So let's first use this method to get a
-                # numpy.array() and then make a python list out of it.
-                arr = args[0].__array__()
-                if len(arr.shape) == 2:
-                    rows, cols = arr.shape[0], arr.shape[1]
-                    flat_list = [cls._sympify(i) for i in arr.ravel()]
-                    return rows, cols, flat_list
-                elif len(arr.shape) == 1:
-                    rows, cols = arr.shape[0], 1
-                    flat_list = [cls.zero] * rows
-                    for i in range(len(arr)):
-                        flat_list[i] = cls._sympify(arr[i])
-                    return rows, cols, flat_list
-                else:
-                    raise NotImplementedError(
-                        "SymPy supports just 1D and 2D matrices")
+                return cls._handle_ndarray(args[0])
 
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
             elif is_sequence(args[0]) \
@@ -1064,13 +1065,20 @@ class MatrixBase(MatrixDeprecated,
                         if not is_sequence(row) and \
                                 not getattr(row, 'is_Matrix', False):
                             raise ValueError('expecting list of lists')
-                        if not row:
+
+                        if hasattr(row, '__array__'):
+                            if 0 in row.shape:
+                                continue
+                            r, c, flat = cls._handle_ndarray(row)
+                        elif not row:
                             continue
+
                         if evaluate and all(ismat(i) for i in row):
                             r, c, flatT = cls._handle_creation_inputs(
                                 [i.T for i in row])
                             T = reshape(flatT, [c])
-                            flat = [T[i][j] for j in range(c) for i in range(r)]
+                            flat = [T[i][j] for j in range(c) for i
+                            in range(r)]
                             r, c = c, r
                         else:
                             r = 1
