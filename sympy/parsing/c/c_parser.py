@@ -46,8 +46,8 @@ if cin:
     from sympy.codegen.ast import (Variable, IntBaseType,
         FloatBaseType, String, Integer, Float, FunctionPrototype,
         FunctionDefinition, FunctionCall, none, Return, Assignment,
-        Type, int8, int16, int32, int64, uint8, uint16, uint32, uint64,
-        float16, float32, float64, float80, aug_assign)
+        Type, int8, int16, int64, uint8, uint16, uint32, uint64,
+        float64, float80, aug_assign)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
         PreIncrement, PostIncrement)
     from sympy.core import Add, Mod, Mul, Pow, Rel

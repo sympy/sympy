@@ -200,8 +200,6 @@ if cin:
         res_type4 = SymPyExpression(c_src_type4, 'c').return_expr()
         res_type5 = SymPyExpression(c_src_type5, 'c').return_expr()
         res_type6 = SymPyExpression(c_src_type6, 'c').return_expr()
-        res_type7 = SymPyExpression(c_src_type7, 'c').return_expr()
-        res_type8 = SymPyExpression(c_src_type8, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
