@@ -986,7 +986,7 @@ class binomial(CombinatorialFunction):
         n_k = n - k
         nint, kint, n_kint = [int_like(i) for i in (n, k, n_k)]
 
-        # Known Properties for faster computation
+        # properties not based on relative ordering of n and k
         if k.is_zero or n_k.is_zero:
             return S.One
         if S.One in (k, n_k):
@@ -994,41 +994,68 @@ class binomial(CombinatorialFunction):
         if nint and n.is_negative:
             if kint is False:
                 return S.ComplexInfinity
+            if kint is None:
+                return
+        if kint and k.is_negative:
+            if (k + 1).is_zero:
+                if (n + 1).is_zero:
+                    return S.One
+                if (n + 1).is_zero is False:
+                    return S.Zero
+                return
+            elif (k + 1).is_zero is False:
+                if nint is False:
+                    return S.Zero
+                if nint is None:
+                    return
+            else:
+                return
+        elif nint is False and kint is False and \
+                n_kint and n_k.is_negative:
+            return S.Zero
 
         # 0 <= k <= n
         if n.is_nonnegative and k.is_nonnegative:
             if n_k.is_nonnegative:
                 if kint is False or nint is False:
                     return cls._eval(n, k, 'gamma')
-                if n.is_number and k.is_number:
+                if kint and nint:
                     return cls._eval(n, k)
+                return
 
         # n < 0 <= k
         if n.is_negative and k.is_nonnegative:
-            if n.is_number and kint:
+            if kint:
                 n = -n + k - 1
                 res = cls._eval(n, k)
                 return res if res is None else Pow(S.NegativeOne, k)*res
-            return cls._eval(n, k, 'gamma')
+            if kint is False:
+                return cls._eval(n, k, 'gamma')
+            return
 
         # k <= n < 0
         if n.is_negative and k.is_negative:
             if n_k.is_nonnegative:
-                if n.is_number:
-                    if kint and nint:
-                        n, k = -k - 1, n - k
-                        res = cls._eval(n, k)
-                        return res if res is None else Pow(S.NegativeOne, k)*res
-                return cls._eval(n, k, 'gamma')
+                if kint and nint:
+                    n, k = -k - 1, n - k
+                    res = cls._eval(n, k)
+                    return res if res is None else Pow(S.NegativeOne, k)*res
+                if kint is False or nint is False:
+                    return cls._eval(n, k, 'gamma')
+                return
 
         # 0 <= n < k
         if k.is_positive and n.is_nonnegative:
             if n_k.is_negative:
                 if nint and kint:
                     return S.Zero
+                if n_kint:
+                    return S.Zero
                 if kint:
                     return cls._eval(n, k)
-                return cls._eval(n, k, 'gamma')
+                if nint is False or kint is False:
+                    return cls._eval(n, k, 'gamma')
+                return
 
         # k < 0 <= n
         if n.is_extended_nonnegative and k.is_negative:
@@ -1036,14 +1063,19 @@ class binomial(CombinatorialFunction):
                 return S.Zero
             if n_kint:
                 return cls._eval(n, n_k)
-            return cls._eval(n, k, 'gamma')
+            if kint is False and n_kint is False:
+                return cls._eval(n, k, 'gamma')
+            return
 
         # n < k < 0
         if k.is_negative and n.is_negative:
             if n_k.is_negative:
-                if nint and kint:
+                if n_kint:
                     return S.Zero
-                return cls._eval(n, k, 'gamma')
+                if kint:
+                    return S.Zero
+                if kint is False and n_kint is False:
+                    return cls._eval(n, k, 'gamma')
 
         # Support for Complex numbers and so on
         if k.is_number:
