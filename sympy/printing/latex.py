@@ -851,7 +851,12 @@ class LatexPrinter(Printer):
                 len(args) == 1 and \
                 not self._needs_function_brackets(expr.args[0])
 
-            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
+            inv_trig_table = [
+                "asin", "acos", "atan",
+                "acsc", "asec", "acot",
+                "asinh", "acosh", "atanh",
+                "acsch", "asech", "acoth",
+            ]
 
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
@@ -1588,9 +1593,9 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
-    _print_ImmutableMatrix = _print_ImmutableDenseMatrix \
-                           = _print_Matrix \
-                           = _print_MatrixBase
+
+    _print_ImmutableDenseMatrix = _print_MatrixBase
+    _print_ImmutableSparseMatrix = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\

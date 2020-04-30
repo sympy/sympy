@@ -1,5 +1,5 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
-    Dummy, Eq, Ne, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
+    Dummy, Eq, Ne, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, simplify, integrate)
 from sympy.solvers.ode import (classify_ode,
@@ -1496,15 +1496,6 @@ def test_old_ode_tests():
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 
-def test_1st_linear():
-    # Type: first order linear form f'(x)+p(x)f(x)=q(x)
-    eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    sol = Eq(f(x), (C1 + x*exp(x**2/2)
-                    - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2)*exp(-x**2/2))
-    assert dsolve(eq, hint='1st_linear') == sol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-
 @slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
@@ -2565,52 +2556,6 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
 
 
-def test_Liouville_ODE():
-    hint = 'Liouville'
-    # The first part here used to be test_ODE_1() from test_solvers.py
-    eq1 = diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2
-    eq1a = diff(x*exp(-f(x)), x, x)
-    # compare to test_unexpanded_Liouville_ODE() below
-    eq2 = (eq1*exp(-f(x))/exp(f(x))).expand()
-    eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
-    eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
-    eq5 = Eq((x*exp(f(x))).diff(x, x), 0)
-    sol1 = Eq(f(x), log(x/(C1 + C2*x)))
-    sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
-    sol2 = sol1
-    sol3 = set(
-        [Eq(f(x), -sqrt(C1 + C2*log(x))),
-        Eq(f(x), sqrt(C1 + C2*log(x)))])
-    sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
-                Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
-    sol5 = Eq(f(x), log(C1 + C2/x))
-    sol1s = constant_renumber(sol1)
-    sol2s = constant_renumber(sol2)
-    sol3s = constant_renumber(sol3)
-    sol4s = constant_renumber(sol4)
-    sol5s = constant_renumber(sol5)
-    assert dsolve(eq1, hint=hint) in (sol1, sol1s)
-    assert dsolve(eq1a, hint=hint) in (sol1, sol1s)
-    assert dsolve(eq2, hint=hint) in (sol2, sol2s)
-    assert set(dsolve(eq3, hint=hint)) in (sol3, sol3s)
-    assert set(dsolve(eq4, hint=hint)) in (sol4, sol4s)
-    assert dsolve(eq5, hint=hint) in (sol5, sol5s)
-    assert checkodesol(eq1, sol1, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq1a, sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, sol3, order=2, solve_for_func=False) == {(True, 0)}
-    assert checkodesol(eq4, sol4, order=2, solve_for_func=False) == {(True, 0)}
-    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
-    not_Liouville1 = classify_ode(diff(f(x), x)/x + f(x)*diff(f(x), x, x)/2 -
-        diff(f(x), x)**2/2, f(x))
-    not_Liouville2 = classify_ode(diff(f(x), x)/x + diff(f(x), x, x)/2 -
-        x*diff(f(x), x)**2/2, f(x))
-    assert hint not in not_Liouville1
-    assert hint not in not_Liouville2
-    assert hint + '_Integral' not in not_Liouville1
-    assert hint + '_Integral' not in not_Liouville2
-
-
 def test_unexpanded_Liouville_ODE():
     # This is the same as eq1 from test_Liouville_ODE() above.
     eq1 = diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2
@@ -2684,43 +2629,6 @@ def test_issue_5112_5430():
 def test_issue_5095():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
-
-
-def test_almost_linear():
-    from sympy import Ei
-    A = Symbol('A', positive=True)
-    our_hint = 'almost_linear'
-    f = Function('f')
-    d = f(x).diff(x)
-    eq = x**2*f(x)**2*d + f(x)**3 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == (C1*exp(3/x) - 1)**Rational(1, 3)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    sol = [
-        Eq(f(x), -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))),
-        Eq(f(x), sqrt((C1 - 2*Ei(4*x))*exp(-4*x)))
-    ]
-    assert set(dsolve(eq, f(x), hint = 'almost_linear')) == set(sol)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = x*d + x*f(x) + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 - Ei(x))*exp(-x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-    assert our_hint in classify_ode(eq, f(x))
-
-    eq = x*exp(f(x))*d + exp(f(x)) + 3*x
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == log(C1/x - x*Rational(3, 2))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 + Piecewise(
-        (x, Eq(A + 1, 0)), ((-A*x + A - x - 1)*exp(x)/(A + 1), True)))*exp(-x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
 def test_exact_enhancement():
