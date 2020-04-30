@@ -980,7 +980,7 @@ class binomial(CombinatorialFunction):
                 except ValueError:
                     pass
             res = ff(n, k)/factorial(k)
-            if not res.has(ff):
+            if not res.has(ff) and res.is_number:
                 return _mexpand(res) if res else res
 
     @classmethod
