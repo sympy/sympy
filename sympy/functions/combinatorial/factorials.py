@@ -821,11 +821,14 @@ class binomial(CombinatorialFunction):
     of factorials::
 
     .. math:: \binom{n}{k} = \frac{n!}{k!(n - k)!}
+       :label: 1
 
-    For arbitrary ``n`` and integer ``k``, we use Newton's Generalized
-    Binomial Theorem. See [4]_ ::
+    We've implemented Newton's Generalized Binomial Theorem :eq:`2`
+    here. It agrees with :eq:`1` when r is a nonnegative integer.
+    It also extends to arbitrary ``n``. See [4]_ ::
 
     .. math:: \binom{n}{k} = \frac{ff(n, k)}{k!}
+       :label: 2
 
     .. math:: (x+y)^n & =\sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
 
@@ -834,27 +837,39 @@ class binomial(CombinatorialFunction):
     of :math:`x^k, y^k, x^(n - k), y^(n - k)` in the Series expansion
     of :math:`(x + y)^n`.
 
-    When ``k`` is negative and ``n - k`` is a non-negative integer
-    then the following identity is used before the coefficient is
-    calculated::
+    When ``n`` and ``k`` are integers, the Cartestian Plane is divided
+    into six regions. See [3]_ and [5]_::
 
-    .. math:: \binom{n}{k} = \binom{n}{n - k}
+    .. math::
 
-    .. math:: \binom{n}{k} = \frac{ff(n, n - k)}{(n - k)!}
+        \binom{n}{k} =
+        \begin{cases}
+          \binom{n}{k} & \qquad 0 \leq k \leq n \\
+          (-1)^k\binom{-n + k - 1}{k} & \qquad n < 0 \leq k \\
+          (-1)^{n + k}\binom{-k - 1}{n - k} & \qquad k \leq n < 0 \\
+          0 & \qquad 0 \leq n < k \\
+          0 & \qquad k < 0 \leq n \\
+          0 & \qquad n < k < 0 \\
+        \end{cases}
 
-    The binomial coefficient is zero in the following cases, provided
-    both ``n`` and ``k`` are integers. See [3]_ ::
+    Extension for non-integers is done using the gamma function.
+    See [2]_ and [5]_ ::
 
-    .. math:: k > n \geq 0
+    .. math::
 
-    .. math:: n \geq 0 > k
+        \binom{n}{k} =
+        \begin{cases}
+          \begin{cases}
+          (-1)^k\frac{\Gamma(k - n)}{\Gamma(-n)\Gamma(k + 1)} & \qquad n \leq 0 \land k \geq 0 \\
+          (-1)^{n + k}\frac{\Gamma(-k)}{\Gamma(-n)\Gamma(n - k + 1))} & \qquad k \leq n < 0 \\
+          \end{cases} \qquad \{n, k\} \subset \mathbb{Z} \\
+          \frac{\Gamma(n + 1)}{\Gamma(k + 1)\Gamma(n - k + 1)} & \qquad otherwise
+        \end{cases}
 
-    .. math:: 0 > k > n
-
-    If neither ``k`` nor ``n - k`` is a nonnegative integer then
-    the binomial is expressed in terms of the gamma function. See [2]_ ::
-
-    .. math:: \binom{n}{k} = \frac{\gamma(n + 1)}{\gamma(k + 1)\gamma(n - k + 1)}
+    This Implementation agrees with the Knuth Gamma Coefficients [3]_
+    when :math:`\{n, k\} \subset \mathbb{Z}`, The Classical Extended
+    Binomial Theorem [2]_ when :math:`\{n\} \subset \mathbb{C}`, and
+    Agrees with the Loeb[Loe92] and Sprugnoli [Spr08] adaptation [5]_
 
 
     Examples
@@ -914,9 +929,11 @@ class binomial(CombinatorialFunction):
 
     .. [2] http://functions.wolfram.com/GammaBetaErf/Binomial/02/
 
-    .. [3] https://core.ac.uk/download/pdf/82732883.pdf#page=9
+    .. [3] https://arxiv.org/pdf/math/9502218.pdf#page=12
 
     .. [4] https://en.wikipedia.org/wiki/Binomial_theorem#Newton%27s_generalized_binomial_theorem
+
+    .. [5] https://arxiv.org/pdf/1802.02684.pdf#section.3
 
     See Also
     ========
@@ -976,9 +993,7 @@ class binomial(CombinatorialFunction):
                 return S.ComplexInfinity
 
         # 0 <= k <= n
-        if n.is_extended_nonnegative and k.is_nonnegative:
-            if n.is_infinite:
-                return S.Infinity
+        if n.is_nonnegative and k.is_nonnegative:
             if n_k.is_nonnegative:
                 if k.is_integer is False or n.is_integer is False:
                     return (cls._eval(n, k, 'gamma'))
@@ -986,13 +1001,7 @@ class binomial(CombinatorialFunction):
                     return (cls._eval(n, k))
 
         # n < 0 <= k
-        if n.is_extended_negative and k.is_extended_nonnegative:
-            if k.is_infinite and n.is_infinite:
-                return S.Infinity
-            if n.is_infinite and not k.is_infinite:
-                return S.NegativeInfinity
-            if k.is_infinite and not n.is_infinite:
-                return S.Infinity
+        if n.is_negative and k.is_nonnegative:
             if n.is_number and k.is_integer:
                 n = -n + k - 1
                 res = (cls._eval(n, k))
@@ -1001,9 +1010,7 @@ class binomial(CombinatorialFunction):
             return (cls._eval(n, k, 'gamma'))
 
         # k <= n < 0
-        if n.is_negative and k.is_extended_negative:
-            if k.is_infinite:
-                return S.NegativeInfinity
+        if n.is_negative and k.is_negative:
             if n_k.is_nonnegative:
                 if n.is_number:
                     if k.is_integer and n.is_integer:
@@ -1014,9 +1021,7 @@ class binomial(CombinatorialFunction):
                 return (cls._eval(n, k, 'gamma'))
 
         # 0 <= n < k
-        if k.is_extended_positive and n.is_nonnegative:
-            if k.is_infinite:
-                return S.Zero
+        if k.is_positive and n.is_nonnegative:
             if n_k.is_negative:
                 if n.is_integer and k.is_integer:
                     return S.Zero
@@ -1025,19 +1030,15 @@ class binomial(CombinatorialFunction):
                 return (cls._eval(n, k, 'gamma'))
 
         # k < 0 <= n
-        if n.is_extended_nonnegative and k.is_extended_negative:
+        if n.is_extended_nonnegative and k.is_negative:
             if k.is_integer:
-                return S.Zero
-            if n.is_infinite or k.is_infinite:
                 return S.Zero
             if n_k.is_integer:
                 return (cls._eval(n, n_k))
             return (cls._eval(n, k, 'gamma'))
 
         # n < k < 0
-        if k.is_negative and n.is_extended_negative:
-            if n.is_infinite:
-                return S.Zero
+        if k.is_negative and n.is_negative:
             if n_k.is_negative:
                 if n.is_integer and k.is_integer:
                     return S.Zero
@@ -1251,7 +1252,7 @@ class binomial(CombinatorialFunction):
                 elif (n + 1).is_zero is False:
                     if n.is_infinite:
                         if n.is_extended_negative:
-                            return False
+                            return True
                         elif n.is_extended_positive:
                             return False
                     elif n.is_finite:
