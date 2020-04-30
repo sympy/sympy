@@ -112,10 +112,14 @@ def test_subs():
     C = MatrixSymbol('C', m, l)
 
     assert A.subs(n, m).shape == (m, m)
-
     assert (A*B).subs(B, C) == A*C
-
     assert (A*B).subs(l, n).is_square
+
+    A = SparseMatrix([[1, 2], [3, 4]])
+    B = Matrix([[1, 2], [3, 4]])
+    C, D = MatrixSymbol('C', 2, 2), MatrixSymbol('D', 2, 2)
+
+    assert (C*D).subs({C: A, D: B}) == MatMul(A, B)
 
 
 def test_ZeroMatrix():
