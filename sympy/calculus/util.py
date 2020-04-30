@@ -1479,7 +1479,6 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other:
                 return False
-        return None
 
 
     def __contains__(self, other):
