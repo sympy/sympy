@@ -1408,7 +1408,7 @@ class AccumulationBounds(AtomicExpr):
 
     def _eval_is_gt(self, other):
 
-        """""
+        """
         Returns True if range of values attained by `self` AccumulationBounds
         object is greater than the range of values attained by `other`,
         where other may be any value of type AccumulationBounds object or
