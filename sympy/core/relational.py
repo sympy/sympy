@@ -1065,77 +1065,65 @@ def fuzzy_resolve(lhs, rhs, op, cls):
 
 
 def is_lt(lhs, rhs):
-    if lhs.is_extended_real and rhs.is_extended_real:
-        eval_str = "_eval_is_ge"
-    else:
-        eval_str = "_eval_is_lt"
-    retval = fuzzy_not(_eval_dispatch(lhs, rhs, eval_str))
+    retval = None
+    if lhs.is_extended_real and rhs.is_extended_real and hasattr(lhs, "_eval_is_ge"):
+        retval = fuzzy_not(getattr(lhs, "_eval_is_ge")(rhs))
+    elif hasattr(lhs, "_eval_is_lt"):
+        retval = getattr(lhs, "_eval_is_lt")(rhs)
     if retval is None:
         retval = cmp(lhs, rhs, "<")
     return retval
 
 
 def is_le(lhs, rhs):
-    retval = fuzzy_not(_eval_dispatch(lhs, rhs, "_eval_is_gt"))
+    retval = None
+    if hasattr(lhs, "_eval_is_gt"):
+        retval = fuzzy_not(getattr(lhs, "_eval_is_gt")(rhs))
     if retval is None:
         retval = cmp(lhs, rhs, "<=")
     return retval
 
 
 def is_gt(lhs, rhs):
-    retval = _eval_dispatch(lhs, rhs, "_eval_is_gt")
+    retval = None
+    if hasattr(lhs, "_eval_is_gt"):
+        retval = getattr(lhs, "_eval_is_gt")(rhs)
     if retval is None:
         retval = cmp(lhs, rhs, ">")
     return retval
 
 
 def is_ge(lhs, rhs):
-    retval = _eval_dispatch(lhs, rhs, "_eval_is_ge")
+    retval = None
+    if hasattr(lhs, "_eval_is_ge"):
+        retval = getattr(lhs, "_eval_is_ge")(rhs)
     if retval is None:
         retval = cmp(lhs, rhs, ">=")
     return retval
 
 
 def is_eq(lhs, rhs):
-    retval = _eval_dispatch(lhs, rhs, "_eval_Eq")
+    retval = None
+    if hasattr(lhs, "_eval_Eq"):
+        retval = getattr(lhs, "_eval_Eq")(rhs)
+    elif hasattr(rhs, "_eval_Eq"):
+        retval = getattr(rhs, "_eval_Eq")(lhs)
+
     if retval is None:
         retval = _cmp_eq(lhs, rhs)
     return retval
 
 
 def is_neq(lhs, rhs):
-    retval = fuzzy_not(_eval_dispatch(lhs, rhs, "_eval_Eq"))
+    retval = None
+    if hasattr(lhs, "_eval_Eq"):
+        retval = fuzzy_not(getattr(lhs, "_eval_Eq")(rhs))
+    elif hasattr(rhs, "_eval_Eq"):
+        retval = fuzzy_not(getattr(rhs, "_eval_Eq")(lhs))
+
     if retval is None:
         retval = fuzzy_not(_cmp_eq(lhs, rhs))
     return retval
-
-
-
-def _eval_cmp(lhs, rhs, op, negate_op, basic_cmp):
-    """
-    Evaluates eval_dispatch with an argument of op. If op returns None, then uses basic_cmp(lhs, rhs).
-    Negates eval_dispatch
-
-    """
-    retval = _eval_dispatch(lhs, rhs, op)
-    if negate_op:
-        retval = fuzzy_not(retval)
-
-    if retval is None:
-        retval = basic_cmp(lhs, rhs)
-
-    return retval
-
-
-def _eval_dispatch(lhs, rhs, eval_str):
-    retval = None
-    if hasattr(lhs, eval_str):
-        retval = getattr(lhs, eval_str)(rhs)
-    elif hasattr(rhs, eval_str):
-        retval = getattr(rhs, eval_str)(lhs)
-
-    return retval
-
 
 
 def cmp(lhs, rhs, op):
@@ -1149,28 +1137,21 @@ def cmp(lhs, rhs, op):
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> two = sympify(2)
-    >>> cmp(x,two, "<") is None
-
-    >>> from sympy.core.relational import cmp
-    >>> from sympy import sympify
-    >>> from sympy import Symbol
-    >>> x = Symbol('x')
-    >>> two = sympify(2)
-    >>> cmp(x,two, "=") is None
+    >>> assert cmp(x,two, "<") is None
 
     >>> from sympy.core.relational import cmp
     >>> from sympy import sympify
     >>> from sympy import Symbol
     >>> three = sympify(3)
     >>> two = sympify(2)
-    >>> cmp(three,two, "<") is False
+    >>> assert not cmp(three,two, "<")
 
     >>> from sympy.core.relational import cmp
     >>> from sympy import sympify
     >>> from sympy import Symbol
     >>> three = sympify(3)
     >>> two = sympify(2)
-    >>> cmp(three,two, ">") is True
+    >>> assert cmp(three,two, ">")
 
     """
     assert op in ("<", ">", "<=", ">=")
