@@ -478,10 +478,10 @@ def test_binomial():
     assert not binomial(0, sqrt(3) + sqrt(11)*I).is_integer
     assert binomial(3, oo, evaluate=False).is_integer
 
-    assert binomial(-oo, oo) == oo
+    assert binomial(-oo, oo) == 0
     assert binomial(-1, oo) is S.ComplexInfinity
     assert binomial(oo, oo) is S.NaN
-    assert binomial(-oo, oo, evaluate=False).is_integer is False
+    assert binomial(-oo, oo, evaluate=False).is_integer
     assert binomial(-1, oo, evaluate=False).is_integer is False
     assert binomial(oo, oo, evaluate=False).is_integer is False
     assert binomial(1, 2) == 0
