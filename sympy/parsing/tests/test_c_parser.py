@@ -5,15 +5,18 @@ from sympy.external import import_module
 cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if cin:
-    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-                                   Return, FunctionDefinition, Integer, Float,
-                                   Declaration, CodeBlock, FunctionPrototype,
-                                   FunctionCall, NoneToken, Assignment, Type)
+    from sympy.codegen.ast import (Variable, IntBaseType,
+        FloatBaseType, String, Return, FunctionDefinition, Integer,
+        Float, Declaration, CodeBlock, FunctionPrototype, FunctionCall,
+        NoneToken, Assignment, Type, SignedIntType, UnsignedIntType,
+        FloatType, AddAugmentedAssignment, SubAugmentedAssignment,
+        MulAugmentedAssignment, DivAugmentedAssignment,
+        ModAugmentedAssignment)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
         PreIncrement, PostIncrement)
-    from sympy.core import (Add, Mul, Mod, Pow, Rational, StrictLessThan,
-                            LessThan, StrictGreaterThan, GreaterThan,
-                            Equality, Unequality)
+    from sympy.core import (Add, Mul, Mod, Pow, Rational,
+        StrictLessThan, LessThan, StrictGreaterThan, GreaterThan,
+        Equality, Unequality)
     from sympy.logic.boolalg import And, Not, Or
     from sympy import Symbol, true, false
     import os
@@ -141,12 +144,64 @@ if cin:
         c_src5 = "int x = '0', y = 'a';"
         c_src6 = "int r = true, s = false;"
 
+        # cin.TypeKind.UCHAR
+        c_src_type1 = (
+            "signed char a = 1, b = 5.1;"
+            )
+
+        # cin.TypeKind.SHORT
+        c_src_type2 = (
+            "short a = 1, b = 5.1;"
+            "signed short c = 1, d = 5.1;"
+            "short int e = 1, f = 5.1;"
+            "signed short int g = 1, h = 5.1;"
+            )
+
+        # cin.TypeKind.INT
+        c_src_type3 = (
+            "signed int a = 1, b = 5.1;"
+            "int c = 1, d = 5.1;"
+            )
+
+        # cin.TypeKind.LONG
+        c_src_type4 = (
+            "long a = 1, b = 5.1;"
+            "long int c = 1, d = 5.1;"
+            )
+
+        # cin.TypeKind.UCHAR
+        c_src_type5 = "unsigned char a = 1, b = 5.1;"
+
+        # cin.TypeKind.USHORT
+        c_src_type6 = (
+            "unsigned short a = 1, b = 5.1;"
+            "unsigned short int c = 1, d = 5.1;"
+            )
+
+        # cin.TypeKind.UINT
+        c_src_type7 = "unsigned int a = 1, b = 5.1;"
+
+        # cin.TypeKind.ULONG
+        c_src_type8 = (
+            "unsigned long a = 1, b = 5.1;"
+            "unsigned long int c = 1, d = 5.1;"
+            )
+
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
         res3 = SymPyExpression(c_src3, 'c').return_expr()
         res4 = SymPyExpression(c_src4, 'c').return_expr()
         res5 = SymPyExpression(c_src5, 'c').return_expr()
         res6 = SymPyExpression(c_src6, 'c').return_expr()
+
+        res_type1 = SymPyExpression(c_src_type1, 'c').return_expr()
+        res_type2 = SymPyExpression(c_src_type2, 'c').return_expr()
+        res_type3 = SymPyExpression(c_src_type3, 'c').return_expr()
+        res_type4 = SymPyExpression(c_src_type4, 'c').return_expr()
+        res_type5 = SymPyExpression(c_src_type5, 'c').return_expr()
+        res_type6 = SymPyExpression(c_src_type6, 'c').return_expr()
+        res_type7 = SymPyExpression(c_src_type7, 'c').return_expr()
+        res_type8 = SymPyExpression(c_src_type8, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -236,6 +291,257 @@ if cin:
             )
         )
 
+        assert res_type1[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=SignedIntType(
+                    String('int8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type1[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=SignedIntType(
+                    String('int8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[2] == Declaration(
+            Variable(Symbol('c'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[4] == Declaration(
+            Variable(
+                Symbol('e'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[5] == Declaration(
+            Variable(
+                Symbol('f'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[6] == Declaration(
+            Variable(
+                Symbol('g'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[7] == Declaration(
+            Variable(
+                Symbol('h'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type3[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=IntBaseType(String('integer')),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type3[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=IntBaseType(String('integer')),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type3[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=IntBaseType(String('integer')),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type3[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=IntBaseType(String('integer')),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type4[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type4[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type4[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type4[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type5[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type5[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type6[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type6[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type6[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type6[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
 
     def test_float():
         c_src1 = 'float a = 1.0;'
@@ -247,11 +553,24 @@ if cin:
         c_src4 = 'float p = 5, e = 7.89;'
         c_src5 = 'float r = true, s = false;'
 
+        # cin.TypeKind.FLOAT
+        c_src_type1 = 'float x = 1, y = 2.5;'
+
+        # cin.TypeKind.DOUBLE
+        c_src_type2 = 'double x = 1, y = 2.5;'
+
+        # cin.TypeKind.LONGDOUBLE
+        c_src_type3 = 'long double x = 1, y = 2.5;'
+
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
         res3 = SymPyExpression(c_src3, 'c').return_expr()
         res4 = SymPyExpression(c_src4, 'c').return_expr()
         res5 = SymPyExpression(c_src5, 'c').return_expr()
+
+        res_type1 = SymPyExpression(c_src_type1, 'c').return_expr()
+        res_type2 = SymPyExpression(c_src_type2, 'c').return_expr()
+        res_type3 = SymPyExpression(c_src_type3, 'c').return_expr()
 
         assert res1[0] == Declaration(
             Variable(
@@ -324,6 +643,73 @@ if cin:
                 value=Float('0.0', precision=53)
             )
         )
+
+        assert res_type1[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatBaseType(String('real')),
+                value=Float('1.0', precision=53)
+                )
+            )
+
+        assert res_type1[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatBaseType(String('real')),
+                value=Float('2.5', precision=53)
+                )
+            )
+        assert res_type2[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatType(
+                    String('float64'),
+                    nbits=Integer(64),
+                    nmant=Integer(52),
+                    nexp=Integer(11)
+                    ),
+                value=Float('1.0', precision=53)
+                )
+            )
+
+        assert res_type2[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatType(
+                    String('float64'),
+                    nbits=Integer(64),
+                    nmant=Integer(52),
+                    nexp=Integer(11)
+                    ),
+                value=Float('2.5', precision=53)
+                )
+            )
+
+        assert res_type3[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatType(
+                    String('float80'),
+                    nbits=Integer(80),
+                    nmant=Integer(63),
+                    nexp=Integer(15)
+                    ),
+                value=Float('1.0', precision=53)
+                )
+            )
+
+        assert res_type3[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatType(
+                    String('float80'),
+                    nbits=Integer(80),
+                    nmant=Integer(63),
+                    nexp=Integer(15)
+                    ),
+                value=Float('2.5', precision=53)
+                )
+            )
 
 
     def  test_bool():
@@ -3038,18 +3424,10 @@ if cin:
         )
 
         c_src_raise1 = (
-            'double a;'
-        )
-
-        c_src_raise2 = (
-            'long a = 1;'
-        )
-
-        c_src_raise3 = (
             'int a = (int) 1.0;'
         )
 
-        c_src_raise4 = (
+        c_src_raise2 = (
             'int a = 10;'
             'int b = (a!=10)?(a):(0);'
         )
@@ -4195,8 +4573,6 @@ if cin:
 
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
-        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise3, 'c'))
-        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise4, 'c'))
 
 
     def test_paren_expr():
@@ -4438,6 +4814,57 @@ if cin:
 
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
+
+
+    def test_compound_assignment_operator():
+        c_src = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 100;' + '\n' +
+                'a += 10;' + '\n' +
+                'a -= 10;' + '\n' +
+                'a *= 10;' + '\n' +
+                'a /= 10;' + '\n' +
+                'a %= 10;' + '\n' +
+            '}'
+        )
+
+        res = SymPyExpression(c_src, 'c').return_expr()
+
+        assert res[0] == FunctionDefinition(
+            NoneToken(),
+            name=String('func'),
+            parameters=(),
+            body=CodeBlock(
+                Declaration(
+                    Variable(
+                        Symbol('a'),
+                        type=IntBaseType(String('integer')),
+                        value=Integer(100)
+                        )
+                    ),
+                AddAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                SubAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                MulAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                DivAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                ModAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    )
+                )
+            )
 
 else:
     def test_raise():

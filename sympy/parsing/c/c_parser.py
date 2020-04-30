@@ -43,9 +43,11 @@ Refrences
 """
 
 if cin:
-    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-        Integer, Float, FunctionPrototype, FunctionDefinition, FunctionCall,
-        none, Return, Assignment, Type)
+    from sympy.codegen.ast import (Variable, IntBaseType,
+        FloatBaseType, String, Integer, Float, FunctionPrototype,
+        FunctionDefinition, FunctionCall, none, Return, Assignment,
+        Type, int8, int16, int32, int64, uint8, uint16, uint32, uint64,
+        float16, float32, float64, float80, aug_assign)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
         PreIncrement, PostIncrement)
     from sympy.core import Add, Mod, Mul, Pow, Rel
@@ -234,16 +236,43 @@ if cin:
                 while child.kind == cin.CursorKind.NAMESPACE_REF:
                     child = next(children)
 
-                while child.kind == cin.CursorKind.TYPE_REF:
-                    child = next(children)
+                # while child.kind == cin.CursorKind.TYPE_REF:
+                #     child = next(children)
 
                 val = self.transform(child)
                 # List in case of variable assignment,
                 # FunctionCall node in case of a function call
                 if (child.kind == cin.CursorKind.INTEGER_LITERAL
+                    or child.kind == cin.CursorKind.FLOATING_LITERAL
                     or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
-                    if (node.type.kind == cin.TypeKind.INT):
-                        type = IntBaseType(String('integer'))
+
+                    supported_int_types = [cin.TypeKind.SCHAR,
+                    cin.TypeKind.SHORT, cin.TypeKind.INT,
+                    cin.TypeKind.LONG, cin.TypeKind.UCHAR,
+                    cin.TypeKind.USHORT, cin.TypeKind.UINT,
+                    cin.TypeKind.ULONG]
+
+                    supported_float_types = [cin.TypeKind.FLOAT,
+                    cin.TypeKind.DOUBLE, cin.TypeKind.LONGDOUBLE]
+
+                    if node.type.kind in supported_int_types:
+                        if node.type.kind == cin.TypeKind.SCHAR:
+                            type = int8
+                        elif node.type.kind == cin.TypeKind.SHORT:
+                            type = int16
+                        elif node.type.kind == cin.TypeKind.INT:
+                            type = IntBaseType(String('integer'))
+                        elif node.type.kind == cin.TypeKind.LONG:
+                            type = int64
+                        elif node.type.kind == cin.TypeKind.UCHAR:
+                            type = uint8
+                        elif node.type.kind == cin.TypeKind.USHORT:
+                            type = uint16
+                        elif node.type.kind == cin.TypeKind.UINT:
+                            type = uint32
+                        elif node.type.kind == cin.TypeKind.ULONG:
+                            type = uint64
+
                         # when only one decl_ref_expr is assigned
                         # e.g., int b = a;
                         if isinstance(val, str):
@@ -261,8 +290,14 @@ if cin:
                         else:
                             value = val
 
-                    elif (node.type.kind == cin.TypeKind.FLOAT):
-                        type = FloatBaseType(String('real'))
+                    elif node.type.kind in supported_float_types:
+                        if node.type.kind == cin.TypeKind.FLOAT:
+                            type = FloatBaseType(String('real'))
+                        elif node.type.kind == cin.TypeKind.DOUBLE:
+                            type = float64
+                        elif node.type.kind == cin.TypeKind.LONGDOUBLE:
+                            type = float80
+
                         # e.g., float b = a;
                         if isinstance(val, str):
                             value = Symbol(val)
@@ -744,6 +779,25 @@ if cin:
             """
             return self.transform(next(node.get_children()))
 
+        def transform_compound_assignment_operator(self, node):
+            """Transformation function for handling shorthand operators
+
+            Returns
+            =======
+
+            augmented_assignment_expression: Codegen AST node
+                    shorthand assignment expression represented as Codegen AST
+
+            Raises
+            ======
+
+            NotImplementedError
+                If the shorthand operator for bitwise operators
+                (~=, ^=, &=, |=, <<=, >>=) is encountered
+
+            """
+            return self.transform_binary_operator(node)
+
         def transform_unary_operator(self, node):
             """Transformation function for handling unary operators
 
@@ -826,7 +880,8 @@ if cin:
 
             # supported operators list
             operators_list = ['+', '-', '*', '/', '%','=',
-            '>', '>=', '<', '<=', '==', '!=', '&&', '||']
+            '>', '>=', '<', '<=', '==', '!=', '&&', '||', '+=', '-=',
+            '*=', '/=', '%=']
 
             # this stack will contain variable content
             # and type of variable in the rhs
@@ -893,6 +948,13 @@ if cin:
                         raise NotImplementedError(
                             "Bitwise operator has not been "
                             "implemented yet!")
+
+                    # token is a shorthand bitwise operator
+                    elif token.spelling in ['&=', '|=', '^=', '<<=',
+                    '>>=']:
+                        raise NotImplementedError(
+                            "Shorthand bitwise operator has not been "
+                            "implemented yet!")
                     else:
                         raise NotImplementedError(
                             "Given token {} is not implemented yet!"
@@ -935,7 +997,7 @@ if cin:
 
         def priority_of(self, op):
             """To get the priority of given operator"""
-            if op == '=':
+            if op in ['=', '+=', '-=', '*=', '/=', '%=']:
                 return 1
             if op in ['&&', '||']:
                 return 2
@@ -977,6 +1039,8 @@ if cin:
                 return [Or(as_Boolean(lhs_value), as_Boolean(rhs_value)), 'expr']
             if op == '=':
                 return [Assignment(Variable(lhs_value), rhs_value), 'expr']
+            if op in ['+=', '-=', '*=', '/=', '%=']:
+                return [aug_assign(Variable(lhs_value), op[0], rhs_value), 'expr']
 
         def get_expr_for_operand(self, combined_variable):
             """Gives out SymPy Codegen AST node
