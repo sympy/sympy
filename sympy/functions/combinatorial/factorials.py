@@ -971,85 +971,84 @@ class binomial(CombinatorialFunction):
             if not rv.has(gamma):
                 return rv
         else:
+            if HAS_GMPY and n.is_number and k.is_number:
+                from sympy.core.compatibility import gmpy
+                return Ntype(gmpy.bincoef(n, k))
             res = ff(n, k)/factorial(k)
             if not res.has(ff):
                 return _mexpand(res) if res else res
-            if HAS_GMPY:
-                from sympy.core.compatibility import gmpy
-                return Ntype(gmpy.bincoef(n, k))
 
     @classmethod
     def eval(cls, n, k):
         from sympy import Pow
         n, k = map(sympify, (n, k))
         n_k = n - k
+        nint, kint, n_kint = [int_like(i) for i in (n, k, n_k)]
 
         # Known Properties for faster computation
         if k.is_zero or n_k.is_zero:
             return S.One
         if S.One in (k, n_k):
             return n
-        if n.is_integer and n.is_negative:
-            if k.is_integer is False:
+        if nint and n.is_negative:
+            if kint is False:
                 return S.ComplexInfinity
 
         # 0 <= k <= n
         if n.is_nonnegative and k.is_nonnegative:
             if n_k.is_nonnegative:
-                if k.is_integer is False or n.is_integer is False:
-                    return (cls._eval(n, k, 'gamma'))
+                if kint is False or nint is False:
+                    return cls._eval(n, k, 'gamma')
                 if n.is_number and k.is_number:
-                    return (cls._eval(n, k))
+                    return cls._eval(n, k)
 
         # n < 0 <= k
         if n.is_negative and k.is_nonnegative:
-            if n.is_number and k.is_integer:
+            if n.is_number and kint:
                 n = -n + k - 1
-                res = (cls._eval(n, k))
-                if res is not None:
-                    return Pow(S.NegativeOne, k)*res
-            return (cls._eval(n, k, 'gamma'))
+                res = cls._eval(n, k)
+                return res if res is None else Pow(S.NegativeOne, k)*res
+            return cls._eval(n, k, 'gamma')
 
         # k <= n < 0
         if n.is_negative and k.is_negative:
             if n_k.is_nonnegative:
                 if n.is_number:
-                    if k.is_integer and n.is_integer:
+                    if kint and nint:
                         n, k = -k - 1, n - k
-                        res = (cls._eval(n, k))
-                        if res is not None:
-                            return Pow(S.NegativeOne, k)*res
-                return (cls._eval(n, k, 'gamma'))
+                        res = cls._eval(n, k)
+                        return res if res is None else Pow(S.NegativeOne, k)*res
+                return cls._eval(n, k, 'gamma')
 
         # 0 <= n < k
         if k.is_positive and n.is_nonnegative:
             if n_k.is_negative:
-                if n.is_integer and k.is_integer:
+                if nint and kint:
                     return S.Zero
-                if k.is_integer:
-                    return (cls._eval(n, k))
-                return (cls._eval(n, k, 'gamma'))
+                if kint:
+                    return cls._eval(n, k)
+                return cls._eval(n, k, 'gamma')
 
         # k < 0 <= n
         if n.is_extended_nonnegative and k.is_negative:
-            if k.is_integer:
+            if kint:
                 return S.Zero
-            if n_k.is_integer:
-                return (cls._eval(n, n_k))
-            return (cls._eval(n, k, 'gamma'))
+            if n_kint:
+                return cls._eval(n, n_k)
+            return cls._eval(n, k, 'gamma')
 
         # n < k < 0
         if k.is_negative and n.is_negative:
             if n_k.is_negative:
-                if n.is_integer and k.is_integer:
+                if nint and kint:
                     return S.Zero
-                return (cls._eval(n, k, 'gamma'))
+                return cls._eval(n, k, 'gamma')
 
         # Support for Complex numbers and so on
         if k.is_number:
-            if int_like(k) and n.is_number:
+            if kint and n.is_number:
                 return cls._eval(n, k)
-            elif int_like(k) is False:
+            elif kint is False:
                 return cls._eval(n, k ,'gamma')
 
     def _eval_Mod(self, q):
