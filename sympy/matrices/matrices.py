@@ -1077,8 +1077,8 @@ class MatrixBase(MatrixDeprecated,
                             r, c, flatT = cls._handle_creation_inputs(
                                 [i.T for i in row])
                             T = reshape(flatT, [c])
-                            flat = [T[i][j] for j in range(c) for i
-                            in range(r)]
+                            flat = \
+                                [T[i][j] for j in range(c) for i in range(r)]
                             r, c = c, r
                         else:
                             r = 1
