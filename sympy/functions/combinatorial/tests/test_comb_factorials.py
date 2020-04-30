@@ -456,6 +456,12 @@ def test_binomial():
     assert unchanged(binomial, n, p)
     assert unchanged(binomial, n, k)
     assert unchanged(binomial, n, n + p)
+    assert unchanged(binomial, kn, x)
+    assert unchanged(binomial, x, kn - 1)
+    assert unchanged(binomial, u, -u)
+    assert unchanged(binomial, u, 2*u)
+    assert unchanged(binomial, 2*u, u)
+    assert unchanged(binomial, v, v + p)
 
     assert unchanged(binomial, n, 3)
     assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
@@ -467,6 +473,9 @@ def test_binomial():
     assert expand_func(binomial(x + 1, x - 1)) == x*(x + 1)/2
     assert expand_func(binomial(x**2 + 1, x**2)) == x**2 + 1
 
+    assert binomial(2*kn, kn) == 0
+    assert binomial(2*kn - S.Half, kn - S.Half) == 0
+    assert binomial(-S.Half, S.Half*3) == 0
     assert binomial(n, k).is_integer
     assert binomial(nt, k).is_integer is None
     assert binomial(k, nt).is_integer is None
