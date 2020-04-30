@@ -1002,8 +1002,8 @@ class binomial(CombinatorialFunction):
                 return
         if kint and k.is_negative:
             if (k + 1).is_zero:
-                if (n + 1).is_zero:
-                    return S.One
+                # case of n = -1 covered by n - k = 0 above
+                # so only handle non-True cases here
                 if (n + 1).is_zero is False:
                     return S.Zero
                 return
@@ -1012,7 +1012,10 @@ class binomial(CombinatorialFunction):
                     return S.Zero
                 if nint is None:
                     return
-            else:
+            elif (n - k).is_zero is None:
+                # k is negative and we aren't sure that it
+                # is not -1 and since we don't know if n == k
+                # we must return
                 return
         elif nint is False and kint is False and \
                 n_kint and n_k.is_negative:
@@ -1033,8 +1036,13 @@ class binomial(CombinatorialFunction):
                 n = -n + k - 1
                 res = cls._eval(n, k)
                 return res if res is None else Pow(S.NegativeOne, k)*res
-            if kint is False:
-                return cls._eval(n, k, 'gamma')
+            # if k is not an integer then we have n = neq, k=pos
+            # gamma(neg + 1)/(gamma(pos + 1)*gamma(neg - pos + 1))
+            # and the only gamma that will evaluate is that which is an
+            # odd multiple of S.Half; but if neg and pos are odd
+            # multiples of 1/2 then the difference will be an integer
+            # and that has already been handled with the check for n
+            # and k not integer but n - k is a negative integer
             return
 
         # k <= n < 0
@@ -1049,7 +1057,7 @@ class binomial(CombinatorialFunction):
                 return
 
         # 0 <= n < k
-        if k.is_positive and n.is_nonnegative:
+        if n.is_nonnegative and k.is_positive:
             if n_k.is_negative:
                 if nint and kint:
                     return S.Zero
@@ -1076,14 +1084,15 @@ class binomial(CombinatorialFunction):
             if n_k.is_negative:
                 if n_kint:
                     return S.Zero
-                if kint:
-                    return S.Zero
+                # already handled kint and k < 0 above
+                # so only this is left:
                 if kint is False and n_kint is False:
                     return cls._eval(n, k, 'gamma')
+                return
 
-        # Support for Complex numbers and so on
-        if k.is_number:
-            if kint and n.is_number:
+        # other numbers
+        if k.is_number and n.is_number:
+            if kint:
                 return cls._eval(n, k)
             elif kint is False:
                 return cls._eval(n, k ,'gamma')
