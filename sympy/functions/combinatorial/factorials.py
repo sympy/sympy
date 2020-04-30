@@ -972,9 +972,13 @@ class binomial(CombinatorialFunction):
             if not rv.has(gamma):
                 return rv
         else:
-            if HAS_GMPY and n.is_number and k.is_number:
-                from sympy.core.compatibility import gmpy
-                return Ntype(gmpy.bincoef(n, k))
+            if HAS_GMPY:
+                try:
+                    from sympy.core.compatibility import gmpy, as_int
+                    n, k = map(as_int, (n, k))
+                    return Ntype(gmpy.bincoef(n, k))
+                except ValueError:
+                    pass
             res = ff(n, k)/factorial(k)
             if not res.has(ff):
                 return _mexpand(res) if res else res
