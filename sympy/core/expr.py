@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 from typing import Tuple as tTuple
 
-
 from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
