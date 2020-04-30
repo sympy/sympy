@@ -418,7 +418,7 @@ def test_binomial():
     v = Symbol('v', nonnegative=True)
     p = Symbol('p', positive=True)
     z = Symbol('z', zero=True)
-    # nz = Symbol('z', zero=False)
+    nz = Symbol('nz', zero=False, integer=False)
 
     i, j = symbols('i, j', finite=True)
     assert binomial(i, i - j).equals(binomial(i, j))
@@ -444,9 +444,9 @@ def test_binomial():
     assert binomial(x + 1, x) == x + 1
 
     assert unchanged(binomial, x, -1)
-    # assert binomial(-1 + nz, -1) == 0
-    assert binomial(v, v + 1) == 0
-    # assert binomial(nt, nt + 1) == 0
+    assert binomial(-1 + nz, -1) == 0
+    assert binomial(v, v + i) == 0
+    assert binomial(nt, nt + 1) == 0
     assert unchanged(binomial, x, x + 1)  # Piecewise((0, Ne(n, -1)), (1, True))
 
     assert unchanged(binomial, kp, -kn)
