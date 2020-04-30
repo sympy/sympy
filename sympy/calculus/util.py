@@ -1404,7 +1404,6 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min >= other:
                 return False
-        return None
 
     def _eval_is_gt(self, other):
 
