@@ -1069,7 +1069,6 @@ class MatrixBase(MatrixDeprecated,
                         if hasattr(row, '__array__'):
                             if 0 in row.shape:
                                 continue
-                            r, c, flat = cls._handle_ndarray(row)
                         elif not row:
                             continue
 
