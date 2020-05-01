@@ -43,11 +43,11 @@ Refrences
 """
 
 if cin:
-    from sympy.codegen.ast import (Variable, IntBaseType,
-        FloatBaseType, String, Integer, Float, FunctionPrototype,
-        FunctionDefinition, FunctionCall, none, Return, Assignment,
-        Type, int8, int16, int64, uint8, uint16, uint32, uint64,
-        float64, float80, aug_assign)
+    from sympy.codegen.ast import (Variable, Integer, Float,
+        FunctionPrototype, FunctionDefinition, FunctionCall,
+        none, Return, Assignment, intc, int8, int16, int64,
+        uint8, uint16, uint32, uint64, float32, float64, float80,
+        aug_assign, bool_)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
         PreIncrement, PostIncrement)
     from sympy.core import Add, Mod, Mul, Pow, Rel
@@ -91,6 +91,26 @@ if cin:
             """Initializes the code converter"""
             super(CCodeConverter, self).__init__()
             self._py_nodes = []
+            self._data_types = {
+                "bool": {
+                    cin.TypeKind.BOOL: bool_
+                },
+                "int": {
+                    cin.TypeKind.SCHAR: int8,
+                    cin.TypeKind.SHORT: int16,
+                    cin.TypeKind.INT: intc,
+                    cin.TypeKind.LONG: int64,
+                    cin.TypeKind.UCHAR: uint8,
+                    cin.TypeKind.USHORT: uint16,
+                    cin.TypeKind.UINT: uint32,
+                    cin.TypeKind.ULONG: uint64
+                },
+                "float": {
+                    cin.TypeKind.FLOAT: float32,
+                    cin.TypeKind.DOUBLE: float64,
+                    cin.TypeKind.LONGDOUBLE: float80
+                }
+            }
 
         def parse(self, filenames, flags):
             """Function to parse a file with C source code
@@ -236,8 +256,8 @@ if cin:
                 while child.kind == cin.CursorKind.NAMESPACE_REF:
                     child = next(children)
 
-                # while child.kind == cin.CursorKind.TYPE_REF:
-                #     child = next(children)
+                while child.kind == cin.CursorKind.TYPE_REF:
+                    child = next(children)
 
                 val = self.transform(child)
                 # List in case of variable assignment,
@@ -246,32 +266,8 @@ if cin:
                     or child.kind == cin.CursorKind.FLOATING_LITERAL
                     or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
 
-                    supported_int_types = [cin.TypeKind.SCHAR,
-                    cin.TypeKind.SHORT, cin.TypeKind.INT,
-                    cin.TypeKind.LONG, cin.TypeKind.UCHAR,
-                    cin.TypeKind.USHORT, cin.TypeKind.UINT,
-                    cin.TypeKind.ULONG]
-
-                    supported_float_types = [cin.TypeKind.FLOAT,
-                    cin.TypeKind.DOUBLE, cin.TypeKind.LONGDOUBLE]
-
-                    if node.type.kind in supported_int_types:
-                        if node.type.kind == cin.TypeKind.SCHAR:
-                            type = int8
-                        elif node.type.kind == cin.TypeKind.SHORT:
-                            type = int16
-                        elif node.type.kind == cin.TypeKind.INT:
-                            type = IntBaseType(String('integer'))
-                        elif node.type.kind == cin.TypeKind.LONG:
-                            type = int64
-                        elif node.type.kind == cin.TypeKind.UCHAR:
-                            type = uint8
-                        elif node.type.kind == cin.TypeKind.USHORT:
-                            type = uint16
-                        elif node.type.kind == cin.TypeKind.UINT:
-                            type = uint32
-                        elif node.type.kind == cin.TypeKind.ULONG:
-                            type = uint64
+                    if node.type.kind in self._data_types["int"]:
+                        type = self._data_types["int"][node.type.kind]
 
                         # when only one decl_ref_expr is assigned
                         # e.g., int b = a;
@@ -290,13 +286,8 @@ if cin:
                         else:
                             value = val
 
-                    elif node.type.kind in supported_float_types:
-                        if node.type.kind == cin.TypeKind.FLOAT:
-                            type = FloatBaseType(String('real'))
-                        elif node.type.kind == cin.TypeKind.DOUBLE:
-                            type = float64
-                        elif node.type.kind == cin.TypeKind.LONGDOUBLE:
-                            type = float80
+                    elif node.type.kind in self._data_types["float"]:
+                        type = self._data_types["float"][node.type.kind]
 
                         # e.g., float b = a;
                         if isinstance(val, str):
@@ -311,8 +302,8 @@ if cin:
                         else:
                             value = val
 
-                    elif (node.type.kind == cin.TypeKind.BOOL):
-                        type = Type(String('bool'))
+                    elif node.type.kind in self._data_types["bool"]:
+                        type = self._data_types["bool"][node.type.kind]
                         # e.g., bool b = a;
                         if isinstance(val, str):
                             value = Symbol(val)
@@ -343,12 +334,12 @@ if cin:
                     or child.kind == cin.CursorKind.PAREN_EXPR
                     or child.kind == cin.CursorKind.UNARY_OPERATOR
                     or child.kind == cin.CursorKind.CXX_BOOL_LITERAL_EXPR):
-                    if (node.type.kind == cin.TypeKind.INT):
-                        type = IntBaseType(String('integer'))
-                    elif (node.type.kind == cin.TypeKind.FLOAT):
-                        type = FloatBaseType(String('real'))
-                    elif (node.type.kind == cin.TypeKind.BOOL):
-                        type = Type(String('bool'))
+                    if node.type.kind in self._data_types["int"]:
+                        type = self._data_types["int"][node.type.kind]
+                    elif node.type.kind in self._data_types["float"]:
+                        type = self._data_types["float"][node.type.kind]
+                    elif node.type.kind in self._data_types["bool"]:
+                        type = self._data_types["bool"][node.type.kind]
                     else:
                         raise NotImplementedError("Only bool, int "
                             "and float are supported")
@@ -365,18 +356,18 @@ if cin:
 
             except StopIteration:
 
-                if (node.type.kind == cin.TypeKind.INT):
-                    type = IntBaseType(String('integer'))
+                if node.type.kind in self._data_types["int"]:
+                    type = self._data_types["int"][node.type.kind]
                     value = Integer(0)
-                elif (node.type.kind == cin.TypeKind.FLOAT):
-                    type = FloatBaseType(String('real'))
+                elif node.type.kind in self._data_types["float"]:
+                    type = self._data_types["float"][node.type.kind]
                     value = Float(0.0)
-                elif (node.type.kind == cin.TypeKind.BOOL):
-                    type = Type(String('bool'))
+                elif node.type.kind in self._data_types["bool"]:
+                    type = self._data_types["bool"][node.type.kind]
                     value = false
                 else:
                     raise NotImplementedError("Only bool, int "
-                            "and float are supported")
+                        "and float are supported")
 
             return Variable(
                 node.spelling
@@ -400,16 +391,40 @@ if cin:
 
 
             """
-            token = node.get_tokens()
-            c_ret_type = next(token).spelling
-            if (c_ret_type == 'void'):
-                ret_type = none
-            elif(c_ret_type == 'int'):
-                ret_type = IntBaseType(String('integer'))
-            elif (c_ret_type == 'float'):
-                ret_type = FloatBaseType(String('real'))
+            tokens_spelling = [
+            token.spelling for token in node.get_tokens()]
+
+            curr_ret_type = ''
+            for spelling in tokens_spelling:
+                if spelling == node.spelling:
+                    curr_ret_type = curr_ret_type[:-1]
+                    break
+                curr_ret_type += spelling + ' '
+
+            ret_types = {
+            'void': none,
+            'bool': bool_,
+            'unsigned char': int8,
+            'short' : int16,
+            'short int' : int16,
+            'signed short': int16,
+            'signed short int': int16,
+            'int': intc,
+            'signed int': intc,
+            'long': int64,
+            'long int': int64,
+            'signed long': int64,
+            'signed long int': int64,
+            'float': float32,
+            'double': float64,
+            'long double': float80
+            }
+
+            if curr_ret_type in ret_types:
+                ret_type = ret_types[curr_ret_type]
             else:
-                raise NotImplementedError("Variable not yet supported")
+                raise NotImplementedError("Only bool, int "
+                        "and float are supported")
             body = []
             param = []
             try:
@@ -476,12 +491,18 @@ if cin:
             ValueError if multiple children encountered in the parameter node
 
             """
-            if (node.type.kind == cin.TypeKind.INT):
-                type = IntBaseType(String('integer'))
+            if node.type.kind in self._data_types["int"]:
+                type = self._data_types["int"][node.type.kind]
                 value = Integer(0)
-            elif (node.type.kind == cin.TypeKind.FLOAT):
-                type = FloatBaseType(String('real'))
+            elif node.type.kind in self._data_types["float"]:
+                type = self._data_types["float"][node.type.kind]
                 value = Float(0.0)
+            elif node.type.kind in self._data_types["bool"]:
+                type = self._data_types["bool"][node.type.kind]
+                value = false
+            else:
+                raise NotImplementedError("Only bool, int "
+                    "and float are supported")
             try:
                 children = node.get_children()
                 child = next(children)
@@ -494,10 +515,18 @@ if cin:
 
                 # If there is a child, it is the default value of the parameter.
                 lit = self.transform(child)
-                if (node.type.kind == cin.TypeKind.INT):
+                if node.type.kind in self._data_types["int"]:
+                    type = self._data_types["int"][node.type.kind]
                     val = Integer(lit)
-                elif (node.type.kind == cin.TypeKind.FLOAT):
+                elif node.type.kind in self._data_types["float"]:
+                    type = self._data_types["float"][node.type.kind]
                     val = Float(lit)
+                elif node.type.kind in self._data_types["bool"]:
+                    type = self._data_types["bool"][node.type.kind]
+                    val = sympify(bool(lit))
+                else:
+                    raise NotImplementedError("Only bool, int "
+                        "and float are supported")
 
                 param = Variable(
                     node.spelling
