@@ -522,7 +522,7 @@ if cin:
                 )
 
             try:
-                value = self.transform(next(children))
+                self.transform(next(children))
                 raise ValueError("Can't handle multiple children on parameter")
             except StopIteration:
                 pass
