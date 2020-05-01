@@ -313,9 +313,9 @@ if cin:
                 elif child.kind == cin.CursorKind.CALL_EXPR:
                     return Variable(
                         node.spelling
-                    ).as_Declaration(
-                        value = val
-                    )
+                        ).as_Declaration(
+                            value = val
+                        )
 
                 else:
                     raise NotImplementedError("Given "
