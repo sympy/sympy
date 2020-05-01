@@ -2807,7 +2807,7 @@ def _convert_meijerint(func, x, initcond=True, domain=QQ):
         a = d[b]
 
         t = b.as_base_exp()
-        b = t[1] if t[0] is x else S.Zero
+        b = t[1] if t[0] == x else S.Zero
         r = s / b
         an = (i + r for i in func.args[0][0])
         ap = (i + r for i in func.args[0][1])
