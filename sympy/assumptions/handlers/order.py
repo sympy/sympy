@@ -31,10 +31,10 @@ class AskNegativeHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         r, i = expr.as_real_imag()
-        # If the imaginary part can symbolically be shown to be zero then
-        # we just evaluate the real part; otherwise we evaluate the imaginary
-        # part to see if it actually evaluates to zero and if it does then
-        # we make the comparison between the real part and zero.
+        """If the imaginary part can symbolically be shown to be zero then
+        we just evaluate the real part; otherwise we evaluate the imaginary
+        part to see if it actually evaluates to zero and if it does then
+        we make the comparison between the real part and zero."""
         if not i:
             r = r.evalf(2)
             if r._prec != 1:
@@ -297,7 +297,7 @@ class AskNonPositiveHandler(CommonHandler):
 class AskPositiveHandler(CommonHandler):
     """
     Handler for key 'positive'
-    Test that an expression is greater (strict) than zero
+    Test that an expression is strictly greater than zero
     """
 
     @staticmethod
@@ -307,10 +307,10 @@ class AskPositiveHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         r, i = expr.as_real_imag()
-        # If the imaginary part can symbolically be shown to be zero then
-        # we just evaluate the real part; otherwise we evaluate the imaginary
-        # part to see if it actually evaluates to zero and if it does then
-        # we make the comparison between the real part and zero.
+        """If the imaginary part can symbolically be shown to be zero then
+        we just evaluate the real part; otherwise we evaluate the imaginary
+        part to see if it actually evaluates to zero and if it does then
+        we make the comparison between the real part and zero."""
         if not i:
             r = r.evalf(2)
             if r._prec != 1:
@@ -411,14 +411,11 @@ class AskPositiveHandler(CommonHandler):
                 return None
         if pos_inf and neg_inf:
             return None
-        elif inf and pos_inf:
+        elif (inf and pos_inf) or (pos and not npos):
             return True
-        elif inf and neg_inf:
+        elif (inf and neg_inf) or (not pos and not nneg):
             return False
-        elif pos and not npos:
-            return True
-        elif not pos and not nneg:
-            return False
+
 
     @staticmethod
     def Pow(expr, assumptions):
