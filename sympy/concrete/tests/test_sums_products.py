@@ -1301,13 +1301,34 @@ def test_empty_sequence():
     assert Sum(x, (x, -oo, oo), (y, 1, 0)).doit() == 0
     assert Sum(x, (y, 1, 0), (x, -oo, oo)).doit() == 0
 
-@XFAIL
+
 def test_issue_8016():
-    # This Fails because the Knuth Implementation has since been replaced
-    k, n , m = symbols('k n m', positive=True, integer=True)
+    # in order to let the binomials simplify to gamma without
+    # restriction we need to declare the symbols as non-integer
+    k, m, n = symbols('k m n', integer=False, positive=True)
     s = Sum(binomial(m, k)*binomial(m, n - k)*(-1)**k, (k, 0, n))
-    assert s.doit().simplify() == \
-            cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
+    ans = gamma(1 - n/2)*gamma(m + 1)/(
+        gamma(1 - n)*gamma(n + 1)*gamma(m - n/2 + 1))
+    assert s.doit() == ans
+    # simplification with non-integer is not the same as with integer
+    got1 = ans.simplify()
+    assert got1 == -sin(pi*n)*gamma(-n/2)*gamma(m + 1)/(
+        2*pi*gamma(m - n/2 + 1))
+    oldn = n
+    oldm = m
+    m, n = symbols('m n', integer=True)
+    reps = {oldn: n, oldm: m}
+    # if the non-integers are replaced with integers, the answer is 0
+    assert got1.subs(reps) == 0
+    # if we replace non-integers with integers *before* simplification
+    # we get a different simplification
+    got2 = ans.subs(reps).simplify()
+    assert got2 != 0
+    # this was the answer before changes were made to binomial
+    got3 = cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
+    # the before and after forms are equivalent
+    assert (got2/got3).simplify() == 1
+
 
 @XFAIL
 def test_issue_14313():
