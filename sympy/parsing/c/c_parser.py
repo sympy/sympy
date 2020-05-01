@@ -272,72 +272,50 @@ if cin:
                     child = next(children)
 
                 val = self.transform(child)
-                # List in case of variable assignment,
-                # FunctionCall node in case of a function call
-                if (child.kind == cin.CursorKind.INTEGER_LITERAL
-                    or child.kind == cin.CursorKind.FLOATING_LITERAL
-                    or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
 
-                    if node.type.kind in self._data_types["int"]:
-                        # when only one decl_ref_expr is assigned
-                        # e.g., int b = a;
-                        if isinstance(val, str):
-                            value = Symbol(val)
-                        # e.g., int b = true;
-                        elif isinstance(val, bool):
+                supported_rhs = [
+                    cin.CursorKind.INTEGER_LITERAL,
+                    cin.CursorKind.FLOATING_LITERAL,
+                    cin.CursorKind.UNEXPOSED_EXPR,
+                    cin.CursorKind.BINARY_OPERATOR,
+                    cin.CursorKind.PAREN_EXPR,
+                    cin.CursorKind.UNARY_OPERATOR,
+                    cin.CursorKind.CXX_BOOL_LITERAL_EXPR
+                ]
+
+                if child.kind in supported_rhs:
+                    if isinstance(val, str):
+                        value = Symbol(val)
+                    elif isinstance(val, bool):
+                        if node.type.kind in self._data_types["int"]:
                             value = Integer(0) if val == False else Integer(1)
-                        # when val is integer or character literal
-                        # e.g., int b = 1; or int b = 'a';
-                        elif isinstance(val, (Integer, int, Float, float)):
-                            value = Integer(val)
-                        # when val is combination of both of the above
-                        # but in total only two nodes on rhs
-                        # e.g., int b = a * 1;
-                        else:
-                            value = val
-
-                    elif node.type.kind in self._data_types["float"]:
-                        # e.g., float b = a;
-                        if isinstance(val, str):
-                            value = Symbol(val)
-                        # e.g., float b = true;
-                        elif isinstance(val, bool):
+                        elif node.type.kind in self._data_types["float"]:
                             value = Float(0.0) if val == False else Float(1.0)
-                        # e.g., float b = 1.0;
-                        elif isinstance(val, (Integer, int, Float, float)):
+                        elif node.type.kind in self._data_types["bool"]:
+                            value = sympify(val)
+                    elif isinstance(val, (Integer, int, Float, float)):
+                        if node.type.kind in self._data_types["int"]:
+                            value = Integer(val)
+                        elif node.type.kind in self._data_types["float"]:
                             value = Float(val)
-                        # e.g., float b = a * 1.0;
-                        else:
-                            value = val
-
-                    elif node.type.kind in self._data_types["bool"]:
-                        # e.g., bool b = a;
-                        if isinstance(val, str):
-                            value = Symbol(val)
-                        # e.g., bool b = 1;
-                        elif isinstance(val, (Integer, int, Float, float)):
+                        elif node.type.kind in self._data_types["bool"]:
                             value = sympify(bool(val))
-                        # e.g., bool b = a * 1;
-                        else:
-                            value = val
+                    else:
+                        value = val
 
-                elif (child.kind == cin.CursorKind.CALL_EXPR):
+                    return Variable(
+                    node.spelling
+                    ).as_Declaration(
+                        type = type,
+                        value = value
+                    )
+
+                elif child.kind == cin.CursorKind.CALL_EXPR:
                     return Variable(
                         node.spelling
                     ).as_Declaration(
                         value = val
                     )
-
-                # when val is combination of more than two expr and
-                # integer(or float) i.e. it has binary operator
-                # Or var decl has parenthesis in the rhs(as a parent Clang node)
-                # Or it has unary operator
-                # Or it has boolean literal on rhs i.e. true or false
-                elif (child.kind == cin.CursorKind.BINARY_OPERATOR
-                    or child.kind == cin.CursorKind.PAREN_EXPR
-                    or child.kind == cin.CursorKind.UNARY_OPERATOR
-                    or child.kind == cin.CursorKind.CXX_BOOL_LITERAL_EXPR):
-                    value = val
 
                 else:
                     raise NotImplementedError("Given "
@@ -353,13 +331,6 @@ if cin:
                 node.spelling
                 ).as_Declaration(
                     type = type
-                )
-
-            return Variable(
-                node.spelling
-                ).as_Declaration(
-                    type = type,
-                    value = value
                 )
 
         def transform_function_decl(self, node):
