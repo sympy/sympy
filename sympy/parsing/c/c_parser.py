@@ -402,22 +402,28 @@ if cin:
                 curr_ret_type += spelling + ' '
 
             ret_types = {
-            'void': none,
-            'bool': bool_,
-            'unsigned char': int8,
-            'short' : int16,
-            'short int' : int16,
-            'signed short': int16,
-            'signed short int': int16,
-            'int': intc,
-            'signed int': intc,
-            'long': int64,
-            'long int': int64,
-            'signed long': int64,
-            'signed long int': int64,
-            'float': float32,
-            'double': float64,
-            'long double': float80
+                'void': none,
+                'bool': bool_,
+                'signed char': int8,
+                'unsigned char': uint8,
+                'short' : int16,
+                'short int' : int16,
+                'signed short': int16,
+                'signed short int': int16,
+                'unsigned short': uint16,
+                'unsigned short int': uint16,
+                'int': intc,
+                'signed int': intc,
+                'unsigned int': uint32,
+                'long': int64,
+                'long int': int64,
+                'signed long': int64,
+                'signed long int': int64,
+                'unsigned long': uint64,
+                'unsigned long int': uint64,
+                'float': float32,
+                'double': float64,
+                'long double': float80
             }
 
             if curr_ret_type in ret_types:
