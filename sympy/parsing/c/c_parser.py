@@ -92,6 +92,9 @@ if cin:
             super(CCodeConverter, self).__init__()
             self._py_nodes = []
             self._data_types = {
+                "void": {
+                    cin.TypeKind.VOID: none
+                },
                 "bool": {
                     cin.TypeKind.BOOL: bool_
                 },
@@ -358,23 +361,28 @@ if cin:
 
                 if node.type.kind in self._data_types["int"]:
                     type = self._data_types["int"][node.type.kind]
-                    value = Integer(0)
                 elif node.type.kind in self._data_types["float"]:
                     type = self._data_types["float"][node.type.kind]
-                    value = Float(0.0)
                 elif node.type.kind in self._data_types["bool"]:
                     type = self._data_types["bool"][node.type.kind]
-                    value = false
                 else:
                     raise NotImplementedError("Only bool, int "
                         "and float are supported")
+                value = None
 
-            return Variable(
-                node.spelling
-            ).as_Declaration(
-                type = type,
-                value = value
-            )
+            if value == None:
+                return Variable(
+                    node.spelling
+                ).as_Declaration(
+                    type = type
+                )
+            else:
+                return Variable(
+                    node.spelling
+                ).as_Declaration(
+                    type = type,
+                    value = value
+                )
 
         def transform_function_decl(self, node):
             """Transformation Function For Function Declaration
@@ -391,46 +399,18 @@ if cin:
 
 
             """
-            tokens_spelling = [
-            token.spelling for token in node.get_tokens()]
 
-            curr_ret_type = ''
-            for spelling in tokens_spelling:
-                if spelling == node.spelling:
-                    curr_ret_type = curr_ret_type[:-1]
-                    break
-                curr_ret_type += spelling + ' '
-
-            ret_types = {
-                'void': none,
-                'bool': bool_,
-                'signed char': int8,
-                'unsigned char': uint8,
-                'short' : int16,
-                'short int' : int16,
-                'signed short': int16,
-                'signed short int': int16,
-                'unsigned short': uint16,
-                'unsigned short int': uint16,
-                'int': intc,
-                'signed int': intc,
-                'unsigned int': uint32,
-                'long': int64,
-                'long int': int64,
-                'signed long': int64,
-                'signed long int': int64,
-                'unsigned long': uint64,
-                'unsigned long int': uint64,
-                'float': float32,
-                'double': float64,
-                'long double': float80
-            }
-
-            if curr_ret_type in ret_types:
-                ret_type = ret_types[curr_ret_type]
+            if node.result_type.kind in self._data_types["int"]:
+                ret_type = self._data_types["int"][node.result_type.kind]
+            elif node.result_type.kind in self._data_types["float"]:
+                ret_type = self._data_types["float"][node.result_type.kind]
+            elif node.result_type.kind in self._data_types["bool"]:
+                ret_type = self._data_types["bool"][node.result_type.kind]
+            elif node.result_type.kind in self._data_types["void"]:
+                ret_type = self._data_types["void"][node.result_type.kind]
             else:
-                raise NotImplementedError("Only bool, int "
-                        "and float are supported")
+                raise NotImplementedError("Only void, bool, int "
+                    "and float are supported")
             body = []
             param = []
             try:
@@ -499,13 +479,10 @@ if cin:
             """
             if node.type.kind in self._data_types["int"]:
                 type = self._data_types["int"][node.type.kind]
-                value = Integer(0)
             elif node.type.kind in self._data_types["float"]:
                 type = self._data_types["float"][node.type.kind]
-                value = Float(0.0)
             elif node.type.kind in self._data_types["bool"]:
                 type = self._data_types["bool"][node.type.kind]
-                value = false
             else:
                 raise NotImplementedError("Only bool, int "
                     "and float are supported")
@@ -522,13 +499,10 @@ if cin:
                 # If there is a child, it is the default value of the parameter.
                 lit = self.transform(child)
                 if node.type.kind in self._data_types["int"]:
-                    type = self._data_types["int"][node.type.kind]
                     val = Integer(lit)
                 elif node.type.kind in self._data_types["float"]:
-                    type = self._data_types["float"][node.type.kind]
                     val = Float(lit)
                 elif node.type.kind in self._data_types["bool"]:
-                    type = self._data_types["bool"][node.type.kind]
                     val = sympify(bool(lit))
                 else:
                     raise NotImplementedError("Only bool, int "
@@ -544,8 +518,7 @@ if cin:
                 param = Variable(
                     node.spelling
                 ).as_Declaration(
-                        type = type,
-                        value = value
+                    type = type
                 )
 
             try:
