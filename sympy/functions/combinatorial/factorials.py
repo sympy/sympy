@@ -913,7 +913,7 @@ class binomial(CombinatorialFunction):
     >>> b = binomial(n, 3); b
     binomial(n, 3)
 
-    When ``k`` is positive the polynomial expression
+    When $k$ is positive the polynomial expression
     can be viewed in either expanded or factored form:
 
     >>> b.expand(func=True)
@@ -960,8 +960,9 @@ class binomial(CombinatorialFunction):
 
     @classmethod
     def _eval(cls, n, k, method='ff'):
-        ''' This Contains the Barebones Implementation of
-        Newtons Generalized Binomial Theorem
+        '''return a binomial value using Newton's generalized binomial theorem
+        using either the falling factorial (default) or `gamma` representation; if
+        a number cannot be returned, return None.'''
         '''
 
         from sympy import gamma
@@ -1335,12 +1336,12 @@ class multinomial(CombinatorialFunction):
     .. math:: \frac{(k_1+k_2+\cdots+k_m)!}{k_1!\, k_2! \cdots k_m!} = {k_1\choose k_1}{k_1+k_2\choose k_2}\cdots{k_1+k_2+\cdots+k_m\choose k_m}
 
     The multinomial coefficients have a direct combinatorial interpretation,
-    as the number of ways of depositing ``n`` distinct objects into ``m`` bins,
-    with ``k_i`` objects in a given bin.
+    as the number of ways of depositing $n$ distinct objects into $m$ bins,
+    with $k_i$ objects in a given bin.
 
-    For non-integral values of ``k`` which sum to ``n``, the multinomial gives the
-    coefficient of the terms in the series expansion of ``(a_1 + a_2 + ... + a_m) ^ n`` where
-    ``k_i`` is the exponents of ``a_i`` in a term of the expansion.
+    For non-integral values of $k$ which sum to $n$, the multinomial gives the
+    coefficient of the terms in the series expansion of $(a_1 + a_2 + ... + a_m) ^ n$ where
+    $k_i$ is the exponent of $a_i$ in the expansion.
 
     Examples
     ========
@@ -1360,9 +1361,9 @@ class multinomial(CombinatorialFunction):
 
     The series expansion of `(1 + x)^(2/3)` yields the following leading terms when it
     is expanded:
-    ``1 + (2/3) x^1 - (1/9) x^2 + (4/81) x^3 - (7/243) x^4 + ...``. The coeffient of
-    ``x^2`` is given by ``multinomial(2, a)`` where (since the arguments must sum to 2/3)
-    ``a = -4/3``.
+    $1 + (2/3) x^1 - (1/9) x^2 + (4/81) x^3 - (7/243) x^4 + ...$. The coefficient of
+    $x^2$ is given by ``multinomial(2, a)`` where (since the arguments must sum to 2/3)
+    $a = -4/3$.
 
     >>> multinomial(2, Rational(-4, 3))
     -1/9
