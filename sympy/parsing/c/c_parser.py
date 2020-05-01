@@ -252,6 +252,15 @@ if cin:
             types
 
             """
+            if node.type.kind in self._data_types["int"]:
+                type = self._data_types["int"][node.type.kind]
+            elif node.type.kind in self._data_types["float"]:
+                type = self._data_types["float"][node.type.kind]
+            elif node.type.kind in self._data_types["bool"]:
+                type = self._data_types["bool"][node.type.kind]
+            else:
+                raise NotImplementedError("Only bool, int "
+                    "and float are supported")
             try:
                 children = node.get_children()
                 child = next(children)
@@ -270,8 +279,6 @@ if cin:
                     or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
 
                     if node.type.kind in self._data_types["int"]:
-                        type = self._data_types["int"][node.type.kind]
-
                         # when only one decl_ref_expr is assigned
                         # e.g., int b = a;
                         if isinstance(val, str):
@@ -290,8 +297,6 @@ if cin:
                             value = val
 
                     elif node.type.kind in self._data_types["float"]:
-                        type = self._data_types["float"][node.type.kind]
-
                         # e.g., float b = a;
                         if isinstance(val, str):
                             value = Symbol(val)
@@ -306,7 +311,6 @@ if cin:
                             value = val
 
                     elif node.type.kind in self._data_types["bool"]:
-                        type = self._data_types["bool"][node.type.kind]
                         # e.g., bool b = a;
                         if isinstance(val, str):
                             value = Symbol(val)
@@ -316,10 +320,6 @@ if cin:
                         # e.g., bool b = a * 1;
                         else:
                             value = val
-
-                    else:
-                        raise NotImplementedError("Only bool, int "
-                            "and float are supported")
 
                 elif (child.kind == cin.CursorKind.CALL_EXPR):
                     return Variable(
@@ -337,15 +337,6 @@ if cin:
                     or child.kind == cin.CursorKind.PAREN_EXPR
                     or child.kind == cin.CursorKind.UNARY_OPERATOR
                     or child.kind == cin.CursorKind.CXX_BOOL_LITERAL_EXPR):
-                    if node.type.kind in self._data_types["int"]:
-                        type = self._data_types["int"][node.type.kind]
-                    elif node.type.kind in self._data_types["float"]:
-                        type = self._data_types["float"][node.type.kind]
-                    elif node.type.kind in self._data_types["bool"]:
-                        type = self._data_types["bool"][node.type.kind]
-                    else:
-                        raise NotImplementedError("Only bool, int "
-                            "and float are supported")
                     value = val
 
                 else:
@@ -358,31 +349,14 @@ if cin:
                         ))
 
             except StopIteration:
-
-                if node.type.kind in self._data_types["int"]:
-                    type = self._data_types["int"][node.type.kind]
-                elif node.type.kind in self._data_types["float"]:
-                    type = self._data_types["float"][node.type.kind]
-                elif node.type.kind in self._data_types["bool"]:
-                    type = self._data_types["bool"][node.type.kind]
-                else:
-                    raise NotImplementedError("Only bool, int "
-                        "and float are supported")
                 value = None
 
-            if value == None:
-                return Variable(
-                    node.spelling
-                ).as_Declaration(
-                    type = type
-                )
-            else:
-                return Variable(
-                    node.spelling
-                ).as_Declaration(
-                    type = type,
-                    value = value
-                )
+            return Variable(
+                node.spelling
+            ).as_Declaration(
+                type = type,
+                value = value
+            )
 
         def transform_function_decl(self, node):
             """Transformation Function For Function Declaration
