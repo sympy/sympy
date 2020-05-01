@@ -962,7 +962,7 @@ class binomial(CombinatorialFunction):
     def _eval(cls, n, k, method='ff'):
         '''return a binomial value using Newton's generalized binomial theorem
         using either the falling factorial (default) or `gamma` representation; if
-        a number cannot be returned, return None.'''
+        a number cannot be returned, return None.
         '''
 
         from sympy import gamma
