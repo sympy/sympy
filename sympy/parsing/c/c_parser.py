@@ -349,14 +349,18 @@ if cin:
                         ))
 
             except StopIteration:
-                value = None
+                return Variable(
+                node.spelling
+                ).as_Declaration(
+                    type = type
+                )
 
             return Variable(
                 node.spelling
-            ).as_Declaration(
-                type = type,
-                value = value
-            )
+                ).as_Declaration(
+                    type = type,
+                    value = value
+                )
 
         def transform_function_decl(self, node):
             """Transformation Function For Function Declaration
