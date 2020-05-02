@@ -3550,12 +3550,11 @@ if cin:
         )
 
         c_src_raise1 = (
-            'int a = (int) 1.0;'
+            "char a = 'b';"
         )
 
         c_src_raise2 = (
-            'int a = 10;'
-            'int b = (a!=10)?(a):(0);'
+            'int a[] = {10, 20};'
         )
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
