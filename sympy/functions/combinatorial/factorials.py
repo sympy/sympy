@@ -20,15 +20,13 @@ from math import sqrt as _sqrt
 
 
 def int_like(x):
-    if x.is_integer is False:
-        if x.is_Float and int(x) == x:
-            return True
-        return False
-    return x.is_integer
+    """return True if x is like 1.0, 1 or Symbol('i', integer=True), else False or None."""
+    return int(x) == x if x.is_Float else x.is_integer
 
 
 def igen(i='i'):
-    """return unnumbered symbol and then numbered versions
+    """
+    Return unnumbered symbol and then numbered versions
 
     Examples
     ========

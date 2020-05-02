@@ -15,7 +15,7 @@ method which is available in Basic class. Here is simple example involving a
 polynomial:
 
     >>> from sympy import *
-    >>> n, k = symbols('n,k', nonnegative=True)
+    >>> n, k = symbols('n, k', nonnegative=True)
     >>> (n**2 + 1).is_hypergeometric(n)
     True
 
