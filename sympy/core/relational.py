@@ -1199,8 +1199,6 @@ def cmp(lhs, rhs, op):
 
             return test
 
-    return None
-
 
 def _cmp_eq(lhs, rhs):
     from sympy.core.add import Add
@@ -1253,8 +1251,6 @@ def _cmp_eq(lhs, rhs):
         if not (arglhs == S.NaN and argrhs == S.NaN):
             return fuzzy_bool(Eq(arglhs, argrhs))
 
-        return None
-
     if all(isinstance(i, Expr) for i in (lhs, rhs)):
         # see if the difference evaluates
         dif = lhs - rhs
@@ -1298,5 +1294,3 @@ def _cmp_eq(lhs, rhs):
             rv = False
         if rv is not None:
             return rv
-
-    return None

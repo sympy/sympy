@@ -1442,7 +1442,6 @@ class AccumulationBounds(AtomicExpr):
             if self.max <= other:
                 return False
 
-
     def _eval_is_ge(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
@@ -1477,7 +1476,6 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other:
                 return False
-
 
     def __contains__(self, other):
         """

@@ -24,8 +24,8 @@ class Expr(Basic, EvalfMixin):
     used only for argument storage and expression manipulation, i.e.
     pattern matching, substitutions, etc).
 
-    Should us _eval_is_X (_eval_is_gt/_eval_is_lt _eval_is_le) if we want to override
-    the comparison functions.
+    If you want to override the comparisons of expressions:
+    Should use _eval_is_X (where X is gt, ge, lt, or Eq).
     _eval_is_X should return None if you want to return the object unevaluated
 
     See Also
