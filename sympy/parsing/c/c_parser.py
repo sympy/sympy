@@ -236,8 +236,7 @@ if cin:
             Returns
             =======
 
-            A variable node as Declaration, with the given value or 0 if the
-            value is not provided
+            A variable node as Declaration, with the initial value if given
 
             Raises
             ======
@@ -248,8 +247,23 @@ if cin:
             Notes
             =====
 
-            This function currently only supports basic Integer and Float data
-            types
+            The function currently supports following data types:
+
+            Boolean:
+                bool, _Bool
+
+            Integer:
+                8-bit: signed char and unsigned char
+                16-bit: short, short int, signed short,
+                    signed short int, unsigned short, unsigned short int
+                32-bit: int, signed int, unsigned int
+                64-bit: long, long int, signed long,
+                    signed long int, unsigned long, unsigned long int
+
+            Floating point:
+                Single Precision: float
+                Double Precision: double
+                Extended Precision: long double
 
             """
             if node.type.kind in self._data_types["int"]:
