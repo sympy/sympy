@@ -8,7 +8,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
+    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -379,6 +379,8 @@ def test_latex_functions():
         r"\sin^{-1} {x^{2}}"
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
+    assert latex(asinh(x), inv_trig_style="full") == \
+        r"\operatorname{arcsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
