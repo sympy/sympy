@@ -316,16 +316,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 return quantile
         return self.compute_quantile(**kwargs)(x)
 
-class ContinuousDistributionHandmade(SingleContinuousDistribution):
-    _argnames = ('pdf',)
-
-    @property
-    def set(self):
-        return self.args[1]
-
-    def __new__(cls, pdf, set=Interval(-oo, oo)):
-        return Basic.__new__(cls, pdf, set)
-
 
 class ContinuousPSpace(PSpace):
     """ Continuous Probability Space
@@ -451,6 +441,7 @@ class ContinuousPSpace(PSpace):
                 dens = density(expr, **kwargs)
                 comp = 0
             if not isinstance(dens, ContinuousDistribution):
+                from sympy.stats.crv_types import ContinuousDistributionHandmade
                 dens = ContinuousDistributionHandmade(dens, set=self.domain.set)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)

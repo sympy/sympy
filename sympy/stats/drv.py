@@ -204,16 +204,6 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.pdf(*args)
 
 
-class DiscreteDistributionHandmade(SingleDiscreteDistribution):
-    _argnames = ('pdf',)
-
-    @property
-    def set(self):
-        return self.args[1]
-
-    def __new__(cls, pdf, set=S.Integers):
-        return Basic.__new__(cls, pdf, set)
-
 class DiscreteDomain(RandomDomain):
     """
     A domain with discrete support with step size one.
@@ -277,6 +267,7 @@ class DiscretePSpace(PSpace):
             expr = condition.lhs - condition.rhs
             dens = density(expr)
             if not isinstance(dens, DiscreteDistribution):
+                from sympy.stats.drv_types import DiscreteDistributionHandmade
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real=True)
             space = SingleDiscretePSpace(z, dens)

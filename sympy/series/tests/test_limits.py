@@ -2,7 +2,7 @@ from itertools import product as cartes
 
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, gamma, Symbol, S, pi, Integral, Rational, I,
+    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
     acos, erfi, LambertW, factorial, Ei, EulerGamma)
@@ -612,6 +612,15 @@ def test_issue_14590():
     assert limit((x**3*((x + 1)/x)**x)/((x + 1)*(x + 2)*(x + 3)), x, oo) == exp(1)
 
 
+def test_issue_14393():
+    a, b = symbols('a b')
+    assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a)*y**b/a
+
+
+def test_issue_14811():
+    assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
+
+
 def test_issue_17431():
     assert limit(((n + 1) + 1) / (((n + 1) + 2) * factorial(n + 1)) *
                  (n + 2) * factorial(n) / (n + 1), n, oo) == 0
@@ -632,12 +641,31 @@ def test_issue_18442():
     assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == AccumBounds(-oo, oo)
 
 
+def test_issue_18501():
+    assert limit(Abs(log(x - 1)**3 - 1), x, 1, '+') == oo
+
+
 def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
+
+def test_issue_18997():
+    assert limit(Abs(log(x)), x, 0) == oo
+    assert limit(Abs(log(Abs(x))), x, 0) == oo
+
+
+def test_issue_19026():
+    x = Symbol('x', positive=True)
+    assert limit(Abs(log(x) + 1)/log(x), x, oo) == 1
+
+
 def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
     assert limit(n + p, n, 0) == 0
+
+
+def test_issue_15055():
+    assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1

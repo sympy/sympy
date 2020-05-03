@@ -952,7 +952,7 @@ def test_atan():
     assert atan(1) == pi/4
     assert atan(sqrt(3)) == pi/3
     assert atan(-(1 + sqrt(2))) == pi*Rational(-3, 8)
-    assert atan(sqrt((5 - 2 * sqrt(5)))) == pi/5
+    assert atan(sqrt(5 - 2 * sqrt(5))) == pi/5
     assert atan(-sqrt(1 - 2 * sqrt(5)/ 5)) == -pi/10
     assert atan(sqrt(1 + 2 * sqrt(5) / 5)) == pi*Rational(3, 10)
     assert atan(-2 + sqrt(3)) == -pi/12
@@ -1836,3 +1836,8 @@ def test_as_real_imag():
     # please open up the issue again.
     expr = atan(I/(I + I*tan(1)))
     assert expr.as_real_imag() == (expr, 0)
+
+
+def test_issue_18746():
+    e3 = cos(S.Pi*(x/4 + 1/4))
+    assert e3.period() == 8

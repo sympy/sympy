@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple
@@ -390,8 +388,8 @@ class Polyhedron(Basic):
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
         # use the identity permutation if none are given
-        obj._pgroup = PermutationGroup((
-            pgroup or [Perm(range(len(corners)))] ))
+        obj._pgroup = PermutationGroup(
+            pgroup or [Perm(range(len(corners)))] )
         return obj
 
     @property

@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import copy
 
 from sympy.core.function import expand_mul
@@ -259,16 +257,15 @@ def _cholesky(M, hermitian=True):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _get_intermediate_simp(expand_mul, expand_mul)
     L   = MutableDenseMatrix.zeros(M.rows, M.rows)
 
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / L[j, j])*(M[i, j] -
+                L[i, j] = ((1 / L[j, j])*(M[i, j] -
                     sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
 
-            Lii2 = dps(M[i, i] -
+            Lii2 = (M[i, i] -
                 sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
 
             if Lii2.is_positive is False:
@@ -280,11 +277,11 @@ def _cholesky(M, hermitian=True):
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / L[j, j])*(M[i, j] -
+                L[i, j] = ((1 / L[j, j])*(M[i, j] -
                     sum(L[i, k]*L[j, k] for k in range(j))))
 
-            L[i, i] = sqrt(dps(M[i, i] -
-                sum(L[i, k]**2 for k in range(i))))
+            L[i, i] = sqrt(M[i, i] -
+                sum(L[i, k]**2 for k in range(i)))
 
     return M._new(L)
 
@@ -462,17 +459,16 @@ def _LDLdecomposition(M, hermitian=True):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _get_intermediate_simp(expand_mul, expand_mul)
     D   = MutableDenseMatrix.zeros(M.rows, M.rows)
     L   = MutableDenseMatrix.eye(M.rows)
 
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j))))
+                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
+                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
 
-            D[i, i] = dps(M[i, i] -
+            D[i, i] = (M[i, i] -
                 sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
 
             if D[i, i].is_positive is False:
@@ -482,10 +478,10 @@ def _LDLdecomposition(M, hermitian=True):
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j))))
+                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
+                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
 
-            D[i, i] = dps(M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
+            D[i, i] = M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
 
     return M._new(L), M._new(D)
 

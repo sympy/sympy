@@ -1,5 +1,4 @@
 """Base class for all the objects in SymPy"""
-from __future__ import print_function, division
 from collections import defaultdict
 from itertools import chain, zip_longest
 
@@ -27,9 +26,10 @@ def as_Basic(expr):
 
 class Basic(metaclass=ManagedProperties):
     """
-    Base class for all objects in SymPy.
+    Base class for all SymPy objects.
 
-    Conventions:
+    Notes and conventions
+    =====================
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
@@ -54,6 +54,19 @@ class Basic(metaclass=ManagedProperties):
     >>> cot(x)._args    # do not use this, use cot(x).args instead
     (x,)
 
+
+    3)  By "SymPy object" we mean something that can be returned by
+        ``sympify``.  But not all objects one encounters using SymPy are
+        subclasses of Basic.  For example, mutable objects are not:
+
+        >>> from sympy import Basic, Matrix, sympify
+        >>> A = Matrix([[1, 2], [3, 4]]).as_mutable()
+        >>> isinstance(A, Basic)
+        False
+
+        >>> B = sympify(A)
+        >>> isinstance(B, Basic)
+        True
     """
     __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
@@ -527,7 +540,7 @@ class Basic(metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        return set([])
+        return set()
 
     def as_dummy(self):
         """Return the expression with any objects having structurally
@@ -569,7 +582,7 @@ class Basic(metaclass=ManagedProperties):
             # replace bound
             x = x.xreplace(c)
             # undo masking
-            x = x.xreplace(dict((v, k) for k, v in d.items()))
+            x = x.xreplace({v: k for k, v in d.items()})
             return x
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
@@ -598,7 +611,7 @@ class Basic(metaclass=ManagedProperties):
         v = self.bound_symbols
         # this free will include bound symbols that are not part of
         # self's bound symbols
-        free = set([i.name for i in self.atoms(Symbol) - set(v)])
+        free = {i.name for i in self.atoms(Symbol) - set(v)}
         for v in v:
             d = next(dums)
             if v.is_Symbol:
@@ -1939,7 +1952,7 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal(object):
+class preorder_traversal:
     """
     Do a pre-order traversal of a tree.
 
@@ -2007,12 +2020,10 @@ class preorder_traversal(object):
                 else:
                     args = ordered(args)
             for arg in args:
-                for subtree in self._preorder_traversal(arg, keys):
-                    yield subtree
+                yield from self._preorder_traversal(arg, keys)
         elif iterable(node):
             for item in node:
-                for subtree in self._preorder_traversal(item, keys):
-                    yield subtree
+                yield from self._preorder_traversal(item, keys)
 
     def skip(self):
         """
@@ -2045,7 +2056,7 @@ class preorder_traversal(object):
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""
     try:
-        query = sympify(query)
+        query = _sympify(query)
     except SympifyError:
         pass
     if isinstance(query, type):

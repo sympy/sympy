@@ -1,16 +1,17 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
                    zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
-                   floor)
+                   floor, FiniteSet)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
-                         kurtosis)
+                         kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Hermite, Logarithmic,
-                                    NegativeBinomial, Skellam, YuleSimon, Zeta)
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta,
+                                    DiscreteRV)
 from sympy.stats.rv import sample
 from sympy.testing.pytest import slow, nocache_fail, raises, skip
 from sympy.external import import_module
@@ -37,12 +38,18 @@ def test_Poisson():
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
 
+@slow
 def test_GeometricDistribution():
     p = S.One / 5
     d = GeometricDistribution(p)
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+
+    X = Geometric('X', Rational(1, 5))
+    Y = Geometric('Y', Rational(3, 10))
+    assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
+
 
 def test_Hermite():
     a1 = Symbol("a1", positive=True)
@@ -157,6 +164,16 @@ def test_discrete_probability():
     assert P(G < 3) == x*(2-x)
     assert P(Eq(G, 3)) == x*(-x + 1)**2
 
+
+def test_DiscreteRV():
+    p = S(1)/2
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    D = DiscreteRV(x, pdf, set=S.Naturals)
+    assert E(D) == E(Geometric('G', S(1)/2)) == 2
+    assert P(D > 3) == S(1)/8
+    assert D.pspace.domain.set == S.Naturals
+    raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4))))
 
 def test_precomputed_characteristic_functions():
     import mpmath

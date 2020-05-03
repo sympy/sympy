@@ -7,7 +7,6 @@ References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
   - https://www.researchgate.net/publication/242384772_Implementations_of_the_DPLL_Algorithm
 """
-from __future__ import print_function, division
 
 from sympy import default_sort_key
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
@@ -300,7 +299,7 @@ def find_unit_clause_int_repr(clauses, model):
     (2, False)
 
     """
-    bound = set(model) | set(-sym for sym in model)
+    bound = set(model) | {-sym for sym in model}
     for clause in clauses:
         unbound = clause - bound
         if len(unbound) == 1:

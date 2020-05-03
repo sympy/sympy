@@ -7,7 +7,7 @@ SymPy Development Team
 .. literalinclude:: ../../AUTHORS
 
 
-You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.rst>`_.
+You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.md>`_.
 
 Financial and Infrastructure Support
 ------------------------------------
@@ -26,6 +26,9 @@ Financial and Infrastructure Support
   * in 2014 for 10 students (`GSoC 2014 <https://github.com/sympy/sympy/wiki/Gsoc-2014-report>`_)
   * in 2015 for 7 students (`GSoC 2015 <https://github.com/sympy/sympy/wiki/Gsoc-2015-report>`_)
   * in 2016 for 9 students (`GSoC 2016 <https://github.com/sympy/sympy/wiki/GSoC-2016-report>`_)
+  * in 2017 for 9 students (`GSoC 2017 <https://github.com/sympy/sympy/wiki/GSoC-2017-report>`_)
+  * in 2018 for 7 students (`GSoC 2018 <https://github.com/sympy/sympy/wiki/GSoC-2018-report>`_)
+  * in 2019 for 9 students (`GSoC 2019 <https://github.com/sympy/sympy/wiki/GSoC-2019-report>`_)
 
   Of these, we would like to thank these organizations for hosting GSoC students under their
   umbrella organizations:

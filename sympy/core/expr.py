@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Tuple as tTuple
 
 from .sympify import sympify, _sympify, SympifyError
@@ -1173,7 +1171,7 @@ class Expr(Basic, EvalfMixin):
         from .mul import Mul
         from .exprtools import decompose_power
 
-        gens, terms = set([]), []
+        gens, terms = set(), []
 
         for term in Add.make_args(self):
             coeff, _term = term.as_coeff_Mul()
@@ -2518,7 +2516,7 @@ class Expr(Basic, EvalfMixin):
         return res, n
 
     def _eval_is_polynomial(self, syms):
-        if self.free_symbols.intersection(syms) == set([]):
+        if self.free_symbols.intersection(syms) == set():
             return True
         return False
 
@@ -2584,14 +2582,14 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set([]):
+        if syms.intersection(self.free_symbols) == set():
             # constant polynomial
             return True
         else:
             return self._eval_is_polynomial(syms)
 
     def _eval_is_rational_function(self, syms):
-        if self.free_symbols.intersection(syms) == set([]):
+        if self.free_symbols.intersection(syms) == set():
             return True
         return False
 
@@ -2654,14 +2652,14 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set([]):
+        if syms.intersection(self.free_symbols) == set():
             # constant rational function
             return True
         else:
             return self._eval_is_rational_function(syms)
 
     def _eval_is_algebraic_expr(self, syms):
-        if self.free_symbols.intersection(syms) == set([]):
+        if self.free_symbols.intersection(syms) == set():
             return True
         return False
 
@@ -2712,7 +2710,7 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set([]):
+        if syms.intersection(self.free_symbols) == set():
             # constant algebraic expression
             return True
         else:
@@ -3641,17 +3639,8 @@ class Expr(Basic, EvalfMixin):
         Notes
         =====
 
-        The Python builtin function, round, always returns a
-        float in Python 2 while the SymPy round method (and
-        round with a Number argument in Python 3) returns a
-        Number.
-
-        >>> from sympy.core.compatibility import PY3
-        >>> isinstance(round(S(123), -2), Number if PY3 else float)
-        True
-
-        For a consistent behavior, and Python 3 rounding
-        rules, import `round` from sympy.core.compatibility.
+        The Python ``round`` function uses the SymPy ``round`` method so it
+        will always return a SymPy number (not a Python float or int):
 
         >>> isinstance(round(S(123), -2), Number)
         True
@@ -3669,11 +3658,10 @@ class Expr(Basic, EvalfMixin):
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_extended_real:
-            i, r = x.as_real_imag()
-            return i.round(n) + S.ImaginaryUnit*r.round(n)
+            r, i = x.as_real_imag()
+            return r.round(n) + S.ImaginaryUnit*i.round(n)
         if not x:
             return S.Zero if n is None else x
-
 
         p = as_int(n or 0)
 
@@ -3799,7 +3787,7 @@ class AtomicExpr(Atom, Expr):
         from sympy import Tuple, MatrixExpr
         from sympy.matrices.common import MatrixCommon
         if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
-            return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
+            return super()._eval_derivative_n_times(s, n)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
         else:
@@ -3922,7 +3910,7 @@ def unchanged(func, *args):
     return f.func == func and f.args == args
 
 
-class ExprBuilder(object):
+class ExprBuilder:
     def __init__(self, op, args=[], validator=None, check=True):
         if not hasattr(op, "__call__"):
             raise TypeError("op {} needs to be callable".format(op))
