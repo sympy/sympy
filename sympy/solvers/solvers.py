@@ -15,6 +15,7 @@ This module contain solvers for all kinds of equations:
 from __future__ import print_function, division
 
 from sympy import divisors, binomial, expand_func
+from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
@@ -27,7 +28,7 @@ from sympy.core.function import (expand_mul, expand_log,
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational
-from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.core.logic import fuzzy_not
 from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
@@ -40,7 +41,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1
+from sympy.simplify.fu import TR1, TR2i
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, degree
@@ -374,100 +375,6 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def failing_assumptions(expr, **assumptions):
-    """
-    Return a dictionary containing assumptions with values not
-    matching those of the passed assumptions.
-
-    Examples
-    ========
-
-    >>> from sympy import failing_assumptions, Symbol
-
-    >>> x = Symbol('x', real=True, positive=True)
-    >>> y = Symbol('y')
-    >>> failing_assumptions(6*x + y, real=True, positive=True)
-    {'positive': None, 'real': None}
-
-    >>> failing_assumptions(x**2 - 1, positive=True)
-    {'positive': None}
-
-    If *expr* satisfies all of the assumptions, an empty dictionary is returned.
-
-    >>> failing_assumptions(x**2, positive=True)
-    {}
-
-    """
-    expr = sympify(expr)
-    failed = {}
-    for key in list(assumptions.keys()):
-        test = getattr(expr, 'is_%s' % key, None)
-        if test is not assumptions[key]:
-            failed[key] = test
-    return failed  # {} or {assumption: value != desired}
-
-
-def check_assumptions(expr, against=None, **assumptions):
-    """
-    Checks whether expression *expr* satisfies all assumptions.
-
-    Explanation
-    ===========
-
-    *assumptions* is a dict of assumptions: {'assumption': True|False, ...}.
-
-    Examples
-    ========
-
-       >>> from sympy import Symbol, pi, I, exp, check_assumptions
-
-       >>> check_assumptions(-5, integer=True)
-       True
-       >>> check_assumptions(pi, real=True, integer=False)
-       True
-       >>> check_assumptions(pi, real=True, negative=True)
-       False
-       >>> check_assumptions(exp(I*pi/7), real=False)
-       True
-
-       >>> x = Symbol('x', real=True, positive=True)
-       >>> check_assumptions(2*x + 1, real=True, positive=True)
-       True
-       >>> check_assumptions(-2*x - 5, real=True, positive=True)
-       False
-
-       To check assumptions of *expr* against another variable or expression,
-       pass the expression or variable as ``against``.
-
-       >>> check_assumptions(2*x + 1, x)
-       True
-
-       ``None`` is returned if ``check_assumptions()`` could not conclude.
-
-       >>> check_assumptions(2*x - 1, real=True, positive=True)
-       >>> z = Symbol('z')
-       >>> check_assumptions(z, real=True)
-
-    See Also
-    ========
-
-    failing_assumptions
-
-    """
-    expr = sympify(expr)
-    if against:
-        if not isinstance(against, Symbol):
-            raise TypeError('against should be of type Symbol')
-        if assumptions:
-            raise AssertionError('No assumptions should be specified')
-        assumptions = against.assumptions0
-    def _test(key):
-        v = getattr(expr, 'is_' + key, None)
-        if v is not None:
-            return assumptions[key] is v
-    return fuzzy_and(_test(key) for key in assumptions)
-
-
 def solve(f, *symbols, **flags):
     r"""
     Algebraically solves equations and systems of equations.
@@ -791,8 +698,8 @@ def solve(f, *symbols, **flags):
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
         >>> solve(eq)  # this gives 2 solutions but misses a 3rd
-        [CRootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
-        CRootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
+        [CRootOf(7*x**5 - 7*x**3 + 1, 1)**15,
+        CRootOf(7*x**5 - 7*x**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
@@ -1596,7 +1503,26 @@ def _solve(f, *symbols, **flags):
                     isinstance(_, TrigonometricFunction)])
                 other = funcs - trig
                 if not other and len(funcs.intersection(trig)) > 1:
-                    newf = TR1(f_num).rewrite(tan)
+                    newf = None
+                    if f_num.is_Add and len(f_num.args) == 2:
+                        # check for sin(x)**p = cos(x)**p
+                        _args = f_num.args
+                        t = a, b = [i.atoms(Function).intersection(
+                            trig) for i in _args]
+                        if all(len(i) == 1 for i in t):
+                            a, b = [i.pop() for i in t]
+                            if isinstance(a, cos):
+                                a, b = b, a
+                                _args = _args[::-1]
+                            if isinstance(a, sin) and isinstance(b, cos
+                                    ) and a.args[0] == b.args[0]:
+                                # sin(x) + cos(x) = 0 -> tan(x) + 1 = 0
+                                newf, _d = (TR2i(_args[0]/_args[1]) + 1
+                                    ).as_numer_denom()
+                                if not _d.is_Number:
+                                    newf = None
+                    if newf is None:
+                        newf = TR1(f_num).rewrite(tan)
                     if newf != f_num:
                         # don't check the rewritten form --check
                         # solutions in the un-rewritten form below

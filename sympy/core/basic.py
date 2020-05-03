@@ -26,9 +26,10 @@ def as_Basic(expr):
 
 class Basic(metaclass=ManagedProperties):
     """
-    Base class for all objects in SymPy.
+    Base class for all SymPy objects.
 
-    Conventions:
+    Notes and conventions
+    =====================
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
@@ -53,6 +54,19 @@ class Basic(metaclass=ManagedProperties):
     >>> cot(x)._args    # do not use this, use cot(x).args instead
     (x,)
 
+
+    3)  By "SymPy object" we mean something that can be returned by
+        ``sympify``.  But not all objects one encounters using SymPy are
+        subclasses of Basic.  For example, mutable objects are not:
+
+        >>> from sympy import Basic, Matrix, sympify
+        >>> A = Matrix([[1, 2], [3, 4]]).as_mutable()
+        >>> isinstance(A, Basic)
+        False
+
+        >>> B = sympify(A)
+        >>> isinstance(B, Basic)
+        True
     """
     __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments

@@ -407,23 +407,16 @@ tests = [
     'sympy.vector.tests',
 ]
 
-long_description = '''SymPy is a Python library for symbolic mathematics. It aims
-to become a full-featured computer algebra system (CAS) while keeping the code
-as simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python.'''
 
 with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
     # Defines __version__
     exec(f.read())
 
-with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
-    long_description = f.read().split('"""')[1]
 
 if __name__ == '__main__':
     setup(name='sympy',
           version=__version__,
           description='Computer algebra system (CAS) in Python',
-          long_description=long_description,
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
           license='BSD',

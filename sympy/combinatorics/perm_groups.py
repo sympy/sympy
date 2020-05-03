@@ -1,7 +1,7 @@
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import multiplicity, factorint
+from sympy import multiplicity, factorint, Symbol
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -16,7 +16,7 @@ from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.testing.randtest import _randrange
 from itertools import islice
-
+from sympy.core.sympify import _sympify
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -266,6 +266,8 @@ class PermutationGroup(Basic):
         25
 
         """
+        if isinstance(other, Permutation):
+            return Coset(other, self, dir='+')
         gens1 = [perm._array_form for perm in self.generators]
         gens2 = [perm._array_form for perm in other.generators]
         n1 = self._degree
@@ -2299,6 +2301,10 @@ class PermutationGroup(Basic):
         False
 
         """
+        if isinstance(G, SymmetricPermutationGroup):
+            if self.degree != G.degree:
+                return False
+            return True
         if not isinstance(G, PermutationGroup):
             return False
         if self == G or self.generators[0]==Permutation():
@@ -5073,3 +5079,203 @@ def _stabilizer(degree, generators, alpha):
     return [_af_new(x) for x in stab_gens]
 
 PermGroup = PermutationGroup
+
+class SymmetricPermutationGroup(Basic):
+    """
+    The class defining the lazy form of SymmetricGroup.
+
+    deg : int
+
+    """
+
+    def __new__(cls, deg):
+        deg = _sympify(deg)
+        obj = Basic.__new__(cls, deg)
+        obj._deg = deg
+        obj._order = None
+        return obj
+
+    def __contains__(self, i):
+        """Return ``True`` if *i* is contained in SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> Permutation(1, 2, 3) in G
+        True
+
+        """
+        if not isinstance(i, Permutation):
+            raise TypeError("A SymmetricPermutationGroup contains only Permutations as "
+                            "elements, not elements of type %s" % type(i))
+        return i.size == self.degree
+
+    def order(self):
+        """
+        Return the order of the SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> G.order()
+        24
+        """
+        if self._order is not None:
+            return self._order
+        n = self._deg
+        self._order = factorial(n)
+        return self._order
+
+    @property
+    def degree(self):
+        """
+        Return the degree of the SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> G.degree
+        4
+
+        """
+        return self._deg
+
+    @property
+    def identity(self):
+        '''
+        Return the identity element of the SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> G.identity()
+        (3)
+
+        '''
+        return _af_new(list(range(self._deg)))
+
+
+class Coset(Basic):
+    """A left coset of a permutation group with respect to an element.
+
+    Parameters
+    ==========
+
+    g : Permutation
+
+    H : PermutationGroup
+
+    dir : "+" or "-", If not specified by default it will be "+"
+        here ``dir`` specified the type of coset "+" represent the
+        right coset and "-" represent the left coset.
+
+    G : PermutationGroup, optional
+        The group which contains *H* as its subgroup and *g* as its
+        element.
+
+        If not specified, it would automatically become a symmetric
+        group ``SymmetricPermutationGroup(g.size)`` and
+        ``SymmetricPermutationGroup(H.degree)`` if ``g.size`` and ``H.degree``
+        are matching.``SymmetricPermutationGroup`` is a lazy form of SymmetricGroup
+        used for representation purpose.
+
+    """
+
+    def __new__(cls, g, H, G=None, dir="+"):
+        g = _sympify(g)
+        if not isinstance(g, Permutation):
+            raise NotImplementedError
+
+        H = _sympify(H)
+        if not isinstance(H, PermutationGroup):
+            raise NotImplementedError
+
+        if G is not None:
+            G = _sympify(G)
+            if not isinstance(G, PermutationGroup) and not isinstance(G, SymmetricPermutationGroup):
+                raise NotImplementedError
+            if not H.is_subgroup(G):
+                raise ValueError("{} must be a subgroup of {}.".format(H, G))
+            if g not in G:
+                raise ValueError("{} must be an element of {}.".format(g, G))
+        else:
+            g_size = g.size
+            h_degree = H.degree
+            if g_size != h_degree:
+                raise ValueError(
+                    "The size of the permutation {} and the degree of "
+                    "the permutation group {} should be matching "
+                    .format(g, H))
+            G = SymmetricPermutationGroup(g.size)
+
+        if isinstance(dir, str):
+            dir = Symbol(dir)
+        elif not isinstance(dir, Symbol):
+            raise TypeError("dir must be of type basestring or "
+                    "Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-'):
+            raise ValueError("dir must be one of '+' or '-' not %s" % dir)
+        obj = Basic.__new__(cls, g, H, G, dir)
+        obj._dir = dir
+        return obj
+
+    @property
+    def is_left_coset(self):
+        """
+        Check if the coset is left coset that is ``gH``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup, Coset
+        >>> a = Permutation(1, 2)
+        >>> b = Permutation(0, 1)
+        >>> G = PermutationGroup([a, b])
+        >>> cst = Coset(a, G, dir="-")
+        >>> cst.is_left_coset
+        True
+
+        """
+        return str(self._dir) == '-'
+
+    @property
+    def is_right_coset(self):
+        """
+        Check if the coset is right coset that is ``Hg``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup, Coset
+        >>> a = Permutation(1, 2)
+        >>> b = Permutation(0, 1)
+        >>> G = PermutationGroup([a, b])
+        >>> cst = Coset(a, G, dir="+")
+        >>> cst.is_right_coset
+        True
+
+        """
+        return str(self._dir) == '+'
+
+    def as_list(self):
+        """
+        Return all the elements of coset in the form of list.
+        """
+        g = self.args[0]
+        H = self.args[1]
+        cst = []
+        if str(self._dir) == '+':
+            for h in H.elements:
+                cst.append(h*g)
+        else:
+            for h in H.elements:
+                cst.append(g*h)
+        return cst

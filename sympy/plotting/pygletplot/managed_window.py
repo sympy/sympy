@@ -53,7 +53,7 @@ class ManagedWindow(Window):
             gl_lock.release()
 
         clock = Clock()
-        clock.set_fps_limit(self.fps_limit)
+        clock.fps_limit = self.fps_limit
         while not self.has_exit:
             dt = clock.tick()
             gl_lock.acquire()

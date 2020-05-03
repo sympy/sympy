@@ -765,8 +765,9 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         # XXX Workaround for negative integer power error
+        from sympy.core.power import Pow
         if expr.exp.is_integer and expr.exp.is_negative:
-            expr = expr.base ** expr.exp.evalf()
+            expr = Pow(expr.base, expr.exp.evalf(), evaluate=False)
         return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
 
     def _print_Min(self, expr):

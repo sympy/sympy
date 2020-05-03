@@ -159,8 +159,26 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collect_const, collect_sqrt, rcollect
     """
+    from sympy.core.assumptions import assumptions
+    from sympy.utilities.iterables import sift
+    from sympy.core.symbol import Dummy, Wild
     expr = sympify(expr)
-    syms = list(syms) if iterable(syms) else [syms]
+    syms = [sympify(i) for i in (syms if iterable(syms) else [syms])]
+    # replace syms[i] if it is not x, -x or has Wild symbols
+    cond = lambda x: x.is_Symbol or (-x).is_Symbol or bool(
+        x.atoms(Wild))
+    _, nonsyms = sift(syms, cond, binary=True)
+    if nonsyms:
+        reps = dict(zip(nonsyms, [Dummy(**assumptions(i)) for i in nonsyms]))
+        syms = [reps.get(s, s) for s in syms]
+        rv = collect(expr.subs(reps), syms,
+            func=func, evaluate=evaluate, exact=exact,
+            distribute_order_term=distribute_order_term)
+        urep = {v: k for k, v in reps.items()}
+        if not isinstance(rv, dict):
+            return rv.xreplace(urep)
+        else:
+            return {urep.get(k, k): v for k, v in rv.items()}
 
     if evaluate is None:
         evaluate = global_parameters.evaluate

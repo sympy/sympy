@@ -9,7 +9,7 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag)
+    Heaviside, dirichlet_eta, diag, MatrixSlice)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
@@ -3166,25 +3166,68 @@ tr⎜⎢    ⎥⎟ + tr⎜⎢    ⎥⎟
     assert upretty(Trace(X) + Trace(Y)) == ucode_str_2
 
 
+def test_MatrixSlice():
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    expr = MatrixSlice(X, (None, None, None), (None, None, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = X[x:x + 1, y:y + 1]
+    assert pretty(expr) == upretty(expr) == 'X[x:x + 1, y:y + 1]'
+    expr = X[x:x + 1:2, y:y + 1:2]
+    assert pretty(expr) == upretty(expr) == 'X[x:x + 1:2, y:y + 1:2]'
+    expr = X[:x, y:]
+    assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
+    expr = X[:x, y:]
+    assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
+    expr = X[x:, :y]
+    assert pretty(expr) == upretty(expr) == 'X[x:, :y]'
+    expr = X[x:y, z:w]
+    assert pretty(expr) == upretty(expr) == 'X[x:y, z:w]'
+    expr = X[x:y:t, w:t:x]
+    assert pretty(expr) == upretty(expr) == 'X[x:y:t, w:t:x]'
+    expr = X[x::y, t::w]
+    assert pretty(expr) == upretty(expr) == 'X[x::y, t::w]'
+    expr = X[:x:y, :t:w]
+    assert pretty(expr) == upretty(expr) == 'X[:x:y, :t:w]'
+    expr = X[::x, ::y]
+    assert pretty(expr) == upretty(expr) == 'X[::x, ::y]'
+    expr = MatrixSlice(X, (0, None, None), (0, None, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = MatrixSlice(X, (None, n, None), (None, n, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = MatrixSlice(X, (0, n, None), (0, n, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = MatrixSlice(X, (0, n, 2), (0, n, 2))
+    assert pretty(expr) == upretty(expr) == 'X[::2, ::2]'
+    expr = X[1:2:3, 4:5:6]
+    assert pretty(expr) == upretty(expr) == 'X[1:2:3, 4:5:6]'
+    expr = X[1:3:5, 4:6:8]
+    assert pretty(expr) == upretty(expr) == 'X[1:3:5, 4:6:8]'
+    expr = X[1:10:2]
+    assert pretty(expr) == upretty(expr) == 'X[1:10:2, :]'
+    expr = Y[:5, 1:9:2]
+    assert pretty(expr) == upretty(expr) == 'Y[:5, 1:9:2]'
+    expr = Y[:5, 1:10:2]
+    assert pretty(expr) == upretty(expr) == 'Y[:5, 1::2]'
+    expr = Y[5, :5:2]
+    assert pretty(expr) == upretty(expr) == 'Y[5:6, :5:2]'
+    expr = X[0:1, 0:1]
+    assert pretty(expr) == upretty(expr) == 'X[:1, :1]'
+    expr = X[0:1:2, 0:1:2]
+    assert pretty(expr) == upretty(expr) == 'X[:1:2, :1:2]'
+    expr = (Y + Z)[2:, 2:]
+    assert pretty(expr) == upretty(expr) == '(Y + Z)[2:, 2:]'
+
+
 def test_MatrixExpressions():
     n = Symbol('n', integer=True)
     X = MatrixSymbol('X', n, n)
 
     assert pretty(X) == upretty(X) == "X"
-
-    Y = X[1:2:3, 4:5:6]
-
-    ascii_str = ucode_str = "X[1:3, 4:6]"
-
-    assert pretty(Y) == ascii_str
-    assert upretty(Y) == ucode_str
-
-    Z = X[1:10:2]
-
-    ascii_str = ucode_str = "X[1:10:2, :n]"
-
-    assert pretty(Z) == ascii_str
-    assert upretty(Z) == ucode_str
 
     # Apply function elementwise (`ElementwiseApplyFunc`):
 

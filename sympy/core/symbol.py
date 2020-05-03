@@ -27,6 +27,7 @@ def _filter_assumptions(kwargs):
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
 
+
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
     the matching_symbol if the names are the same or else a new symbol
@@ -269,7 +270,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self):
         return Dummy(self.name)
@@ -359,7 +360,7 @@ class Dummy(Symbol):
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (
-            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
+            2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)

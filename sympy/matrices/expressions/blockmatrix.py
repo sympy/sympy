@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import ask, Q
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
@@ -83,7 +81,7 @@ class BlockMatrix(MatrixExpr):
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
                 not is_sequence(args[0]) or \
-                len(set([isMat(r) for r in args[0]])) != 1:
+                len({isMat(r) for r in args[0]}) != 1:
             raise ValueError(filldedent('''
                 expecting a sequence of 1 or more rows
                 containing Matrices.'''))
@@ -93,25 +91,25 @@ class BlockMatrix(MatrixExpr):
                 rows = [rows]  # rows is not list of lists or []
             # regularity check
             # same number of matrices in each row
-            blocky = ok = len(set([len(r) for r in rows])) == 1
+            blocky = ok = len({len(r) for r in rows}) == 1
             if ok:
                 # same number of rows for each matrix in a row
                 for r in rows:
-                    ok = len(set([i.rows for i in r])) == 1
+                    ok = len({i.rows for i in r}) == 1
                     if not ok:
                         break
                 blocky = ok
                 if ok:
                     # same number of cols for each matrix in each col
                     for c in range(len(rows[0])):
-                        ok = len(set([rows[i][c].cols
-                            for i in range(len(rows))])) == 1
+                        ok = len({rows[i][c].cols
+                            for i in range(len(rows))}) == 1
                         if not ok:
                             break
             if not ok:
                 # same total cols in each row
-                ok = len(set([
-                    sum([i.cols for i in r]) for r in rows])) == 1
+                ok = len({
+                    sum([i.cols for i in r]) for r in rows}) == 1
                 if blocky and ok:
                     raise ValueError(filldedent('''
                         Although this matrix is comprised of blocks,
@@ -280,7 +278,7 @@ class BlockMatrix(MatrixExpr):
             return True
         if (isinstance(other, BlockMatrix) and self.blocks == other.blocks):
             return True
-        return super(BlockMatrix, self).equals(other)
+        return super().equals(other)
 
 
 class BlockDiagMatrix(BlockMatrix):
@@ -558,37 +556,70 @@ def blockinverse_1x1(expr):
         return BlockMatrix(mat)
     return expr
 
+
 def blockinverse_2x2(expr):
-    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2) and expr.arg.blocks[0, 0].is_square:
-        # Cite: The Matrix Cookbook Section 9.1.3
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
+        # See: Inverses of 2x2 Block Matrices, Tzon-Tzer Lu and Sheng-Hua Shiou
         [[A, B],
          [C, D]] = expr.arg.blocks.tolist()
 
-        # Use one or the other formula, depending on whether A or D is known to be invertible or at least not known
-        # to not be invertible.  Note that invertAbility of the other expressions M is not checked.
-        A_invertible = ask(Q.invertible(A))
-        D_invertible = ask(Q.invertible(D))
-        if A_invertible == True:
-            invert_A = True
-        elif D_invertible == True:
-            invert_A = False
-        elif A_invertible != False:
-            invert_A = True
-        elif D_invertible != False:
-            invert_A = False
-        else:
-            invert_A = True
+        formula = _choose_2x2_inversion_formula(A, B, C, D)
 
-        if invert_A:
+        if formula == 'A':
             AI = A.I
             MI = (D - C * AI * B).I
             return BlockMatrix([[AI + AI * B * MI * C * AI, -AI * B * MI], [-MI * C * AI, MI]])
-        else:
+        if formula == 'B':
+            BI = B.I
+            MI = (C - D * BI * A).I
+            return BlockMatrix([[-MI * D * BI, MI], [BI + BI * A * MI * D * BI, -BI * A * MI]])
+        if formula == 'C':
+            CI = C.I
+            MI = (B - A * CI * D).I
+            return BlockMatrix([[-CI * D * MI, CI + CI * D * MI * A * CI], [MI, -MI * A * CI]])
+        if formula == 'D':
             DI = D.I
             MI = (A - B * DI * C).I
             return BlockMatrix([[MI, -MI * B * DI], [-DI * C * MI, DI + DI * C * MI * B * DI]])
 
     return expr
+
+
+def _choose_2x2_inversion_formula(A, B, C, D):
+    """
+    Assuming [[A, B], [C, D]] would form a valid square block matrix, find
+    which of the classical 2x2 block matrix inversion formulas would be
+    best suited.
+
+    Returns 'A', 'B', 'C', 'D' to represent the algorithm involving inversion
+    of the given argument or None if the matrix cannot be inverted using
+    any of those formulas.
+    """
+    # Try to find a known invertible matrix.  Note that the Schur complement
+    # is currently not being considered for this
+    A_inv = ask(Q.invertible(A))
+    if A_inv == True:
+        return 'A'
+    B_inv = ask(Q.invertible(B))
+    if B_inv == True:
+        return 'B'
+    C_inv = ask(Q.invertible(C))
+    if C_inv == True:
+        return 'C'
+    D_inv = ask(Q.invertible(D))
+    if D_inv == True:
+        return 'D'
+    # Otherwise try to find a matrix that isn't known to be non-invertible
+    if A_inv != False:
+        return 'A'
+    if B_inv != False:
+        return 'B'
+    if C_inv != False:
+        return 'C'
+    if D_inv != False:
+        return 'D'
+    return None
+
 
 def deblock(B):
     """ Flatten a BlockMatrix of BlockMatrices """
@@ -611,15 +642,33 @@ def deblock(B):
         return B
 
 
-
-def reblock_2x2(B):
-    """ Reblock a BlockMatrix so that it has 2x2 blocks of block matrices """
-    if not isinstance(B, BlockMatrix) or not all(d > 2 for d in B.blocks.shape):
-        return B
+def reblock_2x2(expr):
+    """
+    Reblock a BlockMatrix so that it has 2x2 blocks of block matrices.  If
+    possible in such a way that the matrix continues to be invertible using the
+    classical 2x2 block inversion formulas.
+    """
+    if not isinstance(expr, BlockMatrix) or not all(d > 2 for d in expr.blockshape):
+        return expr
 
     BM = BlockMatrix  # for brevity's sake
-    return BM([[   B.blocks[0,  0],  BM(B.blocks[0,  1:])],
-               [BM(B.blocks[1:, 0]), BM(B.blocks[1:, 1:])]])
+    rowblocks, colblocks = expr.blockshape
+    blocks = expr.blocks
+    for i in range(1, rowblocks):
+        for j in range(1, colblocks):
+            # try to split rows at i and cols at j
+            A = bc_unpack(BM(blocks[:i, :j]))
+            B = bc_unpack(BM(blocks[:i, j:]))
+            C = bc_unpack(BM(blocks[i:, :j]))
+            D = bc_unpack(BM(blocks[i:, j:]))
+
+            formula = _choose_2x2_inversion_formula(A, B, C, D)
+            if formula is not None:
+                return BlockMatrix([[A, B], [C, D]])
+
+    # else: nothing worked, just split upper left corner
+    return BM([[blocks[0, 0], BM(blocks[0, 1:])],
+               [BM(blocks[1:, 0]), BM(blocks[1:, 1:])]])
 
 
 def bounds(sizes):

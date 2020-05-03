@@ -7,7 +7,7 @@ from .basic import Basic
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
 from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
@@ -629,10 +629,10 @@ class Mul(Expr, AssocOp):
 
         return c_part, nc_part, order_symbols
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
-        cargs, nc = b.args_cnc(split_1=False)
+        cargs, nc = self.args_cnc(split_1=False)
 
         if e.is_Integer:
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
@@ -640,8 +640,8 @@ class Mul(Expr, AssocOp):
         if e.is_Rational and e.q == 2:
             from sympy.core.power import integer_nthroot
             from sympy.functions.elementary.complexes import sign
-            if b.is_imaginary:
-                a = b.as_real_imag()[1]
+            if self.is_imaginary:
+                a = self.as_real_imag()[1]
                 if a.is_Rational:
                     n, d = abs(a/2).as_numer_denom()
                     n, t = integer_nthroot(n, 2)
@@ -651,7 +651,7 @@ class Mul(Expr, AssocOp):
                             r = sympify(n)/d
                             return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
-        p = Pow(b, e, evaluate=False)
+        p = Pow(self, e, evaluate=False)
 
         if e.is_Rational or e.is_Float:
             return p._eval_expand_power_base()
@@ -1248,16 +1248,26 @@ class Mul(Expr, AssocOp):
         return zero
 
     def _eval_is_integer(self):
-        is_rational = self.is_rational
+        from sympy import fraction
+        from sympy.core.numbers import Float
 
+        is_rational = self._eval_is_rational()
+        if is_rational is False:
+            return False
+
+        # use exact=True to avoid recomputing num or den
+        n, d = fraction(self, exact=True)
         if is_rational:
-            n, d = self.as_numer_denom()
             if d is S.One:
                 return True
-            elif d == S(2):
+        if d.is_even:
+            if d.is_prime:  # literal or symbolic 2
                 return n.is_even
-        elif is_rational is False:
-            return False
+            if n.is_odd:
+                return False  # true even if d = 0
+        if n == d:
+            return fuzzy_and([not bool(self.atoms(Float)),
+            fuzzy_not(d.is_zero)])
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)

@@ -19,6 +19,7 @@ def test_inverse():
     assert Inverse(A*E).shape == (n, n)
     assert Inverse(E*A).shape == (m, m)
     assert Inverse(C).inverse() == C
+    assert Inverse(Inverse(C)).doit() == C
     assert isinstance(Inverse(Inverse(C)), Inverse)
 
     assert Inverse(*Inverse(E*A).args) == Inverse(E*A)

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import List
 
 from sympy.core import S, sympify, Dummy, Mod

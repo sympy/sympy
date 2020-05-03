@@ -48,6 +48,8 @@ class MathematicaParser(object):
         'Mod[x,y]': 'Mod(x,y)',
         'Max[*x]': 'Max(*x)',
         'Min[*x]': 'Min(*x)',
+        'Pochhammer[x,y]':'rf(x,y)',
+        'ArcTan[x,y]':'atan2(y,x)'
     }
 
     # trigonometric, e.t.c.

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
+from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import as_int, is_sequence, ordered
 from sympy.core.exprtools import factor_terms
@@ -25,7 +26,6 @@ from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
-from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
