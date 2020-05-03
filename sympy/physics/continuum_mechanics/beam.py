@@ -1553,16 +1553,21 @@ class Beam(object):
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
-    def ild_reactions(self, val, *reactions):
-        """
 
-        Determines the equations of reaction forces under the effect
-        of a moving load for Influence Line Diagram."
+    def ild_reactions(self, val, Plot=True, *reactions):
+        """
+        Plots the influence line diagram of reaction forces under the effect
+        of a moving load.
 
         Parameters
         ==========
         val : Integer
             Magnitude of moving load
+        Plot : Boolean (default = True)
+            Setting ``Plot = True`` would print the reaction equations and
+            plot them.
+            Setting ``Plot = False`` would update the values in reaction_loads
+            dictionary without plotting them.
         reactions :
             The reaction forces applied on the beam.
 
@@ -1594,17 +1599,13 @@ class Beam(object):
         solution = solution[2:]
         # Determining the equations and solving them.
         self._reaction_loads = dict(zip(reactions, solution))
-        return self._reaction_loads
 
-    def plot_ild_reactions(self):
-        """
+        if(Plot == True):
+            # Printing the reaction equations
+            print(self._reaction_loads)
 
-        Plots the Influence Line Diagram of Reaction Forces
-        under the effect of a moving load.
-
-        """
-        X = symbols('X')
-        for i in self._reaction_loads:
+            # Plotting the equations
+            for i in self._reaction_loads:
                 plot(self._reaction_loads[i], (X, 0, self._length), title='I.L.D. for Reactions',
                 xlabel=X, ylabel=i, line_color='blue')
 
