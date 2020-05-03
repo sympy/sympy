@@ -2792,7 +2792,7 @@ def _convert_meijerint(func, x, initcond=True, domain=QQ):
     # lists for sum of meijerg functions
     fac_list = [fac * i[0] for i in g]
     t = po.as_base_exp()
-    s = t[1] if t[0] is x else S.Zero
+    s = t[1] if t[0] == x else S.Zero
     po_list = [s + i[1] for i in g]
     G_list = [i[2] for i in g]
 
