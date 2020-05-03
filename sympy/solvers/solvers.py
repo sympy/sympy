@@ -49,7 +49,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (uniq, generate_bell, flatten, cartes,
-                                    connected_components)
+                                    connected_components, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1822,7 +1822,7 @@ def _solve_system(exprs, symbols, **flags):
                 subexpr = choices.pop(tuple(ordered(subsyms)), [])
                 for k in choices:
                     subexpr.append(next(ordered(choices[k])))
-                flags['_split'] = False
+                flags['_split'] = False  # skip split step
                 subsol = _solve_system(subexpr, subsyms, **flags)
                 if not isinstance(subsol, list):
                     subsol = [subsol]
