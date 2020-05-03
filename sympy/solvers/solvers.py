@@ -1050,7 +1050,9 @@ def solve(f, *symbols, **flags):
                     'is not real or imaginary.' % e)
 
         # arg
-        fi = fi.replace(arg, lambda a: arg(a).rewrite(atan2).rewrite(atan))
+        fi = fi.replace(arg, lambda a:
+            arg(a).rewrite(atan2).rewrite(atan) if a.has(*symbols)
+            else a)
 
         # save changes
         f[i] = fi
@@ -1062,7 +1064,7 @@ def solve(f, *symbols, **flags):
         for s in symbols:
             if s.is_real or s.is_imaginary:
                 continue  # neither re(x) nor im(x) will appear
-            # if re(s) or im(s) appear, the auxiliary equation must be present
+            # if re(s)|im(s) appear, the aux. equation must be present
             if any(fi.has(re(s), im(s)) for fi in freim):
                 irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
         if irf:
@@ -1789,38 +1791,51 @@ def _solve_system(exprs, symbols, **flags):
     if not exprs:
         return []
 
-    # Split the system into connected components?
-    V = exprs
-    #exprsyms = {e: {s for s in symbols if e.has(s)} for e in exprs}
-    symsset = set(symbols)
-    exprsyms = {e: e.free_symbols & symsset for e in exprs}
-    E = []
-    for n, e1 in enumerate(exprs):
-        for e2 in exprs[:n]:
-            # Equations are connected if they share a symbol
-            if exprsyms[e1] & exprsyms[e2]:
-                E.append((e1, e2))
-    G = V, E
-    subexprs = connected_components(G)
-    if len(subexprs) > 1:
-        subsols = []
-        for subexpr in subexprs:
-            subsyms = set()
-            for e in subexpr:
-                subsyms |= exprsyms[e]
-            subsyms = sorted(subsyms, key=default_sort_key)
-            subsol = _solve_system(subexpr, subsyms, **flags)
-            if not isinstance(subsol, list):
-                subsol = [subsol]
-            subsols.append(subsol)
-        # Full solution is cartesion product of subsystems
-        sols = []
-        for soldicts in cartes(*subsols):
-            sols.append(dict(item for sd in soldicts for item in sd.items()))
-        # Return a single dict if it would be a list of one dicts
-        if len(sols) == 1:
-            return sols[0]
-        return sols
+    if flags.pop('_split', True):
+        # Split the system into connected components
+        V = exprs
+        symsset = set(symbols)
+        exprsyms = {e: e.free_symbols & symsset for e in exprs}
+        E = []
+        for n, e1 in enumerate(exprs):
+            for e2 in exprs[:n]:
+                # Equations are connected if they share a symbol
+                if exprsyms[e1] & exprsyms[e2]:
+                    E.append((e1, e2))
+        G = V, E
+        subexprs = connected_components(G)
+        if len(subexprs) > 1:
+            subsols = []
+            for subexpr in subexprs:
+                subsyms = set()
+                for e in subexpr:
+                    subsyms |= exprsyms[e]
+                subsyms = list(ordered(subsyms))
+                # use canonical subset to solve these equations
+                # since there may be redundant equations in the set:
+                # take the first equation of several that may have the
+                # same sub-maximal free symbols of interest; the
+                # other equations that weren't used should be checked
+                # to see that they did not fail -- does the solver
+                # take care of that?
+                choices = sift(subexpr, lambda x: tuple(ordered(exprsyms[x])))
+                subexpr = choices.pop(tuple(ordered(subsyms)), [])
+                for k in choices:
+                    subexpr.append(next(ordered(choices[k])))
+                flags['_split'] = False
+                subsol = _solve_system(subexpr, subsyms, **flags)
+                if not isinstance(subsol, list):
+                    subsol = [subsol]
+                subsols.append(subsol)
+            # Full solution is cartesion product of subsystems
+            sols = []
+            for soldicts in cartes(*subsols):
+                sols.append(dict(item for sd in soldicts
+                    for item in sd.items()))
+            # Return a list with one dict as just the dict
+            if len(sols) == 1:
+                return sols[0]
+            return sols
 
     polys = []
     dens = set()
