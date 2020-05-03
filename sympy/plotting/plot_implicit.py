@@ -272,7 +272,7 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
         :format: doctest
         :include-source: True
 
-        >>> plot_implicit(Eq(x**2 + y**2, 5))
+        >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
 
     With the range for the symbols:
 
@@ -281,7 +281,8 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
         :format: doctest
         :include-source: True
 
-        >>> plot_implicit(Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3))
+        >>> p2 = plot_implicit(
+        ...     Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3))
 
     With depth of recursion as argument:
 
@@ -290,7 +291,7 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
         :format: doctest
         :include-source: True
 
-        >>> plot_implicit(
+        >>> p3 = plot_implicit(
         ...     Eq(x**2 + y**2, 5), (x, -4, 4), (y, -4, 4), depth = 2)
 
     Using mesh grid and not using adaptive meshing:
