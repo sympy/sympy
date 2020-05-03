@@ -603,7 +603,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             if match['is_linear'] == True:
                 # These conditions have to be improved upon in future for the new solvers
                 # added in systems.py
-                if match.get('is_constant', False) and match.get('is_homogeneous', False):
+                if match.get('is_general', False):
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
                 elif match.get('is_homogeneous', False) and "commutative_antiderivative" in match:
                     solvefunc = _neq_linear_first_order_nonconst_coeff_homogeneous
@@ -4515,10 +4515,6 @@ def _linear_coeff_match(expr, func):
         a1, b1, c1, a2, b2, c2, denom = m1
         return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
 
-def _linear_neq_order1_type1(match_):
-    from sympy.solvers.ode.systems import _neq_linear_first_order_const_coeff_homogeneous
-    return _neq_linear_first_order_const_coeff_homogeneous(match_)
-
 def ode_linear_coefficients(eq, func, order, match):
     r"""
     Solves a differential equation with linear coefficients.
@@ -7776,8 +7772,14 @@ def _linear_3eq_order1_type4(x, y, z, t, r, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 
-def sysode_linear_neq_order1(match_):
-    sol = _linear_neq_order1_type1(match_)
+def sysode_linear_neq_order1(match):
+    from sympy.solvers.ode.systems import (_neq_linear_first_order_const_coeff_homogeneous,
+        _neq_linear_first_order_nonconst_coeff_homogeneous)
+
+    if match['type_of_equation'] == 'type1':
+        sol = _neq_linear_first_order_const_coeff_homogeneous(match)
+    elif match['type_of_equation'] == 'type3':
+        sol = _neq_linear_first_order_nonconst_coeff_homogeneous(match)
     return sol
 
 

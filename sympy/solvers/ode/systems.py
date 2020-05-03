@@ -573,6 +573,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                           matrix if the coefficient matrix is non-constant
                           and commutative with its antiderivative. This key
                           may or may not exist.
+            9. is_general: Boolean value indicating if the system of ODEs is
+                           solvable using one of the general case solvers or not.
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
 
@@ -634,6 +636,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Homogeneous check
     is_homogeneous = True if b.is_zero_matrix else False
 
+    # Is general key is used to identify if the system of ODEs can be solved by
+    # one of the general case solvers or not.
     match = {
         'no_of_equation': len(eqs),
         'eq': eqs,
@@ -642,6 +646,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_linear': is_linear,
         'is_constant': is_constant,
         'is_homogeneous': is_homogeneous,
+        'is_general': True
     }
 
     # The match['is_linear'] check will be added in the future when this
