@@ -14,7 +14,7 @@ from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 from sympy.assumptions.ask import ask, Q
-
+from sympy.core.basic import BadArgumentsError
 
 def _sympifyit(arg, retval=None):
     # This version of _sympifyit sympifies MutableMatrix objects
@@ -550,7 +550,7 @@ class MatrixExpr(Expr):
                 if dimensions is not None:
                     identity = Identity(dimensions[0])
                 else:
-                    identity = S.One
+                    identity = Symbol('1', Integer=True)
                 return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
@@ -712,6 +712,9 @@ class MatrixElement(Expr):
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
+        if not isinstance(name, (Symbol, MatrixExpr)):
+            msg = "MatrixElement name should be a Symbol/MatrixExpr not %s"
+            raise BadArgumentsError(msg % type(name))
         obj = Expr.__new__(cls, name, n, m)
         return obj
 

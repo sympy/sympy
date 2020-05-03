@@ -2064,3 +2064,7 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+class BadArgumentsError(TypeError):
+    '''Raised when a class instance is constructed with invalid arguments'''
+    pass

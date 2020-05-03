@@ -675,7 +675,7 @@ class Expr(Basic, EvalfMixin):
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
-            except ZeroDivisionError:
+            except (ZeroDivisionError, BadArgumentsError):
                 a = None
             if a is not None and a is not S.NaN:
                 try:
@@ -684,7 +684,7 @@ class Expr(Basic, EvalfMixin):
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
-                except ZeroDivisionError:
+                except (ZeroDivisionError, BadArgumentsError):
                     b = None
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
@@ -3968,3 +3968,4 @@ from .function import Derivative, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational
+from .basic import BadArgumentsError
