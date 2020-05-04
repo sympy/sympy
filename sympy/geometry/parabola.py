@@ -378,8 +378,9 @@ class Parabola(GeometrySet):
 
     @property
     def latus_rectum(self):
-        """Returns the line passing through the focus
-           that is perpendicular to the axis of symmetry
+        """The latus rectum of a conic section is the chord through
+           a focus parallel to the conic section directrix (Coxeter 1969).
+           "Latus rectum" is a compound of the Latin latus, meaning "side," and rectum, meaning "straight."
 
            Returns
            =======
