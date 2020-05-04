@@ -831,7 +831,13 @@ def _minor_submatrix(M, i, j):
 
 
 def _permanent(M):
-    """Returns the permanent of a matrix as defined in [1]
+    """Returns the permanent of a matrix. This is given as
+    the sum over all permutations s on [1, 2, . . . n]
+    of the product from i = 1 to n of M[i, s[i]]. This is the same
+    as the permutation definition of the determinant, but it does not
+    take the sign of the permutation into account. Computing the permanent
+    with this definition is quite inefficient, so here the Ryser formula
+    is used.
 
 
     Examples
@@ -845,26 +851,35 @@ def _permanent(M):
     References
     ==========
 
-    1. Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
+        .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
+        .. [2] Wikipedia article on computing the permanent: https://en.wikipedia.org/wiki/Computing_the_permanent#Ryser_formula
 
     """
-    from itertools import permutations
+    import itertools
 
     if not M.is_square:
         raise NonSquareMatrixError()
 
     n = M.rows
+    s = list(range(n))
 
-    perm_list = list(permutations(range(n)))
+    subsets = []
+    for i in range(n):
+        subsets += list(map(list, itertools.combinations(s, i + 1)))
+
+    n = M.rows
+    s = list(range(n))
+
+    subsets = []
+    for i in range(n + 1):
+        subsets += list(map(list, itertools.combinations(s, i)))
 
     total = 0
-    # Computing permanent by summing over all permuatations on (0, ... n-1)
-    # TODO: find a faster way to do this, maybe a sparse method, maybe Gaussian Elim
-    for perm in perm_list:
-        product = 1
+    for this_subset in subsets:
+        total_prod = 1
         for i in range(n):
-            product = product*M[i, perm[i]]
-
-        total += product
-
-    return total
+            this_summand = sum([M[i, j] for j in this_subset])
+            total_prod *= this_summand
+        total += total_prod*(-1)**(len(this_subset))
+    total *= (-1)**n
+    return total.simplify()
