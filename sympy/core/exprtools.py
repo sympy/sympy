@@ -1,7 +1,5 @@
 """Tools for manipulating of large commutative expressions. """
 
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
@@ -284,7 +282,7 @@ def decompose_power_rat(expr):
     return base, exp
 
 
-class Factors(object):
+class Factors:
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 
     __slots__ = ('factors', 'gens')
@@ -812,7 +810,7 @@ class Factors(object):
         return not self == other
 
 
-class Term(object):
+class Term:
     """Efficient representation of ``coeff*(numer/denom)``. """
 
     __slots__ = ('coeff', 'numer', 'denom')
@@ -1139,7 +1137,7 @@ def _factor_sum_int(expr, **kwargs):
     limits = expr.limits
 
     # get the wrt variables
-    wrt = set([i.args[0] for i in limits])
+    wrt = {i.args[0] for i in limits}
 
     # factor out any common terms that are independent of wrt
     f = factor_terms(result, **kwargs)

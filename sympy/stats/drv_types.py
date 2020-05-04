@@ -15,8 +15,9 @@ Zeta
 
 from __future__ import print_function, division
 
-from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
-                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy)
+from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
+                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
+                   Lambda)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
@@ -47,6 +48,62 @@ def rv(symbol, cls, *args):
     if any(isinstance(arg, RandomSymbol) for arg in args):
         pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
+
+
+class DiscreteDistributionHandmade(SingleDiscreteDistribution):
+    _argnames = ('pdf',)
+
+    def __new__(cls, pdf, set=S.Integers):
+        return Basic.__new__(cls, pdf, set)
+
+    @property
+    def set(self):
+        return self.args[1]
+
+    @staticmethod
+    def check(pdf, set):
+        x = Dummy('x')
+        val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
+        _value_check(val == S.One, "The pdf is incorrect on the given set.")
+
+def DiscreteRV(symbol, density, set=S.Integers):
+    """
+    Create a Discrete Random Variable given the following:
+
+    Parameters
+    ==========
+
+    symbol : Symbol
+        Represents name of the random variable.
+    density : Expression containing symbol
+        Represents probability density function.
+    set : set
+        Represents the region where the pdf is valid, by default is real line.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import DiscreteRV, P, E
+    >>> from sympy import Rational, Symbol
+    >>> x = Symbol('x')
+    >>> n = 10
+    >>> density = Rational(1, 10)
+    >>> X = DiscreteRV(x, density, set=set(range(n)))
+    >>> E(X)
+    9/2
+    >>> P(X>3)
+    3/5
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    """
+    set = sympify(set)
+    pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
+    pdf = Lambda(symbol, pdf)
+    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set)
 
 
 #-------------------------------------------------------------------------------

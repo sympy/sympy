@@ -61,11 +61,10 @@ from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
-                   hyper, uppergamma, sinh, Ne, expint, Rational)
+                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
 from sympy.external import import_module
 from sympy.matrices import MatrixBase, MatrixExpr
-from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
-                             ContinuousDistributionHandmade)
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, RandomSymbol
@@ -125,6 +124,33 @@ __all__ = ['ContinuousRV',
 
 
 
+def rv(symbol, cls, args):
+    args = list(map(sympify, args))
+    dist = cls(*args)
+    dist.check(*args)
+    pspace = SingleContinuousPSpace(symbol, dist)
+    if any(isinstance(arg, RandomSymbol) for arg in args):
+        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+    return pspace.value
+
+
+class ContinuousDistributionHandmade(SingleContinuousDistribution):
+    _argnames = ('pdf',)
+
+    def __new__(cls, pdf, set=Interval(-oo, oo)):
+        return Basic.__new__(cls, pdf, set)
+
+    @property
+    def set(self):
+        return self.args[1]
+
+    @staticmethod
+    def check(pdf, set):
+        x = Dummy('x')
+        val = integrate(pdf(x), (x, set))
+        _value_check(val == S.One, "The pdf on the given set is incorrect.")
+
+
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
@@ -166,18 +192,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    dist = ContinuousDistributionHandmade(pdf, set)
-    return SingleContinuousPSpace(symbol, dist).value
-
-
-def rv(symbol, cls, args):
-    args = list(map(sympify, args))
-    dist = cls(*args)
-    dist.check(*args)
-    pspace = SingleContinuousPSpace(symbol, dist)
-    if any(isinstance(arg, RandomSymbol) for arg in args):
-        pspace = JointPSpace(symbol, CompoundDistribution(dist))
-    return pspace.value
+    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set))
 
 ########################################
 # Continuous Probability Distributions #

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import is_sequence, ordered
 from .basic import Basic
@@ -28,6 +26,7 @@ def _filter_assumptions(kwargs):
         binary=True))
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
+
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
@@ -266,12 +265,12 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def assumptions0(self):
-        return dict((key, value) for key, value
-                in self._assumptions.items() if value is not None)
+        return {key: value for key, value
+                in self._assumptions.items() if value is not None}
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self):
         return Dummy(self.name)
@@ -361,7 +360,7 @@ class Dummy(Symbol):
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (
-            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
+            2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
@@ -476,7 +475,7 @@ class Wild(Symbol):
         return obj
 
     def _hashable_content(self):
-        return super(Wild, self)._hashable_content() + (self.exclude, self.properties)
+        return super()._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
     def matches(self, expr, repl_dict={}, old=False):

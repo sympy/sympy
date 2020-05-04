@@ -399,8 +399,8 @@ class IndependentProductPSpace(ProductPSpace):
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
         if any([pspace(rv).is_Continuous for rv in rvs]):
-            from sympy.stats.crv import (ContinuousDistributionHandmade,
-                SingleContinuousPSpace)
+            from sympy.stats.crv import SingleContinuousPSpace
+            from sympy.stats.crv_types import ContinuousDistributionHandmade
             if expr in self.values:
                 # Marginalize all other random symbols out of the density
                 randomsymbols = tuple(set(self.values) - frozenset([expr]))
@@ -412,8 +412,8 @@ class IndependentProductPSpace(ProductPSpace):
             space = SingleContinuousPSpace(z, dens)
             result = space.probability(condition.__class__(space.value, 0))
         else:
-            from sympy.stats.drv import (DiscreteDistributionHandmade,
-                SingleDiscretePSpace)
+            from sympy.stats.drv import SingleDiscretePSpace
+            from sympy.stats.drv_types import DiscreteDistributionHandmade
             dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', integer=True)
             space = SingleDiscretePSpace(z, dens)

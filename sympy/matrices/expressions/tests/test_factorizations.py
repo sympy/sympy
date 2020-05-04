@@ -25,3 +25,9 @@ def test_svd():
     assert ask(Q.orthogonal(U))
     assert ask(Q.orthogonal(V))
     assert ask(Q.diagonal(S))
+
+def test_polar():
+    U, P = up(X)
+    assert U.shape == P.shape == X.shape
+    assert ask(Q.orthogonal(X))
+    assert ask(Q.nonnegative(X))

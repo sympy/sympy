@@ -8,7 +8,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
+    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -16,7 +16,7 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SeqPer, SeqFormula,
+    Contains, divisor_sigma, SeqPer, SeqFormula, MatrixSlice,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
@@ -102,6 +102,7 @@ def test_latex_basic():
     assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
     assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
         r"\frac{2 x}{3} \sqrt{2}"
+    assert latex(binomial(x, y)) == r"{\binom{x}{y}}"
 
     x_star = Symbol('x^*')
     f = Function('f')
@@ -378,6 +379,8 @@ def test_latex_functions():
         r"\sin^{-1} {x^{2}}"
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
+    assert latex(asinh(x), inv_trig_style="full") == \
+        r"\operatorname{arcsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -1425,7 +1428,8 @@ def test_latex_Lambda():
         r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
         r"\left( \left( x, \  y\right) \mapsto x + 1 \right)"
-
+    assert latex(Lambda(x, x)) == \
+        r"\left( x \mapsto x \right)"
 
 def test_latex_PolyElement():
     Ruv, u, v = ring("u,v", ZZ)
@@ -1590,11 +1594,36 @@ def test_matMul():
 
 
 def test_latex_MatrixSlice():
-    from sympy.matrices.expressions import MatrixSymbol
-    assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
-        r'X\left[:5, 1:9:2\right]'
-    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
-        r'X\left[5, :5:2\right]'
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert latex(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X\left[:, :\right]'
+    assert latex(X[x:x + 1, y:y + 1]) == r'X\left[x:x + 1, y:y + 1\right]'
+    assert latex(X[x:x + 1:2, y:y + 1:2]) == r'X\left[x:x + 1:2, y:y + 1:2\right]'
+    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
+    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
+    assert latex(X[x:, :y]) == r'X\left[x:, :y\right]'
+    assert latex(X[x:y, z:w]) == r'X\left[x:y, z:w\right]'
+    assert latex(X[x:y:t, w:t:x]) == r'X\left[x:y:t, w:t:x\right]'
+    assert latex(X[x::y, t::w]) == r'X\left[x::y, t::w\right]'
+    assert latex(X[:x:y, :t:w]) == r'X\left[:x:y, :t:w\right]'
+    assert latex(X[::x, ::y]) == r'X\left[::x, ::y\right]'
+    assert latex(MatrixSlice(X, (0, None, None), (0, None, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (None, n, None), (None, n, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (0, n, None), (0, n, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (0, n, 2), (0, n, 2))) == r'X\left[::2, ::2\right]'
+    assert latex(X[1:2:3, 4:5:6]) == r'X\left[1:2:3, 4:5:6\right]'
+    assert latex(X[1:3:5, 4:6:8]) == r'X\left[1:3:5, 4:6:8\right]'
+    assert latex(X[1:10:2]) == r'X\left[1:10:2, :\right]'
+    assert latex(Y[:5, 1:9:2]) == r'Y\left[:5, 1:9:2\right]'
+    assert latex(Y[:5, 1:10:2]) == r'Y\left[:5, 1::2\right]'
+    assert latex(Y[5, :5:2]) == r'Y\left[5:6, :5:2\right]'
+    assert latex(X[0:1, 0:1]) == r'X\left[:1, :1\right]'
+    assert latex(X[0:1:2, 0:1:2]) == r'X\left[:1:2, :1:2\right]'
+    assert latex((Y + Z)[2:, 2:]) == r'\left(Y + Z\right)\left[2:, 2:\right]'
 
 
 def test_latex_RandomDomain():

@@ -5,7 +5,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Lambda, Mul, Dummy, IndexedBase, Add,
                    linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, Piecewise, Symbol)
+                   Ge, Piecewise, Symbol, NonSquareMatrixError)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -80,7 +80,7 @@ def _matrix_checks(matrix):
         raise TypeError("Transition probabilities either should "
                             "be a Matrix or a MatrixSymbol.")
     if matrix.shape[0] != matrix.shape[1]:
-        raise ValueError("%s is not a square matrix"%(matrix))
+        raise NonSquareMatrixError("%s is not a square matrix"%(matrix))
     if isinstance(matrix, Matrix):
         matrix = ImmutableMatrix(matrix.tolist())
     return matrix

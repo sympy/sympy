@@ -1,7 +1,6 @@
 """
 Integer factorization
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 import random
@@ -1513,8 +1512,7 @@ def _divisors(n, proper=False):
             if p != n:
                 yield p
     else:
-        for p in rec_gen():
-            yield p
+        yield from rec_gen()
 
 
 def divisors(n, generator=False, proper=False):

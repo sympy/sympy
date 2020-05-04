@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
@@ -204,7 +202,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if d:
                 reps[xab[0]] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
@@ -1316,10 +1314,11 @@ def _eval_matrix_sum(expression):
 
 def _dummy_with_inherited_properties_concrete(limits):
     """
-    Return a Dummy symbol that inherits as much assumptions based on the
-    provided symbol and limits as possible.
+    Return a Dummy symbol that inherits as many assumptions as possible
+    from the provided symbol and limits.
 
-    If the symbol already has all possible assumptions, return None.
+    If the symbol already has all True assumption shared by the limits
+    then return None.
     """
     x, a, b = limits
     l = [a, b]
@@ -1342,5 +1341,3 @@ def _dummy_with_inherited_properties_concrete(limits):
     if assumptions_to_add:
         assumptions_to_keep.update(assumptions_to_add)
         return Dummy('d', **assumptions_to_keep)
-    else:
-        return None

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.core.compatibility import as_int

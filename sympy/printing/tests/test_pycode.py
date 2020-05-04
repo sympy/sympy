@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
@@ -111,6 +111,9 @@ def test_NumPyPrinter():
     # Workaround for numpy negative integer power errors
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'
+
+    expr = Pow(2, -1, evaluate=False)
+    assert p.doprint(expr) == "2**(-1.0)"
 
     assert p.doprint(S.Exp1) == 'numpy.e'
     assert p.doprint(S.Pi) == 'numpy.pi'

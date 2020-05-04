@@ -45,7 +45,12 @@ Refrences
 if cin:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
         Integer, Float, FunctionPrototype, FunctionDefinition, FunctionCall,
-        none, Return)
+        none, Return, Assignment, Type)
+    from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
+        PreIncrement, PostIncrement)
+    from sympy.core import Add, Mod, Mul, Pow, Rel
+    from sympy.logic.boolalg import And, as_Boolean, Not, Or
+    from sympy import Symbol, sympify, true, false
     import sys
     import tempfile
 
@@ -150,7 +155,7 @@ if cin:
                 A list of sympy AST nodes
 
             """
-            file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.h')
+            file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
             file.write(source)
             file.seek(0)
             self.tu = self.index.parse(
@@ -169,10 +174,10 @@ if cin:
             return self._py_nodes
 
         def transform(self, node):
-            """Transformation Function for a Clang AST nodes
+            """Transformation Function for Clang AST nodes
 
-            It determines the kind of node and calss the respective
-            transforation function for that node.
+            It determines the kind of node and calls the respective
+            transformation function for that node.
 
             Raises
             ======
@@ -233,42 +238,95 @@ if cin:
                     child = next(children)
 
                 val = self.transform(child)
-                # List in case of variable assignment, FunctionCall node in case of a funcion call
+                # List in case of variable assignment,
+                # FunctionCall node in case of a function call
                 if (child.kind == cin.CursorKind.INTEGER_LITERAL
                     or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
                     if (node.type.kind == cin.TypeKind.INT):
                         type = IntBaseType(String('integer'))
-                        value = Integer(val)
+                        # when only one decl_ref_expr is assigned
+                        # e.g., int b = a;
+                        if isinstance(val, str):
+                            value = Symbol(val)
+                        # e.g., int b = true;
+                        elif isinstance(val, bool):
+                            value = Integer(0) if val == False else Integer(1)
+                        # when val is integer or character literal
+                        # e.g., int b = 1; or int b = 'a';
+                        elif isinstance(val, (Integer, int, Float, float)):
+                            value = Integer(val)
+                        # when val is combination of both of the above
+                        # but in total only two nodes on rhs
+                        # e.g., int b = a * 1;
+                        else:
+                            value = val
+
                     elif (node.type.kind == cin.TypeKind.FLOAT):
                         type = FloatBaseType(String('real'))
-                        value = Float(val)
+                        # e.g., float b = a;
+                        if isinstance(val, str):
+                            value = Symbol(val)
+                        # e.g., float b = true;
+                        elif isinstance(val, bool):
+                            value = Float(0.0) if val == False else Float(1.0)
+                        # e.g., float b = 1.0;
+                        elif isinstance(val, (Integer, int, Float, float)):
+                            value = Float(val)
+                        # e.g., float b = a * 1.0;
+                        else:
+                            value = val
+
+                    elif (node.type.kind == cin.TypeKind.BOOL):
+                        type = Type(String('bool'))
+                        # e.g., bool b = a;
+                        if isinstance(val, str):
+                            value = Symbol(val)
+                        # e.g., bool b = 1;
+                        elif isinstance(val, (Integer, int, Float, float)):
+                            value = sympify(bool(val))
+                        # e.g., bool b = a * 1;
+                        else:
+                            value = val
+
                     else:
-                        raise NotImplementedError()
-                    return Variable(
-                        node.spelling
-                    ).as_Declaration(
-                        type = type,
-                        value = value
-                    )
+                        raise NotImplementedError("Only bool, int "
+                            "and float are supported")
+
                 elif (child.kind == cin.CursorKind.CALL_EXPR):
                     return Variable(
                         node.spelling
                     ).as_Declaration(
                         value = val
                     )
-                #case where a character is assigned to an integer type variable
-                elif (child.kind == cin.CursorKind.CHARACTER_LITERAL
-                    and node.type.kind == cin.TypeKind.INT):
-                    type = IntBaseType(String('integer'))
-                    value = Integer(ord(val))
-                    return Variable(
-                        node.spelling
-                    ).as_Declaration(
-                        type = type,
-                        value = value
-                    )
+
+                # when val is combination of more than two expr and
+                # integer(or float) i.e. it has binary operator
+                # Or var decl has parenthesis in the rhs(as a parent Clang node)
+                # Or it has unary operator
+                # Or it has boolean literal on rhs i.e. true or false
+                elif (child.kind == cin.CursorKind.BINARY_OPERATOR
+                    or child.kind == cin.CursorKind.PAREN_EXPR
+                    or child.kind == cin.CursorKind.UNARY_OPERATOR
+                    or child.kind == cin.CursorKind.CXX_BOOL_LITERAL_EXPR):
+                    if (node.type.kind == cin.TypeKind.INT):
+                        type = IntBaseType(String('integer'))
+                    elif (node.type.kind == cin.TypeKind.FLOAT):
+                        type = FloatBaseType(String('real'))
+                    elif (node.type.kind == cin.TypeKind.BOOL):
+                        type = Type(String('bool'))
+                    else:
+                        raise NotImplementedError("Only bool, int "
+                            "and float are supported")
+                    value = val
+
                 else:
-                    raise NotImplementedError()
+                    raise NotImplementedError("Given "
+                        "variable declaration \"{}\" "
+                        "is not possible to parse yet!"
+                        .format(" ".join(
+                            t.spelling for t in node.get_tokens()
+                            )
+                        ))
 
             except StopIteration:
 
@@ -278,14 +336,19 @@ if cin:
                 elif (node.type.kind == cin.TypeKind.FLOAT):
                     type = FloatBaseType(String('real'))
                     value = Float(0.0)
+                elif (node.type.kind == cin.TypeKind.BOOL):
+                    type = Type(String('bool'))
+                    value = false
                 else:
-                    raise NotImplementedError()
-                return Variable(
-                    node.spelling
-                ).as_Declaration(
-                    type = type,
-                    value = value
-                )
+                    raise NotImplementedError("Only bool, int "
+                            "and float are supported")
+
+            return Variable(
+                node.spelling
+            ).as_Declaration(
+                type = type,
+                value = value
+            )
 
         def transform_function_decl(self, node):
             """Transformation Function For Function Declaration
@@ -475,7 +538,6 @@ if cin:
                 value = node.literal
             return float(value)
 
-
         def transform_string_literal(self, node):
             #TODO: No string type in AST
             #type =
@@ -496,8 +558,8 @@ if cin:
             Returns
             =======
 
-            val : str
-                val contains the string value stored in the variable
+            val : int
+                val contains the ascii value of the character literal
 
             Notes
             =====
@@ -511,7 +573,25 @@ if cin:
             except (StopIteration, ValueError):
                 # No tokens
                value = node.literal
-            return str(value[1])
+            return ord(str(value[1]))
+
+        def transform_cxx_bool_literal_expr(self, node):
+            """Transformation function for boolean literal
+
+            Used to get the value of the given boolean literal.
+
+            Returns
+            =======
+
+            value : bool
+                value contains the boolean value of the variable
+
+            """
+            try:
+                value = next(node.get_tokens()).spelling
+            except (StopIteration, ValueError):
+                value = node.literal
+            return True if value == 'true' else False
 
         def transform_unexposed_decl(self,node):
             """Transformation function for unexposed declarations"""
@@ -655,6 +735,269 @@ if cin:
                 pass
 
             return statement
+
+        def transform_paren_expr(self, node):
+            """Transformation function for Parenthesized expressions
+
+            Returns the result from its children nodes
+
+            """
+            return self.transform(next(node.get_children()))
+
+        def transform_unary_operator(self, node):
+            """Transformation function for handling unary operators
+
+            Returns
+            =======
+
+            unary_expression: Codegen AST node
+                    simplified unary expression represented as Codegen AST
+
+            Raises
+            ======
+
+            NotImplementedError
+                If dereferencing operator(*), address operator(&) or
+                bitwise NOT operator(~) is encountered
+
+            """
+            # supported operators list
+            operators_list = ['+', '-', '++', '--', '!']
+            tokens = [token for token in node.get_tokens()]
+
+            # it can be either pre increment/decrement or any other operator from the list
+            if tokens[0].spelling in operators_list:
+                child = self.transform(next(node.get_children()))
+                # (decl_ref) e.g.; int a = ++b; or simply ++b;
+                if isinstance(child, str):
+                    if tokens[0].spelling == '+':
+                        return Symbol(child)
+                    if tokens[0].spelling == '-':
+                        return Mul(Symbol(child), -1)
+                    if tokens[0].spelling == '++':
+                        return PreIncrement(Symbol(child))
+                    if tokens[0].spelling == '--':
+                        return PreDecrement(Symbol(child))
+                    if tokens[0].spelling == '!':
+                        return Not(Symbol(child))
+                # e.g.; int a = -1; or int b = -(1 + 2);
+                else:
+                    if tokens[0].spelling == '+':
+                        return child
+                    if tokens[0].spelling == '-':
+                        return Mul(child, -1)
+                    if tokens[0].spelling == '!':
+                        return Not(sympify(bool(child)))
+
+            # it can be either post increment/decrement
+            # since variable name is obtained in token[0].spelling
+            elif tokens[1].spelling in ['++', '--']:
+                child = self.transform(next(node.get_children()))
+                if tokens[1].spelling == '++':
+                    return PostIncrement(Symbol(child))
+                if tokens[1].spelling == '--':
+                    return PostDecrement(Symbol(child))
+            else:
+                raise NotImplementedError("Dereferencing operator, "
+                    "Address operator and bitwise NOT operator "
+                    "have not been implemented yet!")
+
+        def transform_binary_operator(self, node):
+            """Transformation function for handling binary operators
+
+            Returns
+            =======
+
+            binary_expression: Codegen AST node
+                    simplified binary expression represented as Codegen AST
+
+            Raises
+            ======
+
+            NotImplementedError
+                If a bitwise operator or
+                unary operator(which is a child of any binary
+                operator in Clang AST) is encountered
+
+            """
+            # get all the tokens of assignment
+            # and store it in the tokens list
+            tokens = [token for token in node.get_tokens()]
+
+            # supported operators list
+            operators_list = ['+', '-', '*', '/', '%','=',
+            '>', '>=', '<', '<=', '==', '!=', '&&', '||']
+
+            # this stack will contain variable content
+            # and type of variable in the rhs
+            combined_variables_stack = []
+
+            # this stack will contain operators
+            # to be processed in the rhs
+            operators_stack = []
+
+            # iterate through every token
+            for token in tokens:
+                # token is either '(', ')' or
+                # any of the supported operators from the operator list
+                if token.kind == cin.TokenKind.PUNCTUATION:
+
+                    # push '(' to the operators stack
+                    if token.spelling == '(':
+                        operators_stack.append('(')
+
+                    elif token.spelling == ')':
+                        # keep adding the expression to the
+                        # combined variables stack unless
+                        # '(' is found
+                        while (operators_stack
+                            and operators_stack[-1] != '('):
+                            if len(combined_variables_stack) < 2:
+                                raise NotImplementedError(
+                                    "Unary operators as a part of "
+                                    "binary operators is not "
+                                    "supported yet!")
+                            rhs = combined_variables_stack.pop()
+                            lhs = combined_variables_stack.pop()
+                            operator = operators_stack.pop()
+                            combined_variables_stack.append(
+                                self.perform_operation(
+                                lhs, rhs, operator))
+
+                        # pop '('
+                        operators_stack.pop()
+
+                    # token is an operator (supported)
+                    elif token.spelling in operators_list:
+                        while (operators_stack
+                            and self.priority_of(token.spelling)
+                            <= self.priority_of(
+                            operators_stack[-1])):
+                            if len(combined_variables_stack) < 2:
+                                raise NotImplementedError(
+                                    "Unary operators as a part of "
+                                    "binary operators is not "
+                                    "supported yet!")
+                            rhs = combined_variables_stack.pop()
+                            lhs = combined_variables_stack.pop()
+                            operator = operators_stack.pop()
+                            combined_variables_stack.append(
+                                self.perform_operation(
+                                lhs, rhs, operator))
+
+                        # push current operator
+                        operators_stack.append(token.spelling)
+
+                    # token is a bitwise operator
+                    elif token.spelling in ['&', '|', '^', '<<', '>>']:
+                        raise NotImplementedError(
+                            "Bitwise operator has not been "
+                            "implemented yet!")
+                    else:
+                        raise NotImplementedError(
+                            "Given token {} is not implemented yet!"
+                            .format(token.spelling))
+
+                # token is an identifier(variable)
+                elif token.kind == cin.TokenKind.IDENTIFIER:
+                    combined_variables_stack.append(
+                        [token.spelling, 'identifier'])
+
+                # token is a literal
+                elif token.kind == cin.TokenKind.LITERAL:
+                    combined_variables_stack.append(
+                        [token.spelling, 'literal'])
+
+                # token is a keyword, either true or false
+                elif (token.kind == cin.TokenKind.KEYWORD
+                    and token.spelling in ['true', 'false']):
+                    combined_variables_stack.append(
+                        [token.spelling, 'boolean'])
+                else:
+                    raise NotImplementedError(
+                        "Given token {} is not implemented yet!"
+                        .format(token.spelling))
+
+            # process remaining operators
+            while operators_stack:
+                if len(combined_variables_stack) < 2:
+                    raise NotImplementedError(
+                        "Unary operators as a part of "
+                        "binary operators is not "
+                        "supported yet!")
+                rhs = combined_variables_stack.pop()
+                lhs = combined_variables_stack.pop()
+                operator = operators_stack.pop()
+                combined_variables_stack.append(
+                    self.perform_operation(lhs, rhs, operator))
+
+            return combined_variables_stack[-1][0]
+
+        def priority_of(self, op):
+            """To get the priority of given operator"""
+            if op == '=':
+                return 1
+            if op in ['&&', '||']:
+                return 2
+            if op in ['<', '<=', '>', '>=', '==', '!=']:
+                return 3
+            if op in ['+', '-']:
+                return 4
+            if op in ['*', '/', '%']:
+                return 5
+            return 0
+
+        def perform_operation(self, lhs, rhs, op):
+            """Performs operation supported by the sympy core
+
+            Returns
+            =======
+
+            combined_variable: list
+                contains variable content and type of variable
+
+            """
+            lhs_value = self.get_expr_for_operand(lhs)
+            rhs_value = self.get_expr_for_operand(rhs)
+            if op == '+':
+                return [Add(lhs_value, rhs_value), 'expr']
+            if op == '-':
+                return [Add(lhs_value, -rhs_value), 'expr']
+            if op == '*':
+                return [Mul(lhs_value, rhs_value), 'expr']
+            if op == '/':
+                return [Mul(lhs_value, Pow(rhs_value, Integer(-1))), 'expr']
+            if op == '%':
+                return [Mod(lhs_value, rhs_value), 'expr']
+            if op in ['<', '<=', '>', '>=', '==', '!=']:
+                return [Rel(lhs_value, rhs_value, op), 'expr']
+            if op == '&&':
+                return [And(as_Boolean(lhs_value), as_Boolean(rhs_value)), 'expr']
+            if op == '||':
+                return [Or(as_Boolean(lhs_value), as_Boolean(rhs_value)), 'expr']
+            if op == '=':
+                return [Assignment(Variable(lhs_value), rhs_value), 'expr']
+
+        def get_expr_for_operand(self, combined_variable):
+            """Gives out SymPy Codegen AST node
+
+            AST node returned is corresponding to
+            combined variable passed.Combined variable contains
+            variable content and type of variable
+
+            """
+            if combined_variable[1] == 'identifier':
+                return Symbol(combined_variable[0])
+            if combined_variable[1] == 'literal':
+                if '.' in combined_variable[0]:
+                    return Float(float(combined_variable[0]))
+                else:
+                    return Integer(int(combined_variable[0]))
+            if combined_variable[1] == 'expr':
+                return combined_variable[0]
+            if combined_variable[1] == 'boolean':
+                    return true if combined_variable[0] == 'true' else false
+
 else:
     class CCodeConverter():  # type: ignore
         def __init__(self, *args, **kwargs):

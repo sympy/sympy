@@ -1,7 +1,5 @@
-from __future__ import print_function, division
-
 from sympy import Basic, Expr, S, sympify
-from .matexpr import ShapeError
+from sympy.matrices.common import NonSquareMatrixError
 
 
 class Determinant(Expr):
@@ -26,7 +24,7 @@ class Determinant(Expr):
             raise TypeError("Input to Determinant, %s, not a matrix" % str(mat))
 
         if not mat.is_square:
-            raise ShapeError("Det of a non-square matrix")
+            raise NonSquareMatrixError("Det of a non-square matrix")
 
         return Basic.__new__(cls, mat)
 

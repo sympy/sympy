@@ -24,11 +24,11 @@ def ambiguous(a, b):
 def ambiguities(signatures):
     """ All signature pairs such that A is ambiguous with B """
     signatures = list(map(tuple, signatures))
-    return set([(a, b) for a in signatures for b in signatures
+    return {(a, b) for a in signatures for b in signatures
                        if hash(a) < hash(b)
                        and ambiguous(a, b)
                        and not any(supercedes(c, a) and supercedes(c, b)
-                                    for c in signatures)])
+                                    for c in signatures)}
 
 
 def super_signature(signatures):
@@ -64,5 +64,5 @@ def ordering(signatures):
     for s in signatures:
         if s not in edges:
             edges[s] = []
-    edges = dict((k, [b for a, b in v]) for k, v in edges.items())
+    edges = {k: [b for a, b in v] for k, v in edges.items()}
     return _toposort(edges)

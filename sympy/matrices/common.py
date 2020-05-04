@@ -4,8 +4,6 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import division, print_function
-
 from sympy.core.logic import FuzzyBool
 
 from collections import defaultdict
@@ -17,6 +15,7 @@ from sympy.core.basic import Atom
 from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, reduce)
 from sympy.core.decorators import call_highest_priority
+from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -53,7 +52,7 @@ class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
     pass
 
 
-class MatrixRequired(object):
+class MatrixRequired:
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""
     rows = None  # type: int
@@ -174,6 +173,16 @@ class MatrixShaping(MatrixRequired):
 
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
+
+    def _eval_todok(self):
+        dok = {}
+        rows, cols = self.shape
+        for i in range(rows):
+            for j in range(cols):
+                val = self[i, j]
+                if val != self.zero:
+                    dok[i, j] = val
+        return dok
 
     def _eval_vec(self):
         rows = self.rows
@@ -590,6 +599,19 @@ class MatrixShaping(MatrixRequired):
         3
         """
         return (self.rows, self.cols)
+
+    def todok(self):
+        """Return the matrix as dictionary of keys.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, SparseMatrix
+        >>> M = Matrix.eye(3)
+        >>> M.todok()
+        {(0, 0): 1, (1, 1): 1, (2, 2): 1}
+        """
+        return self._eval_todok()
 
     def tolist(self):
         """Return the Matrix as a nested Python list.
@@ -1161,6 +1183,14 @@ class MatrixProperties(MatrixRequired):
     def _eval_values(self):
         return [i for i in self if not i.is_zero]
 
+    def _has_positive_diagonals(self):
+        diagonal_entries = (self[i, i] for i in range(self.rows))
+        return fuzzy_and((x.is_positive for x in diagonal_entries))
+
+    def _has_nonnegative_diagonals(self):
+        diagonal_entries = (self[i, i] for i in range(self.rows))
+        return fuzzy_and((x.is_nonnegative for x in diagonal_entries))
+
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
@@ -1332,6 +1362,106 @@ class MatrixProperties(MatrixRequired):
         diagonalize
         """
         return self._eval_is_diagonal()
+
+    @property
+    def is_weakly_diagonally_dominant(self):
+        r"""Tests if the matrix is row weakly diagonally dominant.
+
+        Explanation
+        ===========
+
+        A $n, n$ matrix $A$ is row weakly diagonally dominant if
+
+        .. math::
+            \left|A_{i, i}\right| \ge \sum_{j = 0, j \neq i}^{n-1}
+            \left|A_{i, j}\right| \quad {\text{for all }}
+            i \in \{ 0, ..., n-1 \}
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[3, -2, 1], [1, -3, 2], [-1, 2, 4]])
+        >>> A.is_weakly_diagonally_dominant
+        True
+
+        >>> A = Matrix([[-2, 2, 1], [1, 3, 2], [1, -2, 0]])
+        >>> A.is_weakly_diagonally_dominant
+        False
+
+        >>> A = Matrix([[-4, 2, 1], [1, 6, 2], [1, -2, 5]])
+        >>> A.is_weakly_diagonally_dominant
+        True
+
+        Notes
+        =====
+
+        If you want to test whether a matrix is column diagonally
+        dominant, you can apply the test after transposing the matrix.
+        """
+        if not self.is_square:
+            return False
+
+        rows, cols = self.shape
+
+        def test_row(i):
+            summation = self.zero
+            for j in range(cols):
+                if i != j:
+                    summation += Abs(self[i, j])
+            return (Abs(self[i, i]) - summation).is_nonnegative
+
+        return fuzzy_and((test_row(i) for i in range(rows)))
+
+    @property
+    def is_strongly_diagonally_dominant(self):
+        r"""Tests if the matrix is row strongly diagonally dominant.
+
+        Explanation
+        ===========
+
+        A $n, n$ matrix $A$ is row strongly diagonally dominant if
+
+        .. math::
+            \left|A_{i, i}\right| > \sum_{j = 0, j \neq i}^{n-1}
+            \left|A_{i, j}\right| \quad {\text{for all }}
+            i \in \{ 0, ..., n-1 \}
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[3, -2, 1], [1, -3, 2], [-1, 2, 4]])
+        >>> A.is_strongly_diagonally_dominant
+        False
+
+        >>> A = Matrix([[-2, 2, 1], [1, 3, 2], [1, -2, 0]])
+        >>> A.is_strongly_diagonally_dominant
+        False
+
+        >>> A = Matrix([[-4, 2, 1], [1, 6, 2], [1, -2, 5]])
+        >>> A.is_strongly_diagonally_dominant
+        True
+
+        Notes
+        =====
+
+        If you want to test whether a matrix is column diagonally
+        dominant, you can apply the test after transposing the matrix.
+        """
+        if not self.is_square:
+            return False
+
+        rows, cols = self.shape
+
+        def test_row(i):
+            summation = self.zero
+            for j in range(cols):
+                if i != j:
+                    summation += Abs(self[i, j])
+            return (Abs(self[i, i]) - summation).is_positive
+
+        return fuzzy_and((test_row(i) for i in range(rows)))
 
     @property
     def is_hermitian(self):
@@ -2589,7 +2719,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
     _diff_wrt = True  # type: bool
 
 
-class _MinimalMatrix(object):
+class _MinimalMatrix:
     """Class providing the minimum functionality
     for a matrix-like object and implementing every method
     required for a `MatrixRequired`.  This class does not have everything
@@ -2700,7 +2830,7 @@ class _CastableMatrix: # this is needed here ONLY FOR TESTS.
         return self
 
 
-class _MatrixWrapper(object):
+class _MatrixWrapper:
     """Wrapper class providing the minimum functionality for a matrix-like
     object: .rows, .cols, .shape, indexability, and iterability. CommonMatrix
     math operations should work on matrix-like objects. This one is intended for

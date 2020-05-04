@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.matrices.expressions import MatrixExpr
 from sympy import Q
 
@@ -32,6 +30,10 @@ class SofSVD(Factorization):
 class VofSVD(Factorization):
     predicates = Q.orthogonal,
 
+class PofPolar(Factorization):
+    predicates = Q.nonnegative,
+class UofPolar(Factorization):
+    predicates = Q.orthogonal,
 
 def lu(expr):
     return LofLU(expr), UofLU(expr)
@@ -44,3 +46,6 @@ def eig(expr):
 
 def svd(expr):
     return UofSVD(expr), SofSVD(expr), VofSVD(expr)
+
+def up(expr):
+    return UofPolar(expr), PofPolar(expr)

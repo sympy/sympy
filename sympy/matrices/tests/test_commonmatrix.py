@@ -13,7 +13,9 @@ from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
     MatrixOperations, MatrixArithmetic, MatrixSpecial)
 from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
-    matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
+    matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
+    MutableDenseMatrix, MutableSparseMatrix, ImmutableDenseMatrix,
+    ImmutableSparseMatrix)
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
@@ -102,6 +104,16 @@ def test_vec():
     assert m_vec.cols == 1
     for i in range(4):
         assert m_vec[i] == i + 1
+
+
+def test_todok():
+    a, b, c, d = symbols('a:d')
+    m1 = MutableDenseMatrix([[a, b], [c, d]])
+    m2 = ImmutableDenseMatrix([[a, b], [c, d]])
+    m3 = MutableSparseMatrix([[a, b], [c, d]])
+    m4 = ImmutableSparseMatrix([[a, b], [c, d]])
+    assert m1.todok() == m2.todok() == m3.todok() == m4.todok() == \
+        {(0, 0): a, (0, 1): b, (1, 0): c, (1, 1): d}
 
 
 def test_tolist():
@@ -417,10 +429,10 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2, 2, [0, 1, 2, 3]
-        ).values()) == set([1, 2, 3])
+        ).values()) == {1, 2, 3}
     x = Symbol('x', real=True)
     assert set(PropertiesOnlyMatrix(2, 2, [x, 0, 0, 1]
-        ).values()) == set([x, 1])
+        ).values()) == {x, 1}
 
 
 # OperationsOnlyMatrix tests

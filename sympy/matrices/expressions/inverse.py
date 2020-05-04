@@ -1,9 +1,7 @@
-from __future__ import print_function, division
-
 from sympy.core.sympify import _sympify
 from sympy.core import S, Basic
 
-from sympy.matrices.expressions.matexpr import ShapeError
+from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.expressions.matpow import MatPow
 
 
@@ -41,7 +39,7 @@ class Inverse(MatPow):
         if not mat.is_Matrix:
             raise TypeError("mat should be a matrix")
         if not mat.is_square:
-            raise ShapeError("Inverse of non-square matrix %s" % mat)
+            raise NonSquareMatrixError("Inverse of non-square matrix %s" % mat)
         return Basic.__new__(cls, mat, exp)
 
     @property
@@ -67,10 +65,7 @@ class Inverse(MatPow):
         if hints.get('deep', True):
             arg = arg.doit(**hints)
 
-        if isinstance(arg, MatPow):
-            return MatPow(arg.base, self.exp * arg.exp)
         return arg.inverse()
-
 
     def _eval_derivative_matrix_lines(self, x):
         arg = self.args[0]
