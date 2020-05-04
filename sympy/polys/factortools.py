@@ -133,7 +133,7 @@ def dup_zz_mignotte_bound(f, K):
     """
     d = dup_degree(f)
     delta = _ceil( d / 2 )
-    
+
     # euclidean-norm
     eucl_norm = K.sqrt( sum( [cf**2 for cf in f] ) )
 
