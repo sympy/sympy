@@ -130,12 +130,12 @@ def dup_zz_mignotte_bound(f, K):
 
     References
     ==========
-    
+
     ..[1] [Abbott2013]_
     
     """
     from sympy import binomial
-    
+
     d = dup_degree(f)
     delta = _ceil( d / 2 )
 
