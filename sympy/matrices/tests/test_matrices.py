@@ -956,129 +956,6 @@ def test_wronskian():
     assert wronskian([], x) == 1
 
 
-def test_definite():
-    # Examples from Gilbert Strang, "Introduction to Linear Algebra"
-    # Positive definite matrices
-    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    m = Matrix([[5, 4], [4, 5]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    # Positive semidefinite matrices
-    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    m = Matrix([[1, 2], [2, 4]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    # Examples from Mathematica documentation
-    # Non-hermitian positive definite matrices
-    m = Matrix([[2, 3], [4, 8]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    m = Matrix([[1, 2*I], [-I, 4]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    # Symbolic matrices examples
-    a = Symbol('a', positive=True)
-    b = Symbol('b', negative=True)
-    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
-
-    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == False
-    assert m.is_negative_definite == True
-    assert m.is_negative_semidefinite == True
-    assert m.is_indefinite == False
-
-    m = Matrix([[a, 0], [0, b]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == False
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == True
-
-
-def test_positive_definite():
-    # Test alternative algorithms for testing positive definitiveness.
-    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
-    assert m._eval_is_positive_definite(method='eigen') == True
-    assert m._eval_is_positive_definite(method='LDL') == True
-    assert m._eval_is_positive_definite(method='CH') == True
-
-    m = Matrix([[5, 4], [4, 5]])
-    assert m._eval_is_positive_definite(method='eigen') == True
-    assert m._eval_is_positive_definite(method='LDL') == True
-    assert m._eval_is_positive_definite(method='CH') == True
-
-    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
-    assert m._eval_is_positive_definite(method='eigen') == False
-    assert m._eval_is_positive_definite(method='LDL') == False
-    assert m._eval_is_positive_definite(method='CH') == False
-
-    m = Matrix([[1, 2], [2, 4]])
-    assert m._eval_is_positive_definite(method='eigen') == False
-    assert m._eval_is_positive_definite(method='LDL') == False
-    assert m._eval_is_positive_definite(method='CH') == False
-
-    m = Matrix([[2, 3], [4, 8]])
-    assert m._eval_is_positive_definite(method='eigen') == True
-    assert m._eval_is_positive_definite(method='LDL') == True
-    assert m._eval_is_positive_definite(method='CH') == True
-
-    m = Matrix([[1, 2*I], [-I, 4]])
-    assert m._eval_is_positive_definite(method='eigen') == True
-    assert m._eval_is_positive_definite(method='LDL') == True
-    assert m._eval_is_positive_definite(method='CH') == True
-
-    a = Symbol('a', positive=True)
-    b = Symbol('b', negative=True)
-    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
-    assert m._eval_is_positive_definite(method='eigen') == True
-    assert m._eval_is_positive_definite(method='LDL') == True
-    assert m._eval_is_positive_definite(method='CH') == True
-
-    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
-    assert m._eval_is_positive_definite(method='eigen') == False
-    assert m._eval_is_positive_definite(method='LDL') == False
-    assert m._eval_is_positive_definite(method='CH') == False
-
-    m = Matrix([[a, 0], [0, b]])
-    assert m._eval_is_positive_definite(method='eigen') == False
-    assert m._eval_is_positive_definite(method='LDL') == False
-    assert m._eval_is_positive_definite(method='CH') == False
-
-
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
     assert Matrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \
@@ -1236,11 +1113,11 @@ def test_issue_3950():
 
 
 def test_issue_3981():
-    class Index1(object):
+    class Index1:
         def __index__(self):
             return 1
 
-    class Index2(object):
+    class Index2:
         def __index__(self):
             return 2
     index1 = Index1()
@@ -1909,7 +1786,7 @@ def test_errors():
     raises(ShapeError,
         lambda: Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
     raises(TypeError, lambda: Matrix([[1, 2], [3, 4]]).copyin_list([0,
-           1], set([])))
+           1], set()))
     raises(NonSquareMatrixError, lambda: Matrix([[1, 2, 3], [2, 3, 0]]).inv())
     raises(ShapeError,
         lambda: Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]])))
@@ -2099,7 +1976,7 @@ def test_cholesky():
     assert L.is_lower
     assert L == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
-    assert A.cholesky() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
+    assert A.cholesky().expand() == Matrix(((2, 0, 0), (I, 1, 0), (1 - I, 0, 3)))
 
     raises(NonSquareMatrixError, lambda: SparseMatrix((1, 2)).cholesky())
     raises(ValueError, lambda: SparseMatrix(((1, 2), (3, 4))).cholesky())
@@ -2458,7 +2335,7 @@ def test_issue_5964():
 
 
 def test_issue_7604():
-    x, y = symbols(u"x y")
+    x, y = symbols("x y")
     assert sstr(Matrix([[x, 2*y], [y**2, x + 3]])) == \
         'Matrix([\n[   x,   2*y],\n[y**2, x + 3]])'
 
@@ -2615,45 +2492,6 @@ def test_simplify_immutable():
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
 
-def test_rank():
-    from sympy.abc import x
-    m = Matrix([[1, 2], [x, 1 - 1/x]])
-    assert m.rank() == 2
-    n = Matrix(3, 3, range(1, 10))
-    assert n.rank() == 2
-    p = zeros(3)
-    assert p.rank() == 0
-
-def test_issue_11434():
-    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
-        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
-    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
-                [bx, by, bx*t0, by*t0, 0],
-                [cx, cy, cx*t0, cy*t0, 1],
-                [dx, dy, dx*t0, dy*t0, 1],
-                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
-    assert M.rank() == 4
-
-def test_rank_regression_from_so():
-    # see:
-    # https://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
-
-    nu, lamb = symbols('nu, lambda')
-    A = Matrix([[-3*nu,         1,                  0,  0],
-                [ 3*nu, -2*nu - 1,                  2,  0],
-                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
-                [    0,         0,          nu + lamb, -3]])
-    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
-                               [0, 1, 0,    3/(nu*(-lamb - nu))],
-                               [0, 0, 1,         3/(-lamb - nu)],
-                               [0, 0, 0,                      0]])
-    expected_pivots = (0, 1, 2)
-
-    reduced, pivots = A.rref()
-
-    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
-    assert pivots == expected_pivots
-
 def test_replace():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
@@ -2763,8 +2601,11 @@ def test_from_ndarray():
     assert Matrix(array([[1, 2, 3], [4, 5, 6]])) == \
         Matrix([[1, 2, 3], [4, 5, 6]])
     assert Matrix(array([x, y, z])) == Matrix([x, y, z])
-    raises(NotImplementedError, lambda: Matrix(array([[
-        [1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+    raises(NotImplementedError,
+        lambda: Matrix(array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])))
+    assert Matrix([array([1, 2]), array([3, 4])]) == Matrix([[1, 2], [3, 4]])
+    assert Matrix([array([1, 2]), [3, 4]]) == Matrix([[1, 2], [3, 4]])
+    assert Matrix([array([]), array([])]) == Matrix([])
 
 def test_17522_numpy():
     from sympy.matrices.common import _matrixify
@@ -2997,13 +2838,6 @@ def test_case_6913():
     a = m[0, 0]>0
     assert str(a) == 'm[0, 0] > 0'
 
-def test_issue_15872():
-    A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])
-    B = A - Matrix.eye(4) * I
-    assert B.rank() == 3
-    assert (B**2).rank() == 2
-    assert (B**3).rank() == 2
-
 def test_issue_11948():
     A = MatrixSymbol('A', 3, 3)
     a = Wild('a')
@@ -3018,27 +2852,6 @@ def test_gramschmidt_conjugate_dot():
     Q, R = mat.QRdecomposition()
     assert Q * Q.H == Matrix.eye(2)
 
-def test_issue_17827():
-    C = Matrix([
-        [3, 4, -1, 1],
-        [9, 12, -3, 3],
-        [0, 2, 1, 3],
-        [2, 3, 0, -2],
-        [0, 3, 3, -5],
-        [8, 15, 0, 6]
-    ])
-    # Tests for row/col within valid range
-    D = C.elementary_row_op('n<->m', row1=2, row2=5)
-    E = C.elementary_row_op('n->n+km', row1=5, row2=3, k=-4)
-    F = C.elementary_row_op('n->kn', row=5, k=2)
-    assert(D[5, :] == Matrix([[0, 2, 1, 3]]))
-    assert(E[5, :] == Matrix([[0, 3, 0, 14]]))
-    assert(F[5, :] == Matrix([[16, 30, 0, 12]]))
-    # Tests for row/col out of range
-    raises(ValueError, lambda: C.elementary_row_op('n<->m', row1=2, row2=6))
-    raises(ValueError, lambda: C.elementary_row_op('n->kn', row=7, k=2))
-    raises(ValueError, lambda: C.elementary_row_op('n->n+km', row1=-1, row2=5, k=2))
-
 def test_issue_8207():
     a = Matrix(MatrixSymbol('a', 3, 1))
     b = Matrix(MatrixSymbol('b', 3, 1))
@@ -3047,7 +2860,6 @@ def test_issue_8207():
     e = diff(d, a[0, 0])
     assert d == b[0, 0]
     assert e == 0
-
 
 def test_func():
     from sympy.simplify.simplify import nthroot

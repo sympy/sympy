@@ -17,7 +17,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
-                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
@@ -335,6 +335,11 @@ def test_ContinuousRV():
 
     assert variance(X) == variance(Y)
     assert P(X > 0) == P(Y > 0)
+    Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
+    assert Z.pspace.domain.set == Interval(0, oo)
+    assert E(Z) == 1
+    assert P(Z > 5) == exp(-5)
+    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
 
 
 def test_arcsin():
@@ -584,7 +589,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True,finite=True)
+    p = Symbol("p", positive=True, real=True, finite=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -616,6 +621,13 @@ def test_exponential():
 
     expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
     assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
+
+    Y = Exponential('y', 2*rate)
+    assert coskewness(X, X, X) == skewness(X)
+    assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
+                        4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))
+    assert coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3) == \
+                        sqrt(170)*Rational(9, 85)
 
 def test_exponential_power():
     mu = Symbol('mu')
@@ -673,7 +685,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
-
+@slow
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)
@@ -699,6 +711,10 @@ def test_gamma():
     assert skewness(X).expand() == 2/sqrt(k)
     assert kurtosis(X).expand() == 3 + 6/k
 
+    Y = Gamma('y', 2*k, 3*theta)
+    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
+        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
+        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -766,7 +782,7 @@ def test_laplace():
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
-    X = Laplace('x', [1, 2], [1, 1])
+    X = Laplace('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateLaplaceDistribution)
 
 def test_levy():
@@ -1327,7 +1343,7 @@ def test_random_parameters():
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
     assert isinstance(pspace(meas), JointPSpace)
-    X = Normal('x', [1, 2], [1, 1])
+    X = Normal('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)

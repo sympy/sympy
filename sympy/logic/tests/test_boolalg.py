@@ -61,7 +61,7 @@ def test_And():
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
     assert And(g, l, ge, le) == And(ge, g)
-    assert set([And(*i) for i in permutations((l,g,le,ge))]) == {And(ge, g)}
+    assert {And(*i) for i in permutations((l,g,le,ge))} == {And(ge, g)}
     assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
 
 
@@ -383,11 +383,21 @@ def test_bool_symbol():
 
 
 def test_is_boolean():
-    assert true.is_Boolean
+    assert isinstance(True, Boolean) is False
+    assert isinstance(true, Boolean) is True
+    assert 1 == True
+    assert 1 != true
+    assert (1 == true) is False
+    assert 0 == False
+    assert 0 != false
+    assert (0 == false) is False
+    assert true.is_Boolean is True
     assert (A & B).is_Boolean
     assert (A | B).is_Boolean
     assert (~A).is_Boolean
     assert (A ^ B).is_Boolean
+    assert A.is_Boolean != isinstance(A, Boolean)
+    assert isinstance(A, Boolean)
 
 
 def test_subs():
@@ -969,19 +979,19 @@ def test_as_Boolean():
 
 
 def test_binary_symbols():
-    assert ITE(x < 1, y, z).binary_symbols == set((y, z))
+    assert ITE(x < 1, y, z).binary_symbols == {y, z}
     for f in (Eq, Ne):
         assert f(x, 1).binary_symbols == set()
-        assert f(x, True).binary_symbols == set([x])
-        assert f(x, False).binary_symbols == set([x])
+        assert f(x, True).binary_symbols == {x}
+        assert f(x, False).binary_symbols == {x}
     assert S.true.binary_symbols == set()
     assert S.false.binary_symbols == set()
-    assert x.binary_symbols == set([x])
-    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == set([x, y])
+    assert x.binary_symbols == {x}
+    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
     assert Q.is_true(x < 1).binary_symbols == set()
-    assert Q.is_true(x).binary_symbols == set([x])
-    assert Q.is_true(Eq(x, True)).binary_symbols == set([x])
+    assert Q.is_true(x).binary_symbols == {x}
+    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 

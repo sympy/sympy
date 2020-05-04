@@ -308,12 +308,12 @@ Example 3
 
 A beam of length 6 meters is having a roller support at the start and a hinged
 support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
-of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m is
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m/m is
 applied from the mid till the end of the beam.
 
 ::
 
-                              ramp load = 1 KN/m
+                              ramp load = 1 KN/m/m
                             constant load = 3 KN/m
                          |------------------------|
                        ⭯ 1.5 KN-m
@@ -328,49 +328,73 @@ applied from the mid till the end of the beam.
     Using the sign convention of upward forces and counterclockwise moment
     being positive.
 
->>> from sympy.physics.continuum_mechanics.beam import Beam
->>> from sympy import symbols
->>> E, I = symbols('E, I')
->>> R1, R2 = symbols('R1, R2')
->>> b = Beam(6, E, I)
->>> b.apply_load(R1, 0, -1)
->>> b.apply_load(1.5, 3, -2)
->>> b.apply_load(-3, 3, 0)
->>> b.apply_load(-1, 3, 1)
->>> b.apply_load(R2, 6, -1)
->>> b.bc_deflection.append((0, 0))
->>> b.bc_deflection.append((6, 0))
->>> b.solve_for_reaction_loads(R1, R2)
->>> b.reaction_loads
-    {R₁: 2.75, R₂: 10.75}
->>> b.load
-            -1              -2            0          1                -1
-    2.75⋅<x>   + 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.75⋅<x - 6>
->>> b.shear_force()
-                                                    2
-            0              -1            1   <x - 3>                 0
-    2.75⋅<x>  + 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.75⋅<x - 6>
-                                                2
->>> b.bending_moment()
-                                        2          3
-            1              0   3⋅<x - 3>    <x - 3>                 1
-    2.75⋅<x>  + 1.5⋅<x - 3>  - ────────── - ──────── + 10.75⋅<x - 6>
-                                   2           6
->>> b.slope()
-                                                      4
-             2              1              3   <x - 3>                 2
-    1.375⋅<x>  + 1.5⋅<x - 3>  - 0.5⋅<x - 3>  - ──────── + 5.375⋅<x - 6>  - 15.6
-                                                  24
-    ───────────────────────────────────────────────────────────────────────────
-                                        E⋅I
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
 
->>> b.deflection()
-                                                                               5
-                                   3               2                4   <x - 3>                            3
-    -15.6⋅x + 0.458333333333333⋅<x>  + 0.75⋅<x - 3>  - 0.125⋅<x - 3>  - ──────── + 1.79166666666667⋅<x - 6>
-                                                                          120
-    ────────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                      E⋅I
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols, plot, S
+   >>> E, I = symbols('E, I')
+   >>> R1, R2 = symbols('R1, R2')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_load(R1, 0, -1)
+   >>> b.apply_load(-S(3)/2, 3, -2)
+   >>> b.apply_load(3, 3, 0)
+   >>> b.apply_load(1, 3, 1)
+   >>> b.apply_load(R2, 6, -1)
+   >>> b.bc_deflection.append((0, 0))
+   >>> b.bc_deflection.append((6, 0))
+   >>> b.solve_for_reaction_loads(R1, R2)
+   >>> b.reaction_loads
+      {R₁: -11/4, R₂: -43/4}
+
+   >>> b.load
+               -1            -2                                     -1
+         11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>
+       - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
+            4            2                                     4
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> plot(b.load)  # doctest: +SKIP
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> b.shear_force()
+               0            -1                       2             0
+         11⋅<x>    3⋅<x - 3>              1   <x - 3>    43⋅<x - 6>
+       - ─────── - ─────────── + 3⋅<x - 3>  + ──────── - ───────────
+            4           2                        2            4
+
+   >>> b.bending_moment()
+               1            0            2          3             1
+         11⋅<x>    3⋅<x - 3>    3⋅<x - 3>    <x - 3>    43⋅<x - 6>
+       - ─────── - ────────── + ────────── + ──────── - ───────────
+            4          2            2           6            4
+
+   >>> b.slope()
+               2            1          3          4             2
+         11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>    78
+       - ─────── - ────────── + ──────── + ──────── - ─────────── + ──
+            8          2           2          24           8        5
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
+
+
+   >>> b.deflection()
+                    3            2          4          5             3
+       78⋅x   11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>
+       ──── - ─────── - ────────── + ──────── + ──────── - ───────────
+        5        24         4           8         120           24
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
 
 Example 4
 ---------
@@ -444,7 +468,7 @@ Example 5
 
 A cantilever beam of length 6 meters is under downward distributed constant
 load with magnitude of 4.0 KN/m from starting point till 2 meters away
-from it. A ramp load of 1 kN/m applied from the mid till the end of
+from it. A ramp load of 1 kN/m/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
@@ -456,7 +480,7 @@ away from start.
                              |   . | | |
                              V . | | | |
   \\\\|   4 KN/m             . | | | | |
-  \\\\|___________         . 1 KN/m  | |
+  \\\\|___________         . 1 KN/m/m| |
   \\\\|| | | | | |       . V V V V V V V
   \\\\|V V V V V V     |---------------|
   \\\\|________________________________

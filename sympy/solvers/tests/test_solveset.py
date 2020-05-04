@@ -41,7 +41,7 @@ from sympy.solvers.solveset import (
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic,
-    _solve_logarithm, _term_factors, _is_modular)
+    _solve_logarithm, _term_factors, _is_modular, NonlinearError)
 
 from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
     t, w, x, y, z)
@@ -1152,7 +1152,7 @@ def test_linear_eq_to_matrix():
     # 3) there are non-symbols
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
     # 4) a nonlinear term is detected in the original expression
-    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x)))
+    raises(NonlinearError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x), [x]))
 
     assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
     # issue 15195
@@ -1200,8 +1200,8 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(A, B, x1, x2))
 
     #raise ValueError if equations are non-linear in given variables
-    raises(ValueError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
-    raises(ValueError, lambda: linsolve([cos(x) + y, x + y], [x, y]))
+    raises(NonlinearError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
+    raises(NonlinearError, lambda: linsolve([cos(x) + y, x + y], [x, y]))
     assert linsolve([x + z - 1, x ** 2 + y - 3], [z, y]) == {(-x + 1, -x**2 + 3)}
 
     # Fully symbolic test

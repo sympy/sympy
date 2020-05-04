@@ -1,22 +1,78 @@
-from __future__ import division, print_function
-
 from types import FunctionType
+from collections import Counter
 
+from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.compatibility import default_sort_key
+from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
-from sympy.core.symbol import Dummy
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots
 from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from .common import (MatrixError, NonSquareMatrixError,
-    NonPositiveDefiniteMatrixError)
+from .common import MatrixError, NonSquareMatrixError
 
 from .utilities import _iszero
+
+
+def _eigenvals_triangular(M, multiple=False):
+    """A fast decision for eigenvalues of an upper or a lower triangular
+    matrix.
+    """
+    diagonal_entries = [M[i, i] for i in range(M.rows)]
+    if multiple:
+        return diagonal_entries
+    return dict(Counter(diagonal_entries))
+
+
+def _eigenvals_eigenvects_mpmath(M):
+    norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
+
+    v1 = None
+    prec = max([x._prec for x in M.atoms(Float)])
+    eps = 2**-prec
+
+    while prec < DEFAULT_MAXPREC:
+        with workprec(prec):
+            A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
+            E, ER = mp.eig(A)
+            v2 = norm2([i for e in E for i in (mp.re(e), mp.im(e))])
+            if v1 is not None and mp.fabs(v1 - v2) < eps:
+                return E, ER
+            v1 = v2
+        prec *= 2
+
+    # we get here because the next step would have taken us
+    # past MAXPREC or because we never took a step; in case
+    # of the latter, we refuse to send back a solution since
+    # it would not have been verified; we also resist taking
+    # a small step to arrive exactly at MAXPREC since then
+    # the two calculations might be artificially close.
+    raise PrecisionExhausted
+
+
+def _eigenvals_mpmath(M, multiple=False):
+    """Compute eigenvalues using mpmath"""
+    E, _ = _eigenvals_eigenvects_mpmath(M)
+    result = [_sympify(x) for x in E]
+    if multiple:
+        return result
+    return dict(Counter(result))
+
+
+def _eigenvects_mpmath(M):
+    E, ER = _eigenvals_eigenvects_mpmath(M)
+    result = []
+    for i in range(M.rows):
+        eigenval = _sympify(E[i])
+        eigenvect = _sympify(ER[:, i])
+        result.append((eigenval, 1, [eigenvect]))
+
+    return result
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -91,49 +147,38 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
     Eigenvalues of a matrix `A` can be computed by solving a matrix
     equation `\det(A - \lambda I) = 0`
     """
-
-    simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
-    multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
-    rational = flags.pop('rational', True)
-
     if not M:
         return {}
+
+    if not M.is_square:
+        raise NonSquareMatrixError("{} must be a square matrix.".format(M))
+
+    simplify = flags.pop('simplify', False)
+    multiple = flags.get('multiple', False)
+    rational = flags.pop('rational', True)
+
+    if M.is_upper or M.is_lower:
+        return _eigenvals_triangular(M, multiple=multiple)
+
+    if all(x.is_number for x in M) and M.has(Float):
+        return _eigenvals_mpmath(M, multiple=multiple)
 
     if rational:
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
-    if M.is_upper or M.is_lower:
-        if not M.is_square:
-            raise NonSquareMatrixError()
-
-        diagonal_entries = [M[i, i] for i in range(M.rows)]
-
-        if multiple:
-            eigs = diagonal_entries
-
-        else:
-            eigs = {}
-
-            for diagonal_entry in diagonal_entries:
-                if diagonal_entry not in eigs:
-                    eigs[diagonal_entry] = 0
-
-                eigs[diagonal_entry] += 1
-
+    if isinstance(simplify, FunctionType):
+        eigs = roots(M.charpoly(simplify=simplify), **flags)
     else:
-        flags.pop('simplify', None)  # pop unsupported flag
-
-        if isinstance(simplify, FunctionType):
-            eigs = roots(M.charpoly(x=Dummy('x'), simplify=simplify), **flags)
-        else:
-            eigs = roots(M.charpoly(x=Dummy('x')), **flags)
+        eigs = roots(M.charpoly(), **flags)
 
     # make sure the algebraic multiplicity sums to the
     # size of the matrix
-    if error_when_incomplete and (sum(eigs.values()) if
-            isinstance(eigs, dict) else len(eigs)) != M.cols:
-        raise MatrixError("Could not compute eigenvalues for {}".format(M))
+    if error_when_incomplete:
+        if not multiple and sum(eigs.values()) != M.rows or \
+            multiple and len(eigs) != M.cols:
+            raise MatrixError(
+                "Could not compute eigenvalues for {}".format(M))
 
     # Since 'simplify' flag is unsupported in roots()
     # simplify() function will be applied once at the end of the routine.
@@ -148,6 +193,21 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
         return {simplify(key): value for key, value in eigs.items()}
     else:
         return [simplify(value) for value in eigs]
+
+
+def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
+    """Get a basis for the eigenspace for a particular eigenvalue"""
+    m   = M - M.eye(M.rows) * eigenval
+    ret = m.nullspace(iszerofunc=iszerofunc)
+
+    # The nullspace for a real eigenvalue should be non-trivial.
+    # If we didn't find an eigenvector, try once more a little harder
+    if len(ret) == 0 and simplify:
+        ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
+    if len(ret) == 0:
+        raise NotImplementedError(
+            "Can't evaluate eigenvector for eigenvalue {}".format(eigenval))
+    return ret
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
@@ -226,44 +286,29 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     eigenvals
     MatrixSubspaces.nullspace
     """
-
-    def eigenspace(eigenval):
-        """Get a basis for the eigenspace for a particular eigenvalue"""
-
-        m   = M - M.eye(M.rows) * eigenval
-        ret = m.nullspace(iszerofunc=iszerofunc)
-
-        # the nullspace for a real eigenvalue should be
-        # non-trivial.  If we didn't find an eigenvector, try once
-        # more a little harder
-        if len(ret) == 0 and simplify:
-            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
-        if len(ret) == 0:
-            raise NotImplementedError(
-                    "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
-
-        return ret
-
     simplify = flags.get('simplify', True)
+    primitive = flags.get('simplify', False)
+    chop = flags.pop('chop', False)
+    flags.pop('multiple', None)  # remove this if it's there
 
     if not isinstance(simplify, FunctionType):
         simpfunc = _simplify if simplify else lambda x: x
 
-    primitive = flags.get('simplify', False)
-    chop      = flags.pop('chop', False)
-
-    flags.pop('multiple', None)  # remove this if it's there
-
-    has_floats = M.has(Float) # roots doesn't like Floats, so replace them with Rationals
-
+    has_floats = M.has(Float)
     if has_floats:
+        if all(x.is_number for x in M):
+            return _eigenvects_mpmath(M)
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
-    eigenvals = M.eigenvals(rational=False,
-            error_when_incomplete=error_when_incomplete, **flags)
+    eigenvals = M.eigenvals(
+        rational=False, error_when_incomplete=error_when_incomplete,
+        **flags)
 
-    ret = [(val, mult, eigenspace(val)) for val, mult in
-                sorted(eigenvals.items(), key=default_sort_key)]
+    eigenvals = sorted(eigenvals.items(), key=default_sort_key)
+    ret = []
+    for val, mult in eigenvals:
+        vects = _eigenspace(M, val, iszerofunc=iszerofunc, simplify=simplify)
+        ret.append((val, mult, vects))
 
     if primitive:
         # if the primitive flag is set, get rid of any common
@@ -574,96 +619,53 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     return M.hstack(*p_cols), M.diag(*diag)
 
 
-def _eval_is_positive_definite(M, method="eigen"):
-    """Algorithm dump for computing positive-definiteness of a
-    matrix.
+def _fuzzy_positive_definite(M):
+    positive_diagonals = M._has_positive_diagonals()
+    if positive_diagonals is False:
+        return False
 
-    Parameters
-    ==========
+    if positive_diagonals and M.is_strongly_diagonally_dominant:
+        return True
 
-    method : str, optional
-        Specifies the method for computing positive-definiteness of
-        a matrix.
+    return None
 
-        If ``'eigen'``, it computes the full eigenvalues and decides
-        if the matrix is positive-definite.
-
-        If ``'CH'``, it attempts computing the Cholesky
-        decomposition to detect the definitiveness.
-
-        If ``'LDL'``, it attempts computing the LDL
-        decomposition to detect the definitiveness.
-    """
-
-    if M.is_hermitian:
-        if method == 'eigen':
-            eigen = M.eigenvals()
-            args  = [x.is_positive for x in eigen.keys()]
-
-            return fuzzy_and(args)
-
-        elif method == 'CH':
-            try:
-                M.cholesky(hermitian=True)
-            except NonPositiveDefiniteMatrixError:
-                return False
-
-            return True
-
-        elif method == 'LDL':
-            try:
-                M.LDLdecomposition(hermitian=True)
-            except NonPositiveDefiniteMatrixError:
-                return False
-
-            return True
-
-        else:
-            raise NotImplementedError()
-
-    elif M.is_square:
-        M_H = (M + M.H) / 2
-
-        return M_H._eval_is_positive_definite(method=method)
 
 def _is_positive_definite(M):
-    return M._eval_is_positive_definite()
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
+
+    fuzzy = _fuzzy_positive_definite(M)
+    if fuzzy is not None:
+        return fuzzy
+
+    return _is_positive_definite_GE(M)
+
 
 def _is_positive_semidefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_nonnegative for x in eigen.keys()]
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
 
-        return fuzzy_and(args)
+    nonnegative_diagonals = M._has_nonnegative_diagonals()
+    if nonnegative_diagonals is False:
+        return False
 
-    elif M.is_square:
-        return ((M + M.H) / 2).is_positive_semidefinite
+    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
+        return True
 
-    return None
+    return _is_positive_semidefinite_minors(M)
+
 
 def _is_negative_definite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_negative for x in eigen.keys()]
+    return _is_positive_definite(-M)
 
-        return fuzzy_and(args)
-
-    elif M.is_square:
-        return ((M + M.H) / 2).is_negative_definite
-
-    return None
 
 def _is_negative_semidefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_nonpositive for x in eigen.keys()]
+    return _is_positive_semidefinite(-M)
 
-        return fuzzy_and(args)
-
-    elif M.is_square:
-        return ((M + M.H) / 2).is_negative_semidefinite
-
-    return None
 
 def _is_indefinite(M):
     if M.is_hermitian:
@@ -676,9 +678,37 @@ def _is_indefinite(M):
         return fuzzy_and([any_positive, any_negative])
 
     elif M.is_square:
-        return ((M + M.H) / 2).is_indefinite
+        return (M + M.H).is_indefinite
 
-    return None
+    return False
+
+
+def _is_positive_definite_GE(M):
+    """A division-free gaussian elimination method for testing
+    positive-definiteness."""
+    M = M.as_mutable()
+    size = M.rows
+
+    for i in range(size):
+        is_positive = M[i, i].is_positive
+        if is_positive is not True:
+            return is_positive
+        for j in range(i+1, size):
+            M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
+    return True
+
+
+def _is_positive_semidefinite_minors(M):
+    """A method to evaluate all principal minors for testing
+    positive-semidefiniteness."""
+    size = M.rows
+    for i in range(size):
+        minor = M[:i+1, :i+1].det(method='berkowitz')
+        is_nonnegative = minor.is_nonnegative
+        if is_nonnegative is not True:
+            return is_nonnegative
+    return True
+
 
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.

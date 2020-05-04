@@ -6,7 +6,6 @@
 
 import os
 import re
-import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
@@ -35,7 +34,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with io.open(os.path.join(root, file), "r", encoding='utf-8') as f:
+            with open(os.path.join(root, file), "r", encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
@@ -894,6 +893,11 @@ def test_sympy__sets__sets__SymmetricDifference():
     assert _test_args(SymmetricDifference(FiniteSet(1, 2, 3), \
            FiniteSet(2, 3, 4)))
 
+def test_sympy__sets__sets__DisjointUnion():
+    from sympy.sets.sets import FiniteSet, DisjointUnion
+    assert _test_args(DisjointUnion(FiniteSet(1, 2, 3), \
+           FiniteSet(2, 3, 4)))
+
 
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
@@ -1286,16 +1290,20 @@ def test_sympy__stats__frv_types__FiniteDistributionHandmade():
     assert _test_args(FiniteDistributionHandmade(Dict({1: 1})))
 
 
-def test_sympy__stats__crv__ContinuousDistributionHandmade():
-    from sympy.stats.crv import ContinuousDistributionHandmade
-    from sympy import Symbol, Interval
-    assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
-                                                     Interval(0, 2)))
+def test_sympy__stats__crv_types__ContinuousDistributionHandmade():
+    from sympy.stats.crv_types import ContinuousDistributionHandmade
+    from sympy import Interval, Lambda
+    from sympy.abc import x
+    assert _test_args(ContinuousDistributionHandmade(Lambda(x, 2*x),
+                                                     Interval(0, 1)))
 
 
-def test_sympy__stats__drv__DiscreteDistributionHandmade():
-    from sympy.stats.drv import DiscreteDistributionHandmade
-    assert _test_args(DiscreteDistributionHandmade(x, S.Naturals))
+def test_sympy__stats__drv_types__DiscreteDistributionHandmade():
+    from sympy.stats.drv_types import DiscreteDistributionHandmade
+    from sympy import Lambda, FiniteSet
+    from sympy.abc import x
+    assert _test_args(DiscreteDistributionHandmade(Lambda(x, Rational(1, 10)),
+                                                    FiniteSet(*range(10))))
 
 
 def test_sympy__stats__rv__Density():
@@ -4949,3 +4957,19 @@ def test_sympy__integrals__rubi__utility_function__PolyGamma():
 def test_sympy__integrals__rubi__utility_function__ProductLog():
     from sympy.integrals.rubi.utility_function import ProductLog
     assert _test_args(ProductLog(1))
+
+def test_sympy__combinatorics__schur_number__SchurNumber():
+    from sympy.combinatorics.schur_number import SchurNumber
+    assert _test_args(SchurNumber(1))
+
+def test_sympy__combinatorics__perm_groups__SymmetricPermutationGroup():
+    from sympy.combinatorics.perm_groups import SymmetricPermutationGroup
+    assert _test_args(SymmetricPermutationGroup(5))
+
+def test_sympy__combinatorics__perm_groups__Coset():
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.combinatorics.perm_groups import PermutationGroup, Coset
+    a = Permutation(1, 2)
+    b = Permutation(0, 1)
+    G = PermutationGroup([a, b])
+    assert _test_args(Coset(a, G))

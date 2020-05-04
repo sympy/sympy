@@ -127,6 +127,8 @@ def test_KroneckerProduct_combine_pow():
                              ** 2) == x * KroneckerProduct(X**2, Y**2)
     assert combine_kronecker(
         x * (KroneckerProduct(X, Y)**2) * KroneckerProduct(A, B)) == x * KroneckerProduct(X**2 * A, Y**2 * B)
+    # cannot simplify because of non-square arguments to kronecker product:
+    assert combine_kronecker(KroneckerProduct(A, B.T) ** m) == KroneckerProduct(A, B.T) ** m
 
 
 def test_KroneckerProduct_expand():

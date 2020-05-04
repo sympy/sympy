@@ -7,7 +7,7 @@ from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
-        SparseMatrix, Transpose, Adjoint)
+        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
                                                 GenericZeroMatrix, GenericIdentity, OneMatrix)
 from sympy.testing.pytest import raises, XFAIL
@@ -62,6 +62,7 @@ def test_zero_matrix_creation():
 def test_one_matrix_creation():
     assert OneMatrix(2, 2)
     assert OneMatrix(0, 0)
+    assert Eq(OneMatrix(1, 1), Identity(1))
     raises(ValueError, lambda: OneMatrix(-1, 2))
     raises(ValueError, lambda: OneMatrix(2.0, 2))
     raises(ValueError, lambda: OneMatrix(2j, 2))
@@ -111,10 +112,14 @@ def test_subs():
     C = MatrixSymbol('C', m, l)
 
     assert A.subs(n, m).shape == (m, m)
-
     assert (A*B).subs(B, C) == A*C
-
     assert (A*B).subs(l, n).is_square
+
+    A = SparseMatrix([[1, 2], [3, 4]])
+    B = Matrix([[1, 2], [3, 4]])
+    C, D = MatrixSymbol('C', 2, 2), MatrixSymbol('D', 2, 2)
+
+    assert (C*D).subs({C: A, D: B}) == MatMul(A, B)
 
 
 def test_ZeroMatrix():
@@ -126,16 +131,20 @@ def test_ZeroMatrix():
     assert Z*A.T == ZeroMatrix(n, n)
     assert A - A == ZeroMatrix(*A.shape)
 
-    assert not Z
+    assert Z
 
     assert transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
 
     assert ZeroMatrix(n, n)**0 == Identity(n)
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
         Z**0
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
+        Z**1
+    with raises(NonSquareMatrixError):
         Z**2
+
+    assert ZeroMatrix(3, 3).as_explicit() == ImmutableMatrix.zeros(3, 3)
 
 
 def test_ZeroMatrix_doit():
@@ -156,9 +165,11 @@ def test_OneMatrix():
     assert U.conjugate() == U
 
     assert OneMatrix(n, n) ** 0 == Identity(n)
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
         U ** 0
-    with raises(ShapeError):
+    with raises(NonSquareMatrixError):
+        U ** 1
+    with raises(NonSquareMatrixError):
         U ** 2
     with raises(ShapeError):
         a + U
@@ -175,6 +186,12 @@ def test_OneMatrix_doit():
     assert isinstance(Unn.rows, Add)
     assert Unn.doit() == OneMatrix(2 * n, n)
     assert isinstance(Unn.doit().rows, Mul)
+
+
+def test_OneMatrix_mul():
+    assert OneMatrix(n, m) * OneMatrix(m, k) == OneMatrix(n, k) * m
+    assert w * OneMatrix(1, 1) == w
+    assert OneMatrix(1, 1) * w.T == w.T
 
 
 def test_Identity():
@@ -212,6 +229,7 @@ def test_Identity():
             (0, True)
         )
     )
+    assert Identity(3).as_explicit() == ImmutableMatrix.eye(3)
 
 
 def test_Identity_doit():
@@ -283,7 +301,7 @@ def test_MatPow():
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
     assert A**Rational(1, 3) == cbrt(A)
-    raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
+    raises(NonSquareMatrixError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
 def test_MatrixSymbol():
@@ -301,7 +319,7 @@ def test_dense_conversion():
 
 
 def test_free_symbols():
-    assert (C*D).free_symbols == set((C, D))
+    assert (C*D).free_symbols == {C, D}
 
 
 def test_zero_matmul():
@@ -642,3 +660,12 @@ def test_matrixsymbol_from_symbol():
     A_2 = A.subs(2, 3)
     assert A_1.args == A.args
     assert A_2.args[0] == A.args[0]
+
+
+def test_as_explicit():
+    Z = MatrixSymbol('Z', 2, 3)
+    assert Z.as_explicit() == ImmutableMatrix([
+        [Z[0, 0], Z[0, 1], Z[0, 2]],
+        [Z[1, 0], Z[1, 1], Z[1, 2]],
+    ])
+    raises(ValueError, lambda: A.as_explicit())

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -74,8 +72,14 @@ class ExpBase(Function):
         """
         return self.func(1), Mul(*self.args)
 
+    def _eval_adjoint(self):
+        return self.func(self.args[0].adjoint())
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
+
+    def _eval_transpose(self):
+        return self.func(self.args[0].transpose())
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -1074,7 +1078,7 @@ class LambertW(Function):
                 s = S.Zero
 
             return s + Order(x**n, x)
-        return super(LambertW, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _eval_is_zero(self):
         x = self.args[0]

@@ -1,16 +1,15 @@
-from __future__ import print_function, division
-
 from sympy.core.compatibility import reduce
 from operator import add
 
 from sympy.core import Add, Basic, sympify
 from sympy.functions import adjoint
+from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-    ZeroMatrix, GenericZeroMatrix)
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ZeroMatrix,
+    GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
 
 # XXX: MatAdd should perhaps not subclass directly from Add
