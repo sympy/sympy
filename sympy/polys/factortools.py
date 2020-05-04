@@ -73,6 +73,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets
+from sympy import binomial
 
 from math import ceil as _ceil, log as _log
 
