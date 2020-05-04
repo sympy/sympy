@@ -71,12 +71,6 @@ def test_parabola_geom():
     assert pa10.focal_length == pa11.focal_length == sqrt((a - b) ** 2) / 2 # if a, b real == abs(a - b)/2
     assert pa11.vertex == Point(*pa10.vertex[::-1]) == Point(a,
                             a - sqrt((a - b)**2)*sign(a - b)/2) # change axis x->y, y->x on pa10
-    assert pa3.latus_rectum == Line(Point2D(0, 0), Point2D(0, 1))
-    assert pa4.latus_rectum == pa5.latus_rectum == Line(Point2D(3, 7), Point2D(4, 7))
-    assert pa6.latus_rectum == Line(Point2D(0, 4), Point2D(1, 4))
-    assert pa7.latus_rectum == Line(Point2D(3, 7), Point2D(3, 8))
-    assert pa8.latus_rectum == Line(Point2D(6, 0), Point2D(6, 1))
-    assert pa9.latus_rectum == Line(Point2D(6, 0), Point2D(6, 1))
     assert pa10.latus_rectum == Line(Point2D(a, a), Point2D(a, a + 1))
     assert pa11.latus_rectum == Line(Point2D(a, a), Point2D(a + 1, a))
 

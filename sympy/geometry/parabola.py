@@ -380,11 +380,12 @@ class Parabola(GeometrySet):
     def latus_rectum(self):
         """Returns the line passing through the focus
            that is perpendicular to the axis of symmetry
+
            Returns
            =======
 
            latus_rectum : Line
-            Latus Rectum of Parabola
+               Latus Rectum of Parabola
 
            Examples
            ========
@@ -395,8 +396,7 @@ class Parabola(GeometrySet):
            Line2D(Point2D(0, 0), Point2D(1, 0))
 
         """
-        s = self.directrix.slope
-        return Line(self.focus, slope=s)
+        return Line(self.focus, slope=self.directrix.slope)
 
     @property
     def vertex(self):
