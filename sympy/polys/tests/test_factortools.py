@@ -27,7 +27,7 @@ def test_dmp_trial_division():
 
 def test_dup_zz_mignotte_bound():
     R, x = ring("x", ZZ)
-    assert R.dup_zz_mignotte_bound(2*x**2 + 3*x + 4) == 32
+    assert R.dup_zz_mignotte_bound(2*x**2 + 3*x + 4) == 6
 
 
 def test_dmp_zz_mignotte_bound():

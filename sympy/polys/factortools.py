@@ -124,13 +124,29 @@ def dmp_trial_division(f, factors, u, K):
 
 
 def dup_zz_mignotte_bound(f, K):
-    """Mignotte bound for univariate polynomials in `K[x]`. """
-    a = dup_max_norm(f, K)
-    b = abs(dup_LC(f, K))
-    n = dup_degree(f)
+    """
+    The Knuth-Cohen variant of Mignotte bound for
+    univariate polynomials in `K[x]`.
 
-    return K.sqrt(K(n + 1))*2**n*a*b
+    Reference: John Abbott, Journal of Symbolic Computation 50 (2013) 532–563.
+    """
+    d = dup_degree(f)
+    delta = _ceil( d / 2 )
+    
+    # euclidean-norm
+    eucl_norm = K.sqrt( sum( [cf**2 for cf in f] ) )
 
+    # biggest values of binomial coefficients (p. 538 of reference)
+    t1 = binomial( delta - 1, _ceil( delta / 2 ) )
+    t2 = binomial( delta - 1, _ceil( delta / 2 ) - 1 )
+
+    lc = abs( dup_LC(f, K) )   # leading coefficient
+    
+    bound = t1 * eucl_norm + t2 * lc   # (p. 538 of reference)
+    
+    bound = _ceil( bound / 2 ) * 2   # round up to even integer
+    
+    return bound + dup_max_norm(f, K)  # add max_coeff for irreducible polys
 
 def dmp_zz_mignotte_bound(f, u, K):
     """Mignotte bound for multivariate polynomials in `K[X]`. """
@@ -1147,7 +1163,7 @@ def dmp_ext_factor(f, u, K):
         return lc, []
 
     f, F = dmp_sqf_part(f, u, K), f
-    s, g, r = dmp_sqf_norm(F, u, K)
+    s, g, r = dmp_sqf_norm(f, u, K)
 
     factors = dmp_factor_list_include(r, u, K.dom)
 
