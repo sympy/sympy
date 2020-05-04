@@ -548,9 +548,11 @@ class MatrixExpr(Expr):
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
                 if dimensions is not None:
-                    identity = Identity(dimensions[0])
+                    size = dimensions[0]
                 else:
-                    identity = Symbol('1', Integer=True)
+                    range1 = index_ranges[i1]
+                    size = range1[1] - range1[0] + 1
+                identity = Identity(size)
                 return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
