@@ -13,7 +13,7 @@ from sympy.plotting.plot import (
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
     TextBackend)
-from sympy.testing.pytest import skip, raises, warns, slow
+from sympy.testing.pytest import skip, raises, warns
 from sympy.utilities import lambdify as lambdify_
 
 
@@ -306,7 +306,6 @@ def test_plot_and_save_3():
         p._backend.close()
 
 
-@slow
 def test_plot_and_save_4():
     if not matplotlib:
         skip("Matplotlib not the default backend")
@@ -334,7 +333,6 @@ def test_plot_and_save_4():
             p._backend.close()
 
 
-@slow
 def test_plot_and_save_5():
     if not matplotlib:
         skip("Matplotlib not the default backend")
