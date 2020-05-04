@@ -1239,7 +1239,7 @@ class Basic(metaclass=ManagedProperties):
             return any(f.func == pattern or f == pattern
             for f in self.atoms(Function, UndefinedFunction))
 
-        pattern = sympify(pattern)
+        pattern = _sympify(pattern)
         if isinstance(pattern, BasicMeta):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
