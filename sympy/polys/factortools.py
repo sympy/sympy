@@ -147,11 +147,11 @@ def dup_zz_mignotte_bound(f, K):
     t2 = binomial( delta - 1, _ceil( delta / 2 ) - 1 )
 
     lc = abs( dup_LC(f, K) )   # leading coefficient
-    
+
     bound = t1 * eucl_norm + t2 * lc   # (p. 538 of reference)
-    
+
     bound = _ceil( bound / 2 ) * 2   # round up to even integer
-    
+
     return bound + dup_max_norm(f, K)  # add max_coeff for irreducible polys
 
 def dmp_zz_mignotte_bound(f, u, K):
