@@ -129,7 +129,11 @@ def dup_zz_mignotte_bound(f, K):
     The Knuth-Cohen variant of Mignotte bound for
     univariate polynomials in `K[x]`.
 
-    Reference: John Abbott, Journal of Symbolic Computation 50 (2013) 532–563.
+    References
+    ==========
+    
+    ..[1] [Abbott2013]_
+    
     """
     d = dup_degree(f)
     delta = _ceil( d / 2 )
