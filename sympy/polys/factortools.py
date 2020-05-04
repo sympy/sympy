@@ -132,7 +132,7 @@ def dup_zz_mignotte_bound(f, K):
     ==========
 
     ..[1] [Abbott2013]_
-    
+
     """
     from sympy import binomial
 
