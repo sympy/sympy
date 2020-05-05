@@ -5,7 +5,7 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
                                        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
                                        _RecognizeMatMulLines, _unfold_recognized_expr,
                                        parse_indexed_expression, recognize_matrix_expression,
-                                       _parse_matrix_expression, parse_matrix_expression)
+                                       parse_matrix_expression, parse_matrix_expression)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -327,34 +327,34 @@ def test_codegen_permutedims_sink():
 def test_parsing_of_matrix_expressions():
 
     expr = M*N
-    assert _parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
 
     expr = Transpose(M)
-    assert _parse_matrix_expression(expr) == CodegenArrayPermuteDims(M, [1, 0])
+    assert parse_matrix_expression(expr) == CodegenArrayPermuteDims(M, [1, 0])
 
     expr = M*Transpose(N)
-    assert _parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
 
     expr = 3*M*N
-    res = _parse_matrix_expression(expr)
+    res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
     assert expr == rexpr
 
     expr = 3*M + N*M.T*M + 4*k*N
-    res = _parse_matrix_expression(expr)
+    res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
     assert expr == rexpr
 
     expr = Inverse(M)*N
-    rexpr = recognize_matrix_expression(_parse_matrix_expression(expr))
+    rexpr = recognize_matrix_expression(parse_matrix_expression(expr))
     assert expr == rexpr
 
     expr = M**2
-    rexpr = recognize_matrix_expression(_parse_matrix_expression(expr))
+    rexpr = recognize_matrix_expression(parse_matrix_expression(expr))
     assert expr == rexpr
 
     expr = M*(2*N + 3*M)
-    res = _parse_matrix_expression(expr)
+    res = parse_matrix_expression(expr)
     rexpr = recognize_matrix_expression(res)
     assert expr.expand() == rexpr.doit()
 

@@ -1019,10 +1019,6 @@ def _codegen_array_parse(expr):
 
 
 def parse_matrix_expression(expr: MatrixExpr) -> Basic:
-    return _parse_matrix_expression(expr)
-
-
-def _parse_matrix_expression(expr: MatrixExpr) -> Basic:
     if isinstance(expr, MatMul):
         args_nonmat = []
         args = []
@@ -1035,22 +1031,22 @@ def _parse_matrix_expression(expr: MatrixExpr) -> Basic:
         scalar = Mul.fromiter(args_nonmat)
         if scalar == 1:
             tprod = CodegenArrayTensorProduct(
-                *[_parse_matrix_expression(arg) for arg in args])
+                *[parse_matrix_expression(arg) for arg in args])
         else:
             tprod = CodegenArrayTensorProduct(
                 scalar,
-                *[_parse_matrix_expression(arg) for arg in args])
+                *[parse_matrix_expression(arg) for arg in args])
         return CodegenArrayContraction(
                 tprod,
                 *contractions
         )
     elif isinstance(expr, MatAdd):
         return CodegenArrayElementwiseAdd(
-                *[_parse_matrix_expression(arg) for arg in expr.args]
+                *[parse_matrix_expression(arg) for arg in expr.args]
         )
     elif isinstance(expr, Transpose):
         return CodegenArrayPermuteDims(
-                _parse_matrix_expression(expr.args[0]), [1, 0]
+                parse_matrix_expression(expr.args[0]), [1, 0]
         )
     else:
         return expr
