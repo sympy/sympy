@@ -632,6 +632,24 @@ class LatexPrinter(Printer):
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
             base = base[6: -7]  # remove outermost added parens
+<<<<<<< HEAD
+=======
+            exp = r"{%s}" % exp
+        elif expr.base.is_Pow:
+            if isinstance(expr.exp, Add) or expr.exp.is_Integer or expr.exp.is_Rational :
+                exp = r"{%s}" % exp
+            else:
+                exp = r"\left({%s}\right)" % exp
+        else:
+            exp = r"{%s}" % exp
+ 
+         # checks if base expression contains '^' and it is not considered
+         # in previous if statement and it doesnt already enclosed in bracket
+        if ('^' in base and (not expr.base.is_Pow)
+            and ('left(' not in base)):
+            base = r'\left(%s\right)' % base
+ 
+>>>>>>> add parenthesis around base expression if expression in power contains expression with power.
         return template % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):

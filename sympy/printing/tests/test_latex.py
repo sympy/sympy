@@ -2184,6 +2184,12 @@ def test_issue_13651():
     expr = c + Mul(-1, a + b, evaluate=False)
     assert latex(expr) == r"c - \left(a + b\right)"
 
+def test_issue_6975():
+    x = symbols('x')
+    assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
+    assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)\right)^\left({\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)}\right)"
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
