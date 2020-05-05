@@ -150,9 +150,11 @@ def dup_zz_mignotte_bound(f, K):
 
     bound = t1 * eucl_norm + t2 * lc   # (p. 538 of reference)
 
+    bound += dup_max_norm(f, K) #add max coeff for irreducible polys
+
     bound = _ceil( bound / 2 ) * 2   # round up to even integer
 
-    return bound + dup_max_norm(f, K)  # add max_coeff for irreducible polys
+    return bound
 
 def dmp_zz_mignotte_bound(f, u, K):
     """Mignotte bound for multivariate polynomials in `K[X]`. """
