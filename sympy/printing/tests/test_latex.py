@@ -2184,12 +2184,6 @@ def test_issue_13651():
     expr = c + Mul(-1, a + b, evaluate=False)
     assert latex(expr) == r"c - \left(a + b\right)"
 
-def test_issue_6975():
-    x = symbols('x')
-    assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
-        r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
-    assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
-        r"\left(\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)\right)^\left({\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)}\right)"
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
@@ -2554,6 +2548,14 @@ def test_unit_printing():
     assert latex(5*meter) == r'5 \text{m}'
     assert latex(3*gibibyte) == r'3 \text{gibibyte}'
     assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'
+
+
+def test_issue_6975():
+    x = symbols('x')
+    assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
+    assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)\right)^\left({\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)}\right)"
 
 
 def test_issue_17092():
