@@ -2136,6 +2136,7 @@ def test_Pow():
 
 def test_issue_6975():
     x = symbols('x')
+    y = symbols('y')
     assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
         r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
     assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
