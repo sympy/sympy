@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -777,9 +777,35 @@ def test_MatMul_MatAdd():
     assert str(-(1 + I)*X) == '(-1 - I)*X'
 
 def test_MatrixSlice():
-    from sympy.matrices.expressions import MatrixSymbol
-    assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
-    assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert str(MatrixSlice(X, (None, None, None), (None, None, None))) == 'X[:, :]'
+    assert str(X[x:x + 1, y:y + 1]) == 'X[x:x + 1, y:y + 1]'
+    assert str(X[x:x + 1:2, y:y + 1:2]) == 'X[x:x + 1:2, y:y + 1:2]'
+    assert str(X[:x, y:]) == 'X[:x, y:]'
+    assert str(X[:x, y:]) == 'X[:x, y:]'
+    assert str(X[x:, :y]) == 'X[x:, :y]'
+    assert str(X[x:y, z:w]) == 'X[x:y, z:w]'
+    assert str(X[x:y:t, w:t:x]) == 'X[x:y:t, w:t:x]'
+    assert str(X[x::y, t::w]) == 'X[x::y, t::w]'
+    assert str(X[:x:y, :t:w]) == 'X[:x:y, :t:w]'
+    assert str(X[::x, ::y]) == 'X[::x, ::y]'
+    assert str(MatrixSlice(X, (0, None, None), (0, None, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (None, n, None), (None, n, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (0, n, None), (0, n, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (0, n, 2), (0, n, 2))) == 'X[::2, ::2]'
+    assert str(X[1:2:3, 4:5:6]) == 'X[1:2:3, 4:5:6]'
+    assert str(X[1:3:5, 4:6:8]) == 'X[1:3:5, 4:6:8]'
+    assert str(X[1:10:2]) == 'X[1:10:2, :]'
+    assert str(Y[:5, 1:9:2]) == 'Y[:5, 1:9:2]'
+    assert str(Y[:5, 1:10:2]) == 'Y[:5, 1::2]'
+    assert str(Y[5, :5:2]) == 'Y[5:6, :5:2]'
+    assert str(X[0:1, 0:1]) == 'X[:1, :1]'
+    assert str(X[0:1:2, 0:1:2]) == 'X[:1:2, :1:2]'
+    assert str((Y + Z)[2:, 2:]) == '(Y + Z)[2:, 2:]'
 
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "True"
@@ -833,14 +859,6 @@ def test_MatrixExpressions():
     X = MatrixSymbol('X', n, n)
 
     assert str(X) == "X"
-
-    Y = X[1:2:3, 4:5:6]
-
-    assert str(Y) == "X[1:3, 4:6]"
-
-    Z = X[1:10:2]
-
-    assert str(Z) == "X[1:10:2, :n]"
 
     # Apply function elementwise (`ElementwiseApplyFunc`):
 

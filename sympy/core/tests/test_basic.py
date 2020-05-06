@@ -8,6 +8,7 @@ from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic, _aresame)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol
+from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
@@ -102,6 +103,7 @@ def test_has():
     assert b21.has(Basic)
     assert not b1.has(b21, b3)
     assert not b21.has()
+    raises(SympifyError, lambda: Symbol("x").has("x"))
 
 
 def test_subs():

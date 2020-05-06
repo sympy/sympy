@@ -257,48 +257,94 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
 
     Plot expressions:
 
-    >>> from sympy import plot_implicit, cos, sin, symbols, Eq, And
-    >>> x, y = symbols('x y')
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
 
-    Without any ranges for the symbols in the expression
+        >>> from sympy import plot_implicit, cos, sin, symbols, Eq, And
+        >>> x, y = symbols('x y')
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
+    Without any ranges for the symbols in the expression:
 
-    With the range for the symbols
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
-    ...         (x, -3, 3), (y, -3, 3))
+        >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
 
-    With depth of recursion as argument.
+    With the range for the symbols:
 
-    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -4, 4), (y, -4, 4), depth = 2)
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    Using mesh grid and not using adaptive meshing.
+        >>> p2 = plot_implicit(
+        ...     Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3))
 
-    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -5, 5), (y, -2, 2), adaptive=False)
+    With depth of recursion as argument:
 
-    Using mesh grid with number of points as input.
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -5, 5), (y, -2, 2),
-    ...         adaptive=False, points=400)
+        >>> p3 = plot_implicit(
+        ...     Eq(x**2 + y**2, 5), (x, -4, 4), (y, -4, 4), depth = 2)
 
-    Plotting regions.
+    Using mesh grid and not using adaptive meshing:
 
-    >>> p6 = plot_implicit(y > x**2)
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    Plotting Using boolean conjunctions.
+        >>> p4 = plot_implicit(
+        ...     Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2),
+        ...     adaptive=False)
 
-    >>> p7 = plot_implicit(And(y > x, y > -x))
+    Using mesh grid without using adaptive meshing with number of points
+    specified:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> p5 = plot_implicit(
+        ...     Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2),
+        ...     adaptive=False, points=400)
+
+    Plotting regions:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> p6 = plot_implicit(y > x**2)
+
+    Plotting Using boolean conjunctions:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> p7 = plot_implicit(And(y > x, y > -x))
 
     When plotting an expression with a single variable (y - 1, for example),
     specify the x or the y variable explicitly:
 
-    >>> p8 = plot_implicit(y - 1, y_var=y)
-    >>> p9 = plot_implicit(x - 1, x_var=x)
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
+        >>> p8 = plot_implicit(y - 1, y_var=y)
+        >>> p9 = plot_implicit(x - 1, x_var=x)
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan

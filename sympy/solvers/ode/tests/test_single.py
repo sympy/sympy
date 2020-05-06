@@ -32,8 +32,8 @@ Functions that are for internal use:
    ODEs which raises exception.
 
 """
-from sympy import (cos, Derivative, diff,
-    Eq, exp, log, pi, Rational, sin, tan,
+from sympy import (cos, Derivative, Dummy, diff,
+    Eq, exp, I, log, pi, Piecewise, Rational, sin, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
@@ -115,9 +115,9 @@ when using {hint} for the example {example}
 
 You can test this with:
 
-from sympy.solvers.ode.tests.test_single import _test_particular_example
+from sympy.solvers.ode.tests.test_single import _test_an_example
 
-_test_particular_example('{hint}', example_name = '{example}')
+_test_an_example('{hint}', example_name = '{example}')
 
 The ODE is:
 {eq}
@@ -160,66 +160,88 @@ def _test_all_hints(runxfail=False):
     all_examples = _get_all_examples()
 
     for our_hint in all_hints:
+        if our_hint.endswith('_Integral') or 'series' in our_hint:
+            continue
         _test_all_examples_for_one_hint(our_hint, all_examples, runxfail)
 
 
-def _test_particular_example(our_hint, ode_example=None,solver_flag=False, example_name=None):
-    if example_name is not None:
-        all_examples = _get_all_examples()
-        for example in all_examples:
-            if example['example_name'] == example_name:
-                eq = example['eq']
-                dsolve(eq, hint=our_hint)
+def _test_dummy_sol(expected_sol,dsolve_sol):
+    if type(dsolve_sol)==list:
+        return any(expected_sol.dummy_eq(sub_dsol) for sub_dsol in dsolve_sol)
     else:
-        eq = ode_example['eq']
-        expected_sol = ode_example['sol']
-        example = ode_example['example_name']
-        xfail = our_hint in ode_example['XFAIL']
-        func = ode_example['func']
-        result = {'msg': '', 'xpass_msg': ''}
-        xpass = True
-        if solver_flag:
-            if our_hint not in classify_ode(eq, func):
-                message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
+        return expected_sol.dummy_eq(dsolve_sol)
+
+
+def _test_an_example(our_hint, example_name):
+    all_examples = _get_all_examples()
+    for example in all_examples:
+        if example['example_name'] == example_name:
+            _test_particular_example(our_hint, example)
+
+
+def _test_particular_example(our_hint, ode_example, solver_flag=False):
+    eq = ode_example['eq']
+    expected_sol = ode_example['sol']
+    example = ode_example['example_name']
+    xfail = our_hint in ode_example['XFAIL']
+    func = ode_example['func']
+    result = {'msg': '', 'xpass_msg': ''}
+    xpass = True
+    if solver_flag:
+        if our_hint not in classify_ode(eq, func):
+            message = hint_message.format(example=example, eq=eq, our_hint=our_hint)
+            raise AssertionError(message)
+
+    if our_hint in classify_ode(eq, func):
+        result['match_list'] = example
+        try:
+            dsolve_sol = dsolve(eq, func, hint=our_hint)
+
+        except Exception as e:
+            dsolve_sol = []
+            result['exception_list'] = example
+            if not solver_flag:
+                traceback.print_exc()
+                result['msg'] = exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq)
+            xpass = False
+
+        if solver_flag and dsolve_sol!=[]:
+            expect_sol_check = False
+            if type(dsolve_sol)==list:
+                for sub_sol in expected_sol:
+                    if sub_sol.has(Dummy):
+                        expect_sol_check = not _test_dummy_sol(sub_sol, dsolve_sol)
+                    else:
+                        expect_sol_check = sub_sol not in dsolve_sol
+                    if expect_sol_check:
+                        break
+            else:
+                expect_sol_check = dsolve_sol not in expected_sol
+                for sub_sol in expected_sol:
+                    if sub_sol.has(Dummy):
+                        expect_sol_check = not _test_dummy_sol(sub_sol, dsolve_sol)
+
+            if expect_sol_check:
+                message = expected_sol_message.format(example=example, eq=eq, sol=expected_sol, dsolve_sol=dsolve_sol)
                 raise AssertionError(message)
 
-        if our_hint in classify_ode(eq, func):
-            result['match_list'] = example
-            try:
-                dsolve_sol = dsolve(eq, func, hint=our_hint)
-                if solver_flag:
-                    expect_sol_check = False
-                    if type(dsolve_sol)==list:
-                        if any(sub_sol not in dsolve_sol for sub_sol in expected_sol):
-                            expect_sol_check = True
-                    else:
-                        expect_sol_check = dsolve_sol not in expected_sol
-                    if expect_sol_check:
-                        message = expected_sol_message.format(example=example, eq=eq, sol=expected_sol, dsolve_sol=dsolve_sol)
-                        raise AssertionError(message)
+            expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
+            if len(expected_sol) == 1:
+                expected_checkodesol = (True, 0)
 
-                expected_checkodesol = [(True, 0) for i in range(len(expected_sol))]
-                if len(expected_sol) == 1:
-                    expected_checkodesol = (True, 0)
-
-                if checkodesol(eq, dsolve_sol) != expected_checkodesol:
-                    result['unsolve_list'] = example
-                    xpass = False
-                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-                    if solver_flag:
-                        message = checkodesol.format(example=example, eq=eq)
-                        raise AssertionError(message)
-                    else:
-                        result['msg'] = 'AssertionError: ' + message
-            except Exception as e:
-                result['exception_list'] = example
-                if not solver_flag:
-                    traceback.print_exc()
-                    result['msg'] = exception_msg.format(e=str(e), hint=our_hint, example=example, eq=eq)
+            if checkodesol(eq, dsolve_sol) != expected_checkodesol:
+                result['unsolve_list'] = example
                 xpass = False
+                message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                if solver_flag:
+                    message = checkodesol_msg.format(example=example, eq=eq)
+                    raise AssertionError(message)
+                else:
+                    result['msg'] = 'AssertionError: ' + message
+
         if xpass and xfail:
             result['xpass_msg'] = example + "is now passing for the hint" + our_hint
-        return result
+    return result
 
 
 def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
@@ -227,10 +249,10 @@ def _test_all_examples_for_one_hint(our_hint, all_examples=[], runxfail=None):
         all_examples = _get_all_examples()
     match_list, unsolve_list, exception_list = [], [], []
     for ode_example in all_examples:
-        if our_hint.endswith('_Integral') or 'series' in our_hint:
-            continue
         xfail = our_hint in ode_example['XFAIL']
         if runxfail and not xfail:
+            continue
+        if xfail:
             continue
         result = _test_particular_example(our_hint, ode_example)
         match_list += result.get('match_list',[])
@@ -293,39 +315,34 @@ def test_factorable():
     _ode_solver_test(_get_examples_ode_sol_factorable())
 
 
-def test_issue_15889():
-    eq = exp(f(x).diff(x))-f(x)**2
-    sol = Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)
-    assert sol.dummy_eq(dsolve(eq))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)
-    sol = Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x)**2 - f(x)**2
-    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-    eq = f(x).diff(x)**2 - f(x)**3
-    sol = Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))
-    assert sol == dsolve(eq)
-    assert checkodesol(eq, sol) == (True, 0)
-
-
 def test_Riccati_special_minus2():
     _ode_solver_test(_get_examples_ode_sol_riccati())
 
 
 def test_Bernoulli():
     _ode_solver_test(_get_examples_ode_sol_bernoulli())
+
+
+def test_1st_linear():
+    _ode_solver_test(_get_examples_ode_sol_1st_linear())
+
+
+def test_almost_linear():
+   _ode_solver_test(_get_examples_ode_sol_almost_linear())
+
+
+def test_Liouville_ODE():
+    hint = 'Liouville'
+    not_Liouville1 = classify_ode(diff(f(x), x)/x + f(x)*diff(f(x), x, x)/2 -
+        diff(f(x), x)**2/2, f(x))
+    not_Liouville2 = classify_ode(diff(f(x), x)/x + diff(f(x), x, x)/2 -
+        x*diff(f(x), x)**2/2, f(x))
+    assert hint not in not_Liouville1
+    assert hint not in not_Liouville2
+    assert hint + '_Integral' not in not_Liouville1
+    assert hint + '_Integral' not in not_Liouville2
+
+    _ode_solver_test(_get_examples_ode_sol_liouville())
 
 
 def test_nth_order_linear_euler_eq_homogeneous():
@@ -519,11 +536,26 @@ def _get_examples_ode_sol_riccati():
     }
 
 
+def _get_examples_ode_sol_1st_linear():
+    # Type: first order linear form f'(x)+p(x)f(x)=q(x)
+    return {
+            'hint': "1st_linear",
+            'func': f(x),
+            'examples':{
+    'linear_01': {
+        'eq': Eq(f(x).diff(x) + x*f(x), x**2),
+        'sol': [Eq(f(x), (C1 + x*exp(x**2/2)- sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2)*exp(-x**2/2))],
+    },
+    },
+    }
+
+
 def _get_examples_ode_sol_factorable():
     """ some hints are marked as xfail for examples because they missed additional algebraic solution
     which could be found by Factorable hint. Fact_01 raise exception for
     nth_linear_constant_coeff_undetermined_coefficients"""
 
+    y = Dummy('y')
     return {
             'hint': "factorable",
             'func': f(x),
@@ -598,8 +630,119 @@ def _get_examples_ode_sol_factorable():
         'sol': [], #currently dsolve doesn't return any solution for this example
         'XFAIL': ['factorable']
     },
+
+    #Below examples were added for the issue: https://github.com/sympy/sympy/issues/15889
+    'fact_12': {
+        'eq': exp(f(x).diff(x))-f(x)**2,
+        'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
+        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+    },
+
+    'fact_13': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
+        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+    },
+
+    'fact_14': {
+        'eq': f(x).diff(x)**2 - f(x),
+        'sol': [Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)]
+    },
+
+    'fact_15': {
+        'eq': f(x).diff(x)**2 - f(x)**2,
+        'sol': [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
+    },
+
+    'fact_16': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))]
+    },
     }
     }
+
+
+
+def _get_examples_ode_sol_almost_linear():
+    from sympy import Ei
+    A = Symbol('A', positive=True)
+    f = Function('f')
+    d = f(x).diff(x)
+
+    return {
+            'hint': "almost_linear",
+            'func': f(x),
+            'examples':{
+    'almost_lin_01': {
+        'eq': x**2*f(x)**2*d + f(x)**3 + 1,
+        'sol': [Eq(f(x), (C1*exp(3/x) - 1)**Rational(1, 3)),
+        Eq(f(x), (-1 - sqrt(3)*I)*(C1*exp(3/x) - 1)**Rational(1, 3)/2),
+        Eq(f(x), (-1 + sqrt(3)*I)*(C1*exp(3/x) - 1)**Rational(1, 3)/2)],
+
+    },
+
+    'almost_lin_02': {
+        'eq': x*f(x)*d + 2*x*f(x)**2 + 1,
+        'sol': [Eq(f(x), -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))), Eq(f(x), sqrt((C1 - 2*Ei(4*x))*exp(-4*x)))]
+    },
+
+    'almost_lin_03': {
+        'eq':  x*d + x*f(x) + 1,
+        'sol': [Eq(f(x), (C1 - Ei(x))*exp(-x))]
+    },
+
+    'almost_lin_04': {
+        'eq': x*exp(f(x))*d + exp(f(x)) + 3*x,
+        'sol': [Eq(f(x), log(C1/x - x*Rational(3, 2)))],
+    },
+
+    'almost_lin_05': {
+        'eq': x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2,
+        'sol': [Eq(f(x), (C1 + Piecewise(
+        (x, Eq(A + 1, 0)), ((-A*x + A - x - 1)*exp(x)/(A + 1), True)))*exp(-x))],
+    },
+    }
+    }
+
+
+def _get_examples_ode_sol_liouville():
+    return {
+            'hint': "Liouville",
+            'func': f(x),
+            'examples':{
+    'liouville_01': {
+        'eq': diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2,
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))],
+
+    },
+
+    'liouville_02': {
+        'eq': diff(x*exp(-f(x)), x, x),
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))]
+    },
+
+    'liouville_03': {
+        'eq':  ((diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2)*exp(-f(x))/exp(f(x))).expand(),
+        'sol': [Eq(f(x), log(x/(C1 + C2*x)))]
+    },
+
+    'liouville_04': {
+        'eq': diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x),
+        'sol': [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))],
+    },
+
+    'liouville_05': {
+        'eq': x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x),
+        'sol': [Eq(f(x), -sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(C1 + C2*exp(-x)))],
+    },
+
+    'liouville_06': {
+        'eq': Eq((x*exp(f(x))).diff(x, x), 0),
+        'sol': [Eq(f(x), log(C1 + C2/x))],
+    },
+    }
+    }
+
 
 def _get_examples_ode_sol_nth_algebraic():
     M, m, r, t = symbols('M m r t')
@@ -700,7 +843,10 @@ def _get_all_examples():
     _get_examples_ode_sol_factorable(),
     _get_examples_ode_sol_bernoulli(),
     _get_examples_ode_sol_nth_algebraic(),
-    _get_examples_ode_sol_riccati()]
+    _get_examples_ode_sol_riccati(),
+    _get_examples_ode_sol_1st_linear(),
+    _get_examples_ode_sol_almost_linear(),
+    ]
 
     all_examples = []
     for solver in all_solvers:
