@@ -616,7 +616,7 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, exp=self._print(expr.exp))
             else:
-                tex = r"%s^{%s}"
+                tex = r"%s^%s"
                 return self._helper_print_standard_power(expr, tex)
 
     def _helper_print_standard_power(self, expr, template):
@@ -624,14 +624,27 @@ class LatexPrinter(Printer):
         # issue #12886: add parentheses around superscripts raised
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-        if '^' in base and expr.base.is_Symbol:
-            base = self.parenthesize_super(base)
-        elif (isinstance(expr.base, Derivative)
+        if (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
             and base.endswith(r'\right)')):
             # don't use parentheses around dotted derivative
             base = base[6: -7]  # remove outermost added parens
+            exp = r"{%s}" % exp
+        elif expr.base.is_Pow:
+            if isinstance(expr.exp, Add) or expr.exp.is_Integer or expr.exp.is_Rational:
+                exp = r"{%s}" % exp
+            else:
+                exp = r"\left({%s}\right)" % exp
+        else:
+            exp = r"{%s}" % exp
+
+         # checks if base expression contains '^' and it is not considered
+         # in previous if statement and it doesnt already enclosed in bracket
+        if ('^' in base and (not expr.base.is_Pow)
+            and ('left(' not in base)):
+            base = r'\left(%s\right)' % base
+
         return template % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):
@@ -1679,9 +1692,9 @@ class LatexPrinter(Printer):
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
-            template = r"%s^{\circ \left({%s}\right)}"
+            template = r"%s^{\circ \left(%s\right)}"
         else:
-            template = r"%s^{\circ {%s}}"
+            template = r"%s^{\circ %s}"
         return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):

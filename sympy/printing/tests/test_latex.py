@@ -2134,6 +2134,14 @@ def test_Pow():
     assert latex(x2**2) == r'\left(x^{2}\right)^{2}'
 
 
+def test_issue_6975():
+    x = symbols('x')
+    assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
+    assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)\right)^\left({\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)}\right)"
+
+
 def test_issue_7180():
     assert latex(Equivalent(x, y)) == r"x \Leftrightarrow y"
     assert latex(Not(Equivalent(x, y))) == r"x \not\Leftrightarrow y"
