@@ -26,6 +26,7 @@ from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 x = Symbol('x')
@@ -1063,6 +1064,12 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
     >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
 
+    Returns
+    =======
+
+    sample: iterator object
+        iterator object containing the sample/samples of given expr
+
     """
     return sample_iter(expr, condition, size=size, library=library,
                                                         numsamples=numsamples)
@@ -1142,6 +1149,12 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
     >>> list(iterator) # doctest: +SKIP
     [12, 4, 7]
 
+    Returns
+    =======
+
+    sample_iter: iterator object
+        iterator object containing the sample/samples of given expr
+
     See Also
     ========
 
@@ -1185,6 +1198,30 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
             yield fn(*args)
             count += 1
     return return_generator()
+
+def sample_iter_lambdify(expr, condition=None, size=(1,), numsamples=S.Infinity,
+                                                                    **kwargs):
+    SymPyDeprecationWarning(
+        feature='sample_iter_lambdify',
+        useinstead='sample_iter',
+        issue=19061,
+        deprecated_since_version=1.6,
+    ).warn()
+
+    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
+                                                                        **kwargs)
+
+def sample_iter_subs(expr, condition=None, size=(1,), numsamples=S.Infinity,
+                                                                    **kwargs):
+    SymPyDeprecationWarning(
+        feature='sample_iter_subs',
+        useinstead='sample_iter',
+        issue=19061,
+        deprecated_since_version=1.6,
+    ).warn()
+
+    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
+                                                                        **kwargs)
 
 
 def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,

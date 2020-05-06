@@ -7,8 +7,8 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, sample_iter, PSpace)
-from sympy.testing.pytest import raises, skip, XFAIL
+        RandomSymbol, sample_iter, PSpace, sample_iter_subs, sample_iter_lambdify)
+from sympy.testing.pytest import raises, skip, XFAIL, warns_deprecated_sympy
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -104,7 +104,9 @@ def test_sample_iter():
             return True
         else:
             return False
-
+    with warns_deprecated_sympy():
+        sample_iter_subs(expr)
+        sample_iter_lambdify(expr)
     assert is_iterator(iterator)
     assert is_iterator(iterator2)
     assert is_iterator(iterator3)
