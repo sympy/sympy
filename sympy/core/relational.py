@@ -492,7 +492,11 @@ class Equality(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if evaluate:
-            return fuzzy_resolve(lhs, rhs, is_eq, Equality)
+            val = is_eq(lhs, rhs)
+            if val is None:
+                return cls(lhs, rhs, evaluate=False)
+            else:
+                return _sympify(val)
 
         return Relational.__new__(cls, lhs, rhs)
 
@@ -628,7 +632,11 @@ class Unequality(Relational):
         rhs = _sympify(rhs)
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         if evaluate:
-            return fuzzy_resolve(lhs, rhs, is_neq, Unequality)
+            val = is_neq(lhs, rhs)
+            if val is None:
+                return cls(lhs, rhs, evaluate=False)
+            else:
+                return _sympify(val)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -674,9 +682,13 @@ class _Inequality(Relational):
         except SympifyError:
             return NotImplemented
 
-
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         if evaluate:
+            for me in (lhs, rhs):
+                if me.is_extended_real is False:
+                    raise TypeError("Invalid comparison of non-real %s" % me)
+                if me is S.NaN:
+                    raise TypeError("Invalid NaN comparison")
             # First we invoke the appropriate inequality method of `lhs`
             # (e.g., `lhs.__lt__`).  That method will try to reduce to
             # boolean or raise an exception.  It may keep calling
@@ -963,7 +975,11 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        return fuzzy_resolve(lhs, rhs, is_ge, cls)
+        val = is_ge(lhs, rhs)
+        if val is None:
+            return cls(lhs, rhs, evaluate=False)
+        else:
+            return _sympify(val)
 
 
 Ge = GreaterThan
@@ -977,8 +993,11 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return fuzzy_resolve(lhs, rhs, is_le, cls)
+        val = is_le(lhs, rhs)
+        if val is None:
+            return cls(lhs, rhs, evaluate=False)
+        else:
+            return _sympify(val)
 
 
 Le = LessThan
@@ -992,8 +1011,11 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return fuzzy_resolve(lhs, rhs, is_gt, cls)
+        val = is_gt(lhs, rhs)
+        if val is None:
+            return cls(lhs, rhs, evaluate=False)
+        else:
+            return _sympify(val)
 
 
 Gt = StrictGreaterThan
@@ -1007,8 +1029,12 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return fuzzy_resolve(lhs, rhs, is_lt, cls)
+        val = is_lt(lhs, rhs)
+        if val is None:
+            return cls(lhs, rhs, evaluate=False)
+        else:
+            return _sympify(val)
+
 
 
 Lt = StrictLessThan
@@ -1046,251 +1072,171 @@ def _n2(a, b):
             return dif
 
 
-def fuzzy_resolve(lhs, rhs, op, cls):
-    """
-    Resolves op to S.true if cmp returns true.
-    or to S.false if cmp returns false
-    or to an unevaluated if cmp returns none.
-    """
-    val = op(lhs, rhs)
-    if val is None:
-        return cls(lhs, rhs, evaluate=False)
-    elif isinstance(val,bool):
-        if val is True:
-            return S.true
-        else:
-            return S.false
-    else:
-        return val
-
-
 def is_lt(lhs, rhs):
-    retval = None
-    if lhs.is_extended_real and rhs.is_extended_real and hasattr(lhs, "_eval_is_ge"):
-        retval = fuzzy_not(getattr(lhs, "_eval_is_ge")(rhs))
-    elif hasattr(lhs, "_eval_is_lt"):
-        retval = getattr(lhs, "_eval_is_lt")(rhs)
-    if retval is None:
-        retval = cmp(lhs, rhs, "<")
-    return retval
+    if lhs.is_extended_real and rhs.is_extended_real:
+        retval = fuzzy_not(is_ge(lhs, rhs))
+    else:
+        retval = lhs._eval_is_lt(rhs)
+    if retval is not None:
+        return retval
+    else:
+        n2 = _n2(lhs, rhs)
+        if n2 is not None:
+            # use float comparison for infinity.
+            # otherwise get stuck in infinite recursion
+            if n2 in (S.Infinity, S.NegativeInfinity):
+                n2 = float(n2)
+            return _sympify(n2 < 0)
 
 
 def is_le(lhs, rhs):
-    retval = None
-    if hasattr(lhs, "_eval_is_gt"):
-        retval = fuzzy_not(getattr(lhs, "_eval_is_gt")(rhs))
-    if retval is None:
-        retval = cmp(lhs, rhs, "<=")
-    return retval
+    return fuzzy_not(is_gt(lhs, rhs))
 
 
 def is_gt(lhs, rhs):
-    retval = None
-    if hasattr(lhs, "_eval_is_gt"):
-        retval = getattr(lhs, "_eval_is_gt")(rhs)
-    if retval is None:
-        retval = cmp(lhs, rhs, ">")
-    return retval
+    retval = lhs._eval_is_gt(rhs)
+    if retval is not None:
+        return retval
+    else:
+        n2 = _n2(lhs, rhs)
+        if n2 is not None:
+            # use float comparison for infinity.
+            # otherwise get stuck in infinite recursion
+            if n2 in (S.Infinity, S.NegativeInfinity):
+                n2 = float(n2)
+            return _sympify(n2 > 0)
+        if lhs.is_extended_real and rhs.is_extended_real:
+            if (lhs.is_infinite and lhs.is_extended_negative) or (rhs.is_infinite and rhs.is_extended_positive):
+                return S.false
+
+            diff = lhs - rhs
+            if diff is not S.NaN:
+                return diff.is_extended_positive
+
 
 
 def is_ge(lhs, rhs):
-    retval = None
-    if hasattr(lhs, "_eval_is_ge"):
-        retval = getattr(lhs, "_eval_is_ge")(rhs)
-    if retval is None:
-        retval = cmp(lhs, rhs, ">=")
-    return retval
-
-
-def is_eq(lhs, rhs):
-    retval = None
-    if hasattr(lhs, "_eval_Eq"):
-        retval = getattr(lhs, "_eval_Eq")(rhs)
-    elif hasattr(rhs, "_eval_Eq"):
-        retval = getattr(rhs, "_eval_Eq")(lhs)
-
-    if retval is None:
-        retval = _cmp_eq(lhs, rhs)
-    return retval
+    retval = lhs._eval_is_ge(rhs)
+    if retval is not None:
+        return retval
+    else:
+        n2 = _n2(lhs, rhs)
+        if n2 is not None:
+            # use float comparison for infinity.
+            # otherwise get stuck in infinite recursion
+            if n2 in (S.Infinity, S.NegativeInfinity):
+                n2 = float(n2)
+            return _sympify(n2 >= 0)
+        if lhs.is_extended_real and rhs.is_extended_real:
+            if (lhs.is_infinite and lhs.is_extended_positive) \
+                     or (rhs.is_infinite and rhs.is_extended_negative):
+                return S.true
+            diff = lhs - rhs
+            if diff is not S.NaN:
+                rv = diff.is_extended_nonnegative
+                if rv is not None:
+                   return rv
 
 
 def is_neq(lhs, rhs):
-    retval = None
-    if hasattr(lhs, "_eval_Eq"):
-        retval = fuzzy_not(getattr(lhs, "_eval_Eq")(rhs))
-    elif hasattr(rhs, "_eval_Eq"):
-        retval = fuzzy_not(getattr(rhs, "_eval_Eq")(lhs))
-
-    if retval is None:
-        retval = fuzzy_not(_cmp_eq(lhs, rhs))
-    return retval
+    return fuzzy_not(is_eq(lhs, rhs))
 
 
-def cmp(lhs, rhs, op):
-    """
-    Returns Fuzzy-Valued (True, False,None) truth-values, of a lhs and a rhs.
-    None-means that lhs cannot be compared against lhs.
-
-    Examples:
-    >>> from sympy.core.relational import cmp
-    >>> from sympy import sympify
-    >>> from sympy import Symbol
-    >>> x = Symbol('x')
-    >>> two = sympify(2)
-    >>> assert cmp(x,two, "<") is None
-
-    >>> from sympy.core.relational import cmp
-    >>> from sympy import sympify
-    >>> from sympy import Symbol
-    >>> three = sympify(3)
-    >>> two = sympify(2)
-    >>> assert not cmp(three,two, "<")
-
-    >>> from sympy.core.relational import cmp
-    >>> from sympy import sympify
-    >>> from sympy import Symbol
-    >>> three = sympify(3)
-    >>> two = sympify(2)
-    >>> assert cmp(three,two, ">")
-
-    """
-    assert op in ("<", ">", "<=", ">=")
-
-    for me in (lhs, rhs):
-        if me.is_extended_real is False:
-            raise TypeError("Invalid comparison of non-real %s" % me)
-        if me is S.NaN:
-            raise TypeError("Invalid NaN comparison")
-
-    n2 = _n2(lhs, rhs)
-    if n2 is not None:
-        # use float comparison for infinity.
-        # otherwise get stuck in infinite recursion
-        if n2 in (S.Infinity, S.NegativeInfinity):
-            n2 = float(n2)
-        if op == "<":
-            return (n2 < 0) == S.true
-        elif op == ">":
-            return (n2 > 0) == S.true
-        elif op == "<=":
-            return (n2 <= 0) == S.true
-        else:  # >=
-            return (n2 >= 0) == S.true
-
-    if lhs.is_extended_real and rhs.is_extended_real:
-        if op in ("<=", ">") \
-            and ((lhs.is_infinite and lhs.is_extended_negative) \
-                 or (rhs.is_infinite and rhs.is_extended_positive)):
-            return True if op == "<=" else False
-        if op in ("<", ">=") \
-            and ((lhs.is_infinite and lhs.is_extended_positive) \
-                 or (rhs.is_infinite and rhs.is_extended_negative)):
-            return True if op == ">=" else False
-        diff = lhs - rhs
-        if diff is not S.NaN:
-            if op == "<":
-                test = diff.is_extended_negative
-            elif op == ">":
-                test = diff.is_extended_positive
-            elif op == "<=":
-                test = diff.is_extended_nonpositive
-            else:  # >=
-                test = diff.is_extended_nonnegative
-
-            return test
-
-
-def _cmp_eq(lhs, rhs):
+def is_eq(lhs, rhs):
     from sympy.core.add import Add
     from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
     from sympy.core.expr import Expr
+    
+    retval = lhs._eval_Eq(rhs)
+    if retval is not None:
+        return retval
 
+    retval = rhs._eval_Eq(lhs)
+    if retval is not None:
+        return retval
+    else:
+        # retval is still None, so go through the equality logic
+        # If expressions have the same structure, they must be equal.
+        if lhs == rhs:
+            return S.true  # e.g. True == True
+        elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+            return S.false # True != False
+        elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+            isinstance(lhs, Boolean) !=
+            isinstance(rhs, Boolean)):
+            return S.false  # only Booleans can equal Booleans
 
-    # If expressions have the same structure, they must be equal.
-    if lhs == rhs:
-        return True  # e.g. True == True
-    elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-        return False  # True != False
-    elif not (lhs.is_Symbol or rhs.is_Symbol) and (
-        isinstance(lhs, Boolean) !=
-        isinstance(rhs, Boolean)):
-        return False  # only Booleans can equal Booleans
+        if lhs.is_infinite or rhs.is_infinite:
+            if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
+                return S.false
+            if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
+                return S.false
+            if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
+                return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
 
-    if lhs.is_infinite or rhs.is_infinite:
-        if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
-            return False
-        if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
-            return False
-        if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
-            return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+            # Try to split real/imaginary parts and equate them
+            I = S.ImaginaryUnit
 
-        # Try to split real/imaginary parts and equate them
-        I = S.ImaginaryUnit
+            def split_real_imag(expr):
+                real_imag = lambda t: (
+                    'real' if t.is_extended_real else
+                    'imag' if (I * t).is_extended_real else None)
+                return sift(Add.make_args(expr), real_imag)
 
-        def split_real_imag(expr):
-            real_imag = lambda t: (
-                'real' if t.is_extended_real else
-                'imag' if (I * t).is_extended_real else None)
-            return sift(Add.make_args(expr), real_imag)
+            lhs_ri = split_real_imag(lhs)
+            if not lhs_ri[None]:
+                rhs_ri = split_real_imag(rhs)
+                if not rhs_ri[None]:
+                    eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                    eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
+                    return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
 
-        lhs_ri = split_real_imag(lhs)
-        if not lhs_ri[None]:
-            rhs_ri = split_real_imag(rhs)
-            if not rhs_ri[None]:
-                eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
-                eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
-                return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
+            # Compare e.g. zoo with 1+I*oo by comparing args
+            arglhs = arg(lhs)
+            argrhs = arg(rhs)
+            # Guard against Eq(nan, nan) -> False
+            if not (arglhs == S.NaN and argrhs == S.NaN):
+                return fuzzy_bool(Eq(arglhs, argrhs))
 
-        # Compare e.g. zoo with 1+I*oo by comparing args
-        arglhs = arg(lhs)
-        argrhs = arg(rhs)
-        # Guard against Eq(nan, nan) -> False
-        if not (arglhs == S.NaN and argrhs == S.NaN):
-            return fuzzy_bool(Eq(arglhs, argrhs))
+        if all(isinstance(i, Expr) for i in (lhs, rhs)):
+            # see if the difference evaluates
+            dif = lhs - rhs
+            z = dif.is_zero
+            if z is not None:
+                if z is False and dif.is_commutative:  # issue 10728
+                    return S.false
+                if z:
+                    return S.true
+            # evaluate numerically if possible
+            n2 = _n2(lhs, rhs)
+            if n2 is not None:
+                return n2 == 0
 
-    if all(isinstance(i, Expr) for i in (lhs, rhs)):
-        # see if the difference evaluates
-        dif = lhs - rhs
-        z = dif.is_zero
-        if z is not None:
-            if z is False and dif.is_commutative:  # issue 10728
-                return False
-            if z:
-                return True
-        # evaluate numerically if possible
-        n2 = _n2(lhs, rhs)
-        if n2 is not None:
-            sym_res = _sympify(n2 == 0)
-            if sym_res is not None:
-                return sym_res is S.true
-            else:
-                return sym_res
-
-        # see if the ratio evaluates
-        n, d = dif.as_numer_denom()
-        rv = None
-        if n.is_zero:
-            rv = d.is_nonzero
-        elif n.is_finite:
-            if d.is_infinite:
-                rv = True
-            elif n.is_zero is False:
-                rv = d.is_infinite
-                if rv is None:
-                    # if the condition that makes the denominator
-                    # infinite does not make the original expression
-                    # True then False can be returned
-                    l, r = clear_coefficients(d, S.Infinity)
-                    args = [_.subs(l, r) for _ in (lhs, rhs)]
-                    if args != [lhs, rhs]:
-                        rv = fuzzy_bool(Eq(*args))
-                        if rv is True:
-                            rv = None
-        elif any(a.is_infinite for a in Add.make_args(n)):
-            # (inf or nan)/x != 0
-            rv = False
-        if rv is not None:
-            return rv
+            # see if the ratio evaluates
+            n, d = dif.as_numer_denom()
+            rv = None
+            if n.is_zero:
+                rv = d.is_nonzero
+            elif n.is_finite:
+                if d.is_infinite:
+                    rv = True
+                elif n.is_zero is False:
+                    rv = d.is_infinite
+                    if rv is None:
+                        # if the condition that makes the denominator
+                        # infinite does not make the original expression
+                        # True then False can be returned
+                        l, r = clear_coefficients(d, S.Infinity)
+                        args = [_.subs(l, r) for _ in (lhs, rhs)]
+                        if args != [lhs, rhs]:
+                            rv = fuzzy_bool(Eq(*args))
+                            if rv is True:
+                                rv = None
+            elif any(a.is_infinite for a in Add.make_args(n)):
+                # (inf or nan)/x != 0
+                rv = S.false
+            if rv is not None:
+                return rv
