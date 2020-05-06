@@ -641,9 +641,15 @@ class LatexPrinter(Printer):
 
          # checks if base expression contains '^' and it is not considered
          # in previous if statement and it doesnt already enclosed in bracket
+         # and parenthesize_super is set to True
         if ('^' in base and (not expr.base.is_Pow)
-            and ('left(' not in base)):
+            and ('left(' not in base) 
+            and self._settings['parenthesize_super']):
             base = r'\left(%s\right)' % base
+        
+        # if parenthesize_super is set to false
+        if not self._settings['parenthesize_super']:
+            base = r'{%s}' % base
 
         return template % (base, exp)
 
