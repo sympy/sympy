@@ -903,6 +903,7 @@ class Basic(metaclass=ManagedProperties):
         from sympy.core.containers import Dict
         from sympy.utilities.iterables import sift
         from sympy import Dummy, Symbol
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
 
         unordered = False
         if len(args) == 1:
@@ -959,7 +960,10 @@ class Basic(metaclass=ManagedProperties):
                 # using d*m so Subs will be used on dummy variables
                 # in things like Derivative(f(x, y), x) in which x
                 # is both free and bound
-                rv = rv._subs(old, d*m, **kwargs)
+                if isinstance(old, MatrixSymbol):
+                    rv = rv._subs(old, Symbol(str(d*m)))
+                else:
+                    rv = rv._subs(old, d*m, **kwargs)
                 if not isinstance(rv, Basic):
                     break
                 reps[d] = new

@@ -665,26 +665,38 @@ class Expr(Basic, EvalfMixin):
         if expr.is_zero:
             return True
 
+        def zero(wrt):
+            from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+            if wrt.is_Matrix:
+                return Matrix.zeros(wrt.rows, wrt.cols)
+            return S.Zero
+        
+        def one(wrt):
+            from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+            if wrt.is_Matrix:
+                return Matrix.ones(wrt.rows, wrt.cols)
+            return S.One
+
         # try numerical evaluation to see if we get two different values
         failing_number = None
         if wrt == free:
             # try 0 (for a) and 1 (for b)
             try:
-                a = expr.subs(list(zip(free, [0]*len(free))),
-                    simultaneous=True)
+                subs_dict = {x: zero(x) for x in free}
+                a = expr.subs(subs_dict, simultaneous=True)
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
-            except (ZeroDivisionError, BadArgumentsError):
+            except ZeroDivisionError:
                 a = None
             if a is not None and a is not S.NaN:
                 try:
-                    b = expr.subs(list(zip(free, [1]*len(free))),
-                        simultaneous=True)
+                    subs_dict = {x: one(x) for x in free}
+                    b = expr.subs(subs_dict, simultaneous=True)
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
-                except (ZeroDivisionError, BadArgumentsError):
+                except ZeroDivisionError:
                     b = None
                 if b is not None and b is not S.NaN and b.equals(a) is False:
                     return False
@@ -3968,4 +3980,3 @@ from .function import Derivative, Function
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational
-from .basic import BadArgumentsError
