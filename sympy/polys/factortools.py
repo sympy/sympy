@@ -150,11 +150,9 @@ def dup_zz_mignotte_bound(f, K):
     Lastly,To see the difference between the new and the old Mignotte bound
     consider the irreducible polynomial::
 
-        f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
-
-        >>> f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
-        >>> R.dup_zz_mignotte_bound(f)
-        744
+    >>> f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
+    >>> R.dup_zz_mignotte_bound(f)
+    744
 
     The new Mignotte bound is 744 whereas the old one (SymPy 1.5.1) is 1937664.
 
