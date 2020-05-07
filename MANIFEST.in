@@ -11,5 +11,5 @@ recursive-include sympy/parsing/autolev *.g4 *.al
 include LICENSE
 include TODO
 include AUTHORS
-include README.md
+include README.rst
 include bin/isympy
