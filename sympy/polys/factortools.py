@@ -147,7 +147,7 @@ def dup_zz_mignotte_bound(f, K):
     >>> R.dup_zz_mignotte_bound(f)
     6
 
-    Lastly,To see the difference between the new and the old Mignotte bound 
+    Lastly,To see the difference between the new and the old Mignotte bound
     consider the irreducible polynomial::
 
         f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
