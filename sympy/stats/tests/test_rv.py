@@ -8,7 +8,8 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
+from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
 
@@ -80,6 +81,9 @@ def test_sample_iter():
     Y = DiscreteUniform('Y', [1,2,7])
     Z = Poisson('Z', 2)
 
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     expr = X**2 + 3
     iterator = sample_iter(expr)
 
@@ -100,7 +104,6 @@ def test_sample_iter():
             return True
         else:
             return False
-
     assert is_iterator(iterator)
     assert is_iterator(iterator2)
     assert is_iterator(iterator3)
@@ -180,26 +183,38 @@ def test_H():
 def test_Sample():
     X = Die('X', 6)
     Y = Normal('Y', 0, 1)
-    z = Symbol('z')
+    z = Symbol('z', integer=True)
 
-    assert sample(X) in [1, 2, 3, 4, 5, 6]
-    assert sample(X + Y).is_Float
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    with ignore_warnings(UserWarning):
+        assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
+        assert next(sample(X + Y))[0].is_Float
 
-    P(X + Y > 0, Y < 0, numsamples=10).is_number
+    assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
+    assert E(X**2 + Y, numsamples=10).is_number
+    assert E((X + Y)**2, numsamples=10).is_number
     assert variance(X + Y, numsamples=10).is_number
 
-    raises(ValueError, lambda: P(Y > z, numsamples=5))
+    raises(TypeError, lambda: P(Y > z, numsamples=5))
 
     assert P(sin(Y) <= 1, numsamples=10) == 1
     assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
 
-    # Make sure this doesn't raise an error
-    E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
-
-
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+
+@XFAIL
+def test_samplingE():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    Y = Normal('Y', 0, 1)
+    z = Symbol('z', integer=True)
+    assert E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3).is_number
 
 
 def test_given():

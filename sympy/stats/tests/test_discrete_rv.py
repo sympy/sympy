@@ -13,7 +13,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
 from sympy.stats.rv import sample
-from sympy.testing.pytest import slow, nocache_fail, raises, skip
+from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
 from sympy.external import import_module
 
 x = Symbol('x')
@@ -137,10 +137,14 @@ def test_zeta():
 @slow
 def test_sample_discrete():
     X = Geometric('X', S.Half)
-    assert sample(X) in X.pspace.domain.set
-    samps = sample(X, size=4)
-    for samp in samps:
-        assert samp in X.pspace.domain.set
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests')
+    with ignore_warnings(UserWarning):
+        assert next(sample(X))[0] in X.pspace.domain.set
+        samps = next(sample(X, size=2)) # This takes long time if ran without scipy
+        for samp in samps:
+            assert samp in X.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
@@ -303,23 +307,26 @@ def test_sampling_methods():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        for X in distribs_numpy:
-            samps = X.pspace.distribution._sample_numpy(size)
-            for samp in samps:
-                assert samp in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_numpy:
+                samps = X.pspace.distribution._sample_numpy(size)
+                for samp in samps:
+                    assert samp in X.pspace.domain.set
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
-        for X in distribs_scipy:
-            samps = sample(X, size=size)
-            for samp in samps:
-                assert samp in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size))
+                for samp in samps:
+                    assert samp in X.pspace.domain.set
     pymc3 = import_module('pymc3')
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        for X in distribs_pymc3:
-            samps = X.pspace.distribution._sample_pymc3(size)
-            for samp in samps:
-                assert samp in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_pymc3:
+                samps = X.pspace.distribution._sample_pymc3(size)
+                for samp in samps:
+                    assert samp in X.pspace.domain.set
