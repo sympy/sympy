@@ -1777,25 +1777,35 @@ class Basic(metaclass=ManagedProperties):
                 else:
                     return self
 
-    _constructor_preprocessor_mapping = {}  # type: ignore
+    _constructor_hook_mapping = {}  # type: ignore
     _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
-    def _exec_constructor_preprocessors(cls, *args, **options):
+    def _constructor_priority_hook(cls, *args, ignore_hook=False, **options):
         """
-        Select the constructor of argument with highest ``_op_priority``.
+        Select the constructor of arguments with highest ``_op_priority``.
 
         Explanation
         ===========
 
-        This method is implemented to let ``Add``, ``Mul``, and ``Pow`` to behave as
-        the constructor for its subclasses.
+        This method is implemented to let ``Add``, ``Mul``, and ``Pow`` (possibly
+        other classes) to behave as the constructor for its subclasses.
         When arguments and options are passed to constructor (e.g. ``Add(x, y)``),
-        they are passed to this method. Then, it compares ``_op_priority`` attribute
+        they are passed to this method, then it compares ``_op_priority`` attribute
         of the arguments. If any superclass of argument with highest ``_op_priority``
-        can be found in ``Basic._constructor_preprocessor_mapping``, its preprocessor
-        is used to return the object.
-        If ``preprocess=False`` option is passed, the arguments are not preprocessed.
+        can be found in ``Basic._constructor_hook_mapping``, its value
+        (which is a function) is used to return the object.
+        If ``None`` is returned from this method, hook is not applied.
+
+        Parameters
+        ==========
+
+        args
+            Arguments for the constructor
+        options
+            Options for the constructor
+        ignore_hook : bool
+            If True, hook is skipped
 
         Examples
         ========
@@ -1804,7 +1814,7 @@ class Basic(metaclass=ManagedProperties):
         >>> A = MatrixSymbol('A', 2,2)
         >>> isinstance(Add(A,A), MatrixExpr)
         True
-        >>> isinstance(Add(A,A, preprocess=False), MatrixExpr)
+        >>> isinstance(Add(A,A, ignore_hook=True), MatrixExpr)
         False
 
         See Also
@@ -1812,33 +1822,32 @@ class Basic(metaclass=ManagedProperties):
 
         matrices.expressions.matexpr
         """
-        skip = not options.get('preprocess', True)
-        if skip:
+        if ignore_hook:
             return None
 
-        preprocessors = []
+        hook_functions = []
         for a in args:
             if hasattr(a, '_op_priority'):
                 priority = a._op_priority
-                processor = None
+                hook = None
                 for func in type(a).__mro__:
-                    if func in Basic._constructor_preprocessor_mapping:
-                        preprocessor_map = Basic._constructor_preprocessor_mapping[func]
-                        if cls in preprocessor_map:
-                            processor = preprocessor_map[cls]
+                    if func in Basic._constructor_hook_mapping:
+                        hook_map = Basic._constructor_hook_mapping[func]
+                        if cls in hook_map:
+                            hook = hook_map[cls]
                             break
-                preprocessors.append((priority, processor))
+                hook_functions.append((priority, hook))
             else:
                 continue
-        if not preprocessors:
-            processor = None
+        if not hook_functions:
+            hook = None
         else:
-            _, processor = max(preprocessors, key=lambda x:x[0])
+            _, hook = max(hook_functions, key=lambda x:x[0])
 
-        if processor is None:
+        if hook is None:
             result = None
         else:
-            result = processor(*args, **options)
+            result = hook(*args, **options)
         return result
 
     @classmethod

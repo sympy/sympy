@@ -532,7 +532,7 @@ def test_generic_identity():
     # Make sure it is hashable
     hash(I)
 
-def test_MatMul_preprocessor():
+def test_Mul_hook():
     z = zeros(2)
     z1 = ZeroMatrix(2, 2)
     assert Mul(0, z) == Mul(z, 0) in [z, z1]
@@ -564,7 +564,7 @@ def test_MatMul_preprocessor():
     with raises(ShapeError):
         Mul(A,B, check=True)
 
-def test_MatAdd_preprocessor():
+def test_Add_hook():
     # Some of these are nonsensical, but we do not raise errors for Add
     # because that breaks algorithms that want to replace matrices with dummy
     # symbols.

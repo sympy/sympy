@@ -3055,7 +3055,7 @@ class TensMul(TensExpr, AssocOp):
 
     Multiply two tensors using Einstein summation convention.
     If the two tensors have an index in common, one contravariant
-    and the other covariant, in their product the indices are summed
+    and the other covariant, in their product the indices are summed.
 
     Parameters
     ==========
@@ -4202,7 +4202,7 @@ def _expand(expr, **kwargs):
     else:
         return expr.expand(**kwargs)
 
-def Add_preprocessor(*args, **options):
+def Add_hook(*args, **options):
     evaluate = options.get('evaluate', global_parameters.evaluate)
     if not evaluate:
         return TensAdd(*args)
@@ -4226,7 +4226,7 @@ def Add_preprocessor(*args, **options):
 
     return TensAdd(tensor, coeff, extra).doit()
 
-def Mul_preprocessor(*args, **options):
+def Mul_hook(*args, **options):
     evaluate = options.get('evaluate', global_parameters.evaluate)
     if not evaluate:
         return TensMul(*args)
@@ -4239,7 +4239,7 @@ def Mul_preprocessor(*args, **options):
 
     return result
 
-def Pow_preprocessor(b, e, **options):
+def Pow_hook(b, e, **options):
     if isinstance(e, TensExpr):
         raise NotImplementedError
     if e.is_negative:
@@ -4264,10 +4264,10 @@ def Pow_preprocessor(b, e, **options):
         )
     return marray ** (e * S.Half)
 
-Basic._constructor_preprocessor_mapping[TensExpr] = {
-    Add: Add_preprocessor,
-    Mul: Mul_preprocessor,
-    Pow: Pow_preprocessor
+Basic._constructor_hook_mapping[TensExpr] = {
+    Add: Add_hook,
+    Mul: Mul_hook,
+    Pow: Pow_hook
 }
 
 from sympy.matrices.expressions import MatrixExpr

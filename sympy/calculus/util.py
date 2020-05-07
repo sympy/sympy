@@ -1553,7 +1553,8 @@ class AccumulationBounds(AtomicExpr):
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds
 
-def Add_preprocessor(*args, **options):
+# Hooks
+def Add_hook(*args, **options):
     evaluate = options.get('evalaute', global_parameters.evaluate)
     if not evaluate:
         return None
@@ -1601,7 +1602,7 @@ def Add_preprocessor(*args, **options):
     # Every combinables are combined.
     return Add(result, extra, preprocess=False, evaluate=False)
 
-def Mul_preprocessor(*args, **options):
+def Mul_hook(*args, **options):
     evaluate = options.get('evalaute', global_parameters.evaluate)
     if not evaluate:
         return None
@@ -1672,9 +1673,9 @@ def Mul_preprocessor(*args, **options):
     # Every combinables are combined.
     return Mul(result, extra, preprocess=False, evaluate=False)
 
-Basic._constructor_preprocessor_mapping[AccumulationBounds] = {
-    Add: Add_preprocessor,
-    Mul: Mul_preprocessor
+Basic._constructor_hook_mapping[AccumulationBounds] = {
+    Add: Add_hook,
+    Mul: Mul_hook
 }
 
 from sympy.matrices.expressions import MatrixExpr

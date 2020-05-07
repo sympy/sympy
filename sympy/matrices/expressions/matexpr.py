@@ -601,8 +601,8 @@ class MatrixExpr(Expr):
         return Eq(self, other, evaluate=False)
 
 
-def get_preprocessor(cls):
-    def _preprocessor(*args, **options):
+def get_hook(cls):
+    def _hook(*args, **options):
         # To avoid circular imports, we can't have MatMul/MatAdd on the top level
         mat_class = {Mul: MatMul, Add: MatAdd}[cls]
         nonmatrices = []
@@ -644,12 +644,12 @@ def get_preprocessor(cls):
         if mat_class == MatAdd:
             return mat_class(*matrices, **options).doit(deep=False)
         return mat_class(cls._from_args(nonmatrices), *matrices, **options).doit(deep=False)
-    return _preprocessor
+    return _hook
 
 
-Basic._constructor_preprocessor_mapping[MatrixExpr] = {
-    Mul: get_preprocessor(Mul),
-    Add: get_preprocessor(Add),
+Basic._constructor_hook_mapping[MatrixExpr] = {
+    Mul: get_hook(Mul),
+    Add: get_hook(Add),
 }
 
 

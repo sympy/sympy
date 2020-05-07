@@ -32,7 +32,7 @@ class AssocOp(Basic):
         from sympy import Order
         args = list(map(_sympify, args))
 
-        obj = cls._exec_constructor_preprocessors(*args, **options)
+        obj = cls._constructor_priority_hook(*args, **options)
         if obj is not None:
             return obj
 
