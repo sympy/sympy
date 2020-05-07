@@ -545,3 +545,10 @@ def test_issue_16469():
 
 def test_issue_18747():
     assert periodicity(exp(pi*I*(x/4+S.Half/2)), x) == 8
+
+def test_AccumBounds_hooks():
+    a = AccumBounds(1,2)
+    assert Mul(2,a, evaluate=True) == 2*a
+    assert Mul(a,a, evaluate=True) == a*a
+    assert Add(2,a, evaluate=True) == 2+a
+    assert Add(a,a, evaluate=True) == a+a
