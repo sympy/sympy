@@ -1596,11 +1596,11 @@ def Add_hook(*args, **options):
                 return AccumBounds(self.min + other, oo)
             else:
                 return AccumBounds(Add(self.min, other), Add(self.max, other))
-        return Add(self, other, preprocess=False, evaluate=False)
+        return Add(self, other, ignore_hook=True, evaluate=False)
     result = _add_combine(accbnd, coeff)
 
     # Every combinables are combined.
-    return Add(result, extra, preprocess=False, evaluate=False)
+    return Add(result, extra, ignore_hook=True, evaluate=False)
 
 def Mul_hook(*args, **options):
     evaluate = options.get('evalaute', global_parameters.evaluate)
