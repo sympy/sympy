@@ -46,7 +46,7 @@ from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 import traceback
 
 
@@ -140,7 +140,7 @@ Examples which raised exceptions are {exceptions}
 """
 
 
-def _ode_solver_test(ode_examples):
+def _ode_solver_test(ode_examples, run_slow_test=False):
     our_hint = ode_examples['hint']
     for example in ode_examples['examples']:
         temp = {
@@ -149,7 +149,10 @@ def _ode_solver_test(ode_examples):
             'XFAIL': ode_examples['examples'][example].get('XFAIL', []),
             'func': ode_examples['examples'][example].get('func',ode_examples['func']),
             'example_name': example,
+            'slow': ode_examples['examples'][example].get('slow', False)
         }
+        if (not run_slow_test) and temp['slow']:
+            continue
 
         result = _test_particular_example(our_hint, temp, solver_flag=True)
         if result['xpass_msg'] != "":
@@ -312,16 +315,8 @@ def test_nth_algebraic():
     _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
 
 
-@slow
 def test_nth_order_reducible():
     from sympy.solvers.ode.ode import _nth_order_reducible_match
-
-    eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2), 0)
-    sol = Eq(f(x),
-             C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert sol == dsolve(eqn, f(x), hint='nth_order_reducible')
-    assert sol == dsolve(eqn, f(x))
 
     F = lambda eq: _nth_order_reducible_match(eq, f(x))
     D = Derivative
@@ -332,80 +327,7 @@ def test_nth_order_reducible():
     assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) is None
     assert F(D(f(x), x, 2) + D(f(x), x, 3)) == dict(n=2)
 
-    eqn = -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x
-    sol = Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert sol == dsolve(eqn, f(x))
-    assert sol == dsolve(eqn, f(x), hint='nth_order_reducible')
-
-    eqn = Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0)
-    sol = Eq(f(x), C1 + C2*sin(2**Rational(3, 4)*x/2) + C3*cos(2**Rational(3, 4)*x/2))
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert sol == dsolve(eqn, f(x))
-    assert sol == dsolve(eqn, f(x), hint='nth_order_reducible')
-
-    eqn = f(x).diff(x, 2) + 2*f(x).diff(x)
-    sol = Eq(f(x), C1 + C2*exp(-2*x))
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
-
-    eqn = f(x).diff(x, 3) + f(x).diff(x, 2) - 6*f(x).diff(x)
-    sol = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
-
-    eqn = f(x).diff(x, 4) - f(x).diff(x, 3) - 4*f(x).diff(x, 2) + \
-        4*f(x).diff(x)
-    sol = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
-
-    eqn = f(x).diff(x, 4) + 3*f(x).diff(x, 3)
-    sol = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
-
-    eqn = f(x).diff(x, 4) - 2*f(x).diff(x, 2)
-    sol = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
-
-    eqn = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
-    sol = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
-
-    eqn = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
-    # These are equivalent:
-    sol1 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
-    sol2 = Eq(f(x), C1 + C2*(x*sin(x) + cos(x)) + C3*(-x*cos(x) + sin(x)) + C4*sin(x) + C5*cos(x))
-    sol1s = constant_renumber(sol1)
-    sol2s = constant_renumber(sol2)
-    assert checkodesol(eqn, sol1, order=2, solve_for_func=False) == (True, 0)
-    assert checkodesol(eqn, sol2, order=2, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x)) in (sol1, sol1s)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol2, sol2s)
-
-    # In this case the reduced ODE has two distinct solutions
-    eqn = f(x).diff(x, 2) - f(x).diff(x)**3
-    sol = [Eq(f(x), C2 - sqrt(2)*I*(C1 + x)*sqrt(1/(C1 + x))),
-           Eq(f(x), C2 + sqrt(2)*I*(C1 + x)*sqrt(1/(C1 + x)))]
-    sols = constant_renumber(sol)
-    assert checkodesol(eqn, sol, order=2, solve_for_func=False) == [(True, 0), (True, 0)]
-    assert dsolve(eqn, f(x)) in (sol, sols)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
+    _ode_solver_test(_get_examples_ode_sol_nth_order_reducible())
 
 
 def test_factorable():
@@ -928,6 +850,82 @@ def _get_examples_ode_sol_nth_algebraic():
         'eq': Eq(Derivative(x*Derivative(f(x), x), x)/x, exp(x)),
         'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))],
         'XFAIL': ['nth_algebraic']  # It passes only when prep=False is set in dsolve.
+    },
+    }
+    }
+
+
+def _get_examples_ode_sol_nth_order_reducible():
+    return {
+            'hint': "nth_order_reducible",
+            'func': f(x),
+            'examples':{
+    'reducible_01': {
+        'eq': Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2), 0),
+        'sol': [Eq(f(x),C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) +
+        sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))],
+        'slow': True,
+    },
+
+    'reducible_02': {
+        'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
+        'sol': [Eq(f(x), C1 + C2*log(x) + exp(x) - Ei(x))],
+        'slow': True,
+    },
+
+    'reducible_03': {
+        'eq': Eq(sqrt(2) * f(x).diff(x,x,x) + f(x).diff(x), 0),
+        'sol': [Eq(f(x), C1 + C2*sin(2**Rational(3, 4)*x/2) + C3*cos(2**Rational(3, 4)*x/2))],
+        'slow': True,
+    },
+
+    'reducible_04': {
+        'eq': f(x).diff(x, 2) + 2*f(x).diff(x),
+        'sol': [Eq(f(x), C1 + C2*exp(-2*x))],
+    },
+
+    'reducible_05': {
+        'eq': f(x).diff(x, 3) + f(x).diff(x, 2) - 6*f(x).diff(x),
+        'sol': [Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))],
+        'slow': True,
+    },
+
+    'reducible_06': {
+        'eq': f(x).diff(x, 4) - f(x).diff(x, 3) - 4*f(x).diff(x, 2) + \
+        4*f(x).diff(x),
+        'sol': [Eq(f(x), C1 + C2*exp(-2*x) + C3*exp(x) + C4*exp(2*x))],
+        'slow': True,
+    },
+
+    'reducible_07': {
+        'eq': f(x).diff(x, 4) + 3*f(x).diff(x, 3),
+        'sol': [Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))],
+        'slow': True,
+    },
+
+    'reducible_08': {
+        'eq': f(x).diff(x, 4) - 2*f(x).diff(x, 2),
+        'sol': [Eq(f(x), C1 + C2*x + C3*exp(-sqrt(2)*x) + C4*exp(sqrt(2)*x))],
+        'slow': True,
+    },
+
+    'reducible_09': {
+        'eq': f(x).diff(x, 4) + 4*f(x).diff(x, 2),
+        'sol': [Eq(f(x), C1 + C2*x + C3*sin(2*x) + C4*cos(2*x))],
+        'slow': True,
+    },
+
+    'reducible_10': {
+        'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x),
+        'sol': [Eq(f(x), C1 + C2*(x*sin(x) + cos(x)) + C3*(-x*cos(x) + sin(x)) + C4*sin(x) + C5*cos(x))],
+        'slow': True,
+    },
+
+    'reducible_11': {
+        'eq': f(x).diff(x, 2) - f(x).diff(x)**3,
+        'sol': [Eq(f(x), C1 - sqrt(2)*I*(C2 + x)*sqrt(1/(C2 + x))),
+        Eq(f(x), C1 + sqrt(2)*I*(C2 + x)*sqrt(1/(C2 + x)))],
+        'slow': True,
     },
     }
     }
