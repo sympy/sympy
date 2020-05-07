@@ -40,7 +40,7 @@ from sympy.core import Function, Symbol
 from sympy.functions import airyai, airybi, besselj, bessely
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
-from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions, constant_renumber
+from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
 from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
     SingleODEProblem, SingleODESolver)
 
