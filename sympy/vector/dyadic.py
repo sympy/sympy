@@ -181,16 +181,6 @@ class Dyadic(BasisDependent):
         return Matrix([i.dot(self).dot(j) for i in system for j in
                        second_system]).reshape(3, 3)
 
-    def _div_helper(one, other):
-        """ Helper for division involving dyadics """
-        if isinstance(one, Dyadic) and isinstance(other, Dyadic):
-            raise TypeError("Cannot divide two dyadics")
-        elif isinstance(one, Dyadic):
-            return DyadicMul(one, Pow(other, S.NegativeOne))
-        else:
-            raise TypeError("Cannot divide by a dyadic")
-
-
 class BaseDyadic(Dyadic, AtomicExpr):
     """
     Class to denote a base dyadic tensor component.

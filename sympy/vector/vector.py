@@ -330,17 +330,6 @@ class Vector(BasisDependent):
                                   vect * measure)
         return parts
 
-    def _div_helper(one, other):
-        """ Helper for division involving vectors. """
-        if isinstance(one, Vector) and isinstance(other, Vector):
-            raise TypeError("Cannot divide two vectors")
-        elif isinstance(one, Vector):
-            if other == S.Zero:
-                raise ValueError("Cannot divide a vector by zero")
-            return VectorMul(one, Pow(other, S.NegativeOne))
-        else:
-            raise TypeError("Invalid division involving a vector")
-
 
 class BaseVector(Vector, AtomicExpr):
     """

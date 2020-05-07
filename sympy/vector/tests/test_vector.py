@@ -1,4 +1,4 @@
-from sympy.core import Rational
+from sympy.core import Rational, Add, Mul, Pow
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos, Function, Integral, Derivative, diff
@@ -105,6 +105,13 @@ def test_vector():
     raises(TypeError, lambda: v1.outer(1))
     raises(TypeError, lambda: v1.dot(1))
 
+def test_vector_hooks():
+    assert Add(i,j, evaluate=True) == VectorAdd(i,j)
+    assert Add(i,i, evaluate=True) == VectorMul(2,i)
+    assert Mul(i,2, evaluate=True) == VectorMul(2,i)
+    raises(TypeError, lambda: Pow(i,-1))
+    raises(TypeError, lambda: Pow(2, i))
+    raises(NotImplementedError, lambda: Pow(i,2))
 
 def test_vector_magnitude_normalize():
     assert Vector.zero.magnitude() == 0

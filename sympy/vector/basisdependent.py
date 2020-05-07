@@ -6,6 +6,8 @@ from sympy.core.assumptions import StdFactKB
 from sympy import factor as fctr, diff as df, Integral
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+from sympy.core.basic import Basic
+from sympy.core.power import Pow
 
 
 class BasisDependent(Expr):
@@ -15,47 +17,8 @@ class BasisDependent(Expr):
     Named so because the representation of these quantities in
     sympy.vector is dependent on the basis they are expressed in.
     """
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return self._add_func(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return self._add_func(other, self)
-
-    @call_highest_priority('__rsub__')
-    def __sub__(self, other):
-        return self._add_func(self, -other)
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return self._add_func(other, -self)
-
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return self._mul_func(self, other)
-
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return self._mul_func(other, self)
-
     def __neg__(self):
         return self._mul_func(S.NegativeOne, self)
-
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
-        return self._div_helper(other)
-
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
-        return TypeError("Invalid divisor for division")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
@@ -262,7 +225,7 @@ class BasisDependentMul(BasisDependent, Mul):
         if count > 1:
             raise ValueError("Invalid multiplication")
         elif count == 0:
-            return Mul(*args, **options)
+            return Mul(*args, **options, ignore_hook=True)
         # Handle zero vector case
         if zeroflag:
             return cls.zero
@@ -366,3 +329,40 @@ class BasisDependentZero(BasisDependent):
 
     __repr__ = __str__
     _sympystr = __str__
+
+# Hooks
+def Add_hook(*args, **options):
+    for i,a in enumerate(args):
+        if i == 0:
+            result = a
+        else:
+            result = result._add_func(result, a)
+    return result
+
+def Mul_hook(*args, **options):
+    for i,a in enumerate(args):
+        if i == 0:
+            result = a
+        else:
+            if isinstance(result, BasisDependent):
+                result = result._mul_func(result, a)
+            elif isinstance(a, BasisDependent):
+                result = a._mul_func(result, a)
+            else:
+                result = Mul(result, a, evaluate=True)
+    return result
+
+def Pow_hook(b, e, **options):
+    if isinstance(b, BasisDependent):
+        if e.is_negative:
+            raise TypeError("Invalid divisor for division")
+        else:
+            raise NotImplementedError("Power of vector or dyadic is not supported")
+    if isinstance(e, BasisDependent):
+        raise TypeError('Vector or dyadic cannot be the exponent')
+
+Basic._constructor_hook_mapping[BasisDependent] = {
+    Add: Add_hook,
+    Mul: Mul_hook,
+    Pow: Pow_hook
+}
