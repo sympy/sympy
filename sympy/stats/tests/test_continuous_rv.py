@@ -24,7 +24,7 @@ from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, C
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.joint_rv import JointPSpace
-from sympy.testing.pytest import raises, XFAIL, slow, skip
+from sympy.testing.pytest import raises, XFAIL, slow, skip, ignore_warnings
 from sympy.testing.randtest import verify_numerically as tn
 
 oo = S.Infinity
@@ -326,7 +326,8 @@ def test_sample_continuous():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    assert next(sample(Z))[0] in Z.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        assert next(sample(Z))[0] in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val[0] in Interval(0, oo)
 
@@ -735,7 +736,8 @@ def test_sampling_gamma_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
-    assert next(sample(X))[0] in X.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        assert next(sample(X))[0] in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -861,14 +863,16 @@ def test_lognormal():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    for i in range(3):
-        X = LogNormal('x', i, 1)
-        assert next(sample(X))[0] in X.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        for i in range(3):
+            X = LogNormal('x', i, 1)
+            assert next(sample(X))[0] in X.pspace.domain.set
 
     size = 5
-    samps = next(sample(X, size=size))
-    for samp in samps:
-        assert samp in X.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        samps = next(sample(X, size=size))
+        for samp in samps:
+            assert samp in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
     raises(NotImplementedError, lambda: moment_generating_function(X))
@@ -971,7 +975,8 @@ def test_sampling_gaussian_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
-    assert next(sample(X, library='scipy'))[0] in X.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        assert next(sample(X, library='scipy'))[0] in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)
@@ -1257,6 +1262,9 @@ def test_wignersemicircle():
 
 
 def test_prefab_sampling():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     N = Normal('X', 0, 1)
     L = LogNormal('L', 0, 1)
     E = Exponential('Ex', 1)
@@ -1269,15 +1277,13 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     size = 5
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests')
-    for var in variables:
-        for i in range(niter):
-            assert next(sample(var))[0] in var.pspace.domain.set
-            samps = next(sample(var, size=size))
-            for samp in samps:
-                assert samp in var.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        for var in variables:
+            for i in range(niter):
+                assert next(sample(var))[0] in var.pspace.domain.set
+                samps = next(sample(var, size=size))
+                for samp in samps:
+                    assert samp in var.pspace.domain.set
 
 def test_input_value_assertions():
     a, b = symbols('a b')
@@ -1539,10 +1545,11 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        for X in distribs_numpy:
-            samps = next(sample(X, size=size, library='numpy'))
-            for sam in samps:
-                assert sam in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_numpy:
+                samps = next(sample(X, size=size, library='numpy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
 
 
 def test_sample_scipy():
@@ -1568,16 +1575,17 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
-        g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
-        assert len(g_sample) == numsamples
-        for X in distribs_scipy:
-            samps = next(sample(X, size=size, library='scipy'))
-            samps2 = next(sample(X, size=(2, 2), library='scipy'))
-            for sam in samps:
-                assert sam in X.pspace.domain.set
-            for i in range(2):
-                for j in range(2):
-                    assert samps2[i][j] in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
+            assert len(g_sample) == numsamples
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size, library='scipy'))
+                samps2 = next(sample(X, size=(2, 2), library='scipy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+                for i in range(2):
+                    for j in range(2):
+                        assert samps2[i][j] in X.pspace.domain.set
 
 def test_sample_pymc3():
     distribs_pymc3 = [
@@ -1597,10 +1605,11 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        for X in distribs_pymc3:
-            samps = next(sample(X, size=size, library='pymc3'))
-            for sam in samps:
-                assert sam in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_pymc3:
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
 
 
 def test_issue_16318():

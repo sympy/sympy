@@ -11,7 +11,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, ignore_warnings
 
 
 def BayesTest(A, B):
@@ -149,7 +149,8 @@ def test_given():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    assert next(sample(X, X > 5)) == 6
+    with ignore_warnings(UserWarning):
+        assert next(sample(X, X > 5)) == 6
 
 
 def test_domains():
@@ -448,25 +449,27 @@ def test_sampling_methods():
     distribs_pymc3 = [BetaBinomial("B", 1, 1, 1)]
 
     size = 5
-
-    for X in distribs_random:
-        sam = X.pspace.distribution._sample_random(size)
-        for i in range(size):
-            assert sam[i] in X.pspace.domain.set
+    with ignore_warnings(UserWarning):
+        for X in distribs_random:
+            sam = X.pspace.distribution._sample_random(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
 
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        for X in distribs_scipy:
-            sam = X.pspace.distribution._sample_scipy(size)
-            for i in range(size):
-                assert sam[i] in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_scipy:
+                sam = X.pspace.distribution._sample_scipy(size)
+                for i in range(size):
+                    assert sam[i] in X.pspace.domain.set
     pymc3 = import_module('pymc3')
     if not pymc3:
         skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
     else:
-        for X in distribs_pymc3:
-            sam = X.pspace.distribution._sample_pymc3(size)
-            for i in range(size):
-                assert sam[i] in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_pymc3:
+                sam = X.pspace.distribution._sample_pymc3(size)
+                for i in range(size):
+                    assert sam[i] in X.pspace.domain.set

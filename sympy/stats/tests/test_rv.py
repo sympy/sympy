@@ -7,8 +7,8 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, sample_iter, PSpace, sample_iter_subs, sample_iter_lambdify)
-from sympy.testing.pytest import raises, skip, XFAIL, warns_deprecated_sympy
+        RandomSymbol, sample_iter, PSpace)
+from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -104,9 +104,6 @@ def test_sample_iter():
             return True
         else:
             return False
-    with warns_deprecated_sympy():
-        sample_iter_subs(expr)
-        sample_iter_lambdify(expr)
     assert is_iterator(iterator)
     assert is_iterator(iterator2)
     assert is_iterator(iterator3)
@@ -191,8 +188,9 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-    assert next(sample(X + Y))[0].is_Float
+    with ignore_warnings(UserWarning):
+        assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
+        assert next(sample(X + Y))[0].is_Float
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number

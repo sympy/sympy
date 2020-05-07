@@ -26,7 +26,8 @@ from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import filldedent
+import warnings
 
 
 x = Symbol('x')
@@ -1071,6 +1072,10 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
         iterator object containing the sample/samples of given expr
 
     """
+    message = ("The return type of sample has been changed to return an "
+                  "iterator object since version 1.7. For more information see "
+                  "https://github.com/sympy/sympy/issues/19061")
+    warnings.warn(filldedent(message))
     return sample_iter(expr, condition, size=size, library=library,
                                                         numsamples=numsamples)
 
@@ -1201,24 +1206,12 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
 
 def sample_iter_lambdify(expr, condition=None, size=(1,), numsamples=S.Infinity,
                                                                     **kwargs):
-    SymPyDeprecationWarning(
-        feature='sample_iter_lambdify',
-        useinstead='sample_iter',
-        issue=19061,
-        deprecated_since_version=1.6,
-    ).warn()
 
     return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
                                                                         **kwargs)
 
 def sample_iter_subs(expr, condition=None, size=(1,), numsamples=S.Infinity,
                                                                     **kwargs):
-    SymPyDeprecationWarning(
-        feature='sample_iter_subs',
-        useinstead='sample_iter',
-        issue=19061,
-        deprecated_since_version=1.6,
-    ).warn()
 
     return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
                                                                         **kwargs)
