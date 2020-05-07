@@ -639,7 +639,7 @@ def get_hook(cls):
                     options['evaluate'] = False
                     return cls._from_args(args, is_commutative=False)
 
-                return cls(*args, preprocess=False, **options)
+                return cls(*args, ignore_hook=True, **options)
 
         if mat_class == MatAdd:
             return mat_class(*matrices, **options).doit(deep=False)

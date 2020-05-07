@@ -1667,11 +1667,11 @@ def Mul_hook(*args, **options):
                     Mul(self.min, other))
         if isinstance(other, Order):
             return other
-        return Mul(self, other, preprocess=False, evaluate=False)
+        return Mul(self, other, ignore_hook=True, evaluate=False)
     result = _mul_combine(accbnd, coeff)
 
     # Every combinables are combined.
-    return Mul(result, extra, preprocess=False, evaluate=False)
+    return Mul(result, extra, ignore_hook=True, evaluate=False)
 
 Basic._constructor_hook_mapping[AccumulationBounds] = {
     Add: Add_hook,
