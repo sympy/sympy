@@ -1,7 +1,7 @@
 from typing import Type
 
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, sympify
+from sympy.core import S, sympify
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.compatibility import default_sort_key
 from sympy import sqrt, ImmutableMatrix as Matrix, Add

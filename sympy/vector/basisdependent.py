@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from sympy.simplify import simplify as simp, trigsimp as tsimp
-from sympy.core.decorators import call_highest_priority, _sympifyit
+from sympy.core.decorators import call_highest_priority
 from sympy.core.assumptions import StdFactKB
 from sympy import factor as fctr, diff as df, Integral
 from sympy.core import S, Add, Mul
