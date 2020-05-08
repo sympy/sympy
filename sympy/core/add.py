@@ -114,8 +114,6 @@ class Add(Expr, AssocOp):
                         # e.g. 3 + ...
         order_factors = []
 
-        extra = []
-
         for o in seq:
 
             # O(x)
@@ -135,18 +133,18 @@ class Add(Expr, AssocOp):
             # 3 or NaN
             elif o.is_Number:
                 if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_finite is False) and not extra:
+                        o.is_finite is False):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number:
                     coeff += o
-                    if coeff is S.NaN and not extra:
+                    if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
                 continue
 
             elif o is S.ComplexInfinity:
-                if coeff.is_finite is False and not extra:
+                if coeff.is_finite is False:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 coeff = S.ComplexInfinity
@@ -185,7 +183,7 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
-                if terms[s] is S.NaN and not extra:
+                if terms[s] is S.NaN:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
             else:
@@ -262,10 +260,6 @@ class Add(Expr, AssocOp):
         # current code expects coeff to be first
         if coeff is not S.Zero:
             newseq.insert(0, coeff)
-
-        if extra:
-            newseq += extra
-            noncommutative = True
 
         # we are done
         if noncommutative:
