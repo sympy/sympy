@@ -38,6 +38,7 @@ Continuous Types
 .. autofunction:: Beta
 .. autofunction:: BetaNoncentral
 .. autofunction:: BetaPrime
+.. autofunction:: BoundedPareto
 .. autofunction:: Cauchy
 .. autofunction:: Chi
 .. autofunction:: ChiNoncentral
@@ -59,6 +60,7 @@ Continuous Types
 .. autofunction:: Logistic
 .. autofunction:: LogLogistic
 .. autofunction:: LogNormal
+.. autofunction:: Lomax
 .. autofunction:: Maxwell
 .. autofunction:: Moyal
 .. autofunction:: Nakagami

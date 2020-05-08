@@ -8,6 +8,7 @@ Benini
 Beta
 BetaNoncentral
 BetaPrime
+BoundedPareto
 Cauchy
 Chi
 ChiNoncentral
@@ -30,6 +31,7 @@ Levy
 Logistic
 LogLogistic
 LogNormal
+Lomax
 Maxwell
 Moyal
 Nakagami
@@ -75,6 +77,7 @@ __all__ = ['ContinuousRV',
 'Beta',
 'BetaNoncentral',
 'BetaPrime',
+'BoundedPareto',
 'Cauchy',
 'Chi',
 'ChiNoncentral',
@@ -97,6 +100,7 @@ __all__ = ['ContinuousRV',
 'Logistic',
 'LogLogistic',
 'LogNormal',
+'Lomax',
 'Maxwell',
 'Moyal',
 'Nakagami',
@@ -601,6 +605,75 @@ def BetaPrime(name, alpha, beta):
     return rv(name, BetaPrimeDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
+# Bounded Pareto Distribution --------------------------------------------------
+class BoundedParetoDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'left', 'right')
+
+    @property
+    def set(self):
+        return Interval(self.left , self.right)
+
+    @staticmethod
+    def check(alpha, left, right):
+        _value_check (alpha.is_positive, "Shape must be positive.")
+        _value_check (left.is_positive, "Left value should be positive.")
+        _value_check (right > left, "Right should be greater than left.")
+
+    def pdf(self, x):
+        alpha, left, right = self.alpha, self.left, self.right
+        num = alpha * (left**alpha) * x**(- alpha -1)
+        den = 1 - (left/right)**alpha
+        return num/den
+
+def BoundedPareto(name, alpha, left, right):
+    """
+    Create a continuous random variable with a Bounded Pareto distribution.
+
+    The density of the Bounded Pareto distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha L^{\alpha}x^{-\alpha-1}}{1-(\frac{L}{H})^{\alpha}}
+
+    Parameters
+    ==========
+
+    alpha : Real Number, `alpha > 0`
+        Shape parameter
+    left : Real Number, `left > 0`
+        Location parameter
+    right : Real Number, `right > left`
+        Location parameter
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BoundedPareto, density, cdf, E
+    >>> from sympy import symbols
+    >>> L, H = symbols('L, H', positive=True)
+    >>> X = BoundedPareto('X', 2, L, H)
+    >>> x = symbols('x')
+    >>> density(X)(x)
+    2*L**2/(x**3*(1 - L**2/H**2))
+    >>> cdf(X)(x)
+    Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), L <= x), (0, True))
+    >>> E(X).simplify()
+    2*H*L/(H + L)
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Pareto_distribution#Bounded_Pareto_distribution
+
+
+    """
+    return rv (name, BoundedParetoDistribution, (alpha, left, right))
+
+# ------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
 
 
@@ -2458,6 +2531,72 @@ def LogNormal(name, mean, std):
     """
 
     return rv(name, LogNormalDistribution, (mean, std))
+
+#-------------------------------------------------------------------------------
+# Lomax Distribution -----------------------------------------------------------
+
+class LomaxDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'lamda',)
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, lamda):
+        _value_check(alpha.is_real, "Shape parameter should be real.")
+        _value_check(lamda.is_real, "Scale parameter should be real.")
+        _value_check(alpha.is_positive, "Shape parameter should be positive.")
+        _value_check(lamda.is_positive, "Scale parameter should be positive.")
+
+    def pdf(self, x):
+        lamba, alpha = self.lamda, self.alpha
+        return (alpha/lamba) * (S.One + x/lamba)**(-alpha-1)
+
+def Lomax(name, alpha, lamda):
+    """
+    Create a continuous random variable with a Lomax distribution.
+
+    The density of the Lomax distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha}{\lambda}\left[1+\frac{x}{\lambda}\right]^{-(\alpha+1)}
+
+    Parameters
+    ==========
+
+    alpha : Real Number, `alpha > 0`
+        Shape parameter
+    lamda : Real Number, `lamda > 0`
+        Scale parameter
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Lomax, density, cdf, E
+    >>> from sympy import symbols
+    >>> a, l = symbols('a, l', positive=True)
+    >>> X = Lomax('X', a, l)
+    >>> x = symbols('x')
+    >>> density(X)(x)
+    a*(1 + x/l)**(-a - 1)/l
+    >>> cdf(X)(x)
+    Piecewise((1 - (1 + x/l)**(-a), x >= 0), (0, True))
+    >>> a = 2
+    >>> X = Lomax('X', a, l)
+    >>> E(X)
+    l
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lomax_distribution
+
+
+    """
+    return rv(name, LomaxDistribution, (alpha, lamda))
 
 #-------------------------------------------------------------------------------
 # Maxwell distribution ---------------------------------------------------------
