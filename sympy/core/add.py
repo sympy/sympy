@@ -94,7 +94,6 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
-        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -144,11 +143,6 @@ class Add(Expr, AssocOp):
                     if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
-                continue
-
-            elif isinstance(o, MatrixExpr):
-                # can't add 0 to Matrix so make sure coeff is not 0
-                extra.append(o)
                 continue
 
             elif o is S.ComplexInfinity:

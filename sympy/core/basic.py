@@ -1812,9 +1812,10 @@ class Basic(metaclass=ManagedProperties):
 
         >>> from sympy import Add, MatrixSymbol, MatrixExpr
         >>> A = MatrixSymbol('A', 2,2)
-        >>> isinstance(Add(A,A), MatrixExpr)
+        >>> B = MatrixSymbol('B', 2,2)
+        >>> isinstance(Add(A,B), MatrixExpr) # Hook applied: returns MatAdd
         True
-        >>> isinstance(Add(A,A, ignore_hook=True), MatrixExpr)
+        >>> isinstance(Add(A,B, ignore_hook=True), MatrixExpr) # Hook not applied: returns Add
         False
 
         See Also
