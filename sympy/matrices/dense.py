@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import random
 
 from sympy.core import SympifyError, Add
@@ -292,6 +290,8 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
+    __hash__ = None
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 

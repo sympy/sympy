@@ -25,9 +25,9 @@ def generate_rules_from_downvalues():
     for k in range(0, 18):
         module_name = output[k][0:-3]
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        header = open(os.path.join(path_header, "header.py.txt"), "r").read()
+        header = open(os.path.join(path_header, "header.py.txt")).read()
         header = header.format(module_name)
-        with open(input[k], 'r') as myfile:
+        with open(input[k]) as myfile:
             fullform =myfile.read().replace('\n', '')
         for i in temporary_variable_replacement:
             fullform = fullform.replace(i, temporary_variable_replacement[i])

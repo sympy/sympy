@@ -8,6 +8,7 @@ from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic, _aresame)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol
+from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
@@ -46,7 +47,7 @@ def test_equality():
     assert Basic() != 0
     assert not(Basic() == 0)
 
-    class Foo(object):
+    class Foo:
         """
         Class that is unaware of Basic, and relies on both classes returning
         the NotImplemented singleton for equivalence to evaluate to False.
@@ -61,7 +62,7 @@ def test_equality():
     assert not b == foo
     assert not foo == b
 
-    class Bar(object):
+    class Bar:
         """
         Class that considers itself equal to any instance of Basic, and relies
         on Basic returning the NotImplemented singleton in order to achieve
@@ -102,6 +103,7 @@ def test_has():
     assert b21.has(Basic)
     assert not b1.has(b21, b3)
     assert not b21.has()
+    raises(SympifyError, lambda: Symbol("x").has("x"))
 
 
 def test_subs():
@@ -123,13 +125,13 @@ def test_subs():
     # cannot be sympified; sympification is strict if foo is not string
     raises(ValueError, lambda: b21.subs(b1='bad arg'))
 
-    assert Symbol(u"text").subs({u"text": b1}) == b1
-    assert Symbol(u"s").subs({u"s": 1}) == 1
+    assert Symbol("text").subs({"text": b1}) == b1
+    assert Symbol("s").subs({"s": 1}) == 1
 
 
 def test_subs_with_unicode_symbols():
     expr = Symbol('var1')
-    replaced = expr.subs('var1', u'x')
+    replaced = expr.subs('var1', 'x')
     assert replaced.name == 'x'
 
     replaced = expr.subs('var1', 'x')
@@ -137,7 +139,7 @@ def test_subs_with_unicode_symbols():
 
 
 def test_atoms():
-    assert b21.atoms() == set([Basic()])
+    assert b21.atoms() == {Basic()}
 
 
 def test_free_symbols_empty():

@@ -47,19 +47,16 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=()):
+    def sample(self, size=(1,), library='scipy'):
         """ A random realization from the distribution"""
-        if getattr(self,'_sample_scipy', None) and import_module('scipy'):
-            return self._sample_scipy(size)
+        if hasattr(self,'_sample_scipy') and import_module('scipy'):
+            return self._sample_scipy(size=size)
         icdf = self._inverse_cdf_expression()
         samp_list = []
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
             if sample_ >= self.set.inf:
-                if not size:
-                    return sample_
-                else:
-                    samp_list.append(sample_)
+                samp_list.append(sample_)
             if len(samp_list) == size:
                 return samp_list
 
@@ -204,16 +201,6 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.pdf(*args)
 
 
-class DiscreteDistributionHandmade(SingleDiscreteDistribution):
-    _argnames = ('pdf',)
-
-    @property
-    def set(self):
-        return self.args[1]
-
-    def __new__(cls, pdf, set=S.Integers):
-        return Basic.__new__(cls, pdf, set)
-
 class DiscreteDomain(RandomDomain):
     """
     A domain with discrete support with step size one.
@@ -277,6 +264,7 @@ class DiscretePSpace(PSpace):
             expr = condition.lhs - condition.rhs
             dens = density(expr)
             if not isinstance(dens, DiscreteDistribution):
+                from sympy.stats.drv_types import DiscreteDistributionHandmade
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real=True)
             space = SingleDiscretePSpace(z, dens)
@@ -327,7 +315,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     def domain(self):
         return SingleDiscreteDomain(self.symbol, self.set)
 
-    def sample(self, size=()):
+    def sample(self, size=(1,), library='scipy'):
         """
         Internal sample method
 

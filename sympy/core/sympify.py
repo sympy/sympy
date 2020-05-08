@@ -1,7 +1,5 @@
 """sympify -- convert objects SymPy internal format"""
 
-from __future__ import print_function, division
-
 from typing import Dict, Type, Callable, Any
 
 from inspect import getmro
@@ -28,7 +26,7 @@ class SympifyError(ValueError):
 converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
-class CantSympify(object):
+class CantSympify:
     """
     Mix in this trait to a class to disallow sympification of its instances.
 
@@ -53,6 +51,16 @@ class CantSympify(object):
 
     """
     pass
+
+
+def _is_numpy_instance(a):
+    """
+    Checks if an object is an instance of a type from the numpy module.
+    """
+    # This check avoids unnecessarily importing NumPy.  We check the whole
+    # __mro__ in case any base type is a numpy type.
+    return any(type_.__module__ == 'numpy'
+               for type_ in type(a).__mro__)
 
 
 def _convert_numpy_types(a, **sympify_args):
@@ -295,8 +303,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate = global_parameters.evaluate
 
     # Support for basic numpy datatypes
-    # Note that this check exists to avoid importing NumPy when not necessary
-    if type(a).__module__ == 'numpy':
+    if _is_numpy_instance(a):
         import numpy as np
         if np.isscalar(a):
             return _convert_numpy_types(a, locals=locals,
@@ -324,15 +331,30 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, str):
-        for coerce in (float, int):
-            try:
-                coerced = coerce(a)
-            except (TypeError, ValueError):
-                continue
-            try:
-                return sympify(coerced)
-            except SympifyError:
-                continue
+        if _is_numpy_instance(a):
+            import numpy as np
+            assert not isinstance(a, np.number)
+            if isinstance(a, np.ndarray):
+                # Scalar arrays (those with zero dimensions) have sympify
+                # called on the scalar element.
+                if a.ndim == 0:
+                    try:
+                        return sympify(a.item(),
+                                       locals=locals,
+                                       convert_xor=convert_xor,
+                                       strict=strict,
+                                       rational=rational,
+                                       evaluate=evaluate)
+                    except SympifyError:
+                        pass
+        else:
+            # float and int can coerce size-one numpy arrays to their lone
+            # element.  See issue https://github.com/numpy/numpy/issues/10404.
+            for coerce in (float, int):
+                try:
+                    return sympify(coerce(a))
+                except (TypeError, ValueError, AttributeError, SympifyError):
+                    continue
 
     if strict:
         raise SympifyError(a)
@@ -352,19 +374,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             # Not all iterables are rebuildable with their type.
             pass
 
-    # At this point we were given an arbitrary expression
-    # which does not inherit from Basic and doesn't implement
-    # _sympy_ (which is a canonical and robust way to convert
-    # anything to SymPy expression).
-    #
-    # As a last chance, we try to take "a"'s normal form via unicode()
-    # and try to parse it. If it fails, then we have no luck and
-    # return an exception
-    try:
-        from .compatibility import unicode
-        a = unicode(a)
-    except Exception as exc:
-        raise SympifyError(a, exc)
+    if not isinstance(a, str):
+        try:
+            a = str(a)
+        except Exception as exc:
+            raise SympifyError(a, exc)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(
+            feature="String fallback in sympify",
+            useinstead= \
+                'sympify(str(obj)) or ' + \
+                'sympy.core.sympify.converter or obj._sympy_',
+            issue=18066,
+            deprecated_since_version='1.6'
+        ).warn()
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)

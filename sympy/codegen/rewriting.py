@@ -30,7 +30,6 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 
 """
-from __future__ import (absolute_import, division, print_function)
 from itertools import chain
 from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.assumptions import Q, ask
@@ -42,7 +41,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
 
 
-class Optimization(object):
+class Optimization:
     """ Abstract base class for rewriting optimization.
 
     Subclasses should implement ``__call__`` taking an expression
@@ -86,7 +85,7 @@ class ReplaceOptim(Optimization):
     """
 
     def __init__(self, query, value, **kwargs):
-        super(ReplaceOptim, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.query = query
         self.value = value
 

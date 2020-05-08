@@ -1,7 +1,6 @@
 """
 Integer factorization
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 import random
@@ -20,6 +19,7 @@ from sympy.core.power import integer_nthroot, Pow
 from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
+from .digits import digits
 from sympy.utilities.misc import filldedent
 
 
@@ -1512,8 +1512,7 @@ def _divisors(n, proper=False):
             if p != n:
                 yield p
     else:
-        for p in rec_gen():
-            yield p
+        yield from rec_gen()
 
 
 def divisors(n, generator=False, proper=False):
@@ -2039,8 +2038,10 @@ class divisor_sigma(Function):
     def eval(cls, n, k=1):
         n = sympify(n)
         k = sympify(k)
+
         if n.is_prime:
             return 1 + n**k
+
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
@@ -2052,6 +2053,17 @@ class divisor_sigma(Function):
             else:
                 return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
                            else e + 1 for p, e in factorint(n).items()])
+
+        if n.is_integer:  # symbolic case
+            args = []
+            for p, e in (_.as_base_exp() for _ in Mul.make_args(n)):
+                if p.is_prime and e.is_positive:
+                    args.append((p**(k*(e + 1)) - 1)/(p**k - 1) if
+                                k != 0 else e + 1)
+                else:
+                    return
+            return Mul(*args)
+
 
 def core(n, t=2):
     r"""
@@ -2117,40 +2129,6 @@ def core(n, t=2):
         y = 1
         for p, e in factorint(n).items():
             y *= p**(e % t)
-        return y
-
-
-def digits(n, b=10):
-    """
-    Return a list of the digits of n in base b. The first element in the list
-    is b (or -b if n is negative).
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import digits
-    >>> digits(35)
-    [10, 3, 5]
-    >>> digits(27, 2)
-    [2, 1, 1, 0, 1, 1]
-    >>> digits(65536, 256)
-    [256, 1, 0, 0]
-    >>> digits(-3958, 27)
-    [-27, 5, 11, 16]
-    """
-
-    b = as_int(b)
-    n = as_int(n)
-    if b <= 1:
-        raise ValueError("b must be >= 2")
-    else:
-        x, y = abs(n), []
-        while x >= b:
-            x, r = divmod(x, b)
-            y.append(r)
-        y.append(x)
-        y.append(-b if n < 0 else b)
-        y.reverse()
         return y
 
 

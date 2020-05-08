@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 import numbers
 import decimal
 import fractions
@@ -7,7 +5,8 @@ import math
 import re as regex
 
 from .containers import Tuple
-from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
+from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
+                      _is_numpy_instance)
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
@@ -277,8 +276,6 @@ except ImportError:
 
 
 # Use Lehmer's algorithm only for very large numbers.
-# The limit could be different on Python 2.7 and 3.x.
-# If so, then this could be defined in compatibility.py.
 BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
@@ -808,7 +805,7 @@ class Number(AtomicExpr):
         return _sympify(other).__le__(self)
 
     def __hash__(self):
-        return super(Number, self).__hash__()
+        return super().__hash__()
 
     def is_constant(self, *wrt, **flags):
         return True
@@ -1086,7 +1083,7 @@ class Float(Number):
             return num
         elif num is S.NaN:
             return num
-        elif type(num).__module__ == 'numpy': # support for numpy datatypes
+        elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
         elif isinstance(num, mpmath.mpf):
             if precision is None:
@@ -1390,12 +1387,15 @@ class Float(Number):
     __long__ = __int__
 
     def __eq__(self, other):
+        from sympy.logic.boolalg import Boolean
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
         if not self:
             return not other
+        if isinstance(other, Boolean):
+            return False
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
@@ -1482,7 +1482,7 @@ class Float(Number):
         return rv
 
     def __hash__(self):
-        return super(Float, self).__hash__()
+        return super().__hash__()
 
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
@@ -1968,7 +1968,7 @@ class Rational(Number):
         return Expr.__le__(*rv)
 
     def __hash__(self):
-        return super(Rational, self).__hash__()
+        return super().__hash__()
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
@@ -2332,7 +2332,7 @@ class Integer(Rational):
                 return (-self)**expt
         if isinstance(expt, Float):
             # Rational knows how to exponentiate by a Float
-            return super(Integer, self)._eval_power(expt)
+            return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -2495,7 +2495,7 @@ class AlgebraicNumber(Expr):
         return obj
 
     def __hash__(self):
-        return super(AlgebraicNumber, self).__hash__()
+        return super().__hash__()
 
     def _eval_evalf(self, prec):
         return self.as_expr()._evalf(prec)
@@ -2605,6 +2605,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.Zero
@@ -2667,6 +2670,9 @@ class One(IntegerConstant, metaclass=Singleton):
 
     __slots__ = ()
 
+    def __getnewargs__(self):
+        return ()
+
     @staticmethod
     def __abs__():
         return S.One
@@ -2719,6 +2725,9 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
     q = 1
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
@@ -2774,6 +2783,9 @@ class Half(RationalConstant, metaclass=Singleton):
     q = 2
 
     __slots__ = ()
+
+    def __getnewargs__(self):
+        return ()
 
     @staticmethod
     def __abs__():
@@ -2944,7 +2956,7 @@ class Infinity(Number, metaclass=Singleton):
         return sage.oo
 
     def __hash__(self):
-        return super(Infinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
@@ -3109,7 +3121,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
         return -(sage.oo)
 
     def __hash__(self):
-        return super(NegativeInfinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
@@ -3243,7 +3255,7 @@ class NaN(Number, metaclass=Singleton):
         return sage.NaN
 
     def __hash__(self):
-        return super(NaN, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         # NaN is structurally equal to another NaN
@@ -3399,7 +3411,7 @@ class NumberSymbol(AtomicExpr):
         return self.__int__()
 
     def __hash__(self):
-        return super(NumberSymbol, self).__hash__()
+        return super().__hash__()
 
 
 class Exp1(NumberSymbol, metaclass=Singleton):

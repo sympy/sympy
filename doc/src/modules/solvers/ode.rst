@@ -68,7 +68,7 @@ sol_simplicity
 
 factorable
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_factorable
+.. autoclass:: sympy.solvers.ode.single.Factorable
 
 1st_exact
 ^^^^^^^^^
@@ -88,7 +88,7 @@ factorable
 
 1st_linear
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_1st_linear
+.. autoclass:: sympy.solvers.ode.single.FirstLinear
 
 2nd_linear_airy
 ^^^^^^^^^^^^^^^
@@ -100,7 +100,7 @@ factorable
 
 Bernoulli
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_Bernoulli
+.. autoclass:: sympy.solvers.ode.single.Bernoulli
 
 Liouville
 ^^^^^^^^^
@@ -108,7 +108,7 @@ Liouville
 
 Riccati_special_minus2
 ^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_Riccati_special_minus2
+.. autoclass:: sympy.solvers.ode.single.RiccatiSpecial
 
 nth_linear_constant_coeff_homogeneous
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -124,7 +124,7 @@ nth_linear_constant_coeff_variation_of_parameters
 
 nth_algebraic
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_nth_algebraic
+.. autoclass:: sympy.solvers.ode.single.NthAlgebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
@@ -136,7 +136,7 @@ separable
 
 almost_linear
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode.ode_almost_linear
+.. autoclass:: sympy.solvers.ode.single.AlmostLinear
 
 linear_coefficients
 ^^^^^^^^^^^^^^^^^^^
@@ -281,25 +281,25 @@ Linear, 2 equations, Order 2, Type 11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_2eq_order2_type11
 
-Linear, 3 equations, Order 1, Type 1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type1
-
-Linear, 3 equations, Order 1, Type 2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type2
-
-Linear, 3 equations, Order 1, Type 3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type3
-
 Linear, 3 equations, Order 1, Type 4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type4
 
+Linear ODE to matrix
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.linear_ode_to_matrix
+
+Matrix Exponential Jordan Form
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.matrix_exp_jordan_form
+
+Matrix Exponential
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.matrix_exp
+
 Linear, n equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_neq_order1_type1
+.. autofunction:: sympy.solvers.ode.systems._neq_linear_first_order_const_coeff_homogeneous
 
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
