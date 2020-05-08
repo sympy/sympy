@@ -186,7 +186,6 @@ class Mul(Expr, AssocOp):
 
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
-        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -593,9 +592,7 @@ class Mul(Expr, AssocOp):
         # 0
         elif coeff.is_zero:
             # we know for sure the result will be 0 except the multiplicand
-            # is infinity or a matrix
-            if any(isinstance(c, MatrixExpr) for c in nc_part):
-                return [coeff], nc_part, order_symbols
+            # is infinity
             if any(c.is_finite == False for c in c_part):
                 return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols
