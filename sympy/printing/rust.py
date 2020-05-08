@@ -441,7 +441,12 @@ class RustCodePrinter(CodePrinter):
         if A.cols == 1:
             return "[%s]" % ", ".join(self._print(a) for a in A)
         else:
-            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
+            mat = "{\n" + "let mut mat = [[0.0_f64; {}]; {}];\n".format(A.cols, A.rows)
+            for col in range(A.cols):
+                for row in range(A.rows):
+                    mat += "mat[{}][{}] = {};\n".format(col, row, self._print(A[col, row]))
+
+            return mat + " mat\n}"
 
     def _print_SparseMatrix(self, mat):
         # do not allow sparse matrices to be made dense
