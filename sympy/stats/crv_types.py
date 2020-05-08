@@ -626,7 +626,7 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
         return num/den
 
 def BoundedPareto(name, alpha, left, right):
-    """
+    r"""
     Create a continuous random variable with a Bounded Pareto distribution.
 
     The density of the Bounded Pareto distribution is given by
@@ -668,7 +668,6 @@ def BoundedPareto(name, alpha, left, right):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Pareto_distribution#Bounded_Pareto_distribution
-
 
     """
     return rv (name, BoundedParetoDistribution, (alpha, left, right))
@@ -2551,7 +2550,7 @@ class LomaxDistribution(SingleContinuousDistribution):
         return (alpha/lamba) * (S.One + x/lamba)**(-alpha-1)
 
 def Lomax(name, alpha, lamda):
-    """
+    r"""
     Create a continuous random variable with a Lomax distribution.
 
     The density of the Lomax distribution is given by
@@ -2593,7 +2592,6 @@ def Lomax(name, alpha, lamda):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Lomax_distribution
-
 
     """
     return rv(name, LomaxDistribution, (alpha, lamda))
