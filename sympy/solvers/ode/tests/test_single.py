@@ -941,6 +941,7 @@ def _get_all_examples():
     _get_examples_ode_sol_riccati(),
     _get_examples_ode_sol_1st_linear(),
     _get_examples_ode_sol_almost_linear(),
+    _get_examples_ode_sol_nth_order_reducible(),
     ]
 
     all_examples = []
