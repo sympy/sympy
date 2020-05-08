@@ -1,11 +1,11 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S, I,
                    Eq, sqrt)
-from sympy.functions import exp, cos, sin
+from sympy.functions import exp, cos, sin, log
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 
@@ -699,3 +699,33 @@ def test_neq_linear_first_order_nonconst_coeff_homogeneous():
 
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
+
+
+# 19185: This test case has to be updated in future when a proper
+# technique to handle complicated solutions has been found for
+# non constant coefficient solver.
+@slow
+def test_linear_3eq_order1():
+
+    x, y, z = symbols('x, y, z', cls=Function)
+    t = Symbol('t')
+
+    f = t ** 3 + log(t)
+    g = t ** 2 + sin(t)
+    eq1 = (Eq(diff(x(t), t), (4 * f + g) * x(t) - f * y(t) - 2 * f * z(t)),
+                Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)), Eq(diff(z(t), t), 5 * f * x(t) + f * y(
+        t) + (-3 * f + g) * z(t)))
+
+    # sol1 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
+    #         + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
+    #         + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
+    #         Eq(y(t), (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)* \
+    #         Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
+    #         + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
+    #         Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*Integral(t**3 + log(t), t)) - \
+    #         C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+
+    dsolve_sol = dsolve(eq1)
+    # dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
+    # assert all(simplify(s1.rhs - ds1.rhs) == 0 for s1, ds1 in zip(sol1, dsolve_sol))
+    assert checksysodesol(eq1, dsolve_sol) == (True, [0, 0, 0])

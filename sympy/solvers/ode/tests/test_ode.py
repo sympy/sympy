@@ -1,7 +1,7 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, simplify, integrate)
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect, hyper, integrate)
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, infinitesimals, checkinfsol,
     dsolve)
@@ -742,40 +742,6 @@ def test_linear_2eq_order2():
     5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 14))]
     assert dsolve(eq10) == sol10
     # FIXME: assert checksysodesol(eq10, sol10) == (True, [0, 0]) # this hangs or at least takes a while...
-
-
-# 19185: This test case has to be updated in future when a proper
-# technique to handle complicated solutions has been found for
-# non constant coefficient solver.
-@slow
-def test_linear_3eq_order1():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
-
-    f = t ** 3 + log(t)
-    g = t ** 2 + sin(t)
-    eq1 = (Eq(diff(x(t), t), (4 * f + g) * x(t) - f * y(t) - 2 * f * z(t)),
-                Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)), Eq(diff(z(t), t), 5 * f * x(t) + f * y(
-        t) + (-3 * f + g) * z(t)))
-
-    # sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
-    # + cos(sqrt(3)*Integral    (t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
-    # sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
-    # (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
-    # C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
-    # exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
-    # Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
-    sol1 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
-            + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
-            + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
-            Eq(y(t), (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)* \
-            Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
-            + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
-            Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*Integral(t**3 + log(t), t)) - \
-            C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
-    dsolve_sol = dsolve(eq1)
-    # dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
-    assert all(simplify(s1.rhs - ds1.rhs) == 0 for s1, ds1 in zip(sol1, dsolve_sol))
 
 
 def test_linear_3eq_order1_nonhomog():
