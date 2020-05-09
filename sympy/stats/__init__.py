@@ -113,11 +113,11 @@ __all__ = [
     'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
-    'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
+    'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Moyal',
-    'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Lomax',
+    'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
     'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
@@ -155,10 +155,10 @@ from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         FiniteDistributionHandmade)
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
-        BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
+        BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Levy, Logistic, LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal,
+        Levy, Logistic, LogLogistic, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
         GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
