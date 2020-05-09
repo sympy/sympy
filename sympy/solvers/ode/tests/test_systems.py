@@ -669,7 +669,7 @@ def test_sysode_linear_neq_order1():
 
 
 def test_neq_linear_first_order_nonconst_coeff_homogeneous():
-    f, g = symbols('f g', cls=Function)
+    f, g, h = symbols('f g h', cls=Function)
     x = symbols('x')
     r = symbols('r', real=True)
 
@@ -707,6 +707,29 @@ def test_neq_linear_first_order_nonconst_coeff_homogeneous():
             Eq(g(x), C1*(-I*exp(x**2/2 - I*x)/2 + I*exp(x**2/2 + I*x)/2) + C2*(exp(x**2/2 - I*x)/2 + exp(x**2/2 + I*x)/2))]
     assert dsolve(eqs3) == sol3
     assert checksysodesol(eqs3, sol3) == (True, [0, 0])
+
+    obt = Rational(1, 3)
+    eqs4 = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x))), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x))), Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)))]
+    sol4 = [Eq(f(x), C1 * (exp(3 * x ** 2 / 2) / 3 + 2*obt) + C2 * (exp(3 * x ** 2 / 2) / 3 - obt) + C3 * (
+             exp(3 * x ** 2 / 2) / 3 - obt)),
+            Eq(g(x), C1 * (exp(3 * x ** 2 / 2) / 3 - obt) + C2 * (exp(3 * x ** 2 / 2) / 3 + 2*obt) + C3 * (
+             exp(3 * x ** 2 / 2) / 3 - obt)),
+            Eq(h(x), C1 * (exp(3 * x ** 2 / 2) / 3 - obt) + C2 * (exp(3 * x ** 2 / 2) / 3 - obt) + C3 * (
+             exp(3 * x ** 2 / 2) / 3 + 2*obt))]
+    assert dsolve(eqs4) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0, 0])
+
+    eqs5 = [Eq(f(x).diff(x), x**2*(f(x) + g(x) + h(x))), Eq(g(x).diff(x), x**2*(f(x) + g(x) + h(x))),
+            Eq(h(x).diff(x), x**2*(f(x) + g(x) + h(x)))]
+    sol5 = [Eq(f(x), C1 * (exp(x ** 3) / 3 + 2*obt) + C2 * (exp(x ** 3) / 3 - obt) + C3 * (
+             exp(x ** 3) / 3 - obt)),
+            Eq(g(x), C1 * (exp(x ** 3) / 3 - obt) + C2 * (exp(x ** 3) / 3 + 2*obt) + C3 * (
+             exp(x ** 3) / 3 - obt)),
+            Eq(h(x), C1 * (exp(x ** 3) / 3 - obt) + C2 * (exp(x ** 3) / 3 - obt) + C3 * (
+             exp(x ** 3) / 3 + 2*obt))]
+    
+    assert dsolve(eqs5) == sol5
+    assert checksysodesol(eqs5, sol5) == (True, [0, 0, 0])
 
 
 # 19185: This test case has to be updated in future when a proper
