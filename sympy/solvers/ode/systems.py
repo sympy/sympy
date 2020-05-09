@@ -508,6 +508,11 @@ def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
 
     sol_vector = B.exp() * Cvect
 
+    # 19185: This isn't properly collecting the expressions, we can do something like
+    # collect(expand(s), ordered(.... where we expand the s below so that we can collect
+    # the powers where it isn't possible.
+    # For example: collect(a*(x+2), x) == a*(x + 2) but
+    # collect(expand(a*(x+2)), x) == a*x + 2*a
     sol_vector = [collect(s, ordered(s.atoms(exp)), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]

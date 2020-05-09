@@ -700,6 +700,14 @@ def test_neq_linear_first_order_nonconst_coeff_homogeneous():
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
+    # 19185: May have to change this test case later when it is confirmed that we can
+    # the expand function in the solver or not.
+    eqs3 = [Eq(f(x).diff(x), x * f(x) + g(x)), Eq(g(x).diff(x), -f(x) + x * g(x))]
+    sol3 = [Eq(f(x), C1*(exp(x**2/2 - I*x)/2 + exp(x**2/2 + I*x)/2) + C2*(I*exp(x**2/2 - I*x)/2 - I*exp(x**2/2 + I*x)/2)),
+            Eq(g(x), C1*(-I*exp(x**2/2 - I*x)/2 + I*exp(x**2/2 + I*x)/2) + C2*(exp(x**2/2 - I*x)/2 + exp(x**2/2 + I*x)/2))]
+    assert dsolve(eqs3) == sol3
+    assert checksysodesol(eqs3, sol3) == (True, [0, 0])
+
 
 # 19185: This test case has to be updated in future when a proper
 # technique to handle complicated solutions has been found for
