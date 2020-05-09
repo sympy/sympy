@@ -3,6 +3,7 @@
 from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
     Eq, Integral, exp, Mul)
 from sympy.testing.pytest import raises
+from sympy import Poly
 
 from sympy.polys.polyutils import (
     _nsort,
@@ -12,6 +13,7 @@ from sympy.polys.polyutils import (
     _sort_factors,
     parallel_dict_from_expr,
     dict_from_expr,
+    pow
 )
 
 from sympy.polys.polyerrors import PolynomialError
@@ -286,3 +288,11 @@ def test_dict_from_expr():
         ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
     raises(PolynomialError, lambda: dict_from_expr(S.true))
+
+def test_poly_powers():
+    # Ensure the power works properly
+    assert(pow(Poly(x, x), 2, Poly(x ** 37)) == Poly(x ** 2, x))
+    assert(pow(Poly(x, x), 13, Poly(x ** 37)) == Poly(x ** 13, x))
+    # Ensure that modulo is working properly within the function
+    assert(pow(Poly(x + 1, x), 4, Poly(x ** 3)) == Poly(6 * x ** 2 + 4 * x + 1, x))
+    assert(pow(Poly(x + 2, x), 4, Poly(x ** 2 + 3)) == Poly(8 * x - 47, x))

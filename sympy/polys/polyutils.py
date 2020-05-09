@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+import math
+
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
 from sympy.core.exprtools import decompose_power, decompose_power_rat
@@ -420,6 +422,14 @@ def _dict_reorder(rep, gens, new_gens):
 
     return map(tuple, new_monoms), coeffs
 
+def pow(base, exp, mod):
+    current_polynomial = base
+    result_polynomial = 1
+    for i in range(0, math.floor(math.log2(exp)) + 1):
+        if math.floor(exp / (2 ** i)) % 2 == 1:
+            result_polynomial = result_polynomial * current_polynomial
+        current_polynomial = current_polynomial ** 2 % mod
+    return result_polynomial
 
 class PicklableWithSlots(object):
     """
