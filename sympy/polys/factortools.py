@@ -147,6 +147,16 @@ def dup_zz_mignotte_bound(f, K):
     >>> R.dup_zz_mignotte_bound(f)
     6
 
+    Lastly,To see the difference between the new and the old Mignotte bound
+    consider the irreducible polynomial::
+
+    >>> f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
+    >>> R.dup_zz_mignotte_bound(f)
+    744
+
+    The new Mignotte bound is 744 whereas the old one (SymPy 1.5.1) is 1937664.
+
+
     References
     ==========
 
@@ -168,7 +178,7 @@ def dup_zz_mignotte_bound(f, K):
 
     lc = K.abs(dup_LC(f, K))   # leading coefficient
     bound = t1 * eucl_norm + t2 * lc   # (p. 538 of reference)
-    bound += dup_max_norm(f, K) #add max coeff for irreducible polys
+    bound += dup_max_norm(f, K) # add max coeff for irreducible polys
     bound = _ceil(bound / 2) * 2   # round up to even integer
 
     return bound
@@ -313,7 +323,7 @@ def dup_zz_zassenhaus(f, K):
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
+    B = int(dup_zz_mignotte_bound(f, K))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
