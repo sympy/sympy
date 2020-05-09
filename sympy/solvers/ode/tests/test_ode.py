@@ -160,32 +160,6 @@ def test_linear_2eq_order1_type2_fixme_check():
     assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
-# This test is not fixed by the new solver because the
-# coefficient matrix's antiderivative doesn't commute.
-def test_linear_2eq_order1_type4_broken():
-    eqs = [Eq(f(x).diff(x), f(x) + x*g(x)),
-           Eq(g(x).diff(x), x*f(x) - g(x))]
-    # FIXME: This is not the correct solution:
-    sol = [Eq(f(x), (C1*sin(x) + C2*cos(x))*exp(x**2/2)),
-           Eq(g(x), (C1*cos(x) - C2*sin(x))*exp(x**2/2))]
-    dsolve_sol = dsolve(eqs)
-    # FIXME: This should probably be fixed so that this happens in the solver:
-    dsolve_sol = [s.doit() for s in sol]
-    assert dsolve_sol == sol
-    # FIXME: Checked in XFAIL test_linear_2eq_order1_type4_broken_check below
-
-
-@XFAIL
-def test_linear_2eq_order1_type4_broken_check():
-    # see test_linear_2eq_order1_type4_broken above
-    eqs = [Eq(f(x).diff(x), f(x) + x*g(x)),
-           Eq(g(x).diff(x), x*f(x) - g(x))]
-    # FIXME: This is not the correct solution:
-    sol = [Eq(f(x), (C1*sin(x) + C2*cos(x))*exp(x**2/2)),
-           Eq(g(x), (C1*cos(x) - C2*sin(x))*exp(x**2/2))]
-    assert checksysodesol(eqs, sol) == (True, [0, 0])
-
-
 def test_linear_2eq_order1_type6_path1_broken():
     eqs = [Eq(diff(f(x), x), f(x) + x*g(x)),
            Eq(diff(g(x), x), 2*(1 + 2/x)*f(x) + 2*(x - 1/x) * g(x))]

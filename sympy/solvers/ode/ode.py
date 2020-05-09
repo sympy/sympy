@@ -1999,6 +1999,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     return matching_hints
 
 
+# 19185: To remove the checks for the types of
+# systems of ODEs which have been removed.
 def check_linear_2eq_order1(eq, func, func_coef):
     x = func[0].func
     y = func[1].func
@@ -6598,18 +6600,14 @@ def sysode_linear_2eq_order1(match_):
         gsol = _linear_2eq_order1_type1(x, y, t, r, eq)
         psol = _linear_2eq_order1_type2(x, y, t, r, eq)
         sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
-    if match_['type_of_equation'] == 'type3':
-        sol = _linear_2eq_order1_type3(x, y, t, r, eq)
-    if match_['type_of_equation'] == 'type4':
-        sol = _linear_2eq_order1_type4(x, y, t, r, eq)
-    if match_['type_of_equation'] == 'type5':
-        sol = _linear_2eq_order1_type5(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type6':
         sol = _linear_2eq_order1_type6(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type7':
         sol = _linear_2eq_order1_type7(x, y, t, r, eq)
     return sol
 
+# To remove Linear 2 Eq, Order 1, Type 1 when
+# Linear 2 Eq, Order 1, Type 2 is removed.
 def _linear_2eq_order1_type1(x, y, t, r, eq):
     r"""
     It is classified under system of two linear homogeneous first-order constant-coefficient
@@ -6795,99 +6793,6 @@ def _linear_2eq_order1_type2(x, y, t, r, eq):
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         psol = [sol1, sol2]
     return psol
-
-def _linear_2eq_order1_type3(x, y, t, r, eq):
-    r"""
-    The equations of this type of ode are
-
-    .. math:: x' = f(t) x + g(t) y
-
-    .. math:: y' = g(t) x + f(t) y
-
-    The solution of such equations is given by
-
-    .. math:: x = e^{F} (C_1 e^{G} + C_2 e^{-G}) , y = e^{F} (C_1 e^{G} - C_2 e^{-G})
-
-    where `C_1` and `C_2` are arbitrary constants, and
-
-    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    F = Integral(r['a'], t)
-    G = Integral(r['b'], t)
-    sol1 = exp(F)*(C1*exp(G) + C2*exp(-G))
-    sol2 = exp(F)*(C1*exp(G) - C2*exp(-G))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order1_type4(x, y, t, r, eq):
-    r"""
-    The equations of this type of ode are .
-
-    .. math:: x' = f(t) x + g(t) y
-
-    .. math:: y' = -g(t) x + f(t) y
-
-    The solution is given by
-
-    .. math:: x = F (C_1 \cos(G) + C_2 \sin(G)), y = F (-C_1 \sin(G) + C_2 \cos(G))
-
-    where `C_1` and `C_2` are arbitrary constants, and
-
-    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    if r['b'] == -r['c']:
-        F = exp(Integral(r['a'], t))
-        G = Integral(r['b'], t)
-        sol1 = F*(C1*cos(G) + C2*sin(G))
-        sol2 = F*(-C1*sin(G) + C2*cos(G))
-    # FIXME: the case below doesn't seem correct, is only XFAIL tested and doesn't
-    # match the description in the docstring above. It can be triggered with:
-    # dsolve([Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), x*f(x) - g(x))])
-    elif r['d'] == -r['a']:
-        F = exp(Integral(r['b'], t))
-        G = Integral(r['d'], t)
-        sol1 = F*(-C1*sin(G) + C2*cos(G))
-        sol2 = F*(C1*cos(G) + C2*sin(G))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order1_type5(x, y, t, r, eq):
-    r"""
-    The equations of this type of ode are .
-
-    .. math:: x' = f(t) x + g(t) y
-
-    .. math:: y' = a g(t) x + [f(t) + b g(t)] y
-
-    The transformation of
-
-    .. math:: x = e^{\int f(t) \,dt} u , y = e^{\int f(t) \,dt} v , T = \int g(t) \,dt
-
-    leads to a system of constant coefficient linear differential equations
-
-    .. math:: u'(T) = v , v'(T) = au + bv
-
-    """
-    u, v = symbols('u, v', cls=Function)
-    T = Symbol('T')
-    if not cancel(r['c']/r['b']).has(t):
-        p = cancel(r['c']/r['b'])
-        q = cancel((r['d']-r['a'])/r['b'])
-        eq = (Eq(diff(u(T),T), v(T)), Eq(diff(v(T),T), p*u(T)+q*v(T)))
-        sol = dsolve(eq)
-        sol1 = exp(Integral(r['a'], t))*sol[0].rhs.subs(T, Integral(r['b'], t))
-        sol2 = exp(Integral(r['a'], t))*sol[1].rhs.subs(T, Integral(r['b'], t))
-    # The case below isn't tested and doesn't match the description in the
-    # docstring above. Perhaps this should be removed...
-    if not cancel(r['a']/r['d']).has(t):
-        p = cancel(r['a']/r['d'])
-        q = cancel((r['b']-r['c'])/r['d'])
-        sol = dsolve(Eq(diff(u(T),T), v(T)), Eq(diff(v(T),T), p*u(T)+q*v(T)))
-        sol1 = exp(Integral(r['c'], t))*sol[1].rhs.subs(T, Integral(r['d'], t))
-        sol2 = exp(Integral(r['c'], t))*sol[0].rhs.subs(T, Integral(r['d'], t))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order1_type6(x, y, t, r, eq):
     r"""
@@ -7681,8 +7586,6 @@ def sysode_linear_3eq_order1(match_):
 
     if match_['type_of_equation'] == 'type3':
         sol = _linear_3eq_order1_type3(x, y, z, t, r, eq)
-    if match_['type_of_equation'] == 'type4':
-        sol = _linear_3eq_order1_type4(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type6':
         sol = sysode_linear_neq_order1(match_)
     return sol
@@ -7726,49 +7629,6 @@ def _linear_3eq_order1_type3(x, y, z, t, r, eq):
     sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
     sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
     sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def _linear_3eq_order1_type4(x, y, z, t, r, eq):
-    r"""
-    Equations:
-
-    .. math:: x' = (a_1 f(t) + g(t)) x + a_2 f(t) y + a_3 f(t) z
-
-    .. math:: y' = b_1 f(t) x + (b_2 f(t) + g(t)) y + b_3 f(t) z
-
-    .. math:: z' = c_1 f(t) x + c_2 f(t) y + (c_3 f(t) + g(t)) z
-
-    The transformation
-
-    .. math:: x = e^{\int g(t) \,dt} u, y = e^{\int g(t) \,dt} v, z = e^{\int g(t) \,dt} w, \tau = \int f(t) \,dt
-
-    leads to the system of constant coefficient linear differential equations
-
-    .. math:: u' = a_1 u + a_2 v + a_3 w
-
-    .. math:: v' = b_1 u + b_2 v + b_3 w
-
-    .. math:: w' = c_1 u + c_2 v + c_3 w
-
-    These system of equations are solved by homogeneous linear system of constant
-    coefficients of `n` equations of first order. Then substituting the value of
-    `u, v` and `w` in transformed equation gives value of `x, y` and `z`.
-
-    """
-    u, v, w = symbols('u, v, w', cls=Function)
-    a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
-    f = cancel(r['b1']/a2)
-    b1 = cancel(r['a2']/f); b3 = cancel(r['c2']/f)
-    c1 = cancel(r['a3']/f); c2 = cancel(r['b3']/f)
-    a1, g = div(r['a1'],f)
-    b2 = div(r['b2'],f)[0]
-    c3 = div(r['c3'],f)[0]
-    trans_eq = (diff(u(t),t)-a1*u(t)-a2*v(t)-a3*w(t), diff(v(t),t)-b1*u(t)-\
-    b2*v(t)-b3*w(t), diff(w(t),t)-c1*u(t)-c2*v(t)-c3*w(t))
-    sol = dsolve(trans_eq)
-    sol1 = exp(Integral(g,t))*((sol[0].rhs).subs(t, Integral(f,t)))
-    sol2 = exp(Integral(g,t))*((sol[1].rhs).subs(t, Integral(f,t)))
-    sol3 = exp(Integral(g,t))*((sol[2].rhs).subs(t, Integral(f,t)))
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 
