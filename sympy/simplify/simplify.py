@@ -304,6 +304,7 @@ def hypersimp(f, k):
         return None
     f = f.rewrite(gamma)
     if f.has(Piecewise):
+        f = piecewise_fold(f)
         f = f.args[-1][0]
 
     g = f.subs(k, k + 1) / f
