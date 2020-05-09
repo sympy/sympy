@@ -1073,20 +1073,7 @@ def _n2(a, b):
 
 
 def is_lt(lhs, rhs):
-    if lhs.is_extended_real and rhs.is_extended_real:
-        retval = fuzzy_not(is_ge(lhs, rhs))
-    else:
-        retval = lhs._eval_is_lt(rhs)
-    if retval is not None:
-        return retval
-    else:
-        n2 = _n2(lhs, rhs)
-        if n2 is not None:
-            # use float comparison for infinity.
-            # otherwise get stuck in infinite recursion
-            if n2 in (S.Infinity, S.NegativeInfinity):
-                n2 = float(n2)
-            return _sympify(n2 < 0)
+    return fuzzy_not(is_ge(lhs, rhs))
 
 
 def is_le(lhs, rhs):
@@ -1112,7 +1099,6 @@ def is_gt(lhs, rhs):
             diff = lhs - rhs
             if diff is not S.NaN:
                 return diff.is_extended_positive
-
 
 
 def is_ge(lhs, rhs):
@@ -1149,7 +1135,6 @@ def is_eq(lhs, rhs):
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
     from sympy.core.expr import Expr
-    
     retval = lhs._eval_Eq(rhs)
     if retval is not None:
         return retval
