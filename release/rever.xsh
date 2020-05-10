@@ -81,14 +81,14 @@ def test_sympy():
 
         ./setup.py test
 
-@activity(deps={'_version', 'mailmap_update', 'test_sympy'})
+@activity(deps={'_version', 'mailmap_update'})
 def source_tarball():
     with run_in_conda_env(['mpmath', 'python=3.6'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
         ./setup.py sdist --keep-temp
 
 
-@activity(deps={'_version', 'mailmap_update', 'test_sympy'})
+@activity(deps={'_version', 'mailmap_update'})
 def wheel():
     with run_in_conda_env(['mpmath', 'python=3.6', 'setuptools', 'pip', 'wheel'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
@@ -163,7 +163,7 @@ def compare_tar_against_git():
 
     See the bottom of the file for the whitelists.
     """
-    release/compare_tar_against_git.py @(tarball_format['source']) .
+    release/compare_tar_against_git.py /root/release/@(tarball_format['source']) .
 
 @activity(deps={'source_tarball', 'wheel'})
 def print_authors():
