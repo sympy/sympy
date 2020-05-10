@@ -682,54 +682,41 @@ def test_neq_linear_first_order_nonconst_coeff_homogeneous():
 
     eqs2 = [Eq(diff(f(x), x),  x*f(x) + x**2*g(x)),
            Eq(diff(g(x), x),  2*x**2*f(x) + (x + 3*x**2)*g(x))]
-    sol2 = [
-        Eq(f(x), C1 * ((-187 + 45 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
-                -34 + 6 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
-                    -221 + 51 * sqrt(17)) + C2 * (
-                    (13 - 3 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
-                        -13 + 3 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
-                    -51 + 13 * sqrt(17))),
-        Eq(g(x), -C1 * ((-102 + 26 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
-                 102 - 26 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
-                    -221 + 51 * sqrt(17)) + C2 * (
-                    (-34 + 6 * sqrt(17)) * exp(x ** 3 / 2 + sqrt(17) * x ** 3 / 6 + x ** 2 / 2) + (
-                        -187 + 45 * sqrt(17)) * exp(-sqrt(17) * x ** 3 / 6 + x ** 3 / 2 + x ** 2 / 2)) / (
-                    -221 + 51 * sqrt(17)))
-        ]
+    sol2 = [Eq(f(x), (6*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 34*C1/(-221 + 51*sqrt(17)) - 13*C2/(-51 + 13*sqrt(17))
+                        + 3*sqrt(17)*C2/(-51 + 13*sqrt(17)))*exp(-sqrt(17)*x**3/6 + x**3/2 + x**2/2)
+                        + (45*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 187*C1/(-221 + 51*sqrt(17)) - 3*sqrt(17)*C2/(-51 + 13*sqrt(17))
+                        + 13*C2/(-51 + 13*sqrt(17)))*exp(x**3/2 + sqrt(17)*x**3/6 + x**2/2)),
+            Eq(g(x), (102*C1/(-221 + 51*sqrt(17)) - 26*sqrt(17)*C1/(-221 + 51*sqrt(17))
+                        + 6*sqrt(17)*C2/(-221 + 51*sqrt(17)) - 34*C2/(-221 + 51*sqrt(17)))*exp(x**3/2
+                        + sqrt(17)*x**3/6 + x**2/2) + (26*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 102*C1/(-221 + 51*sqrt(17))
+                        + 45*sqrt(17)*C2/(-221 + 51*sqrt(17)) - 187*C2/(-221 + 51*sqrt(17)))*exp(-sqrt(17)*x**3/6
+                        + x**3/2 + x**2/2))]
 
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
-    # 19185: May have to change this test case later when it is confirmed that we can
-    # the expand function in the solver or not.
     eqs3 = [Eq(f(x).diff(x), x * f(x) + g(x)), Eq(g(x).diff(x), -f(x) + x * g(x))]
-    sol3 = [Eq(f(x), C1*(exp(x**2/2 - I*x)/2 + exp(x**2/2 + I*x)/2) + C2*(I*exp(x**2/2 - I*x)/2 - I*exp(x**2/2 + I*x)/2)),
-            Eq(g(x), C1*(-I*exp(x**2/2 - I*x)/2 + I*exp(x**2/2 + I*x)/2) + C2*(exp(x**2/2 - I*x)/2 + exp(x**2/2 + I*x)/2))]
+    sol3 = [Eq(f(x), (C1/2 - I*C2/2)*exp(x**2/2 + I*x) + (C1/2 + I*C2/2)*exp(x**2/2 - I*x)),
+            Eq(g(x), (-I*C1/2 + C2/2)*exp(x**2/2 - I*x) + (I*C1/2 + C2/2)*exp(x**2/2 + I*x))]
     assert dsolve(eqs3) == sol3
     assert checksysodesol(eqs3, sol3) == (True, [0, 0])
 
-    obt = Rational(1, 3)
     eqs4 = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x))), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x))), Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)))]
-    sol4 = [Eq(f(x), C1 * (exp(3 * x ** 2 / 2) / 3 + 2*obt) + C2 * (exp(3 * x ** 2 / 2) / 3 - obt) + C3 * (
-             exp(3 * x ** 2 / 2) / 3 - obt)),
-            Eq(g(x), C1 * (exp(3 * x ** 2 / 2) / 3 - obt) + C2 * (exp(3 * x ** 2 / 2) / 3 + 2*obt) + C3 * (
-             exp(3 * x ** 2 / 2) / 3 - obt)),
-            Eq(h(x), C1 * (exp(3 * x ** 2 / 2) / 3 - obt) + C2 * (exp(3 * x ** 2 / 2) / 3 - obt) + C3 * (
-             exp(3 * x ** 2 / 2) / 3 + 2*obt))]
+    sol4 = [Eq(f(x), 2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2)),
+            Eq(g(x), -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2)),
+            Eq(h(x), -C1/3 - C2/3 + 2*C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2))]
     assert dsolve(eqs4) == sol4
     assert checksysodesol(eqs4, sol4) == (True, [0, 0, 0])
 
     eqs5 = [Eq(f(x).diff(x), x**2*(f(x) + g(x) + h(x))), Eq(g(x).diff(x), x**2*(f(x) + g(x) + h(x))),
             Eq(h(x).diff(x), x**2*(f(x) + g(x) + h(x)))]
-    sol5 = [Eq(f(x), C1 * (exp(x ** 3) / 3 + 2*obt) + C2 * (exp(x ** 3) / 3 - obt) + C3 * (
-             exp(x ** 3) / 3 - obt)),
-            Eq(g(x), C1 * (exp(x ** 3) / 3 - obt) + C2 * (exp(x ** 3) / 3 + 2*obt) + C3 * (
-             exp(x ** 3) / 3 - obt)),
-            Eq(h(x), C1 * (exp(x ** 3) / 3 - obt) + C2 * (exp(x ** 3) / 3 - obt) + C3 * (
-             exp(x ** 3) / 3 + 2*obt))]
-    
+    sol5 = [Eq(f(x), 2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(x**3)),
+            Eq(g(x), -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(x**3)),
+            Eq(h(x), -C1/3 - C2/3 + 2*C3/3 + (C1/3 + C2/3 + C3/3)*exp(x**3))]
     assert dsolve(eqs5) == sol5
     assert checksysodesol(eqs5, sol5) == (True, [0, 0, 0])
+
+    # 19185: To add a test case for when x is real.
 
 
 # 19185: This test case has to be updated in future when a proper
