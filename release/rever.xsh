@@ -1039,6 +1039,7 @@ git_whitelist = {
     '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
+    'asv.conf.travis.json',
     'coveragerc_travis',
     'codecov.yml',
     'pytest.ini',
@@ -1076,6 +1077,7 @@ git_whitelist = {
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',
+    'bin/test_py2_import.py',
     'bin/test_setup.py',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
