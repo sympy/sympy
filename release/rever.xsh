@@ -92,7 +92,7 @@ def source_tarball():
 def wheel():
     with run_in_conda_env(['mpmath', 'python=3.6', 'setuptools', 'pip', 'wheel'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
-        ./setup.py bdist_wheel --universal --keep-temp
+        ./setup.py bdist_wheel --keep-temp
 
 @activity(deps={'_version'})
 def build_docs():
