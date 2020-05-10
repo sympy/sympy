@@ -669,7 +669,7 @@ def test_sysode_linear_neq_order1():
 
 
 def test_neq_linear_first_order_nonconst_coeff_homogeneous():
-    f, g, h = symbols('f g h', cls=Function)
+    f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols('x')
     r = symbols('r', real=True)
 
@@ -716,7 +716,23 @@ def test_neq_linear_first_order_nonconst_coeff_homogeneous():
     assert dsolve(eqs5) == sol5
     assert checksysodesol(eqs5, sol5) == (True, [0, 0, 0])
 
-    # 19185: To add a test case for when x is real.
+    eqs6 = [Eq(Derivative(f(x), x), x*(f(x) + g(x) + h(x) + k(x))),
+            Eq(Derivative(g(x), x), x*(f(x) + g(x) + h(x) + k(x))),
+            Eq(Derivative(h(x), x), x*(f(x) + g(x) + h(x) + k(x))),
+            Eq(Derivative(k(x), x), x*(f(x) + g(x) + h(x) + k(x)))]
+    sol6 = [Eq(f(x), 3*C1/4 - C2/4 - C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2)),
+            Eq(g(x), -C1/4 + 3*C2/4 - C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2)),
+            Eq(h(x), -C1/4 - C2/4 + 3*C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2)),
+            Eq(k(x), -C1/4 - C2/4 - C3/4 + 3*C4/4 + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2))]
+    assert dsolve(eqs6) == sol6
+    assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0, 0])
+
+    y = symbols("y", real=True)
+
+    eqs7 = [Eq(Derivative(f(y), y), y*f(y) + g(y)), Eq(Derivative(g(y), y), y*g(y) - f(y))]
+    sol7 = [Eq(f(y), (C1*cos(y) + C2*sin(y))*exp(y**2/2)), Eq(g(y), (-C1*sin(y) + C2*cos(y))*exp(y**2/2))]
+    assert dsolve(eqs7) == sol7
+    assert checksysodesol(eqs7, sol7) == (True, [0, 0])
 
 
 # 19185: This test case has to be updated in future when a proper
