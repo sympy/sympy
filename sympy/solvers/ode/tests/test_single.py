@@ -33,7 +33,7 @@ Functions that are for internal use:
 
 """
 from sympy import (cos, Derivative, Dummy, diff,
-    Eq, exp, I, log, pi, Piecewise, Rational, sin, tan,
+    Eq, exp, I, log, pi, Piecewise, Rational, S, sin, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
@@ -313,6 +313,11 @@ def test_nth_algebraic():
     assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
     _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
+
+
+
+def test_nth_linear_constant_coeff_undetermined_coefficients():
+    _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients())
 
 
 def test_nth_order_reducible():
@@ -931,6 +936,190 @@ def _get_examples_ode_sol_nth_order_reducible():
     }
 
 
+
+def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
+    # examples 3-27 below are from Ordinary Differential Equations,
+    #                     Tenenbaum and Pollard, pg. 231
+    g = exp(-x)
+    f2 = f(x).diff(x, 2)
+    c = 3*f(x).diff(x, 3) + 5*f2 + f(x).diff(x) - f(x) - x
+    return {
+            'hint': "nth_linear_constant_coeff_undetermined_coefficients",
+            'func': f(x),
+            'examples':{
+    'undet_01': {
+        'eq': c - x*g,
+        'sol': [Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x**2/24 - 3*x/32))*exp(-x) - 1)],
+        'slow': True,
+    },
+
+    'undet_02': {
+        'eq': c - g,
+        'sol': [Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x/8))*exp(-x) - 1)],
+        'slow': True,
+    },
+
+    'undet_03': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - 4,
+        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + 2)],
+        'slow': True,
+    },
+
+    'undet_04': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - 12*exp(x),
+        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + 2*exp(x))],
+        'slow': True,
+    },
+
+    'undet_05': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - exp(I*x),
+        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + exp(I*x)/10 - 3*I*exp(I*x)/10)],
+        'slow': True,
+    },
+
+    'undet_06': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - sin(x),
+        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + sin(x)/10 - 3*cos(x)/10)],
+        'slow': True,
+    },
+
+    'undet_07': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - cos(x),
+        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + 3*sin(x)/10 + cos(x)/10)],
+        'slow': True,
+    },
+
+    'undet_08': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - (8 + 6*exp(x) + 2*sin(x)),
+        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + exp(x) + sin(x)/5 - 3*cos(x)/5 + 4)],
+        'slow': True,
+    },
+
+    'undet_09': {
+        'eq': f2 + f(x).diff(x) + f(x) - x**2,
+        'sol': [Eq(f(x), -2*x + x**2 + (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(-x/2))],
+        'slow': True,
+    },
+
+    'undet_10': {
+        'eq': f2 - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x),
+        'sol': [Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))],
+        'slow': True,
+    },
+
+    'undet_11': {
+        'eq': f2 - 3*f(x).diff(x) - 2*exp(2*x)*sin(x),
+        'sol': [Eq(f(x), C1 + C2*exp(3*x) - 3*exp(2*x)*sin(x)/5 - exp(2*x)*cos(x)/5)],
+        'slow': True,
+    },
+
+    'undet_12': {
+        'eq': f(x).diff(x, 4) - 2*f2 + f(x) - x + sin(x),
+        'sol': [Eq(f(x), x - sin(x)/4 + (C1 + C2*x)*exp(-x) + (C3 + C4*x)*exp(x))],
+        'slow': True,
+    },
+
+    'undet_13': {
+        'eq': f2 + f(x).diff(x) - x**2 - 2*x,
+        'sol': [Eq(f(x), C1 + x**3/3 + C2*exp(-x))],
+        'slow': True,
+    },
+
+    'undet_14': {
+        'eq': f2 + f(x).diff(x) - x - sin(2*x),
+        'sol': [Eq(f(x), C1 - x - sin(2*x)/5 - cos(2*x)/10 + x**2/2 + C2*exp(-x))],
+        'slow': True,
+    },
+
+    'undet_15': {
+        'eq': f2 + f(x) - 4*x*sin(x),
+        'sol': [Eq(f(x), (C1 - x**2)*cos(x) + (C2 + x)*sin(x))],
+        'slow': True,
+    },
+
+    'undet_16': {
+        'eq': f2 + 4*f(x) - x*sin(2*x),
+        'sol': [Eq(f(x), (C1 - x**2/8)*cos(2*x) + (C2 + x/16)*sin(2*x))],
+        'slow': True,
+    },
+
+    'undet_17': {
+        'eq': f2 + 2*f(x).diff(x) + f(x) - x**2*exp(-x),
+        'sol': [Eq(f(x), (C1 + x*(C2 + x**3/12))*exp(-x))],
+        'slow': True,
+    },
+
+    'undet_18': {
+        'eq': f(x).diff(x, 3) + 3*f2 + 3*f(x).diff(x) + f(x) - 2*exp(-x) + \
+        x**2*exp(-x),
+        'sol': [Eq(f(x), (C1 + x*(C2 + x*(C3 - x**3/60 + x/3)))*exp(-x))],
+        'slow': True,
+    },
+
+    'undet_19': {
+        'eq': f2 + 3*f(x).diff(x) + 2*f(x) - exp(-2*x) - x**2,
+        'sol': [Eq(f(x), C2*exp(-x) + x**2/2 - x*Rational(3,2) + (C1 - x)*exp(-2*x) + Rational(7,4))],
+        'slow': True,
+    },
+
+    'undet_20': {
+        'eq': f2 - 3*f(x).diff(x) + 2*f(x) - x*exp(-x),
+        'sol': [Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)],
+        'slow': True,
+    },
+
+    'undet_21': {
+        'eq': f2 + f(x).diff(x) - 6*f(x) - x - exp(2*x),
+        'sol': [Eq(f(x), Rational(-1, 36) - x/6 + C2*exp(-3*x) + (C1 + x/5)*exp(2*x))],
+        'slow': True,
+    },
+
+    'undet_22': {
+        'eq': f2 + f(x) - sin(x) - exp(-x),
+        'sol': [Eq(f(x), C2*sin(x) + (C1 - x/2)*cos(x) + exp(-x)/2)],
+        'slow': True,
+    },
+
+    'undet_23': {
+        'eq': f(x).diff(x, 3) - 3*f2 + 3*f(x).diff(x) - f(x) - exp(x),
+        'sol': [Eq(f(x), (C1 + x*(C2 + x*(C3 + x/6)))*exp(x))],
+        'slow': True,
+    },
+
+    'undet_24': {
+        'eq': f2 + f(x) - S.Half - cos(2*x)/2,
+        'sol': [Eq(f(x), S.Half - cos(2*x)/6 + C1*sin(x) + C2*cos(x))],
+        'slow': True,
+    },
+
+    'undet_25': {
+        'eq': f(x).diff(x, 3) - f(x).diff(x) - exp(2*x)*(S.Half - cos(2*x)/2),
+        'sol': [Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + (-21*sin(2*x) + 27*cos(2*x) + 130)*exp(2*x)/1560)],
+        'slow': True,
+    },
+
+    'undet_26': {
+        'eq': (f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x -
+        sin(x) - cos(x)),
+        'sol': [Eq(f(x), C1 + x**2 + (C2 + x*(C3 - x/8))*sin(x) + (C4 + x*(C5 + x/8))*cos(x))],
+        'slow': True,
+    },
+
+    'undet_27': {
+        'eq': f2 + f(x) - cos(x)/2 + cos(3*x)/2,
+        'sol': [Eq(f(x), cos(3*x)/16 + C2*cos(x) + (C1 + x/4)*sin(x))],
+        'slow': True,
+    },
+
+    'undet_28': {
+        'eq': f(x).diff(x) - 1,
+        'sol': [Eq(f(x), C1 + x)],
+        'slow': True,
+    },
+    }
+    }
+
+
 def _get_all_examples():
     all_solvers = [_get_examples_ode_sol_euler_homogeneous(),
     _get_examples_ode_sol_euler_undetermined_coeff(),
@@ -942,6 +1131,7 @@ def _get_all_examples():
     _get_examples_ode_sol_1st_linear(),
     _get_examples_ode_sol_almost_linear(),
     _get_examples_ode_sol_nth_order_reducible(),
+    _get_examples_ode_sol_nth_linear_undetermined_coefficients(),
     ]
 
     all_examples = []
