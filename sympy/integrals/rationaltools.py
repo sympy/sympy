@@ -1,7 +1,5 @@
 """This module implements tools for integrating rational functions. """
 
-from __future__ import print_function, division
-
 from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy
 
@@ -224,7 +222,8 @@ def ratint_logpart(f, g, x, t=None):
     def _include_sign(c, sqf):
         if c.is_extended_real and (c < 0) == True:
             h, k = sqf[0]
-            sqf[0] = h*c, k
+            c_poly = c.as_poly(h.gens)
+            sqf[0] = h*c_poly, k
 
     C, res_sqf = res.sqf_list()
     _include_sign(C, res_sqf)
@@ -247,6 +246,7 @@ def ratint_logpart(f, g, x, t=None):
             inv, coeffs = h_lc.invert(q), [S.One]
 
             for coeff in h.coeffs()[1:]:
+                coeff = coeff.as_poly(inv.gens)
                 T = (inv*coeff).rem(q)
                 coeffs.append(T.as_expr())
 

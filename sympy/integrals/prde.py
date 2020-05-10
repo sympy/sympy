@@ -14,7 +14,6 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from __future__ import print_function, division
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 from sympy.core.compatibility import reduce
@@ -138,7 +137,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                 betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
                 betad = alphad
                 etaa, etad = frac_in(dcoeff, DE.t)
-                if recognize_log_derivative(2*betaa, betad, DE):
+                if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
                     A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                     B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
@@ -451,7 +450,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     for i in range(n, -1, -1):
         if DE.case == 'exp': # this re-checking can be avoided
             with DecrementLevel(DE):
-                ba, bd = frac_in(b + i*derivation(DE.t, DE)/DE.t,
+                ba, bd = frac_in(b + (i*(derivation(DE.t, DE)/DE.t)).as_poly(b.gens),
                                 DE.t, field=True)
         with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
@@ -470,7 +469,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
 
         # from eq. on top of p.238 (unnumbered)
         for j in range(ri):
-            hji = fi[j]*DE.t**i
+            hji = fi[j] * (DE.t**i).as_poly(fi[j].gens)
             hi[j] = hji
             # building up Sum(djn*(D(fjn*t^n) - b*fjnt^n))
             Fi[j] = -(derivation(hji, DE) - b*hji)
@@ -538,7 +537,7 @@ def param_poly_rischDE(a, b, q, n, DE):
 
     # Iterate SPDE as long as possible cumulating coefficient
     # and terms for the recovery of original solutions.
-    alpha, beta = 1, [0]*m
+    alpha, beta = a.one, [a.zero]*m
     while n >= 0:  # and a, b relatively prime
         a, b, q, r, n = prde_spde(a, b, q, n, DE)
         beta = [betai + alpha*ri for betai, ri in zip(beta, r)]
@@ -854,11 +853,12 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             return None
 
         M, N = s[c1].as_numer_denom()
+        M_poly = M.as_poly(q.gens)
+        N_poly = N.as_poly(q.gens)
 
-        nfmwa = N*fa*wd - M*wa*fd
+        nfmwa = N_poly*fa*wd - M_poly*wa*fd
         nfmwd = fd*wd
-        Qv = is_log_deriv_k_t_radical_in_field(N*fa*wd - M*wa*fd, fd*wd, DE,
-            'auto')
+        Qv = is_log_deriv_k_t_radical_in_field(nfmwa, nfmwd, DE, 'auto')
         if Qv is None:
             # (N*f - M*w) is not the logarithmic derivative of a k(t)-radical.
             return None
@@ -985,7 +985,7 @@ def is_deriv_k(fa, fd, DE):
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.exts) != len(DE.D):
         if [i for i in DE.cases if i == 'tan'] or \
-                (set([i for i in DE.cases if i == 'primitive']) -
+                ({i for i in DE.cases if i == 'primitive'} -
                         set(DE.indices('log'))):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
@@ -1101,7 +1101,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.exts) != len(DE.D):
         if [i for i in DE.cases if i == 'tan'] or \
-                (set([i for i in DE.cases if i == 'primitive']) -
+                ({i for i in DE.cases if i == 'primitive'} -
                         set(DE.indices('log'))):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")

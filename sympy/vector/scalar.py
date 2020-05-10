@@ -17,17 +17,17 @@ class BaseScalar(AtomicExpr):
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
         from sympy.vector.coordsysrect import CoordSys3D
         if pretty_str is None:
-            pretty_str = "x{0}".format(index)
+            pretty_str = "x{}".format(index)
         elif isinstance(pretty_str, Symbol):
             pretty_str = pretty_str.name
         if latex_str is None:
-            latex_str = "x_{0}".format(index)
+            latex_str = "x_{}".format(index)
         elif isinstance(latex_str, Symbol):
             latex_str = latex_str.name
 
         index = _sympify(index)
         system = _sympify(system)
-        obj = super(BaseScalar, cls).__new__(cls, index, system)
+        obj = super().__new__(cls, index, system)
         if not isinstance(system, CoordSys3D):
             raise TypeError("system should be a CoordSys3D")
         if index not in range(0, 3):
@@ -35,7 +35,7 @@ class BaseScalar(AtomicExpr):
         # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
         obj._name = obj.name = system._name + '.' + system._variable_names[index]
-        obj._pretty_form = u'' + pretty_str
+        obj._pretty_form = '' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
 

@@ -403,7 +403,7 @@ expensive to calculate.
 
     >>> lamda = symbols('lamda')
     >>> p = M.charpoly(lamda)
-    >>> factor(p)
+    >>> factor(p.as_expr())
            2
     (λ - 5) ⋅(λ - 3)⋅(λ + 2)
 

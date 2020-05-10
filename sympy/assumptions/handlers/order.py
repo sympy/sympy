@@ -1,7 +1,6 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
-from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler

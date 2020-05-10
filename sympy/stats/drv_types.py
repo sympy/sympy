@@ -15,14 +15,19 @@ Zeta
 
 from __future__ import print_function, division
 
-import random
-
-from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
-                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy)
+from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
+                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
+                   Lambda)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.external import import_module
+
+numpy = import_module('numpy')
+scipy = import_module('scipy')
+pymc3 = import_module('pymc3')
+
 
 __all__ = ['Geometric',
 'Hermite',
@@ -43,6 +48,62 @@ def rv(symbol, cls, *args):
     if any(isinstance(arg, RandomSymbol) for arg in args):
         pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
+
+
+class DiscreteDistributionHandmade(SingleDiscreteDistribution):
+    _argnames = ('pdf',)
+
+    def __new__(cls, pdf, set=S.Integers):
+        return Basic.__new__(cls, pdf, set)
+
+    @property
+    def set(self):
+        return self.args[1]
+
+    @staticmethod
+    def check(pdf, set):
+        x = Dummy('x')
+        val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
+        _value_check(val == S.One, "The pdf is incorrect on the given set.")
+
+def DiscreteRV(symbol, density, set=S.Integers):
+    """
+    Create a Discrete Random Variable given the following:
+
+    Parameters
+    ==========
+
+    symbol : Symbol
+        Represents name of the random variable.
+    density : Expression containing symbol
+        Represents probability density function.
+    set : set
+        Represents the region where the pdf is valid, by default is real line.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import DiscreteRV, P, E
+    >>> from sympy import Rational, Symbol
+    >>> x = Symbol('x')
+    >>> n = 10
+    >>> density = Rational(1, 10)
+    >>> X = DiscreteRV(x, density, set=set(range(n)))
+    >>> E(X)
+    9/2
+    >>> P(X>3)
+    3/5
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    """
+    set = sympify(set)
+    pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
+    pdf = Lambda(symbol, pdf)
+    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set)
 
 
 #-------------------------------------------------------------------------------
@@ -67,6 +128,21 @@ class GeometricDistribution(SingleDiscreteDistribution):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
 
+    def _sample_numpy(self, size):
+        p = float(self.p)
+        return numpy.random.geometric(p=p, size=size)
+
+    def _sample_scipy(self, size):
+        p = float(self.p)
+        from scipy.stats import geom
+        return geom.rvs(p=p, size=size)
+
+    def _sample_pymc3(self, size):
+        p = float(self.p)
+        with pymc3.Model():
+            pymc3.Geometric('X', p=p)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
 def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
@@ -84,7 +160,7 @@ def Geometric(name, p):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -168,7 +244,7 @@ def Hermite(name, a1, a2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -225,10 +301,10 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
         p = self.p
         return log(1 - p * exp(t)) / log(1 - p)
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
-
+    def _sample_scipy(self, size):
+        p = float(self.p)
+        from scipy.stats import logser
+        return logser.rvs(p=p, size=size)
 
 def Logarithmic(name, p):
     r"""
@@ -247,7 +323,7 @@ def Logarithmic(name, p):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -332,7 +408,7 @@ def NegativeBinomial(name, r, p):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -380,25 +456,20 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
 
-    def sample(self):
-        def search(x, y, u):
-            while x < y:
-                mid = (x + y)//2
-                if u <= self.cdf(mid):
-                    y = mid
-                else:
-                    x = mid + 1
-            return x
+    def _sample_numpy(self, size):
+        lamda = float(self.lamda)
+        return numpy.random.poisson(lam=lamda, size=size)
 
-        u = random.uniform(0, 1)
-        if u <= self.cdf(S.Zero):
-            return S.Zero
-        n = S.One
-        while True:
-            if u > self.cdf(2*n):
-                n *= 2
-            else:
-                return search(n, 2*n, u)
+    def _sample_scipy(self, size):
+        lamda = float(self.lamda)
+        from scipy.stats import poisson
+        return poisson.rvs(mu=lamda, size=size)
+
+    def _sample_pymc3(self, size):
+        lamda = float(self.lamda)
+        with pymc3.Model():
+            pymc3.Poisson('X', mu=lamda)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _characteristic_function(self, t):
         return exp(self.lamda * (exp(I*t) - 1))
@@ -424,7 +495,7 @@ def Poisson(name, lamda):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -479,6 +550,11 @@ class SkellamDistribution(SingleDiscreteDistribution):
         raise NotImplementedError(
             "Skellam doesn't have closed form for the CDF.")
 
+    def _sample_scipy(self, size):
+        mu1, mu2 = float(self.mu1), float(self.mu2)
+        from scipy.stats import skellam
+        return skellam.rvs(mu1=mu1, mu2=mu2, size=size)
+
     def _characteristic_function(self, t):
         (mu1, mu2) = (self.mu1, self.mu2)
         return exp(-(mu1 + mu2) + mu1 * exp(I * t) + mu2 * exp(-I * t))
@@ -510,7 +586,7 @@ def Skellam(name, mu1, mu2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -570,10 +646,10 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
-
+    def _sample_scipy(self, size):
+        rho = float(self.rho)
+        from scipy.stats import yulesimon
+        return yulesimon.rvs(alpha=rho, size=size)
 
 def YuleSimon(name, rho):
     r"""
@@ -592,7 +668,7 @@ def YuleSimon(name, rho):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -644,10 +720,14 @@ class ZetaDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         return polylog(self.s, exp(t)) / zeta(self.s)
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+    def _sample_numpy(self, size):
+        s = float(self.s)
+        return numpy.random.zipf(a=s, size=size)
 
+    def _sample_scipy(self, size):
+        s = float(self.s)
+        from scipy.stats import zipf
+        return zipf.rvs(a=s, size=size)
 
 def Zeta(name, s):
     r"""
@@ -666,7 +746,7 @@ def Zeta(name, s):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========

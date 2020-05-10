@@ -2,6 +2,9 @@
 
 from __future__ import print_function, division
 
+from functools import wraps, reduce
+from operator import mul
+
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
@@ -12,7 +15,7 @@ from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -43,6 +46,7 @@ from sympy.polys.polyutils import (
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, sift, public, filldedent
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Required to avoid errors
 import sympy.polys
@@ -52,12 +56,42 @@ from mpmath.libmp.libhyper import NoConvergence
 
 
 
+def _polifyit(func):
+    @wraps(func)
+    def wrapper(f, g):
+        g = _sympify(g)
+        if isinstance(g, Poly):
+            return func(f, g)
+        elif isinstance(g, Expr):
+            try:
+                g = f.from_expr(g, *f.gens)
+            except PolynomialError:
+                if g.is_Matrix:
+                    return NotImplemented
+                expr_method = getattr(f.as_expr(), func.__name__)
+                result = expr_method(g)
+                if result is not NotImplemented:
+                    SymPyDeprecationWarning(
+                        feature="Mixing Poly with non-polynomial expressions in binary operations",
+                        issue=18613,
+                        deprecated_since_version="1.6",
+                        useinstead="the as_expr or as_poly method to convert types").warn()
+                return result
+            else:
+                return func(f, g)
+        else:
+            return NotImplemented
+    return wrapper
+
+
 
 @public
-class Poly(Expr):
+class Poly(Basic):
     """
     Generic class for representing and operating on polynomial expressions.
-    Subclasses Expr class.
+
+    Poly is a subclass of Basic rather than Expr but instances can be
+    converted to Expr with the ``as_expr`` method.
 
     Examples
     ========
@@ -124,6 +158,15 @@ class Poly(Expr):
             else:
                 return cls._from_expr(rep, opt)
 
+    # Poly does not pass its args to Basic.__new__ to be stored in _args so we
+    # have to emulate them here with an args property that derives from rep
+    # and gens which are instance attributes. This also means we need to
+    # define _hashable_content. The _hashable_content is rep and gens but args
+    # uses expr instead of rep (expr is the Basic version of rep). Passing
+    # expr in args means that Basic methods like subs should work. Using rep
+    # otherwise means that Poly can remain more efficient than Basic by
+    # avoiding creating a Basic instance just to be hashable.
+
     @classmethod
     def new(cls, rep, *gens):
         """Construct :class:`Poly` instance from raw representation. """
@@ -134,11 +177,21 @@ class Poly(Expr):
             raise PolynomialError("invalid arguments: %s, %s" % (rep, gens))
 
         obj = Basic.__new__(cls)
-
         obj.rep = rep
         obj.gens = gens
 
         return obj
+
+    @property
+    def expr(self):
+        return basic_from_dict(self.rep.to_sympy_dict(), *self.gens)
+
+    @property
+    def args(self):
+        return (self.expr,) + self.gens
+
+    def _hashable_content(self):
+        return (self.rep,) + self.gens
 
     @classmethod
     def from_dict(cls, rep, *gens, **args):
@@ -235,10 +288,6 @@ class Poly(Expr):
         rep, opt = _dict_from_expr(rep, opt)
         return cls._from_dict(rep, opt)
 
-    def _hashable_content(self):
-        """Allow SymPy to hash Poly instances. """
-        return (self.rep, self.gens)
-
     def __hash__(self):
         return super(Poly, self).__hash__()
 
@@ -302,23 +351,6 @@ class Poly(Expr):
                 symbols |= coeff.free_symbols
 
         return symbols
-
-    @property
-    def args(self):
-        """
-        Don't mess up with the core.
-
-        Examples
-        ========
-
-        >>> from sympy import Poly
-        >>> from sympy.abc import x
-
-        >>> Poly(x**2 + 1, x).args
-        (x**2 + 1,)
-
-        """
-        return (self.as_expr(),)
 
     @property
     def gen(self):
@@ -582,6 +614,10 @@ class Poly(Expr):
                 return f.per(f.rep, gens=gens)
 
         raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
+
+    def match(f, *args, **kwargs):
+        """Match expression from Poly. See Basic.match()"""
+        return f.as_expr().match(*args, **kwargs)
 
     def reorder(f, *gens, **args):
         """
@@ -996,8 +1032,9 @@ class Poly(Expr):
 
         """
         if not gens:
-            gens = f.gens
-        elif len(gens) == 1 and isinstance(gens[0], dict):
+            return f.expr
+
+        if len(gens) == 1 and isinstance(gens[0], dict):
             mapping = gens[0]
             gens = list(f.gens)
 
@@ -1011,6 +1048,32 @@ class Poly(Expr):
                     gens[index] = value
 
         return basic_from_dict(f.rep.to_sympy_dict(), *gens)
+
+    def as_poly(self, *gens, **args):
+        """Converts ``self`` to a polynomial or returns ``None``.
+
+        >>> from sympy import sin
+        >>> from sympy.abc import x, y
+
+        >>> print((x**2 + x*y).as_poly())
+        Poly(x**2 + x*y, x, y, domain='ZZ')
+
+        >>> print((x**2 + x*y).as_poly(x, y))
+        Poly(x**2 + x*y, x, y, domain='ZZ')
+
+        >>> print((x**2 + sin(y)).as_poly(x, y))
+        None
+
+        """
+        try:
+            poly = Poly(self, *gens, **args)
+
+            if not poly.is_Poly:
+                return None
+            else:
+                return poly
+        except PolynomialError:
+            return None
 
     def lift(f):
         """
@@ -3995,66 +4058,28 @@ class Poly(Expr):
     def __neg__(f):
         return f.neg()
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __add__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return f.as_expr() + g
-
         return f.add(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __radd__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return g + f.as_expr()
-
         return g.add(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __sub__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return f.as_expr() - g
-
         return f.sub(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __rsub__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return g - f.as_expr()
-
         return g.sub(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __mul__(f, g):
-        if not isinstance(g, Expr):
-            return NotImplemented
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return f.as_expr()*g
-
         return f.mul(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __rmul__(f, g):
-        if not g.is_Poly:
-            try:
-                g = f.__class__(g, *f.gens)
-            except PolynomialError:
-                return g*f.as_expr()
-
         return g.mul(f)
 
     @_sympifyit('n', NotImplemented)
@@ -4062,48 +4087,30 @@ class Poly(Expr):
         if n.is_Integer and n >= 0:
             return f.pow(n)
         else:
-            return f.as_expr()**n
+            return NotImplemented
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __divmod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return f.div(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __rdivmod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return g.div(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __mod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return f.rem(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __rmod__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return g.rem(f)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __floordiv__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return f.quo(g)
 
-    @_sympifyit('g', NotImplemented)
+    @_polifyit
     def __rfloordiv__(f, g):
-        if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
         return g.quo(f)
 
     @_sympifyit('g', NotImplemented)
@@ -4131,13 +4138,7 @@ class Poly(Expr):
             return False
 
         if f.rep.dom != g.rep.dom:
-            try:
-                dom = f.rep.dom.unify(g.rep.dom, f.gens)
-            except UnificationFailed:
-                return False
-
-            f = f.set_domain(dom)
-            g = g.set_domain(dom)
+            return False
 
         return f.rep == g.rep
 
@@ -5787,7 +5788,7 @@ def gff_list(f, *gens, **args):
     >>> gff_list(f)
     [(Poly(x, x, domain='ZZ'), 1), (Poly(x + 2, x, domain='ZZ'), 4)]
 
-    >>> (ff(Poly(x), 1)*ff(Poly(x + 2), 4)).expand() == f
+    >>> (ff(Poly(x), 1)*ff(Poly(x + 2), 4)) == f
     True
 
     >>> f = Poly(x**12 + 6*x**11 - 11*x**10 - 56*x**9 + 220*x**8 + 208*x**7 - \
@@ -5916,10 +5917,7 @@ def _symbolic_factor_list(expr, opt, method):
         if arg.is_Number:
             coeff *= arg
             continue
-        if arg.is_Mul:
-            args.extend(arg.args)
-            continue
-        if arg.is_Pow:
+        elif arg.is_Pow:
             base, exp = arg.args
             if base.is_Number and exp.is_Number:
                 coeff *= arg
@@ -5960,13 +5958,16 @@ def _symbolic_factor_list(expr, opt, method):
                         other.append((f, k))
 
                 factors.append((_factors_product(other), exp))
+    if method == 'sqf':
+        factors = [(reduce(mul, (f for f, _ in factors if _ == k)), k)
+                   for k in set(i for _, i in factors)]
 
     return coeff, factors
 
 
 def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
-    if isinstance(expr, Expr) and not expr.is_Relational:
+    if isinstance(expr, Expr):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
         coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
@@ -5986,8 +5987,11 @@ def _generic_factor_list(expr, gens, args, method):
 
     expr = sympify(expr)
 
-    if isinstance(expr, Expr) and not expr.is_Relational:
-        numer, denom = together(expr).as_numer_denom()
+    if isinstance(expr, (Expr, Poly)):
+        if isinstance(expr, Poly):
+            numer, denom = expr, 1
+        else:
+            numer, denom = together(expr).as_numer_denom()
 
         cp, fp = _symbolic_factor_list(numer, opt, method)
         cq, fq = _symbolic_factor_list(denom, opt, method)
@@ -6436,6 +6440,11 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
     """
     try:
         F = Poly(f)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError(
             "can't refine a root of %s, not a polynomial" % f)
@@ -6465,6 +6474,11 @@ def count_roots(f, inf=None, sup=None):
     """
     try:
         F = Poly(f, greedy=False)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError("can't count roots of %s, not a polynomial" % f)
 
@@ -6484,10 +6498,14 @@ def real_roots(f, multiple=True):
 
     >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4)
     [-1/2, 2, 2]
-
     """
     try:
         F = Poly(f, greedy=False)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError(
             "can't compute real roots of %s, not a polynomial" % f)
@@ -6514,6 +6532,11 @@ def nroots(f, n=15, maxsteps=50, cleanup=True):
     """
     try:
         F = Poly(f, greedy=False)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError(
             "can't compute numerical roots of %s, not a polynomial" % f)
@@ -6540,6 +6563,11 @@ def ground_roots(f, *gens, **args):
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
     except PolificationFailed as exc:
         raise ComputationFailed('ground_roots', 1, exc)
 
@@ -6574,6 +6602,11 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
     except PolificationFailed as exc:
         raise ComputationFailed('nth_power_roots_poly', 1, exc)
 
@@ -6838,7 +6871,8 @@ class GroebnerBasis(Basic):
 
     @property
     def args(self):
-        return (Tuple(*self._basis), Tuple(*self._options.gens))
+        basis = (p.as_expr() for p in self._basis)
+        return (Tuple(*basis), Tuple(*self._options.gens))
 
     @property
     def exprs(self):

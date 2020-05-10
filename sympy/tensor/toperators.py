@@ -44,7 +44,7 @@ class PartialDerivative(TensExpr):
             expr = expr.expr
 
         args, indices, free, dum = cls._contract_indices_for_derivative(
-            expr, variables)
+            S(expr), variables)
 
         obj = TensExpr.__new__(cls, *args)
 
@@ -104,7 +104,9 @@ class PartialDerivative(TensExpr):
 
         result = obj
 
-        if isinstance(obj.expr, TensAdd):
+        if not args[0].free_symbols:
+            return S.Zero
+        elif isinstance(obj.expr, TensAdd):
             # take care of sums of multi PDs
             result = obj.expr.func(*[
                     self.func(a, *obj.variables)._expand_partial_derivative()

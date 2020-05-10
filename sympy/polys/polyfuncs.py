@@ -93,7 +93,7 @@ def symmetrize(F, *gens, **args):
 
         if not f.is_homogeneous:
             symmetric.append(f.TC())
-            f -= f.TC()
+            f -= f.TC().as_poly(f.gens)
 
         while f:
             _height, _monom, _coeff = -1, None, None

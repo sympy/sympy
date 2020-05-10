@@ -412,7 +412,6 @@ def translate(s, a, b=None, c=None):
     ========
 
     >>> from sympy.utilities.misc import translate
-    >>> from sympy.core.compatibility import unichr
     >>> abc = 'abc'
     >>> translate(abc, None, 'a')
     'bc'

@@ -5,7 +5,7 @@ from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan, Function
+    GreaterThan, Sum, Product, E, log, tan, Function, binomial
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
@@ -41,6 +41,9 @@ def _factorial(a):
 
 def _log(a, b):
     return log(a, b, evaluate=False)
+
+def _binomial(n, k):
+    return binomial(n, k, evaluate=False)
 
 
 def test_import():
@@ -174,7 +177,11 @@ GOOD_PAIRS = [
     ("\\log_{a^2} x", _log(x, _Pow(a, 2))),
     ("[x]", x),
     ("[a + b]", _Add(a, b)),
-    ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
+    ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x)),
+    ("\\binom{n}{k}", _binomial(n, k)),
+    ("\\tbinom{n}{k}", _binomial(n, k)),
+    ("\\dbinom{n}{k}", _binomial(n, k)),
+    ("\\binom{n}{0}", _binomial(n, 0))
 ]
 
 def test_parseable():

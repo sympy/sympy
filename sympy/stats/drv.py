@@ -16,7 +16,9 @@ from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
+from sympy.core.sympify import _sympify
 import random
+from sympy.external import import_module
 
 
 class DiscreteDistribution(Basic):
@@ -45,13 +47,18 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
-        """ A random realization from the distribution """
+    def sample(self, size=(1,), library='scipy'):
+        """ A random realization from the distribution"""
+        if hasattr(self,'_sample_scipy') and import_module('scipy'):
+            return self._sample_scipy(size=size)
         icdf = self._inverse_cdf_expression()
+        samp_list = []
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
             if sample_ >= self.set.inf:
-                return sample_
+                samp_list.append(sample_)
+            if len(samp_list) == size:
+                return samp_list
 
     @cacheit
     def _inverse_cdf_expression(self):
@@ -194,16 +201,6 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.pdf(*args)
 
 
-class DiscreteDistributionHandmade(SingleDiscreteDistribution):
-    _argnames = ('pdf',)
-
-    @property
-    def set(self):
-        return self.args[1]
-
-    def __new__(cls, pdf, set=S.Integers):
-        return Basic.__new__(cls, pdf, set)
-
 class DiscreteDomain(RandomDomain):
     """
     A domain with discrete support with step size one.
@@ -267,6 +264,7 @@ class DiscretePSpace(PSpace):
             expr = condition.lhs - condition.rhs
             dens = density(expr)
             if not isinstance(dens, DiscreteDistribution):
+                from sympy.stats.drv_types import DiscreteDistributionHandmade
                 dens = DiscreteDistributionHandmade(dens)
             z = Dummy('z', real=True)
             space = SingleDiscretePSpace(z, dens)
@@ -317,19 +315,20 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
     def domain(self):
         return SingleDiscreteDomain(self.symbol, self.set)
 
-    def sample(self):
+    def sample(self, size=(1,), library='scipy'):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample()}
+        return {self.value: self.distribution.sample(size)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
 
+        expr = _sympify(expr)
         expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         x = self.value.symbol

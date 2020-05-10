@@ -39,8 +39,6 @@ def JointRV(symbol, pdf, _set=None):
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
 
-    Returns a RandomSymbol.
-
     Examples
     ========
 
@@ -54,6 +52,12 @@ def JointRV(symbol, pdf, _set=None):
     >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
     """
     #TODO: Add support for sets provided by the user
     symbol = sympify(symbol)
@@ -188,10 +192,23 @@ def MultivariateT(syms, mu, sigma, v):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
-    mu: A list/tuple/set consisting of k means,represents a k
-        dimensional location vector
+    syms: A symbol/str
+        For identifying the random variable.
+    mu: A list/matrix
+        Representing the location vector
     sigma: The shape matrix for the distribution
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, MultivariateT
+    >>> from sympy import Symbol
+
+    >>> x = Symbol("x")
+    >>> X = MultivariateT("x", [1, 1], [[1, 0], [0, 1]], 2)
+
+    >>> density(X)(1, 2)
+    2/(9*pi)
 
     Returns
     =======
@@ -243,7 +260,7 @@ class NormalGammaDistribution(JointDistribution):
         from sympy.stats.crv_types import GammaDistribution
         return Lambda(sym, GammaDistribution(self.alpha, self.beta)(sym[0]))
 
-def NormalGamma(syms, mu, lamda, alpha, beta):
+def NormalGamma(sym, mu, lamda, alpha, beta):
     """
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
@@ -251,18 +268,32 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    syms: list/tuple/set of two symbols for identifying each component
-    mu: A real number, as the mean of the normal distribution
+    sym: A symbol/str
+        For identifying the random variable.
+    mu: A real number
+        The mean of the normal distribution
     alpha: a positive integer
     beta: a positive integer
     lamda: a positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, NormalGamma
+    >>> from sympy import symbols
+
+    >>> X = NormalGamma('x', 0, 1, 2, 3)
+    >>> y, z = symbols('y z')
+
+    >>> density(X)(y, z)
+    9*sqrt(2)*z**(3/2)*exp(-3*z)*exp(-y**2*z/2)/(2*sqrt(pi))
 
     Returns
     =======
 
     A random symbol
     """
-    return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+    return multivariate_rv(NormalGammaDistribution, sym, mu, lamda, alpha, beta)
 
 #-------------------------------------------------------------------------------
 # Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
@@ -524,7 +555,8 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
+    syms: list/tuple/set of symbols
+        For identifying each component
     omega: A square matrix
            Every element of square matrix must be absolute value of
            square root of correlation coefficient

@@ -4,11 +4,11 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.geometry import Point, Circle
+from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 
 from sympy.testing.pytest import raises
 
@@ -122,7 +122,15 @@ def test_Function():
 def test_Geometry():
     assert sstr(Point(0, 0)) == 'Point2D(0, 0)'
     assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point2D(0, 0), 3)'
-    # TODO test other Geometry entities
+    assert sstr(Ellipse(Point(1, 2), 3, 4)) == 'Ellipse(Point2D(1, 2), 3, 4)'
+    assert sstr(Triangle(Point(1, 1), Point(7, 8), Point(0, -1))) == \
+        'Triangle(Point2D(1, 1), Point2D(7, 8), Point2D(0, -1))'
+    assert sstr(Polygon(Point(5, 6), Point(-2, -3), Point(0, 0), Point(4, 7))) == \
+        'Polygon(Point2D(5, 6), Point2D(-2, -3), Point2D(0, 0), Point2D(4, 7))'
+    assert sstr(Triangle(Point(0, 0), Point(1, 0), Point(0, 1)), sympy_integers=True) == \
+        'Triangle(Point2D(S(0), S(0)), Point2D(S(1), S(0)), Point2D(S(0), S(1)))'
+    assert sstr(Ellipse(Point(1, 2), 3, 4), sympy_integers=True) == \
+        'Ellipse(Point2D(S(1), S(2)), S(3), S(4))'
 
 
 def test_GoldenRatio():
@@ -759,13 +767,45 @@ def test_issue_6387():
 
 def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
-    assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
-        "2*(X + Y)"
+
+    X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
+    assert str(2*(X + Y)) == "2*(X + Y)"
+
+    assert str(I*X) == "I*X"
+    assert str(-I*X) == "-I*X"
+    assert str((1 + I)*X) == '(1 + I)*X'
+    assert str(-(1 + I)*X) == '(-1 - I)*X'
 
 def test_MatrixSlice():
-    from sympy.matrices.expressions import MatrixSymbol
-    assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
-    assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert str(MatrixSlice(X, (None, None, None), (None, None, None))) == 'X[:, :]'
+    assert str(X[x:x + 1, y:y + 1]) == 'X[x:x + 1, y:y + 1]'
+    assert str(X[x:x + 1:2, y:y + 1:2]) == 'X[x:x + 1:2, y:y + 1:2]'
+    assert str(X[:x, y:]) == 'X[:x, y:]'
+    assert str(X[:x, y:]) == 'X[:x, y:]'
+    assert str(X[x:, :y]) == 'X[x:, :y]'
+    assert str(X[x:y, z:w]) == 'X[x:y, z:w]'
+    assert str(X[x:y:t, w:t:x]) == 'X[x:y:t, w:t:x]'
+    assert str(X[x::y, t::w]) == 'X[x::y, t::w]'
+    assert str(X[:x:y, :t:w]) == 'X[:x:y, :t:w]'
+    assert str(X[::x, ::y]) == 'X[::x, ::y]'
+    assert str(MatrixSlice(X, (0, None, None), (0, None, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (None, n, None), (None, n, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (0, n, None), (0, n, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (0, n, 2), (0, n, 2))) == 'X[::2, ::2]'
+    assert str(X[1:2:3, 4:5:6]) == 'X[1:2:3, 4:5:6]'
+    assert str(X[1:3:5, 4:6:8]) == 'X[1:3:5, 4:6:8]'
+    assert str(X[1:10:2]) == 'X[1:10:2, :]'
+    assert str(Y[:5, 1:9:2]) == 'Y[:5, 1:9:2]'
+    assert str(Y[:5, 1:10:2]) == 'Y[:5, 1::2]'
+    assert str(Y[5, :5:2]) == 'Y[5:6, :5:2]'
+    assert str(X[0:1, 0:1]) == 'X[:1, :1]'
+    assert str(X[0:1:2, 0:1:2]) == 'X[:1:2, :1:2]'
+    assert str((Y + Z)[2:, 2:]) == '(Y + Z)[2:, 2:]'
 
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "True"
@@ -819,14 +859,6 @@ def test_MatrixExpressions():
     X = MatrixSymbol('X', n, n)
 
     assert str(X) == "X"
-
-    Y = X[1:2:3, 4:5:6]
-
-    assert str(Y) == "X[1:3, 4:6]"
-
-    Z = X[1:10:2]
-
-    assert str(Z) == "X[1:10:2, :n]"
 
     # Apply function elementwise (`ElementwiseApplyFunc`):
 

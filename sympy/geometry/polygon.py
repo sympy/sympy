@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols
@@ -32,6 +30,12 @@ class Polygon(GeometrySet):
     ==========
 
     vertices : sequence of Points
+
+    Optional parameters
+    ==========
+
+    n : If > 0, an n-sided RegularPolygon is created. See below.
+        Default value is 0.
 
     Attributes
     ==========
@@ -109,9 +113,8 @@ class Polygon(GeometrySet):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        if kwargs.get('n', 0):
-            n = kwargs.pop('n')
+    def __new__(cls, *args, n = 0, **kwargs):
+        if n:
             args = list(args)
             # return a virtual polygon with n sides
             if len(args) == 2:  # center, radius
@@ -469,7 +472,7 @@ class Polygon(GeometrySet):
         Q_x, Q_y: number or sympy expressions
             Q_x is the first moment of area about the x-axis
             Q_y is the first moment of area about the y-axis
-            A negetive sign indicates that the section modulus is
+            A negative sign indicates that the section modulus is
             determined for a section below (or left of) the centroidal axis
 
         Examples
@@ -564,7 +567,7 @@ class Polygon(GeometrySet):
         S_x, S_y: numbers or SymPy expressions
                   S_x is the section modulus with respect to the x-axis
                   S_y is the section modulus with respect to the y-axis
-                  A negetive sign indicates that the section modulus is
+                  A negative sign indicates that the section modulus is
                   determined for a point below the centroidal axis
 
         Examples
@@ -1290,8 +1293,8 @@ class Polygon(GeometrySet):
         from sympy.core.evalf import N
 
         verts = map(N, self.vertices)
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {} z".format(coords[0], " L ".join(coords[1:]))
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
@@ -2029,7 +2032,7 @@ class RegularPolygon(Polygon):
         return self.args == o.args
 
     def __hash__(self):
-        return super(RegularPolygon, self).__hash__()
+        return super().__hash__()
 
 
 class Triangle(Polygon):

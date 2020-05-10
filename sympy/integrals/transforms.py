@@ -1,7 +1,5 @@
 """ Integral Transforms """
 
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.core.compatibility import reduce, iterable
 from sympy.core.function import Function
@@ -33,7 +31,7 @@ class IntegralTransformError(NotImplementedError):
     computed.
     """
     def __init__(self, transform, function, msg):
-        super(IntegralTransformError, self).__init__(
+        super().__init__(
             "%s Transform could not be computed: %s." % (transform, msg))
         self.function = function
 
@@ -810,9 +808,9 @@ class InverseMellinTransform(IntegralTransform):
             from sympy import (
                 exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh,
                 coth, factorial, rf)
-            _allowed = set(
-                [exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
-                 factorial, rf])
+            _allowed = {
+                exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
+                 factorial, rf}
         for f in postorder_traversal(F):
             if f.is_Function and f.has(s) and f.func not in _allowed:
                 raise IntegralTransformError('Inverse Mellin', F,

@@ -1,6 +1,7 @@
 from sympy import Q, ask, Symbol, DiagMatrix, DiagonalMatrix
+from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
-        Trace, MatrixSlice, Determinant)
+        OneMatrix, Trace, MatrixSlice, Determinant, BlockMatrix, BlockDiagMatrix)
 from sympy.matrices.expressions.factorizations import LofLU
 from sympy.testing.pytest import XFAIL
 
@@ -29,6 +30,8 @@ def test_invertible():
     assert ask(Q.invertible(X.I)) is True
     assert ask(Q.invertible(Identity(3))) is True
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(OneMatrix(1, 1))) is True
+    assert ask(Q.invertible(OneMatrix(3, 3))) is False
     assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
 
 def test_singular():
@@ -39,6 +42,40 @@ def test_singular():
 @XFAIL
 def test_invertible_fullrank():
     assert ask(Q.invertible(X), Q.fullrank(X)) is True
+
+
+def test_invertible_BlockMatrix():
+    assert ask(Q.invertible(BlockMatrix([Identity(3)]))) == True
+    assert ask(Q.invertible(BlockMatrix([ZeroMatrix(3, 3)]))) == False
+
+    X = Matrix([[1, 2, 3], [3, 5, 4]])
+    Y = Matrix([[4, 2, 7], [2, 3, 5]])
+    # non-invertible A block
+    assert ask(Q.invertible(BlockMatrix([
+        [Matrix.ones(3, 3), Y.T],
+        [X, Matrix.eye(2)],
+    ]))) == True
+    # non-invertible B block
+    assert ask(Q.invertible(BlockMatrix([
+        [Y.T, Matrix.ones(3, 3)],
+        [Matrix.eye(2), X],
+    ]))) == True
+    # non-invertible C block
+    assert ask(Q.invertible(BlockMatrix([
+        [X, Matrix.eye(2)],
+        [Matrix.ones(3, 3), Y.T],
+    ]))) == True
+    # non-invertible D block
+    assert ask(Q.invertible(BlockMatrix([
+        [Matrix.eye(2), X],
+        [Y.T, Matrix.ones(3, 3)],
+    ]))) == True
+
+
+def test_invertible_BlockDiagMatrix():
+    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), Identity(5)))) == True
+    assert ask(Q.invertible(BlockDiagMatrix(ZeroMatrix(3, 3), Identity(5)))) == False
+    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), OneMatrix(5, 5)))) == False
 
 
 def test_symmetric():
@@ -58,6 +95,9 @@ def test_symmetric():
     assert ask(Q.symmetric(V1.T*(V1 + V2))) is True
     assert ask(Q.symmetric(V1.T*(V1 + V2) + A1x1)) is True
     assert ask(Q.symmetric(MatrixSlice(Y, (0, 1), (1, 2)))) is True
+    assert ask(Q.symmetric(Identity(3))) is True
+    assert ask(Q.symmetric(ZeroMatrix(3, 3))) is True
+    assert ask(Q.symmetric(OneMatrix(3, 3))) is True
 
 def _test_orthogonal_unitary(predicate):
     assert ask(predicate(X), predicate(X))
@@ -89,6 +129,8 @@ def test_fullrank():
     assert ask(Q.fullrank(X*Z), Q.fullrank(X) & Q.fullrank(Z)) is True
     assert ask(Q.fullrank(Identity(3))) is True
     assert ask(Q.fullrank(ZeroMatrix(3, 3))) is False
+    assert ask(Q.fullrank(OneMatrix(1, 1))) is True
+    assert ask(Q.fullrank(OneMatrix(3, 3))) is False
     assert ask(Q.invertible(X), ~Q.fullrank(X)) == False
 
 
@@ -107,6 +149,8 @@ def test_positive_definite():
     assert not ask(Q.positive_definite(Y.T*X*Y), Q.positive_definite(X))
     assert ask(Q.positive_definite(Identity(3))) is True
     assert ask(Q.positive_definite(ZeroMatrix(3, 3))) is False
+    assert ask(Q.positive_definite(OneMatrix(1, 1))) is True
+    assert ask(Q.positive_definite(OneMatrix(3, 3))) is False
     assert ask(Q.positive_definite(X + Z), Q.positive_definite(X) &
             Q.positive_definite(Z)) is True
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
@@ -119,6 +163,11 @@ def test_triangular():
             Q.lower_triangular(Z)) is True
     assert ask(Q.lower_triangular(Identity(3))) is True
     assert ask(Q.lower_triangular(ZeroMatrix(3, 3))) is True
+    assert ask(Q.upper_triangular(ZeroMatrix(3, 3))) is True
+    assert ask(Q.lower_triangular(OneMatrix(1, 1))) is True
+    assert ask(Q.upper_triangular(OneMatrix(1, 1))) is True
+    assert ask(Q.lower_triangular(OneMatrix(3, 3))) is False
+    assert ask(Q.upper_triangular(OneMatrix(3, 3))) is False
     assert ask(Q.triangular(X), Q.unit_triangular(X))
     assert ask(Q.upper_triangular(X**3), Q.upper_triangular(X))
     assert ask(Q.lower_triangular(X**3), Q.lower_triangular(X))
@@ -128,6 +177,8 @@ def test_diagonal():
     assert ask(Q.diagonal(X + Z.T + Identity(2)), Q.diagonal(X) &
                Q.diagonal(Z)) is True
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
+    assert ask(Q.diagonal(OneMatrix(1, 1))) is True
+    assert ask(Q.diagonal(OneMatrix(3, 3))) is False
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
     assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
     assert ask(Q.symmetric(X), Q.diagonal(X))
@@ -214,12 +265,12 @@ def test_matrix_element_sets():
     assert ask(Q.complex(X[1, 2]), Q.complex_elements(X))
     assert ask(Q.integer_elements(Identity(3)))
     assert ask(Q.integer_elements(ZeroMatrix(3, 3)))
+    assert ask(Q.integer_elements(OneMatrix(3, 3)))
     from sympy.matrices.expressions.fourier import DFT
     assert ask(Q.complex_elements(DFT(3)))
 
 
 def test_matrix_element_sets_slices_blocks():
-    from sympy.matrices.expressions import BlockMatrix
     X = MatrixSymbol('X', 4, 4)
     assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
     assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),

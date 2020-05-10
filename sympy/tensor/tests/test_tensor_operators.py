@@ -229,6 +229,8 @@ def test_expand_partial_derivative_full_linearity():
     c3 = Rational(nneg, neg)
 
     # check full linearity
+    p = PartialDerivative(42, D(j))
+    assert p and not p._expand_partial_derivative()
 
     expr3a = PartialDerivative(nneg*A(i) + pos*B(i), D(j))
     assert expr3a._expand_partial_derivative() ==\

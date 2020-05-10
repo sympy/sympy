@@ -515,22 +515,30 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    __slots__ = ('z', 'z_r', 'wavelen')
+    def __new__(cls, wavelen, z, z_r=None, w=None):
+        wavelen = sympify(wavelen)
+        z = sympify(z)
 
-    def __new__(cls, wavelen, z, **kwargs):
-        wavelen, z = map(sympify, (wavelen, z))
-        inst = Expr.__new__(cls, wavelen, z)
-        inst.wavelen = wavelen
-        inst.z = z
-        if len(kwargs) != 1:
-            raise ValueError('Constructor expects exactly one named argument.')
-        elif 'z_r' in kwargs:
-            inst.z_r = sympify(kwargs['z_r'])
-        elif 'w' in kwargs:
-            inst.z_r = waist2rayleigh(sympify(kwargs['w']), wavelen)
+        if z_r is not None and w is None:
+            z_r = sympify(z_r)
+        elif w is not None and z_r is None:
+            z_r = waist2rayleigh(sympify(w), wavelen)
         else:
-            raise ValueError('The constructor needs named argument w or z_r')
-        return inst
+            raise ValueError('Constructor expects exactly one named argument.')
+
+        return Expr.__new__(cls, wavelen, z, z_r)
+
+    @property
+    def wavelen(self):
+        return self.args[0]
+
+    @property
+    def z(self):
+        return self.args[1]
+
+    @property
+    def z_r(self):
+        return self.args[2]
 
     @property
     def q(self):

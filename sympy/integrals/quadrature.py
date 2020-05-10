@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Dummy, pi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos

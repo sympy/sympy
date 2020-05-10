@@ -45,7 +45,6 @@ https://en.wikipedia.org/wiki/Propositional_formula
 https://en.wikipedia.org/wiki/Inference_rule
 https://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 
@@ -254,7 +253,7 @@ class TautologyDetected(Exception):
     pass
 
 
-class Prover(object):
+class Prover:
     """ai - prover of logic rules
 
        given a set of initial rules, Prover tries to prove all possible rules
@@ -372,7 +371,7 @@ class Prover(object):
 ########################################
 
 
-class FactRules(object):
+class FactRules:
     """Rules that describe how to deduce facts in logic space
 
        When defined, these rules allow implications to quickly be determined
@@ -431,7 +430,7 @@ class FactRules(object):
         self.beta_rules = []
         for bcond, bimpl in P.rules_beta:
             self.beta_rules.append(
-                (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
+                ({_as_pair(a) for a in bcond.args}, _as_pair(bimpl)))
 
         # deduce alpha implications
         impl_a = deduce_alpha_implications(P.rules_alpha)
@@ -443,13 +442,13 @@ class FactRules(object):
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         # extract defined fact names
-        self.defined_facts = set(_base_fact(k) for k in impl_ab.keys())
+        self.defined_facts = {_base_fact(k) for k in impl_ab.keys()}
 
         # build rels (forward chains)
         full_implications = defaultdict(set)
         beta_triggers = defaultdict(set)
         for k, (impl, betaidxs) in impl_ab.items():
-            full_implications[_as_pair(k)] = set(_as_pair(i) for i in impl)
+            full_implications[_as_pair(k)] = {_as_pair(i) for i in impl}
             beta_triggers[_as_pair(k)] = betaidxs
 
         self.full_implications = full_implications

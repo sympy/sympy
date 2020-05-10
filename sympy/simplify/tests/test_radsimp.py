@@ -363,8 +363,8 @@ def test_issue_13143():
 
 
 def test_issue_6097():
-    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == y**(2.0*x)*(a + b)
-    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == 2**(2.0*x)*(a + b)
+    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == (a + b)*(y**x)**2.0
+    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == (a + b)*(2**x)**2.0
 
 
 def test_fraction_expand():
@@ -439,3 +439,8 @@ def test_collect_abs():
     # See https://github.com/sympy/sympy/issues/12910
     p = Symbol('p', positive=True)
     assert collect_abs(p/abs(1-p)).is_commutative is True
+
+
+def test_issue_19149():
+    eq = exp(3*x/4)
+    assert collect(eq, exp(x)) == eq
