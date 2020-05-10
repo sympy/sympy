@@ -163,7 +163,7 @@ def compare_tar_against_git():
 
     See the bottom of the file for the whitelists.
     """
-    release/compare_tar_against_git.py @(tarball_format['source']) .
+    release/compare_tar_against_git.py /root/release/@(tarball_format['source']) .
 
 @activity(deps={'source_tarball', 'wheel'})
 def print_authors():
