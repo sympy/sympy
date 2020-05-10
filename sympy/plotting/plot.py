@@ -1149,7 +1149,7 @@ class MatplotlibBackend(BaseBackend):
         for s in series:
             # Create the collections
             if s.is_2Dline:
-                if type(s) == LineOver1DRangeSeries and type(s.expr) in [Float, Integer, Zero]:
+                if isinstance(s, LineOver1DRangeSeries) and isinstance(s.expr, (Float, Integer, Zero)):
                     y = float(s.expr)
                     if y:
                         mi, ma = sorted([0, 2*y])
@@ -1221,7 +1221,9 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_color(s.surface_color)
 
         Axes3D = mpl_toolkits.mplot3d.Axes3D
-        if not isinstance(ax, Axes3D):
+        if all(isinstance(s, LineOver1DRangeSeries) and isinstance(s.expr, (Float, Integer, Zero)) for s in series):
+            pass
+        elif not isinstance(ax, Axes3D):
             ax.autoscale_view(
                 scalex=ax.get_autoscalex_on(),
                 scaley=ax.get_autoscaley_on())
