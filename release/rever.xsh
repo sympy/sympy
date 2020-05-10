@@ -163,41 +163,7 @@ def compare_tar_against_git():
 
     See the bottom of the file for the whitelists.
     """
-    git_lsfiles = set([i.strip() for i in $(git ls-files).strip().split("\n")])
-    tar_output_orig = set(show_files('source', print_=False).split("\n"))
-    tar_output = set()
-    for file in tar_output_orig:
-        # The tar files are like sympy-0.7.3/sympy/__init__.py, and the git
-        # files are like sympy/__init__.py.
-        split_path = full_path_split(file)
-        if split_path[-1]:
-            # Exclude directories, as git ls-files does not include them
-            tar_output.add(os.path.join(*split_path[1:]))
-    # print tar_output
-    # print git_lsfiles
-    fail = False
-    print()
-    print(blue("Files in the tarball from git that should not be there:"))
-    print()
-    for line in sorted(tar_output.intersection(git_whitelist)):
-        fail = True
-        print(line)
-    print()
-    print(blue("Files in git but not in the tarball:"))
-    print()
-    for line in sorted(git_lsfiles - tar_output - git_whitelist):
-        fail = True
-        print(line)
-    print()
-    print(blue("Files in the tarball but not in git:"))
-    print()
-    for line in sorted(tar_output - git_lsfiles - tarball_whitelist):
-        fail = True
-        print(line)
-    print()
-
-    if fail:
-        sys.exit(red("Non-whitelisted files found or not found in the tarball"))
+    release/compare_tar_against_git.py @(tarball_format['source']) .
 
 @activity(deps={'source_tarball', 'wheel'})
 def print_authors():
@@ -381,28 +347,6 @@ def release_files():
     """
     return glob.glob('release/release-' + $VERSION + '/*')
 
-def show_files(file, print_=True):
-    """
-    Show the contents of a tarball.
-
-    The current options for file are
-
-    source: The source tarball
-    html: The html docs zip
-
-    """
-    # TODO: Test the unarchived name. See
-    # https://github.com/sympy/sympy/issues/7087.
-    if file == 'source':
-        ret = $(tar tf @("/root/release/{source}".format(**tarball_format)))
-    elif file == 'html':
-        ret = $(unzip -l @("/root/release/{html}".format(**tarball_format)))
-    else:
-        raise ValueError(file + " is not valid")
-    if print_:
-        print(ret)
-    return ret
-
 def red(text):
     return "\033[31m%s\033[0m" % text
 
@@ -414,16 +358,6 @@ def yellow(text):
 
 def blue(text):
     return "\033[34m%s\033[0m" % text
-
-def full_path_split(path):
-    """
-    Function to do a full split on a path.
-    """
-    # Based on https://stackoverflow.com/a/13505966/161801
-    rest, tail = os.path.split(path)
-    if not rest or rest == os.path.sep:
-        return (tail,)
-    return full_path_split(rest) + (tail,)
 
 def get_authors():
     """
@@ -1011,130 +945,3 @@ def _update_sympy_org(website_location=None):
 
     cd @(release_dir)
     cd ..
-
-
-## TARBALL WHITELISTS
-
-# If a file does not end up in the tarball that should, add it to setup.py if
-# it is Python, or MANIFEST.in if it is not.  (There is a command at the top
-# of setup.py to gather all the things that should be there).
-
-# TODO: Also check that this whitelist isn't growing out of date from files
-# removed from git.
-
-# Files that are in git that should not be in the tarball
-git_whitelist = {
-    # Git specific dotfiles
-    '.gitattributes',
-    '.gitignore',
-    '.mailmap',
-    # Travis and CI
-    '.travis.yml',
-    '.ci/durations.json',
-    '.ci/generate_durations_log.sh',
-    '.ci/parse_durations_log.py',
-    '.ci/blacklisted.json',
-    '.ci/README.rst',
-    '.github/FUNDING.yml',
-    '.editorconfig',
-    '.coveragerc',
-    'asv.conf.travis.json',
-    'coveragerc_travis',
-    'codecov.yml',
-    'pytest.ini',
-    'MANIFEST.in',
-    # Code of conduct
-    'CODE_OF_CONDUCT.md',
-    # Pull request template
-    'PULL_REQUEST_TEMPLATE.md',
-    # Contributing guide
-    'CONTRIBUTING.md',
-    # Nothing from bin/ should be shipped unless we intend to install it. Most
-    # of this stuff is for development anyway. To run the tests from the
-    # tarball, use setup.py test, or import sympy and run sympy.test() or
-    # sympy.doctest().
-    'bin/adapt_paths.py',
-    'bin/ask_update.py',
-    'bin/authors_update.py',
-    'bin/build_doc.sh',
-    'bin/coverage_doctest.py',
-    'bin/coverage_report.py',
-    'bin/deploy_doc.sh',
-    'bin/diagnose_imports',
-    'bin/doctest',
-    'bin/generate_module_list.py',
-    'bin/generate_test_list.py',
-    'bin/get_sympy.py',
-    'bin/mailmap_update.py',
-    'bin/py.bench',
-    'bin/strip_whitespace',
-    'bin/sympy_time.py',
-    'bin/sympy_time_cache.py',
-    'bin/test',
-    'bin/test_external_imports.py',
-    'bin/test_executable.py',
-    'bin/test_import',
-    'bin/test_import.py',
-    'bin/test_isolated',
-    'bin/test_py2_import.py',
-    'bin/test_setup.py',
-    'bin/test_travis.sh',
-    # The notebooks are not ready for shipping yet. They need to be cleaned
-    # up, and preferably doctested.  See also
-    # https://github.com/sympy/sympy/issues/6039.
-    'examples/advanced/identitysearch_example.ipynb',
-    'examples/beginner/plot_advanced.ipynb',
-    'examples/beginner/plot_colors.ipynb',
-    'examples/beginner/plot_discont.ipynb',
-    'examples/beginner/plot_gallery.ipynb',
-    'examples/beginner/plot_intro.ipynb',
-    'examples/intermediate/limit_examples_advanced.ipynb',
-    'examples/intermediate/schwarzschild.ipynb',
-    'examples/notebooks/density.ipynb',
-    'examples/notebooks/fidelity.ipynb',
-    'examples/notebooks/fresnel_integrals.ipynb',
-    'examples/notebooks/qubits.ipynb',
-    'examples/notebooks/sho1d_example.ipynb',
-    'examples/notebooks/spin.ipynb',
-    'examples/notebooks/trace.ipynb',
-    'examples/notebooks/Bezout_Dixon_resultant.ipynb',
-    'examples/notebooks/IntegrationOverPolytopes.ipynb',
-    'examples/notebooks/Macaulay_resultant.ipynb',
-    'examples/notebooks/Sylvester_resultant.ipynb',
-    'examples/notebooks/README.txt',
-    # This stuff :)
-    'release/.gitignore',
-    'release/README.md',
-    'release/Vagrantfile',
-    'release/fabfile.py',
-    'release/Dockerfile',
-    'release/Dockerfile-base',
-    'release/release.sh',
-    'release/rever.xsh',
-    'release/pull_and_run_rever.sh',
-    # This is just a distribute version of setup.py. Used mainly for setup.py
-    # develop, which we don't care about in the release tarball
-    'setupegg.py',
-    # pytest stuff
-    'conftest.py',
-    # Encrypted deploy key for deploying dev docs to GitHub
-    'github_deploy_key.enc',
-    }
-
-# Files that should be in the tarball should not be in git
-
-tarball_whitelist = {
-    # Generated by setup.py. Contains metadata for PyPI.
-    "PKG-INFO",
-    # Generated by setuptools. More metadata.
-    'setup.cfg',
-    'sympy.egg-info/PKG-INFO',
-    'sympy.egg-info/SOURCES.txt',
-    'sympy.egg-info/dependency_links.txt',
-    'sympy.egg-info/requires.txt',
-    'sympy.egg-info/top_level.txt',
-    'sympy.egg-info/not-zip-safe',
-    'sympy.egg-info/entry_points.txt',
-    # Not sure where this is generated from...
-    'doc/commit_hash.txt',
-    }
