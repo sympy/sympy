@@ -144,29 +144,32 @@ class Plot(object):
     - surface_color : function which returns a float.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,
+        title=None, xlabel=None, ylabel=None, aspect_ratio='auto',
+        xlim=None, ylim=None, axis_center='auto', axis=True,
+        xscale='linear', yscale='linear', legend=False, autoscale=True,
+        margin=0, annotations=None, markers=None, rectangles=None,
+        fill=None, backend='default', **kwargs):
         super(Plot, self).__init__()
 
         # Options for the graph as a whole.
         # The possible values for each option are described in the docstring of
         # Plot. They are based purely on convention, no checking is done.
-        self.title = None
-        self.xlabel = None
-        self.ylabel = None
-        self.aspect_ratio = 'auto'
-        self.xlim = None
-        self.ylim = None
-        self.axis_center = 'auto'
-        self.axis = True
-        self.xscale = 'linear'
-        self.yscale = 'linear'
-        self.legend = False
-        self.autoscale = True
-        self.margin = 0
-        self.annotations = None
-        self.markers = None
-        self.rectangles = None
-        self.fill = None
+        self.title = title
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.aspect_ratio = aspect_ratio
+        self.axis_center = axis_center
+        self.axis = axis
+        self.xscale = xscale
+        self.yscale = yscale
+        self.legend = legend
+        self.autoscale = autoscale
+        self.margin = margin
+        self.annotations = annotations
+        self.markers = markers
+        self.rectangles = rectangles
+        self.fill = fill
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -176,13 +179,32 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = plot_backends[kwargs.pop('backend', 'default')]
+        self.backend = plot_backends[backend]
 
+        is_real = \
+            lambda lim: all(getattr(i, 'is_real', True) for i in lim)
+        is_finite = \
+            lambda lim: all(getattr(i, 'is_finite', True) for i in lim)
 
-        # The keyword arguments should only contain options for the plot.
-        for key, val in kwargs.items():
-            if hasattr(self, key):
-                setattr(self, key, val)
+        self.xlim = None
+        self.ylim = None
+        if xlim:
+            if not is_real(xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if not is_finite(xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            self.xlim = (float(xlim[0]), float(xlim[1]))
+        if ylim:
+            if not is_real(ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if not is_finite(ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            self.ylim = (float(ylim[0]), float(ylim[1]))
+
 
     def show(self):
         # TODO move this to the backend (also for save)
@@ -847,14 +869,28 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
     def get_points(self):
+        np = import_module('numpy')
         param = self.get_parameter_points()
         fx = vectorized_lambdify([self.var], self.expr_x)
         fy = vectorized_lambdify([self.var], self.expr_y)
         fz = vectorized_lambdify([self.var], self.expr_z)
+
         list_x = fx(param)
         list_y = fy(param)
         list_z = fz(param)
-        return (list_x, list_y, list_z)
+
+        list_x = np.array(list_x, dtype=np.float64)
+        list_y = np.array(list_y, dtype=np.float64)
+        list_z = np.array(list_z, dtype=np.float64)
+
+        list_x = np.ma.masked_invalid(list_x)
+        list_y = np.ma.masked_invalid(list_y)
+        list_z = np.ma.masked_invalid(list_z)
+
+        self._xlim = (np.amin(list_x), np.amax(list_x))
+        self._ylim = (np.amin(list_y), np.amax(list_y))
+        self._zlim = (np.amin(list_z), np.amax(list_z))
+        return list_x, list_y, list_z
 
 
 ### Surfaces
@@ -906,6 +942,9 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
         self.nb_of_points_y = kwargs.get('nb_of_points_y', 50)
         self.surface_color = kwargs.get('surface_color', None)
 
+        self._xlim = (self.start_x, self.end_x)
+        self._ylim = (self.start_y, self.end_y)
+
     def __str__(self):
         return ('cartesian surface: %s for'
                 ' %s over %s and %s over %s') % (
@@ -922,7 +961,11 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
                                      np.linspace(self.start_y, self.end_y,
                                                  num=self.nb_of_points_y))
         f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
-        return (mesh_x, mesh_y, f(mesh_x, mesh_y))
+        mesh_z = f(mesh_x, mesh_y)
+        mesh_z = np.array(mesh_z, dtype=np.float64)
+        mesh_z = np.ma.masked_invalid(mesh_z)
+        self._zlim = (np.amin(mesh_z), np.amax(mesh_z))
+        return mesh_x, mesh_y, mesh_z
 
 
 class ParametricSurfaceSeries(SurfaceBaseSeries):
@@ -967,11 +1010,30 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                                        num=self.nb_of_points_v))
 
     def get_meshes(self):
+        np = import_module('numpy')
+
         mesh_u, mesh_v = self.get_parameter_meshes()
         fx = vectorized_lambdify((self.var_u, self.var_v), self.expr_x)
         fy = vectorized_lambdify((self.var_u, self.var_v), self.expr_y)
         fz = vectorized_lambdify((self.var_u, self.var_v), self.expr_z)
-        return (fx(mesh_u, mesh_v), fy(mesh_u, mesh_v), fz(mesh_u, mesh_v))
+
+        mesh_x = fx(mesh_u, mesh_v)
+        mesh_y = fy(mesh_u, mesh_v)
+        mesh_z = fz(mesh_u, mesh_v)
+
+        mesh_x = np.array(mesh_x, dtype=np.float64)
+        mesh_y = np.array(mesh_y, dtype=np.float64)
+        mesh_z = np.array(mesh_z, dtype=np.float64)
+
+        mesh_x = np.ma.masked_invalid(mesh_x)
+        mesh_y = np.ma.masked_invalid(mesh_y)
+        mesh_z = np.ma.masked_invalid(mesh_z)
+
+        self._xlim = (np.amin(mesh_x), np.amax(mesh_x))
+        self._ylim = (np.amin(mesh_y), np.amax(mesh_y))
+        self._zlim = (np.amin(mesh_z), np.amax(mesh_z))
+
+        return mesh_x, mesh_y, mesh_z
 
 
 ### Contours
@@ -995,6 +1057,9 @@ class ContourSeries(BaseSeries):
         self.end_y = float(var_start_end_y[2])
 
         self.get_points = self.get_meshes
+
+        self._xlim = (self.start_x, self.end_x)
+        self._ylim = (self.start_y, self.end_y)
 
     def __str__(self):
         return ('contour: %s for '
@@ -1068,12 +1133,18 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
                 self.ax[i].spines['top'].set_color('none')
-                self.ax[i].spines['left'].set_smart_bounds(True)
-                self.ax[i].spines['bottom'].set_smart_bounds(False)
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
     def _process_series(self, series, ax, parent):
+        np = import_module('numpy')
+        mpl_toolkits = import_module(
+            'mpl_toolkits', import_kwargs={'fromlist': ['mplot3d']})
+
+        # XXX Workaround for matplotlib issue
+        # https://github.com/matplotlib/matplotlib/issues/17130
+        xlims, ylims, zlims = [], [], []
+
         for s in series:
             # Create the collections
             if s.is_2Dline:
@@ -1083,24 +1154,22 @@ class MatplotlibBackend(BaseBackend):
                 ax.contour(*s.get_meshes())
             elif s.is_3Dline:
                 # TODO too complicated, I blame matplotlib
-                mpl_toolkits = import_module('mpl_toolkits',
-                    import_kwargs={'fromlist': ['mplot3d']})
                 art3d = mpl_toolkits.mplot3d.art3d
                 collection = art3d.Line3DCollection(s.get_segments())
                 ax.add_collection(collection)
                 x, y, z = s.get_points()
-                ax.set_xlim((min(x), max(x)))
-                ax.set_ylim((min(y), max(y)))
-                ax.set_zlim((min(z), max(z)))
+                xlims.append(s._xlim)
+                ylims.append(s._ylim)
+                zlims.append(s._zlim)
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
+                xlims.append(s._xlim)
+                ylims.append(s._ylim)
+                zlims.append(s._zlim)
             elif s.is_implicit:
-                # Smart bounds have to be set to False for implicit plots.
-                ax.spines['left'].set_smart_bounds(False)
-                ax.spines['bottom'].set_smart_bounds(False)
                 points = s.get_raster()
                 if len(points) == 2:
                     # interval math plotting
@@ -1118,9 +1187,10 @@ class MatplotlibBackend(BaseBackend):
                     else:
                         ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
-                raise ValueError('The matplotlib backend supports only '
-                                 'is_2Dline, is_3Dline, is_3Dsurface and '
-                                 'is_contour objects.')
+                raise NotImplementedError(
+                    '{} is not supported in the sympy plotting module '
+                    'with matplotlib backend. Please report this issue.'
+                    .format(ax))
 
             # Customise the collections with the corresponding per-series
             # options.
@@ -1142,12 +1212,38 @@ class MatplotlibBackend(BaseBackend):
                 else:
                     collection.set_color(s.surface_color)
 
+        Axes3D = mpl_toolkits.mplot3d.Axes3D
+        if not isinstance(ax, Axes3D):
+            ax.autoscale_view(
+                scalex=ax.get_autoscalex_on(),
+                scaley=ax.get_autoscaley_on())
+        else:
+            # XXX Workaround for matplotlib issue
+            # https://github.com/matplotlib/matplotlib/issues/17130
+            if xlims:
+                xlims = np.array(xlims)
+                xlim = (np.amin(xlims[:, 0]), np.amax(xlims[:, 1]))
+                ax.set_xlim(xlim)
+            else:
+                ax.set_xlim([0, 1])
+
+            if ylims:
+                ylims = np.array(ylims)
+                ylim = (np.amin(ylims[:, 0]), np.amax(ylims[:, 1]))
+                ax.set_ylim(ylim)
+            else:
+                ax.set_ylim([0, 1])
+
+            if zlims:
+                zlims = np.array(zlims)
+                zlim = (np.amin(zlims[:, 0]), np.amax(zlims[:, 1]))
+                ax.set_zlim(zlim)
+            else:
+                ax.set_zlim([0, 1])
+
         # Set global options.
         # TODO The 3D stuff
         # XXX The order of those is important.
-        mpl_toolkits = import_module('mpl_toolkits',
-            import_kwargs={'fromlist': ['mplot3d']})
-        Axes3D = mpl_toolkits.mplot3d.Axes3D
         if parent.xscale and not isinstance(ax, Axes3D):
             ax.set_xscale(parent.xscale)
         if parent.yscale and not isinstance(ax, Axes3D):
@@ -1205,38 +1301,9 @@ class MatplotlibBackend(BaseBackend):
         # xlim and ylim shoulld always be set at last so that plot limits
         # doesn't get altered during the process.
         if parent.xlim:
-            from sympy.core.basic import Basic
-            xlim = parent.xlim
-            if any(isinstance(i, Basic) and not i.is_real for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if any(isinstance(i, Basic) and not i.is_finite for i in xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            xlim = (float(i) for i in xlim)
-            ax.set_xlim(xlim)
-        else:
-            if parent._series and all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
-                starts = [s.start for s in parent._series]
-                ends = [s.end for s in parent._series]
-                ax.set_xlim(min(starts), max(ends))
-
+            ax.set_xlim(parent.xlim)
         if parent.ylim:
-            from sympy.core.basic import Basic
-            ylim = parent.ylim
-            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            ylim = (float(i) for i in ylim)
-            ax.set_ylim(ylim)
-
-        if not isinstance(ax, Axes3D):
-            ax.autoscale_view(
-                scalex=ax.get_autoscalex_on(),
-                scaley=ax.get_autoscaley_on())
+            ax.set_ylim(parent.ylim)
 
 
     def process_series(self):
