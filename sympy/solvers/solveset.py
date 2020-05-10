@@ -796,7 +796,7 @@ def _recursive_check_f(f):
     not_compute = False
     floor_type = False
 
-    if type(f) == floor:
+    if isinstance(f, floor):
         floor_type = True
         f, not_compute, _ = _recursive_check_f(f.args[0])
         return f, not_compute, floor_type
