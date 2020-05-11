@@ -22,11 +22,11 @@ def test_literal_probability():
     assert Expectation(X).rewrite(Integral).doit() == expectation(X)
     assert Expectation(X**2).evaluate_integral() == expectation(X**2)
     assert Expectation(x*X).args == (x*X,)
-    assert Expectation(x*X).doit() == x*Expectation(X)
-    assert Expectation(2*X + 3*Y + z*X*Y).doit() == 2*Expectation(X) + 3*Expectation(Y) + z*Expectation(X*Y)
+    assert Expectation(x*X).expand() == x*Expectation(X)
+    assert Expectation(2*X + 3*Y + z*X*Y).expand() == 2*Expectation(X) + 3*Expectation(Y) + z*Expectation(X*Y)
     assert Expectation(2*X + 3*Y + z*X*Y).args == (2*X + 3*Y + z*X*Y,)
-    assert Expectation(sin(X)) == Expectation(sin(X)).doit()
-    assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).doit() == 2*x*Expectation(sin(X)*Y) + y*Expectation(X**2) + z*Expectation(X*Y)
+    assert Expectation(sin(X)) == Expectation(sin(X)).expand()
+    assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).expand() == 2*x*Expectation(sin(X)*Y) + y*Expectation(X**2) + z*Expectation(X*Y)
 
     assert Variance(w).args == (w,)
     assert Variance(w).doit() == 0

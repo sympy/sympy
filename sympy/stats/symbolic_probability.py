@@ -5,7 +5,8 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import RandomSymbol, probability, expectation
+from sympy.stats.rv import (RandomSymbol, probability, pspace, random_symbols,
+                            given, sampling_E, RandomIndexedSymbol)
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
@@ -89,11 +90,11 @@ class Expectation(Expr):
     >>> Expectation(X + Y)
     Expectation(X + Y)
 
-    To expand the ``Expectation`` into its expression, use ``doit()``:
+    To expand the ``Expectation`` into its expression, use ``expand()``:
 
-    >>> Expectation(X + Y).doit()
+    >>> Expectation(X + Y).expand()
     Expectation(X) + Expectation(Y)
-    >>> Expectation(a*X + Y).doit()
+    >>> Expectation(a*X + Y).expand()
     a*Expectation(X) + Expectation(Y)
     >>> Expectation(a*X + Y)
     Expectation(a*X + Y)
@@ -109,9 +110,10 @@ class Expectation(Expr):
             condition = _sympify(condition)
             obj = Expr.__new__(cls, expr, condition)
         obj._condition = condition
+        obj._evaluate = kwargs.get('evaluate', True)
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         expr = self.args[0]
         condition = self._condition
 
@@ -119,7 +121,8 @@ class Expectation(Expr):
             return expr
 
         if isinstance(expr, Add):
-            return Add(*[Expectation(a, condition=condition).doit() for a in expr.args])
+            return Add(*[Expectation(a, condition=condition).expand()
+                    for a in expr.args])
         elif isinstance(expr, Mul):
             rv = []
             nonrv = []
@@ -131,6 +134,47 @@ class Expectation(Expr):
             return Mul(*nonrv)*Expectation(Mul(*rv), condition=condition)
 
         return self
+
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
+        expr = self.args[0]
+        condition = self._condition
+        evaluate = self._evaluate
+        numsamples = hints.get('numsamples', False)
+        for_integral = hints.get('for_integral', False)
+        if not (evaluate or deep or for_integral):
+            return self
+        if deep:
+            expr = expr.doit(**hints)
+        if not random_symbols(expr) or isinstance(expr, Expectation):  # expr isn't random?
+            return expr
+        if numsamples:  # Computing by monte carlo sampling?
+            evalf = hints.get('evalf', True)
+            return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
+
+        if expr.has(RandomIndexedSymbol):
+            return pspace(expr).compute_expectation(expr, condition, evaluate)
+
+        # Create new expr and recompute E
+        if condition is not None:  # If there is a condition
+            return self.func(given(expr, condition), evaluate=evaluate).doit(**hints)
+
+        # A few known statements for efficiency
+
+        if expr.is_Add:  # We know that E is Linear
+            return Add(*[self.func(arg, evaluate=evaluate).doit(**hints)
+                    if not isinstance(arg, Expectation) else arg
+                         for arg in expr.args])
+        if expr.is_Mul:
+            if expr.atoms(Expectation):
+                return expr
+        # Otherwise case is simple, pass work off to the ProbabilitySpace
+        result = pspace(expr).compute_expectation(expr, evaluate=evaluate)
+        if evaluate and hasattr(result, 'doit'):
+            return result.doit(**hints)
+        else:
+            return result
+
 
     def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
         rvs = arg.atoms(RandomSymbol)
@@ -158,7 +202,8 @@ class Expectation(Expr):
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return expectation(arg, condition=condition, evaluate=False)
+        return self.func(arg, condition=condition,
+                evaluate=False).doit(deep=False, for_integral=True)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 

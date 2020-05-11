@@ -19,7 +19,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -720,29 +720,11 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
 
     if not random_symbols(expr):  # expr isn't random?
         return expr
-    if numsamples:  # Computing by monte carlo sampling?
-        evalf = kwargs.get('evalf', True)
-        return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
-
-    if expr.has(RandomIndexedSymbol):
-        return pspace(expr).compute_expectation(expr, condition, evaluate, **kwargs)
-
-    # Create new expr and recompute E
-    if condition is not None:  # If there is a condition
-        return expectation(given(expr, condition), evaluate=evaluate)
-
-    # A few known statements for efficiency
-
-    if expr.is_Add:  # We know that E is Linear
-        return Add(*[expectation(arg, evaluate=evaluate)
-                     for arg in expr.args])
-
-    # Otherwise case is simple, pass work off to the ProbabilitySpace
-    result = pspace(expr).compute_expectation(expr, evaluate=evaluate, **kwargs)
-    if evaluate and hasattr(result, 'doit'):
-        return result.doit(**kwargs)
-    else:
-        return result
+    kwargs['numsamples'] = numsamples
+    from sympy.stats.symbolic_probability import Expectation
+    if evaluate:
+        return Expectation(expr, condition, evaluate=True).doit(**kwargs)
+    return Expectation(expr, condition).rewrite(Integral)
 
 
 def probability(condition, given_condition=None, numsamples=None,

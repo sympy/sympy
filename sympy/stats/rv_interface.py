@@ -32,7 +32,8 @@ def moment(X, n, c=0, condition=None, **kwargs):
     >>> moment(X, 1) == E(X)
     True
     """
-    return expectation((X - c)**n, condition, **kwargs)
+    evaluate = kwargs.pop('evaluate', True)
+    return expectation((X - c)**n, condition, evaluate=evaluate, **kwargs)
 
 
 def variance(X, condition=None, **kwargs):
@@ -202,8 +203,9 @@ def cmoment(X, n, condition=None, **kwargs):
     >>> cmoment(X, 2) == variance(X)
     True
     """
-    mu = expectation(X, condition, **kwargs)
-    return moment(X, n, mu, condition, **kwargs)
+    evaluate = kwargs.pop('evaluate', True)
+    mu = expectation(X, condition, evaluate=evaluate, **kwargs)
+    return moment(X, n, mu, condition, evaluate=evaluate, **kwargs)
 
 
 def smoment(X, n, condition=None, **kwargs):
