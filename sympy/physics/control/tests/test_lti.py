@@ -181,7 +181,7 @@ def test_controllable():
     assert StateSpaceModel(A, B).is_controllable() == True
 
 
-def test_StateSpaceModel_cascade():
+def test_StateSpaceModel_series():
     a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
     ssm1 = StateSpaceModel(
         Matrix([[0, 1],
@@ -208,10 +208,10 @@ def test_StateSpaceModel_cascade():
         Matrix([[0, 0, b0, b1, b2]]),
         zeros(1)
     )
-    assert ssm1.cascade(ssm2).represent == expect.represent
+    assert ssm1.series(ssm2).represent == expect.represent
 
 
-def test_TransferFunctionModel_cascade():
+def test_TransferFunctionModel_series():
     a, b, s = symbols('a, b, s')
     tfm1 = TransferFunctionModel(
         Matrix([1 / (a * s)])
@@ -222,7 +222,7 @@ def test_TransferFunctionModel_cascade():
     expect = TransferFunctionModel(
         Matrix([(b + s) / (a * s * (a + s))])
     )
-    assert tfm1.cascade(tfm2).G == expect.G
+    assert tfm1.series(tfm2).G == expect.G
 
 
 def test_StateSpaceModel_parallel():

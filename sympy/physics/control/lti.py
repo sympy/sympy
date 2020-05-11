@@ -613,10 +613,10 @@ class StateSpaceModel(object):
 
         return True
 
-    def cascade(self, other):
-        """ Returns the cascade interconnection of the system and another system
+    def series(self, other):
+        """ Returns the series interconnection of the system and another system
 
-        The cascade interconnection of two systems P1 and P2 is the system for which
+        The series interconnection of two systems P1 and P2 is the system for which
         u = u1, y = y2 and z = u2 = y1 so that:
 
                ----    z     ----
@@ -639,7 +639,7 @@ class StateSpaceModel(object):
         >>> a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
         >>> ssm1 = StateSpaceModel(Matrix([[0, 1], [-a0, -a1]]), Matrix([0, 1]), Matrix([[b0, b1]]))
         >>> ssm2 = StateSpaceModel(Matrix([[0, 1, 0], [0, 0, 1], [-a0, -a1, -a2]]), Matrix([0, 0, 1]), Matrix([[b0, b1, b2]]))
-        >>> ssm1.cascade(ssm2)
+        >>> ssm1.series(ssm2)
         StateSpaceModel(
         Matrix([
         [  0,   1,   0,   0,   0],
@@ -659,10 +659,10 @@ class StateSpaceModel(object):
         When the number of outputs of the first systems does not match the
         number of inputs of the second, an error is thrown:
 
-        >>> ssm1.cascade(StateSpaceModel(Matrix([[1, 2]]), Matrix([[2, 3]])))
+        >>> ssm1.series(StateSpaceModel(Matrix([[1, 2]]), Matrix([[2, 3]])))
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "sympy\physics\control\lti.py", line 514, in cascade
+          File "sympy\physics\control\lti.py", line 514, in series
             integrate(integrand[row_idx, col_idx], (tau, t0, t))
         sympy.matrices.matrices.ShapeError: Dimensions of the input of the argument and the ouput of the System must match!
 
@@ -748,7 +748,7 @@ class StateSpaceModel(object):
         See Also
         ========
 
-        cascade: cascade interconnection of two systems
+        series: series interconnection of two systems
         """
         if not isinstance(other, StateSpaceModel):
             raise TypeError("Argument must be of type StateSpaceModel, not %r" % (type(other)))
@@ -918,10 +918,10 @@ class TransferFunctionModel(object):
         # return result
         return self.G.subs(self.s, s) * u
 
-    def cascade(self, other):
-        """ Returns the cascade interconnection of the system and another system
+    def series(self, other):
+        """ Returns the series interconnection of the system and another system
 
-        The cascade interconnection of two systems P1 and P2 is the system for which
+        The series interconnection of two systems P1 and P2 is the system for which
         u = u1, y = y2 and z = u2 = y1 so that:
 
                ----    z     ----
@@ -943,7 +943,7 @@ class TransferFunctionModel(object):
         >>> s = Symbol('s')
         >>> tfm1 = TransferFunctionModel(Matrix([2*s/(2 + s**2 - s), s/(1 + s**3)]))
         >>> tfm2 = TransferFunctionModel(Matrix([[1/(s + 2), (2 + s**3)/ (s**5 + s**2 + 7)]]))
-        >>> tfm1.cascade(tfm2)
+        >>> tfm1.series(tfm2)
         TransferFunctionModel(Matrix([
         [2*s/((s + 2)*(s**2 - s + 2)), 2*s*(s**3 + 2)/((s**2 - s + 2)*(s**5 + s**2 + 7))],
         [      s/((s + 2)*(s**3 + 1)),       s*(s**3 + 2)/((s**3 + 1)*(s**5 + s**2 + 7))]]))
@@ -999,7 +999,7 @@ class TransferFunctionModel(object):
         See Also
         ========
 
-        cascade: cascade interconnection of two systems
+        series: series interconnection of two systems
         """
         if not isinstance(other, TransferFunctionModel):
             raise TypeError("Argument must be of type TransferFunctionModel, not %r" %
