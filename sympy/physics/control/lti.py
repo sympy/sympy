@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (
     Symbol, var, simplify, oo, exp,
     Poly, lcm, LC, degree, Integral, integrate,
