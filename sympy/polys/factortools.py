@@ -323,7 +323,11 @@ def dup_zz_zassenhaus(f, K):
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = 2*int(abs(dup_zz_mignotte_bound(f, K)))
+    if Poly(f).is_univariate:
+        B = 2*int(abs(dup_zz_mignotte_bound(f, K)))
+    else:
+        B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
+
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
