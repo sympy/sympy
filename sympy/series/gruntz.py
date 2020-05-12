@@ -628,7 +628,7 @@ def rewrite(e, Omega, x, wsym):
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
-    f = f.xreplace({wsym: wsym**exponent})
+    f = f.subs({wsym: wsym**exponent})
     logw /= exponent
 
     return f, logw
