@@ -1,6 +1,6 @@
 import itertools
 
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, expand as _expand
 from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
@@ -61,8 +61,8 @@ class Expectation(Expr):
     Examples
     ========
 
-    >>> from sympy.stats import Expectation, Normal, Probability
-    >>> from sympy import symbols, Integral
+    >>> from sympy.stats import Expectation, Normal, Probability, Poisson
+    >>> from sympy import symbols, Integral, Sum
     >>> mu = symbols("mu")
     >>> sigma = symbols("sigma", positive=True)
     >>> X = Normal("X", mu, sigma)
@@ -81,6 +81,13 @@ class Expectation(Expr):
     >>> Expectation(X).rewrite(Probability)
     Integral(x*Probability(Eq(X, x)), (x, -oo, oo))
 
+    To get the Summation expression of the expectation for discrete random variables:
+
+    >>> lamda = symbols('lamda', positive=True)
+    >>> Z = Poisson('Z', lamda)
+    >>> Expectation(Z).rewrite(Sum)
+    Sum(Z*lamda**Z*exp(-lamda)/factorial(Z), (Z, 0, oo))
+
     This class is aware of some properties of the expectation:
 
     >>> from sympy.abc import a
@@ -98,6 +105,8 @@ class Expectation(Expr):
     a*Expectation(X) + Expectation(Y)
     >>> Expectation(a*X + Y)
     Expectation(a*X + Y)
+    >>> Expectation((X + Y)*(X - Y)).expand()
+    Expectation(X**2) - Expectation(Y**2)
 
     To evaluate the ``Expectation``, use ``doit()``:
 
@@ -109,9 +118,9 @@ class Expectation(Expr):
     To prevent evaluating nested ``Expectation``, use ``doit(deep=False)``
 
     >>> Expectation(X + Expectation(Y)).doit(deep=False)
-    mu + Expectation(Y)
+    mu + Expectation(Expectation(Y))
     >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False)
-    mu + Expectation(Y + Expectation(2*X))
+    mu + Expectation(Expectation(Y + Expectation(2*X)))
 
     """
 
@@ -125,7 +134,6 @@ class Expectation(Expr):
             condition = _sympify(condition)
             obj = Expr.__new__(cls, expr, condition)
         obj._condition = condition
-        obj._evaluate = kwargs.get('evaluate', True)
         return obj
 
     def expand(self, **hints):
@@ -139,6 +147,8 @@ class Expectation(Expr):
             return Add(*[Expectation(a, condition=condition).expand()
                     for a in expr.args])
         elif isinstance(expr, Mul):
+            if isinstance(_expand(expr), Add):
+                return Expectation(_expand(expr)).expand()
             rv = []
             nonrv = []
             for a in expr.args:
@@ -152,15 +162,14 @@ class Expectation(Expr):
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
-        expr = self.args[0]
         condition = self._condition
-        evaluate = self._evaluate
+        expr = self.args[0]
         numsamples = hints.get('numsamples', False)
-        for_integral = hints.get('for_integral', False)
-        if not (evaluate or deep or for_integral):
-            return self
+        for_rewrite = not hints.get('for_rewrite', False)
+
         if deep:
             expr = expr.doit(**hints)
+
         if not random_symbols(expr) or isinstance(expr, Expectation):  # expr isn't random?
             return expr
         if numsamples:  # Computing by monte carlo sampling?
@@ -168,24 +177,24 @@ class Expectation(Expr):
             return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
 
         if expr.has(RandomIndexedSymbol):
-            return pspace(expr).compute_expectation(expr, condition, evaluate)
+            return pspace(expr).compute_expectation(expr, condition)
 
         # Create new expr and recompute E
         if condition is not None:  # If there is a condition
-            return self.func(given(expr, condition), evaluate=evaluate).doit(**hints)
+            return self.func(given(expr, condition)).doit(**hints)
 
         # A few known statements for efficiency
 
         if expr.is_Add:  # We know that E is Linear
-            return Add(*[self.func(arg, evaluate=evaluate).doit(**hints)
-                    if not isinstance(arg, Expectation) else arg
+            return Add(*[self.func(arg, condition).doit(**hints)
+                    if not isinstance(arg, Expectation) else self.func(arg, condition)
                          for arg in expr.args])
         if expr.is_Mul:
             if expr.atoms(Expectation):
                 return expr
         # Otherwise case is simple, pass work off to the ProbabilitySpace
-        result = pspace(expr).compute_expectation(expr, evaluate=evaluate)
-        if evaluate and hasattr(result, 'doit'):
+        result = pspace(expr).compute_expectation(expr, evaluate=for_rewrite)
+        if hasattr(result, 'doit') and for_rewrite:
             return result.doit(**hints)
         else:
             return result
@@ -217,14 +226,14 @@ class Expectation(Expr):
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return self.func(arg, condition=condition,
-                evaluate=False).doit(deep=False, for_integral=True)
+        return self.func(arg, condition=condition).doit(deep=False, for_rewrite=True)
 
-    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral # For discrete this will be Sum
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
 
+    evaluate_sum = evaluate_integral
 
 class Variance(Expr):
     """

@@ -723,8 +723,8 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     kwargs['numsamples'] = numsamples
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
-        return Expectation(expr, condition, evaluate=True).doit(**kwargs)
-    return Expectation(expr, condition).rewrite(Integral)
+        return Expectation(expr, condition).doit(**kwargs)
+    return Expectation(expr, condition).rewrite(Integral) # wil return Sum in case of discrete RV
 
 
 def probability(condition, given_condition=None, numsamples=None,
