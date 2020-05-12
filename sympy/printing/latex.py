@@ -632,10 +632,7 @@ class LatexPrinter(Printer):
             base = base[6: -7]  # remove outermost added parens
             exp = r"{%s}" % exp
         elif expr.base.is_Pow:
-            if isinstance(expr.exp, Add) or expr.exp.is_Integer or expr.exp.is_Rational:
-                exp = r"{%s}" % exp
-            else:
-                exp = r"\left({%s}\right)" % exp
+            exp = r"\left({%s}\right)" % exp
         else:
             exp = r"{%s}" % exp
 
