@@ -11,7 +11,7 @@ from __future__ import print_function
 
 import sys
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import re
 
 from get_sympy import path_hack
@@ -23,7 +23,9 @@ epilog = """
 If no test arguments are given, all tests will be run.
 """
 
-parser = ArgumentParser(epilog=epilog)
+parser = ArgumentParser(
+    epilog=epilog,
+    formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument(
     "-v", "--verbose", action="store_true", dest="verbose", default=False)
 parser.add_argument(
