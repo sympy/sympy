@@ -1963,21 +1963,14 @@ def classify_sysode(eq, funcs=None, **kwargs):
                     type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
                 elif order_eq == 2:
                     type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
 
-            elif matching_hints['no_of_equation'] == 3:
-                if order_eq == 1:
-                    type_of_equation = check_linear_3eq_order1(eq, funcs, func_coef)
-                    if type_of_equation is None:
-                        type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+            # If the equation doesn't match up with any of the
+            # general case solvers in systems.py and the number
+            # of equations is greater than 2, then NotImplementedError
+            # should be raised.
             else:
-                if order_eq == 1:
-                    type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+                type_of_equation = None
+
         else:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
@@ -2057,17 +2050,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
         else:
             r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
             r['c1'] = r['c1']/r['a1'] ; r['c2'] = r['c2']/r['a2']
-            if (r['b1'] == r['c2']) and (r['c1'] == r['b2']):
-                # Equation for type 3 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), g(t)*x(t) + f(t)*y(t))
-                return "type3"
-            elif (r['b1'] == r['c2']) and (r['c1'] == -r['b2']) or (r['b1'] == -r['c2']) and (r['c1'] == r['b2']):
-                # Equation for type 4 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), -g(t)*x(t) + f(t)*y(t))
-                return "type4"
-            elif (not cancel(r['b2']/r['c1']).has(t) and not cancel((r['c2']-r['b1'])/r['c1']).has(t)) \
-            or (not cancel(r['b1']/r['c2']).has(t) and not cancel((r['c1']-r['b2'])/r['c2']).has(t)):
-                # Equations for type 5 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), a*g(t)*x(t) + [f(t) + b*g(t)]*y(t)
-                return "type5"
-            elif p:
+            if p:
                 return "type6"
             else:
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
@@ -2170,62 +2153,6 @@ def check_linear_2eq_order2(eq, func, func_coef):
 
         else:
             return None
-
-def check_linear_3eq_order1(eq, func, func_coef):
-    x = func[0].func
-    y = func[1].func
-    z = func[2].func
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
-    r['a1'] = fc[0,x(t),1]; r['a2'] = fc[1,y(t),1]; r['a3'] = fc[2,z(t),1]
-    r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
-    r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
-    r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
-    forcing = [S.Zero, S.Zero, S.Zero]
-    for i in range(3):
-        for j in Add.make_args(eq[i]):
-            if not j.has(x(t), y(t), z(t)):
-                forcing[i] += j
-    if forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t):
-        # We can handle homogeneous case and simple constant forcings.
-        # Issue #9244: nonhomogeneous linear systems are not supported
-        return None
-
-    if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
-        if r['c1']==r['d1']==r['d2']==0:
-            return 'type1'
-        elif r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
-        and r['b1'] == r['c2'] == r['d3'] == 0:
-            return 'type2'
-        elif r['b1'] == r['c2'] == r['d3'] == 0 and r['c1']/r['a1'] == -r['d1']/r['a1'] \
-        and r['d2']/r['a2'] == -r['b2']/r['a2'] and r['b3']/r['a3'] == -r['c3']/r['a3']:
-            return 'type3'
-        else:
-            return None
-    else:
-        for k1 in 'c1 d1 b2 d2 b3 c3'.split():
-            if r[k1] == 0:
-                continue
-            else:
-                if all(not cancel(r[k1]/r[k]).has(t) for k in 'd1 b2 d2 b3 c3'.split() if r[k]!=0) \
-                and all(not cancel(r[k1]/(r['b1'] - r[k])).has(t) for k in 'b1 c2 d3'.split() if r['b1']!=r[k]):
-                    return 'type4'
-                else:
-                    break
-    return None
-
-def check_linear_neq_order1(eq, func, func_coef):
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    n = len(eq)
-    for i in range(n):
-        for j in range(n):
-            if (fc[i, func[j], 0]/fc[i, func[i], 1]).has(t):
-                return None
-    if len(eq) == 3:
-        return 'type6'
-    return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
@@ -7553,83 +7480,6 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
     sol1 = C3*t + t*Integral(msol1.rhs/t**2, t)
     sol2 = C4*t + t*Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def sysode_linear_3eq_order1(match_):
-
-    x = match_['func'][0].func
-    y = match_['func'][1].func
-    z = match_['func'][2].func
-    func = match_['func']
-    fc = match_['func_coeff']
-    eq = match_['eq']
-    r = dict()
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    for i in range(3):
-        eqs = 0
-        for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],1]
-        eq[i] = eqs
-    # for equations:
-    #   Eq(g1*diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
-    #   Eq(g2*diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2), and
-    #   Eq(g3*diff(z(t),t), a3*x(t)+b3*y(t)+c3*z(t)+d3)
-    r['a1'] = fc[0,x(t),0]/fc[0,x(t),1]; r['a2'] = fc[1,x(t),0]/fc[1,y(t),1];
-    r['a3'] = fc[2,x(t),0]/fc[2,z(t),1]
-    r['b1'] = fc[0,y(t),0]/fc[0,x(t),1]; r['b2'] = fc[1,y(t),0]/fc[1,y(t),1];
-    r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
-    r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
-    r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    for i in range(3):
-        for j in Add.make_args(eq[i]):
-            if not j.has(x(t), y(t), z(t)):
-                raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
-
-    if match_['type_of_equation'] == 'type3':
-        sol = _linear_3eq_order1_type3(x, y, z, t, r, eq)
-    if match_['type_of_equation'] == 'type6':
-        sol = sysode_linear_neq_order1(match_)
-    return sol
-
-def _linear_3eq_order1_type3(x, y, z, t, r, eq):
-    r"""
-    Equations of this system of ODEs
-
-    .. math:: a x' = bc (y - z)
-
-    .. math:: b y' = ac (z - x)
-
-    .. math:: c z' = ab (x - y)
-
-    1. First integral:
-
-    .. math:: a^2 x + b^2 y + c^2 z = A
-
-    where A is an arbitrary constant. It follows that the integral lines are plane curves.
-
-    2. Solution:
-
-    .. math:: x = C_0 + k C_1 \cos(kt) + a^{-1} bc (C_2 - C_3) \sin(kt)
-
-    .. math:: y = C_0 + k C_2 \cos(kt) + a b^{-1} c (C_3 - C_1) \sin(kt)
-
-    .. math:: z = C_0 + k C_3 \cos(kt) + ab c^{-1} (C_1 - C_2) \sin(kt)
-
-    where `k = \sqrt{a^2 + b^2 + c^2}` and the four constants of integration,
-    `C_1,...,C_4` are constrained by a single relation
-
-    .. math:: a^2 C_1 + b^2 C_2 + c^2 C_3 = 0
-
-    """
-    C0, C1, C2, C3 = get_numbered_constants(eq, num=4, start=0)
-    c = sqrt(r['b1']*r['c2'])
-    b = sqrt(r['b1']*r['a3'])
-    a = sqrt(r['c2']*r['a3'])
-    C3 = (-a**2*C1-b**2*C2)/c**2
-    k = sqrt(a**2 + b**2 + c**2)
-    sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
-    sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
-    sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 
 def sysode_linear_neq_order1(match):
