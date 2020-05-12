@@ -86,7 +86,7 @@ class Expectation(Expr):
     >>> from sympy.abc import a
     >>> Expectation(a*X)
     Expectation(a*X)
-    >>> Y = Normal("Y", 0, 1)
+    >>> Y = Normal("Y", 1, 2)
     >>> Expectation(X + Y)
     Expectation(X + Y)
 
@@ -98,6 +98,21 @@ class Expectation(Expr):
     a*Expectation(X) + Expectation(Y)
     >>> Expectation(a*X + Y)
     Expectation(a*X + Y)
+
+    To evaluate the ``Expectation``, use ``doit()``:
+
+    >>> Expectation(X + Y).doit()
+    mu + 1
+    >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit()
+    3*mu + 1
+
+    To prevent evaluating nested ``Expectation``, use ``doit(deep=False)``
+
+    >>> Expectation(X + Expectation(Y)).doit(deep=False)
+    mu + Expectation(Y)
+    >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False)
+    mu + Expectation(Y + Expectation(2*X))
+
     """
 
     def __new__(cls, expr, condition=None, **kwargs):

@@ -27,6 +27,14 @@ def test_literal_probability():
     assert Expectation(2*X + 3*Y + z*X*Y).args == (2*X + 3*Y + z*X*Y,)
     assert Expectation(sin(X)) == Expectation(sin(X)).expand()
     assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).expand() == 2*x*Expectation(sin(X)*Y) + y*Expectation(X**2) + z*Expectation(X*Y)
+    assert Expectation(X + Y).expand() ==  Expectation(X) + Expectation(Y)
+    assert Expectation(X + Y, evaluate=True).doit() == 5
+    assert Expectation(X + Expectation(Y)).doit() == 5
+    assert Expectation(X + Expectation(Y)).doit(deep=False) == 2 + Expectation(Y)
+    assert Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False) == 2 + Expectation(Y + Expectation(2*X))
+    assert Expectation(X + Expectation(Y + Expectation(2*X))).doit() == 9
+    assert Expectation(Expectation(2*X)).doit() == 4
+    assert Expectation(Expectation(2*X)).doit(deep=False) == Expectation(2*X)
 
     assert Variance(w).args == (w,)
     assert Variance(w).doit() == 0
