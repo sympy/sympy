@@ -416,19 +416,19 @@ def limitinf(e, x, leadsimp=False):
     ``e`` cannot be simplified.
     """
     # rewrite e in terms of tractable functions only
-    e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
         return e  # e is a constant
     if e.has(Order):
         e = e.expand().removeO()
-    if not x.is_positive:
-        # We make sure that x.is_positive is True so we
-        # get all the correct mathematical behavior from the expression.
+    if not x.is_positive or x.is_integer:
+        # We make sure that x.is_positive is True and x.is_integer is None
+        # so we get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, finite=True)
+        p = Dummy('p', positive=True)
         e = e.subs(x, p)
         x = p
+    e = e.rewrite('tractable', deep=True)
     e = powdenest(e)
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)

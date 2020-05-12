@@ -7,7 +7,7 @@ from .basic import Basic
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
 from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
@@ -1249,25 +1249,25 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_integer(self):
         from sympy import fraction
+        from sympy.core.numbers import Float
 
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
 
-        n, d = fraction(self)
-        if not is_rational:
-            _self = n/d
-            if _self != self:
-                return _self.is_integer
+        # use exact=True to avoid recomputing num or den
+        n, d = fraction(self, exact=True)
         if is_rational:
             if d is S.One:
                 return True
-            elif d == S(2):
+        if d.is_even:
+            if d.is_prime:  # literal or symbolic 2
                 return n.is_even
-        # if d is even -- 0 or not -- the
-        # result is not an integer
-        if n.is_odd and d.is_even:
-            return False
+            if n.is_odd:
+                return False  # true even if d = 0
+        if n == d:
+            return fuzzy_and([not bool(self.atoms(Float)),
+            fuzzy_not(d.is_zero)])
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)

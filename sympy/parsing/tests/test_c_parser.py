@@ -9,10 +9,12 @@ if cin:
                                    Return, FunctionDefinition, Integer, Float,
                                    Declaration, CodeBlock, FunctionPrototype,
                                    FunctionCall, NoneToken, Assignment, Type)
+    from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
+        PreIncrement, PostIncrement)
     from sympy.core import (Add, Mul, Mod, Pow, Rational, StrictLessThan,
                             LessThan, StrictGreaterThan, GreaterThan,
                             Equality, Unequality)
-    from sympy.logic.boolalg import And, Or
+    from sympy.logic.boolalg import And, Not, Or
     from sympy import Symbol, true, false
     import os
 
@@ -1327,6 +1329,45 @@ if cin:
             '}'
         )
 
+        c_src_raise1 = (
+            'void func()'+
+            '{' + '\n' +
+            'int a;' + '\n' +
+            'a = -1;' + '\n' +
+            '}'
+        )
+
+        c_src_raise2 = (
+            'void func()'+
+            '{' + '\n' +
+            'int a;' + '\n' +
+            'a = -+1;' + '\n' +
+            '}'
+        )
+
+        c_src_raise3 = (
+            'void func()'+
+            '{' + '\n' +
+            'int a;' + '\n' +
+            'a = 2*-2;' + '\n' +
+            '}'
+        )
+
+        c_src_raise4 = (
+            'void func()'+
+            '{' + '\n' +
+            'int a;' + '\n' +
+            'a = (int)2.0;' + '\n' +
+            '}'
+        )
+
+        c_src_raise5 = (
+            'void func()'+
+            '{' + '\n' +
+            'int a=100;' + '\n' +
+            'a = (a==100)?(1):(0);' + '\n' +
+            '}'
+        )
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
@@ -2757,6 +2798,13 @@ if cin:
                 )
             )
 
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise3, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise4, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise5, 'c'))
+
+
     def test_var_decl():
         c_src1 = (
             'int b = 100;' + '\n' +
@@ -2987,6 +3035,23 @@ if cin:
             'bool c4 = a || b;' + '\n' +
             'bool c5 = a || c;' + '\n' +
             'bool c6 = c || d;'
+        )
+
+        c_src_raise1 = (
+            'double a;'
+        )
+
+        c_src_raise2 = (
+            'long a = 1;'
+        )
+
+        c_src_raise3 = (
+            'int a = (int) 1.0;'
+        )
+
+        c_src_raise4 = (
+            'int a = 10;'
+            'int b = (a!=10)?(a):(0);'
         )
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
@@ -4127,6 +4192,252 @@ if cin:
                     )
                 )
             )
+
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise3, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise4, 'c'))
+
+
+    def test_paren_expr():
+        c_src1 = (
+            'int a = (1);'
+            'int b = (1 + 2 * 3);'
+        )
+
+        c_src2 = (
+            'int a, b, c;'
+            'int d = (a);'
+            'int e = (a + 1);'
+            'int f = (a + b * c - d / e);'
+        )
+
+        res1 = SymPyExpression(c_src1, 'c').return_expr()
+        res2 = SymPyExpression(c_src2, 'c').return_expr()
+
+        assert res1[0] == Declaration(
+            Variable(Symbol('a'),
+                type=IntBaseType(String('integer')),
+                value=Integer(1)
+                )
+            )
+
+        assert res1[1] == Declaration(
+            Variable(Symbol('b'),
+                type=IntBaseType(String('integer')),
+                value=Integer(7)
+                )
+            )
+
+        assert res2[0] == Declaration(
+            Variable(Symbol('a'),
+                type=IntBaseType(String('integer')),
+                value=Integer(0)
+                )
+            )
+
+        assert res2[1] == Declaration(
+            Variable(Symbol('b'),
+                type=IntBaseType(String('integer')),
+                value=Integer(0)
+                )
+            )
+
+        assert res2[2] == Declaration(
+            Variable(Symbol('c'),
+                type=IntBaseType(String('integer')),
+                value=Integer(0)
+                )
+            )
+
+        assert res2[3] == Declaration(
+            Variable(Symbol('d'),
+                type=IntBaseType(String('integer')),
+                value=Symbol('a')
+                )
+            )
+
+        assert res2[4] == Declaration(
+            Variable(Symbol('e'),
+                type=IntBaseType(String('integer')),
+                value=Add(
+                    Symbol('a'),
+                    Integer(1)
+                    )
+                )
+            )
+
+        assert res2[5] == Declaration(
+            Variable(Symbol('f'),
+                type=IntBaseType(String('integer')),
+                value=Add(
+                    Symbol('a'),
+                    Mul(
+                        Symbol('b'),
+                        Symbol('c')
+                        ),
+                    Mul(
+                        Integer(-1),
+                        Symbol('d'),
+                        Pow(
+                            Symbol('e'),
+                            Integer(-1)
+                            )
+                        )
+                    )
+                )
+            )
+
+
+    def test_unary_operators():
+        c_src1 = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 10;' + '\n' +
+                'int b = 20;' + '\n' +
+                '++a;' + '\n' +
+                '--b;' + '\n' +
+                'a++;' + '\n' +
+                'b--;' + '\n' +
+            '}'
+        )
+
+        c_src2 = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 10;' + '\n' +
+                'int b = -100;' + '\n' +
+                'int c = +19;' + '\n' +
+                'int d = ++a;' + '\n' +
+                'int e = --b;' + '\n' +
+                'int f = a++;' + '\n' +
+                'int g = b--;' + '\n' +
+                'bool h = !false;' + '\n' +
+                'bool i = !d;' + '\n' +
+                'bool j = !0;' + '\n' +
+                'bool k = !10.0;' + '\n' +
+            '}'
+        )
+
+        c_src_raise1 = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 10;' + '\n' +
+                'int b = ~a;' + '\n' +
+            '}'
+        )
+
+        c_src_raise2 = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 10;' + '\n' +
+                'int b = *&a;' + '\n' +
+            '}'
+        )
+
+        res1 = SymPyExpression(c_src1, 'c').return_expr()
+        res2 = SymPyExpression(c_src2, 'c').return_expr()
+
+        assert res1[0] == FunctionDefinition(
+            NoneToken(),
+            name=String('func'),
+            parameters=(),
+            body=CodeBlock(
+                Declaration(
+                    Variable(Symbol('a'),
+                        type=IntBaseType(String('integer')),
+                        value=Integer(10)
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('b'),
+                        type=IntBaseType(String('integer')),
+                        value=Integer(20)
+                        )
+                    ),
+                PreIncrement(Symbol('a')),
+                PreDecrement(Symbol('b')),
+                PostIncrement(Symbol('a')),
+                PostDecrement(Symbol('b'))
+                )
+            )
+
+        assert res2[0] == FunctionDefinition(
+            NoneToken(),
+            name=String('func'),
+            parameters=(),
+            body=CodeBlock(
+                Declaration(
+                    Variable(Symbol('a'),
+                        type=IntBaseType(String('integer')),
+                        value=Integer(10)
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('b'),
+                        type=IntBaseType(String('integer')),
+                        value=Integer(-100)
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('c'),
+                        type=IntBaseType(String('integer')),
+                        value=Integer(19)
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('d'),
+                        type=IntBaseType(String('integer')),
+                        value=PreIncrement(Symbol('a'))
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('e'),
+                        type=IntBaseType(String('integer')),
+                        value=PreDecrement(Symbol('b'))
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('f'),
+                        type=IntBaseType(String('integer')),
+                        value=PostIncrement(Symbol('a'))
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('g'),
+                        type=IntBaseType(String('integer')),
+                        value=PostDecrement(Symbol('b'))
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('h'),
+                        type=Type(String('bool')),
+                        value=true
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('i'),
+                        type=Type(String('bool')),
+                        value=Not(Symbol('d'))
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('j'),
+                        type=Type(String('bool')),
+                        value=true
+                        )
+                    ),
+                Declaration(
+                    Variable(Symbol('k'),
+                        type=Type(String('bool')),
+                        value=false
+                        )
+                    )
+                )
+            )
+
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
+        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
 
 else:
     def test_raise():

@@ -11,6 +11,7 @@ from sympy.core import S
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
+from sympy.core.numbers import Float
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.functions import exp, sqrt, tan, log
@@ -683,6 +684,8 @@ class Factorable(SingleODESolver):
             self.eqs = [(df - root) for root in roots]
             if len(self.eqs)==1:
                 if order>1:
+                    return False
+                if self.eqs[0].has(Float):
                     return False
                 return fraction(factor(self.eqs[0]))[0]-eq!=0
             return True
