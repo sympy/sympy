@@ -418,6 +418,14 @@ def test_sysode_linear_neq_order1():
     assert dsolve(eq16) == sol16
     assert checksysodesol(eq16, sol16) == (True, [0, 0])
 
+    # Regression test case for issue #18562
+    # https://github.com/sympy/sympy/issues/18562
+    eq17 = [Eq(x(t).diff(t), x(t) + a*y(t)), Eq(y(t).diff(t), x(t)*a - y(t))]
+    sol17 = [Eq(x(t), -C1*a*exp(-t*sqrt(a**2 + 1))/(sqrt(a**2 + 1) + 1) + C2*a*exp(t*sqrt(a**2 + 1))/(sqrt(a**2 + 1) - 1)),
+            Eq(y(t), C1*exp(-t*sqrt(a**2 + 1)) + C2*exp(t*sqrt(a**2 + 1)))]
+    assert dsolve(eq17) == sol17
+    assert checksysodesol(eq17, sol17) == (True, [0, 0])
+
     Z0 = Function('Z0')
     Z1 = Function('Z1')
     Z2 = Function('Z2')

@@ -479,7 +479,6 @@ def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
     where $C$ is the vector of constants.
 
     """
-
     # Some parts of code is repeated, this needs to be taken care of
     # The constant vector obtained here can be done so in the match
     # function itself.
