@@ -5,7 +5,7 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
                                        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
                                        _RecognizeMatMulLines, _unfold_recognized_expr,
                                        parse_indexed_expression, recognize_matrix_expression,
-                                       parse_matrix_expression, parse_matrix_expression)
+                                       parse_matrix_expression)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
