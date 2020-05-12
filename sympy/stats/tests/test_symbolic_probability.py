@@ -61,7 +61,7 @@ def test_literal_probability():
     assert Covariance(X + Y, Z + W).expand() == Covariance(W, X) + Covariance(W, Y) + Covariance(X, Z) + Covariance(Y, Z)
     assert Covariance(x*X + y*Y, z*Z + w*W).expand() == (x*w*Covariance(W, X) + w*y*Covariance(W, Y) +
                                                 x*z*Covariance(X, Z) + y*z*Covariance(Y, Z))
-    assert Covariance(x*X**2 + y*sin(Y), z*Y*Z**2 + w*W).doit() == (w*x*Covariance(W, X**2) + w*y*Covariance(sin(Y), W) +
+    assert Covariance(x*X**2 + y*sin(Y), z*Y*Z**2 + w*W).expand() == (w*x*Covariance(W, X**2) + w*y*Covariance(sin(Y), W) +
                                                         x*z*Covariance(Y*Z**2, X**2) + y*z*Covariance(Y*Z**2, sin(Y)))
     assert Covariance(X, X**2).expand() == Covariance(X, X**2)
     assert Covariance(X, sin(X)).expand() == Covariance(sin(X), X)
