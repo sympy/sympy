@@ -137,50 +137,6 @@ def test_transferFunctionModel_eval():
                   G * u).is_zero
 
 
-def test_controllability_matrix():
-    a1, a2, a3 = symbols('a1:4')
-    A = Matrix([[a1, a2, a3],
-                [1, 0, 0],
-                [0, 1, 0]])
-    B = Matrix([1, 0, 0])
-    assert StateSpaceModel(A, B).controllability_matrix() == \
-        Matrix([[1, a1, a1**2 + a2],
-                [0, 1, a1],
-                [0, 0, 1]])
-
-    A = Matrix([[-1, 1, 0],
-                [0, -1, 1],
-                [0, 0, -1]])
-    B = Matrix([[1, 0],
-                [1, 0],
-                [0, 1]])
-    ctrb = StateSpaceModel(A, B).controllability_matrix()
-    assert ctrb == Matrix([[1, 0, 0, 0, -1, 1],
-                           [1, 0, -1, 1, 1, -2],
-                           [0, 1, 0, -1, 0, 1]])
-
-
-def test_controllable():
-    a1, a2, b1, b2 = symbols('a1:3, b1:3')
-    A = Matrix([[a1, 0],
-                [0, a2]])
-    B = Matrix([b1, b2])
-    assert StateSpaceModel(A, B).is_controllable() == True
-
-    B = B.subs(b2, 0)
-    assert StateSpaceModel(A, B).is_controllable() == False
-
-    A = Matrix([[-5., -2.],
-                [6., 2.]])
-    B = Matrix([1., -1.])
-    assert StateSpaceModel(A, B).is_controllable() == True
-
-    A = Matrix([[-1, 0],
-                [0, -3]])
-    B = eye(2)
-    assert StateSpaceModel(A, B).is_controllable() == True
-
-
 def test_StateSpaceModel_series():
     a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
     ssm1 = StateSpaceModel(

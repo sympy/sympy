@@ -1,7 +1,7 @@
 from sympy import (
-    Symbol, var, simplify, oo, exp,
+    Symbol, symbols, simplify, oo, exp,
     Poly, lcm, LC, degree, Integral, integrate,
-    Matrix, BlockMatrix, eye, zeros,
+    Matrix, BlockMatrix, eye, zeros, Basic,
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
     SparseMatrix, MutableDenseMatrix
 )
@@ -17,7 +17,7 @@ _matrixTypes = (
     Matrix, ImmutableMatrix, MutableMatrix, SparseMatrix, MutableDenseMatrix)
 
 
-class StateSpaceModel(object):
+class StateSpaceModel(Basic):
     """State space model (ssm) of a linear, time invariant control system
 
     Represents the standard state-space model with state matrix A, input matrix B, output matrix C, and
@@ -183,7 +183,7 @@ class StateSpaceModel(object):
 
         G: Matrix
             Matrix valued transfer function G(s) in Laplace space
-        s: symbol
+        s: Symbol
             variable s, where G is dependent from
 
         See Also
@@ -518,101 +518,6 @@ class StateSpaceModel(object):
         # return the general solution
         return self.represent[2] * expA * x0 + self.represent[3] * u + integral
 
-    def controllability_matrix(self):
-        """
-        Returns the controllability matrix of the system:
-            C = [B, A * B, A^2 * B, .. , A^(n-1), B]; A in R^(n x n), B in^R^(n x m)
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, symbols
-        >>> from sympy.physics.control.lti import StateSpaceModel
-
-        The controllability matrix only depends on A and B:
-
-        >>> a0, a1, a2 = symbols('a:3')
-        >>> A = Matrix([[a0, a1, a2], [1, 0, 0], [0, 1, 0]])
-        >>> B = Matrix([1, 0, 0])
-        >>> StateSpaceModel(A, B).controllability_matrix()
-        Matrix([
-        [1, a0, a0**2 + a1],
-        [0,  1,         a0],
-        [0,  0,          1]])
-
-        """
-        res = self.represent[1]
-        for i in range(self.represent[0].shape[0] - 1):
-            res = res.row_join(self.represent[0] ** (i + 1) * self.represent[1])
-        return res
-
-    def controllable_subspace(self):
-        """ Returns a list of vectors that span the controllable subspace of the system.
-
-        This subspace consists of the states x0 for which there exists an input u : [t0, t1] -> R^k, that
-        transfers the state x(t0) = x0 to x(t1) = 0.
-
-        The controllable subspace of an lti system is equal to the image of its controllability matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, symbols
-        >>> from sympy.physics.control.lti import StateSpaceModel
-
-        The controllable subspace only depends on A and B:
-
-        >>> a0, a1, a2 = symbols('a:3')
-        >>> A = Matrix([[a0, a1, a2], [1, 0, 0], [0, 1, 0]])
-        >>> B = Matrix([1, 0, 0])
-        >>> StateSpaceModel(A, B).controllable_subspace()
-        [Matrix([
-        [1],
-        [0],
-        [0]]), Matrix([
-        [a0],
-        [ 1],
-        [ 0]]), Matrix([
-        [a0**2 + a1],
-        [        a0],
-        [         1]])]
-
-        """
-        return self.controllability_matrix().columnspace()
-
-    def is_controllable(self):
-        """ Returns True, if the system is controllable.
-
-        A lti system is called 'controllable' if the controllable subspace of the system equals the
-        whole state space R^n. This means, that every state x0 can be transfered to zero at any time.
-
-        The package implements the Eigenvector test for controllability
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, symbols
-        >>> from sympy.physics.control.lti import StateSpaceModel
-
-        The controllability only depends on A and B:
-
-        >>> a1, a2, b1, b2 = symbols('a1:3, b1:3')
-        >>> A = Matrix([[a1, 0], [0, a2]])
-        >>> B = Matrix([b1, b2])
-        >>> StateSpaceModel(A, B).is_controllable()
-        True
-
-        >>> StateSpaceModel(A, B.subs(b2, 0)).is_controllable()
-        False
-
-        """
-        for eigenvect_of_A_tr in self.represent[0].transpose().eigenvects():
-            for idx in range(eigenvect_of_A_tr[1]):
-                if (self.represent[1].transpose() * eigenvect_of_A_tr[2][idx]).is_zero:
-                    return False
-
-        return True
-
     def series(self, other):
         """ Returns the series interconnection of the system and another system
 
@@ -847,10 +752,7 @@ class TransferFunctionModel(object):
     def __init__(self, arg, s=None):
 
         # check if a variable is given, if not create a new one as class-wide variable
-        if s:
-            self.s = s
-        else:
-            self.s = var('s')
+        self.s = s if s else Symbol('s')
 
         # constructor from a given state space model
         if isinstance(arg, StateSpaceModel):
