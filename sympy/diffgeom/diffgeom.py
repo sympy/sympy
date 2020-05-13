@@ -32,6 +32,13 @@ class Manifold(Atom):
     defined on the manifold. It does not provide any means to study the
     topological characteristics of the manifold that it represents.
 
+    Parameters
+    ==========
+    name : str
+        The name of the manifold.
+    
+    dim : int
+        The dimension of the manifold.
     """
 
     def __new__(cls, name, dim):
@@ -47,7 +54,10 @@ class Manifold(Atom):
         return self.name, self.dim
 
 class Patch(Atom):
-    """Object representing a patch on a manifold.
+    """A patch on a manifold.
+
+    Explanation
+    ===========
 
     On a manifold one can have many patches that do not always include the
     whole manifold. On these patches coordinate charts can be defined that
@@ -56,6 +66,14 @@ class Patch(Atom):
 
     This object serves as a container/parent for all coordinate system charts
     that can be defined on the patch it represents.
+
+    Parameters
+    ==========
+    name : string
+        The name of the patch.
+    
+    manifold : Manifold
+        The manifold on which the patch is defined.
 
     Examples
     ========
@@ -89,7 +107,24 @@ class Patch(Atom):
         return self.name, self.manifold
 
 class CoordSystem(Atom):
-    """Contains all coordinate transformation logic.
+    """A coordinate system defined on the patch
+
+    Explanation
+    ===========
+
+    This class contains all coordinate transformation logic.
+
+    Parameters
+    ==========
+
+    name : string
+        The name of the coordinate system.
+    
+    patch : Patch
+        The patch where the coordinate system is defined.
+
+    names : list of strings, optional
+        Determines how base scalar fields will be printed.
 
     Examples
     ========
@@ -341,7 +376,10 @@ class CoordSystem(Atom):
     ##########################################################################
 
 class Point(Basic):
-    """Point in a Manifold object.
+    """Point defined in a coordinate system.
+
+    Explanation
+    ===========
 
     To define a point you must supply coordinates and a coordinate system.
 
@@ -349,6 +387,14 @@ class Point(Basic):
     coordinate system that was used in order to define it, however due to
     limitations in the simplification routines you can arrive at complicated
     expressions if you use inappropriate coordinate systems.
+
+    Parameters
+    ==========
+
+    coord_sys : CoordSystem
+
+    coords: list of sympy expressions
+        The coordinates of the point.
 
     Examples
     ========
@@ -403,6 +449,9 @@ class Point(Basic):
 class BaseScalarField(AtomicExpr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
 
+    Explanation
+    ===========
+
     A scalar field takes a point as an argument and returns a scalar.
 
     A base scalar field of a coordinate system takes a point and returns one of
@@ -418,6 +467,13 @@ class BaseScalarField(AtomicExpr):
 
     You can build complicated scalar fields by just building up SymPy
     expressions containing ``BaseScalarField`` instances.
+
+    Parameters
+    ==========
+
+    coord_sys : CoordSystem
+
+    index : integer
 
     Examples
     ========
@@ -490,6 +546,9 @@ class BaseScalarField(AtomicExpr):
 class BaseVectorField(AtomicExpr):
     r"""Vector Field over a Manifold.
 
+    Explanation
+    ===========
+
     A vector field is an operator taking a scalar field and returning a
     directional derivative (which is also a scalar field).
 
@@ -503,6 +562,13 @@ class BaseVectorField(AtomicExpr):
     coordinate system in which it was defined, however due to limitations in the
     simplification routines you may arrive at more complicated expression if you
     use unappropriate coordinate systems.
+
+    Parameters
+    ==========
+
+    coord_sys : CoordSystem
+
+    index : integer
 
     Examples
     ========
