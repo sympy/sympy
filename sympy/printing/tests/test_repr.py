@@ -185,7 +185,7 @@ def test_Dummy_from_Symbol():
     n = Symbol('n', integer=True)
     d = n.as_dummy()
     assert srepr(d
-        ) == "Dummy('n', dummy_index=%s)" % str(d.dummy_index)
+        ) == "Dummy('n', commutative=True, dummy_index=%s)" % str(d.dummy_index)
 
 
 def test_tuple():

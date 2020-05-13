@@ -273,7 +273,7 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        return Dummy(self.name)
+        return Dummy(self.name, commutative=self.is_commutative)
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re
