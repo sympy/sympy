@@ -281,12 +281,21 @@ def test_as_dummy():
     u, v, x, y, z, _0, _1 = symbols('u v x y z _0 _1')
     assert Lambda(x, x + 1).as_dummy() == Lambda(_0, _0 + 1)
     assert Lambda(x, x + _0).as_dummy() == Lambda(_1, _0 + _1)
-    assert (1 + Sum(x, (x, 1, x))).as_dummy() == 1 + Sum(_0, (_0, 1, x))
+    eq = (1 + Sum(x, (x, 1, x)))
+    ans = 1 + Sum(_0, (_0, 1, x))
+    once = eq.as_dummy()
+    assert once == ans
+    twice = once.as_dummy()
+    assert twice == ans
+    assert Integral(x + _0, (x, x + 1), (_0, 1, 2)
+        ).as_dummy() == Integral(_0 + _1, (_0, x + 1), (_1, 1, 2))
 
 
 def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')
     assert Integral(x, (x, x + 1)).canonical_variables == {x: i0}
+    assert Integral(x, (x, x + 1), (i0, 1, 2)).canonical_variables == {
+        x: i0, i0: i1}
     assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}
 
 
