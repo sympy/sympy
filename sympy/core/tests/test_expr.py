@@ -619,6 +619,34 @@ def test_is_rational_function():
     assert (S.NegativeInfinity).is_rational_function() is False
     assert (S.ComplexInfinity).is_rational_function() is False
 
+def test_is_meromorphic():
+    f = a/x**2 + b + x + c*x**2
+    assert f.is_meromorphic(x, 0) is True
+    assert f.is_meromorphic(x, 1) is True
+    assert f.is_meromorphic(x, zoo) is True
+
+    g = 3 + 2*x**(log(3)/log(2) - 1)
+    assert g.is_meromorphic(x, 0) is None
+    assert g.is_meromorphic(x, 1) is True
+    assert g.is_meromorphic(x, zoo) is None
+
+    n = Symbol('n', integer=True)
+    h = sin(1/x)**n*x
+    assert h.is_meromorphic(x, 0) is False
+    assert h.is_meromorphic(x, 1) is True
+    assert h.is_meromorphic(x, zoo) is True
+
+    e = log(x)**pi
+    assert e.is_meromorphic(x, 0) is False
+    assert e.is_meromorphic(x, 1) is False
+    assert e.is_meromorphic(x, 2) is True
+    assert e.is_meromorphic(x, zoo) is False
+
+    assert (log(x)**a).is_meromorphic(x, 0) is False
+    assert (log(x)**a).is_meromorphic(x, 1) is None
+    assert (a**log(x)).is_meromorphic(x, 0) is None
+    assert (3**log(x)).is_meromorphic(x, 0) is False
+    assert (3**log(x)).is_meromorphic(x, 1) is True
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
