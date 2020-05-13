@@ -2633,6 +2633,18 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+    def _print_Manifold(self, manifold):
+        return self._print(manifold.name)
+
+    def _print_Patch(self, patch):
+        return self._print(patch.name)
+
+    def _print_CoordSystem(self, coords):
+        return self._print(coords.name)
+
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys._names[field._index]
+        return self._print(string)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
