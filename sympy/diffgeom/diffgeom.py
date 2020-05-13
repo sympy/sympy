@@ -36,7 +36,7 @@ class Manifold(Atom):
     ==========
     name : str
         The name of the manifold.
-    
+
     dim : int
         The dimension of the manifold.
     """
@@ -71,7 +71,7 @@ class Patch(Atom):
     ==========
     name : string
         The name of the patch.
-    
+
     manifold : Manifold
         The manifold on which the patch is defined.
 
@@ -119,7 +119,7 @@ class CoordSystem(Atom):
 
     name : string
         The name of the coordinate system.
-    
+
     patch : Patch
         The patch where the coordinate system is defined.
 
