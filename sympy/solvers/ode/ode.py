@@ -571,7 +571,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
-    from sympy.solvers.ode.systems import _neq_linear_first_order_nonconst_coeff_homogeneous
 
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -605,8 +604,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                 # added in systems.py
                 if match.get('is_general', False):
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
-                elif match.get('is_homogeneous', False) and "commutative_antiderivative" in match:
-                    solvefunc = _neq_linear_first_order_nonconst_coeff_homogeneous
                 else:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
@@ -7483,13 +7480,13 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 
 def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import (_neq_linear_first_order_const_coeff_homogeneous,
-        _neq_linear_first_order_nonconst_coeff_homogeneous)
+    from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
+        _linear_neq_order1_type3)
 
     if match['type_of_equation'] == 'type1':
-        sol = _neq_linear_first_order_const_coeff_homogeneous(match)
+        sol = _linear_neq_order1_type1(match)
     elif match['type_of_equation'] == 'type3':
-        sol = _neq_linear_first_order_nonconst_coeff_homogeneous(match)
+        sol = _linear_neq_order1_type3(match)
     return sol
 
 

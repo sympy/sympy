@@ -283,11 +283,11 @@ Matrix Exponential
 
 Linear, n equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems._neq_linear_first_order_const_coeff_homogeneous
+.. autofunction:: sympy.solvers.ode.systems._linear_neq_order1_type1
 
 Linear, n equations, Order 1, Type 3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems._neq_linear_first_order_nonconst_coeff_homogeneous
+.. autofunction:: sympy.solvers.ode.systems._linear_neq_order1_type3
 
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

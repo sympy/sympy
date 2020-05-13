@@ -379,7 +379,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def _neq_linear_first_order_const_coeff_homogeneous(match_):
+def _linear_neq_order1_type1(match_):
     r"""
     System of n first-order constant-coefficient linear homogeneous differential equations
 
@@ -454,7 +454,7 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def _neq_linear_first_order_nonconst_coeff_homogeneous(match_):
+def _linear_neq_order1_type3(match_):
     r"""
     System of n first-order nonconstant-coefficient linear homogeneous differential equations
 
