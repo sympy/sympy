@@ -244,8 +244,10 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
+        if isinstance(symbol, str):
+            symbol = Symbol(symbol)
         if not isinstance(symbol, Symbol):
-            raise TypeError("symbol should be of type Symbol")
+            raise TypeError("symbol should be of type Symbol or string")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
@@ -739,6 +741,10 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
+    if pspace(expr) == PSpace():
+        from sympy.stats.symbolic_probability import Expectation
+        return Expectation(expr)
+
     result = pspace(expr).compute_expectation(expr, evaluate=evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
@@ -817,6 +823,10 @@ def probability(condition, given_condition=None, numsamples=None,
         return probability(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
+    if pspace(condition) == PSpace():
+        from sympy.stats.symbolic_probability import Probability
+        return Probability(condition, given_condition)
+
     result = pspace(condition).probability(condition, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit()

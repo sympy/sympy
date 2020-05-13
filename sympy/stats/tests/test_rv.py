@@ -6,7 +6,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
-        BernoulliProcess)
+        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random)
 from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
@@ -359,3 +359,13 @@ def test_is_random():
     assert is_random(X * Y * B[1])
     assert is_random(Matrix([[X, B[2]], [G, Y]]))
     assert is_random(Eq(X, 4))
+
+def test_issue_12283():
+    x = symbols('x')
+    X = RandomSymbol(x)
+    Y = RandomSymbol('Y')
+    assert pspace(X) == PSpace()
+    assert E(X) == Expectation(X)
+    assert P(X > 3) == Probability(X > 3)
+    assert variance(X) == Variance(X)
+    assert covariance(X, Y) == Covariance(X, Y)
