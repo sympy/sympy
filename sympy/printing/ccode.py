@@ -584,10 +584,10 @@ class C89CodePrinter(CodePrinter):
         return '(%s)' % ', '.join(map(lambda arg: self._print(arg), expr.args))
 
     def _print_Label(self, expr):
-        return '%s:' % str(expr)
+        return '%s: \n%s' % (str(expr.name), self._print_CodeBlock(expr.body))
 
     def _print_goto(self, expr):
-        return 'goto %s' % expr.label
+        return 'goto %s;' % expr.label.name
 
     def _print_PreIncrement(self, expr):
         arg, = expr.args
@@ -612,10 +612,13 @@ class C89CodePrinter(CodePrinter):
         )
 
     def _print_BreakToken(self, _):
-        return 'break'
+        return 'break;'
 
     def _print_ContinueToken(self, _):
-        return 'continue'
+        return 'continue;'
+
+    def _print_NullStatement(self, _):
+        return ';'
 
     _print_union = _print_struct
 
