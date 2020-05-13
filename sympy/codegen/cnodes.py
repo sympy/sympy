@@ -47,13 +47,14 @@ class Label(Node):
     Examples
     ========
 
+    >>> from sympy import Symbol
     >>> from sympy.codegen.cnodes import Label, PreIncrement
     >>> from sympy.printing.ccode import ccode
     >>> print(ccode(Label('foo')))
     foo:
     >>> print(ccode(Label('bar', [PreIncrement(Symbol('a'))])))
     bar:
-    ++(a)
+    ++(a);
 
     """
     __slots__ = ('name', 'body')
