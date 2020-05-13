@@ -1891,6 +1891,9 @@ class Lambda(Expr):
     'lambda x: expr'. A function of several variables is written as
     Lambda((x, y, ...), expr).
 
+    Examples
+    ========
+
     A simple example:
 
     >>> from sympy import Lambda
