@@ -315,6 +315,11 @@ def _test_pl(fc, q, pl):
 
 def dup_zz_zassenhaus(f, K):
     """Factor primitive square-free polynomials in `Z[x]`. """
+    import sympy.polys
+
+    import mpmath
+    from mpmath.libmp.libhyper import NoConvergence
+
     n = dup_degree(f)
 
     if n == 1:
