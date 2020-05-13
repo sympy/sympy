@@ -21,10 +21,6 @@ def test_point():
 
 
 def test_rebuild():
-    assert m == m.func(*m.args)
-    assert p == p.func(*p.args)
-    assert cs == cs.func(*cs.args)
-    assert cs_noname == cs_noname.func(*cs_noname.args)
     assert s1 == s1.func(*s1.args)
     assert v1 == v1.func(*v1.args)
     assert f1 == f1.func(*f1.args)

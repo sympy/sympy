@@ -3,7 +3,10 @@ from typing import Any, Set
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
-from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core import (
+    AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff,
+    Pow, Mul, Add, Symbol, symbols, Tuple, Atom
+)
 from sympy.core.compatibility import reduce
 from sympy.core.numbers import Zero
 from sympy.functions import factorial
@@ -19,18 +22,20 @@ from sympy.solvers import solve
 from sympy.tensor.array import ImmutableDenseNDimArray
 
 
-class Manifold(Basic):
-    """Object representing a mathematical manifold.
+class Manifold(Atom):
+    """A mathematical manifold.
+
+    Explanation
+    ===========
 
     The only role that this object plays is to keep a list of all patches
     defined on the manifold. It does not provide any means to study the
     topological characteristics of the manifold that it represents.
 
     """
+
     def __new__(cls, name, dim):
-        name = sympify(name)
-        dim = sympify(dim)
-        obj = Basic.__new__(cls, name, dim)
+        obj = super().__new__(cls)
         obj.name = name
         obj.dim = dim
         obj.patches = []
@@ -38,11 +43,8 @@ class Manifold(Basic):
         # other Patch instance on the same manifold.
         return obj
 
-    def _latex(self, printer, *args):
-        return r'\text{%s}' % self.name
 
-
-class Patch(Basic):
+class Patch(Atom):
     """Object representing a patch on a manifold.
 
     On a manifold one can have many patches that do not always include the
@@ -68,8 +70,7 @@ class Patch(Basic):
     # Contains a reference to the parent manifold in order to be able to access
     # other patches.
     def __new__(cls, name, manifold):
-        name = sympify(name)
-        obj = Basic.__new__(cls, name, manifold)
+        obj = super().__new__(cls)
         obj.name = name
         obj.manifold = manifold
         obj.manifold.patches.append(obj)
@@ -82,11 +83,8 @@ class Patch(Basic):
     def dim(self):
         return self.manifold.dim
 
-    def _latex(self, printer, *args):
-        return r'\text{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
 
-
-class CoordSystem(Basic):
+class CoordSystem(Atom):
     """Contains all coordinate transformation logic.
 
     Examples
@@ -179,18 +177,13 @@ class CoordSystem(Basic):
     #  Contains a reference to the parent patch in order to be able to access
     # other coordinate system charts.
     def __new__(cls, name, patch, names=None):
-        name = sympify(name)
         # names is not in args because it is related only to printing, not to
         # identifying the CoordSystem instance.
         if not names:
             names = ['%s_%d' % (name, i) for i in range(patch.dim)]
-        if isinstance(names, Tuple):
-            obj = Basic.__new__(cls, name, patch, names)
-        else:
-            names = Tuple(*symbols(names))
-            obj = Basic.__new__(cls, name, patch, names)
+        obj = super().__new__(cls)
         obj.name = name
-        obj._names = [str(i) for i in names.args]
+        obj._names = [str(i) for i in names]
         obj.patch = patch
         obj.patch.coord_systems.append(obj)
         obj.transforms = {}
@@ -339,11 +332,6 @@ class CoordSystem(Basic):
     ##########################################################################
     # Printing.
     ##########################################################################
-
-    def _latex(self, printer, *args):
-        return r'\text{%s}^{\text{%s}}_{%s}' % (
-            self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
-
 
 class Point(Basic):
     """Point in a Manifold object.
@@ -1081,9 +1069,6 @@ class CovarDerivativeOp(Expr):
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
                     for v in vectors]
         return self._wrt.subs(list(zip(vectors, base_ops))).rcall(field)
-
-    def _latex(self, printer, *args):
-        return r'\mathbb{\nabla}_{%s}' % printer._print(self._wrt)
 
 
 ###############################################################################
