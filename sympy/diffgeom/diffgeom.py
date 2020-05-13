@@ -43,6 +43,8 @@ class Manifold(Atom):
         # other Patch instance on the same manifold.
         return obj
 
+    def _hashable_content(self):
+        return self.name, self.dim
 
 class Patch(Atom):
     """Object representing a patch on a manifold.
@@ -83,6 +85,8 @@ class Patch(Atom):
     def dim(self):
         return self.manifold.dim
 
+    def _hashable_content(self):
+        return self.name, self.manifold
 
 class CoordSystem(Atom):
     """Contains all coordinate transformation logic.
@@ -183,7 +187,7 @@ class CoordSystem(Atom):
             names = ['%s_%d' % (name, i) for i in range(patch.dim)]
         obj = super().__new__(cls)
         obj.name = name
-        obj._names = [str(i) for i in names]
+        obj._names = tuple(str(i) for i in names)
         obj.patch = patch
         obj.patch.coord_systems.append(obj)
         obj.transforms = {}
@@ -201,6 +205,9 @@ class CoordSystem(Atom):
     @property
     def dim(self):
         return self.patch.dim
+
+    def _hashable_content(self):
+        return self.name, self.patch, self._names
 
     ##########################################################################
     # Coordinate transformations.
