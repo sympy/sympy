@@ -1,13 +1,14 @@
 from __future__ import unicode_literals
 from sympy import (S, Symbol, Interval, exp,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta, Lambda, log, pi, FallingFactorial, Rational)
+        DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
-        density, given, independent, dependent, where, pspace,
+        density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
-        DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
+        DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
+        BernoulliProcess)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, sample_iter, PSpace)
+        RandomSymbol, sample_iter, PSpace, is_random)
 from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
@@ -338,3 +339,23 @@ def test_issue_12237():
     assert W == P(X + Y > 0, X)
     assert U == BernoulliDistribution(S.Half, S.Zero, S.One)
     assert V == S.Half
+
+def test_is_random():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+    a, b = symbols('a, b')
+    G = GaussianUnitaryEnsemble('U', 2)
+    B = BernoulliProcess('B', 0.9)
+    assert not is_random(a)
+    assert not is_random(a + b)
+    assert not is_random(a * b)
+    assert not is_random(Matrix([a**2, b**2]))
+    assert is_random(X)
+    assert is_random(X**2 + Y)
+    assert is_random(Y + b**2)
+    assert is_random(Y > 5)
+    assert is_random(B[3] < 1)
+    assert is_random(G)
+    assert is_random(X * Y * B[1])
+    assert is_random(Matrix([[X, B[2]], [G, Y]]))
+    assert is_random(Eq(X, 4))
