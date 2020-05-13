@@ -23,7 +23,8 @@ from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
-    int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
+    int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped,
+    none
 )
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -584,7 +585,9 @@ class C89CodePrinter(CodePrinter):
         return '(%s)' % ', '.join(map(lambda arg: self._print(arg), expr.args))
 
     def _print_Label(self, expr):
-        return '%s: \n%s' % (str(expr.name), self._print_CodeBlock(expr.body))
+        if expr.body == none:
+            return '%s:' % str(expr.name)
+        return '%s:\n%s' % (str(expr.name), self._print_CodeBlock(expr.body))
 
     def _print_goto(self, expr):
         return 'goto %s;' % expr.label.name
