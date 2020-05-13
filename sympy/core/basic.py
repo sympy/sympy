@@ -409,7 +409,7 @@ class Basic(metaclass=ManagedProperties):
 
         tmp = dummy.__class__()
 
-        return s.subs(dummy, tmp) == o.subs(symbol, tmp)
+        return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
