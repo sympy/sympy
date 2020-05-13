@@ -562,28 +562,24 @@ class Basic(metaclass=ManagedProperties):
         Notes
         =====
 
-        Any object that has structural dummy variables should have
-        a property, `bound_symbols` that returns a list of structural
-        dummy symbols of the object itself.
+        Any object that has structurally bound variables should have
+        a property, `bound_symbols` that returns those symbols
+        appearing in the object.
 
-        Lambda and Subs have bound symbols, but because of how they
-        are cached, they already compare the same regardless of their
-        bound symbols:
-
-        >>> from sympy import Lambda
-        >>> Lambda(x, x + 1) == Lambda(y, y + 1)
-        True
         """
+        from sympy.core.symbol import Dummy, Symbol
         def can(x):
-            d = {i: i.as_dummy() for i in x.bound_symbols}
             # mask free that shadow bound
+            free = x.free_symbols
+            bound = set(x.bound_symbols)
+            d = {i: Dummy() for i in bound & free}
             x = x.subs(d)
-            c = x.canonical_variables
-            # replace bound
-            x = x.xreplace(c)
-            # undo masking
-            x = x.xreplace({v: k for k, v in d.items()})
-            return x
+            # replace bound with canonical names
+            x = x.xreplace(x.canonical_variables)
+            # return after undoing masking
+            return x.xreplace({v: k for k, v in d.items()})
+        if not self.has(Symbol):
+            return self
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
             lambda x: can(x))
@@ -592,7 +588,7 @@ class Basic(metaclass=ManagedProperties):
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
         ``self.bound_symbols`` to Symbols that do not clash
-        with any existing symbol in the expression.
+        with any free symbols in the expression.
 
         Examples
         ========
@@ -602,22 +598,21 @@ class Basic(metaclass=ManagedProperties):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        from sympy.core.symbol import Symbol
         from sympy.utilities.iterables import numbered_symbols
         if not hasattr(self, 'bound_symbols'):
             return {}
         dums = numbered_symbols('_')
         reps = {}
-        v = self.bound_symbols
-        # this free will include bound symbols that are not part of
-        # self's bound symbols
-        free = {i.name for i in self.atoms(Symbol) - set(v)}
-        for v in v:
+        # watch out for free symbol that are not in bound symbols;
+        # those that are in bound symbols are about to get changed
+        bound = self.bound_symbols
+        names = {i.name for i in self.free_symbols - set(bound)}
+        for b in bound:
             d = next(dums)
-            if v.is_Symbol:
-                while v.name == d.name or d.name in free:
+            if b.is_Symbol:
+                while d.name in names:
                     d = next(dums)
-            reps[v] = d
+            reps[b] = d
         return reps
 
     def rcall(self, *args):
