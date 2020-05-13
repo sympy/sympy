@@ -171,10 +171,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
         except NonlinearError:
             raise ODENonlinearError("The system of ODEs is nonlinear.")
 
-        # 19185: To be changed when we have figured out why the minus
-        # sign isn't expanded.
-        # Note: The below statement has been commented for an experiment.
-        # Ai = Ai.applyfunc(expand)
+        Ai = Ai.applyfunc(expand)
 
         As.append(Ai)
 
