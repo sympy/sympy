@@ -122,4 +122,3 @@ class union(struct):
 
 class NullStatement(Basic):
     """ Represents the null statement in C """
-
