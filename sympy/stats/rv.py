@@ -15,11 +15,12 @@ sympy.stats.rv_interface
 
 from __future__ import print_function, division
 
+from functools import singledispatch
 from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, MatrixBase)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -640,7 +641,7 @@ def given(expr, condition=None, **kwargs):
          2*\/ pi
     """
 
-    if not random_symbols(condition) or pspace_independent(expr, condition):
+    if not is_random(condition) or pspace_independent(expr, condition):
         return expr
 
     if isinstance(condition, RandomSymbol):
@@ -718,7 +719,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     5
     """
 
-    if not random_symbols(expr):  # expr isn't random?
+    if not is_random(expr):  # expr isn't random?
         return expr
     if numsamples:  # Computing by monte carlo sampling?
         evalf = kwargs.get('evalf', True)
@@ -1514,3 +1515,40 @@ def _symbol_converter(sym):
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
+
+
+@singledispatch
+def is_random(x):
+    return False
+
+@is_random.register(RandomSymbol)
+def _(x):
+    return True
+
+@is_random.register(Expr)
+def _(x):
+    atoms = x.free_symbols
+    if len(atoms) == 1 and next(iter(atoms)) == x:
+        return False
+    return any([is_random(i) for i in atoms])
+
+@is_random.register(Boolean)
+def _(x):
+    atoms = x.free_symbols
+    return any([is_random(i) for i in atoms])
+
+@is_random.register(Indexed)
+def _(x):
+    return is_random(x.base)
+
+@is_random.register(MatrixBase)
+def _(x):
+    return any([is_random(i) for i in x])
+
+@is_random.register(RandomMatrixSymbol)
+def _(x):
+    return True
+
+@is_random.register(RandomIndexedSymbol)
+def _(x):
+    return True

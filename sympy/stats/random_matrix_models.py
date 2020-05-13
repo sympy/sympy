@@ -3,11 +3,11 @@ from __future__ import print_function, division
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
                    gamma, Product, Dummy, Sum, Abs, IndexedBase, I)
 from sympy.core.sympify import _sympify
-from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
-                            RandomSymbol)
+from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol, is_random
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
+
 
 __all__ = [
     'CircularEnsemble',
@@ -351,7 +351,7 @@ def JointEigenDistribution(mat):
 
     """
     eigenvals = mat.eigenvals(multiple=True)
-    if any(not eigenval.has(RandomSymbol) for eigenval in set(eigenvals)):
+    if any(not is_random(eigenval) for eigenval in set(eigenvals)):
         raise ValueError("Eigen values don't have any random expression, "
                          "joint distribution cannot be generated.")
     return JointDistributionHandmade(*eigenvals)

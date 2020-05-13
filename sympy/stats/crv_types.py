@@ -65,7 +65,7 @@ from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
-from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.rv import _value_check, is_random
 
 oo = S.Infinity
 
@@ -127,7 +127,7 @@ def rv(symbol, cls, args):
     dist = cls(*args)
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
-    if any(isinstance(arg, RandomSymbol) for arg in args):
+    if any(is_random(arg) for arg in args):
         pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
