@@ -7,7 +7,7 @@ import sys
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic, _aresame)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols, Symbol
+from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
@@ -289,6 +289,12 @@ def test_as_dummy():
     assert twice == ans
     assert Integral(x + _0, (x, x + 1), (_0, 1, 2)
         ).as_dummy() == Integral(_0 + _1, (_0, x + 1), (_1, 1, 2))
+    for T in (Symbol, Dummy):
+        d = T('x', real=True)
+        D = d.as_dummy()
+        assert D != d and D.func == Dummy and D.is_real is None
+    assert Dummy().as_dummy().is_commutative
+    assert Dummy(commutative=False).as_dummy().is_commutative is False
 
 
 def test_canonical_variables():

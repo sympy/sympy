@@ -546,7 +546,9 @@ class Basic(metaclass=ManagedProperties):
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
-        assumption for commutativity being True.
+        assumption for commutativity being True. When applied to a
+        symbol a new symbol having only the same commutativity will be
+        returned.
 
         Examples
         ========
@@ -558,6 +560,8 @@ class Basic(metaclass=ManagedProperties):
         Integral(_0, (_0, x))
         >>> _.variables[0].is_real is None
         True
+        >>> r.as_dummy()
+        _r
 
         Notes
         =====
