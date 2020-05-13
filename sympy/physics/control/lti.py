@@ -99,82 +99,52 @@ class StateSpaceModel(Basic):
     """
 
     def __init__(self, *arg):
+        if len(arg) == 0:
+            self.represent = [zeros(1)] * 4
+        else:
+            if isinstance(arg[0], TransferFunctionModel):
+                # call the private method for realization finding
+                self.represent = self.find_realization(arg[0].G, arg[0].s)
 
-        def zero():
-            self.represent[0] = zeros(1)
-            self.represent[1] = zeros(1)
-            self.represent[2] = zeros(1)
-            self.represent[3] = zeros(1)
-
-        def one():
-            self.represent[1] = zeros(self.represent[0].shape[0], 1)
-            self.represent[2] = zeros(1, self.represent[0].shape[1])
-            self.represent[3] = zeros(1)
-
-        def two():
-            if not self.represent[0].shape[0] == self.represent[1].shape[0]:
-                raise ShapeError("Shapes of A,B,C,D must fit")
-            self.represent[2] = zeros(1, self.represent[0].shape[1])
-            self.represent[3] = zeros(1, self.represent[1].shape[1])
-
-        def three():
-            if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
-                    (self.represent[0].shape[1] == self.represent[2].shape[1])):
-                raise ShapeError("Shapes of A,B,C,D must fit")
-            self.represent[3] = zeros(self.represent[2].shape[0],
-                                      self.represent[1].shape[1])
-
-        def default():
-            # assert that A,B,C,D have matching shapes
-            if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
-                    (self.represent[0].shape[1] == self.represent[2].shape[1]) and
-                    (self.represent[1].shape[1] == self.represent[3].shape[1]) and
-                    (self.represent[2].shape[0] == self.represent[3].shape[0])):
-                raise ShapeError("Shapes of A,B,C,D must fit")
-
-        def transferfunction():
-            # call the private method for realization finding
-            self.represent = self._find_realization(arg[0].G, arg[0].s)
-
-            # create a block matrix [[A,B], [C,D]] for visual representation
-            self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
-                                               [self.represent[2], self.represent[3]]])
-
-        try:
-            if len(arg) == 0:
-                self.represent = [None] * 4
-                zero()
-            else:
-                if isinstance(arg[0], TransferFunctionModel):
-                    transferfunction()
-
-                else:
-                    # store the argument as representation of the system, fill
-                    # in noneset args with None
-                    self.represent = [None] * 4
-                    for i, a in enumerate(arg):
-                        self.represent[i] = a
-
-                    {
-                        1: one,
-                        2: two,
-                        3: three
-                    }.get(len(arg), default)()
-
-            # create a block matrix [[A,B], [C,D]] for visual representation
-            self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
+                # create a block matrix [[A,B], [C,D]] for visual representation
+                self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
                                                 [self.represent[2], self.represent[3]]])
-            return None
+            else:
+                # store the argument as representation of the system, fill
+                # in noneset args with None
+                self.represent = [None] * 4
+                for i, a in enumerate(arg):
+                    self.represent[i] = a
 
-        except TypeError:
-            raise TypeError("entries of 'representation' must be matrices")
-        except AttributeError:
-            raise TypeError("entries of 'representation' must be matrices")
-        except IndexError:
-            raise TypeError("'representation' must have at least 4 matrix-valued entries")
+                if len(arg) == 1:
+                    self.represent[1] = zeros(self.represent[0].shape[0], 1)
+                    self.represent[2] = zeros(1, self.represent[0].shape[1])
+                    self.represent[3] = zeros(1)
+                elif len(arg) == 2:
+                    if not self.represent[0].shape[0] == self.represent[1].shape[0]:
+                        raise ShapeError("Shapes of A,B,C,D must fit")
+                    self.represent[2] = zeros(1, self.represent[0].shape[1])
+                    self.represent[3] = zeros(1, self.represent[1].shape[1])
+                elif len(arg) == 3:
+                    if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
+                            (self.represent[0].shape[1] == self.represent[2].shape[1])):
+                        raise ShapeError("Shapes of A,B,C,D must fit")
+                    self.represent[3] = zeros(self.represent[2].shape[0],
+                                            self.represent[1].shape[1])
+                else:
+                    # assert that A,B,C,D have matching shapes
+                    if not ((self.represent[0].shape[0] == self.represent[1].shape[0]) and
+                            (self.represent[0].shape[1] == self.represent[2].shape[1]) and
+                            (self.represent[1].shape[1] == self.represent[3].shape[1]) and
+                            (self.represent[2].shape[0] == self.represent[3].shape[0])):
+                        raise ShapeError("Shapes of A,B,C,D must fit")
 
-    def _find_realization(self, G, s):
-        """ Representation [A, B, C, D] of the state space model
+        # create a block matrix [[A,B], [C,D]] for visual representation
+        self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
+                                            [self.represent[2], self.represent[3]]])
+
+    def find_realization(self, G, s):
+        """ Representation (A, B, C, D) of the state space model
 
         Returns the representation in state space of a given transfer function
 
@@ -203,11 +173,11 @@ class StateSpaceModel(Basic):
             m, k = G.shape
 
         except AttributeError:
-            raise TypeError("G must be a matrix")
+            raise TypeError("G must be a matrix.")
 
         # test if G is proper
-        if not _is_proper(G, s, strict=False):
-            raise ValueError("G must be proper!")
+        if not is_proper(G, s, strict=False):
+            raise ValueError("G must be proper.")
 
         # define D as the limit of G for s to infinity
         D = G.limit(s, oo)
@@ -228,7 +198,7 @@ class StateSpaceModel(Basic):
         # get the degree of the lcd
         lcd_deg = degree(lcd, s)
 
-        # get the Matrix Valued Coeffs of G_sp in G_sp = 1/lcd * (N_1 * s**(n-1) + N_2 * s**(n-2) .. +N_n)
+        # get the Matrix Valued Coeffs of G_sp in G_sp = 1/lcd * (N_1 * s**(n-1) + N_2 * s**(n-2) .. + N_n)
         G_sp_coeff = _matrix_coeff(simplify(G_sp * lcd), s)
         G_sp_coeff = [zeros(m, k)] * (lcd_deg - len(G_sp_coeff)) + G_sp_coeff
 
@@ -240,17 +210,11 @@ class StateSpaceModel(Basic):
             A = A.row_join((-1) * alpha * eye(k))
 
         for i in range(lcd_deg - 1):
-            if i == 0:
-                tmp = eye(k)
-            else:
-                tmp = zeros(k)
+            tmp = eye(k) if i == 0 else zeros(k)
 
             for j in range(1, lcd_deg):
-                if j == i:
-                    tmp = tmp.row_join(eye(k))
-                else:
-                    tmp = tmp.row_join(zeros(k))
-            if tmp is not None:
+                tmp = tmp.row_join(eye(k)) if j == i else tmp.row_join(zeros(k))
+            if tmp:
                 A = A.col_join(tmp)
 
         # define B
@@ -264,7 +228,7 @@ class StateSpaceModel(Basic):
             C = C.row_join(G_sp_coeff[i])
 
         # return the state space representation
-        return [A, B, C, D]
+        return (A, B, C, D)
 
     #
     # evaluate(self, u, t)
@@ -519,7 +483,8 @@ class StateSpaceModel(Basic):
         return self.represent[2] * expA * x0 + self.represent[3] * u + integral
 
     def series(self, other):
-        """ Returns the series interconnection of the system and another system
+        r"""
+        Returns the series interconnection of the system and another system
 
         The series interconnection of two systems P1 and P2 is the system for which
         u = u1, y = y2 and z = u2 = y1 so that:
@@ -594,7 +559,8 @@ class StateSpaceModel(Basic):
         return StateSpaceModel(newA, newB, newC, newD)
 
     def parallel(self, other):
-        """ Returns the parallel interconnection of the system and another system
+        r"""
+        Returns the parallel interconnection of the system and another system
 
         The parallel interconnection of two systems P1 and P2 is the system for which
         u = u1 + u2 and y = y1 + y2 so that:
@@ -1043,8 +1009,8 @@ def _fraction_list(m, only_denoms=False, only_numers=False):
 #
 # deg(en)
 #
-def _entry_deg(en, s):
-    """_entry_deg
+def total_degree(en, s):
+    """ total_degree
 
     gives back the total degree of a rational function. If the degree of the
     denominator ist greater than the degree of the numerator. The result is
@@ -1057,7 +1023,7 @@ def _entry_deg(en, s):
 #
 # is_proper(m, s, strict=False)
 #
-def _is_proper(m, s, strict=False):
+def is_proper(m, s, strict=False):
     """is_proper
 
     tests if the degree of the numerator does not exceed the degree of the denominator
@@ -1077,6 +1043,6 @@ def _is_proper(m, s, strict=False):
         than the degree of the numerator
     """
     if strict is False:
-        return all(_entry_deg(en, s) <= 0 for en in m)
+        return all(total_degree(en, s) <= 0 for en in m)
     else:
-        return all(_entry_deg(en, s) < 0 for en in m)
+        return all(total_degree(en, s) < 0 for en in m)
