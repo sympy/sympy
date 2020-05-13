@@ -378,11 +378,12 @@ class Point(Basic):
     [ sqrt(2)*r/2]])
 
     """
-    def __init__(self, coord_sys, coords):
-        super().__init__()
-        self._coord_sys = coord_sys
-        self._coords = Matrix(coords)
-        self._args = self._coord_sys, self._coords
+    def __new__(cls, coord_sys, coords):
+        coords = Matrix(coords)
+        obj = super().__new__(cls, coord_sys, coords)
+        obj._coord_sys = coord_sys
+        obj._coords = coords
+        return obj
 
     def coords(self, to_sys=None):
         """Coordinates of the point in a given coordinate system.
@@ -455,10 +456,13 @@ class BaseScalarField(AtomicExpr):
     is_commutative = True
 
     def __new__(cls, coord_sys, index):
-        obj = AtomicExpr.__new__(cls, coord_sys, sympify(index))
+        obj = super().__new__(cls)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
+
+    def _hashable_content(self):
+        return self._coord_sys, self._index
 
     def __call__(self, *args):
         """Evaluating the field at a point or doing nothing.
@@ -546,11 +550,13 @@ class BaseVectorField(AtomicExpr):
     is_commutative = False
 
     def __new__(cls, coord_sys, index):
-        index = sympify(index)
-        obj = AtomicExpr.__new__(cls, coord_sys, index)
+        obj = super().__new__(cls)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
+
+    def _hashable_content(self):
+        return self._coord_sys, self._index
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
@@ -590,6 +596,13 @@ class BaseVectorField(AtomicExpr):
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()
 
+def _find_coords(expr):
+    # Finds CoordinateSystems existing in expr
+    fields = expr.atoms(BaseScalarField, BaseVectorField)
+    result = set()
+    for f in fields:
+        result.add(f._coord_sys)
+    return result
 
 class Commutator(Expr):
     r"""Commutator of two vector fields.
@@ -632,7 +645,7 @@ class Commutator(Expr):
                 'Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()
-        coord_sys = set().union(*[v.atoms(CoordSystem) for v in (v1, v2)])
+        coord_sys = set().union(*[_find_coords(v) for v in (v1, v2)])
         if len(coord_sys) == 1:
             # Only one coordinate systems is used, hence it is easy enough to
             # actually evaluate the commutator.
@@ -1445,7 +1458,7 @@ def twoform_to_matrix(expr):
     """
     if covariant_order(expr) != 2 or contravariant_order(expr):
         raise ValueError('The input expression is not a two-form.')
-    coord_sys = expr.atoms(CoordSystem)
+    coord_sys = _find_coords(expr)
     if len(coord_sys) != 1:
         raise ValueError('The input expression concerns more than one '
                          'coordinate systems, hence there is no unambiguous '
@@ -1480,7 +1493,7 @@ def metric_to_Christoffel_1st(expr):
     if not matrix.is_symmetric():
         raise ValueError(
             'The two-form representing the metric is not symmetric.')
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a))
                       for d in coord_sys.base_vectors()]
     indices = list(range(coord_sys.dim))
@@ -1510,7 +1523,7 @@ def metric_to_Christoffel_2nd(expr):
 
     """
     ch_1st = metric_to_Christoffel_1st(expr)
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     indices = list(range(coord_sys.dim))
     # XXX workaround, inverting a matrix does not work if it contains non
     # symbols
@@ -1559,7 +1572,7 @@ def metric_to_Riemann_components(expr):
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     indices = list(range(coord_sys.dim))
     deriv_ch = [[[[d(ch_2nd[i, j, k])
                    for d in coord_sys.base_vectors()]
@@ -1610,7 +1623,7 @@ def metric_to_Ricci_components(expr):
 
     """
     riemann = metric_to_Riemann_components(expr)
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     indices = list(range(coord_sys.dim))
     ricci = [[Add(*[riemann[k, i, k, j] for k in indices])
               for j in indices]
