@@ -620,9 +620,6 @@ class C89CodePrinter(CodePrinter):
     def _print_ContinueToken(self, _):
         return 'continue;'
 
-    def _print_NullStatement(self, _):
-        return ';'
-
     _print_union = _print_struct
 
 class C99CodePrinter(C89CodePrinter):
