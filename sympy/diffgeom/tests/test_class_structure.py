@@ -26,7 +26,7 @@ def test_atomicclass_args():
     assert cs.args == ()
     assert cs_noname.args == ()
 
-def test_rebuild()
+def test_rebuild():
     assert s1 == s1.func(*s1.args)
     assert v1 == v1.func(*v1.args)
     assert f1 == f1.func(*f1.args)

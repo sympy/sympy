@@ -447,7 +447,7 @@ class Point(Basic):
         return self._coords.free_symbols
 
 
-class BaseScalarField(AtomicExpr):
+class BaseScalarField(Expr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
 
     Explanation
@@ -542,7 +542,7 @@ class BaseScalarField(AtomicExpr):
         return self
 
 
-class BaseVectorField(AtomicExpr):
+class BaseVectorField(Expr):
     r"""Vector Field over a Manifold.
 
     Explanation
