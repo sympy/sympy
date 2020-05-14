@@ -2528,7 +2528,7 @@ def test_text_re_im():
     assert latex(re(x), gothic_re_im=False) ==  r'\operatorname{re}{\left(x\right)}'
 
 
-def test_DiffGeomMethods():
+def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
     m = Manifold('M', 2)

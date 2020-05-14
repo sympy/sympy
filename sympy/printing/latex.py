@@ -2478,6 +2478,20 @@ class LatexPrinter(Printer):
         return r"{{{}}} : {{{}}} \to {{{}}}".format(self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
+    def _print_Manifold(self, manifold):
+        return r'\text{%s}' % manifold.name
+
+    def _print_Patch(self, patch):
+        return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
+
+    def _print_CoordSystem(self, coords):
+        return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
+            coords.name, coords.patch.name, coords.patch.manifold.name
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
@@ -2543,7 +2557,6 @@ class LatexPrinter(Printer):
             return r'\left(\Omega\left(%s\right)\right)^{%s}' % \
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
-
 
 def translate(s):
     r'''
