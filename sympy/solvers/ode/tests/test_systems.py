@@ -5,7 +5,7 @@ from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError)
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 
@@ -743,11 +743,10 @@ def test_neq_linear_first_order_nonconst_coeff_homogeneous():
     assert checksysodesol(eqs7, sol7) == (True, [0, 0])
 
 
-# 19185: This test case has to be updated in future when a proper
-# technique to handle complicated solutions has been found for
-# non constant coefficient solver.
 @slow
-def test_linear_3eq_order1():
+def test_linear_3eq_order1_type4():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
 
     x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
