@@ -171,7 +171,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
         except NonlinearError:
             raise ODENonlinearError("The system of ODEs is nonlinear.")
 
-        Ai = Ai.applyfunc(expand)
+        Ai = Ai.applyfunc(expand_mul)
 
         As.append(Ai)
 
