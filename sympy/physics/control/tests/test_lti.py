@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy import (symbols, Matrix, zeros, simplify, eye, exp,
                    ones, cosh, sinh, Integral, expand, together)
 from sympy import Rational as R
@@ -7,7 +6,7 @@ from mpmath import e
 
 
 def test_StateSpaceModel_create():
-    a1, a2, a3, a4 = symbols('a1:5')
+    a1, a2, a3, a4, b1, b2, c1, c2, d, s = symbols('a1:5, b1:3, c1:3, d, s')
     ssm = StateSpaceModel(Matrix([a1]), Matrix([a2]),
                           Matrix([a3]), Matrix([a4]))
     assert ssm.represent[0] == Matrix([a1])
@@ -15,23 +14,19 @@ def test_StateSpaceModel_create():
     assert ssm.represent[2] == Matrix([a3])
     assert ssm.represent[3] == Matrix([a4])
 
-    b1, b2 = symbols('b1:3')
-    c1, c2 = symbols('c1:3')
-    d = symbols('d')
-
     A = Matrix([[a1, a2],
                 [a3, a4]])
     B = Matrix([b1,
                 b2])
     C = Matrix([[c1, c2]])
     D = Matrix([d])
+
     ssm = StateSpaceModel(A, B, C, D)
     assert ssm.represent[0] == A
     assert ssm.represent[1] == B
     assert ssm.represent[2] == C
     assert ssm.represent[3] == D
 
-    s = symbols('s')
     G = Matrix([[(4 * s - 10) / (2 * s + 1), 3 / (s + 2)],
                 [1 / ((2 * s + 1) * (s + 2)), (s + 1) / (s + 2)**2]])
     ssm = StateSpaceModel(TransferFunctionModel(G))
@@ -226,7 +221,7 @@ def test_TransferFunctionModel_parallel():
 
 
 def test_equality():
-    a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
+    a0, a1, b0, b1 = symbols('a:2, b:2')
     ssm1 = StateSpaceModel(
         Matrix([[0, 1],
                [-a0, -a1]]),

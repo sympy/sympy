@@ -1,5 +1,5 @@
 from sympy import (
-    Symbol, symbols, simplify, oo, exp,
+    Symbol, simplify, oo, exp,
     Poly, lcm, LC, degree, Integral, integrate,
     Matrix, BlockMatrix, eye, zeros, Basic,
     latex, ShapeError, ImmutableMatrix, MutableMatrix,
