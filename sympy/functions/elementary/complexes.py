@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
@@ -591,6 +589,8 @@ class Abs(Function):
 
     def _eval_nseries(self, x, n, logx):
         direction = self.args[0].leadterm(x)[0]
+        if direction.has(log(x)):
+            direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         when = Eq(direction, 0)
         return Piecewise(
@@ -797,7 +797,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u'\N{DAGGER}')
+            pform = pform**prettyForm('\N{DAGGER}')
         else:
             pform = pform**prettyForm('+')
         return pform

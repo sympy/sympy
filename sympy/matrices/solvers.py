@@ -1,10 +1,9 @@
-from __future__ import division, print_function
-
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
 
 
@@ -234,7 +233,7 @@ def _cholesky_solve(M, rhs):
     elif not M.is_hermitian:
         reform = True
 
-    if reform or M.is_positive_definite is False:
+    if reform or _fuzzy_positive_definite(M) is False:
         H         = M.H
         M         = H.multiply(M)
         rhs       = H.multiply(rhs)
@@ -291,7 +290,7 @@ def _LDLsolve(M, rhs):
     elif not M.is_hermitian:
         reform = True
 
-    if reform or M.is_positive_definite is False:
+    if reform or _fuzzy_positive_definite(M) is False:
         H         = M.H
         M         = H.multiply(M)
         rhs       = H.multiply(rhs)
@@ -669,7 +668,7 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
 
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
-        w                = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
+        w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
         arbitrary_matrix = M.__class__(cols, rows, w).T
 
     return A_pinv.multiply(B) + (eye(A.cols) -

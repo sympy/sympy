@@ -232,7 +232,7 @@ def test_Permutation_subclassing():
     class CustomPermutation(Permutation):
         def __call__(self, *i):
             try:
-                return super(CustomPermutation, self).__call__(*i)
+                return super().__call__(*i)
             except TypeError:
                 pass
 
@@ -246,10 +246,10 @@ def test_Permutation_subclassing():
             if isinstance(other, Permutation):
                 return self._hashable_content() == other._hashable_content()
             else:
-                return super(CustomPermutation, self).__eq__(other)
+                return super().__eq__(other)
 
         def __hash__(self):
-            return super(CustomPermutation, self).__hash__()
+            return super().__hash__()
 
     p = CustomPermutation([1, 2, 3, 0])
     q = Permutation([1, 2, 3, 0])

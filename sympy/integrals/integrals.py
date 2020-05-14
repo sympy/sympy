@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -9,7 +7,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi, Float
+from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -320,8 +318,8 @@ class Integral(AddWithLimits):
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
-        newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
-                        ).subs(d, uvar) for fi in f])
+        newfuncs = {(self.function.subs(xvar, fi)*fi.diff(d)
+                        ).subs(d, uvar) for fi in f}
         if len(newfuncs) > 1:
             raise ValueError(filldedent('''
             The mapping between F(x) and f(u) did not give
@@ -395,12 +393,6 @@ class Integral(AddWithLimits):
         from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
-
-        if self.has(Float):
-            fvals = self.atoms(Float)
-            fsubs = {f: Dummy() for f in fvals}
-            rsubs = {s: f for f, s in fsubs.items()}
-            return self.subs(fsubs).doit(**hints).subs(rsubs)
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
@@ -486,7 +478,7 @@ class Integral(AddWithLimits):
             if d:
                 reps[x] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])

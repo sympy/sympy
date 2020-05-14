@@ -6,7 +6,6 @@ The functions defined in this module allows the user to express functions such a
 as a SymPy function for symbolic manipulation.
 
 """
-
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow

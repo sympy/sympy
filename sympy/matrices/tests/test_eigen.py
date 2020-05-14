@@ -1,28 +1,23 @@
 from sympy import (
-    Rational, Poly, Symbol, N, I, Abs, sqrt, exp, Float, sin,
+    Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
 from sympy.matrices import eye, Matrix
 from sympy.matrices.matrices import MatrixEigen
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
-from sympy.abc import x, y
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
+from sympy.testing.pytest import slow
+
+
 class EigenOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixEigen):
     pass
 
 def test_eigen():
     R = Rational
-
-    assert eye(3).charpoly(x) == Poly((x - 1)**3, x)
-    assert eye(3).charpoly(y) == Poly((y - 1)**3, y)
-
-    M = Matrix([[1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]])
-
+    M = Matrix.eye(3)
     assert M.eigenvals(multiple=False) == {S.One: 3}
     assert M.eigenvals(multiple=True) == [1, 1, 1]
 
@@ -120,13 +115,6 @@ def test_eigen():
         (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(-Rational(3, 8) + sqrt(73)/8)], [1]])]),
         (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])]
 
-    m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
-    evals = { Rational(5, 4) - sqrt(385)/20: 1, sqrt(385)/20 + Rational(5, 4): 1, S.Zero: 1}
-    assert m.eigenvals() == evals
-    nevals = list(sorted(m.eigenvals(rational=False).keys()))
-    sevals = list(sorted(evals.keys()))
-    assert all(abs(nevals[i] - sevals[i]) < 1e-9 for i in range(len(nevals)))
-
     # issue 10719
     assert Matrix([]).eigenvals() == {}
     assert Matrix([]).eigenvects() == []
@@ -151,6 +139,23 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
+
+def test_float_eigenvals():
+    m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
+    evals = [
+        Rational(5, 4) - sqrt(385)/20,
+        sqrt(385)/20 + Rational(5, 4),
+        S.Zero]
+
+    n_evals = m.eigenvals(rational=True, multiple=True)
+    n_evals = sorted(n_evals)
+    s_evals = [x.evalf() for x in evals]
+    s_evals = sorted(s_evals)
+
+    for x, y in zip(n_evals, s_evals):
+        assert abs(x-y) < 10**-9
+
+
 @XFAIL
 def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
@@ -163,6 +168,7 @@ def test_eigen_vects():
 
 def test_issue_8240():
     # Eigenvalues of large triangular matrices
+    x, y = symbols('x y')
     n = 200
 
     diagonal_variables = [Symbol('x%s' % i) for i in range(n)]
@@ -226,6 +232,7 @@ def test_left_eigenvects():
         assert vec_list[0]*M == val*vec_list[0]
 
 
+@slow
 def test_bidiagonalize():
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],
@@ -456,7 +463,7 @@ def test_singular_values():
     A[2, 2] = 5
     vals = A.singular_values()
     # since Abs(x) cannot be sorted, test set equality
-    assert set(vals) == set([5, 1, Abs(x)])
+    assert set(vals) == {5, 1, Abs(x)}
 
     A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
     vals = [sv.trigsimp() for sv in A.singular_values()]
@@ -478,3 +485,90 @@ def test___eq__():
         [[0, 1, 1],
         [1, 0, 0],
         [1, 1, 1]]) == {}) is False
+
+
+def test_definite():
+    # Examples from Gilbert Strang, "Introduction to Linear Algebra"
+    # Positive definite matrices
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Positive semidefinite matrices
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Examples from Mathematica documentation
+    # Non-hermitian positive definite matrices
+    m = Matrix([[2, 3], [4, 8]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Symbolic matrices examples
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == True
+    assert m.is_negative_semidefinite == True
+    assert m.is_indefinite == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
+    m = Matrix([
+        [0.0228202735623867, 0.00518748979085398,
+         -0.0743036351048907, -0.00709135324903921],
+        [0.00518748979085398, 0.0349045359786350,
+         0.0830317991056637, 0.00233147902806909],
+        [-0.0743036351048907, 0.0830317991056637,
+         1.15859676366277, 0.340359081555988],
+        [-0.00709135324903921, 0.00233147902806909,
+         0.340359081555988, 0.928147644848199]
+    ])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_indefinite == False

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 import numbers
 import decimal
 import fractions
@@ -807,7 +805,7 @@ class Number(AtomicExpr):
         return _sympify(other).__le__(self)
 
     def __hash__(self):
-        return super(Number, self).__hash__()
+        return super().__hash__()
 
     def is_constant(self, *wrt, **flags):
         return True
@@ -1389,12 +1387,15 @@ class Float(Number):
     __long__ = __int__
 
     def __eq__(self, other):
+        from sympy.logic.boolalg import Boolean
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
         if not self:
             return not other
+        if isinstance(other, Boolean):
+            return False
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
@@ -1481,7 +1482,7 @@ class Float(Number):
         return rv
 
     def __hash__(self):
-        return super(Float, self).__hash__()
+        return super().__hash__()
 
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
@@ -1967,7 +1968,7 @@ class Rational(Number):
         return Expr.__le__(*rv)
 
     def __hash__(self):
-        return super(Rational, self).__hash__()
+        return super().__hash__()
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
@@ -2331,7 +2332,7 @@ class Integer(Rational):
                 return (-self)**expt
         if isinstance(expt, Float):
             # Rational knows how to exponentiate by a Float
-            return super(Integer, self)._eval_power(expt)
+            return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -2494,7 +2495,7 @@ class AlgebraicNumber(Expr):
         return obj
 
     def __hash__(self):
-        return super(AlgebraicNumber, self).__hash__()
+        return super().__hash__()
 
     def _eval_evalf(self, prec):
         return self.as_expr()._evalf(prec)
@@ -2955,7 +2956,7 @@ class Infinity(Number, metaclass=Singleton):
         return sage.oo
 
     def __hash__(self):
-        return super(Infinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
@@ -3120,7 +3121,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
         return -(sage.oo)
 
     def __hash__(self):
-        return super(NegativeInfinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
@@ -3254,7 +3255,7 @@ class NaN(Number, metaclass=Singleton):
         return sage.NaN
 
     def __hash__(self):
-        return super(NaN, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         # NaN is structurally equal to another NaN
@@ -3410,7 +3411,7 @@ class NumberSymbol(AtomicExpr):
         return self.__int__()
 
     def __hash__(self):
-        return super(NumberSymbol, self).__hash__()
+        return super().__hash__()
 
 
 class Exp1(NumberSymbol, metaclass=Singleton):

@@ -6,8 +6,6 @@ combinatorial polynomials.
 
 """
 
-from __future__ import print_function, division
-
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.singleton import S
