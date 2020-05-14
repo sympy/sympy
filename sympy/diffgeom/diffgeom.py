@@ -4,11 +4,12 @@ from itertools import permutations
 
 from sympy.combinatorics import Permutation
 from sympy.core import (
-    AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff,
+    AtomicExpr, Basic, Expr, Dummy, Function,  diff,
     Pow, Mul, Add, Atom
 )
 from sympy.core.compatibility import reduce
 from sympy.core.numbers import Zero
+from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
@@ -512,13 +513,11 @@ class BaseScalarField(AtomicExpr):
     is_commutative = True
 
     def __new__(cls, coord_sys, index):
-        obj = super().__new__(cls)
+        index = _sympify(index)
+        obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
-
-    def _hashable_content(self):
-        return self._coord_sys, self._index
 
     def __call__(self, *args):
         """Evaluating the field at a point or doing nothing.
@@ -616,13 +615,11 @@ class BaseVectorField(AtomicExpr):
     is_commutative = False
 
     def __new__(cls, coord_sys, index):
-        obj = super().__new__(cls)
+        index = _sympify(index)
+        obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
-
-    def _hashable_content(self):
-        return self._coord_sys, self._index
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
@@ -1366,7 +1363,7 @@ def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
     reps = dict(zip(args, d_args))
-    d_exprs = Matrix([sympify(expr).subs(reps) for expr in exprs])
+    d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
 
