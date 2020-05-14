@@ -625,6 +625,8 @@ def roots_quintic(f):
                 break
         if r2:
             break
+    else:
+        return []  # fall back to normal solve
 
     # Now, we have r's so we can get roots
     x1 = (r1 + r2 + r3 + r4)/5
@@ -870,7 +872,11 @@ def roots(f, *gens, **flags):
         f = Poly(poly, x, field=True)
     else:
         try:
-            f = Poly(f, *gens, **flags)
+            F = Poly(f, *gens, **flags)
+            if not isinstance(f, Poly) and not F.gen.is_Symbol:
+                raise PolynomialError("generator must be a Symbol")
+            else:
+                f = F
             if f.length == 2 and f.degree() != 1:
                 # check for foo**n factors in the constant
                 n = f.degree()

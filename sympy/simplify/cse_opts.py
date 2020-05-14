@@ -14,7 +14,15 @@ def sub_pre(e):
     """
     # replacing Add, A, from which -1 can be extracted with -1*-A
     adds = [a for a in e.atoms(Add) if a.could_extract_minus_sign()]
-    reps = dict((a, Mul._from_args([S.NegativeOne, -a])) for a in adds)
+    reps = {}
+    ignore = set()
+    for a in adds:
+        na = -a
+        if na.is_Mul:  # e.g. MatExpr
+            ignore.add(a)
+            continue
+        reps[a] = Mul._from_args([S.NegativeOne, na])
+
     e = e.xreplace(reps)
 
     # repeat again for persisting Adds but mark these with a leading 1, -1
@@ -22,6 +30,8 @@ def sub_pre(e):
     if isinstance(e, Basic):
         negs = {}
         for a in sorted(e.atoms(Add), key=default_sort_key):
+            if a in ignore:
+                continue
             if a in reps:
                 negs[a] = reps[a]
             elif a.could_extract_minus_sign():

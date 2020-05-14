@@ -4,6 +4,7 @@ from sympy import (
 )
 from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
+from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.codegen.array_utils import (CodegenArrayContraction,
@@ -180,6 +181,15 @@ def test_mod():
     a_ = np.array([2, 3, 4, 5])
     b_ = np.array([2, 3, 4, 5])
     assert np.array_equal(f(a_, b_), [0, 0, 0, 0])
+
+
+def test_pow():
+    if not np:
+        skip('NumPy not installed')
+
+    expr = Pow(2, -1, evaluate=False)
+    f = lambdify([], expr, 'numpy')
+    assert f() == 0.5
 
 
 def test_expm1():

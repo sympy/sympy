@@ -58,6 +58,11 @@ from types import GeneratorType
 from collections import defaultdict
 
 
+class NonlinearError(ValueError):
+    """Raised by linear_eq_to_matrix if the equations are nonlinear"""
+    pass
+
+
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
     Dummy symbols, ``d``, and the list of replacements, ``(d, e)``,
@@ -2184,6 +2189,12 @@ def linear_coeffs(eq, *syms, **_kw):
     The additive constant is returned as the last element of the
     list.
 
+    Raises
+    ======
+
+    NonlinearError
+        The equation contains a nonlinear term
+
     Examples
     ========
 
@@ -2208,12 +2219,12 @@ def linear_coeffs(eq, *syms, **_kw):
     >>> linear_coeffs(eq, x)
     Traceback (most recent call last):
     ...
-    ValueError: nonlinear term encountered: 1/x
+    NonlinearError: nonlinear term encountered: 1/x
 
     >>> linear_coeffs(x*(y + 1) - x*y, x, y)
     Traceback (most recent call last):
     ...
-    ValueError: nonlinear term encountered: x*(y + 1)
+    NonlinearError: nonlinear term encountered: x*(y + 1)
     """
     d = defaultdict(list)
     eq = _sympify(eq)
@@ -2241,7 +2252,7 @@ def linear_coeffs(eq, *syms, **_kw):
         if not _kw:
             return [d.get(s, S.Zero) for s in syms] + [d[0]]
         return d  # default is still list but this won't matter
-    raise ValueError('nonlinear term encountered: %s' % t)
+    raise NonlinearError('nonlinear term encountered: %s' % t)
 
 
 def linear_eq_to_matrix(equations, *symbols):
@@ -2272,8 +2283,9 @@ def linear_eq_to_matrix(equations, *symbols):
     Raises
     ======
 
-    ValueError
+    NonlinearError
         The equations contain a nonlinear term.
+    ValueError
         The symbols are not given or are not unique.
 
     Examples
@@ -2307,7 +2319,7 @@ def linear_eq_to_matrix(equations, *symbols):
     >>> linear_eq_to_matrix(eqns, [x, y])
     Traceback (most recent call last):
     ...
-    ValueError:
+    NonlinearError:
     The term (x**2 - 3*x)/(x - 3) is nonlinear in {x, y}
 
     Simplifying these equations will discard the removable singularity
@@ -2510,8 +2522,8 @@ def linsolve(system, *symbols):
     >>> linsolve([x**2 - 1], x)
     Traceback (most recent call last):
     ...
-    ValueError:
-    The term x**2 is nonlinear in {x}
+    NonlinearError:
+    nonlinear term encountered: x**2
     """
     if not system:
         return S.EmptySet
@@ -2991,8 +3003,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
-                depen = (eq2.rewrite(Add)).as_independent(unsolved_syms)[0]
-                if depen.has(Abs) and solver == solveset_complex:
+                depen1, depen2 = (eq2.rewrite(Add)).as_independent(*unsolved_syms)
+                if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
                     continue

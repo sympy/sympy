@@ -10,8 +10,15 @@ def test_default_sort_key():
     func = lambda x: x
     assert sorted([func, x, func], key=default_sort_key) == [func, func, x]
 
+    class C:
+        def __repr__(self):
+            return 'x.y'
+    func = C()
+    assert sorted([x, func], key=default_sort_key) == [func, x]
+
 
 def test_as_int():
+    raises(ValueError, lambda : as_int(True))
     raises(ValueError, lambda : as_int(1.1))
     raises(ValueError, lambda : as_int([]))
     raises(ValueError, lambda : as_int(S.NaN))
@@ -25,6 +32,7 @@ def test_as_int():
     # integer. This is not -- by design -- as_ints role.
     raises(ValueError, lambda : as_int(1e23))
     raises(ValueError, lambda : as_int(S('1.'+'0'*20+'1')))
+    assert as_int(True, strict=False) == 1
 
 
 def test_iterable():
@@ -42,17 +50,17 @@ def test_iterable():
 
     assert iterable(Test2()) is True
 
-    class Test3(object):
+    class Test3:
         pass
 
     assert iterable(Test3()) is False
 
-    class Test4(object):
+    class Test4:
         _iterable = True
 
     assert iterable(Test4()) is True
 
-    class Test5(object):
+    class Test5:
         def __iter__(self):
             yield 1
 

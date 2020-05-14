@@ -145,6 +145,7 @@ class LatexPrinter(Printer):
         "gothic_re_im": False,
         "decimal_separator": "period",
         "perm_cyclic": True,
+        "parenthesize_super": True,
         "min": None,
         "max": None,
     }  # type: Dict[str, Any]
@@ -217,8 +218,10 @@ class LatexPrinter(Printer):
 
     def parenthesize_super(self, s):
         """ Parenthesize s if there is a superscript in s"""
-        if "^" in s:
+        if "^" in s and self._settings['parenthesize_super']:
             return r"\left({}\right)".format(s)
+        elif "^" in s and not self._settings['parenthesize_super']:
+            return self.embed_super(s)
         return s
 
     def embed_super(self, s):
@@ -598,7 +601,7 @@ class LatexPrinter(Printer):
             p, q = expr.exp.p, expr.exp.q
             # issue #12886: add parentheses for superscripts raised to powers
             if '^' in base and expr.base.is_Symbol:
-                base = r"\left(%s\right)" % base
+                base = self.parenthesize_super(base)
             if expr.base.is_Function:
                 return self._print(expr.base, exp="%s/%s" % (p, q))
             return r"%s^{%s/%s}" % (base, p, q)
@@ -622,7 +625,7 @@ class LatexPrinter(Printer):
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
         if '^' in base and expr.base.is_Symbol:
-            base = r"\left(%s\right)" % base
+            base = self.parenthesize_super(base)
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
             and re.match(r'\\left\(\\d?d?dot', base)
@@ -848,7 +851,12 @@ class LatexPrinter(Printer):
                 len(args) == 1 and \
                 not self._needs_function_brackets(expr.args[0])
 
-            inv_trig_table = ["asin", "acos", "atan", "acsc", "asec", "acot"]
+            inv_trig_table = [
+                "asin", "acos", "atan",
+                "acsc", "asec", "acot",
+                "asinh", "acosh", "atanh",
+                "acsch", "asech", "acoth",
+            ]
 
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
@@ -870,7 +878,9 @@ class LatexPrinter(Printer):
                 else:
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                name = r'%s^{%s}' % (self._hprint_Function(func), exp)
+                func_tex = self._hprint_Function(func)
+                func_tex = self.parenthesize_super(func_tex)
+                name = r'%s^{%s}' % (func_tex, exp)
             else:
                 name = self._hprint_Function(func)
 
@@ -929,6 +939,9 @@ class LatexPrinter(Printer):
         tex = r"\left( %s \mapsto %s \right)" % (symbols, self._print(expr))
 
         return tex
+
+    def _print_IdentityFunction(self, expr):
+        return r"\left( x \mapsto x \right)"
 
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
@@ -1493,25 +1506,23 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        result = self._deal_with_super_sub(expr.name) if \
-            '\\' not in expr.name else expr.name
-
-        if style == 'bold':
-            result = r"\mathbf{{{}}}".format(result)
-
-        return result
+        return self._deal_with_super_sub(expr.name, style=style)
 
     _print_RandomSymbol = _print_Symbol
 
-    def _deal_with_super_sub(self, string):
+    def _deal_with_super_sub(self, string, style='plain'):
         if '{' in string:
-            return string
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
 
-        name, supers, subs = split_super_sub(string)
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
 
-        name = translate(name)
-        supers = [translate(sup) for sup in supers]
-        subs = [translate(sub) for sub in subs]
+        # apply the style only to the name
+        if style == 'bold':
+            name = "\\mathbf{{{}}}".format(name)
 
         # glue all items together:
         if supers:
@@ -1580,27 +1591,27 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
-    _print_ImmutableMatrix = _print_ImmutableDenseMatrix \
-                           = _print_Matrix \
-                           = _print_MatrixBase
+
+    _print_ImmutableDenseMatrix = _print_MatrixBase
+    _print_ImmutableSparseMatrix = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
             + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def latexslice(x):
+        def latexslice(x, dim):
             x = list(x)
             if x[2] == 1:
                 del x[2]
-            if x[1] == x[0] + 1:
-                del x[1]
             if x[0] == 0:
                 x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return ':'.join(map(self._print, x))
-        return (self._print(expr.parent) + r'\left[' +
-                latexslice(expr.rowslice) + ', ' +
-                latexslice(expr.colslice) + r'\right]')
+        return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + r'\left[' +
+                latexslice(expr.rowslice, expr.parent.rows) + ', ' +
+                latexslice(expr.colslice, expr.parent.cols) + r'\right]')
 
     def _print_BlockMatrix(self, expr):
         return self._print(expr.blocks)
@@ -2467,6 +2478,20 @@ class LatexPrinter(Printer):
         return r"{{{}}} : {{{}}} \to {{{}}}".format(self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
+    def _print_Manifold(self, manifold):
+        return r'\text{%s}' % manifold.name
+
+    def _print_Patch(self, patch):
+        return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
+
+    def _print_CoordSystem(self, coords):
+        return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
+            coords.name, coords.patch.name, coords.patch.manifold.name
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
@@ -2533,7 +2558,6 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
-
 def translate(s):
     r'''
     Check for a modifier ending the string.  If present, convert the
@@ -2570,7 +2594,7 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
           mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
-          decimal_separator="period", perm_cyclic=True):
+          decimal_separator="period", perm_cyclic=True, parenthesize_super=True):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2644,6 +2668,9 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
         separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
         ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
+    parenthesize_super : boolean, optional
+        If set to ``False``, superscripted expressions will not be parenthesized when
+        powered. Default is ``True``, which parenthesizes the expression when powered.
     min: Integer or None, optional
         Sets the lower bound for the exponent to print floating point numbers in
         fixed-point format.
@@ -2781,6 +2808,7 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
         'gothic_re_im': gothic_re_im,
         'decimal_separator': decimal_separator,
         'perm_cyclic' : perm_cyclic,
+        'parenthesize_super' : parenthesize_super,
         'min': min,
         'max': max,
     }

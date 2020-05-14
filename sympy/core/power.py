@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from math import log as _log
 
 from .sympify import _sympify
@@ -592,6 +590,10 @@ class Pow(Expr):
         if b.is_Number and e.is_Number:
             check = self.func(*self.args)
             return check.is_Integer
+        if e.is_negative and b.is_positive and (b - 1).is_positive:
+            return False
+        if e.is_negative and b.is_negative and (b + 1).is_negative:
+            return False
 
     def _eval_is_extended_real(self):
         from sympy import arg, exp, log, Mul
@@ -1433,7 +1435,7 @@ class Pow(Expr):
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
         # where e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
-        from sympy import ceiling, collect, exp, log, O, Order, powsimp
+        from sympy import ceiling, collect, exp, log, O, Order, powsimp, powdenest
         b, e = self.args
         if e.is_Integer:
             if e > 0:
@@ -1463,6 +1465,7 @@ class Pow(Expr):
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
+                    b = powdenest(b)
                     prefactor = b.as_leading_term(x)
 
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)

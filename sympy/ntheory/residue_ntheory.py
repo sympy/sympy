@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.compatibility import as_int
 from sympy.core.function import Function
 from sympy.utilities.iterables import cartes
@@ -329,8 +327,7 @@ def sqrt_mod_iter(a, p, domain=int):
             res = _sqrt_mod_prime_power(a, p, 1)
         if res:
             if domain is ZZ:
-                for x in res:
-                    yield x
+                yield from res
             else:
                 for x in res:
                     yield domain(x)
@@ -798,7 +795,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
     for x, y in dd.items():
         m.append(x)
         a.append(list(y))
-    return sorted(set(crt(m, list(i))[0] for i in cartes(*a)))
+    return sorted({crt(m, list(i))[0] for i in cartes(*a)})
 
 def _nthroot_mod_composite(a, n, m):
     """

@@ -357,22 +357,55 @@ def test_Mul_doesnt_expand_exp():
     assert sqrt(2)*2**Rational(1, 4)*5**Rational(3, 4) == 10**Rational(3, 4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
+def test_Mul_is_integer():
+
+    k = Symbol('k', integer=True)
+    n = Symbol('n', integer=True)
+    nr = Symbol('nr', rational=False)
+    nz = Symbol('nz', integer=True, zero=False)
+    nze = Symbol('nze', even=True, zero=False)
+    e = Symbol('e', even=True)
+    o = Symbol('o', odd=True)
+    i2 = Symbol('2', prime=True, even=True)
+
+    assert (k/3).is_integer is None
+    assert (nz/3).is_integer is None
+    assert (nr/3).is_integer is False
+    assert (x*k*n).is_integer is None
+    assert (e/o).is_integer is None
+    assert (o/e).is_integer is False
+    assert (o/i2).is_integer is False
+    assert Mul(o, 1/o, evaluate=False).is_integer is True
+    assert Mul(k, 1/k, evaluate=False).is_integer is None
+    assert Mul(nze, 1/nze, evaluate=False).is_integer is True
+    assert Mul(2., S.Half, evaluate=False).is_integer is False
+
+    s = 2**2**2**Pow(2, 1000, evaluate=False)
+    m = Mul(s, s, evaluate=False)
+    assert m.is_integer
+
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
 
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
+    nk = Symbol('nk', integer=False)
+    nr = Symbol('nr', rational=False)
+    nz = Symbol('nz', integer=True, zero=False)
 
+    assert (-nk).is_integer is None
+    assert (-nr).is_integer is False
     assert (2*k).is_integer is True
     assert (-k).is_integer is True
-    assert (k/3).is_integer is None
-    assert (x*k*n).is_integer is None
 
+    assert (k + nk).is_integer is False
     assert (k + n).is_integer is True
     assert (k + x).is_integer is None
     assert (k + n*x).is_integer is None
     assert (k + n/3).is_integer is None
+    assert (k + nz/3).is_integer is None
+    assert (k + nr/3).is_integer is False
 
     assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
@@ -981,8 +1014,14 @@ def test_Pow_is_integer():
 
     assert ((-1)**k).is_integer
 
+    # issue 8641
     x = Symbol('x', real=True, integer=False)
-    assert (x**2).is_integer is None  # issue 8641
+    assert (x**2).is_integer is None
+
+    # issue 10458
+    x = Symbol('x', positive=True)
+    assert (1/(x + 1)).is_integer is False
+    assert (1/(-x - 1)).is_integer is False
 
 
 def test_Pow_is_real():
@@ -1481,9 +1520,12 @@ def test_Mul_is_irrational():
     expr = Mul(1, 2, 3, evaluate=False)
     assert expr.is_irrational is False
     expr = Mul(1, I, I, evaluate=False)
-    assert expr.is_irrational is not False
+    assert expr.is_rational is None # I * I = -1 but *no evaluation allowed*
+    # sqrt(2) * I * I = -sqrt(2) is irrational but
+    # this can't be determined without evaluating the
+    # expression and the eval_is routines shouldn't do that
     expr = Mul(sqrt(2), I, I, evaluate=False)
-    assert expr.is_irrational is not True
+    assert expr.is_irrational is None
 
 
 def test_issue_3531():
@@ -1535,6 +1577,19 @@ def test_suppressed_evaluation():
     assert c.func is Pow
     assert c.args == (3, 2)
 
+def test_AssocOp_doit():
+    a = Add(x,x, evaluate=False)
+    b = Mul(y,y, evaluate=False)
+    c = Add(b,b, evaluate=False)
+    d = Mul(a,a, evaluate=False)
+    assert c.doit(deep=False).func == Mul
+    assert c.doit(deep=False).args == (2,y,y)
+    assert c.doit().func == Mul
+    assert c.doit().args == (2, Pow(y,2))
+    assert d.doit(deep=False).func == Pow
+    assert d.doit(deep=False).args == (a, 2*S.One)
+    assert d.doit().func == Mul
+    assert d.doit().args == (4*S.One, Pow(x,2))
 
 def test_Add_as_coeff_mul():
     # issue 5524.  These should all be (1, self)

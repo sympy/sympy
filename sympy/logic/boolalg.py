@@ -1,7 +1,6 @@
 """
 Boolean algebra module for SymPy
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import chain, combinations, product
@@ -436,7 +435,6 @@ class BooleanFunction(Application, Boolean):
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
-    # /// drop when Py2 is no longer supported
     def __lt__(self, other):
         from sympy.utilities.misc import filldedent
         raise TypeError(filldedent('''
@@ -447,7 +445,6 @@ class BooleanFunction(Application, Boolean):
     __le__ = __lt__
     __ge__ = __lt__
     __gt__ = __lt__
-    # \\\
 
     @classmethod
     def binary_check_and_simplify(self, *args):
@@ -480,7 +477,7 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_nnf(cls, *args, **kwargs):
         simplify = kwargs.get('simplify', True)
-        argset = set([])
+        argset = set()
         for arg in args:
             if not is_literal(arg):
                 arg = arg.to_nnf(simplify)
@@ -500,7 +497,7 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_anf(cls, *args, **kwargs):
         deep = kwargs.get('deep', True)
-        argset = set([])
+        argset = set()
         for arg in args:
             if deep:
                 if not is_literal(arg) or isinstance(arg, Not):
@@ -719,7 +716,7 @@ class And(LatticeOp, BooleanFunction):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        rv = super(And, self)._eval_simplify(**kwargs)
+        rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, And):
             return rv
 
@@ -868,7 +865,7 @@ class Or(LatticeOp, BooleanFunction):
 
     def _eval_simplify(self, **kwargs):
         # standard simplify
-        rv = super(Or, self)._eval_simplify(**kwargs)
+        rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
         patterns = simplify_patterns_or()
@@ -1051,9 +1048,9 @@ class Xor(BooleanFunction):
 
     """
     def __new__(cls, *args, **kwargs):
-        argset = set([])
+        argset = set()
         remove_true = kwargs.pop('remove_true', True)
-        obj = super(Xor, cls).__new__(cls, *args, **kwargs)
+        obj = super().__new__(cls, *args, **kwargs)
         for arg in obj._args:
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
@@ -1370,7 +1367,7 @@ class Equivalent(BooleanFunction):
             argset.discard(False)
             return And(*[~arg for arg in argset])
         _args = frozenset(argset)
-        obj = super(Equivalent, cls).__new__(cls, _args)
+        obj = super().__new__(cls, _args)
         obj._argset = _args
         return obj
 
@@ -1691,12 +1688,14 @@ def to_nnf(expr, simplify=True):
     return expr.to_nnf(simplify)
 
 
-def to_cnf(expr, simplify=False):
+def to_cnf(expr, simplify=False, force=False):
     """
-    Convert a propositional logical sentence s to conjunctive normal form.
-    That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
-    If simplify is True, the expr is evaluated to its simplest CNF form  using
-    the Quine-McCluskey algorithm.
+    Convert a propositional logical sentence s to conjunctive normal
+    form: ((A | ~B | ...) & (B | C | ...) & ...).
+    If simplify is True, the expr is evaluated to its simplest CNF
+    form using the Quine-McCluskey algorithm; this may take a long
+    time if there are more than 8 variables and requires that the
+    ``force`` flag be set to True (default is False).
 
     Examples
     ========
@@ -1714,7 +1713,12 @@ def to_cnf(expr, simplify=False):
         return expr
 
     if simplify:
-        return simplify_logic(expr, 'cnf', True)
+        if not force and len(_find_predicates(expr)) > 8:
+            raise ValueError(filldedent('''
+            To simplify a logical expression with more
+            than 8 variables may take a long time and requires
+            the use of `force=True`.'''))
+        return simplify_logic(expr, 'cnf', True, force=force)
 
     # Don't convert unless we have to
     if is_cnf(expr):
@@ -1726,12 +1730,14 @@ def to_cnf(expr, simplify=False):
     return res
 
 
-def to_dnf(expr, simplify=False):
+def to_dnf(expr, simplify=False, force=False):
     """
-    Convert a propositional logical sentence s to disjunctive normal form.
-    That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
+    Convert a propositional logical sentence s to disjunctive normal
+    form: ((A & ~B & ...) | (B & C & ...) | ...).
     If simplify is True, the expr is evaluated to its simplest DNF form using
-    the Quine-McCluskey algorithm.
+    the Quine-McCluskey algorithm; this may take a long
+    time if there are more than 8 variables and requires that the
+    ``force`` flag be set to True (default is False).
 
     Examples
     ========
@@ -1749,7 +1755,12 @@ def to_dnf(expr, simplify=False):
         return expr
 
     if simplify:
-        return simplify_logic(expr, 'dnf', True)
+        if not force and len(_find_predicates(expr)) > 8:
+            raise ValueError(filldedent('''
+            To simplify a logical expression with more
+            than 8 variables may take a long time and requires
+            the use of `force=True`.'''))
+        return simplify_logic(expr, 'dnf', True, force=force)
 
     # Don't convert unless we have to
     if is_dnf(expr):
@@ -1910,22 +1921,14 @@ def _is_form(expr, function1, function2):
     """
     expr = sympify(expr)
 
-    def is_a_literal(lit):
-        if isinstance(lit, Not) \
-                and lit.args[0].is_Atom:
-            return True
-        elif lit.is_Atom:
-            return True
-        return False
-
     vals = function1.make_args(expr) if isinstance(expr, function1) else [expr]
     for lit in vals:
         if isinstance(lit, function2):
             vals2 = function2.make_args(lit) if isinstance(lit, function2) else [lit]
             for l in vals2:
-                if is_a_literal(l) is False:
+                if is_literal(l) is False:
                     return False
-        elif is_a_literal(lit) is False:
+        elif is_literal(lit) is False:
             return False
 
     return True
@@ -1977,9 +1980,13 @@ def is_literal(expr):
 
     """
     if isinstance(expr, Not):
-        return not isinstance(expr.args[0], BooleanFunction)
-    else:
-        return not isinstance(expr, BooleanFunction)
+        return is_literal(expr.args[0])
+    elif expr in (True, False) or expr.is_Atom:
+        return True
+    elif not isinstance(expr, BooleanFunction) and all(
+            a.is_Atom for a in expr.args):
+        return True
+    return False
 
 
 def to_int_repr(clauses, symbols):
@@ -2005,7 +2012,7 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols[arg]
 
-    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
+    return [{append_symbol(arg, symbols) for arg in Or.make_args(c)}
             for c in clauses]
 
 
@@ -2593,7 +2600,7 @@ def anf_coeffs(truthvalues):
 
     """
 
-    s = '{0:b}'.format(len(truthvalues))
+    s = '{:b}'.format(len(truthvalues))
     n = len(s) - 1
 
     if len(truthvalues) != 2**n:
@@ -2756,11 +2763,12 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         non-boolean functions contained within the input.
 
     force : boolean (default False)
-        As the simplifications require exponential time in the number of
-        variables, there is by default a limit on expressions with 8 variables.
-        When the expression has more than 8 variables only symbolical
-        simplification (controlled by ``deep``) is made. By setting force to ``True``, this limit
-        is removed. Be aware that this can lead to very long simplification times.
+        As the simplifications require exponential time in the number
+        of variables, there is by default a limit on expressions with
+        8 variables. When the expression has more than 8 variables
+        only symbolical simplification (controlled by ``deep``) is
+        made. By setting force to ``True``, this limit is removed. Be
+        aware that this can lead to very long simplification times.
 
     Examples
     ========
@@ -2782,6 +2790,16 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if form not in (None, 'cnf', 'dnf'):
         raise ValueError("form can be cnf or dnf only")
     expr = sympify(expr)
+    # check for quick exit: right form and all args are
+    # literal and do not involve Not
+    isc = is_cnf(expr)
+    isd = is_dnf(expr)
+    form_ok = (
+        isc and form == 'cnf' or
+        isd and form == 'dnf')
+    if form_ok and all(is_literal(a)
+            for a in expr.args):
+        return expr
     if deep:
         variables = _find_predicates(expr)
         from sympy.simplify.simplify import simplify

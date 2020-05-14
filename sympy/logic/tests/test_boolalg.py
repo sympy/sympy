@@ -61,7 +61,7 @@ def test_And():
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
     assert And(g, l, ge, le) == And(ge, g)
-    assert set([And(*i) for i in permutations((l,g,le,ge))]) == {And(ge, g)}
+    assert {And(*i) for i in permutations((l,g,le,ge))} == {And(ge, g)}
     assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
 
 
@@ -383,11 +383,21 @@ def test_bool_symbol():
 
 
 def test_is_boolean():
-    assert true.is_Boolean
+    assert isinstance(True, Boolean) is False
+    assert isinstance(true, Boolean) is True
+    assert 1 == True
+    assert 1 != true
+    assert (1 == true) is False
+    assert 0 == False
+    assert 0 != false
+    assert (0 == false) is False
+    assert true.is_Boolean is True
     assert (A & B).is_Boolean
     assert (A | B).is_Boolean
     assert (~A).is_Boolean
     assert (A ^ B).is_Boolean
+    assert A.is_Boolean != isinstance(A, Boolean)
+    assert isinstance(A, Boolean)
 
 
 def test_subs():
@@ -528,6 +538,24 @@ def test_to_cnf():
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
     assert to_cnf(A + 1) == A + 1
 
+
+def test_issue_18904():
+    x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15 = symbols('x1:16')
+    eq = (( x1 & x2 & x3 & x4 & x5 & x6 & x7 & x8 & x9 )  |
+        ( x1 & x2 & x3 & x4 & x5 & x6 & x7 & x10 & x9 )  |
+        ( x1 & x11 & x3 & x12 & x5 & x13 & x14 & x15 & x9 ))
+    assert is_cnf(to_cnf(eq))
+    raises(ValueError, lambda: to_cnf(eq, simplify=True))
+    for f, t in zip((And, Or), (to_cnf, to_dnf)):
+        eq = f(x1, x2, x3, x4, x5, x6, x7, x8, x9)
+        raises(ValueError, lambda: to_cnf(eq, simplify=True))
+        assert t(eq, simplify=True, force=True) == eq
+
+
+def test_issue_9949():
+    assert is_cnf(to_cnf((b > -5) | (a > 2) & (a < 4)))
+
+
 def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(~(B | C))) == to_cnf(~(B | C))
     assert CNF.CNF_to_cnf(CNF.to_CNF((A & B) | C)) == to_cnf((A & B) | C)
@@ -665,6 +693,8 @@ def test_is_literal():
     assert is_literal(Not(Q.zero(A))) is True
     assert is_literal(Or(A, B)) is False
     assert is_literal(And(Q.zero(A), Q.zero(B))) is False
+    assert is_literal(x < 3)
+    assert not is_literal(x + y < 3)
 
 
 def test_operators():
@@ -949,19 +979,19 @@ def test_as_Boolean():
 
 
 def test_binary_symbols():
-    assert ITE(x < 1, y, z).binary_symbols == set((y, z))
+    assert ITE(x < 1, y, z).binary_symbols == {y, z}
     for f in (Eq, Ne):
         assert f(x, 1).binary_symbols == set()
-        assert f(x, True).binary_symbols == set([x])
-        assert f(x, False).binary_symbols == set([x])
+        assert f(x, True).binary_symbols == {x}
+        assert f(x, False).binary_symbols == {x}
     assert S.true.binary_symbols == set()
     assert S.false.binary_symbols == set()
-    assert x.binary_symbols == set([x])
-    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == set([x, y])
+    assert x.binary_symbols == {x}
+    assert And(x, Eq(y, False), Eq(z, 1)).binary_symbols == {x, y}
     assert Q.prime(x).binary_symbols == set()
     assert Q.is_true(x < 1).binary_symbols == set()
-    assert Q.is_true(x).binary_symbols == set([x])
-    assert Q.is_true(Eq(x, True)).binary_symbols == set([x])
+    assert Q.is_true(x).binary_symbols == {x}
+    assert Q.is_true(Eq(x, True)).binary_symbols == {x}
     assert Q.prime(x).binary_symbols == set()
 
 

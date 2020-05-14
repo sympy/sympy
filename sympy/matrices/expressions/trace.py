@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 from sympy import Basic, Expr, sympify, S
 from sympy.matrices.matrices import MatrixBase
-from .matexpr import ShapeError
+from sympy.matrices.common import NonSquareMatrixError
 
 
 class Trace(Expr):
@@ -28,7 +26,7 @@ class Trace(Expr):
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 
         if not mat.is_square:
-            raise ShapeError("Trace of a non-square matrix")
+            raise NonSquareMatrixError("Trace of a non-square matrix")
 
         return Basic.__new__(cls, mat)
 

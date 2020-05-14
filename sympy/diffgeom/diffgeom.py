@@ -1,13 +1,15 @@
-from __future__ import print_function, division
-
 from typing import Any, Set
 
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
-from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core import (
+    Basic, Expr, Dummy, Function,  diff,
+    Pow, Mul, Add, Atom
+)
 from sympy.core.compatibility import reduce
 from sympy.core.numbers import Zero
+from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
@@ -21,18 +23,27 @@ from sympy.solvers import solve
 from sympy.tensor.array import ImmutableDenseNDimArray
 
 
-class Manifold(Basic):
-    """Object representing a mathematical manifold.
+class Manifold(Atom):
+    """A mathematical manifold.
+
+    Explanation
+    ===========
 
     The only role that this object plays is to keep a list of all patches
     defined on the manifold. It does not provide any means to study the
     topological characteristics of the manifold that it represents.
 
+    Parameters
+    ==========
+    name : str
+        The name of the manifold.
+
+    dim : int
+        The dimension of the manifold.
     """
+
     def __new__(cls, name, dim):
-        name = sympify(name)
-        dim = sympify(dim)
-        obj = Basic.__new__(cls, name, dim)
+        obj = super().__new__(cls)
         obj.name = name
         obj.dim = dim
         obj.patches = []
@@ -40,12 +51,14 @@ class Manifold(Basic):
         # other Patch instance on the same manifold.
         return obj
 
-    def _latex(self, printer, *args):
-        return r'\text{%s}' % self.name
+    def _hashable_content(self):
+        return self.name, self.dim
 
+class Patch(Atom):
+    """A patch on a manifold.
 
-class Patch(Basic):
-    """Object representing a patch on a manifold.
+    Explanation
+    ===========
 
     On a manifold one can have many patches that do not always include the
     whole manifold. On these patches coordinate charts can be defined that
@@ -54,6 +67,14 @@ class Patch(Basic):
 
     This object serves as a container/parent for all coordinate system charts
     that can be defined on the patch it represents.
+
+    Parameters
+    ==========
+    name : string
+        The name of the patch.
+
+    manifold : Manifold
+        The manifold on which the patch is defined.
 
     Examples
     ========
@@ -70,8 +91,7 @@ class Patch(Basic):
     # Contains a reference to the parent manifold in order to be able to access
     # other patches.
     def __new__(cls, name, manifold):
-        name = sympify(name)
-        obj = Basic.__new__(cls, name, manifold)
+        obj = super().__new__(cls)
         obj.name = name
         obj.manifold = manifold
         obj.manifold.patches.append(obj)
@@ -84,12 +104,28 @@ class Patch(Basic):
     def dim(self):
         return self.manifold.dim
 
-    def _latex(self, printer, *args):
-        return r'\text{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
+    def _hashable_content(self):
+        return self.name, self.manifold
 
+class CoordSystem(Atom):
+    """A coordinate system defined on the patch
 
-class CoordSystem(Basic):
-    """Contains all coordinate transformation logic.
+    Explanation
+    ===========
+
+    This class contains all coordinate transformation logic.
+
+    Parameters
+    ==========
+
+    name : string
+        The name of the coordinate system.
+
+    patch : Patch
+        The patch where the coordinate system is defined.
+
+    names : list of strings, optional
+        Determines how base scalar fields will be printed.
 
     Examples
     ========
@@ -181,18 +217,13 @@ class CoordSystem(Basic):
     #  Contains a reference to the parent patch in order to be able to access
     # other coordinate system charts.
     def __new__(cls, name, patch, names=None):
-        name = sympify(name)
         # names is not in args because it is related only to printing, not to
         # identifying the CoordSystem instance.
         if not names:
             names = ['%s_%d' % (name, i) for i in range(patch.dim)]
-        if isinstance(names, Tuple):
-            obj = Basic.__new__(cls, name, patch, names)
-        else:
-            names = Tuple(*symbols(names))
-            obj = Basic.__new__(cls, name, patch, names)
+        obj = super().__new__(cls)
         obj.name = name
-        obj._names = [str(i) for i in names.args]
+        obj._names = tuple(str(i) for i in names)
         obj.patch = patch
         obj.patch.coord_systems.append(obj)
         obj.transforms = {}
@@ -210,6 +241,9 @@ class CoordSystem(Basic):
     @property
     def dim(self):
         return self.patch.dim
+
+    def _hashable_content(self):
+        return self.name, self.patch, self._names
 
     ##########################################################################
     # Coordinate transformations.
@@ -342,13 +376,11 @@ class CoordSystem(Basic):
     # Printing.
     ##########################################################################
 
-    def _latex(self, printer, *args):
-        return r'\text{%s}^{\text{%s}}_{%s}' % (
-            self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
-
-
 class Point(Basic):
-    """Point in a Manifold object.
+    """Point defined in a coordinate system.
+
+    Explanation
+    ===========
 
     To define a point you must supply coordinates and a coordinate system.
 
@@ -356,6 +388,14 @@ class Point(Basic):
     coordinate system that was used in order to define it, however due to
     limitations in the simplification routines you can arrive at complicated
     expressions if you use inappropriate coordinate systems.
+
+    Parameters
+    ==========
+
+    coord_sys : CoordSystem
+
+    coords: list of sympy expressions
+        The coordinates of the point.
 
     Examples
     ========
@@ -385,11 +425,12 @@ class Point(Basic):
     [ sqrt(2)*r/2]])
 
     """
-    def __init__(self, coord_sys, coords):
-        super(Point, self).__init__()
-        self._coord_sys = coord_sys
-        self._coords = Matrix(coords)
-        self._args = self._coord_sys, self._coords
+    def __new__(cls, coord_sys, coords):
+        coords = Matrix(coords)
+        obj = super().__new__(cls, coord_sys, coords)
+        obj._coord_sys = coord_sys
+        obj._coords = coords
+        return obj
 
     def coords(self, to_sys=None):
         """Coordinates of the point in a given coordinate system.
@@ -406,8 +447,11 @@ class Point(Basic):
         return self._coords.free_symbols
 
 
-class BaseScalarField(AtomicExpr):
+class BaseScalarField(Expr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
+
+    Explanation
+    ===========
 
     A scalar field takes a point as an argument and returns a scalar.
 
@@ -424,6 +468,13 @@ class BaseScalarField(AtomicExpr):
 
     You can build complicated scalar fields by just building up SymPy
     expressions containing ``BaseScalarField`` instances.
+
+    Parameters
+    ==========
+
+    coord_sys : CoordSystem
+
+    index : integer
 
     Examples
     ========
@@ -462,7 +513,8 @@ class BaseScalarField(AtomicExpr):
     is_commutative = True
 
     def __new__(cls, coord_sys, index):
-        obj = AtomicExpr.__new__(cls, coord_sys, sympify(index))
+        index = _sympify(index)
+        obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
@@ -490,8 +542,11 @@ class BaseScalarField(AtomicExpr):
         return self
 
 
-class BaseVectorField(AtomicExpr):
+class BaseVectorField(Expr):
     r"""Vector Field over a Manifold.
+
+    Explanation
+    ===========
 
     A vector field is an operator taking a scalar field and returning a
     directional derivative (which is also a scalar field).
@@ -506,6 +561,13 @@ class BaseVectorField(AtomicExpr):
     coordinate system in which it was defined, however due to limitations in the
     simplification routines you may arrive at more complicated expression if you
     use unappropriate coordinate systems.
+
+    Parameters
+    ==========
+
+    coord_sys : CoordSystem
+
+    index : integer
 
     Examples
     ========
@@ -553,8 +615,8 @@ class BaseVectorField(AtomicExpr):
     is_commutative = False
 
     def __new__(cls, coord_sys, index):
-        index = sympify(index)
-        obj = AtomicExpr.__new__(cls, coord_sys, index)
+        index = _sympify(index)
+        obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
@@ -597,6 +659,13 @@ class BaseVectorField(AtomicExpr):
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()
 
+def _find_coords(expr):
+    # Finds CoordinateSystems existing in expr
+    fields = expr.atoms(BaseScalarField, BaseVectorField)
+    result = set()
+    for f in fields:
+        result.add(f._coord_sys)
+    return result
 
 class Commutator(Expr):
     r"""Commutator of two vector fields.
@@ -629,7 +698,7 @@ class Commutator(Expr):
     Commutator(e_x, e_r)
 
     >>> simplify(c_xr(R2.y**2))
-    -2*y**2*cos(theta)/(x**2 + y**2)
+    -2*cos(theta)*y**2/(x**2 + y**2)
 
     """
     def __new__(cls, v1, v2):
@@ -639,7 +708,7 @@ class Commutator(Expr):
                 'Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()
-        coord_sys = set().union(*[v.atoms(CoordSystem) for v in (v1, v2)])
+        coord_sys = set().union(*[_find_coords(v) for v in (v1, v2)])
         if len(coord_sys) == 1:
             # Only one coordinate systems is used, hence it is easy enough to
             # actually evaluate the commutator.
@@ -655,10 +724,10 @@ class Commutator(Expr):
                     res += c1*b1(c2)*b2 - c2*b2(c1)*b1
             return res
         else:
-            return super(Commutator, cls).__new__(cls, v1, v2)
+            return super().__new__(cls, v1, v2)
 
     def __init__(self, v1, v2):
-        super(Commutator, self).__init__()
+        super().__init__()
         self._args = (v1, v2)
         self._v1 = v1
         self._v2 = v2
@@ -729,10 +798,10 @@ class Differential(Expr):
         if isinstance(form_field, Differential):
             return Zero()
         else:
-            return super(Differential, cls).__new__(cls, form_field)
+            return super().__new__(cls, form_field)
 
     def __init__(self, form_field):
-        super(Differential, self).__init__()
+        super().__init__()
         self._form_field = form_field
         self._args = (self._form_field, )
 
@@ -840,12 +909,12 @@ class TensorProduct(Expr):
         if multifields:
             if len(multifields) == 1:
                 return scalar*multifields[0]
-            return scalar*super(TensorProduct, cls).__new__(cls, *multifields)
+            return scalar*super().__new__(cls, *multifields)
         else:
             return scalar
 
     def __init__(self, *args):
-        super(TensorProduct, self).__init__()
+        super().__init__()
         self._args = args
 
     def __call__(self, *fields):
@@ -954,14 +1023,14 @@ class LieDerivative(Expr):
                              ' vector fields. The supplied argument was not a '
                              'vector field.')
         if expr_form_ord > 0:
-            return super(LieDerivative, cls).__new__(cls, v_field, expr)
+            return super().__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)
         else:
             return v_field.rcall(expr)
 
     def __init__(self, v_field, expr):
-        super(LieDerivative, self).__init__()
+        super().__init__()
         self._v_field = v_field
         self._expr = expr
         self._args = (self._v_field, self._expr)
@@ -995,7 +1064,7 @@ class BaseCovarDerivativeOp(Expr):
     e_x
     """
     def __init__(self, coord_sys, index, christoffel):
-        super(BaseCovarDerivativeOp, self).__init__()
+        super().__init__()
         self._coord_sys = coord_sys
         self._index = index
         self._christoffel = christoffel
@@ -1067,8 +1136,8 @@ class CovarDerivativeOp(Expr):
 
     """
     def __init__(self, wrt, christoffel):
-        super(CovarDerivativeOp, self).__init__()
-        if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
+        super().__init__()
+        if len({v._coord_sys for v in wrt.atoms(BaseVectorField)}) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
             raise ValueError('Covariant derivatives are defined only with '
@@ -1083,9 +1152,6 @@ class CovarDerivativeOp(Expr):
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
                     for v in vectors]
         return self._wrt.subs(list(zip(vectors, base_ops))).rcall(field)
-
-    def _latex(self, printer, *args):
-        return r'\mathbb{\nabla}_{%s}' % printer._print(self._wrt)
 
 
 ###############################################################################
@@ -1297,7 +1363,7 @@ def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
     reps = dict(zip(args, d_args))
-    d_exprs = Matrix([sympify(expr).subs(reps) for expr in exprs])
+    d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
 
@@ -1409,7 +1475,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    x*e_r/sqrt(x**2 + y**2) - y*e_theta/(x**2 + y**2)
+    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
     """
@@ -1455,7 +1521,7 @@ def twoform_to_matrix(expr):
     """
     if covariant_order(expr) != 2 or contravariant_order(expr):
         raise ValueError('The input expression is not a two-form.')
-    coord_sys = expr.atoms(CoordSystem)
+    coord_sys = _find_coords(expr)
     if len(coord_sys) != 1:
         raise ValueError('The input expression concerns more than one '
                          'coordinate systems, hence there is no unambiguous '
@@ -1490,7 +1556,7 @@ def metric_to_Christoffel_1st(expr):
     if not matrix.is_symmetric():
         raise ValueError(
             'The two-form representing the metric is not symmetric.')
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a))
                       for d in coord_sys.base_vectors()]
     indices = list(range(coord_sys.dim))
@@ -1520,7 +1586,7 @@ def metric_to_Christoffel_2nd(expr):
 
     """
     ch_1st = metric_to_Christoffel_1st(expr)
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     indices = list(range(coord_sys.dim))
     # XXX workaround, inverting a matrix does not work if it contains non
     # symbols
@@ -1560,16 +1626,16 @@ def metric_to_Riemann_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
+    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0, :, :, :]
-    [[[0, 0], [0, 0]], [[0, r*exp(-2*r)], [-r*exp(-2*r), 0]]]
+    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
     >>> riemann[1, :, :, :]
     [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     indices = list(range(coord_sys.dim))
     deriv_ch = [[[[d(ch_2nd[i, j, k])
                    for d in coord_sys.base_vectors()]
@@ -1614,13 +1680,13 @@ def metric_to_Ricci_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
+    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    [[1/r, 0], [0, r*exp(-2*r)]]
+    [[1/r, 0], [0, exp(-2*r)*r]]
 
     """
     riemann = metric_to_Riemann_components(expr)
-    coord_sys = expr.atoms(CoordSystem).pop()
+    coord_sys = _find_coords(expr).pop()
     indices = list(range(coord_sys.dim))
     ricci = [[Add(*[riemann[k, i, k, j] for k in indices])
               for j in indices]
