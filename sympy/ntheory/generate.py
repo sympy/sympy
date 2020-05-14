@@ -334,8 +334,8 @@ sieve = Sieve()
 
 
 class prime(Function):
-    """ Represents the function prime(n) which returns the nth prime, with the
-        primes indexed as prime(1) = 2,prime(2) = 3, etc....
+    """ Returns the nth prime, with the primes indexed 
+        as prime(1) = 2,prime(2) = 3, etc....
         The nth prime is approximately n*log(n).
 
         Logarithmic integral of x is a pretty nice approximation for number of
@@ -531,7 +531,7 @@ class primepi(Function):
 
 
 class nextprime(Function):
-    """ Represents the function which returns the ith prime greater than n.
+    """ Returns the ith prime greater than n.
 
         i must be an integer.
 
@@ -604,7 +604,7 @@ class nextprime(Function):
 
 
 class prevprime(Function):
-    """ Reprents the function which returns the largest prime smaller than n.
+    """ Returns the largest prime smaller than n.
 
         Notes
         =====
@@ -780,8 +780,7 @@ def randprime(a, b):
 
 class primorial(Function):
     """
-    Represents the function which returns the product of
-    the first n primes (default) or the primes less than
+    Returns the product of the first n primes (default) or the primes less than
     or equal to n (when ``nth=False``).
 
     Examples
@@ -940,8 +939,7 @@ def cycle_length(f, x0, nmax=None, values=False):
 
 
 class composite(Function):
-    """ Represents the function which returns the nth composite number,
-        with the composite numbers indexed as
+    """ Returns the nth composite number, with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
         Examples
