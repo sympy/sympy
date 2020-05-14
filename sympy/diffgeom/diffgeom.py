@@ -698,7 +698,7 @@ class Commutator(Expr):
     Commutator(e_x, e_r)
 
     >>> simplify(c_xr(R2.y**2))
-    -2*y**2*cos(theta)/(x**2 + y**2)
+    -2*cos(theta)*y**2/(x**2 + y**2)
 
     """
     def __new__(cls, v1, v2):
@@ -1475,7 +1475,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    x*e_r/sqrt(x**2 + y**2) - y*e_theta/(x**2 + y**2)
+    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
     """
@@ -1626,10 +1626,10 @@ def metric_to_Riemann_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
+    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0, :, :, :]
-    [[[0, 0], [0, 0]], [[0, r*exp(-2*r)], [-r*exp(-2*r), 0]]]
+    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
     >>> riemann[1, :, :, :]
     [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
@@ -1680,9 +1680,9 @@ def metric_to_Ricci_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    r**2*TensorProduct(dtheta, dtheta) + exp(2*r)*TensorProduct(dr, dr)
+    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    [[1/r, 0], [0, r*exp(-2*r)]]
+    [[1/r, 0], [0, exp(-2*r)*r]]
 
     """
     riemann = metric_to_Riemann_components(expr)
