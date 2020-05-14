@@ -323,7 +323,7 @@ def dup_zz_zassenhaus(f, K):
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = 2*int(abs(dup_zz_mignotte_bound(f, K)))
+    B = 4*int(abs(dup_zz_mignotte_bound(f, K)))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
