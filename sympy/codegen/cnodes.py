@@ -119,6 +119,3 @@ class struct(Node):
 
 class union(struct):
     """ Represents a union in C """
-
-class NullStatement(Basic):
-    """ Represents the null statement in C """

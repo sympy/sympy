@@ -336,7 +336,7 @@ class BreakToken(Token):
     >>> from sympy.printing import ccode, fcode
     >>> from sympy.codegen.ast import break_
     >>> ccode(break_)
-    'break'
+    'break;'
     >>> fcode(break_, source_format='free')
     'exit'
     """
@@ -355,7 +355,7 @@ class ContinueToken(Token):
     >>> from sympy.printing import ccode, fcode
     >>> from sympy.codegen.ast import continue_
     >>> ccode(continue_)
-    'continue'
+    'continue;'
     >>> fcode(continue_, source_format='free')
     'cycle'
     """
