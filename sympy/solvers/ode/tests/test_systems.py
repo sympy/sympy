@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S, I,
-                   Eq, sqrt)
+                   Eq, sqrt, Integral)
 from sympy.functions import exp, cos, sin
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
@@ -355,6 +355,30 @@ def test_sysode_linear_neq_order1():
             Eq(y(t), C1*exp(t*(a/2 - sqrt(a**2 + 4*b*c)/2)) + C2*exp(t*(a/2 + sqrt(a**2 + 4*b*c)/2)))]
     assert dsolve(eq16) == sol16
     assert checksysodesol(eq16, sol16) == (True, [0, 0])
+
+    eq17 = [Eq(x(t).diff(t), x(t) + y(t) + 9), Eq(y(t).diff(t), 2*x(t) + 5*y(t) + 19)]
+    sol17 = [Eq(x(t), C1*exp(t*(sqrt(6) + 3)) + C2*exp(t*(3 - sqrt(6))) - Rational(26,3)),
+            Eq(y(t), C1*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) + C2*(2 - sqrt(6))*exp(t*(3 - sqrt(6))) - Rational(1,3))]
+    assert dsolve(eq17) == sol17
+    assert checksysodesol(eq17, sol17) == (True, [0, 0])
+
+    eq18 = [Eq(x(t).diff(t), 6*t*x(t) + t**2*y(t)), Eq(y(t).diff(t), -t**2*x(t) + 6*t*y(t))]
+    sol18 = [Eq(x(t), (C1*cos(Integral(t**2, t)) + C2*sin(Integral(t**2, t)))*exp(Integral(6*t, t))),
+            Eq(y(t), (-C1*sin(Integral(t**2, t)) + C2*cos(Integral(t**2, t)))*exp(Integral(6*t, t)))]
+    assert dsolve(eq18) == sol18
+    assert checksysodesol(eq18, sol18) == (True, [0, 0])
+
+    eq19 = [Eq(x(t).diff(t), 2*t*x(t) + t**2*y(t)), Eq(y(t).diff(t), -t**2*x(t) + (2*t+9*t**2)*y(t))]
+    sol19 = [Eq(x(t), (C1*(sqrt(77)/2 + Rational(9, 2))*exp((Rational(9, 2) - sqrt(77)/2)*Integral(t**2, t)) + C2*(Rational(9,2) - sqrt(77)/2)*exp((sqrt(77)/2 + Rational(9,2))*Integral(t**2, t)))*exp(Integral(2*t, t))),
+            Eq(y(t), (C1*exp((Rational(9,2) - sqrt(77)/2)*Integral(t**2, t)) + C2*exp((sqrt(77)/2 + Rational(9, 2))*Integral(t**2, t)))*exp(Integral(2*t, t)))]
+    assert dsolve(eq19) == sol19
+    assert checksysodesol(eq19, sol19) == (True, [0, 0])
+
+    eq20 = [Eq(x(t).diff(t), 10*x(t) + 2*y(t)), Eq(y(t).diff(t), 3*x(t) - 9*y(t))]
+    sol20 = [Eq(x(t), C1*(Rational(19, 6) - sqrt(385)/6)*exp(t*(Rational(1, 2) - sqrt(385)/2)) + C2*(Rational(19, 6) + sqrt(385)/6)*exp(t*(Rational(1, 2) + sqrt(385)/2))),
+            Eq(y(t), C1*exp(t*(Rational(1, 2) - sqrt(385)/2)) + C2*exp(t*(Rational(1, 2) + sqrt(385)/2)))]
+    assert dsolve(eq20) == sol20
+    assert checksysodesol(eq20, sol20) == (True, [0, 0])
 
     Z0 = Function('Z0')
     Z1 = Function('Z1')
