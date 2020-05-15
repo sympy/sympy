@@ -2491,9 +2491,11 @@ def test_MatrixSymbol_bold():
     assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == \
         r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
 
-    A = MatrixSymbol("A_k", 3, 3)
-    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+    A_k = MatrixSymbol("A_k", 3, 3)
+    assert latex(A_k, mat_symbol_style='bold') == r"\mathbf{A}_{k}"
 
+    A = MatrixSymbol(r"\nabla_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{\nabla}_{k}"
 
 def test_AppliedPermutation():
     p = Permutation(0, 1, 2)
@@ -2526,7 +2528,7 @@ def test_text_re_im():
     assert latex(re(x), gothic_re_im=False) ==  r'\operatorname{re}{\left(x\right)}'
 
 
-def test_DiffGeomMethods():
+def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
     m = Manifold('M', 2)

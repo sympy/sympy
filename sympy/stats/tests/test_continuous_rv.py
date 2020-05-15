@@ -18,7 +18,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
-                         WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
+                         WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
+                         Lomax, BoundedPareto)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
@@ -450,6 +451,27 @@ def test_betaprime():
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
     X = BetaPrime('x', 1, 1)
     assert median(X) == FiniteSet(1)
+
+
+def test_BoundedPareto():
+    L, H = symbols('L, H', negative=True)
+    raises(ValueError, lambda: BoundedPareto('X', 1, L, H))
+    L, H = symbols('L, H', real=False)
+    raises(ValueError, lambda: BoundedPareto('X', 1, L, H))
+    L, H = symbols('L, H', positive=True)
+    raises(ValueError, lambda: BoundedPareto('X', -1, L, H))
+
+    X = BoundedPareto('X', 2, L, H)
+    assert X.pspace.domain.set == Interval(L, H)
+    assert density(X)(x) == 2*L**2/(x**3*(1 - L**2/H**2))
+    assert cdf(X)(x) == Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) \
+                            + H**2/(H**2 - L**2), L <= x), (0, True))
+    assert E(X).simplify() == 2*H*L/(H + L)
+    X = BoundedPareto('X', 1, 2, 4)
+    assert E(X).simplify() == log(16)
+    assert median(X) == FiniteSet(Rational(8, 3))
+    assert variance(X).simplify() == 8 - 16*log(2)**2
+
 
 def test_cauchy():
     x0 = Symbol("x0", real=True)
@@ -890,6 +912,23 @@ def test_lognormal():
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
 
+
+def test_Lomax():
+    a, l = symbols('a, l', negative=True)
+    raises(ValueError, lambda: Lomax('X', a , l))
+    a, l = symbols('a, l', real=False)
+    raises(ValueError, lambda: Lomax('X', a , l))
+
+    a, l = symbols('a, l', positive=True)
+    X = Lomax('X', a, l)
+    assert X.pspace.domain.set == Interval(0, oo)
+    assert density(X)(x) == a*(1 + x/l)**(-a - 1)/l
+    assert cdf(X)(x) == Piecewise((1 - (1 + x/l)**(-a), x >= 0), (0, True))
+    a = 3
+    X = Lomax('X', a, l)
+    assert E(X) == l/2
+    assert median(X) == FiniteSet(l*(-1 + 2**Rational(1, 3)))
+    assert variance(X) == 3*l**2/4
 
 
 def test_maxwell():

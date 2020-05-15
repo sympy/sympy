@@ -2574,6 +2574,15 @@ class PrettyPrinter(Printer):
             ' %s> ' % hobj('-', 2), self._print(h.codomain)))
         return pform
 
+    def _print_Manifold(self, manifold):
+        return self._print(manifold.name)
+
+    def _print_Patch(self, patch):
+        return self._print(patch.name)
+
+    def _print_CoordSystem(self, coords):
+        return self._print(coords.name)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
         return self._print(pretty_symbol(string))
@@ -2632,7 +2641,6 @@ class PrettyPrinter(Printer):
         r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
-
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

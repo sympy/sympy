@@ -2658,6 +2658,71 @@ class Expr(Basic, EvalfMixin):
         else:
             return self._eval_is_rational_function(syms)
 
+    def _eval_is_meromorphic(self, x, a):
+        # Default implementation, return True for constants.
+        return None if self.has(x) else True
+
+    def is_meromorphic(self, x, a):
+        """
+        This tests whether an expression is meromorphic as
+        a function of the given symbol ``x`` at the point ``a``.
+
+        This method is intended as a quick test that will return
+        None if no decision can be made without simplification or
+        more detailed analysis.
+
+        Examples
+        ========
+
+        >>> from sympy import zoo, log, sin, sqrt
+        >>> from sympy.abc import x
+
+        >>> f = 1/x**2 + 1 - 2*x**3
+        >>> f.is_meromorphic(x, 0)
+        True
+        >>> f.is_meromorphic(x, 1)
+        True
+        >>> f.is_meromorphic(x, zoo)
+        True
+
+        >>> g = x**log(3)
+        >>> g.is_meromorphic(x, 0)
+        False
+        >>> g.is_meromorphic(x, 1)
+        True
+        >>> g.is_meromorphic(x, zoo)
+        False
+
+        >>> h = sin(1/x)*x**2
+        >>> h.is_meromorphic(x, 0)
+        False
+        >>> h.is_meromorphic(x, 1)
+        True
+        >>> h.is_meromorphic(x, zoo)
+        True
+
+        Multivalued functions are considered meromorphic when their
+        branches are meromorphic. Thus most functions are meromorphic
+        everywhere except at essential singularities and branch points.
+        In particular, they will be meromorphic also on branch cuts
+        except at their endpoints.
+
+        >>> log(x).is_meromorphic(x, -1)
+        True
+        >>> log(x).is_meromorphic(x, 0)
+        False
+        >>> sqrt(x).is_meromorphic(x, -1)
+        True
+        >>> sqrt(x).is_meromorphic(x, 0)
+        False
+
+        """
+        if not x.is_Symbol:
+            raise TypeError("{} should be of type Symbol".format(x))
+        a = sympify(a)
+
+        return self._eval_is_meromorphic(x, a)
+
     def _eval_is_algebraic_expr(self, syms):
         if self.free_symbols.intersection(syms) == set():
             return True
@@ -3797,6 +3862,9 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
+        return True
+
+    def _eval_is_meromorphic(self, x, a):
         return True
 
     def _eval_is_algebraic_expr(self, syms):

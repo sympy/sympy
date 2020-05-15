@@ -274,13 +274,13 @@ class Variance(Expr):
     >>> Variance(a*X)
     Variance(a*X)
 
-    To expand the variance in its expression, use ``doit()``:
+    To expand the variance in its expression, use ``expand()``:
 
-    >>> Variance(a*X).doit()
+    >>> Variance(a*X).expand()
     a**2*Variance(X)
     >>> Variance(X + Y)
     Variance(X + Y)
-    >>> Variance(X + Y).doit()
+    >>> Variance(X + Y).expand()
     2*Covariance(X, Y) + Variance(X) + Variance(Y)
 
     """
@@ -294,7 +294,7 @@ class Variance(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         arg = self.args[0]
         condition = self._condition
 
@@ -308,8 +308,8 @@ class Variance(Expr):
             for a in arg.args:
                 if a.has(RandomSymbol):
                     rv.append(a)
-            variances = Add(*map(lambda xv: Variance(xv, condition).doit(), rv))
-            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).doit()
+            variances = Add(*map(lambda xv: Variance(xv, condition).expand(), rv))
+            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
             return variances + covariances
         elif isinstance(arg, Mul):
@@ -373,19 +373,19 @@ class Covariance(Expr):
     >>> cexpr.rewrite(Expectation)
     Expectation(X*Y) - Expectation(X)*Expectation(Y)
 
-    In order to expand the argument, use ``doit()``:
+    In order to expand the argument, use ``expand()``:
 
     >>> from sympy.abc import a, b, c, d
     >>> Covariance(a*X + b*Y, c*Z + d*W)
     Covariance(a*X + b*Y, c*Z + d*W)
-    >>> Covariance(a*X + b*Y, c*Z + d*W).doit()
+    >>> Covariance(a*X + b*Y, c*Z + d*W).expand()
     a*c*Covariance(X, Z) + a*d*Covariance(W, X) + b*c*Covariance(Y, Z) + b*d*Covariance(W, Y)
 
     This class is aware of some properties of the covariance:
 
-    >>> Covariance(X, X).doit()
+    >>> Covariance(X, X).expand()
     Variance(X)
-    >>> Covariance(a*X, b*Y).doit()
+    >>> Covariance(a*X, b*Y).expand()
     a*b*Covariance(X, Y)
     """
 
@@ -404,13 +404,13 @@ class Covariance(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         arg1 = self.args[0]
         arg2 = self.args[1]
         condition = self._condition
 
         if arg1 == arg2:
-            return Variance(arg1, condition).doit()
+            return Variance(arg1, condition).expand()
 
         if not arg1.has(RandomSymbol):
             return S.Zero

@@ -1,4 +1,3 @@
-import sys
 import inspect
 import copy
 import pickle
@@ -31,21 +30,17 @@ from sympy import symbols, S
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set([
+excluded_attrs = {
     '_assumptions',  # This is a local cache that isn't automatically filled on creation
     '_mhash',   # Cached after __hash__ is called but set to None after creation
-    'message',   # This is an exception attribute that is present but deprecated in Py2 (can be removed when Py2 support is dropped
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
-    ])
+    }
 
 
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    protocols = [0, 1, 2, copy.copy, copy.deepcopy]
-    # Python 2.x doesn't support the third pickling protocol
-    if sys.version_info >= (3,):
-        protocols.extend([3, 4])
+    protocols = [0, 1, 2, copy.copy, copy.deepcopy, 3, 4]
     if cloudpickle:
         protocols.extend([cloudpickle])
 
@@ -180,9 +175,7 @@ def test_core_multidimensional():
 
 
 def test_Singletons():
-    protocols = [0, 1, 2]
-    if sys.version_info >= (3,):
-        protocols.extend([3, 4])
+    protocols = [0, 1, 2, 3, 4]
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]

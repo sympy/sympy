@@ -1506,25 +1506,23 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        result = self._deal_with_super_sub(expr.name) if \
-            '\\' not in expr.name else expr.name
-
-        if style == 'bold':
-            result = r"\mathbf{{{}}}".format(result)
-
-        return result
+        return self._deal_with_super_sub(expr.name, style=style)
 
     _print_RandomSymbol = _print_Symbol
 
-    def _deal_with_super_sub(self, string):
+    def _deal_with_super_sub(self, string, style='plain'):
         if '{' in string:
-            return string
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
 
-        name, supers, subs = split_super_sub(string)
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
 
-        name = translate(name)
-        supers = [translate(sup) for sup in supers]
-        subs = [translate(sub) for sub in subs]
+        # apply the style only to the name
+        if style == 'bold':
+            name = "\\mathbf{{{}}}".format(name)
 
         # glue all items together:
         if supers:
@@ -2480,6 +2478,20 @@ class LatexPrinter(Printer):
         return r"{{{}}} : {{{}}} \to {{{}}}".format(self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
+    def _print_Manifold(self, manifold):
+        return r'\text{%s}' % manifold.name
+
+    def _print_Patch(self, patch):
+        return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
+
+    def _print_CoordSystem(self, coords):
+        return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
+            coords.name, coords.patch.name, coords.patch.manifold.name
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
@@ -2545,7 +2557,6 @@ class LatexPrinter(Printer):
             return r'\left(\Omega\left(%s\right)\right)^{%s}' % \
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
-
 
 def translate(s):
     r'''
