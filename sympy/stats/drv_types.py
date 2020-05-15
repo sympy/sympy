@@ -128,20 +128,6 @@ class GeometricDistribution(SingleDiscreteDistribution):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
 
-    def _sample_numpy(self, size):
-        p = float(self.p)
-        return numpy.random.geometric(p=p, size=size)
-
-    def _sample_scipy(self, size):
-        p = float(self.p)
-        from scipy.stats import geom
-        return geom.rvs(p=p, size=size)
-
-    def _sample_pymc3(self, size):
-        p = float(self.p)
-        with pymc3.Model():
-            pymc3.Geometric('X', p=p)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 def Geometric(name, p):
     r"""
@@ -301,10 +287,6 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
         p = self.p
         return log(1 - p * exp(t)) / log(1 - p)
 
-    def _sample_scipy(self, size):
-        p = float(self.p)
-        from scipy.stats import logser
-        return logser.rvs(p=p, size=size)
 
 def Logarithmic(name, p):
     r"""
@@ -385,10 +367,6 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
         return ((1 - p) / (1 - p * exp(t)))**r
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
-
 
 def NegativeBinomial(name, r, p):
     r"""
@@ -455,21 +433,6 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
-
-    def _sample_numpy(self, size):
-        lamda = float(self.lamda)
-        return numpy.random.poisson(lam=lamda, size=size)
-
-    def _sample_scipy(self, size):
-        lamda = float(self.lamda)
-        from scipy.stats import poisson
-        return poisson.rvs(mu=lamda, size=size)
-
-    def _sample_pymc3(self, size):
-        lamda = float(self.lamda)
-        with pymc3.Model():
-            pymc3.Poisson('X', mu=lamda)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _characteristic_function(self, t):
         return exp(self.lamda * (exp(I*t) - 1))
@@ -549,11 +512,6 @@ class SkellamDistribution(SingleDiscreteDistribution):
     def _cdf(self, x):
         raise NotImplementedError(
             "Skellam doesn't have closed form for the CDF.")
-
-    def _sample_scipy(self, size):
-        mu1, mu2 = float(self.mu1), float(self.mu2)
-        from scipy.stats import skellam
-        return skellam.rvs(mu1=mu1, mu2=mu2, size=size)
 
     def _characteristic_function(self, t):
         (mu1, mu2) = (self.mu1, self.mu2)
@@ -646,10 +604,6 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
-    def _sample_scipy(self, size):
-        rho = float(self.rho)
-        from scipy.stats import yulesimon
-        return yulesimon.rvs(alpha=rho, size=size)
 
 def YuleSimon(name, rho):
     r"""
@@ -720,14 +674,6 @@ class ZetaDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         return polylog(self.s, exp(t)) / zeta(self.s)
 
-    def _sample_numpy(self, size):
-        s = float(self.s)
-        return numpy.random.zipf(a=s, size=size)
-
-    def _sample_scipy(self, size):
-        s = float(self.s)
-        from scipy.stats import zipf
-        return zipf.rvs(a=s, size=size)
 
 def Zeta(name, s):
     r"""

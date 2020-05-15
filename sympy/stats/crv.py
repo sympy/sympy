@@ -301,7 +301,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=1, library='scipy'):
+    def sample(self, size=(1,), library='scipy'):
         """ A random realization from the distribution """
 
         libraries = ['scipy', 'numpy', 'pymc3']
