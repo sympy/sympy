@@ -2674,7 +2674,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import zoo, log, sin
+        >>> from sympy import zoo, log, sin, sqrt
         >>> from sympy.abc import x
 
         >>> f = 1/x**2 + 1 - 2*x**3
@@ -2701,7 +2701,20 @@ class Expr(Basic, EvalfMixin):
         >>> h.is_meromorphic(x, zoo)
         True
 
+        Multivalued functions are considered meromorphic when their
+        branches are meromorphic. Thus most functions are meromorphic
+        everywhere except at essential singularities and branch points.
+        In particular, they will be meromorphic also on branch cuts
+        except at their endpoints.
 
+        >>> log(x).is_meromorphic(x, -1)
+        True
+        >>> log(x).is_meromorphic(x, 0)
+        False
+        >>> sqrt(x).is_meromorphic(x, -1)
+        True
+        >>> sqrt(x).is_meromorphic(x, 0)
+        False
 
         """
         if not x.is_Symbol:
