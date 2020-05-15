@@ -506,7 +506,8 @@ __all__ = [
 #
 # This happened implicitly because there was no __all__ defined in this
 # __init__.py file. Not every package is imported. The list matches what
-# would have been imported before.
+# would have been imported before. It is possible that these packages will
+# not be imported by a star-import from sympy in future.
 #
 #=======================================================================
 
@@ -527,7 +528,6 @@ __all__.extend([
     'multipledispatch',
     'ntheory',
     'parsing',
-    # 'physics',
     'plotting',
     'polys',
     'printing',
@@ -540,13 +540,15 @@ __all__.extend([
 
 #=======================================================================
 #
-# XXX: The names below were importable before sympy 1.6 using
+# XXX: The names listed in _DEPREACTED_IMPORTS below were importable before
+# sympy 1.6 using
 #
 #          from sympy import *
 #
 # This happened implicitly because there was no __all__ defined in this
 # __init__.py file. The plan is to remove them but for now they remain
-# importable but will give a deprecation warning when used.
+# importable but will give a deprecation warning when used. In future these
+# names will be removed and will not be importable from here.
 #
 #=======================================================================
 
