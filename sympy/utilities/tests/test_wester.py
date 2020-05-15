@@ -306,7 +306,7 @@ def test_F3():
 
 @XFAIL
 def test_F4():
-    assert combsimp((2**n * factorial(n) * product(2*k - 1, (k, 1, n)))) == factorial(2*n)
+    assert combsimp(2**n * factorial(n) * product(2*k - 1, (k, 1, n))) == factorial(2*n)
 
 
 @XFAIL
@@ -479,7 +479,7 @@ def test_H14():
 
 
 def test_H15():
-    assert simplify((Mul(*[x - r for r in solveset(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
+    assert simplify(Mul(*[x - r for r in solveset(x**3 + x**2 - 7)])) == x**3 + x**2 - 7
 
 
 def test_H16():

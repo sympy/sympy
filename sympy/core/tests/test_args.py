@@ -1335,6 +1335,9 @@ def test_sympy__stats__crv_types__BetaPrimeDistribution():
     from sympy.stats.crv_types import BetaPrimeDistribution
     assert _test_args(BetaPrimeDistribution(1, 1))
 
+def test_sympy__stats__crv_types__BoundedParetoDistribution():
+    from sympy.stats.crv_types import BoundedParetoDistribution
+    assert _test_args(BoundedParetoDistribution(1, 1, 2))
 
 def test_sympy__stats__crv_types__CauchyDistribution():
     from sympy.stats.crv_types import CauchyDistribution
@@ -1433,6 +1436,9 @@ def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
     assert _test_args(LogNormalDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LomaxDistribution():
+    from sympy.stats.crv_types import LomaxDistribution
+    assert _test_args(LomaxDistribution(1, 2))
 
 def test_sympy__stats__crv_types__MaxwellDistribution():
     from sympy.stats.crv_types import MaxwellDistribution

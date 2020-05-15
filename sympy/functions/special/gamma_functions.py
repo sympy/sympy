@@ -103,6 +103,7 @@ class gamma(Function):
     """
 
     unbranched = True
+    _singularities = (S.ComplexInfinity,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:

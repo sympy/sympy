@@ -863,6 +863,15 @@ class StrPrinter(Printer):
     def _print_Category(self, category):
         return 'Category("%s")' % category.name
 
+    def _print_Manifold(self, manifold):
+        return manifold.name
+
+    def _print_Patch(self, patch):
+        return patch.name
+
+    def _print_CoordSystem(self, coords):
+        return coords.name
+
     def _print_BaseScalarField(self, field):
         return field._coord_sys._names[field._index]
 
@@ -879,7 +888,6 @@ class StrPrinter(Printer):
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
-
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

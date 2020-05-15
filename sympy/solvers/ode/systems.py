@@ -1,7 +1,8 @@
-from sympy import (Derivative, Symbol)
+from sympy import (Derivative, Symbol, expand, factor_terms)
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
+from sympy.core.function import expand_mul
 from sympy.functions import exp, im, cos, sin, re
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix
@@ -10,6 +11,7 @@ from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import ordered, uniq
+from sympy.integrals.integrals import integrate
 
 
 def _get_func_order(eqs, funcs):
@@ -169,7 +171,10 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
         except NonlinearError:
             raise ODENonlinearError("The system of ODEs is nonlinear.")
 
+        Ai = Ai.applyfunc(expand_mul)
+
         As.append(Ai)
+
         if o:
             eqs = [-eq for eq in b]
         else:
@@ -371,7 +376,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def _neq_linear_first_order_const_coeff_homogeneous(match_):
+def _linear_neq_order1_type1(match_):
     r"""
     System of n first-order constant-coefficient linear homogeneous differential equations
 
@@ -380,63 +385,16 @@ def _neq_linear_first_order_const_coeff_homogeneous(match_):
     or that can be written as `\vec{y'} = A . \vec{y}`
     where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
 
-    Since these equations are equivalent to a first order homogeneous linear
-    differential equation. So the general solution will contain `n` linearly
-    independent parts and solution will consist some type of exponential
-    functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
-    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
-    `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
+    These equations are equivalent to a first order homogeneous linear
+    differential equation.
 
-    .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
+    The system of ODEs described above has a unique solution, namely:
 
-    .. math:: r \vec{v} = A \vec{v}
+    .. math ::
+        \vec{y} = \exp(A t) C
 
-    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
-    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
-
-    - `n` distinct real eigenvalues
-    - complex conjugate eigenvalues
-    - eigenvalues with multiplicity `k`
-
-    1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
-    `v_1,...v_n` then the solution is given by
-
-    .. math:: \vec{y} = C_1 e^{r_1 t} \vec{v_1} + C_2 e^{r_2 t} \vec{v_2} +...+ C_n e^{r_n t} \vec{v_n}
-
-    where `C_1,C_2,...,C_n` are arbitrary constants.
-
-    2. When some eigenvalues are complex then in order to make the solution real,
-    we take a linear combination: if `r = a + bi` has an eigenvector
-    `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
-    the system, replace the complex-valued solutions `e^{rx} \vec{v}`
-    with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
-    and for `r = a - bi` replace the solution `e^{-r x} \vec{v}` with
-    `e^{ax} (\vec{w_1} \sin(bx) + \vec{w_2} \cos(bx))`
-
-    3. If some eigenvalues are repeated. Then we get fewer than `n` linearly
-    independent eigenvectors, we miss some of the solutions and need to
-    construct the missing ones. We do this via generalized eigenvectors, vectors
-    which are not eigenvectors but are close enough that we can use to write
-    down the remaining solutions. For a eigenvalue `r` with eigenvector `\vec{w}`
-    we obtain `\vec{w_2},...,\vec{w_k}` using
-
-    .. math:: (A - r I) . \vec{w_2} = \vec{w}
-
-    .. math:: (A - r I) . \vec{w_3} = \vec{w_2}
-
-    .. math:: \vdots
-
-    .. math:: (A - r I) . \vec{w_k} = \vec{w_{k-1}}
-
-    Then the solutions to the system for the eigenspace are `e^{rt} [\vec{w}],
-    e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
-    ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
-    + \vec{w_k}]`
-
-    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
-    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
-
-    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
+    where $t$ is the independent variable and $C$ is a vector of n constants. These are constants
+    from the integration.
 
     """
     eq = match_['eq']
@@ -484,6 +442,75 @@ def _canonical_equations(eqs, funcs, t):
     canon_eqs = [Eq(func.diff(t), canon_eqs[func.diff(t)]) for func in funcs]
 
     return canon_eqs
+
+
+def _is_commutative_anti_derivative(A, t):
+    B = integrate(A, t)
+    is_commuting = (B*A - A*B).applyfunc(expand).applyfunc(factor_terms).is_zero_matrix
+
+    return B, is_commuting
+
+
+def _linear_neq_order1_type3(match_):
+    r"""
+    System of n first-order nonconstant-coefficient linear homogeneous differential equations
+
+    .. math::
+        X' = A(t) X
+
+    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
+    is the first order differential of $X$ with respect to $t$ and $A(t)$ is a $n \times n$
+    coefficient matrix.
+
+    Let us define $B$ as antiderivative of coefficient matrix $A$:
+
+    .. math::
+        B(t) = \int A(t) dt
+
+    If the system of ODEs defined above is such that its antiderivative $B(t)$ commutes with
+    $A(t)$ itself, then, the solution of the above system is given as:
+
+    .. math::
+        X = \exp(B(t)) C
+
+    where $C$ is the vector of constants.
+
+    """
+    # Some parts of code is repeated, this needs to be taken care of
+    # The constant vector obtained here can be done so in the match
+    # function itself.
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # This needs to be modified in future so that fc is only of type Matrix
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+
+    # The code in if block will be removed when it is made sure
+    # that the code works without the statements in if block.
+    if "commutative_antiderivative" not in match_:
+        B, is_commuting = _is_commutative_anti_derivative(M, t)
+
+        # This course is subject to change
+        if not is_commuting:
+            return None
+
+    else:
+        B = match_['commutative_antiderivative']
+
+    sol_vector = B.exp() * Cvect
+
+    # The expand_mul is added to handle the solutions so that
+    # the exponential terms are collected properly.
+    sol_vector = [collect(expand_mul(s), ordered(s.atoms(exp)), exact=True) for s in sol_vector]
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
@@ -541,6 +568,12 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                           equations have constant coefficients or not.
             7. is_homogeneous: Boolean value indicating if the set of
                           equations are homogeneous or not.
+            8. commutative_antiderivative: Antiderivative of the coefficient
+                          matrix if the coefficient matrix is non-constant
+                          and commutative with its antiderivative. This key
+                          may or may not exist.
+            9. is_general: Boolean value indicating if the system of ODEs is
+                           solvable using one of the general case solvers or not.
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
 
@@ -602,6 +635,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Homogeneous check
     is_homogeneous = True if b.is_zero_matrix else False
 
+    # Is general key is used to identify if the system of ODEs can be solved by
+    # one of the general case solvers or not.
     match = {
         'no_of_equation': len(eqs),
         'eq': eqs,
@@ -610,19 +645,26 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_linear': is_linear,
         'is_constant': is_constant,
         'is_homogeneous': is_homogeneous,
+        'is_general': True
     }
 
     # The match['is_linear'] check will be added in the future when this
     # function becomes ready to deal with non-linear systems of ODEs
-    if match['is_constant']:
 
-        # Converting the equation into canonical form if the
-        # equation is first order. There will be a separate
-        # function for this in the future.
-        if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
-            match['func_coeff'] = A
+    # Converting the equation into canonical form if the
+    # equation is first order. There will be a separate
+    # function for this in the future.
+    if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
+        match['func_coeff'] = A
+        if match['is_constant']:
             match['type_of_equation'] = "type1"
+        else:
+            B, is_commuting = _is_commutative_anti_derivative(-A, t)
+            if not is_commuting:
+                return None
+            match['commutative_antiderivative'] = B
+            match['type_of_equation'] = "type3"
 
-            return match
+        return match
 
     return None

@@ -307,3 +307,14 @@ def test_Cycle():
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    m = Manifold('M', 2)
+    assert srepr(m) == "Manifold('M', 2)"
+    p = Patch('P', m)
+    assert srepr(p) == "Patch('P', Manifold('M', 2))"
+    rect = CoordSystem('rect', p)
+    assert srepr(rect) == "CoordSystem('rect', Patch('P', Manifold('M', 2)), ('rect_0', 'rect_1'))"
+    b = BaseScalarField(rect, 0)
+    assert srepr(b) == "BaseScalarField(CoordSystem('rect', Patch('P', Manifold('M', 2)), ('rect_0', 'rect_1')), Integer(0))"

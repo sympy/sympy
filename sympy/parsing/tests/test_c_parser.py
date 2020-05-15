@@ -5,15 +5,18 @@ from sympy.external import import_module
 cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 
 if cin:
-    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-                                   Return, FunctionDefinition, Integer, Float,
-                                   Declaration, CodeBlock, FunctionPrototype,
-                                   FunctionCall, NoneToken, Assignment, Type)
+    from sympy.codegen.ast import (Variable, String, Return,
+        FunctionDefinition, Integer, Float, Declaration, CodeBlock,
+        FunctionPrototype, FunctionCall, NoneToken, Assignment, Type,
+        IntBaseType, SignedIntType, UnsignedIntType, FloatType,
+        AddAugmentedAssignment, SubAugmentedAssignment,
+        MulAugmentedAssignment, DivAugmentedAssignment,
+        ModAugmentedAssignment)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
         PreIncrement, PostIncrement)
-    from sympy.core import (Add, Mul, Mod, Pow, Rational, StrictLessThan,
-                            LessThan, StrictGreaterThan, GreaterThan,
-                            Equality, Unequality)
+    from sympy.core import (Add, Mul, Mod, Pow, Rational,
+        StrictLessThan, LessThan, StrictGreaterThan, GreaterThan,
+        Equality, Unequality)
     from sympy.logic.boolalg import And, Not, Or
     from sympy import Symbol, true, false
     import os
@@ -45,62 +48,70 @@ if cin:
         assert res1[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
 
         assert res1[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
 
         assert res2[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=FloatBaseType(String('real')),
-                value=Float('0.0', precision=53)
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    )
             )
         )
         assert res2[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=FloatBaseType(String('real')),
-                value=Float('0.0', precision=53)
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    )
             )
         )
 
         assert res3[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
 
         assert res3[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=FloatBaseType(String('real')),
-                value=Float('0.0', precision=53)
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    )
             )
         )
 
         assert res3[2] == Declaration(
             Variable(
                 Symbol('c'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
 
         assert res4[0] == Declaration(
             Variable(
                 Symbol('x'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
             )
         )
@@ -108,7 +119,7 @@ if cin:
         assert res4[1] == Declaration(
             Variable(
                 Symbol('y'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(6)
             )
         )
@@ -116,7 +127,12 @@ if cin:
         assert res4[2] == Declaration(
             Variable(
                 Symbol('p'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.0', precision=53)
             )
         )
@@ -124,7 +140,12 @@ if cin:
         assert res4[3] == Declaration(
             Variable(
                 Symbol('q'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('9.67', precision=53)
             )
         )
@@ -141,6 +162,49 @@ if cin:
         c_src5 = "int x = '0', y = 'a';"
         c_src6 = "int r = true, s = false;"
 
+        # cin.TypeKind.UCHAR
+        c_src_type1 = (
+            "signed char a = 1, b = 5.1;"
+            )
+
+        # cin.TypeKind.SHORT
+        c_src_type2 = (
+            "short a = 1, b = 5.1;"
+            "signed short c = 1, d = 5.1;"
+            "short int e = 1, f = 5.1;"
+            "signed short int g = 1, h = 5.1;"
+            )
+
+        # cin.TypeKind.INT
+        c_src_type3 = (
+            "signed int a = 1, b = 5.1;"
+            "int c = 1, d = 5.1;"
+            )
+
+        # cin.TypeKind.LONG
+        c_src_type4 = (
+            "long a = 1, b = 5.1;"
+            "long int c = 1, d = 5.1;"
+            )
+
+        # cin.TypeKind.UCHAR
+        c_src_type5 = "unsigned char a = 1, b = 5.1;"
+
+        # cin.TypeKind.USHORT
+        c_src_type6 = (
+            "unsigned short a = 1, b = 5.1;"
+            "unsigned short int c = 1, d = 5.1;"
+            )
+
+        # cin.TypeKind.UINT
+        c_src_type7 = "unsigned int a = 1, b = 5.1;"
+
+        # cin.TypeKind.ULONG
+        c_src_type8 = (
+            "unsigned long a = 1, b = 5.1;"
+            "unsigned long int c = 1, d = 5.1;"
+            )
+
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
         res3 = SymPyExpression(c_src3, 'c').return_expr()
@@ -148,10 +212,19 @@ if cin:
         res5 = SymPyExpression(c_src5, 'c').return_expr()
         res6 = SymPyExpression(c_src6, 'c').return_expr()
 
+        res_type1 = SymPyExpression(c_src_type1, 'c').return_expr()
+        res_type2 = SymPyExpression(c_src_type2, 'c').return_expr()
+        res_type3 = SymPyExpression(c_src_type3, 'c').return_expr()
+        res_type4 = SymPyExpression(c_src_type4, 'c').return_expr()
+        res_type5 = SymPyExpression(c_src_type5, 'c').return_expr()
+        res_type6 = SymPyExpression(c_src_type6, 'c').return_expr()
+        res_type7 = SymPyExpression(c_src_type7, 'c').return_expr()
+        res_type8 = SymPyExpression(c_src_type8, 'c').return_expr()
+
         assert res1[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
             )
         )
@@ -159,7 +232,7 @@ if cin:
         assert res2[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
             )
         )
@@ -167,7 +240,7 @@ if cin:
         assert res2[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
             )
         )
@@ -175,7 +248,7 @@ if cin:
         assert res3[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
             )
         )
@@ -183,7 +256,7 @@ if cin:
         assert res3[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(5)
             )
         )
@@ -191,7 +264,7 @@ if cin:
         assert res4[0] == Declaration(
             Variable(
                 Symbol('p'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(6)
             )
         )
@@ -199,7 +272,7 @@ if cin:
         assert res4[1] == Declaration(
             Variable(
                 Symbol('q'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(23)
             )
         )
@@ -207,7 +280,7 @@ if cin:
         assert res5[0] == Declaration(
             Variable(
                 Symbol('x'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(48)
             )
         )
@@ -215,7 +288,7 @@ if cin:
         assert res5[1] == Declaration(
             Variable(
                 Symbol('y'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(97)
             )
         )
@@ -223,7 +296,7 @@ if cin:
         assert res6[0] == Declaration(
             Variable(
                 Symbol('r'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
             )
         )
@@ -231,10 +304,327 @@ if cin:
         assert res6[1] == Declaration(
             Variable(
                 Symbol('s'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(0)
             )
         )
+
+        assert res_type1[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=SignedIntType(
+                    String('int8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type1[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=SignedIntType(
+                    String('int8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[2] == Declaration(
+            Variable(Symbol('c'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[4] == Declaration(
+            Variable(
+                Symbol('e'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[5] == Declaration(
+            Variable(
+                Symbol('f'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type2[6] == Declaration(
+            Variable(
+                Symbol('g'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type2[7] == Declaration(
+            Variable(
+                Symbol('h'),
+                type=SignedIntType(
+                    String('int16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type3[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=IntBaseType(String('intc')),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type3[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=IntBaseType(String('intc')),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type3[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=IntBaseType(String('intc')),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type3[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=IntBaseType(String('intc')),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type4[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type4[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type4[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type4[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=SignedIntType(
+                    String('int64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type5[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type5[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint8'),
+                    nbits=Integer(8)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type6[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type6[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type6[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type6[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=UnsignedIntType(
+                    String('uint16'),
+                    nbits=Integer(16)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type7[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint32'),
+                    nbits=Integer(32)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type7[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint32'),
+                    nbits=Integer(32)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type8[0] == Declaration(
+            Variable(
+                Symbol('a'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type8[1] == Declaration(
+            Variable(
+                Symbol('b'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
+
+        assert res_type8[2] == Declaration(
+            Variable(
+                Symbol('c'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(1)
+                )
+            )
+
+        assert res_type8[3] == Declaration(
+            Variable(
+                Symbol('d'),
+                type=UnsignedIntType(
+                    String('uint64'),
+                    nbits=Integer(64)
+                    ),
+                value=Integer(5)
+                )
+            )
 
 
     def test_float():
@@ -247,16 +637,34 @@ if cin:
         c_src4 = 'float p = 5, e = 7.89;'
         c_src5 = 'float r = true, s = false;'
 
+        # cin.TypeKind.FLOAT
+        c_src_type1 = 'float x = 1, y = 2.5;'
+
+        # cin.TypeKind.DOUBLE
+        c_src_type2 = 'double x = 1, y = 2.5;'
+
+        # cin.TypeKind.LONGDOUBLE
+        c_src_type3 = 'long double x = 1, y = 2.5;'
+
         res1 = SymPyExpression(c_src1, 'c').return_expr()
         res2 = SymPyExpression(c_src2, 'c').return_expr()
         res3 = SymPyExpression(c_src3, 'c').return_expr()
         res4 = SymPyExpression(c_src4, 'c').return_expr()
         res5 = SymPyExpression(c_src5, 'c').return_expr()
 
+        res_type1 = SymPyExpression(c_src_type1, 'c').return_expr()
+        res_type2 = SymPyExpression(c_src_type2, 'c').return_expr()
+        res_type3 = SymPyExpression(c_src_type3, 'c').return_expr()
+
         assert res1[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('1.0', precision=53)
                 )
             )
@@ -264,7 +672,12 @@ if cin:
         assert res2[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('1.25', precision=53)
             )
         )
@@ -272,7 +685,12 @@ if cin:
         assert res2[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.3900000000000001', precision=53)
             )
         )
@@ -280,7 +698,12 @@ if cin:
         assert res3[0] == Declaration(
             Variable(
                 Symbol('x'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('1.0', precision=53)
             )
         )
@@ -288,7 +711,12 @@ if cin:
         assert res3[1] == Declaration(
             Variable(
                 Symbol('y'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.0', precision=53)
             )
         )
@@ -296,7 +724,12 @@ if cin:
         assert res4[0] == Declaration(
             Variable(
                 Symbol('p'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                ),
                 value=Float('5.0', precision=53)
             )
         )
@@ -304,7 +737,12 @@ if cin:
         assert res4[1] == Declaration(
             Variable(
                 Symbol('e'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('7.89', precision=53)
             )
         )
@@ -312,7 +750,12 @@ if cin:
         assert res5[0] == Declaration(
             Variable(
                 Symbol('r'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('1.0', precision=53)
             )
         )
@@ -320,10 +763,92 @@ if cin:
         assert res5[1] == Declaration(
             Variable(
                 Symbol('s'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('0.0', precision=53)
             )
         )
+
+        assert res_type1[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
+                value=Float('1.0', precision=53)
+                )
+            )
+
+        assert res_type1[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
+                value=Float('2.5', precision=53)
+                )
+            )
+        assert res_type2[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatType(
+                    String('float64'),
+                    nbits=Integer(64),
+                    nmant=Integer(52),
+                    nexp=Integer(11)
+                    ),
+                value=Float('1.0', precision=53)
+                )
+            )
+
+        assert res_type2[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatType(
+                    String('float64'),
+                    nbits=Integer(64),
+                    nmant=Integer(52),
+                    nexp=Integer(11)
+                    ),
+                value=Float('2.5', precision=53)
+                )
+            )
+
+        assert res_type3[0] == Declaration(
+            Variable(
+                Symbol('x'),
+                type=FloatType(
+                    String('float80'),
+                    nbits=Integer(80),
+                    nmant=Integer(63),
+                    nexp=Integer(15)
+                    ),
+                value=Float('1.0', precision=53)
+                )
+            )
+
+        assert res_type3[1] == Declaration(
+            Variable(
+                Symbol('y'),
+                type=FloatType(
+                    String('float80'),
+                    nbits=Integer(80),
+                    nmant=Integer(63),
+                    nexp=Integer(15)
+                    ),
+                value=Float('2.5', precision=53)
+                )
+            )
 
 
     def  test_bool():
@@ -449,23 +974,21 @@ if cin:
                 Declaration(
                     Variable(
                         Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                     )
                 )
             )
         )
 
         assert res2[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun2'),
             parameters=(),
             body=CodeBlock(
                 Declaration(
                     Variable(
                         Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                     )
                 ),
                 Return('a')
@@ -473,15 +996,24 @@ if cin:
         )
 
         assert res3[0] == FunctionDefinition(
-            FloatBaseType(String('real')),
+            FloatType(
+                String('float32'),
+                nbits=Integer(32),
+                nmant=Integer(23),
+                nexp=Integer(8)
+                ),
             name=String('fun3'),
             parameters=(),
             body=CodeBlock(
                 Declaration(
                     Variable(
                         Symbol('b'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                     )
                 ),
                 Return('b')
@@ -489,7 +1021,12 @@ if cin:
         )
 
         assert res4[0] == FunctionPrototype(
-            FloatBaseType(String('real')),
+            FloatType(
+                String('float32'),
+                nbits=Integer(32),
+                nmant=Integer(23),
+                nexp=Integer(8)
+                ),
             name=String('fun4'),
             parameters=()
         )
@@ -527,42 +1064,47 @@ if cin:
             parameters=(
                 Variable(
                     Symbol('a'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0)
+                    type=IntBaseType(String('intc'))
                 ),
             ),
             body=CodeBlock(
                 Declaration(
                     Variable(
                         Symbol('i'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                     )
                 )
             )
         )
 
         assert res2[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun2'),
             parameters=(
                 Variable(
                     Symbol('x'),
-                    type=FloatBaseType(String('real')),
-                    value=Float('0.0', precision=53)
+                    type=FloatType(
+                        String('float32'),
+                        nbits=Integer(32),
+                        nmant=Integer(23),
+                        nexp=Integer(8)
+                        )
                 ),
                 Variable(
                     Symbol('y'),
-                    type=FloatBaseType(String('real')),
-                    value=Float('0.0', precision=53)
+                    type=FloatType(
+                        String('float32'),
+                        nbits=Integer(32),
+                        nmant=Integer(23),
+                        nexp=Integer(8)
+                        )
                 )
             ),
             body=CodeBlock(
                 Declaration(
                     Variable(
                         Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                     )
                 ),
                 Return('a')
@@ -570,30 +1112,42 @@ if cin:
         )
 
         assert res3[0] == FunctionDefinition(
-            FloatBaseType(String('real')), name=String('fun3'),
+            FloatType(
+                String('float32'),
+                nbits=Integer(32),
+                nmant=Integer(23),
+                nexp=Integer(8)
+                ),
+            name=String('fun3'),
             parameters=(
                 Variable(
                     Symbol('p'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0)
+                    type=IntBaseType(String('intc'))
                 ),
                 Variable(
                     Symbol('q'),
-                    type=FloatBaseType(String('real')),
-                    value=Float('0.0', precision=53)
+                    type=FloatType(
+                        String('float32'),
+                        nbits=Integer(32),
+                        nmant=Integer(23),
+                        nexp=Integer(8)
+                        )
                 ),
                 Variable(
                     Symbol('r'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0)
+                    type=IntBaseType(String('intc'))
                 )
             ),
             body=CodeBlock(
                 Declaration(
                     Variable(
                         Symbol('b'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                     )
                 ),
                 Return('b')
@@ -671,11 +1225,10 @@ if cin:
 
 
         assert res1[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun1'),
             parameters=(Variable(Symbol('x'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
                 ),
             ),
             body=CodeBlock(
@@ -701,18 +1254,16 @@ if cin:
             )
 
         assert res2[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun2'),
             parameters=(Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
                 ),
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)),
+                type=IntBaseType(String('intc'))
+                ),
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
                 )
             ),
             body=CodeBlock(
@@ -741,20 +1292,17 @@ if cin:
             )
 
         assert res3[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun3'),
             parameters=(
                 Variable(Symbol('a'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0)
+                    type=IntBaseType(String('intc'))
                     ),
                 Variable(Symbol('b'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0)
+                    type=IntBaseType(String('intc'))
                     ),
                 Variable(Symbol('c'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0)
+                    type=IntBaseType(String('intc'))
                     )
                 ),
             body=CodeBlock(
@@ -769,20 +1317,17 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('p'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('q'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('r'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
@@ -801,17 +1346,26 @@ if cin:
             )
 
         assert res4[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun4'),
             parameters=(Variable(Symbol('a'),
-                type=FloatBaseType(String('real')),
-                value=Float('0.0', precision=53)),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    )
+                ),
             Variable(Symbol('b'),
-                type=FloatBaseType(String('real')),
-                value=Float('0.0', precision=53)),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    )
+                ),
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
                 )
             ),
             body=CodeBlock(
@@ -826,20 +1380,27 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('x'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                         )
                     ),
                 Declaration(
                     Variable(Symbol('y'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                         )
                     ),
                 Declaration(
                     Variable(Symbol('z'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
@@ -857,7 +1418,7 @@ if cin:
             )
 
         assert res5[0] == FunctionDefinition(
-            IntBaseType(String('integer')),
+            IntBaseType(String('intc')),
             name=String('fun'),
             parameters=(),
             body=CodeBlock(
@@ -911,15 +1472,13 @@ if cin:
         assert res1[0] == Declaration(
             Variable(
                 Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
         assert res1[1] == Declaration(
             Variable(
                 Symbol('b'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc'))
             )
         )
         assert res2[0] == FunctionDefinition(
@@ -930,8 +1489,7 @@ if cin:
                 Declaration(
                     Variable(
                         Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                     )
                 )
             )
@@ -1407,8 +1965,9 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                    type=IntBaseType(String('integer')),
-                    value=Integer(0))),
+                        type=IntBaseType(String('intc'))
+                        )
+                    ),
                 Assignment(Variable(Symbol('a')), Integer(1))
                 )
             )
@@ -1420,7 +1979,7 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                    type=IntBaseType(String('integer')),
+                    type=IntBaseType(String('intc')),
                     value=Integer(0))),
                 Assignment(
                     Variable(Symbol('a')),
@@ -1445,7 +2004,7 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(10)
                         )
                     ),
@@ -1466,12 +2025,12 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0))),
+                        type=IntBaseType(String('intc'))
+                        )
+                    ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1502,26 +2061,22 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('d'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1566,26 +2121,22 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('d'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1634,8 +2185,12 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                         )
                     ),
                 Assignment(
@@ -1652,8 +2207,12 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                         )
                     ),
                 Assignment(
@@ -1670,8 +2229,14 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53))),
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
+                        )
+                    ),
                 Assignment(
                     Variable(Symbol('a')),
                     Float('4.0', precision=53)
@@ -1686,8 +2251,7 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1704,8 +2268,7 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1722,8 +2285,7 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1740,20 +2302,22 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                         )
                     ),
                 Assignment(
@@ -1776,26 +2340,25 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(2)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('d'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(5)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('n'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(10)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('s'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1828,8 +2391,7 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1846,14 +2408,13 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(2)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1873,20 +2434,19 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(100)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(3)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1906,26 +2466,25 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(100)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(3)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('mod'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(1000000007)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -1955,26 +2514,25 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(100)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(3)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('mod'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(1000000007)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Assignment(
@@ -2005,14 +2563,12 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2033,26 +2589,22 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('d'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2081,62 +2633,54 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(1)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(2)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c5'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c6'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c7'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c8'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2205,50 +2749,44 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(3)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(4)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c5'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c6'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2303,32 +2841,32 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=FloatBaseType(String('real')),
-                        value=Float('0.0', precision=53)
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            )
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2356,51 +2894,55 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=FloatBaseType(String('real')),
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            ),
                         value=Float('1.25', precision=53)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=FloatBaseType(String('real')),
+                        type=FloatType(
+                            String('float32'),
+                            nbits=Integer(32),
+                            nmant=Integer(23),
+                            nexp=Integer(8)
+                            ),
                         value=Float('2.5', precision=53)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
                         type=Type(String('bool')
-                            ),
-                        value=false
+                            )
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c5'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c6'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2454,38 +2996,32 @@ if cin:
             parameters=(), body=CodeBlock(
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c5'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c6'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2522,38 +3058,32 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c5'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c6'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2589,32 +3119,27 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2643,30 +3168,27 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0))),
+                        type=IntBaseType(String('intc'))
+                        )
+                    ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2695,62 +3217,52 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
-                        value=Integer(0)
+                        type=IntBaseType(String('intc'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('d'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c1'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c2'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c3'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c4'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c5'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c6'),
-                        type=Type(String('bool')),
-                        value=false
+                        type=Type(String('bool'))
                         )
                     ),
                 Assignment(
@@ -2886,8 +3398,8 @@ if cin:
         )
 
         c_src15 = (
-            'int a;' + '\n' +
-            'int b;' + '\n' +
+            'int a = 4;' + '\n' +
+            'int b = 2;' + '\n' +
             'float c = b/a;' + '\n'
         )
 
@@ -3005,7 +3517,7 @@ if cin:
         )
 
         c_src30 = (
-            'bool a;' + '\n' +
+            'bool a = false;' + '\n' +
 
             'bool c1 = a && true;' + '\n' +
             'bool c2 = false && a;' + '\n' +
@@ -3015,7 +3527,7 @@ if cin:
         )
 
         c_src31 = (
-            'int a;' + '\n' +
+            'int a = 1;' + '\n' +
 
             'bool c1 = a && 1;' + '\n' +
             'bool c2 = a && 0;' + '\n' +
@@ -3025,8 +3537,8 @@ if cin:
         )
 
         c_src32 = (
-            'int a, b;' + '\n' +
-            'bool c, d;'+ '\n' +
+            'int a = 1, b = 0;' + '\n' +
+            'bool c = false, d = true;'+ '\n' +
 
             'bool c1 = a && b;' + '\n' +
             'bool c2 = a && c;' + '\n' +
@@ -3038,20 +3550,11 @@ if cin:
         )
 
         c_src_raise1 = (
-            'double a;'
+            "char a = 'b';"
         )
 
         c_src_raise2 = (
-            'long a = 1;'
-        )
-
-        c_src_raise3 = (
-            'int a = (int) 1.0;'
-        )
-
-        c_src_raise4 = (
-            'int a = 10;'
-            'int b = (a!=10)?(a):(0);'
+            'int a[] = {10, 20};'
         )
 
         res1 = SymPyExpression(c_src1, 'c').return_expr()
@@ -3089,27 +3592,27 @@ if cin:
 
         assert res1[0] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(100)
                 )
             )
 
         assert res1[1] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Symbol('b')
                 )
             )
 
         assert res2[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
                 )
             )
 
         assert res2[1] == Declaration(Variable(Symbol('b'),
-            type=IntBaseType(String('integer')),
+            type=IntBaseType(String('intc')),
             value=Add(
                 Symbol('a'),
                 Integer(1)
@@ -3119,14 +3622,24 @@ if cin:
 
         assert res3[0] == Declaration(
             Variable(Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('12.5', precision=53)
                 )
             )
 
         assert res3[1] == Declaration(
             Variable(Symbol('b'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Mul(
                     Float('20.0', precision=53),
                     Symbol('a')
@@ -3136,35 +3649,35 @@ if cin:
 
         assert res4[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(83)
                 )
             )
 
         assert res5[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(-4836)
                 )
             )
 
         assert res6[0] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
                 )
             )
 
         assert res6[1] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(3)
                 )
             )
 
         assert res6[2] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Add(
                     Symbol('b'),
                     Mul(
@@ -3177,14 +3690,14 @@ if cin:
 
         assert res7[0] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
                 )
             )
 
         assert res7[1] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Add(
                     Symbol('b'),
                     Integer(2)
@@ -3194,7 +3707,7 @@ if cin:
 
         assert res7[2] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mul(
                     Integer(10),
                     Pow(
@@ -3213,19 +3726,19 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(1)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(2)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('temp'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Symbol('a')
                         )
                     ),
@@ -3242,28 +3755,28 @@ if cin:
 
         assert res9[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
                 )
             )
 
         assert res9[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
                 )
             )
 
         assert res9[2] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Symbol('a')
                 )
             )
 
         assert res9[3] == Declaration(
             Variable(Symbol('d'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Add(
                     Symbol('a'),
                     Symbol('b'),
@@ -3274,7 +3787,7 @@ if cin:
 
         assert res9[4] == Declaration(
             Variable(Symbol('e'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Add(
                     Pow(
                         Symbol('a'),
@@ -3306,7 +3819,7 @@ if cin:
 
         assert res9[5] == Declaration(
             Variable(Symbol('f'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mul(
                     Add(
                         Symbol('a'),
@@ -3327,7 +3840,7 @@ if cin:
 
         assert res9[6] == Declaration(
             Variable(Symbol('g'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mul(
                     Symbol('a'),
                     Add(
@@ -3352,21 +3865,36 @@ if cin:
 
         assert res10[0] == Declaration(
             Variable(Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('10.0', precision=53)
                 )
             )
 
         assert res10[1] == Declaration(
             Variable(Symbol('b'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.5', precision=53)
                 )
             )
 
         assert res10[2] == Declaration(
             Variable(Symbol('c'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Add(
                     Pow(
                         Symbol('a'),
@@ -3387,49 +3915,59 @@ if cin:
 
         assert res11[0] == Declaration(
             Variable(Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('4.0', precision=53)
                 )
             )
 
         assert res12[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(25)
                 )
             )
 
         assert res13[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(-95)
                 )
             )
 
         assert res14[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(-300)
                 )
             )
 
         assert res15[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(4)
                 )
             )
 
         assert res15[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(2)
                 )
             )
 
         assert res15[2] == Declaration(
             Variable(Symbol('c'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Mul(
                     Pow(
                         Symbol('a'),
@@ -3442,28 +3980,28 @@ if cin:
 
         assert res16[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
                 )
             )
 
         assert res16[1] == Declaration(
             Variable(Symbol('d'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(5)
                 )
             )
 
         assert res16[2] == Declaration(
             Variable(Symbol('n'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(10)
                 )
             )
 
         assert res16[3] == Declaration(
             Variable(Symbol('s'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mul(
                     Rational(1, 2),
                     Symbol('a'),
@@ -3486,21 +4024,21 @@ if cin:
 
         assert res17[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
                 )
             )
 
         assert res18[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
                 )
             )
 
         assert res18[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mod(
                     Symbol('a'),
                     Integer(3)
@@ -3510,20 +4048,20 @@ if cin:
 
         assert res19[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(100)
                 )
             )
         assert res19[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(3)
                 )
             )
 
         assert res19[2] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mod(
                     Symbol('a'),
                     Symbol('b')
@@ -3533,28 +4071,28 @@ if cin:
 
         assert res20[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(100)
                 )
             )
 
         assert res20[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(3)
                 )
             )
 
         assert res20[2] == Declaration(
             Variable(Symbol('mod'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1000000007)
                 )
             )
 
         assert res20[3] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mod(
                     Add(
                         Symbol('a'),
@@ -3574,28 +4112,28 @@ if cin:
 
         assert res21[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(100)
                 )
             )
 
         assert res21[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(3)
                 )
             )
 
         assert res21[2] == Declaration(
             Variable(Symbol('mod'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1000000007)
                 )
             )
 
         assert res21[3] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Mod(
                     Mul(
                         Add(
@@ -3659,14 +4197,14 @@ if cin:
 
         assert res24[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
                 )
             )
 
         assert res24[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(2)
                 )
             )
@@ -3752,14 +4290,14 @@ if cin:
 
         assert res25[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(3)
                 )
             )
 
         assert res25[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(4)
                 )
             )
@@ -3825,14 +4363,24 @@ if cin:
 
         assert res26[0] == Declaration(
             Variable(Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('1.25', precision=53)
                 )
             )
 
         assert res26[1] == Declaration(
             Variable(Symbol('b'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.5', precision=53)
                 )
             )
@@ -3879,14 +4427,24 @@ if cin:
 
         assert res27[0] == Declaration(
             Variable(Symbol('a'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('1.25', precision=53)
                 )
             )
 
         assert res27[1] == Declaration(
             Variable(Symbol('b'),
-                type=FloatBaseType(String('real')),
+                type=FloatType(
+                    String('float32'),
+                    nbits=Integer(32),
+                    nmant=Integer(23),
+                    nexp=Integer(8)
+                    ),
                 value=Float('2.5', precision=53)
                 )
             )
@@ -4072,8 +4630,8 @@ if cin:
 
         assert res31[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(1)
                 )
             )
 
@@ -4107,14 +4665,14 @@ if cin:
 
         assert res32[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(1)
                 )
             )
 
         assert res32[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(0)
                 )
             )
@@ -4129,7 +4687,7 @@ if cin:
         assert res32[3] == Declaration(
             Variable(Symbol('d'),
                 type=Type(String('bool')),
-                value=false
+                value=true
                 )
             )
 
@@ -4195,8 +4753,6 @@ if cin:
 
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
-        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise3, 'c'))
-        raises(NotImplementedError, lambda: SymPyExpression(c_src_raise4, 'c'))
 
 
     def test_paren_expr():
@@ -4206,7 +4762,7 @@ if cin:
         )
 
         c_src2 = (
-            'int a, b, c;'
+            'int a = 1, b = 2, c = 3;'
             'int d = (a);'
             'int e = (a + 1);'
             'int f = (a + b * c - d / e);'
@@ -4217,49 +4773,49 @@ if cin:
 
         assert res1[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(1)
                 )
             )
 
         assert res1[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Integer(7)
                 )
             )
 
         assert res2[0] == Declaration(
             Variable(Symbol('a'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(1)
                 )
             )
 
         assert res2[1] == Declaration(
             Variable(Symbol('b'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(2)
                 )
             )
 
         assert res2[2] == Declaration(
             Variable(Symbol('c'),
-                type=IntBaseType(String('integer')),
-                value=Integer(0)
+                type=IntBaseType(String('intc')),
+                value=Integer(3)
                 )
             )
 
         assert res2[3] == Declaration(
             Variable(Symbol('d'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Symbol('a')
                 )
             )
 
         assert res2[4] == Declaration(
             Variable(Symbol('e'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Add(
                     Symbol('a'),
                     Integer(1)
@@ -4269,7 +4825,7 @@ if cin:
 
         assert res2[5] == Declaration(
             Variable(Symbol('f'),
-                type=IntBaseType(String('integer')),
+                type=IntBaseType(String('intc')),
                 value=Add(
                     Symbol('a'),
                     Mul(
@@ -4345,13 +4901,13 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(10)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(20)
                         )
                     ),
@@ -4369,43 +4925,43 @@ if cin:
             body=CodeBlock(
                 Declaration(
                     Variable(Symbol('a'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(10)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('b'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(-100)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('c'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=Integer(19)
                         )
                     ),
                 Declaration(
                     Variable(Symbol('d'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=PreIncrement(Symbol('a'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('e'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=PreDecrement(Symbol('b'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('f'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=PostIncrement(Symbol('a'))
                         )
                     ),
                 Declaration(
                     Variable(Symbol('g'),
-                        type=IntBaseType(String('integer')),
+                        type=IntBaseType(String('intc')),
                         value=PostDecrement(Symbol('b'))
                         )
                     ),
@@ -4438,6 +4994,57 @@ if cin:
 
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise1, 'c'))
         raises(NotImplementedError, lambda: SymPyExpression(c_src_raise2, 'c'))
+
+
+    def test_compound_assignment_operator():
+        c_src = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 100;' + '\n' +
+                'a += 10;' + '\n' +
+                'a -= 10;' + '\n' +
+                'a *= 10;' + '\n' +
+                'a /= 10;' + '\n' +
+                'a %= 10;' + '\n' +
+            '}'
+        )
+
+        res = SymPyExpression(c_src, 'c').return_expr()
+
+        assert res[0] == FunctionDefinition(
+            NoneToken(),
+            name=String('func'),
+            parameters=(),
+            body=CodeBlock(
+                Declaration(
+                    Variable(
+                        Symbol('a'),
+                        type=IntBaseType(String('intc')),
+                        value=Integer(100)
+                        )
+                    ),
+                AddAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                SubAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                MulAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                DivAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    ),
+                ModAugmentedAssignment(
+                    Variable(Symbol('a')),
+                    Integer(10)
+                    )
+                )
+            )
 
 else:
     def test_raise():

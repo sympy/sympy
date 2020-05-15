@@ -7003,3 +7003,14 @@ def test_issue_18272():
     '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
     '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
     '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    m = Manifold('M', 2)
+    assert pretty(m) == 'M'
+    p = Patch('P', m)
+    assert pretty(p) == "P"
+    rect = CoordSystem('rect', p)
+    assert pretty(rect) == "rect"
+    b = BaseScalarField(rect, 0)
+    assert pretty(b) == "rect_0"
