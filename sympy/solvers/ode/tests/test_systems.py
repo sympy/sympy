@@ -426,6 +426,26 @@ def test_sysode_linear_neq_order1():
     assert dsolve(eq17) == sol17
     assert checksysodesol(eq17, sol17) == (True, [0, 0])
 
+    eq18 = [Eq(x(t).diff(t), 0), Eq(y(t).diff(t), 0)]
+    sol18 = [Eq(x(t), C1), Eq(y(t), C2)]
+    assert dsolve(eq18) == sol18
+    assert checksysodesol(eq18, sol18) == (True, [0, 0])
+
+    eq19 = [Eq(x(t).diff(t), 2*x(t) - y(t)), Eq(y(t).diff(t), x(t))]
+    sol19 = [Eq(x(t), (C1 + C2*t + C2)*exp(t)), Eq(y(t), (C1 + C2*t)*exp(t))]
+    assert dsolve(eq19) == sol19
+    assert checksysodesol(eq19, sol19) == (True, [0, 0])
+
+    eq20 = [Eq(x(t).diff(t), x(t)), Eq(y(t).diff(t), x(t) + y(t))]
+    sol20 = [Eq(x(t), C2*exp(t)), Eq(y(t), (C1 + C2*t)*exp(t))]
+    assert dsolve(eq20) == sol20
+    assert checksysodesol(eq20, sol20) == (True, [0, 0])
+
+    eq21 = [Eq(x(t).diff(t), 3*x(t)), Eq(y(t).diff(t), x(t) + y(t))]
+    sol21 = [Eq(x(t), 2*C2*exp(3*t)), Eq(y(t), C1*exp(t) + C2*exp(3*t))]
+    assert dsolve(eq21) == sol21
+    assert checksysodesol(eq21, sol21) == (True, [0, 0])
+
     Z0 = Function('Z0')
     Z1 = Function('Z1')
     Z2 = Function('Z2')
