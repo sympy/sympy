@@ -1257,7 +1257,7 @@ def _QRdecomposition(M):
     >>> Q_aug * R_aug == A
     True
 
-    A zero matrix example"
+    A zero matrix example:
 
     >>> from sympy import Matrix
     >>> A = Matrix.zeros(3, 4)
