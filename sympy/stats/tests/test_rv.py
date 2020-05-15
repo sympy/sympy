@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from sympy import (S, Symbol, Interval, exp,
-        symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+        symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
         DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
@@ -8,7 +8,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, sample_iter, PSpace, is_random)
+        RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
 from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
@@ -113,8 +113,8 @@ def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     x = Symbol('x')
 
-    raises(ValueError, lambda: pspace(5 + 3))
-    raises(ValueError, lambda: pspace(x < 1))
+    assert pspace(5 + 3) is None
+    assert pspace(x < 1) is None
     assert pspace(X) == X.pspace
     assert pspace(2*X + 1) == X.pspace
     assert pspace(2*X + Y) == IndependentProductPSpace(Y.pspace, X.pspace)
@@ -364,8 +364,14 @@ def test_issue_12283():
     x = symbols('x')
     X = RandomSymbol(x)
     Y = RandomSymbol('Y')
+    Z = RandomMatrixSymbol('Z', 2, 3)
+    RI = RandomIndexedSymbol(Indexed('RI', 3))
+    assert pspace(Z) == PSpace()
+    assert pspace(RI) == PSpace()
     assert pspace(X) == PSpace()
     assert E(X) == Expectation(X)
-    assert P(X > 3) == Probability(X > 3)
+    assert P(Y > 3) == Probability(Y > 3)
     assert variance(X) == Variance(X)
+    assert variance(RI) == Variance(RI)
     assert covariance(X, Y) == Covariance(X, Y)
+    assert covariance(X, Z) == Covariance(X, Z)

@@ -284,6 +284,9 @@ class RandomSymbol(Expr):
 class RandomIndexedSymbol(RandomSymbol):
 
     def __new__(cls, idx_obj, pspace=None):
+        if pspace is None:
+            # Allow single arg, representing pspace == PSpace()
+            pspace = PSpace()
         if not isinstance(idx_obj, (Indexed, Function)):
             raise TypeError("An Function or Indexed object is expected not %s"%(idx_obj))
         return Basic.__new__(cls, idx_obj, pspace)
@@ -302,6 +305,9 @@ class RandomMatrixSymbol(MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
+        if pspace is None:
+            # Allow single arg, representing pspace == PSpace()
+            pspace = PSpace()
         return Basic.__new__(cls, symbol, n, m, pspace)
 
     symbol = property(lambda self: self.args[0])
@@ -574,7 +580,7 @@ def pspace(expr):
 
     rvs = random_symbols(expr)
     if not rvs:
-        raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
+        return None
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace

@@ -66,6 +66,7 @@ def test_literal_probability():
     assert Covariance(X, X**2).doit() == Covariance(X, X**2)
     assert Covariance(X, sin(X)).doit() == Covariance(sin(X), X)
     assert Covariance(X**2, sin(X)*Y).doit() == Covariance(sin(X)*Y, X**2)
+    assert Covariance(w, X).evaluate_integral() == 0
 
 
 def test_probability_rewrite():
@@ -101,5 +102,8 @@ def test_probability_rewrite():
     assert Variance(X).rewrite(Sum) == Variance(X).rewrite(Integral)
     assert Expectation(X).rewrite(Sum) == Expectation(X).rewrite(Integral)
 
+    assert Covariance(w, X).rewrite(Sum) == 0
+
+    assert Covariance(w, X).rewrite(Integral) == 0
     assert Variance(X, condition=Y).rewrite(Probability) == Integral(x**2*Probability(Eq(X, x), Y), (x, -oo, oo)) - \
                                                             Integral(x*Probability(Eq(X, x), Y), (x, -oo, oo))**2
