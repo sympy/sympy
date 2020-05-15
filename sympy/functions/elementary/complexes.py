@@ -46,6 +46,7 @@ class re(Function):
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -154,6 +155,7 @@ class im(Function):
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -283,6 +285,7 @@ class sign(Function):
     """
 
     is_complex = True
+    _singularities = True
 
     def doit(self, **hints):
         if self.args[0].is_zero is False:
@@ -437,6 +440,7 @@ class Abs(Function):
     is_extended_negative = False
     is_extended_nonnegative = True
     unbranched = True
+    _singularities = True  # non-holomorphic
 
     def fdiff(self, argindex=1):
         """
@@ -653,6 +657,7 @@ class arg(Function):
     is_extended_real = True
     is_real = True
     is_finite = True
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -713,6 +718,7 @@ class conjugate(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):

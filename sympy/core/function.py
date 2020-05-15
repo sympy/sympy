@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import has_dups, sift
@@ -602,6 +602,33 @@ class Function(Application, Expr):
 
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
+
+    def _eval_is_meromorphic(self, x, a):
+        if not self.args:
+            return True
+        if any(arg.has(x) for arg in self.args[1:]):
+            return False
+
+        arg = self.args[0]
+        if not arg._eval_is_meromorphic(x, a):
+            return None
+
+        return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
+
+    _singularities = None  # indeterminate
+
+    @classmethod
+    def is_singular(cls, a):
+        """
+        Tests whether the argument is an essential singularity
+        or a branch point, or the functions is non-holomorphic.
+        """
+        ss = cls._singularities
+        if ss in (True, None, False):
+            return ss
+
+        return fuzzy_or(a.is_infinite if s is S.ComplexInfinity
+                        else (a - s).is_zero for s in ss)
 
     def as_base_exp(self):
         """
