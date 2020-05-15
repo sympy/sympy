@@ -132,6 +132,11 @@ class DiracDelta(Function):
         >>> diff(DiracDelta(x, 1)).fdiff()
         DiracDelta(x, 3)
 
+        Parameters
+        ==========
+
+        argindex : integer degree of derivative
+
         """
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
