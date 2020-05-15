@@ -446,6 +446,11 @@ def test_sysode_linear_neq_order1():
     assert dsolve(eq21) == sol21
     assert checksysodesol(eq21, sol21) == (True, [0, 0])
 
+    eq22 = [Eq(x(t).diff(t), 3*x(t)), Eq(y(t).diff(t), y(t))]
+    sol22 = [Eq(x(t), C2*exp(3*t)), Eq(y(t), C1*exp(t))]
+    assert dsolve(eq22) == sol22
+    assert checksysodesol(eq22, sol22) == (True, [0, 0])
+
     Z0 = Function('Z0')
     Z1 = Function('Z1')
     Z2 = Function('Z2')
