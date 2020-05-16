@@ -41,7 +41,6 @@ from sympy.polys.densearith import (
     dup_sub_mul, dmp_sub_mul,
     dup_lshift,
     dup_max_norm, dmp_max_norm,
-    dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground)
 
