@@ -292,11 +292,7 @@ class Printer(object):
             self._print_level -= 1
 
     def emptyPrinter(self, expr):
-        # Checks what type of decimal separator to print.
-        expr = str(expr)
-        if self._settings.get('decimal_separator', None) == 'comma':
-            expr = expr.replace('.', '{,}')
-        return expr
+        return str(expr)
 
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """

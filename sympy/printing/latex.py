@@ -2558,6 +2558,13 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
+    def emptyPrinter(self, expr):
+        # Checks what type of decimal separator to print.
+        expr = super().emptyPrinter(expr)
+        if self._settings['decimal_separator'] == 'comma':
+            expr = expr.replace('.', '{,}')
+        return expr
+
 def translate(s):
     r'''
     Check for a modifier ending the string.  If present, convert the
