@@ -20,7 +20,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, MatrixBase)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -32,6 +32,15 @@ import warnings
 
 
 x = Symbol('x')
+
+@singledispatch
+def is_random(x):
+    return False
+
+@is_random.register(Boolean)
+def _(x):
+    atoms = x.free_symbols
+    return any([is_random(i) for i in atoms])
 
 class RandomDomain(Basic):
     """
@@ -1531,40 +1540,3 @@ def _symbol_converter(sym):
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
-
-
-@singledispatch
-def is_random(x):
-    return False
-
-@is_random.register(RandomSymbol)
-def _(x):
-    return True
-
-@is_random.register(Expr)
-def _(x):
-    atoms = x.free_symbols
-    if len(atoms) == 1 and next(iter(atoms)) == x:
-        return False
-    return any([is_random(i) for i in atoms])
-
-@is_random.register(Boolean)
-def _(x):
-    atoms = x.free_symbols
-    return any([is_random(i) for i in atoms])
-
-@is_random.register(Indexed)
-def _(x):
-    return is_random(x.base)
-
-@is_random.register(MatrixBase)
-def _(x):
-    return any([is_random(i) for i in x])
-
-@is_random.register(RandomMatrixSymbol)
-def _(x):
-    return True
-
-@is_random.register(RandomIndexedSymbol)
-def _(x):
-    return True

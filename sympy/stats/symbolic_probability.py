@@ -11,6 +11,18 @@ from sympy.stats.rv import RandomSymbol, probability, expectation, is_random
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
 
+@is_random.register(Expr)
+def _(x):
+    atoms = x.free_symbols
+    if len(atoms) == 1 and next(iter(atoms)) == x:
+        return False
+    return any([is_random(i) for i in atoms])
+
+@is_random.register(RandomSymbol)
+def _(x):
+    return True
+
+
 class Probability(Expr):
     """
     Symbolic expression for the probability.

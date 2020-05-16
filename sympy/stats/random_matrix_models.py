@@ -23,6 +23,11 @@ __all__ = [
     'level_spacing_distribution'
 ]
 
+@is_random.register(RandomMatrixSymbol)
+def _(x):
+    return True
+
+
 class RandomMatrixEnsemble(Basic):
     """
     Base class for random matrix ensembles.
