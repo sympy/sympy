@@ -323,7 +323,7 @@ def dup_zz_zassenhaus(f, K):
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
-    B = 2*int(abs(dup_zz_mignotte_bound(f, K)))
+    B = int((dup_zz_mignotte_bound(f, K)))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
@@ -396,10 +396,10 @@ def dup_zz_zassenhaus(f, K):
 
             H = dup_trunc(H, pl, K)
 
-            G_norm = dup_l1_norm(G, K)
-            H_norm = dup_l1_norm(H, K)
+            G_norm = dup_max_norm(G, K)
+            H_norm = dup_max_norm(H, K)
 
-            if G_norm*H_norm <= B:
+            if G_norm <= B and H_norm <= B:
                 T = T_S
                 sorted_T = [i for i in sorted_T if i not in S]
 
