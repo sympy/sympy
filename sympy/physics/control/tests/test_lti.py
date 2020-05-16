@@ -175,6 +175,17 @@ def test_TransferFunctionModel_series():
     )
     assert tfm1.series(tfm2).G == expect.G
 
+    H1 = TransferFunctionModel(
+        Matrix([7 / (s**9 + 9*s)])
+    )
+    H2 = TransferFunctionModel(
+        Matrix([5 / (s + 2)])
+    )
+    H = TransferFunctionModel(
+        Matrix([35 / ((s + 2) * (s**9 + 9*s))])
+    )
+    assert H1.series(H2).G == H.G
+
 
 def test_StateSpaceModel_parallel():
     a0, a1, a2, b0, b1, b2 = symbols('a:3, b:3')
@@ -218,6 +229,17 @@ def test_TransferFunctionModel_parallel():
         Matrix([(a + s + a * s * (b + s)) / (a * s * (a + s))])
     )
     assert together(tfm1.parallel(tfm2).G) == together(expect.G)
+
+    H1 = TransferFunctionModel(
+        Matrix([7 / (s**9 + 9*s)])
+    )
+    H2 = TransferFunctionModel(
+        Matrix([5 / (s + 2)])
+    )
+    H = TransferFunctionModel(
+        Matrix([7 / (s**9 + 9*s) + 5 / (s + 2)])
+    )
+    assert together(H1.parallel(H2).G) == together(H.G)
 
 
 def test_equality():
