@@ -1,8 +1,8 @@
 from sympy import (
     Symbol, simplify, oo, exp,
     Poly, lcm, LC, degree, Integral, integrate,
-    Matrix, BlockMatrix, eye, zeros, Basic,
-    latex, ShapeError, ImmutableMatrix, MutableMatrix,
+    Matrix, eye, zeros, Basic, latex,
+    ShapeError, ImmutableMatrix, MutableMatrix,
     SparseMatrix, MutableDenseMatrix
 )
 
@@ -105,10 +105,6 @@ class StateSpaceModel(Basic):
             if isinstance(arg[0], TransferFunctionModel):
                 # call the private method for realization finding
                 self.represent = self.find_realization(arg[0].G, arg[0].s)
-
-                # create a block matrix [[A,B], [C,D]] for visual representation
-                self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
-                                                [self.represent[2], self.represent[3]]])
             else:
                 # store the argument as representation of the system, fill
                 # in noneset args with None
@@ -138,10 +134,6 @@ class StateSpaceModel(Basic):
                             (self.represent[1].shape[1] == self.represent[3].shape[1]) and
                             (self.represent[2].shape[0] == self.represent[3].shape[0])):
                         raise ShapeError("Shapes of A,B,C,D must fit")
-
-        # create a block matrix [[A,B], [C,D]] for visual representation
-        self._blockrepresent = BlockMatrix([[self.represent[0], self.represent[1]],
-                                            [self.represent[2], self.represent[3]]])
 
     def find_realization(self, G, s):
         """ Representation (A, B, C, D) of the state space model
@@ -669,13 +661,6 @@ class StateSpaceModel(Basic):
                                  (self.__class__, name))
 
         return handler
-
-    #
-    # _repr_latex_(self)
-    #   defines the representation of the class in ipython pretty printing
-    #
-    def _repr_latex_(self):
-        return '$' + latex(self._blockrepresent) + '$'
 
     def __str__(self):
         return 'StateSpaceModel(\n' + sstr(self.represent[0]) + ',\n' \
