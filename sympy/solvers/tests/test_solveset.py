@@ -2235,6 +2235,14 @@ def test_solve_modular():
     # domain intersection
     assert solveset(3 - Mod(5*x - 8, 7), x, S.Naturals0) == \
             Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0)
+
+    assert solveset(Mod(x**16 - 7, 36) - 2, x, S.Integers) == \
+            Union(ImageSet(Lambda(n, 36*n + 3), S.Integers),
+            ImageSet(Lambda(n, 36*n + 9), S.Integers),
+            ImageSet(Lambda(n, 36*n + 15), S.Integers),
+            ImageSet(Lambda(n, 36*n + 21), S.Integers),
+            ImageSet(Lambda(n, 36*n + 27), S.Integers),
+            ImageSet(Lambda(n, 36*n + 33), S.Integers))
     # Complex args
     assert solveset(Mod(x, 3) - I, x, S.Integers) == \
             EmptySet()
