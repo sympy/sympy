@@ -498,18 +498,18 @@ __all__ = [
 ]
 
 
-#=======================================================================
-#
-# XXX: The names below were importable before sympy 1.6 using
-#
-#          from sympy import *
-#
-# This happened implicitly because there was no __all__ defined in this
-# __init__.py file. Not every package is imported. The list matches what
-# would have been imported before. It is possible that these packages will
-# not be imported by a star-import from sympy in future.
-#
-#=======================================================================
+#===========================================================================#
+#                                                                           #
+# XXX: The names below were importable before sympy 1.6 using               #
+#                                                                           #
+#          from sympy import *                                              #
+#                                                                           #
+# This happened implicitly because there was no __all__ defined in this     #
+# __init__.py file. Not every package is imported. The list matches what    #
+# would have been imported before. It is possible that these packages will  #
+# not be imported by a star-import from sympy in future.                    #
+#                                                                           #
+#===========================================================================#
 
 
 __all__.extend([
@@ -538,22 +538,43 @@ __all__.extend([
 ])
 
 
-#=======================================================================
-#
-# XXX: The names listed in _DEPREACTED_IMPORTS below were importable before
-# sympy 1.6 using
-#
-#          from sympy import *
-#
-# This happened implicitly because there was no __all__ defined in this
-# __init__.py file. The plan is to remove them but for now they remain
-# importable but will give a deprecation warning when used. In future these
-# names will be removed and will not be importable from here.
-#
-#=======================================================================
+#===========================================================================#
+#                                                                           #
+# XXX: The names listed in _DEPRECATED_IMPORTS below were importable before #
+# sympy 1.6 using                                                           #
+#                                                                           #
+#          from sympy import *                                              #
+#                                                                           #
+# This happened implicitly because there was no __all__ defined in this     #
+# __init__.py file. The plan is to remove them but for now they remain      #
+# importable but will give a deprecation warning when used. In future these #
+# names will be removed and will not be importable from here.               #
+#                                                                           #
+#===========================================================================#
 
 
 class DeprecatedImportModule:
+    # Add a docstring that someone can see if calling help on these objects
+    """Deprecated imported module object.
+
+    See https://github.com/sympy/sympy/pull/19316
+
+    This is a wrapper around a module that has been imported incorrectly.
+    Previously this module was importable using
+
+        from sympy import *
+
+    or (for example)
+
+        from sympy import add
+
+    However it was unintentional that this module would be imported in that
+    way and it will be removed in a future sympy version. If you do need to
+    use this module then the correct way to import it is to give its full
+    module path e.g.
+
+        import sympy.core.add as add
+    """
 
     from sympy.utilities.exceptions import SymPyDeprecationWarning as Warn
     import sys
