@@ -418,6 +418,33 @@ def _linear_neq_order1_type1(match_):
     return sol_dict
 
 
+# PR_number: Documentation to be added
+def _linear_neq_order1_type2(match_):
+    """
+    """
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    b = match_['rhs']
+
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # This needs to be modified in future so that fc is only of type Matrix
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
+    P, J = matrix_exp_jordan_form(M, t)
+    P = simplify(P)
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+    sol_vector = P * J * (integrate(J.inv() * P.inv() * b, t) + Cvect)
+
+    sol_vector = [collect(s, ordered(J.atoms(exp)), exact=True) for s in sol_vector]
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
+
+
 def _matrix_is_constant(M, t):
     """Checks if the matrix M is independent of t or not."""
     return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
@@ -513,6 +540,8 @@ def _linear_neq_order1_type3(match_):
     return sol_dict
 
 
+# PR_number: Details about the new keys in the match
+# dictionary to be added.
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
@@ -654,13 +683,20 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Converting the equation into canonical form if the
     # equation is first order. There will be a separate
     # function for this in the future.
-    if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
+
+    # PR_number: Matching function to be changed for type2
+    # equations
+    if all([order[func] == 1 for func in funcs]) and is_homogeneous:
         match['func_coeff'] = A
         if match['is_constant']:
+            # if is_homogeneous:
             match['type_of_equation'] = "type1"
+            # else:
+            #     match['rhs'] = b
+            #     match['type_of_equation'] = "type2"
         else:
             B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting:
+            if not is_commuting: # or not is_homogeneous:
                 return None
             match['commutative_antiderivative'] = B
             match['type_of_equation'] = "type3"
@@ -668,3 +704,4 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         return match
 
     return None
+
