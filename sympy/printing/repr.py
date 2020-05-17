@@ -150,6 +150,8 @@ class ReprPrinter(Printer):
         return "{%s}" % sep.join(dict_kvs)
 
     def _print_set(self, expr):
+        if not expr:
+            return "set()"
         return "{%s}" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):

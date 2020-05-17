@@ -334,7 +334,7 @@ def test_dict():
 def test_set():
     from sympy import srepr
     from sympy.abc import x, y
-    s = {x}
-    assert srepr(s) == "{Symbol('x')}"
+    s = set()
+    assert srepr(s) == "set()"
     s = {x, y}
     assert srepr(s) == "{Symbol('x'), Symbol('y')}"
