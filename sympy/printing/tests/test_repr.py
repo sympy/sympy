@@ -337,4 +337,4 @@ def test_set():
     s = set()
     assert srepr(s) == "set()"
     s = {x, y}
-    assert srepr(s) == "{Symbol('x'), Symbol('y')}"
+    assert srepr(s) in ("{Symbol('x'), Symbol('y')}", "{Symbol('y'), Symbol('x')}")
