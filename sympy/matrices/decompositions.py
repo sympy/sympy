@@ -1206,8 +1206,10 @@ def _QRdecomposition(M):
     [14,  21, 0],
     [ 0, 175, 0]])
 
-    It may return a $Q$ matrix which is orthogonal in only one way
-    around ($\mathbb{I} = Q^H Q$).
+    QRdecomposition might return a matrix Q that is rectangular.
+    In this case the orthogonality condition might be satisfied as
+    $\mathbb{I} = Q.H*Q$ but not in the reversed product
+    $\mathbb{I} = Q * Q.H$.
 
     >>> Q.H * Q
     Matrix([
@@ -1221,10 +1223,10 @@ def _QRdecomposition(M):
 
     If you want to augment the results to be a full orthogonal
     decomposition, you should augment $Q$ with an another orthogonal
-    column. It may not look easy at the first place.
+    column.
 
     But if you know the Gram-Schmidt process, you are able to append an
-    arbitrary standard basis that are linearlly independent to every
+    arbitrary standard basis that are linearly independent to every
     other columns and run the Gram-Schmidt process again to make them
     orthogonal again.
 
@@ -1269,10 +1271,6 @@ def _QRdecomposition(M):
     Matrix(3, 0, [])
     >>> R
     Matrix(0, 4, [])
-
-    However, if you know the algebra of matrices with zero rows or
-    columns they are also valid decomposition results.
-
     >>> Q*R
     Matrix([
     [0, 0, 0, 0],
