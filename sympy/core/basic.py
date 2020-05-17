@@ -586,7 +586,8 @@ class Basic(metaclass=ManagedProperties):
             return self
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
-            lambda x: can(x))
+            lambda x: can(x),
+            simultaneous=False)
 
     @property
     def canonical_variables(self):
@@ -1397,11 +1398,11 @@ class Basic(metaclass=ManagedProperties):
 
         >>> e = x**(1 + y)
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
-        1
+        x
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
         x**(-x - y + 1)
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
-        1
+        x
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
         x**(1 - y)
 
@@ -1423,8 +1424,8 @@ class Basic(metaclass=ManagedProperties):
                   using matching rules
 
         """
-        from sympy.core.symbol import Dummy, Wild
-        from sympy.simplify.simplify import bottom_up
+        from sympy.core.symbol import Wild
+
 
         try:
             query = _sympify(query)
@@ -1486,55 +1487,40 @@ class Basic(metaclass=ManagedProperties):
                 "first argument to replace() must be a "
                 "type, an expression or a callable")
 
+        def walk(rv, F):
+            """Apply ``F`` to args and then to result.
+            """
+            args = getattr(rv, 'args', None)
+            if args is not None:
+                if args:
+                    newargs = tuple([walk(a, F) for a in args])
+                    if args != newargs:
+                        rv = rv.func(*newargs)
+                        if simultaneous:
+                            # if rv is something that was already
+                            # matched (that was changed) then skip
+                            # applying F again
+                            for i, e in enumerate(args):
+                                if rv == e and e != newargs[i]:
+                                    return rv
+                rv = F(rv)
+            return rv
+
+
         mapping = {}  # changes that took place
-        mask = []  # the dummies that were used as change placeholders
 
         def rec_replace(expr):
             result = _query(expr)
             if result or result == {}:
-                new = _value(expr, result)
-                if new is not None and new != expr:
-                    mapping[expr] = new
-                    if simultaneous:
-                        # don't let this change during rebuilding;
-                        # XXX this may fail if the object being replaced
-                        # cannot be represented as a Dummy in the expression
-                        # tree, e.g. an ExprConditionPair in Piecewise
-                        # cannot be represented with a Dummy
-                        com = getattr(new, 'is_commutative', True)
-                        if com is None:
-                            com = True
-                        d = Dummy('rec_replace', commutative=com)
-                        mask.append((d, new))
-                        expr = d
-                    else:
-                        expr = new
+                v = _value(expr, result)
+                if v is not None and v != expr:
+                    if map:
+                        mapping[expr] = v
+                    expr = v
             return expr
 
-        rv = bottom_up(self, rec_replace, atoms=True)
-
-        # restore original expressions for Dummy symbols
-        if simultaneous:
-            mask = list(reversed(mask))
-            for o, n in mask:
-                r = {o: n}
-                # if a sub-expression could not be replaced with
-                # a Dummy then this will fail; either filter
-                # against such sub-expressions or figure out a
-                # way to carry out simultaneous replacement
-                # in this situation.
-                rv = rv.xreplace(r)  # if this fails, see above
-
-        if not map:
-            return rv
-        else:
-            if simultaneous:
-                # restore subexpressions in mapping
-                for o, n in mask:
-                    r = {o: n}
-                    mapping = {k.xreplace(r): v.xreplace(r)
-                        for k, v in mapping.items()}
-            return rv, mapping
+        rv = walk(self, rec_replace)
+        return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
