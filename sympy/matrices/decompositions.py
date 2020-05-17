@@ -1225,10 +1225,9 @@ def _QRdecomposition(M):
     decomposition, you should augment $Q$ with an another orthogonal
     column.
 
-    But if you know the Gram-Schmidt process, you are able to append an
-    arbitrary standard basis that are linearly independent to every
-    other columns and run the Gram-Schmidt process again to make them
-    orthogonal again.
+    You are able to append an arbitrary standard basis that are linearly
+    independent to every other columns and you can run the Gram-Schmidt
+    process to make them augmented as orthogonal basis.
 
     >>> Q_aug = Q.row_join(Matrix([0, 0, 1]))
     >>> Q_aug = Q_aug.QRdecomposition()[0]
