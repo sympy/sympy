@@ -899,8 +899,8 @@ class Basic(metaclass=ManagedProperties):
         sympy.core.evalf.EvalfMixin.evalf: calculates the given formula to a desired level of precision
 
         """
+        from sympy.core.compatibility import _nodes, default_sort_key
         from sympy.core.containers import Dict
-        from sympy.utilities.iterables import sift
         from sympy import Dummy, Symbol
 
         unordered = False
@@ -940,10 +940,17 @@ class Basic(metaclass=ManagedProperties):
 
         if unordered:
             sequence = dict(sequence)
-            atoms, nonatoms = sift(list(sequence),
-                lambda x: x.is_Atom, binary=True)
-            sequence = [(k, sequence[k]) for k in
-                list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
+            # order so more complex items are first and items
+            # of identical complexity are ordered so
+            # f(x) < f(y) < x < y
+            # \___ 2 __/    \_1_/  <- number of nodes
+            #
+            # For more complex ordering use an unordered sequence.
+            k = list(ordered(sequence, default=False, keys=(
+                lambda x: -_nodes(x),
+                lambda x: default_sort_key(x),
+                )))
+            sequence = [(k, sequence[k]) for k in k]
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
