@@ -2567,16 +2567,19 @@ def test_latex_decimal_separator():
     assert(latex([1, 2.3, 4.5], decimal_separator='comma') == r'\left[ 1; \  2{,}3; \  4{,}5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='comma') == r'\left\{1; 2{,}3; 4{,}5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'comma') == r'\left( 1; \  2{,}3; \  4{,}6\right)')
+    assert(latex((1,), decimal_separator='comma') == r'\left( 1;\right)')
 
     # period decimal_separator
     assert(latex([1, 2.3, 4.5], decimal_separator='period') == r'\left[ 1, \  2.3, \  4.5\right]' )
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='period') == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'period') == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,), decimal_separator='period') == r'\left( 1,\right)')
 
     # default decimal_separator
     assert(latex([1, 2.3, 4.5]) == r'\left[ 1, \  2.3, \  4.5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5)) == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6)) == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,)) == r'\left( 1,\right)')
 
     assert(latex(Mul(3.4,5.3), decimal_separator = 'comma') ==r'18{,}02')
     assert(latex(3.4*5.3, decimal_separator = 'comma')==r'18{,}02')
