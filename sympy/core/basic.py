@@ -1849,8 +1849,8 @@ class Basic(metaclass=ManagedProperties):
         This method first compares ``_op_priority`` attribute of the arguments. If any superclass
         of argument with highest ``_op_priority`` can be found in  ``Basic._constructor_hook_mapping``,
         its value (which is a function) returned. If two or more arguments have same ``_op_priority``,
-        their ``_operable_classes`` are checked. If the priority cannot be determined yet, TypeError
-        is raised.
+        their ``_operable_classes`` are checked. If the priority cannot be determined yet, then use the
+        hook of first-coming argument.
 
         """
         # First, we check _op_priority.
@@ -1915,7 +1915,7 @@ class Basic(metaclass=ManagedProperties):
 
         # Each type gets 'score' if it knows the other type
         # and the other doesn't know it.
-        types_w_highest_priority = hook_functions.keys()
+        types_w_highest_priority = list(hook_functions.keys())
         type_scores = {t:0 for t in types_w_highest_priority}
         for i,A in enumerate(types_w_highest_priority):
             for B in types_w_highest_priority[i+1:]:
@@ -1935,7 +1935,15 @@ class Basic(metaclass=ManagedProperties):
             hook = tup[1]
             return hook
 
-        raise TypeError("Couldn't determine which hook should be used.")
+        # Can't determine which hook to use, so use the first-coming argument's hook.
+        for t in types:
+            if t in highest_scored_types:
+                first_coming_type = t
+                break
+        tup = hook_functions[first_coming_type]
+        hook = tup[1]
+        return hook
+
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
