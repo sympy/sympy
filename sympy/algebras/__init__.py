@@ -1,3 +1,3 @@
-from .quaternion import Quaternion
+from .quaternion import Quaternion, UnitQuaternion
 
-__all__ = ["Quaternion",]
+__all__ = ["Quaternion", "UnitQuaternion"]
