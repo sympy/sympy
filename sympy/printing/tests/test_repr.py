@@ -327,7 +327,10 @@ def test_dict():
     d = {x: y}
     assert srepr(d) == "{Symbol('x'): Symbol('y')}"
     d = {x: y, y: z}
-    assert srepr(d) == "{Symbol('x'): Symbol('y'), Symbol('y'): Symbol('z')}"
+    assert srepr(d) in (
+        "{Symbol('x'): Symbol('y'), Symbol('y'): Symbol('z')}",
+        "{Symbol('y'): Symbol('z'), Symbol('x'): Symbol('y')}",
+    )
     d = {x: {y: z}}
     assert srepr(d) == "{Symbol('x'): {Symbol('y'): Symbol('z')}}"
 
