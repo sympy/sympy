@@ -2060,24 +2060,6 @@ class Lambda(Expr):
 
         return symargmap
 
-    def __eq__(self, other):
-        if not isinstance(other, Lambda):
-            return False
-        if self.nargs != other.nargs:
-            return False
-
-        try:
-            d = self._match_signature(other.signature, self.signature)
-        except BadArgumentsError:
-            return False
-        return self.args == other.xreplace(d).args
-
-    def __hash__(self):
-        return super().__hash__()
-
-    def _hashable_content(self):
-        return (self.expr.xreplace(self.canonical_variables),)
-
     @property
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
