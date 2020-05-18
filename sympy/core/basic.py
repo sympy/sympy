@@ -1859,19 +1859,19 @@ class Basic(metaclass=ManagedProperties):
         for t in types:
             if hasattr(t, '_op_priority'):
                 priority = t._op_priority
-                hook = None
-                for func in t.__mro__:
-                    if func in Basic._constructor_hook_mapping:
-                        hook_map = Basic._constructor_hook_mapping[func]
-                        if cls in hook_map:
-                            hook = hook_map[cls]
-                            break
-                if hook is not None:
-                    hook_functions[t] = (priority, hook)
-                    if first_args_hook is None:
-                        first_args_hook = hook  # Store to use later
             else:
-                continue
+                priority = 0 # If t doesn't have _op_priority (i.e int or Basic), consider it as 0.
+            hook = None
+            for func in t.__mro__:
+                if func in Basic._constructor_hook_mapping:
+                    hook_map = Basic._constructor_hook_mapping[func]
+                    if cls in hook_map:
+                        hook = hook_map[cls]
+                        break
+            if hook is not None:
+                hook_functions[t] = (priority, hook)
+                if first_args_hook is None:
+                    first_args_hook = hook  # Store to use later
         if not hook_functions:
             return None # No hook is found. Do not use hook.
 
@@ -1901,7 +1901,7 @@ class Basic(metaclass=ManagedProperties):
             A_knows_B = any(issubclass(B, i) for i in A_operables)
             B_knows_A = any(issubclass(A, i) for i in B_operables)
 
-            if A_knows_B and B_knows_a:
+            if A_knows_B and B_knows_A:
                 # both know each other:
                 # then, check if one knows the other explicitly.
                 A_knows_B = any(B == i for i in A_operables)

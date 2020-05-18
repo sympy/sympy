@@ -298,3 +298,61 @@ def test_replace_exceptions():
     raises(TypeError, lambda: e.replace(b*c, c.is_real))
     raises(TypeError, lambda: e.replace(b.is_real, 1))
     raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))
+
+def test_select_hook():
+    from sympy import Add
+    class A(Basic):
+        _op_priority = 10
+    Basic._constructor_hook_mapping[A] = {Add: lambda *args,**kwargs: "A's hook is selected"}
+    class B(Basic):
+        _op_priority = 11
+    Basic._constructor_hook_mapping[B] = {Add: lambda *args,**kwargs: "B's hook is selected"}
+    class C(Basic):
+        _op_priority = 11
+        @classmethod
+        def _operable_classes(cls, op_cls):
+            return {B}
+    Basic._constructor_hook_mapping[C] = {Add: lambda *args,**kwargs: "C's hook is selected"}
+    class B1(B):
+        pass
+    class B2(B):
+        @classmethod
+        def _operable_classes(cls, op_cls):
+            return {C}
+
+    class D(Basic):
+        pass
+    Basic._constructor_hook_mapping[D] = {Add: lambda *args,**kwargs: "D's hook is selected"}
+    class E(Basic):
+        pass
+    Basic._constructor_hook_mapping[E] = {Add: lambda *args,**kwargs: "E's hook is selected"}
+
+    class F(Basic):
+        @classmethod
+        def _operable_classes(cls, op_cls):
+            return {G}
+    Basic._constructor_hook_mapping[F] = {Add: lambda *args,**kwargs: "F's hook is selected"}
+    class G(Basic):
+        @classmethod
+        def _operable_classes(cls, op_cls):
+            return {F}
+    Basic._constructor_hook_mapping[G] = {Add: lambda *args,**kwargs: "G's hook is selected"}
+
+    # A has hook, Basic has no hook
+    assert Add._select_hook(A,Basic)() == "A's hook is selected"
+    # B has higher _op_priority than A
+    assert Add._select_hook(A,B,Basic)() == "B's hook is selected"
+    # C knows B, B doesn't know C
+    assert Add._select_hook(A,B,C,Basic)() == "C's hook is selected"
+    # C knows B1 (by knowing B), but B1 doesn't know C
+    assert Add._select_hook(A,B,B1,C,Basic)() == "C's hook is selected"
+    # C knows B2 (by knowing B), but B2 explicitly knows C
+    assert Add._select_hook(A,B,B2,C,Basic)() == "B's hook is selected"
+
+    # Can't determine the hook between D and E (both don't know each other),
+    # or between F and G (both know each other). In this case, select the hook
+    # according to the order of arguments.
+    assert Add._select_hook(D,E)() == "D's hook is selected"
+    assert Add._select_hook(E,D)() == "E's hook is selected"
+    assert Add._select_hook(F,G)() == "F's hook is selected"
+    assert Add._select_hook(G,F)() == "G's hook is selected"
