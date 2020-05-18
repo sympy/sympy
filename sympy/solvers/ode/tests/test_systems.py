@@ -5,7 +5,7 @@ from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError)
-from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip
+from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip, XFAIL
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 
@@ -217,6 +217,14 @@ def test_neq_nth_linear_constant_coeff_match():
                  [Rational(-12, 5), Rational(12, 5), 0]]), 'type_of_equation': 'type1', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eq15, [x(t), y(t), z(t)], t) == sol15
 
+    # Constant coefficient homogeneous ODEs
+    eq1 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
+    sol1 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), x(t) + y(t) + 9),
+        Eq(Derivative(y(t), t), 2*x(t) + 5*y(t) + 23)), 'func': [x(t), y(t)],
+        'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous': False, 'is_general': True,
+        'func_coeff': Matrix([[-1, -1], [-2, -5]]), 'rhs': Matrix([[ 9], [23]]), 'type_of_equation': 'type2'}
+    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+
     # Non constant coefficient non-homogeneous ODEs
     eq1 = (Eq(diff(x(t), t), 5 * t * x(t) + 2 * y(t)), Eq(diff(y(t), t), 2 * x(t) + 5 * t * y(t)))
     sol1 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), 5*t*x(t) + 2*y(t)), Eq(Derivative(y(t), t), 5*t*y(t) + 2*x(t))),
@@ -326,7 +334,7 @@ def test_matrix_exp():
     assert matrix_exp(A, t) == expAt
 
 
-def test_sysode_linear_neq_order1():
+def test_sysode_linear_neq_order1_type1():
 
     f, g, x, y, h = symbols('f g x y h', cls=Function)
     a, b, c, t = symbols('a b c t')
@@ -701,7 +709,49 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq25, sol25)
 
 
-def test_neq_linear_first_order_nonconst_coeff_homogeneous():
+def test_sysode_linear_neq_order1_type2():
+    f, g, h, k = symbols('f g h k', cls=Function)
+    x = symbols('x')
+
+    eq1 = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
+           Eq(diff(g(x), x), -f(x) - g(x) + 7)]
+    sol1 = [Eq(f(x), C1 + C2*x + C2 + 6*x**2 + 5*x), Eq(g(x), -C1 - C2*x - 6*x**2 + 7*x)]
+    assert dsolve(eq1) == sol1
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
+    eq2 = [Eq(diff(f(x), x), f(x) + g(x) + 5),
+           Eq(diff(g(x), x), f(x) + g(x) + 7)]
+    sol2 = [Eq(f(x), -C1 + C2*exp(2*x) - x - 3), Eq(g(x), C1 + C2*exp(2*x) + x - 3)]
+    assert dsolve(eq2) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])
+
+    eq3 = [Eq(diff(f(x), x), f(x) + 5), Eq(diff(g(x), x), f(x) + 7)]
+    sol3 = [Eq(f(x), C2*exp(x) - 5), Eq(g(x), C1 + C2*exp(x) + 2*x - 5)]
+    assert dsolve(eq3) == sol3
+    assert checksysodesol(eq3, sol3) == (True, [0, 0])
+
+    eq4 = [Eq(diff(f(x), x), f(x) + exp(x)), Eq(diff(g(x), x), f(x) + g(x) + x*exp(x))]
+    sol4 = [Eq(f(x), (C2 + x)*exp(x)), Eq(g(x), (C1 + C2*x + x**2)*exp(x))]
+    assert dsolve(eq4) == sol4
+    assert checksysodesol(eq4, sol4) == (True, [0, 0])
+
+    eq5 = [Eq(diff(f(x), x), f(x) + g(x) + 5*x), Eq(diff(g(x), x), f(x) - g(x))]
+    sol5 = [Eq(f(x), C2*exp(sqrt(2)*x) + sqrt(2)*C2*exp(sqrt(2)*x) - 5*x/2 + (-sqrt(2)*C1 + C1)*exp(-sqrt(2)*x) - Rational(5,2)),
+            Eq(g(x), C1*exp(-sqrt(2)*x) + C2*exp(sqrt(2)*x) - 5*x/2)]
+    assert dsolve(eq5) == sol5
+    assert checksysodesol(eq5, sol5) == (True, [0, 0])
+
+    eq6 = [Eq(diff(f(x), x), -9*f(x) - 4*g(x)),
+         Eq(diff(g(x), x), -4*g(x)),
+         Eq(diff(h(x), x), h(x) + exp(x))]
+    sol6 = [Eq(f(x), C1*exp(-9*x) - 4*C2*exp(-4*x)/5),
+            Eq(g(x), C2*exp(-4*x)),
+            Eq(h(x), (C3 + x)*exp(x))]
+    assert dsolve(eq6) == sol6
+    assert checksysodesol(eq6, sol6) == (True, [0, 0, 0])
+
+
+def test_sysode_linear_neq_order1_type3():
     f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols('x')
     r = symbols('r', real=True)
@@ -779,6 +829,21 @@ def test_linear_3eq_order1_type4_slow():
                 Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)), Eq(diff(z(t), t), 5 * f * x(t) + f * y(
         t) + (-3 * f + g) * z(t)))
     dsolve(eq1)
+
+
+# 19341: To see if this failed test case can
+# be solved with the new solver
+@slow
+@XFAIL
+def test_linear_neq_order1_type2_fail():
+    i, r1, c1, r2, c2, t = symbols('i, r1, c1, r2, c2, t')
+    x1 = Function('x1')
+    x2 = Function('x2')
+    eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
+    eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
+    eq = [eq1, eq2]
+    sol = dsolve(eq)
+    assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
 @slow

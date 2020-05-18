@@ -130,37 +130,6 @@ def test_dsolve_euler_rootof():
     assert dsolve(eq) == sol
 
 
-def test_linear_2eq_order1_type2_noninvertible():
-    # a*d - b*c == 0
-    eqs = [Eq(diff(f(x), x), f(x) + g(x) + 5),
-           Eq(diff(g(x), x), f(x) + g(x) + 7)]
-    sol = [Eq(f(x), C1*exp(2*x) + C2 - x - 3), Eq(g(x), C1*exp(2*x) - C2 + x - 3)]
-    assert dsolve(eqs) == sol
-    assert checksysodesol(eqs, sol) == (True, [0, 0])
-
-
-def test_linear_2eq_order1_type2_fixme():
-    # There is a FIXME comment about this in the code that handles this case.
-    # The answer returned is currently incorrect as reported by checksysodesol
-    # below in the XFAIL test below...
-
-    # a*d - b*c == 0 and a + b*c/a = 0
-    eqs = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
-           Eq(diff(g(x), x), -f(x) - g(x) + 7)]
-    sol = [Eq(f(x), C1 + C2*(x + 1) + 12*x**2 + 5*x), Eq(g(x), -C1 - C2*x - 12*x**2 + 7*x)]
-    assert dsolve(eqs) == sol
-    # FIXME: checked in XFAIL test_linear_2eq_order1_type2_fixme_check below
-
-
-@XFAIL
-def test_linear_2eq_order1_type2_fixme_check():
-    # See test_linear_2eq_order1_type2_fixme above
-    eqs = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
-           Eq(diff(g(x), x), -f(x) - g(x) + 7)]
-    sol = [Eq(f(x), C1 + C2*(x + 1) + 12*x**2 + 5*x), Eq(g(x), -C1 - C2*x - 12*x**2 + 7*x)]
-    assert checksysodesol(eqs, sol) == (True, [0, 0])
-
-
 def test_linear_2eq_order1_type6_path1_broken():
     eqs = [Eq(diff(f(x), x), f(x) + x*g(x)),
            Eq(diff(g(x), x), 2*(1 + 2/x)*f(x) + 2*(x - 1/x) * g(x))]
@@ -467,26 +436,7 @@ def test_linear_2eq_order1():
     # assert checksysodesol(eq10, sol10) == (True, [0, 0])  # this one fails
 
 
-def test_linear_2eq_order1_nonhomog_linear():
-    e = [Eq(diff(f(x), x), f(x) + g(x) + 5*x),
-         Eq(diff(g(x), x), f(x) - g(x))]
-    raises(NotImplementedError, lambda: dsolve(e))
-
-
-def test_linear_2eq_order1_nonhomog():
-    # Note: once implemented, add some tests esp. with resonance
-    e = [Eq(diff(f(x), x), f(x) + exp(x)),
-         Eq(diff(g(x), x), f(x) + g(x) + x*exp(x))]
-    raises(NotImplementedError, lambda: dsolve(e))
-
-
-def test_linear_2eq_order1_type2_degen():
-    e = [Eq(diff(f(x), x), f(x) + 5),
-         Eq(diff(g(x), x), f(x) + 7)]
-    s1 = [Eq(f(x), C1*exp(x) - 5), Eq(g(x), C1*exp(x) - C2 + 2*x - 5)]
-    assert checksysodesol(e, s1) == (True, [0, 0])
-
-
+# 19341: To move this test case
 def test_dsolve_linear_2eq_order1_diag_triangular():
     e = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x))]
@@ -500,6 +450,7 @@ def test_dsolve_linear_2eq_order1_diag_triangular():
     assert checksysodesol(e, s1) == (True, [0, 0])
 
 
+# 19341: To move this test case
 def test_sysode_linear_2eq_order1_type1_D_lt_0():
     e = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)),
          Eq(diff(g(x), x), -4*I*g(x))]
@@ -508,7 +459,7 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0():
     assert checksysodesol(e, s1) == (True, [0, 0])
 
 
-
+# 19341: To move this test case
 def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
     e = [Eq(diff(f(x), x), -9*I*f(x)),
          Eq(diff(g(x), x), -4*I*g(x))]
@@ -516,7 +467,7 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
     assert checksysodesol(e, s1) == (True, [0, 0])
 
 
-
+# 19341: To move the test case
 def test_sysode_linear_2eq_order1_many_zeros():
     t = Symbol('t')
     corner_cases = [(0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0),
@@ -537,20 +488,6 @@ def test_sysode_linear_2eq_order1_many_zeros():
         eq = [Eq(diff(f(t), t), r[0]*f(t) + r[1]*g(t)),
               Eq(diff(g(t), t), r[2]*f(t) + r[3]*g(t))]
         assert checksysodesol(eq, sol) == (True, [0, 0])
-
-
-def test_dsolve_linsystem_symbol_piecewise():
-
-    # example from https://groups.google.com/d/msg/sympy/xmzoqW6tWaE/sf0bgQrlCgAJ
-    i, r1, c1, r2, c2, t = symbols('i, r1, c1, r2, c2, t')
-    x1 = Function('x1')
-    x2 = Function('x2')
-    eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
-    eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
-    sol = dsolve((eq1, eq2))
-    # FIXME: assert checksysodesol(eq, sol) == (True, [0, 0])
-    # Remove line below when checksysodesol works
-    assert all(s.has(Piecewise) for s in sol)
 
 
 @slow
@@ -717,13 +654,6 @@ def test_linear_2eq_order2():
     5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 14))]
     assert dsolve(eq10) == sol10
     # FIXME: assert checksysodesol(eq10, sol10) == (True, [0, 0]) # this hangs or at least takes a while...
-
-
-def test_linear_3eq_order1_nonhomog():
-    e = [Eq(diff(f(x), x), -9*f(x) - 4*g(x)),
-         Eq(diff(g(x), x), -4*g(x)),
-         Eq(diff(h(x), x), h(x) + exp(x))]
-    raises(NotImplementedError, lambda: dsolve(e))
 
 
 def test_nonlinear_2eq_order1():
@@ -1153,13 +1083,6 @@ def test_classify_sysode():
     'eq': [(4*t**2 + 7*t + 1)**2*Derivative(x(t), t, t) - 5*x(t) - 35*y(t), (4*t**2 + 7*t + 1)**2*Derivative(y(t), t, t)\
     - x(t) - 9*y(t)], 'order': {y(t): 2, x(t): 2}}
     assert classify_sysode(eq4) == sol4
-
-    eq5 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
-    sol5 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -1, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): -5, \
-    (1, x(t), 0): -2, (0, y(t), 1): 0, (0, y(t), 0): -1, (1, y(t), 1): 1}, 'type_of_equation': 'type2', \
-    'func': [x(t), y(t)], 'is_linear': True, 'eq': [-x(t) - y(t) + Derivative(x(t), t) - 9, -2*x(t) - 5*y(t) + \
-    Derivative(y(t), t) - 23], 'order': {y(t): 1, x(t): 1}}
-    assert classify_sysode(eq5) == sol5
 
     eq6 = (Eq(x1, exp(k*x(t))*P(x(t),y(t))), Eq(y1,r(y(t))*P(x(t),y(t))))
     sol6 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 0, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): 0, \
