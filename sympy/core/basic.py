@@ -1795,7 +1795,7 @@ class Basic(metaclass=ManagedProperties):
 
         This method is implemented to relieve the complexity in ``Add``, ``Mul``, and
         ``Pow``'s methods, and let them to behave as the constructor for its subclasses.
-        It uses ``Basic._select_hook`` to choose the best hook from the args. If ``None`` 
+        It uses ``Basic._select_hook`` to choose the best hook from the args. If ``None``
         is returned from this method, hook is not applied.
 
         Parameters
@@ -1855,6 +1855,7 @@ class Basic(metaclass=ManagedProperties):
         """
         # First, we check _op_priority.
         hook_functions = {}
+        first_args_hook = None  # This is used as fallback when no hook can be determined.
         for t in types:
             if hasattr(t, '_op_priority'):
                 priority = t._op_priority
@@ -1867,6 +1868,8 @@ class Basic(metaclass=ManagedProperties):
                             break
                 if hook is not None:
                     hook_functions[t] = (priority, hook)
+                    if first_args_hook is None:
+                        first_args_hook = hook  # Store to use later
             else:
                 continue
         if not hook_functions:
@@ -1936,13 +1939,7 @@ class Basic(metaclass=ManagedProperties):
             return hook
 
         # Can't determine which hook to use, so use the first-coming argument's hook.
-        for t in types:
-            if t in highest_scored_types:
-                first_coming_type = t
-                break
-        tup = hook_functions[first_coming_type]
-        hook = tup[1]
-        return hook
+        return first_args_hook
 
 
     @classmethod
