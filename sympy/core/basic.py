@@ -1909,11 +1909,20 @@ class Basic(metaclass=ManagedProperties):
 
             if A_knows_B == B_knows_A:
                 # both don't know each other, or know each other.
-                # either way, we can't determine which to use.
+                # In this case, check if one is another's subclass.
+                # Subclass is preferred.
+                if issubclass(B, A):
+                    return B
+                if issubclass(A, B):
+                    return A
+                # We truly cannot determine which one to use
                 return None
+
             if A_knows_B:
+                # A knows B, but B doesn't know A.
                 return A
             if B_knows_A:
+                # B knows A, but A doesn't know B.
                 return B
 
         # Each type gets 'score' if it knows the other type

@@ -315,6 +315,7 @@ def test_select_hook():
     Basic._constructor_hook_mapping[C] = {Add: lambda *args,**kwargs: "C's hook is selected"}
     class B1(B):
         pass
+    Basic._constructor_hook_mapping[B1] = {Add: lambda *args,**kwargs: "B1's hook is selected"}
     class B2(B):
         @classmethod
         def _operable_classes(cls, op_cls):
@@ -348,6 +349,9 @@ def test_select_hook():
     assert Add._select_hook(A,B,B1,C,Basic)() == "C's hook is selected"
     # C knows B2 (by knowing B), but B2 explicitly knows C
     assert Add._select_hook(A,B,B2,C,Basic)() == "B's hook is selected"
+
+    # B doesn't know B1, B1 doesn't know B. But B1 is B's subclass, so it's preferred.
+    assert Add._select_hook(B,B1)() == "B1's hook is selected"
 
     # Can't determine the hook between D and E (both don't know each other),
     # or between F and G (both know each other). In this case, select the hook
