@@ -33,7 +33,7 @@ Functions that are for internal use:
 
 """
 from sympy import (acos, asin, asinh, atan, cos, Derivative, Dummy, diff,
-    Eq, exp, I, Integral, log, pi, Piecewise, Rational, S, sin, tan,
+    E, Eq, exp, I, Integral, log, pi, Piecewise, Rational, S, sin, sinh, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
@@ -50,7 +50,7 @@ from sympy.testing.pytest import raises, slow
 import traceback
 
 
-x = Symbol('x')
+x = Symbol('x', real=True)
 u = Symbol('u')
 y = Symbol('y')
 f = Function('f')
@@ -149,7 +149,8 @@ def _ode_solver_test(ode_examples, run_slow_test=False):
             'XFAIL': ode_examples['examples'][example].get('XFAIL', []),
             'func': ode_examples['examples'][example].get('func',ode_examples['func']),
             'example_name': example,
-            'slow': ode_examples['examples'][example].get('slow', False)
+            'slow': ode_examples['examples'][example].get('slow', False),
+            'checkodesol_XFAIL': ode_examples['examples'][example].get('checkodesol_XFAIL', False)
         }
         if (not run_slow_test) and temp['slow']:
             continue
@@ -190,6 +191,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
     xfail = our_hint in ode_example['XFAIL']
     func = ode_example['func']
     result = {'msg': '', 'xpass_msg': ''}
+    checkodesol_XFAIL = ode_example['checkodesol_XFAIL']
     xpass = True
     if solver_flag:
         if our_hint not in classify_ode(eq, func):
@@ -233,15 +235,16 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if len(expected_sol) == 1:
                 expected_checkodesol = (True, 0)
 
-            if checkodesol(eq, dsolve_sol, solve_for_func=False) != expected_checkodesol:
-                result['unsolve_list'] = example
-                xpass = False
-                message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
-                if solver_flag:
-                    message = checkodesol_msg.format(example=example, eq=eq)
-                    raise AssertionError(message)
-                else:
-                    result['msg'] = 'AssertionError: ' + message
+            if not checkodesol_XFAIL:
+                if checkodesol(eq, dsolve_sol, solve_for_func=False) != expected_checkodesol:
+                    result['unsolve_list'] = example
+                    xpass = False
+                    message = dsol_incorrect_msg.format(hint=our_hint, eq=eq, sol=expected_sol,dsolve_sol=dsolve_sol)
+                    if solver_flag:
+                        message = checkodesol_msg.format(example=example, eq=eq)
+                        raise AssertionError(message)
+                    else:
+                        result['msg'] = 'AssertionError: ' + message
 
         if xpass and xfail:
             result['xpass_msg'] = example + "is now passing for the hint" + our_hint
@@ -323,6 +326,11 @@ def test_slow_examples_nth_order_reducible():
 @slow
 def test_slow_examples_nth_linear_constant_coeff_undetermined_coefficients():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients(), run_slow_test=True)
+
+
+@slow
+def test_slow_examples_separable():
+    _ode_solver_test(_get_examples_ode_sol_separable(), run_slow_test=True)
 
 
 def test_nth_linear_constant_coeff_undetermined_coefficients():
@@ -770,7 +778,8 @@ def _get_examples_ode_sol_liouville():
 
     'liouville_05': {
         'eq': x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x),
-        'sol': [Eq(f(x), -sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(C1 + C2*exp(-x)))],
+        'sol': [Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2)),
+        Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2))],
     },
 
     'liouville_06': {
@@ -1173,33 +1182,35 @@ def _get_examples_ode_sol_separable():
 
     'separable_07': {
         'eq': f(x)*x**2*f(x).diff(x) - f(x)**3 - 2*x**2*f(x).diff(x),
-        'sol': [Eq(f(x), (-x + sqrt(x*(4*C1*x + x - 4)))/(2*(C1*x - 1))),
-        Eq(f(x), -(x + sqrt(x*(4*C1*x + x - 4)))/(2*(C1*x - 1)))],
+        'sol': [Eq(f(x), (-x + sqrt(x*(4*C1*x + x - 4)))/(C1*x - 1)/2),
+        Eq(f(x), -((x + sqrt(x*(4*C1*x + x - 4)))/(C1*x - 1))/2)],
         'slow': True,
     },
 
     'separable_08': {
         'eq': f(x)**2 - 1 - (2*f(x) + x*f(x))*f(x).diff(x),
-        'sol': [Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))],
+        'sol': [Eq(f(x), -sqrt(C1*x**2 + 4*C1*x + 4*C1 + 1)),
+        Eq(f(x), sqrt(C1*x**2 + 4*C1*x + 4*C1 + 1))],
         'slow': True,
     },
 
     'separable_09': {
         'eq': x*log(x)*f(x).diff(x) + sqrt(1 + f(x)**2),
-        'sol': [Eq(asinh(f(x)), C1 - log(log(x)))], # integrate cannot handle the integral on the lhs (cos/tan)
+        'sol': [Eq(f(x), sinh(C1 - log(log(x))))],  #One more solution is f(x)=I
         'slow': True,
+        'checkodesol_XFAIL': True,
     },
 
     'separable_10': {
         'eq': exp(x + 1)*tan(f(x)) + cos(f(x))*f(x).diff(x),
-        'sol': [Eq(Integral(cos(u)/tan(u), (u, f(x))),
-        C1 + Integral(-exp(1)*exp(x), x))],
+        'sol': [Eq(E*exp(x) + log(cos(f(x)) - 1)/2 - log(cos(f(x)) + 1)/2 + cos(f(x)), C1)],
         'slow': True,
     },
 
     'separable_11': {
         'eq': (x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) - a**2*sin(f(x))*f(x).diff(x)),
-        'sol': [Eq(-log(cos(f(x))), C1 - log(- a**2 + x**2)/2)],
+        'sol': [Eq(f(x), -acos(C1*sqrt(-a**2 + x**2)) + 2*pi),
+        Eq(f(x), acos(C1*sqrt(-a**2 + x**2)))],
         'slow': True,
     },
 
@@ -1221,8 +1232,9 @@ def _get_examples_ode_sol_separable():
 
     'separable_15': {
         'eq': x*f(x).diff(x) + (1 + f(x)**2)*atan(f(x)),
-        'sol': [Eq(log(atan(f(x))), C1 - log(x))],
+        'sol': [Eq(f(x), tan(C1/x))],  #Two more solutions are f(x)=0 and f(x)=I
         'slow': True,
+        'checkodesol_XFAIL': True,
     },
 
     'separable_16': {
@@ -1260,6 +1272,7 @@ def _get_examples_ode_sol_separable():
     'separable_22': {
         'eq': f(x).diff(x) - exp(x + f(x)),
         'sol': [Eq(f(x), log(-1/(C1 + exp(x))))],
+        'XFAIL': ['lie_group'] #It shows 'NoneType' object is not subscriptable for lie_group.
     },
     }
     }
@@ -1277,6 +1290,8 @@ def _get_all_examples():
     _get_examples_ode_sol_almost_linear(),
     _get_examples_ode_sol_nth_order_reducible(),
     _get_examples_ode_sol_nth_linear_undetermined_coefficients(),
+    _get_examples_ode_sol_liouville(),
+    _get_examples_ode_sol_separable(),
     ]
 
     all_examples = []
@@ -1288,6 +1303,7 @@ def _get_all_examples():
                 'eq': solver['examples'][example]['eq'],
                 'sol': solver['examples'][example]['sol'],
                 'XFAIL': solver['examples'][example].get('XFAIL',[]),
+                'checkodesol_XFAIL': solver['examples'][example].get('checkodesol_XFAIL', False),
                 'example_name': example,
             }
             all_examples.append(temp)
