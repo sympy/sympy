@@ -1594,7 +1594,7 @@ class Basic(metaclass=ManagedProperties):
         Examples
         ========
 
-        >>> from sympy import Wild
+        >>> from sympy import Wild, Sum
         >>> from sympy.abc import x, y
         >>> p = Wild("p")
         >>> q = Wild("q")
@@ -1610,6 +1610,16 @@ class Basic(metaclass=ManagedProperties):
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
+        Structurally bound symbols are ignored during matching:
+
+        >>> Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, p)))
+        {p_: 2}
+
+        But they can be identified if desired:
+
+        >>> Sum(x, (x, 1, 2)).match(Sum(q, (q, 1, p)))
+        {p_: 2, q_: x}
+
         The ``old`` flag will give the old-style pattern matching where
         expressions and patterns are essentially solved to give the
         match. Both of the following give None unless ``old=True``:
@@ -1620,8 +1630,27 @@ class Basic(metaclass=ManagedProperties):
         {p_: 2/x**2}
 
         """
+        from sympy.core.symbol import Wild
         pattern = sympify(pattern)
-        return pattern.matches(self, old=old)
+        # match non-bound symbols
+        canonical = lambda x: x if x.is_Symbol else x.as_dummy()
+        m = canonical(pattern).matches(canonical(self), old=old)
+        if m is None:
+            return m
+        # now see if bound symbols were requested
+        bwild = pattern.atoms(Wild) - set(m)
+        if not bwild:
+            return m
+        # replace free-Wild symbols in pattern with match result
+        # so they will match but not be in the next match
+        wpat = pattern.xreplace(m)
+        # identify remaining bound wild
+        w = wpat.matches(self, old=old)
+        # add them to m
+        if w:
+            m.update(w)
+        # done
+        return m
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""

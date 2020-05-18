@@ -1,6 +1,6 @@
 from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi, meijerg
+    Wild, pi, meijerg, Sum
 )
 
 from sympy.testing.pytest import XFAIL
@@ -706,3 +706,11 @@ def test_match_issue_17397():
         - 4*Derivative(f(x), (x, 2)) - 2*Derivative(f(x), x)/x + 4*Derivative(f(x), (x, 2))/x
     r = collect(eq, [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
     assert r == {a3: x - 4 + 4/x, b3: 1 - 2/x, c3: x - 4}
+
+
+def test_match_bound():
+    V, W = map(Wild, "VW")
+    x, y = symbols('x y')
+    assert Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, W))) == {W: 2}
+    assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, W))) == {W: 2, V:x}
+    assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, 2))) == {V:x}
