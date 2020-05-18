@@ -105,5 +105,6 @@ def test_probability_rewrite():
     assert Covariance(w, X).rewrite(Sum) == 0
 
     assert Covariance(w, X).rewrite(Integral) == 0
+
     assert Variance(X, condition=Y).rewrite(Probability) == Integral(x**2*Probability(Eq(X, x), Y), (x, -oo, oo)) - \
                                                             Integral(x*Probability(Eq(X, x), Y), (x, -oo, oo))**2

@@ -589,7 +589,7 @@ def pspace(expr):
 
     rvs = random_symbols(expr)
     if not rvs:
-        return None
+        raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace

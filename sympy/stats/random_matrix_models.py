@@ -8,7 +8,6 @@ from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
 
-
 __all__ = [
     'CircularEnsemble',
     'CircularUnitaryEnsemble',

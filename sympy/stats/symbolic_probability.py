@@ -7,7 +7,6 @@ from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation, is_random
 
-
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
 
