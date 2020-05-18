@@ -153,40 +153,6 @@ class SampleExternalContinuous:
     """Class consisting of the methods that are used to sample values of random
     variables from external libraries."""
 
-
-    scipy_rv_map = {
-        'BetaDistribution': lambda dist, size: scipy.stats.beta.rvs(a=float(dist.alpha),
-            b=float(dist.beta), size=size),
-        'BetaPrimeDistribution':lambda dist, size: scipy.stats.betaprime.rvs(a=float(dist.alpha),
-            b=float(dist.beta), size=size),
-        'CauchyDistribution': lambda dist, size: scipy.stats.cauchy.rvs(loc=float(dist.x0),
-            scale=float(dist.gamma), size=size),
-        'ChiDistribution': lambda dist, size: scipy.stats.chi.rvs(df=float(dist.k),
-            size=size),
-        'ChiSquaredDistribution': lambda dist, size: scipy.stats.chi2.rvs(df=float(dist.k),
-            size=size),
-        'ExponentialDistribution': lambda dist, size: scipy.stats.expon.rvs(loc=0,
-            scale=1/float(dist.rate), size=size),
-        'GammaDistribution': lambda dist, size: scipy.stats.gamma.rvs(a=float(dist.k), loc=0,
-            scale=float(dist.theta), size=size),
-        'GammaInverseDistribution': lambda dist, size: scipy.stats.invgamma.rvs(a=float(dist.a),
-            loc=0, scale=float(dist.b), size=size),
-        'LogNormalDistribution': lambda dist, size: scipy.stats.lognorm.rvs(s=float(dist.std),
-            loc=0, scale=exp(float(dist.mean)), size=size),
-        'NormalDistribution': lambda dist, size: scipy.stats.norm.rvs(float(dist.mean),
-            float(dist.std), size=size),
-        'GaussianInverseDistribution': lambda dist, size: scipy.stats.invgauss.rvs(
-            mu=float(dist.mean)/float(dist.shape), scale=float(dist.shape), size=size),
-        'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(b=float(dist.alpha),
-            scale=float(dist.xm), size=size),
-        'StudentTDistribution': lambda dist, size: scipy.stats.t.rvs(df=float(dist.nu),
-            size=size),
-        'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(loc=float(dist.left),
-            scale=float(dist.right)-float(dist.left), size=size),
-        'WeibullDistribution': lambda dist, size: scipy.stats.weibull_min.rvs(loc=0,
-            c=float(dist.beta), scale=float(dist.alpha), size=size)
-        }
-
     numpy_rv_map = {
         'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
             b=float(dist.beta), size=size),
@@ -232,23 +198,16 @@ class SampleExternalContinuous:
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
-
-        dist_list = cls.scipy_rv_map.keys()
-
-        if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
-            from scipy.stats import rv_continuous
-            z = Dummy('z')
-            handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
-            class scipy_pdf(rv_continuous):
-                def _pdf(self, x):
-                    return handmade_pdf(x)
-            scipy_rv = scipy_pdf(a=dist.set._inf, b=dist.set._sup, name='scipy_pdf')
-            return scipy_rv.rvs(size=size)
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
+        # scipy does not require map as it can handle using custom distributions
+        from scipy.stats import rv_continuous
+        z = Dummy('z')
+        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
+        class scipy_pdf(rv_continuous):
+            def _pdf(self, x):
+                return handmade_pdf(x)
+        scipy_rv = scipy_pdf(a=float(dist.set._inf),
+                    b=float(dist.set._sup), name='scipy_pdf')
+        return scipy_rv.rvs(size=size)
 
     @classmethod
     def _sample_numpy(cls, dist, size):

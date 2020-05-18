@@ -1264,10 +1264,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     """
     samples = list(sample_iter(expr, given_condition, library=library,
                           numsamples=numsamples, **kwargs))
-    try:
-        result = Add(*[samp[0] for samp in samples]) / numsamples
-    except TypeError:
-        result = Add(*[samp for samp in samples]) / numsamples
+    result = Add(*[samp[0] for samp in samples]) / numsamples
 
     if evalf:
         return result.evalf()
@@ -1289,10 +1286,7 @@ def sampling_density(expr, given_condition=None, library='scipy',
     results = {}
     for result in sample_iter(expr, given_condition, library=library,
                               numsamples=numsamples, **kwargs):
-        try:
-            results[result[0]] = results.get(result[0], 0) + 1
-        except TypeError:
-            results[result] = results.get(result, 0) + 1
+        results[result[0]] = results.get(result[0], 0) + 1
 
     return results
 

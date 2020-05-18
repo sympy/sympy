@@ -338,6 +338,7 @@ def test_sample_pymc3():
     distribs_pymc3 = [
         Geometric('G', 0.5),
         Poisson('P', 1),
+        NegativeBinomial('N', 5, 0.4)
     ]
     size = 3
     pymc3 = import_module('pymc3')

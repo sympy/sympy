@@ -8,12 +8,10 @@ sympy.stats.rv
 sympy.stats.crv
 """
 from __future__ import print_function, division
-
-import random
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-                   And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
+                   And, Or, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
                    Sum, Intersection, S)
 from sympy.core.containers import Dict
 from sympy.core.logic import Logic
@@ -23,7 +21,11 @@ from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
                             sumsets, rv_subs, NamedArgsMixin, Density)
+from sympy.external import import_module
 
+numpy = import_module('numpy')
+scipy = import_module('scipy')
+pymc3 = import_module('pymc3')
 
 class FiniteDensity(dict):
     """
@@ -345,18 +347,75 @@ class FinitePSpace(PSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        expr = Tuple(*self.values)
-        cdf = self.sorted_cdf(expr, python_float=True)
 
-        x = random.uniform(0, 1)
-        # Find first occurrence with cumulative probability less than x
-        # This should be replaced with binary search
-        for value, cum_prob in cdf:
-            if x < cum_prob:
-                # return dictionary mapping RandomSymbols to values
-                return dict(list(zip(expr, value)))
+        libraries = ['scipy', 'numpy', 'pymc3']
+        if library not in libraries:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                        % str(library))
+        if not import_module(library):
+            raise ValueError("Failed to import %s" % library)
 
-        assert False, "We should never have gotten to this point"
+        samps = getattr(SampleExternalFinite, '_sample_' + library)(self.distribution, size)
+
+        if samps is not None:
+            return {self.value: samps}
+        raise NotImplementedError(
+                "Sampling for %s is not currently implemented from %s"
+                % (self.__class__.__name__, library)
+                )
+
+
+class SampleExternalFinite:
+    """Class consisting of the methods that are used to sample values of
+    discrete random variables from external libraries."""
+
+
+    numpy_rv_map = {
+        'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
+            p=float(dist.p), size=size)
+    }
+
+    pymc3_rv_map = {
+        'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
+        'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
+            p=float(dist.p))
+    }
+
+    @classmethod
+    def _sample_scipy(cls, dist, size):
+        """Sample from SciPy."""
+        # scipy can handle with custom distributions
+        density_ = dist.dict
+        x, y = [], []
+        for k, v in density_.items():
+            x.append(int(k))
+            y.append(float(v))
+        scipy_rv = scipy.stats.rv_discrete(name='scipy_rv', values=(x, y))
+        return scipy_rv.rvs(size=size)
+
+    @classmethod
+    def _sample_numpy(cls, dist, size):
+        """Sample from NumPy."""
+
+        dist_list = cls.numpy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+
+    @classmethod
+    def _sample_pymc3(cls, dist, size):
+        """Sample from PyMC3."""
+
+        dist_list = cls.pymc3_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        with pymc3.Model():
+            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):

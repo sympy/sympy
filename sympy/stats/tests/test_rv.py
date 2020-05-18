@@ -190,7 +190,7 @@ def test_Sample():
         skip('Scipy is not installed. Abort tests')
     with ignore_warnings(UserWarning):
         assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert next(sample(X + Y))[0].is_Float
+        assert isinstance(next(sample(X + Y))[0], float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number

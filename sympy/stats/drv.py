@@ -5,13 +5,11 @@ from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    series, factorial, And, lambdify)
 
 from sympy.polys.polyerrors import PolynomialError
-from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
                             ProductDomain)
 from sympy.stats.symbolic_probability import Probability
-from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
@@ -60,7 +58,9 @@ class SampleExternalDiscrete:
 
     pymc3_rv_map = {
         'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
-        'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda))
+        'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),
+        'NegativeBinomialDistribution': lambda dist: pymc3.NegativeBinomial('X',
+        mu=float((dist.p*dist.r)/(1-dist.p)), alpha=float(dist.r))
     }
 
     @classmethod
