@@ -418,7 +418,7 @@ def _linear_neq_order1_type1(match_):
     return sol_dict
 
 
-# PR_number: Documentation to be added
+# 19341: Documentation to be added
 def _linear_neq_order1_type2(match_):
     """
     """
@@ -540,7 +540,7 @@ def _linear_neq_order1_type3(match_):
     return sol_dict
 
 
-# PR_number: Details about the new keys in the match
+# 19341: Details about the new keys in the match
 # dictionary to be added.
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
@@ -684,19 +684,19 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # equation is first order. There will be a separate
     # function for this in the future.
 
-    # PR_number: Matching function to be changed for type2
+    # 19341: Matching function to be changed for type2
     # equations
-    if all([order[func] == 1 for func in funcs]) and is_homogeneous:
+    if all([order[func] == 1 for func in funcs]):
         match['func_coeff'] = A
         if match['is_constant']:
-            # if is_homogeneous:
-            match['type_of_equation'] = "type1"
-            # else:
-            #     match['rhs'] = b
-            #     match['type_of_equation'] = "type2"
+            if is_homogeneous:
+                match['type_of_equation'] = "type1"
+            else:
+                match['rhs'] = b
+                match['type_of_equation'] = "type2"
         else:
             B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting: # or not is_homogeneous:
+            if not is_commuting or not is_homogeneous:
                 return None
             match['commutative_antiderivative'] = B
             match['type_of_equation'] = "type3"

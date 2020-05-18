@@ -7479,10 +7479,12 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 def sysode_linear_neq_order1(match):
     from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
-        _linear_neq_order1_type3)
+        _linear_neq_order1_type3, _linear_neq_order1_type2)
 
     if match['type_of_equation'] == 'type1':
         sol = _linear_neq_order1_type1(match)
+    elif match['type_of_equation'] == 'type2':
+        sol = _linear_neq_order1_type2(match)
     elif match['type_of_equation'] == 'type3':
         sol = _linear_neq_order1_type3(match)
     return sol
