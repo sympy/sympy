@@ -150,8 +150,38 @@ class ContinuousDistribution(Basic):
 
 
 class SampleExternalContinuous:
-    """Class consisting of the methods that are used to sample values of random
-    variables from external libraries."""
+    """Base Class to sample values of Continuous random variables from
+    external libraries."""
+
+    def __new__(cls, dist, size, library):
+        _sample_class = _get_sample_class[library]
+        return _sample_class(dist, size)
+
+
+class SampleContinuousScipy(SampleExternalContinuous):
+    """Returns the sample from scipy of the given distribution"""
+    def __new__(cls, dist, size):
+        return cls._sample_scipy(dist, size)
+
+    @classmethod
+    def _sample_scipy(cls, dist, size):
+        """Sample from SciPy."""
+        # scipy does not require map as it can handle using custom distributions
+        from scipy.stats import rv_continuous
+        z = Dummy('z')
+        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
+        class scipy_pdf(rv_continuous):
+            def _pdf(self, x):
+                return handmade_pdf(x)
+        scipy_rv = scipy_pdf(a=float(dist.set._inf),
+                    b=float(dist.set._sup), name='scipy_pdf')
+        return scipy_rv.rvs(size=size)
+
+class SampleContinuousNumpy(SampleExternalContinuous):
+    """Returns the sample from numpy of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_numpy(dist, size)
 
     numpy_rv_map = {
         'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
@@ -171,6 +201,23 @@ class SampleExternalContinuous:
         'UniformDistribution': lambda dist, size: numpy.random.uniform(
             low=float(dist.left), high=float(dist.right), size=size)
     }
+
+    @classmethod
+    def _sample_numpy(cls, dist, size):
+        """Sample from NumPy."""
+
+        dist_list = cls.numpy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+
+class SampleContinuousPymc(SampleExternalContinuous):
+    """Returns the sample from pymc3 of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_pymc3(dist, size)
 
     pymc3_rv_map = {
         'BetaDistribution': lambda dist:
@@ -196,31 +243,6 @@ class SampleExternalContinuous:
     }
 
     @classmethod
-    def _sample_scipy(cls, dist, size):
-        """Sample from SciPy."""
-        # scipy does not require map as it can handle using custom distributions
-        from scipy.stats import rv_continuous
-        z = Dummy('z')
-        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
-        class scipy_pdf(rv_continuous):
-            def _pdf(self, x):
-                return handmade_pdf(x)
-        scipy_rv = scipy_pdf(a=float(dist.set._inf),
-                    b=float(dist.set._sup), name='scipy_pdf')
-        return scipy_rv.rvs(size=size)
-
-    @classmethod
-    def _sample_numpy(cls, dist, size):
-        """Sample from NumPy."""
-
-        dist_list = cls.numpy_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
-
-    @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
@@ -232,6 +254,12 @@ class SampleExternalContinuous:
         with pymc3.Model():
             cls.pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
+_get_sample_class = {
+    'scipy': SampleContinuousScipy,
+    'pymc3': SampleContinuousPymc,
+    'numpy': SampleContinuousNumpy
+}
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
@@ -270,7 +298,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = getattr(SampleExternalContinuous, '_sample_' + library)(self, size)
+        samps = SampleExternalContinuous(self, size, library)
 
         if samps is not None:
             return samps
