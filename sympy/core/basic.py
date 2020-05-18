@@ -1890,12 +1890,6 @@ class Basic(metaclass=ManagedProperties):
         def determine_priority(A,B):
             # Determine which class' hook will be used
 
-            # Always prefer the subclass
-            if issubclass(A,B):
-                return A
-            if issubclass(B,A):
-                return B
-
             A_operables = getattr(A, '_operable_classes', lambda x:[])(cls)
             B_operables = getattr(B, '_operable_classes', lambda x:[])(cls)
             A_knows_B = any(issubclass(B, i) for i in A_operables)
