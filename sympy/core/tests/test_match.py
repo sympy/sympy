@@ -508,7 +508,7 @@ def test_issue_3883():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: Rational(-1, 2), b: -(x - mu)**2/2, c: log(2*pi)/2}
+        {a: Rational(-1, 2), b: -(mu - x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: Rational(-1, 2), b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
     g1 = Wild('g1', exclude=[gamma])
@@ -706,6 +706,14 @@ def test_match_issue_17397():
         - 4*Derivative(f(x), (x, 2)) - 2*Derivative(f(x), x)/x + 4*Derivative(f(x), (x, 2))/x
     r = collect(eq, [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
     assert r == {a3: x - 4 + 4/x, b3: 1 - 2/x, c3: x - 4}
+
+
+def test_match_terms():
+    X, Y = map(Wild, "XY")
+    x, y, z = symbols('x y z')
+    assert (5*y - x).match(5*X - Y) == {X: y, Y: x}
+    # 15907
+    assert (x + (y - 1)*z).match(x + X*z) == {X: y - 1}
 
 
 def test_match_bound():
