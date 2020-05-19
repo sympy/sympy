@@ -209,6 +209,10 @@ class LatexPrinter(Printer):
     def _add_parens(self, s):
         return r"\left({}\right)".format(s)
 
+    # TODO: merge this with the above, which requires a lot of test changes
+    def _add_parens_lspace(self, s):
+        return r"\left( {}\right)".format(s)
+
     def parenthesize(self, item, level, is_neg=False, strict=False):
         prec_val = precedence_traditional(item)
         if is_neg and strict:
@@ -1865,14 +1869,19 @@ class LatexPrinter(Printer):
                     self._print(expr.args[0]), self._print(exp))
 
     def _print_tuple(self, expr):
-        if self._settings['decimal_separator'] =='comma':
-            return r"\left( %s\right)" % \
-                r"; \  ".join([self._print(i) for i in expr])
-        elif self._settings['decimal_separator'] =='period':
-            return r"\left( %s\right)" % \
-                r", \  ".join([self._print(i) for i in expr])
+        if self._settings['decimal_separator'] == 'comma':
+            sep = ";"
+        elif self._settings['decimal_separator'] == 'period':
+            sep = ","
         else:
             raise ValueError('Unknown Decimal Separator')
+
+        if len(expr) == 1:
+            # 1-tuple needs a trailing separator
+            return self._add_parens_lspace(self._print(expr[0]) + sep)
+        else:
+            return self._add_parens_lspace(
+                (sep + r" \  ").join([self._print(i) for i in expr]))
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
