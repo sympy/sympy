@@ -902,7 +902,8 @@ class Basic(metaclass=ManagedProperties):
         """
         from sympy.core.compatibility import _nodes, default_sort_key
         from sympy.core.containers import Dict
-        from sympy import Dummy, Symbol
+        from sympy.core.symbol import Dummy, Symbol
+        from sympy.utilities.misc import filldedent
 
         unordered = False
         if len(args) == 1:
@@ -913,7 +914,6 @@ class Basic(metaclass=ManagedProperties):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be a dictionary of old: new pairs or an iterable
@@ -1561,6 +1561,7 @@ class Basic(metaclass=ManagedProperties):
         >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
         {x_: b + c}
         """
+        repl_dict = repl_dict.copy()
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
@@ -1631,14 +1632,24 @@ class Basic(metaclass=ManagedProperties):
 
         """
         from sympy.core.symbol import Wild
+        from sympy.core.function import WildFunction
+        from sympy.utilities.misc import filldedent
+
         pattern = sympify(pattern)
         # match non-bound symbols
         canonical = lambda x: x if x.is_Symbol else x.as_dummy()
         m = canonical(pattern).matches(canonical(self), old=old)
         if m is None:
             return m
+        wild = pattern.atoms(Wild, WildFunction)
+        # sanity check
+        if set(m) - wild:
+            raise ValueError(filldedent('''
+            Some `matches` routine did not use a copy of repl_dict
+            and injected unexpected symbols. Report this as an
+            error at https://github.com/sympy/sympy/issues'''))
         # now see if bound symbols were requested
-        bwild = pattern.atoms(Wild) - set(m)
+        bwild = wild - set(m)
         if not bwild:
             return m
         # replace free-Wild symbols in pattern with match result
@@ -1860,7 +1871,7 @@ class Atom(Basic):
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:
-            return repl_dict
+            return repl_dict.copy()
 
     def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
