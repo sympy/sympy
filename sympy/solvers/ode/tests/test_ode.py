@@ -3244,6 +3244,7 @@ def test_issue_9446():
 
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
 
+
 def test_issue_19358():
     Y = Function('Y')
     a, b, t = symbols('a, b, t')
