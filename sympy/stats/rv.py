@@ -779,8 +779,8 @@ def probability(condition, given_condition=None, numsamples=None,
 
     condition = sympify(condition)
     given_condition = sympify(given_condition)
-
-    if condition.has(RandomIndexedSymbol):
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    if condition.has(RandomIndexedSymbol) or condition.has(StochasticProcess):
         return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
 
     if isinstance(given_condition, RandomSymbol):

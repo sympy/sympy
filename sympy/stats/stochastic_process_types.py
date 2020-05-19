@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
-                   Lambda, Mul, Dummy, IndexedBase, Add,
-                   linsolve, eye, Or, Not, Intersection,
+                   Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
+                   linsolve, eye, Or, Not, Intersection, factorial,
                    Union, Expr, Function, exp, cacheit,
                    Ge, Piecewise, Symbol, NonSquareMatrixError)
 from sympy.core.relational import Relational
@@ -15,6 +15,7 @@ from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
+from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.core.sympify import _sympify
 
 __all__ = [
@@ -170,7 +171,7 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        if args[0].pspace.distribution == None: # checks if there is any distribution available
+        if not hasattr(args[0].pspace.process, 'distribution'): # checks if there is any distribution available
             return JointDistribution(*args)
 
         pdf = Lambda(tuple(args),
@@ -216,7 +217,8 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        pspace_obj = StochasticPSpace(self.symbol, self)
+        distribution = getattr(self, 'distribution', None)
+        pspace_obj = StochasticPSpace(self.symbol, self, distribution)
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
@@ -883,34 +885,6 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def distribution(self):
         return BernoulliDistribution(self.p)
 
-    def _rvindexed_subs(self, expr, condition=None):
-        """
-        Substitutes the RandomIndexedSymbol with the RandomSymbol with
-        same name, distribution and probability as RandomIndexedSymbol.
-
-        """
-
-        rvs_expr = random_symbols(expr)
-        if len(rvs_expr) != 0:
-            swapdict_expr = {}
-            for rv in rvs_expr:
-                if isinstance(rv, RandomIndexedSymbol):
-                    newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
-                                      succ=self.success, fail=self.failure)
-                    swapdict_expr[rv] = newrv
-            expr = expr.subs(swapdict_expr)
-        rvs_cond = random_symbols(condition)
-        if len(rvs_cond)!=0:
-            swapdict_cond = {}
-            if condition is not None:
-                for rv in rvs_cond:
-                    if isinstance(rv, RandomIndexedSymbol):
-                        newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
-                                          succ=self.success, fail=self.failure)
-                        swapdict_cond[rv] = newrv
-                condition = condition.subs(swapdict_cond)
-        return expr, condition
-
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
         Computes expectation.
@@ -930,18 +904,8 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Expectation of the RandomIndexedSymbol.
 
         """
-        new_expr, new_condition = self._rvindexed_subs(expr, condition)
 
-        new_pspace = pspace(new_expr)
-        if new_condition is not None:
-            new_expr = given(new_expr, new_condition)
-        if new_expr.is_Add:  # As E is Linear
-            return Add(*[new_pspace.compute_expectation(
-                        expr=arg, evaluate=evaluate, **kwargs)
-                        for arg in new_expr.args])
-        return new_pspace.compute_expectation(
-                new_expr, evaluate=evaluate, **kwargs)
-
+        return _expectation_stoch('Bernoulli', expr, condition, evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
@@ -962,17 +926,123 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Probability of the condition.
 
         """
-        new_condition, new_givencondition = self._rvindexed_subs(condition, given_condition)
+
+        return _probability_stoch('Bernoulli', condition, given_condition, evaluate, **kwargs)
+
+    def density(self, x):
+        return Piecewise((self.p, Eq(x, self.success)),
+                         (1 - self.p, Eq(x, self.failure)),
+                         (S.Zero, True))
+
+
+dict_rv_subs = {'Poisson': lambda rv: Poisson(rv.name, lamda=rv.pspace.process.lamda*rv.key),
+                'Bernoulli': lambda rv: Bernoulli(rv.name, p=rv.pspace.process.p, succ=rv.pspace.process.success, fail=rv.pspace.process.failure)
+               }
+
+
+def _rvindexed_subs(process, expr, condition=None):
+        """
+        Substitutes the RandomIndexedSymbol with the RandomSymbol with
+        same name, distribution and probability as RandomIndexedSymbol.
+
+      Parameters
+      ==========
+
+      process : str
+           Key value of dict_rv_subs RandomVariable used to substitute
+      expr: RandomIndexedSymbol, Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+      condition: Relational, Logic
+            The given conditions under which computations should be done.
+
+        """
+
+        rvs_expr = random_symbols(expr)
+        if len(rvs_expr) != 0:
+            swapdict_expr = {}
+            for rv in rvs_expr:
+                if isinstance(rv, RandomIndexedSymbol):
+                    newrv = dict_rv_subs[process](rv)
+                    swapdict_expr[rv] = newrv
+            expr = expr.subs(swapdict_expr)
+        rvs_cond = random_symbols(condition)
+        if len(rvs_cond)!=0:
+            swapdict_cond = {}
+            for rv in rvs_cond:
+                if isinstance(rv, RandomIndexedSymbol):
+                    newrv = dict_rv_subs[process](rv)
+                    swapdict_cond[rv] = newrv
+            condition = condition.subs(swapdict_cond)
+        return expr, condition
+
+
+def _expectation_stoch(process, expr, condition=None, evaluate=True, **kwargs):
+        """
+        Computes expectation.
+
+        Parameters
+        ==========
+
+
+      process : str
+           Key value of dict_rv_subs RandomVariable used to substitute
+        expr: RandomIndexedSymbol, Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        condition: Relational, Logic
+            The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Expectation of the RandomIndexedSymbol.
+
+        """
+        new_expr, new_condition = _rvindexed_subs(process, expr, condition)
+
+        new_pspace = pspace(new_expr)
+        if new_condition is not None:
+            new_expr = given(new_expr, new_condition)
+        if new_expr.is_Add:  # As E is Linear
+            return Add(*[new_pspace.compute_expectation(
+                        expr=arg, evaluate=evaluate, **kwargs)
+                        for arg in new_expr.args])
+        return new_pspace.compute_expectation(
+                new_expr, evaluate=evaluate, **kwargs)
+
+def _probability_stoch(process, condition, given_condition=None, evaluate=True, **kwargs):
+        """
+        Computes probability.
+
+        Parameters
+        ==========
+
+      process : str
+           Key value of dict_rv_subs RandomVariable used to substitute
+        condition: Relational
+                Condition for which probability has to be computed. Must
+                contain a RandomIndexedSymbol of the process.
+        given_condition: Relational/And
+                The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Probability of the condition.
+
+        """
+        new_condition, new_givencondition = _rvindexed_subs(process, condition, given_condition)
 
         if isinstance(new_givencondition, RandomSymbol):
             condrv = random_symbols(new_condition)
             if len(condrv) == 1 and condrv[0] == new_givencondition:
-                return BernoulliDistribution(self.probability(new_condition), 0, 1)
+                return BernoulliDistribution(_probability_stoch(process, new_condition), 0, 1)
 
             if any([dependent(rv, new_givencondition) for rv in condrv]):
                 return Probability(new_condition, new_givencondition)
             else:
-                return self.probability(new_condition)
+                return _probability_stoch(process, new_condition)
 
         if new_givencondition is not None and \
                 not isinstance(new_givencondition, (Relational, Boolean)):
@@ -989,10 +1059,52 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
                     % (new_condition))
         if new_givencondition is not None:  # If there is a condition
         # Recompute on new conditional expr
-            return self.probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
-        return pspace(new_condition).probability(new_condition, **kwargs)
+            return _probability_stoch(process, given(new_condition, new_givencondition, **kwargs), **kwargs)
+        result = pspace(new_condition).probability(new_condition, **kwargs)
+        if evaluate and hasattr(result, 'doit'):
+            return result.doit()
+        else:
+            return result
+
+
+class PoissonProcess(ContinuousTimeStochasticProcess):
+    index_set = _set_converter(Interval(0, oo))
+
+    def __new__(cls, sym, lamda):
+        sym = _symbol_converter(sym)
+        lamda = _sympify(lamda)
+        return Basic.__new__(cls, sym, lamda)
+
+    @property
+    def state_space(self):
+        return S.Naturals0
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def lamda(self):
+        return self.args[1]
+
+
+    def distribution(self, rv):
+        return PoissonDistribution(self.lamda*rv.key)
 
     def density(self, x):
-        return Piecewise((self.p, Eq(x, self.success)),
-                         (1 - self.p, Eq(x, self.failure)),
-                         (S.Zero, True))
+        return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
+
+
+    def expectation(self, expr, condition=None, evaluate=True, **kwargs):
+        return _expectation_stoch('Poisson', expr, condition=condition, evaluate=True, **kwargs)
+
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        if given_condition is not None: # use memory less property
+            if not isinstance(given_condition, Interval):
+                raise TypeError("Expecting an Interval as a given condition")
+            if not condition.has(PoissonProcess):
+                raise TypeError("Condition should contain an instance of PoissonProcess")
+            lhs = condition.args[0](given_condition._sup - given_condition._inf)
+            print(lhs)
+            condition = condition.__class__(lhs, condition.args[1])
+        return _probability_stoch('Poisson', condition, evaluate=True, **kwargs)
