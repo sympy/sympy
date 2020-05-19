@@ -1460,7 +1460,7 @@ class cot(TrigonometricFunction):
         re, im = self._as_real_imag(deep=deep, **hints)
         if im:
             denom = cos(2*re) - cosh(2*im)
-            return (-sin(2*re)/denom, -sinh(2*im)/denom)
+            return (-sin(2*re)/denom, sinh(2*im)/denom)
         else:
             return (self.func(re), S.Zero)
 
