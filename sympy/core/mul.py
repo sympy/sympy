@@ -1753,11 +1753,73 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import Order, powsimp
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(Order):
-            res += Order(x**n, x)
+        from sympy import Integer, Order, ceiling, powsimp
+
+        ords = []
+
+        try:
+            for t in self.args:
+                coeff, exponent = t.leadterm(x)
+                if isinstance(coeff, Integer) or isinstance(coeff, Rational):
+                    ords.append((t, exponent))
+                else:
+                    raise ValueError
+
+            n0 = sum(t[1] for t in ords)
+            facs = [t.series(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
+
+        except (ValueError, NotImplementedError, TypeError, AttributeError):
+            facs = [t.nseries(x, n=n, logx=logx) for t in self.args]
+            res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
+            if res.has(Order):
+                res += Order(x**n, x)
+            return res
+
+        res = 0
+        i = 0
+
+        for j in facs[1:]:
+            if i == 0:
+                fac1 = facs[i]
+            else:
+                fac1 = res
+
+            fac2 = j
+
+            if isinstance(fac1, Add):
+                facs1 = [t.leadterm(x) for t in fac1.args]
+            else:
+                if isinstance(fac1, int):
+                    facs1 = [(fac1, 0)]
+                else:
+                    facs1 = [fac1.leadterm(x)]
+
+            if isinstance(fac2, Add):
+                facs2 = [t.leadterm(x) for t in fac2.args]
+            else:
+                if isinstance(fac2, int):
+                    facs2 = [(fac2, 0)]
+                else:
+                    facs2 = [fac2.leadterm(x)]
+
+            res = 0
+
+            if (i + 2) == len(facs):
+                order = n
+            else:
+                order = n - ords[i + 2][1]
+
+
+            for s in facs1:
+                for t in facs2:
+                    if (s[1] + t[1]) <= order:
+                        power = s[1] + t[1]
+                        coeff = s[0]*t[0]
+                        res += (coeff*(x**power))
+
+            i = i + 1
+
+        res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):
