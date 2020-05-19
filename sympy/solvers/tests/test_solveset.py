@@ -2315,4 +2315,4 @@ def test_substitution_with_infeasible_solution():
         (0, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0, 0, 0, 0, 1, -l3*p11/p01, -p01/p11, l3),
         (0, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0, 0, 0, 0, -l2*p11/p01, -l3*p11/p01, l2, l3),
     )
-    assert solution != nonlinsolve(system, solvefor)
+    assert sol != nonlinsolve(system, solvefor)
