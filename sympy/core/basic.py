@@ -1819,6 +1819,10 @@ class Basic(metaclass=ManagedProperties):
         See Also
         ========
 
+        calculus.util
+        matrices.expressions.matexpr
+        tensor.tensor
+        vector.basisdependent
         https://github.com/sympy/sympy/pull/18769
 
         """
