@@ -275,7 +275,7 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
 
-        obj = cls._constructor_priority_hook(b,e, **options)
+        obj = cls._constructor_hook(b,e, **options)
         if obj is not None:
             return obj
 

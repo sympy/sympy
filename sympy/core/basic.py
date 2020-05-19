@@ -1780,7 +1780,7 @@ class Basic(metaclass=ManagedProperties):
     _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
-    def _constructor_priority_hook(cls, *args, ignore_hook=False, **options):
+    def _constructor_hook(cls, *args, ignore_hook=False, **options):
         """
         Select the hook from args, apply args and options to it and return the result.
 
