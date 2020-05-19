@@ -436,60 +436,6 @@ def test_linear_2eq_order1():
     # assert checksysodesol(eq10, sol10) == (True, [0, 0])  # this one fails
 
 
-# 19341: To move this test case
-def test_dsolve_linear_2eq_order1_diag_triangular():
-    e = [Eq(diff(f(x), x), f(x)),
-         Eq(diff(g(x), x), g(x))]
-    s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x))]
-    assert checksysodesol(e, s1) == (True, [0, 0])
-
-    e = [Eq(diff(f(x), x), 2*f(x)),
-         Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
-    s1 = [Eq(f(x), -5*C2*exp(2*x)),
-          Eq(g(x), 5*C1*exp(7*x) + 3*C2*exp(2*x))]
-    assert checksysodesol(e, s1) == (True, [0, 0])
-
-
-# 19341: To move this test case
-def test_sysode_linear_2eq_order1_type1_D_lt_0():
-    e = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)),
-         Eq(diff(g(x), x), -4*I*g(x))]
-    s1 = [Eq(f(x), -4*C1*exp(-4*I*x) - 4*C2*exp(-9*I*x)), \
-    Eq(g(x), 5*I*C1*exp(-4*I*x))]
-    assert checksysodesol(e, s1) == (True, [0, 0])
-
-
-# 19341: To move this test case
-def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
-    e = [Eq(diff(f(x), x), -9*I*f(x)),
-         Eq(diff(g(x), x), -4*I*g(x))]
-    s1 = [Eq(f(x), -5*I*C2*exp(-9*I*x)), Eq(g(x), 5*I*C1*exp(-4*I*x))]
-    assert checksysodesol(e, s1) == (True, [0, 0])
-
-
-# 19341: To move the test case
-def test_sysode_linear_2eq_order1_many_zeros():
-    t = Symbol('t')
-    corner_cases = [(0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0),
-                    (0, 0, 1, 0), (0, 0, 0, 1), (1, 0, 0, I),
-                    (I, 0, 0, -I), (0, I, 0, 0), (0, I, I, 0)]
-    s1 = [[Eq(f(t), C1), Eq(g(t), C2)],
-          [Eq(f(t), C1*exp(t)), Eq(g(t), -C2)],
-          [Eq(f(t), C1 + C2*t), Eq(g(t), C2)],
-          [Eq(f(t), C2), Eq(g(t), C1 + C2*t)],
-          [Eq(f(t), -C2), Eq(g(t), C1*exp(t))],
-          [Eq(f(t), C1*(1 - I)*exp(t)), Eq(g(t), C2*(-1 + I)*exp(I*t))],
-          [Eq(f(t), 2*I*C1*exp(I*t)), Eq(g(t), -2*I*C2*exp(-I*t))],
-          [Eq(f(t), I*C1 + I*C2*t), Eq(g(t), C2)],
-          [Eq(f(t), I*C1*exp(I*t) + I*C2*exp(-I*t)), \
-           Eq(g(t), I*C1*exp(I*t) - I*C2*exp(-I*t))]
-         ]
-    for r, sol in zip(corner_cases, s1):
-        eq = [Eq(diff(f(t), t), r[0]*f(t) + r[1]*g(t)),
-              Eq(diff(g(t), t), r[2]*f(t) + r[3]*g(t))]
-        assert checksysodesol(eq, sol) == (True, [0, 0])
-
-
 @slow
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', cls=Function)

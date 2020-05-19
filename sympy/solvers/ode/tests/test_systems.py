@@ -706,7 +706,41 @@ def test_sysode_linear_neq_order1_type1():
              Eq(h(t), C2)]
 
     assert dsolve(eq25) == sol25
-    assert checksysodesol(eq25, sol25)
+    assert checksysodesol(eq25, sol25) == (True, [0, 0, 0, 0, 0])
+
+    eq26 = [Eq(diff(f(x), x), 2*f(x)), Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
+    sol26 = [Eq(f(x), -5*C1*exp(2*x)/3), Eq(g(x), C1*exp(2*x) + C2*exp(7*x))]
+    assert dsolve(eq26) == sol26
+    assert checksysodesol(eq26, sol26) == (True, [0, 0])
+
+    eq27 = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)), Eq(diff(g(x), x), -4*I*g(x))]
+    sol27 = [Eq(f(x), C1*exp(-9*I*x) + 4*I*C2*exp(-4*I*x)/5), Eq(g(x), C2*exp(-4*I*x))]
+    assert dsolve(eq27) == sol27
+    assert checksysodesol(eq27, sol27) == (True, [0, 0])
+
+    eq28 = [Eq(diff(f(x), x), -9*I*f(x)), Eq(diff(g(x), x), -4*I*g(x))]
+    sol28 = [Eq(f(x), C1*exp(-9*I*x)), Eq(g(x), C2*exp(-4*I*x))]
+    assert dsolve(eq28) == sol28
+    assert checksysodesol(eq28, sol28) == (True, [0, 0])
+
+    corner_cases = [(0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0),
+                    (0, 0, 1, 0), (0, 0, 0, 1), (1, 0, 0, I),
+                    (I, 0, 0, -I), (0, I, 0, 0), (0, I, I, 0)]
+    s1 = [[Eq(f(t), C1), Eq(g(t), C2)]
+        [Eq(f(t), C2*exp(t)), Eq(g(t), C1)]
+        [Eq(f(t), C1 + C2*t), Eq(g(t), C2)]
+        [Eq(f(t), C2), Eq(g(t), C1 + C2*t)]
+        [Eq(f(t), C1), Eq(g(t), C2*exp(t))]
+        [Eq(f(t), C1*exp(t)), Eq(g(t), C2*exp(I*t))]
+        [Eq(f(t), C2*exp(I*t)), Eq(g(t), C1*exp(-I*t))]
+        [Eq(f(t), I*(C1 + C2*t)), Eq(g(t), C2)]
+        [Eq(f(t), -C1*exp(-I*t) + C2*exp(I*t)), Eq(g(t), C1*exp(-I*t) + C2*exp(I*t))]
+        ]
+    for r, sol in zip(corner_cases, s1):
+        eq = [Eq(diff(f(t), t), r[0]*f(t) + r[1]*g(t)),
+              Eq(diff(g(t), t), r[2]*f(t) + r[3]*g(t))]
+        assert dsolve(eq) == sol
+        assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
 def test_sysode_linear_neq_order1_type2():
