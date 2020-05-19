@@ -1845,7 +1845,7 @@ class Basic(metaclass=ManagedProperties):
         if len(hooks) == 0:
             return None     # No hook is defined for args, so hook cannot be applied.
         else:   # This is the case where different args define same hook
-            hook = list(hooks).pop()
+            hook = hooks.pop()
             return hook(*args, **options)
 
     @classmethod
