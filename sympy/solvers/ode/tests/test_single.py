@@ -1128,7 +1128,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 
     # https://github.com/sympy/sympy/issues/19358
     'undet_29': {
-        'eq': f2 + f(x).diff(x) + exp(x-C1)
+        'eq': f2 + f(x).diff(x) + exp(x-C1),
         'sol': [Eq(f(x), C2 + C3*exp(-x) - exp(-C1 + x)/2)],
         'slow': True,
     },
