@@ -1031,7 +1031,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 
     'undet_11': {
         'eq': f2 - 3*f(x).diff(x) - 2*exp(2*x)*sin(x),
-        'sol': [Eq(f(x), C1 + C2*exp(3*x) - 3*exp(2*x)*sin(x)/5 - exp(2*x)*cos(x)/5)],
+        'sol': [Eq(f(x), C1 + C2*exp(3*x) + (-3*sin(x) - cos(x))*exp(2*x)/5)],
         'slow': True,
     },
 
