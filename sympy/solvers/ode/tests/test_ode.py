@@ -3243,3 +3243,10 @@ def test_issue_9446():
     [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))]
 
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
+
+def test_issue_19358():
+    Y = Function('Y')
+    a, b, t = symbols('a, b, t')
+    eq = Eq(Derivative(Y(t), (t, 2)), b*Derivative(Y(t), t) + exp(-a + t))
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, 0)
