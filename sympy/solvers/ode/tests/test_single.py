@@ -32,8 +32,8 @@ Functions that are for internal use:
    ODEs which raises exception.
 
 """
-from sympy import (acos, asin, asinh, atan, cos, Derivative, Dummy, diff,
-    E, Eq, exp, I, Integral, log, pi, Piecewise, Rational, S, sin, sinh, tan,
+from sympy import (acos, asin atan, cos, Derivative, Dummy, diff,
+    E, Eq, exp, I, log, pi, Piecewise, Rational, S, sin, sinh, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
