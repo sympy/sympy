@@ -50,7 +50,7 @@ from sympy.testing.pytest import raises, slow
 import traceback
 
 
-x = Symbol('x', real=True)
+x = Symbol('x')
 u = Symbol('u')
 y = Symbol('y')
 f = Function('f')
@@ -778,8 +778,7 @@ def _get_examples_ode_sol_liouville():
 
     'liouville_05': {
         'eq': x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x),
-        'sol': [Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2)),
-        Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2))],
+        'sol': [Eq(f(x), -sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(C1 + C2*exp(-x)))],
     },
 
     'liouville_06': {
@@ -1031,7 +1030,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 
     'undet_11': {
         'eq': f2 - 3*f(x).diff(x) - 2*exp(2*x)*sin(x),
-        'sol': [Eq(f(x), C1 + C2*exp(3*x) + (-3*sin(x) - cos(x))*exp(2*x)/5)],
+        'sol': [Eq(f(x), C1 + C2*exp(3*x) - 3*exp(2*x)*sin(x)/5 - exp(2*x)*cos(x)/5)],
         'slow': True,
     },
 
