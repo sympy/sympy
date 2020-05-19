@@ -6,7 +6,6 @@ from sympy.core.assumptions import StdFactKB
 from sympy import factor as fctr, diff as df, Integral
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
-from sympy.core.basic import Basic
 from sympy.core.power import Pow
 
 
