@@ -708,33 +708,33 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq25) == sol25
     assert checksysodesol(eq25, sol25) == (True, [0, 0, 0, 0, 0])
 
-    eq26 = [Eq(diff(f(x), x), 2*f(x)), Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
-    sol26 = [Eq(f(x), -5*C1*exp(2*x)/3), Eq(g(x), C1*exp(2*x) + C2*exp(7*x))]
+    eq26 = [Eq(diff(f(t), t), 2*f(t)), Eq(diff(g(t), t), 3*f(t) + 7*g(t))]
+    sol26 = [Eq(f(t), -5*C1*exp(2*t)/3), Eq(g(t), C1*exp(2*t) + C2*exp(7*t))]
     assert dsolve(eq26) == sol26
     assert checksysodesol(eq26, sol26) == (True, [0, 0])
 
-    eq27 = [Eq(diff(f(x), x), -9*I*f(x) - 4*g(x)), Eq(diff(g(x), x), -4*I*g(x))]
-    sol27 = [Eq(f(x), C1*exp(-9*I*x) + 4*I*C2*exp(-4*I*x)/5), Eq(g(x), C2*exp(-4*I*x))]
+    eq27 = [Eq(diff(f(t), t), -9*I*f(t) - 4*g(t)), Eq(diff(g(t), t), -4*I*g(t))]
+    sol27 = [Eq(f(t), C1*exp(-9*I*t) + 4*I*C2*exp(-4*I*t)/5), Eq(g(t), C2*exp(-4*I*t))]
     assert dsolve(eq27) == sol27
     assert checksysodesol(eq27, sol27) == (True, [0, 0])
 
-    eq28 = [Eq(diff(f(x), x), -9*I*f(x)), Eq(diff(g(x), x), -4*I*g(x))]
-    sol28 = [Eq(f(x), C1*exp(-9*I*x)), Eq(g(x), C2*exp(-4*I*x))]
+    eq28 = [Eq(diff(f(t), t), -9*I*f(t)), Eq(diff(g(t), t), -4*I*g(t))]
+    sol28 = [Eq(f(t), C1*exp(-9*I*t)), Eq(g(t), C2*exp(-4*I*t))]
     assert dsolve(eq28) == sol28
     assert checksysodesol(eq28, sol28) == (True, [0, 0])
 
     corner_cases = [(0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0),
                     (0, 0, 1, 0), (0, 0, 0, 1), (1, 0, 0, I),
                     (I, 0, 0, -I), (0, I, 0, 0), (0, I, I, 0)]
-    s1 = [[Eq(f(t), C1), Eq(g(t), C2)]
-        [Eq(f(t), C2*exp(t)), Eq(g(t), C1)]
-        [Eq(f(t), C1 + C2*t), Eq(g(t), C2)]
-        [Eq(f(t), C2), Eq(g(t), C1 + C2*t)]
-        [Eq(f(t), C1), Eq(g(t), C2*exp(t))]
-        [Eq(f(t), C1*exp(t)), Eq(g(t), C2*exp(I*t))]
-        [Eq(f(t), C2*exp(I*t)), Eq(g(t), C1*exp(-I*t))]
-        [Eq(f(t), I*(C1 + C2*t)), Eq(g(t), C2)]
-        [Eq(f(t), -C1*exp(-I*t) + C2*exp(I*t)), Eq(g(t), C1*exp(-I*t) + C2*exp(I*t))]
+    s1 = [[Eq(f(t), C1), Eq(g(t), C2)],
+        [Eq(f(t), C2*exp(t)), Eq(g(t), C1)],
+        [Eq(f(t), C1 + C2*t), Eq(g(t), C2)],
+        [Eq(f(t), C2), Eq(g(t), C1 + C2*t)],
+        [Eq(f(t), C1), Eq(g(t), C2*exp(t))],
+        [Eq(f(t), C1*exp(t)), Eq(g(t), C2*exp(I*t))],
+        [Eq(f(t), C2*exp(I*t)), Eq(g(t), C1*exp(-I*t))],
+        [Eq(f(t), I*(C1 + C2*t)), Eq(g(t), C2)],
+        [Eq(f(t), -C1*exp(-I*t) + C2*exp(I*t)), Eq(g(t), C1*exp(-I*t) + C2*exp(I*t))],
         ]
     for r, sol in zip(corner_cases, s1):
         eq = [Eq(diff(f(t), t), r[0]*f(t) + r[1]*g(t)),
