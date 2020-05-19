@@ -27,8 +27,17 @@ class DiscreteDistribution(Basic):
 
 
 class SampleExternalDiscrete:
-    """Class consisting of the methods that are used to sample values of
-    discrete random variables from external libraries."""
+    """Base Class to sample values of Discrete random variables from
+    external libraries."""
+
+    def __new__(cls, dist, size, library):
+        _sample_class = _get_sample_class[library]
+        return _sample_class(dist, size)
+
+class SampleDiscreteScipy(SampleExternalDiscrete):
+    """Returns the sample from scipy of the given distribution"""
+    def __new__(cls, dist, size):
+        return cls._sample_scipy(dist, size)
 
     scipy_rv_map = {
         'GeometricDistribution': lambda dist, size: scipy.stats.geom.rvs(p=float(dist.p),
@@ -45,22 +54,6 @@ class SampleExternalDiscrete:
             size=size),
         'ZetaDistribution': lambda dist, size: scipy.stats.zipf.rvs(a=float(dist.s),
             size=size)
-    }
-
-    numpy_rv_map = {
-        'GeometricDistribution': lambda dist, size: numpy.random.geometric(p=float(dist.p),
-            size=size),
-        'PoissonDistribution': lambda dist, size: numpy.random.poisson(lam=float(dist.lamda),
-            size=size),
-        'ZetaDistribution': lambda dist, size: numpy.random.zipf(a=float(dist.s),
-            size=size)
-    }
-
-    pymc3_rv_map = {
-        'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
-        'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),
-        'NegativeBinomialDistribution': lambda dist: pymc3.NegativeBinomial('X',
-        mu=float((dist.p*dist.r)/(1-dist.p)), alpha=float(dist.r))
     }
 
     @classmethod
@@ -85,6 +78,21 @@ class SampleExternalDiscrete:
 
         return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
 
+class SampleDiscreteNumpy(SampleExternalDiscrete):
+    """Returns the sample from numpy of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_numpy(dist, size)
+
+    numpy_rv_map = {
+        'GeometricDistribution': lambda dist, size: numpy.random.geometric(p=float(dist.p),
+            size=size),
+        'PoissonDistribution': lambda dist, size: numpy.random.poisson(lam=float(dist.lamda),
+            size=size),
+        'ZetaDistribution': lambda dist, size: numpy.random.zipf(a=float(dist.s),
+            size=size)
+    }
+
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
@@ -95,6 +103,19 @@ class SampleExternalDiscrete:
             return None
 
         return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+
+class SampleDiscretePymc(SampleExternalDiscrete):
+    """Returns the sample from pymc3 of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_pymc3(dist, size)
+
+    pymc3_rv_map = {
+        'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
+        'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),
+        'NegativeBinomialDistribution': lambda dist: pymc3.NegativeBinomial('X',
+        mu=float((dist.p*dist.r)/(1-dist.p)), alpha=float(dist.r))
+    }
 
     @classmethod
     def _sample_pymc3(cls, dist, size):
@@ -108,6 +129,13 @@ class SampleExternalDiscrete:
         with pymc3.Model():
             cls.pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
+
+_get_sample_class = {
+    'scipy': SampleDiscreteScipy,
+    'pymc3': SampleDiscretePymc,
+    'numpy': SampleDiscreteNumpy
+}
 
 
 class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
@@ -141,7 +169,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = getattr(SampleExternalDiscrete, '_sample_' + library)(self, size)
+        samps = SampleExternalDiscrete(self, size, library)
 
         if samps is not None:
             return samps

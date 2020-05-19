@@ -355,7 +355,7 @@ class FinitePSpace(PSpace):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = getattr(SampleExternalFinite, '_sample_' + library)(self.distribution, size)
+        samps = SampleExternalFinite(self.distribution, size, library)
 
         if samps is not None:
             return {self.value: samps}
@@ -366,20 +366,18 @@ class FinitePSpace(PSpace):
 
 
 class SampleExternalFinite:
-    """Class consisting of the methods that are used to sample values of
-    discrete random variables from external libraries."""
+    """Base Class to sample values of Finite random variables from
+    external libraries."""
+
+    def __new__(cls, dist, size, library):
+        _sample_class = _get_sample_class[library]
+        return _sample_class(dist, size)
 
 
-    numpy_rv_map = {
-        'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
-            p=float(dist.p), size=size)
-    }
-
-    pymc3_rv_map = {
-        'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
-        'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
-            p=float(dist.p))
-    }
+class SampleFiniteScipy(SampleExternalFinite):
+    """Returns the sample from scipy of the given distribution"""
+    def __new__(cls, dist, size):
+        return cls._sample_scipy(dist, size)
 
     @classmethod
     def _sample_scipy(cls, dist, size):
@@ -393,6 +391,18 @@ class SampleExternalFinite:
         scipy_rv = scipy.stats.rv_discrete(name='scipy_rv', values=(x, y))
         return scipy_rv.rvs(size=size)
 
+
+class SampleFiniteNumpy(SampleExternalFinite):
+    """Returns the sample from numpy of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_numpy(dist, size)
+
+    numpy_rv_map = {
+        'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
+            p=float(dist.p), size=size)
+    }
+
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
@@ -403,6 +413,19 @@ class SampleExternalFinite:
             return None
 
         return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+
+
+class SampleFinitePymc(SampleExternalFinite):
+    """Returns the sample from pymc3 of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_pymc3(dist, size)
+
+    pymc3_rv_map = {
+        'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
+        'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
+            p=float(dist.p))
+    }
 
     @classmethod
     def _sample_pymc3(cls, dist, size):
@@ -416,6 +439,12 @@ class SampleExternalFinite:
         with pymc3.Model():
             cls.pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
+_get_sample_class = {
+    'scipy': SampleFiniteScipy,
+    'pymc3': SampleFinitePymc,
+    'numpy': SampleFiniteNumpy
+}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):
