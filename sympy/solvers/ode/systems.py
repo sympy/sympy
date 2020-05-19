@@ -418,9 +418,24 @@ def _linear_neq_order1_type1(match_):
     return sol_dict
 
 
-# 19341: Documentation to be added
 def _linear_neq_order1_type2(match_):
-    """
+    r"""
+    System of n first-order coefficient linear non-homogeneous differential equations
+
+    .. math::
+        X' = A X + b(t)
+
+    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
+    is the first order differential of $X$ with respect to $t$, $A$ is a $n \times n$
+    constant coefficient matrix and $b(t)$ is the non-homogeneous term.
+
+    The solution of the above system is:
+
+    .. math::
+        X = e^{A t} (\int e^{- A t} b\, dt\right + C)
+
+    where $C$ is the vector of constants.
+
     """
     eq = match_['eq']
     func = match_['func']
@@ -540,8 +555,6 @@ def _linear_neq_order1_type3(match_):
     return sol_dict
 
 
-# 19341: Details about the new keys in the match
-# dictionary to be added.
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
@@ -603,6 +616,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                           may or may not exist.
             9. is_general: Boolean value indicating if the system of ODEs is
                            solvable using one of the general case solvers or not.
+            10. rhs: rhs of the non-homogeneous system of ODEs in Matrix form. This
+                     key may or may not exist.
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
 
@@ -683,9 +698,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Converting the equation into canonical form if the
     # equation is first order. There will be a separate
     # function for this in the future.
-
-    # 19341: Matching function to be changed for type2
-    # equations
     if all([order[func] == 1 for func in funcs]):
         match['func_coeff'] = A
         if match['is_constant']:
@@ -704,4 +716,3 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         return match
 
     return None
-
