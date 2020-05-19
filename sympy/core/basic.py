@@ -1777,13 +1777,7 @@ class Basic(metaclass=ManagedProperties):
                 else:
                     return self
 
-    _constructor_hook_mapping = {}  # type: ignore
     _constructor_postprocessor_mapping = {}  # type: ignore
-
-    @classmethod
-    def _operable_classes(cls, op_cls):
-        # Override this method if needed
-        return set()
 
     @classmethod
     def _constructor_priority_hook(cls, *args, ignore_hook=False, **options):
@@ -1794,9 +1788,10 @@ class Basic(metaclass=ManagedProperties):
         ===========
 
         This method is implemented to relieve the complexity in ``Add``, ``Mul``, and
-        ``Pow``'s methods, and let them to behave as the constructor for its subclasses.
-        It uses ``Basic._select_hook`` to choose the best hook from the args. If ``None``
-        is returned from this method, hook is not applied.
+        ``Pow``'s methods, and let them behave as the constructor for its subclasses.
+        For this, ``cls.dispatcher`` must be defined which returns the hook function of given argument.
+        If ``None`` is returned from this method, hook is not applied.
+        Currently, different arguments with different hooks are not supported.
 
         Parameters
         ==========
@@ -1824,126 +1819,30 @@ class Basic(metaclass=ManagedProperties):
         See Also
         ========
 
-        matrices.expressions.matexpr
+        https://github.com/sympy/sympy/pull/18769
+
         """
         # ignore the hook
         if ignore_hook:
             return None
 
-        types = {type(a) for a in args}
-        hook = cls._select_hook(*types)
-        if hook is None:
+        dispatcher = cls.__dict__.get('dispatcher') # do not allow inheritance of dispatcher
+        if dispatcher is None:  # No hook is applied if cls isn't designed for hook
             return None
-        else:
+
+        hooks = []
+        for a in args:
+            try:
+                hook = dispatcher(a)
+                hooks.append(hook)
+            except NotImplementedError:
+                pass
+
+        if len(hooks) == 0:
+            return None     # No hook is defined for args, so hook cannot be applied.
+        else:   # This is the case where different args define same hook
+            hook = list(hooks).pop()
             return hook(*args, **options)
-
-    @classmethod
-    @cacheit
-    def _select_hook(cls, *types):
-        """
-        Select the best constructor hook from the types.
-
-        Explanation
-        ===========
-
-        This method first compares ``_op_priority`` attribute of the arguments. If any superclass
-        of argument with highest ``_op_priority`` can be found in  ``Basic._constructor_hook_mapping``,
-        its value (which is a function) returned. If two or more arguments have same ``_op_priority``,
-        their ``_operable_classes`` are checked. If the priority cannot be determined yet, then use the
-        hook of first-coming argument.
-
-        """
-        # First, we check _op_priority.
-        hook_functions = {}
-        first_args_hook = None  # This is used as fallback when no hook can be determined.
-        for t in types:
-            if hasattr(t, '_op_priority'):
-                priority = t._op_priority
-            else:
-                priority = 0 # If t doesn't have _op_priority (i.e int or Basic), consider it as 0.
-            hook = None
-            for func in t.__mro__:
-                if func in Basic._constructor_hook_mapping:
-                    hook_map = Basic._constructor_hook_mapping[func]
-                    if cls in hook_map:
-                        hook = hook_map[cls]
-                        break
-            if hook is not None:
-                hook_functions[t] = (priority, hook)
-                if first_args_hook is None:
-                    first_args_hook = hook  # Store to use later
-        if not hook_functions:
-            return None # No hook is found. Do not use hook.
-
-        highest_priority, _ = max(hook_functions.values(), key=lambda x:x[0])
-        hook_functions = {
-            t:tup for t,tup in hook_functions.items() if tup[0] == highest_priority
-        }
-
-        if len(hook_functions) == 1:
-            # Only one hook has the highest priority: use that one!
-            tup, = hook_functions.values()
-            hook = tup[1]
-            return hook
-
-        # Now we check each arguments' _operable_classes to see if they 'know' each other
-        def determine_priority(A,B):
-            # Determine which class' hook will be used
-
-            A_operables = getattr(A, '_operable_classes', lambda x:[])(cls)
-            B_operables = getattr(B, '_operable_classes', lambda x:[])(cls)
-            A_knows_B = any(issubclass(B, i) for i in A_operables)
-            B_knows_A = any(issubclass(A, i) for i in B_operables)
-
-            if A_knows_B and B_knows_A:
-                # both know each other:
-                # then, check if one knows the other explicitly.
-                A_knows_B = any(B == i for i in A_operables)
-                B_knows_A = any(A == i for i in B_operables)
-
-            if A_knows_B == B_knows_A:
-                # both don't know each other, or know each other.
-                # In this case, check if one is another's subclass.
-                # Subclass is preferred.
-                if issubclass(B, A):
-                    return B
-                if issubclass(A, B):
-                    return A
-                # We truly cannot determine which one to use
-                return None
-
-            if A_knows_B:
-                # A knows B, but B doesn't know A.
-                return A
-            if B_knows_A:
-                # B knows A, but A doesn't know B.
-                return B
-
-        # Each type gets 'score' if it knows the other type
-        # and the other doesn't know it.
-        types_w_highest_priority = list(hook_functions.keys())
-        type_scores = {t:0 for t in types_w_highest_priority}
-        for i,A in enumerate(types_w_highest_priority):
-            for B in types_w_highest_priority[i+1:]:
-                selected_type = determine_priority(A,B)
-                if selected_type is not None:
-                    type_scores[selected_type] += 1
-
-        highest_score = max(type_scores.values())
-        highest_scored_types = {
-            t:s for t,s in type_scores.items() if s == highest_score
-        }
-
-        if len(highest_scored_types) == 1:
-            # Only one hook has the highest score: use that one!
-            t, = highest_scored_types
-            tup = hook_functions[t]
-            hook = tup[1]
-            return hook
-
-        # Can't determine which hook to use, so use the first-coming argument's hook.
-        return first_args_hook
-
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):

@@ -1673,9 +1673,12 @@ def Mul_hook(*args, **options):
     # Every combinables are combined.
     return Mul(result, extra, ignore_hook=True, evaluate=False)
 
-Basic._constructor_hook_mapping[AccumulationBounds] = {
-    Add: Add_hook,
-    Mul: Mul_hook
-}
+@Add.dispatcher.register(AccumulationBounds)
+def _(arg):
+    return Add_hook
+
+@Mul.dispatcher.register(AccumulationBounds)
+def _(arg):
+    return Mul_hook
 
 from sympy.matrices.expressions import MatrixExpr

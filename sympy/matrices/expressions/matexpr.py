@@ -646,12 +646,13 @@ def get_hook(cls):
         return mat_class(cls._from_args(nonmatrices), *matrices, **options).doit(deep=False)
     return _hook
 
+@Add.dispatcher.register(MatrixExpr)
+def _(arg):
+    return get_hook(Add)
 
-Basic._constructor_hook_mapping[MatrixExpr] = {
-    Mul: get_hook(Mul),
-    Add: get_hook(Add),
-}
-
+@Mul.dispatcher.register(MatrixExpr)
+def _(arg):
+    return get_hook(Mul)
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative

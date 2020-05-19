@@ -4264,10 +4264,16 @@ def Pow_hook(b, e, **options):
         )
     return marray ** (e * S.Half)
 
-Basic._constructor_hook_mapping[TensExpr] = {
-    Add: Add_hook,
-    Mul: Mul_hook,
-    Pow: Pow_hook
-}
+@Add.dispatcher.register(TensExpr)
+def _(arg):
+    return Add_hook
+
+@Mul.dispatcher.register(TensExpr)
+def _(arg):
+    return Mul_hook
+
+@Pow.dispatcher.register(TensExpr)
+def _(arg):
+    return Pow_hook
 
 from sympy.matrices.expressions import MatrixExpr

@@ -9,6 +9,7 @@ from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
 from sympy.core.parameters import global_parameters
 from sympy.utilities.iterables import sift
+from sympy.utilities.misc import filldedent
 
 
 class AssocOp(Basic):

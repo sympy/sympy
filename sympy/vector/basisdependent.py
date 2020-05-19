@@ -361,8 +361,14 @@ def Pow_hook(b, e, **options):
     if isinstance(e, BasisDependent):
         raise TypeError('Vector or dyadic cannot be the exponent')
 
-Basic._constructor_hook_mapping[BasisDependent] = {
-    Add: Add_hook,
-    Mul: Mul_hook,
-    Pow: Pow_hook
-}
+@Add.dispatcher.register(BasisDependent)
+def _(arg):
+    return Add_hook
+
+@Mul.dispatcher.register(BasisDependent)
+def _(arg):
+    return Mul_hook
+
+@Pow.dispatcher.register(BasisDependent)
+def _(arg):
+    return Pow_hook

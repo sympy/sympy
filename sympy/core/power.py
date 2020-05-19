@@ -13,6 +13,7 @@ from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
+from sympy.multipledispatch import Dispatcher
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
@@ -263,6 +264,7 @@ class Pow(Expr):
 
     """
     is_Pow = True
+    dispatcher = Dispatcher('Pow_dispatcher')
 
     __slots__ = ('is_commutative',)
 
