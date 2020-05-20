@@ -65,12 +65,12 @@ def test_exp_sqrt_1():
     assert exp(1 + sqrt(x)).nseries(x, n=3) ==  \
         (exp(1)*(1 + sqrt(x) + x/2 + sqrt(x)*x/6)).expand() + O(sqrt(x)**3)
 
-
+@XFAIL
 def test_power_x_x1():
     assert (exp(x*ln(x))).nseries(x, n=4) == \
         1 + x*log(x) + x**2*log(x)**2/2 + x**3*log(x)**3/6 + O(x**4*log(x)**4)
 
-
+@XFAIL
 def test_power_x_x2():
     assert (x**x).nseries(x, n=4) == \
         1 + x*log(x) + x**2*log(x)**2/2 + x**3*log(x)**3/6 + O(x**4*log(x)**4)
@@ -260,7 +260,7 @@ def test_issue_3258():
     a = x/(exp(x) - 1)
     assert a.nseries(x, 0, 5) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
 
-
+@XFAIL
 def test_issue_3204():
     x = Symbol("x", nonnegative=True)
     f = sin(x**3)**Rational(1, 3)

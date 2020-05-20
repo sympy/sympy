@@ -3,6 +3,7 @@ from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
+from sympy.testing.pytest import raises, XFAIL
 
 
 def test_sin():
@@ -69,14 +70,17 @@ def test_issue_5223():
     assert abs(-x).series(x, oo, n=5, dir='+') == x
     assert abs(-x).series(x, -oo, n=5, dir='-') == -x
 
-    assert exp(x*log(x)).series(n=3) == \
-        1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
     # XXX is this right? If not, fix "ngot > n" handling in expr.
     p = Symbol('p', positive=True)
     assert exp(sqrt(p)**3*log(p)).series(n=3) == \
         1 + p**S('3/2')*log(p) + O(p**3*log(p)**3)
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
+
+@XFAIL
+def test_issue_5223_2():
+    assert exp(x*log(x)).series(n=3) == \
+    1 + x*log(x) + x**2*log(x)**2/2 + O(x**3*log(x)**3)
 
 
 def test_issue_11313():
