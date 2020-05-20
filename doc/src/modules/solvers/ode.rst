@@ -209,14 +209,6 @@ System of ODEs
 These functions are intended for internal use by
 :py:meth:`~sympy.solvers.ode.dsolve` for system of differential equations.
 
-Linear, 2 equations, Order 1, Type 1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type1
-
-Linear, 2 equations, Order 1, Type 2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type2
-
 Linear, 2 equations, Order 1, Type 6
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type6
