@@ -1790,6 +1790,7 @@ class Basic(metaclass=ManagedProperties):
         This method is implemented to relieve the complexity in ``Add``, ``Mul``, and
         ``Pow``'s methods, and let them behave as the constructor for its subclasses.
         For this, ``cls.dispatcher`` must be defined which returns the hook function of given argument.
+        This dispatcher is ``functools.dispatcher``, and should return ``None`` for unregistered type.
         If ``None`` is returned from this method, hook is not applied.
         Currently, different arguments with different hooks are not supported.
 
@@ -1836,11 +1837,9 @@ class Basic(metaclass=ManagedProperties):
 
         hooks = []
         for a in args:
-            try:
-                hook = dispatcher(a)
+            hook = dispatcher(a)
+            if hook is not None:    # None means unregistered type
                 hooks.append(hook)
-            except NotImplementedError:
-                pass
 
         if len(hooks) == 0:
             return None     # No hook is defined for args, so hook cannot be applied.

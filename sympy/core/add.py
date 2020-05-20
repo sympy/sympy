@@ -12,7 +12,7 @@ from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-from sympy.multipledispatch import Dispatcher
+from functools import singledispatch
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -76,7 +76,7 @@ class Add(Expr, AssocOp):
     __slots__ = ()
 
     is_Add = True
-    dispatcher = Dispatcher('Add_dispatcher')
+    dispatcher = singledispatch(lambda arg: None)
 
     @classmethod
     def flatten(cls, seq):

@@ -13,7 +13,7 @@ from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
-from sympy.multipledispatch import Dispatcher
+from functools import singledispatch
 
 
 
@@ -94,7 +94,7 @@ class Mul(Expr, AssocOp):
     __slots__ = ()
 
     is_Mul = True
-    dispatcher = Dispatcher('Mul_dispatcher')
+    dispatcher = singledispatch(lambda arg: None)
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
