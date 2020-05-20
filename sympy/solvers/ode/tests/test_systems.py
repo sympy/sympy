@@ -928,8 +928,6 @@ def test_linear_new_order1_type2_fail_too_slow():
     # Force de Lorentz:
     F = m * A - q * El - q * V.cross(B)
 
-    # Système d'équations différentielles ordinaires:
-
     eqs = (F[0], F[1], F[2])
     sol = dsolve(eqs)
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
