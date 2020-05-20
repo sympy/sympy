@@ -2031,25 +2031,13 @@ def check_linear_2eq_order1(eq, func, func_coef):
                     p = 2
     # End of condition for type 6
 
-    if r['d1']!=0 or r['d2']!=0:
-        if not r['d1'].has(t) and not r['d2'].has(t):
-            if all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
-                # Equations for type 2 are Eq(a1*diff(x(t),t),b1*x(t)+c1*y(t)+d1) and Eq(a2*diff(y(t),t),b2*x(t)+c2*y(t)+d2)
-                return "type2"
-        else:
-            return None
+    r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
+    r['c1'] = r['c1']/r['a1'] ; r['c2'] = r['c2']/r['a2']
+    if p:
+        return "type6"
     else:
-        if all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
-             # Equations for type 1 are Eq(a1*diff(x(t),t),b1*x(t)+c1*y(t)) and Eq(a2*diff(y(t),t),b2*x(t)+c2*y(t))
-            return "type1"
-        else:
-            r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
-            r['c1'] = r['c1']/r['a1'] ; r['c2'] = r['c2']/r['a2']
-            if p:
-                return "type6"
-            else:
-                # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
-                return "type7"
+        # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
+        return "type7"
 
 def check_linear_2eq_order2(eq, func, func_coef):
     x = func[0].func
