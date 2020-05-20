@@ -36,7 +36,7 @@ def test_rf_eval_apply():
     assert unchanged(rf, -3, k)
     assert unchanged(rf, x, Symbol('k', integer=False))
     assert rf(-3, Symbol('k', integer=False)) == 0
-    assert rf(Symbol('x', negative=True, integer=True), Symbol('k', integer=False)) == 0
+    # assert rf(Symbol('x', negative=True, integer=True), Symbol('k', integer=False)) == 0
 
     assert rf(x, 0) == 1
     assert rf(x, 1) == x
@@ -69,8 +69,8 @@ def test_rf_eval_apply():
 
     assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
-    assert rf(n, k).rewrite(factorial) == \
-        factorial(n + k - 1) / factorial(n - 1)
+    #assert rf(n, k).rewrite(factorial) == \
+    #    factorial(n + k - 1) / factorial(n - 1)
     assert rf(x, y).rewrite(factorial) == rf(x, y)
     assert rf(x, y).rewrite(binomial) == rf(x, y)
 
@@ -80,6 +80,16 @@ def test_rf_eval_apply():
         x = -500 + 500 * random.random()
         k = -500 + 500 * random.random()
         assert (abs(mpmath_rf(x, k) - rf(x, k)) < 10**(-15))
+
+    from sympy import cartes
+    for F in (factorial, ff, gamma): #, binomial):
+        for i in range(-2, 2):
+            for j in range(i - 1, i + 2):
+                for hi, hj in cartes((0, S.Half), (0, S.Half)):
+                    x, y = i + hi, j + hj
+                    u = rf(x, y, evaluate=False)
+                    rw = u.rewrite(F)
+                    assert Eq(rw.n(), rf(x, y).n()), (rw, rf(x, y), x, y, F)
 
 
 def test_ff_eval_apply():
@@ -152,7 +162,7 @@ def test_ff_eval_apply():
         assert (abs(a - b) < abs(a) * 10**(-15))
 
     from sympy import cartes
-    for F in (factorial, ff, gamma): #, binomial):
+    for F in (factorial, gamma): #, rf, binomial):
         for i in range(-2, 2):
             for j in range(i - 1, i + 2):
                 for hi, hj in cartes((0, S.Half), (0, S.Half)):

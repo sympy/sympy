@@ -602,20 +602,33 @@ class RisingFactorial(CombinatorialFunction):
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
 
-        if k.is_integer == False:
-            if x.is_integer and x.is_negative:
-                return S.Zero
+        elif all(i.is_integer and i.is_negative for i in (x, k)) or \
+            k.is_integer is False or x.is_integer is False:
+
+            from sympy import gamma
+            rv = cls._eval_rewrite_as_gamma(cls, x, k)
+            if rv is not None:
+                if not rv.has(gamma):
+                    return rv
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
-        return gamma(x + k) / gamma(x)
+        x, k = x + k - 1, k
+        if (k.is_integer is False) or (x.is_nonnegative is True):
+            return gamma(x + 1)/gamma(-k + x + 1)
+        if k.is_integer and x.is_negative:
+            return (-1)**k*gamma(k - x)/gamma(-x)
 
     def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
-        return FallingFactorial(x + k - 1, k)
+        return ff(x + k - 1, k)
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
         if x.is_integer and k.is_integer:
-            return factorial(k + x - 1) / factorial(x - 1)
+            x, k = x + k - 1, k
+            if x.is_nonnegative is True:
+                return factorial(x) / factorial(x - k)
+            elif x.is_nonnegative is False:
+                return (-1)**k*factorial(k - x -1)/factorial(-x -1)
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
@@ -738,7 +751,9 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
-        else:
+
+        elif all(i.is_integer and i.is_negative for i in (x, k)) or \
+            k.is_integer is False or x.is_integer is False:
             from sympy import gamma
             rv = cls._eval_rewrite_as_gamma(cls, x, k)
             if rv is not None:
