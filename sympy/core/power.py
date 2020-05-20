@@ -1433,11 +1433,11 @@ class Pow(Expr):
 
     def matches(self, expr, repl_dict={}, old=False):
         expr = _sympify(expr)
+        repl_dict = repl_dict.copy()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
-            d = repl_dict.copy()
-            d = self.exp.matches(S.Zero, d)
+            d = self.exp.matches(S.Zero, repl_dict)
             if d is not None:
                 return d
 

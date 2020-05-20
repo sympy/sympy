@@ -66,6 +66,7 @@ def test_Function():
     sT(sin(x), "sin(Symbol('x'))")
     sT(sin, "sin")
 
+
 def test_Geometry():
     sT(Point(0, 0), "Point2D(Integer(0), Integer(0))")
     sT(Ellipse(Point(0, 0), 5, 1),
@@ -206,11 +207,13 @@ def test_Mul():
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
     assert srepr(sympify('(x+4)*2*x*7', evaluate=False), order='none') == "Mul(Add(Symbol('x'), Integer(4)), Integer(2), Symbol('x'), Integer(7))"
 
+
 def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2))
     sT(a, "AlgebraicNumber(Pow(Integer(2), Rational(1, 2)), [Integer(1), Integer(0)])")
     a = AlgebraicNumber(root(-2, 3))
     sT(a, "AlgebraicNumber(Pow(Integer(-2), Rational(1, 3)), [Integer(1), Integer(0)])")
+
 
 def test_PolyRing():
     assert srepr(ring("x", ZZ, lex)[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"
@@ -232,6 +235,7 @@ def test_PolyElement():
 def test_FracElement():
     F, x, y = field("x,y", ZZ)
     assert srepr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
+
 
 def test_FractionField():
     assert srepr(QQ.frac_field(x)) == \
@@ -307,6 +311,7 @@ def test_Cycle():
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField

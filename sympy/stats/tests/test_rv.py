@@ -44,6 +44,7 @@ def test_random_symbols():
     assert set(random_symbols(2*X + Y.symbol)) == set((X,))
     assert set(random_symbols(2)) == set()
 
+
 def test_characteristic_function():
     #  Imports I from sympy
     from sympy import I
@@ -56,9 +57,10 @@ def test_characteristic_function():
     R = Lambda(t, exp(2 * exp(t*I) - 2))
 
 
-    assert characteristic_function(X) == P
-    assert characteristic_function(Y) == Q
-    assert characteristic_function(Z) == R
+    assert characteristic_function(X).dummy_eq(P)
+    assert characteristic_function(Y).dummy_eq(Q)
+    assert characteristic_function(Z).dummy_eq(R)
+
 
 def test_moment_generating_function():
 
@@ -71,9 +73,9 @@ def test_moment_generating_function():
     R = Lambda(t, exp(2 * exp(t) - 2))
 
 
-    assert moment_generating_function(X) == P
-    assert moment_generating_function(Y) == Q
-    assert moment_generating_function(Z) == R
+    assert moment_generating_function(X).dummy_eq(P)
+    assert moment_generating_function(Y).dummy_eq(Q)
+    assert moment_generating_function(Z).dummy_eq(R)
 
 def test_sample_iter():
 
