@@ -249,13 +249,13 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
+from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, sqrt, \
-    atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
+    atan2, conjugate, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import wronskian, Matrix
+from sympy.matrices import wronskian
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots, gcd)
 from sympy.polys.polyroots import roots_quartic
