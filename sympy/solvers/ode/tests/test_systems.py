@@ -784,6 +784,13 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq6) == sol6
     assert checksysodesol(eq6, sol6) == (True, [0, 0, 0])
 
+    # Regression test case for issue #8859
+    # https://github.com/sympy/sympy/issues/8859
+    eq7 = [Eq(diff(f(t),t), f(t) + 3*t), Eq(diff(g(t),t), g(t))]
+    sol7 = [Eq(f(t), C1*exp(t) - 3*t - 3), Eq(g(t), C2*exp(t))]
+    assert dsolve(eq7) == sol7
+    assert checksysodesol(eq7, sol7) == (True, [0, 0])
+
 
 def test_sysode_linear_neq_order1_type3():
     f, g, h, k = symbols('f g h k', cls=Function)
