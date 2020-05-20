@@ -273,7 +273,9 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        return Dummy(self.name)
+        # only put commutativity in explicitly if it is False
+        return Dummy(self.name) if self.is_commutative is not False \
+            else Dummy(self.name, commutative=self.is_commutative)
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re
