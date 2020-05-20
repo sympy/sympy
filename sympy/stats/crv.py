@@ -21,7 +21,7 @@ from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 
 scipy = import_module('scipy')
@@ -555,7 +555,7 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            if not random_symbols(expr):
+            if not is_random(expr):
                 dens = self.density
                 comp = condition.rhs
             else:

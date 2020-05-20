@@ -15,6 +15,7 @@ sympy.stats.rv_interface
 
 from __future__ import print_function, division
 
+from functools import singledispatch
 from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
@@ -31,6 +32,15 @@ import warnings
 
 
 x = Symbol('x')
+
+@singledispatch
+def is_random(x):
+    return False
+
+@is_random.register(Basic)
+def _(x):
+    atoms = x.free_symbols
+    return any([is_random(i) for i in atoms])
 
 class RandomDomain(Basic):
     """
@@ -243,8 +253,10 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
+        if isinstance(symbol, str):
+            symbol = Symbol(symbol)
         if not isinstance(symbol, Symbol):
-            raise TypeError("symbol should be of type Symbol")
+            raise TypeError("symbol should be of type Symbol or string")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
@@ -281,6 +293,9 @@ class RandomSymbol(Expr):
 class RandomIndexedSymbol(RandomSymbol):
 
     def __new__(cls, idx_obj, pspace=None):
+        if pspace is None:
+            # Allow single arg, representing pspace == PSpace()
+            pspace = PSpace()
         if not isinstance(idx_obj, (Indexed, Function)):
             raise TypeError("An Function or Indexed object is expected not %s"%(idx_obj))
         return Basic.__new__(cls, idx_obj, pspace)
@@ -299,6 +314,9 @@ class RandomMatrixSymbol(MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
+        if pspace is None:
+            # Allow single arg, representing pspace == PSpace()
+            pspace = PSpace()
         return Basic.__new__(cls, symbol, n, m, pspace)
 
     symbol = property(lambda self: self.args[0])
@@ -640,7 +658,7 @@ def given(expr, condition=None, **kwargs):
          2*\/ pi
     """
 
-    if not random_symbols(condition) or pspace_independent(expr, condition):
+    if not is_random(condition) or pspace_independent(expr, condition):
         return expr
 
     if isinstance(condition, RandomSymbol):
@@ -718,7 +736,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     5
     """
 
-    if not random_symbols(expr):  # expr isn't random?
+    if not is_random(expr):  # expr isn't random?
         return expr
     if numsamples:  # Computing by monte carlo sampling?
         evalf = kwargs.get('evalf', True)
@@ -738,6 +756,10 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
                      for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
+    if pspace(expr) == PSpace():
+        from sympy.stats.symbolic_probability import Expectation
+        return Expectation(expr)
+
     result = pspace(expr).compute_expectation(expr, evaluate=evaluate, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit(**kwargs)
@@ -816,6 +838,10 @@ def probability(condition, given_condition=None, numsamples=None,
         return probability(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
+    if pspace(condition) == PSpace():
+        from sympy.stats.symbolic_probability import Probability
+        return Probability(condition, given_condition)
+
     result = pspace(condition).probability(condition, **kwargs)
     if evaluate and hasattr(result, 'doit'):
         return result.doit()
