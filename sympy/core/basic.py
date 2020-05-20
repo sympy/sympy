@@ -791,6 +791,9 @@ class Basic(metaclass=ManagedProperties):
         """
         Substitutes old for new in an expression after sympifying args.
 
+        Explanation
+        ===========
+
         `args` is either:
           - two arguments, e.g. foo.subs(old, new)
           - one iterable argument, e.g. foo.subs(iterable). The iterable may be
@@ -805,6 +808,8 @@ class Basic(metaclass=ManagedProperties):
 
         If the keyword ``simultaneous`` is True, the subexpressions will not be
         evaluated until all the substitutions have been made.
+
+        If the keyword ``evaluate`` is False, ``Subs`` instance will be returned.
 
         Examples
         ========
@@ -902,7 +907,7 @@ class Basic(metaclass=ManagedProperties):
         """
         from sympy.core.containers import Dict
         from sympy.utilities.iterables import sift
-        from sympy import Dummy, Symbol
+        from sympy import Dummy, Symbol, Subs
 
         unordered = False
         if len(args) == 1:
@@ -945,6 +950,9 @@ class Basic(metaclass=ManagedProperties):
                 lambda x: x.is_Atom, binary=True)
             sequence = [(k, sequence[k]) for k in
                 list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
+
+        if not kwargs.pop('evaluate', True):
+            return Subs(self, *zip(*sequence))
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}

@@ -850,3 +850,8 @@ def test_issue_17823():
     expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
     reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
     assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2
+
+def test_unevaluated_subs():
+    expr = x+y+z
+    assert expr.subs({x:1, y:2}, evaluate=False) == Subs(expr, (x,y), (1,2))
+    assert expr.subs({x:1, y:2}, evaluate=False).doit() == expr.subs({x:1, y:2}, evaluate=True) == z+3
