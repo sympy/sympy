@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S, I,
-                   Eq, sqrt)
+                   Eq, sqrt, simplify)
 from sympy.functions import exp, cos, sin, log
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
@@ -745,7 +745,7 @@ def test_sysode_linear_neq_order1_type1():
 
 def test_sysode_linear_neq_order1_type2():
     f, g, h, k = symbols('f g h k', cls=Function)
-    x = symbols('x')
+    x, t = symbols('x t')
 
     eq1 = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
            Eq(diff(g(x), x), -f(x) - g(x) + 7)]
@@ -790,6 +790,13 @@ def test_sysode_linear_neq_order1_type2():
     sol7 = [Eq(f(t), C1*exp(t) - 3*t - 3), Eq(g(t), C2*exp(t))]
     assert dsolve(eq7) == sol7
     assert checksysodesol(eq7, sol7) == (True, [0, 0])
+
+    # Regression test case for issue #8567
+    # https://github.com/sympy/sympy/issues/8567
+    eq8 = [Eq(f(t).diff(t), f(t) + 2*g(t)), Eq(g(t).diff(t), -2*f(t) + g(t) + 2*exp(t))]
+    sol8 = [Eq(f(t), (sin(2*t) + 1)*exp(t)), Eq(g(t), exp(t)*cos(2*t))]
+    dsolve_sol = [simplify(s) for s in dsolve(eq8, ics={f(0): 1, g(0): 1})]
+    assert dsolve_sol == sol8
 
 
 def test_sysode_linear_neq_order1_type3():
