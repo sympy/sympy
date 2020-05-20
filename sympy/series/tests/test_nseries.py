@@ -65,12 +65,12 @@ def test_exp_sqrt_1():
     assert exp(1 + sqrt(x)).nseries(x, n=3) ==  \
         (exp(1)*(1 + sqrt(x) + x/2 + sqrt(x)*x/6)).expand() + O(sqrt(x)**3)
 
-@XFAIL
+
 def test_power_x_x1():
     assert (exp(x*ln(x))).nseries(x, n=4) == \
         1 + x*log(x) + x**2*log(x)**2/2 + x**3*log(x)**3/6 + O(x**4*log(x)**4)
 
-@XFAIL
+
 def test_power_x_x2():
     assert (x**x).nseries(x, n=4) == \
         1 + x*log(x) + x**2*log(x)**2/2 + x**3*log(x)**3/6 + O(x**4*log(x)**4)

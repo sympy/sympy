@@ -467,7 +467,7 @@ class exp(ExpBase):
         for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
-            l.append(g)
+            l.append(g.removeO())
         return Add(*l)
 
     def _eval_as_leading_term(self, x):

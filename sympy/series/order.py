@@ -414,8 +414,6 @@ class Order(Expr):
         return result
 
     def _eval_subs(self, old, new):
-        if new.has(Order):
-            new = new.removeO()
         if old in self.variables:
             newexpr = self.expr.subs(old, new)
             i = self.variables.index(old)
