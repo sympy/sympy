@@ -2,6 +2,7 @@
 
 from .slice import MatrixSlice
 from .blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse, blockcut
+from .companion import CompanionMatrix
 from .funcmatrix import FunctionMatrix
 from .inverse import Inverse
 from .matadd import MatAdd
@@ -24,6 +25,8 @@ __all__ = [
 
     'BlockMatrix', 'BlockDiagMatrix', 'block_collapse', 'blockcut',
     'FunctionMatrix',
+
+    'CompanionMatrix',
 
     'Inverse',
 

@@ -1770,7 +1770,18 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        _args_set = set(args)
+        # keep the form of the first canonical arg
+        dargs = {}
+        for i in reversed(list(ordered(args))):
+            if i.is_Symbol:
+                dargs[i] = i
+            else:
+                try:
+                    dargs[i.as_dummy()] = i
+                except TypeError:
+                    # e.g. i = class without args like `Interval`
+                    dargs[i] = i
+        _args_set = set(dargs.values())
         args = list(ordered(_args_set, Set._infimum_key))
         obj = Basic.__new__(cls, *args)
         obj._args_set = _args_set

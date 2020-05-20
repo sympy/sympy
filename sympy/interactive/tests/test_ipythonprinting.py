@@ -134,7 +134,7 @@ def test_builtin_containers():
 ([ ],)
  [2]  \
 """
-        assert app.user_ns['c']['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right]\\right)$'
+        assert app.user_ns['c']['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
     else:
         assert app.user_ns['a'][0]['text/plain'] ==  '(True, False)'
         assert 'text/latex' not in app.user_ns['a'][0]
@@ -146,7 +146,7 @@ def test_builtin_containers():
 ([ ],)
  [2]  \
 """
-        assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right]\\right)$'
+        assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
 
 def test_matplotlib_bad_latex():
     # Initialize and setup IPython session

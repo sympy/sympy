@@ -1866,7 +1866,7 @@ def test_ElementwiseApplyFunction():
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
-    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
+    assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():
@@ -2491,9 +2491,11 @@ def test_MatrixSymbol_bold():
     assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == \
         r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
 
-    A = MatrixSymbol("A_k", 3, 3)
-    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+    A_k = MatrixSymbol("A_k", 3, 3)
+    assert latex(A_k, mat_symbol_style='bold') == r"\mathbf{A}_{k}"
 
+    A = MatrixSymbol(r"\nabla_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{\nabla}_{k}"
 
 def test_AppliedPermutation():
     p = Permutation(0, 1, 2)
@@ -2526,7 +2528,7 @@ def test_text_re_im():
     assert latex(re(x), gothic_re_im=False) ==  r'\operatorname{re}{\left(x\right)}'
 
 
-def test_DiffGeomMethods():
+def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
     m = Manifold('M', 2)
@@ -2565,16 +2567,19 @@ def test_latex_decimal_separator():
     assert(latex([1, 2.3, 4.5], decimal_separator='comma') == r'\left[ 1; \  2{,}3; \  4{,}5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='comma') == r'\left\{1; 2{,}3; 4{,}5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'comma') == r'\left( 1; \  2{,}3; \  4{,}6\right)')
+    assert(latex((1,), decimal_separator='comma') == r'\left( 1;\right)')
 
     # period decimal_separator
     assert(latex([1, 2.3, 4.5], decimal_separator='period') == r'\left[ 1, \  2.3, \  4.5\right]' )
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='period') == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'period') == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,), decimal_separator='period') == r'\left( 1,\right)')
 
     # default decimal_separator
     assert(latex([1, 2.3, 4.5]) == r'\left[ 1, \  2.3, \  4.5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5)) == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6)) == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,)) == r'\left( 1,\right)')
 
     assert(latex(Mul(3.4,5.3), decimal_separator = 'comma') ==r'18{,}02')
     assert(latex(3.4*5.3, decimal_separator = 'comma')==r'18{,}02')

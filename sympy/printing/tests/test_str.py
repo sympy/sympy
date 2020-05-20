@@ -867,7 +867,7 @@ def test_MatrixExpressions():
 
     lamda = Lambda(x, 1/x)
     expr = (n*X).applyfunc(lamda)
-    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
+    assert str(expr) == 'Lambda(x, 1/x).(n*X)'
 
 
 def test_Subs_printing():
@@ -889,3 +889,14 @@ def test_str_special_matrices():
 
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    m = Manifold('M', 2)
+    assert str(m) == "M"
+    p = Patch('P', m)
+    assert str(p) == "P"
+    rect = CoordSystem('rect', p)
+    assert str(rect) == "rect"
+    b = BaseScalarField(rect, 0)
+    assert str(b) == "rect_0"

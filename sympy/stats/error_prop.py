@@ -71,14 +71,14 @@ def variance_prop(expr, consts=(), include_covar=False):
     if isinstance(expr, Add):
         var_expr = Add(*var_args)
         if include_covar:
-            terms = [2 * Covariance(_arg0_or_var(x), _arg0_or_var(y)).doit() \
+            terms = [2 * Covariance(_arg0_or_var(x), _arg0_or_var(y)).expand() \
                      for x, y in combinations(var_args, 2)]
             var_expr += Add(*terms)
     elif isinstance(expr, Mul):
         terms = [v/a**2 for a, v in zip(args, var_args)]
         var_expr = simplify(expr**2 * Add(*terms))
         if include_covar:
-            terms = [2*Covariance(_arg0_or_var(x), _arg0_or_var(y)).doit()/(a*b) \
+            terms = [2*Covariance(_arg0_or_var(x), _arg0_or_var(y)).expand()/(a*b) \
                      for (a, b), (x, y) in zip(combinations(args, 2),
                                                combinations(var_args, 2))]
             var_expr += Add(*terms)

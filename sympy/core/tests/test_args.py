@@ -1335,6 +1335,9 @@ def test_sympy__stats__crv_types__BetaPrimeDistribution():
     from sympy.stats.crv_types import BetaPrimeDistribution
     assert _test_args(BetaPrimeDistribution(1, 1))
 
+def test_sympy__stats__crv_types__BoundedParetoDistribution():
+    from sympy.stats.crv_types import BoundedParetoDistribution
+    assert _test_args(BoundedParetoDistribution(1, 1, 2))
 
 def test_sympy__stats__crv_types__CauchyDistribution():
     from sympy.stats.crv_types import CauchyDistribution
@@ -1433,6 +1436,9 @@ def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
     assert _test_args(LogNormalDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LomaxDistribution():
+    from sympy.stats.crv_types import LomaxDistribution
+    assert _test_args(LomaxDistribution(1, 2))
 
 def test_sympy__stats__crv_types__MaxwellDistribution():
     from sympy.stats.crv_types import MaxwellDistribution
@@ -3092,6 +3098,15 @@ def test_sympy__matrices__expressions__permutation__MatrixPermute():
     from sympy.matrices.expressions.permutation import MatrixPermute
     A = MatrixSymbol('A', 3, 3)
     assert _test_args(MatrixPermute(A, Permutation([2, 0, 1])))
+
+def test_sympy__matrices__expressions__companion__CompanionMatrix():
+    from sympy.core.symbol import Symbol
+    from sympy.matrices.expressions.companion import CompanionMatrix
+    from sympy.polys.polytools import Poly
+
+    x = Symbol('x')
+    p = Poly([1, 2, 3], x)
+    assert _test_args(CompanionMatrix(p))
 
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym
