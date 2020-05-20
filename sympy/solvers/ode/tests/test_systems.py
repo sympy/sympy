@@ -893,8 +893,6 @@ def test_linear_3eq_order1_type4_slow():
     dsolve(eq1)
 
 
-# 19341: To see if this failed test case can
-# be solved with the new solver
 @slow
 @XFAIL
 def test_linear_neq_order1_type2_fail():
@@ -906,6 +904,42 @@ def test_linear_neq_order1_type2_fail():
     eq = [eq1, eq2]
     sol = dsolve(eq)
     assert checksysodesol(eq, sol) == (True, [0, 0])
+
+
+@slow
+@XFAIL
+def test_linear_new_order1_type2_fail_too_slow():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    m = Symbol("m", real=True)
+    q = Symbol("q", real=True)
+    t = Symbol("t", real=True)
+
+    e1, e2, e3 = symbols("e1:4", real=True)
+    b1, b2, b3 = symbols("b1:4", real=True)
+    v1, v2, v3 = symbols("v1:4", cls=Function, real=True)
+
+    El = Matrix([e1, e2, e3], real=True)
+    B = Matrix([b1, b2, b3], real=True)
+    V = Matrix([v1(t), v2(t), v3(t)], real=True)
+    A = Matrix([Derivative(v1(t), t), Derivative(v2(t), t), Derivative(v3(t), t)], real=True)
+
+    # Force de Lorentz:
+    F = m * A - q * El - q * V.cross(B)
+
+    # Système d'équations différentielles ordinaires:
+
+    eqs = (F[0], F[1], F[2])
+    sol = dsolve(eqs)
+    assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
+
+    RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
+    V = Function("V")
+    I = Function("I")
+    system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
+    sol = dsolve(system)
+    assert checksysodesol(system, sol) == (True, [0, 0])
 
 
 @slow
