@@ -1,9 +1,12 @@
 from __future__ import print_function, division
 from sympy.sets import FiniteSet
-from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
+from sympy.core.sympify import _sympify
+from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset,
+                   plot)
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile)
+import random
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -453,6 +456,51 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     den = std(X, condition, **kwargs) * std(Y, condition, **kwargs) \
          * std(Z, condition, **kwargs)
     return num/den
+
+
+def density_plot(expr_list, show=True, **kwargs):
+    """
+
+    Create plot of probability density of a random expression, optionally given
+    a second condition.
+
+
+    Parameters
+    ==========
+
+    expr_list : list of tuple as (expr, condition)
+        Each element of list is tuple.The expr of which you want to compute
+        the density value and condition used while calculating the density.
+        If there is no condition on expr, then it can be passed as single
+        element without requiring tuple.
+
+
+    """
+
+    x = Dummy('x')
+    plots = None
+
+    def _get_plot(expr, condition=None):
+        dens_function = density(expr, condition=condition)(x)
+        line_color = (random.random(), random.random(), random.random())
+        plot_dens = plot(dens_function, show=False, label=str(expr.pspace.value),
+                        line_color=line_color, **kwargs)
+        return plot_dens
+
+    for expr in expr_list:
+        if isinstance(expr, (list, tuple)):
+            plot_dens = _get_plot(expr[0], condition=expr[1])
+        else:
+            plot_dens = _get_plot(expr)
+        if plots:
+            plots.append(plot_dens[0])
+        else:
+            plots = plot_dens
+
+    if show:
+        plots.show()
+    else:
+        return plots
 
 
 P = probability
