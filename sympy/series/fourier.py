@@ -588,14 +588,11 @@ def fourier_series(f, limits=None, finite=True):
     Explanation
     ===========
 
-    Fourier trigonometric series is a series of trigonometric functions
-    uniformly converging to the given function in the given interval.
-
     Fourier trigonometric series of $f(x)$ over the interval $(a, b)$
     is defined as:
 
     .. math::
-        a_0 + \sum_{n=1}^{\infty}
+        \frac{a_0}{2} + \sum_{n=1}^{\infty}
         (a_n \cos(\frac{2n \pi x}{L}) + b_n \sin(\frac{2n \pi x}{L}))
 
     where the coefficients are:
@@ -604,7 +601,7 @@ def fourier_series(f, limits=None, finite=True):
         L = b - a
 
     .. math::
-        a_0 = \frac{1}{L} \int_{a}^{b}{f(x) dx}
+        a_0 = \frac{2}{L} \int_{a}^{b}{f(x) dx}
 
     .. math::
         a_n = \frac{2}{L} \int_{a}^{b}{f(x) \cos(\frac{2n \pi x}{L}) dx}
@@ -614,13 +611,17 @@ def fourier_series(f, limits=None, finite=True):
 
     The condition whether the function $f(x)$ given should be periodic
     or not is more than necessary, because it is sufficient to consider
-    the series to be converging only in the given interval.
+    the series to be converging to $f(x)$ only in the given interval,
+    not throughout the whole real line.
 
     This also brings a lot of ease for the computation because
-    you don't necessarily have to think of make a function artificially
-    periodic by wrapping them with piecewise, modulo operations.
+    you don't have to make $f(x)$ artificially periodic by
+    wrapping it with piecewise, modulo operations,
+    but you can shape the function to look like the desired periodic
+    function only in the interval $(a, b)$, and the computed series will
+    automatically become the series of the periodic version of $f(x)$.
 
-    The examples of this property will be illustrated below.
+    This property is illustrated in the examples section below.
 
     Parameters
     ==========
@@ -744,7 +745,7 @@ def fourier_series(f, limits=None, finite=True):
     References
     ==========
 
-    .. [1] mathworld.wolfram.com/FourierSeries.html
+    .. [1] https://mathworld.wolfram.com/FourierSeries.html
     """
     f = sympify(f)
 
