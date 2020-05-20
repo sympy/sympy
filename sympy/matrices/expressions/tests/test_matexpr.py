@@ -584,8 +584,7 @@ def test_Add_hook():
     assert a.args == (S.ComplexInfinity, z)
 
     a = Add(z, S.NaN)
-    assert a == Add(S.NaN, z)
-    assert a.func == Add
+    assert unchanged(Add, S.NaN. z)
     assert a.args == (S.NaN, z)
 
     M = Matrix([[1, 2], [3, 4]])

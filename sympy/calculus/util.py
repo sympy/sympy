@@ -1555,7 +1555,7 @@ AccumBounds = AccumulationBounds
 
 # Hooks
 def Add_hook(*args, **options):
-    evaluate = options.get('evalaute', global_parameters.evaluate)
+    evaluate = options.get('evaluate', global_parameters.evaluate)
     if not evaluate:
         return None
 
@@ -1603,7 +1603,7 @@ def Add_hook(*args, **options):
     return Add(result, extra, ignore_hook=True, evaluate=False)
 
 def Mul_hook(*args, **options):
-    evaluate = options.get('evalaute', global_parameters.evaluate)
+    evaluate = options.get('evaluate', global_parameters.evaluate)
     if not evaluate:
         return None
 

@@ -548,7 +548,12 @@ def test_issue_18747():
 
 def test_AccumBounds_hooks():
     a = AccumBounds(1,2)
-    assert Mul(2,a, evaluate=True) == 2*a
-    assert Mul(a,a, evaluate=True) == a*a
-    assert Add(2,a, evaluate=True) == 2+a
-    assert Add(a,a, evaluate=True) == a+a
+    assert Mul(2,a, evaluate=True) == 2*a == AccumBounds(2, 4)
+    assert Mul(a,a, evaluate=True) == a*a == AccumBounds(1, 4)
+    assert Mul(2,a, evaluate=False).func == Mul
+    assert Mul(2,a, evaluate=False).args == (2, a)
+
+    assert Add(2,a, evaluate=True) == 2+a == AccumBounds(3, 4)
+    assert Add(a,a, evaluate=True) == a+a == AccumBounds(2, 4)
+    assert Add(2,a, evaluate=False).func == Add
+    assert Add(2,a, evaluate=False).args == (2, a)
