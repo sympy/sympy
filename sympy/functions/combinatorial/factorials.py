@@ -738,21 +738,33 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
+        else:
+            from sympy import gamma
+            rv = cls._eval_rewrite_as_gamma(cls, x, k)
+            if rv is not None:
+                if not rv.has(gamma):
+                    return rv
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
-        return (-1)**k*gamma(k - x) / gamma(-x)
+        if (k.is_integer is False) or (x.is_nonnegative is True):
+            return gamma(x + 1)/gamma(-k + x + 1)
+        if k.is_integer and x.is_negative:
+            return (-1)**k*gamma(k - x)/gamma(-x)
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
-        if k.is_integer:
-            return factorial(k) * binomial(x, k)
+        from sympy import gamma
+        return gamma(k + 1) * binomial(x, k)
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
         if x.is_integer and k.is_integer:
-            return factorial(x) / factorial(x - k)
+            if x.is_nonnegative is True:
+                return factorial(x) / factorial(x - k)
+            elif x.is_nonnegative is False:
+                return (-1)**k*factorial(k - x -1)/factorial(-x -1)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,

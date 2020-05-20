@@ -83,7 +83,7 @@ def test_rf_eval_apply():
 
 
 def test_ff_eval_apply():
-    x, y = symbols('x,y')
+    x, y = symbols('x y')
     n, k = symbols('n k', integer=True)
     m = Symbol('m', integer=True, nonnegative=True)
 
@@ -136,11 +136,11 @@ def test_ff_eval_apply():
     assert ff(n, n) == factorial(n)
 
     assert ff(x, k).rewrite(rf) == rf(x - k + 1, k)
-    assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
-    assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
-    assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
+    assert ff(m, k).rewrite(gamma) == gamma(m + 1)/gamma(-k + m + 1)
+    assert ff(m, k).rewrite(factorial) == factorial(m) / factorial(m - k)
+    assert ff(x, k).rewrite(binomial) == gamma(k + 1) * binomial(x, k)
     assert ff(x, y).rewrite(factorial) == ff(x, y)
-    assert ff(x, y).rewrite(binomial) == ff(x, y)
+    assert ff(x, y).rewrite(binomial) == binomial(x, y) * gamma(y + 1)
 
     import random
     from mpmath import ff as mpmath_ff
@@ -151,6 +151,15 @@ def test_ff_eval_apply():
         b = ff(x, k)
         assert (abs(a - b) < abs(a) * 10**(-15))
 
+    from sympy import cartes
+    for F in (factorial, ff, gamma): #, binomial):
+        for i in range(-2, 2):
+            for j in range(i - 1, i + 2):
+                for hi, hj in cartes((0, S.Half), (0, S.Half)):
+                    x, y = i + hi, j + hj
+                    u = ff(x, y, evaluate=False)
+                    rw = u.rewrite(F)
+                    assert Eq(rw.n(), ff(x, y).n()), (rw, ff(x, y), x, y, F)
 
 def test_rf_ff_eval_hiprec():
     maple = Float('6.9109401292234329956525265438452')
