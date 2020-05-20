@@ -661,7 +661,7 @@ def fourier_series(f, limits=None, finite=True):
     >>> s.shiftx(1).truncate()
     -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
 
-    Shcaling of the Fourier series:
+    Scaling of the Fourier series:
 
     >>> s.scale(2).truncate()
     -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
