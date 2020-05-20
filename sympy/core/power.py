@@ -334,6 +334,28 @@ class Pow(Expr):
         obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
+    @classmethod
+    def _constructor_hook(cls, *args, ignore_hook=False, **options):
+        # Refer to AssocOp._constructor_hook
+        if ignore_hook:
+            return None
+
+        dispatcher = cls.__dict__.get('dispatcher')
+        if dispatcher is None:
+            return None
+
+        hooks = []
+        for a in args:
+            hook = dispatcher(a)
+            if hook is not None:
+                hooks.append(hook)
+
+        if len(hooks) == 0:
+            return None
+        else:
+            hook = hooks.pop()
+            return hook(*args, **options)
+
     @property
     def base(self):
         return self._args[0]
