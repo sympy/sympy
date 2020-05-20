@@ -745,7 +745,7 @@ def test_sysode_linear_neq_order1_type1():
 
 def test_sysode_linear_neq_order1_type2():
     f, g, h, k = symbols('f g h k', cls=Function)
-    x, t = symbols('x t')
+    x, t, a, b, c, d = symbols('x t a b c d')
 
     eq1 = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
            Eq(diff(g(x), x), -f(x) - g(x) + 7)]
@@ -797,6 +797,20 @@ def test_sysode_linear_neq_order1_type2():
     sol8 = [Eq(f(t), (sin(2*t) + 1)*exp(t)), Eq(g(t), exp(t)*cos(2*t))]
     dsolve_sol = [simplify(s) for s in dsolve(eq8, ics={f(0): 1, g(0): 1})]
     assert dsolve_sol == sol8
+
+    # Regression test case for issue #19150
+    # https://github.com/sympy/sympy/issues/19150
+    eq9 = (Eq(Derivative(f(t), t), 1 / (a * b) * (-2 * f(t) + g(t) + c)),
+          Eq(Derivative(g(t), t), 1 / (a * b) * (-2 * g(t) + f(t) + h(t))),
+          Eq(Derivative(h(t), t), 1 / (a * b) * (-2 * h(t) + g(t) + d)))
+    sol9 = [Eq(f(t), c/(4*sqrt(2) + 8) + c/4 + c/(8 - 4*sqrt(2)) - d/4 + d/(4*sqrt(2) + 8) + d/(8 - 4*sqrt(2)) +
+               (-C1 + C2*exp(-sqrt(2)*t/(a*b)) + C3*exp(sqrt(2)*t/(a*b)))*exp(-2*t/(a*b))),
+            Eq(g(t), -sqrt(2)*c/(4*sqrt(2) + 8) + sqrt(2)*c/(8 - 4*sqrt(2)) - sqrt(2)*d/(4*sqrt(2) + 8) +
+               sqrt(2)*d/(8 - 4*sqrt(2)) + (-sqrt(2)*C2*exp(-sqrt(2)*t/(a*b)) + sqrt(2)*C3*exp(sqrt(2)*t/(a*b)))*exp(-2*t/(a*b))),
+            Eq(h(t), -c/4 + c/(4*sqrt(2) + 8) + c/(8 - 4*sqrt(2)) + d/(4*sqrt(2) + 8) + d/4 + d/(8 - 4*sqrt(2)) +
+               (C1 + C2*exp(-sqrt(2)*t/(a*b)) + C3*exp(sqrt(2)*t/(a*b)))*exp(-2*t/(a*b)))]
+    assert dsolve(eq9) == sol9
+    assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
 
 def test_sysode_linear_neq_order1_type3():
