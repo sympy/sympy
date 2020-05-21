@@ -3,7 +3,6 @@ from sympy import (
     ImmutableMatrix, MutableMatrix, MutableDenseMatrix
 )
 from sympy.polys.polytools import degree
-from sympy.printing import sstr
 
 __all__ = ['TransferFunction']
 
