@@ -908,7 +908,7 @@ def test_linear_neq_order1_type2_fail():
 
 @slow
 @XFAIL
-def test_linear_new_order1_type2_fail_too_slow():
+def test_linear_new_order1_type2_de_lorentz():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
@@ -931,6 +931,13 @@ def test_linear_new_order1_type2_fail_too_slow():
     eqs = (F[0], F[1], F[2])
     sol = dsolve(eqs)
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
+
+
+@slow
+@XFAIL
+def test_linear_neq_order1_type2_fails_too_slow():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
 
     RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
     V = Function("V")
