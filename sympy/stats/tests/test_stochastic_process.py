@@ -1,9 +1,10 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
-                   Piecewise)
+                   Piecewise, factorial, Interval, oo)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
-                         BernoulliProcess)
+                         BernoulliProcess, PoissonProcess)
+from sympy.stats.stochastic_process_types import random_indexed_symbols
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
@@ -194,3 +195,44 @@ def test_BernoulliProcess():
     assert P(B[5] > 0, B[5]) == BernoulliDistribution(0.6, 0, 1)
     raises(ValueError, lambda: P(3))
     raises(ValueError, lambda: P(B[3] > 0, 3))
+
+def test_random_indexed_symbols():
+    t = symbols('t', positive=True, integer=True)
+    X, Y = BernoulliProcess("X", 0.4), PoissonProcess("Y", 3)
+    assert random_indexed_symbols(X[t] + Y(t)**3) == [X[t], Y(t)]
+    assert not random_indexed_symbols(t + t**2)
+
+def test_PoissonProcess():
+    X = PoissonProcess("X", 3)
+    assert X.state_space == Interval(0, oo)
+    assert X.index_set == Interval(0, oo)
+    assert X.lamda == 3
+
+    t, d, x, y = symbols('t d x y', positive=True)
+    assert isinstance(X(t), RandomIndexedSymbol)
+    raises(ValueError, lambda: PoissonProcess("X", -1))
+    raises(NotImplementedError, lambda: X[t])
+    raises(IndexError, lambda: X(-5))
+
+    assert X.joint_distribution(X(2), X(3)) == JointDistributionHandmade(Lambda((X(2), X(3)),
+                6**X(2)*9**X(3)*exp(-15)/(factorial(X(2))*factorial(X(3)))))
+
+    assert X.joint_distribution(4, 6) == JointDistributionHandmade(Lambda((X(4), X(6)),
+                12**X(4)*18**X(6)*exp(-30)/(factorial(X(4))*factorial(X(6)))))
+
+    assert P(X(t) < 1) == exp(-3*t)
+    assert P(Eq(X(t), 0), (t > 3) & (t <= 5)) == exp(-6) # exp(-2*lamda)
+    res = P(Eq(X(t), 1), (t > 3) & (t <= 4))
+    assert res == 3*exp(-3)
+    assert P(Eq(X(t), 1) & Eq(X(d), 1) & Eq(X(x), 1) & Eq(X(y), 1),
+    (t >= 0) & (t < 1) & (d >= 1) & (d < 2) &(x >= 2) & (x < 3) & (y >= 3) & (y < 4)) == res**4
+    assert P(Eq(X(t), 2) & Eq(X(d), 3), (t > 0) & (t <= 2) & (d > 1) & (d <= 4)) == \
+                Probability(Eq(X(d), 3) & Eq(X(t), 2), (d <= 4) & (t <= 2) & (d > 1))
+
+    raises(ValueError, lambda: P(Eq(X(t), 2) & Eq(X(d), 3), (t > 0) & (t <= 2) & (d > 1))) # no bound on d
+    assert P(Eq(X(t), 2), Eq(t, 3)) == 81*exp(-9)/2
+    assert P(Eq(X(t), 2), t < 5) == 225*exp(-15)/2
+    res1 = P(X(t) <= 3, t < 5)
+    res2 = P(X(t) > 3, t < 5)
+    assert res1 == 691*exp(-15)
+    assert (res1 + res2).simplify() == 1

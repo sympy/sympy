@@ -1,11 +1,13 @@
 from __future__ import print_function, division
 
+import itertools
+
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, Piecewise, Symbol, NonSquareMatrixError)
+                   Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -26,7 +28,8 @@ __all__ = [
     'StochasticStateSpaceOf',
     'GeneratorMatrixOf',
     'ContinuousMarkovChain',
-    'BernoulliProcess'
+    'BernoulliProcess',
+    'PoissonProcess'
 ]
 
 
@@ -84,6 +87,18 @@ def _sym_sympify(arg):
         return Symbol(arg)
     else:
         return _sympify(arg)
+
+def random_indexed_symbols(expr):
+    """
+    Returns all RandomIndexedSymbols within a SymPy Expression.
+    """
+    atoms = getattr(expr, 'atoms', None)
+    if atoms is not None:
+        comp = lambda rv: rv.symbol.name
+        l = list(atoms(RandomIndexedSymbol))
+        return sorted(l, key=comp)
+    else:
+        return []
 
 def _matrix_checks(matrix):
     if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
@@ -1078,9 +1093,11 @@ def _probability_stoch(process, condition, given_condition=None, evaluate=True, 
 
 
 class PoissonProcess(ContinuousTimeStochasticProcess):
+
     index_set = _set_converter(Interval(0, oo))
 
     def __new__(cls, sym, lamda):
+        _value_check(lamda > 0, 'lamda should be a positive number.')
         sym = _symbol_converter(sym)
         lamda = _sympify(lamda)
         return Basic.__new__(cls, sym, lamda)
@@ -1097,13 +1114,11 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
     def lamda(self):
         return self.args[1]
 
-
     def distribution(self, rv):
         return PoissonDistribution(self.lamda*rv.key)
 
     def density(self, x):
         return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
-
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         if condition is not None: # use of memory less property
@@ -1116,11 +1131,38 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
         return _expectation_stoch('Poisson', expr, evaluate=evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
-        if given_condition is not None: # use of memory less property
-            if not isinstance(given_condition, Interval):
-                raise TypeError("Expecting an Interval as a given condition")
-            if not condition.has(PoissonProcess):
-                raise TypeError("Condition should contain an instance of PoissonProcess")
-            lhs = condition.args[0](given_condition._sup - given_condition._inf)
-            condition = condition.__class__(lhs, condition.args[1])
+        if given_condition is not None:
+            if not isinstance(given_condition, (Relational, Boolean)):
+                raise ValueError("%s is not a relational or combination of relationals"
+                    % (given_condition))
+            cond_syms = random_indexed_symbols(condition)
+            if not isinstance(given_condition, Relational):
+                given_cond_args = given_condition.args
+            else:
+                given_cond_args = (given_condition, )
+            rv_swap = {}
+            intervals = []
+            for cond_sym in cond_syms:
+                rv_key = cond_sym.key
+                intv = Interval(0, oo)
+                for arg in given_cond_args:
+                    if arg.has(rv_key):
+                        intv = Intersection(intv, arg.as_set())
+                intervals.append(intv)
+                diff_key = intv._sup - intv._inf
+                if diff_key == oo:
+                    raise ValueError("%s should have finite bounds" % str(rv_key))
+                elif diff_key == S.Zero: # has singleton set
+                    diff_key = intv._sup
+                rv_swap[cond_sym] = cond_sym.subs({rv_key: diff_key})
+            if len(intervals)==1 or all(Intersection(*intv_comb) == EmptySet
+                for intv_comb in itertools.combinations(intervals, 2)): # they are independent
+                if isinstance(condition, And):
+                    return Mul(*[self.probability(arg, given_condition) for arg in condition.args])
+                elif isinstance(condition, Or):
+                    return Add(*[self.probability(arg, given_condition) for arg in condition.args])
+                condition = condition.subs(rv_swap)
+            else:
+                return Probability(condition, given_condition)
+
         return _probability_stoch('Poisson', condition, evaluate=evaluate, **kwargs)

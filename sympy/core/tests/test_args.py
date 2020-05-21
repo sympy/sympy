@@ -1676,6 +1676,10 @@ def test_sympy__stats__stochastic_process_types__BernoulliProcess():
     from sympy.stats.stochastic_process_types import BernoulliProcess
     assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
 
+def test_sympy__stats__stochastic_process_types__PoissonProcess():
+    from sympy.stats.stochastic_process_types import PoissonProcess
+    assert _test_args(PoissonProcess("X", 2))
+
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
     from sympy.stats.random_matrix_models import RandomMatrixEnsemble
