@@ -94,7 +94,7 @@ def test_print_builtin_option():
     # printer.
     app.run_cell("""\
     class WithOverload:
-        def _latex(self):
+        def _latex(self, printer):
             return r"\\LaTeX"
     """)
     app.run_cell("a = format((WithOverload(),))")
