@@ -3099,6 +3099,15 @@ def test_sympy__matrices__expressions__permutation__MatrixPermute():
     A = MatrixSymbol('A', 3, 3)
     assert _test_args(MatrixPermute(A, Permutation([2, 0, 1])))
 
+def test_sympy__matrices__expressions__companion__CompanionMatrix():
+    from sympy.core.symbol import Symbol
+    from sympy.matrices.expressions.companion import CompanionMatrix
+    from sympy.polys.polytools import Poly
+
+    x = Symbol('x')
+    p = Poly([1, 2, 3], x)
+    assert _test_args(CompanionMatrix(p))
+
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym
     from sympy.physics.vector import ReferenceFrame

@@ -952,6 +952,7 @@ class Mul(Expr, AssocOp):
 
     def matches(self, expr, repl_dict={}, old=False):
         expr = sympify(expr)
+        repl_dict = repl_dict.copy()
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
@@ -1000,6 +1001,7 @@ class Mul(Expr, AssocOp):
         expression, while `targets` is a list of arguments in the
         multiplication expression being matched against.
         """
+        repl_dict = repl_dict.copy()
         # List of possible future states to be considered
         agenda = []
         # The current matching state, storing index in nodes and targets

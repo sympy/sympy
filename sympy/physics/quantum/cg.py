@@ -681,21 +681,21 @@ def _check_varsh_sum_871_2(e):
 
 
 def _check_varsh_sum_872_4(e):
+    alpha = symbols('alpha')
+    beta = symbols('beta')
     a = Wild('a')
-    alpha = Wild('alpha')
     b = Wild('b')
-    beta = Wild('beta')
     c = Wild('c')
     cp = Wild('cp')
     gamma = Wild('gamma')
     gammap = Wild('gammap')
-    match1 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)*CG(
-        a, alpha, b, beta, cp, gammap), (alpha, -a, a), (beta, -b, b)))
-    if match1 is not None and len(match1) == 8:
+    cg1 = CG(a, alpha, b, beta, c, gamma)
+    cg2 = CG(a, alpha, b, beta, cp, gammap)
+    match1 = e.match(Sum(cg1*cg2, (alpha, -a, a), (beta, -b, b)))
+    if match1 is not None and len(match1) == 6:
         return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
-    match2 = e.match(Sum(
-        CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b)))
-    if match2 is not None and len(match2) == 6:
+    match2 = e.match(Sum(cg1**2, (alpha, -a, a), (beta, -b, b)))
+    if match2 is not None and len(match2) == 4:
         return 1
     return e
 

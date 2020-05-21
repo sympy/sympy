@@ -3248,13 +3248,13 @@ def test_MatrixExpressions():
     expr = (n*X).applyfunc(lamda)
     ascii_str = """\
 /     1\\      \n\
-|d -> -|.(n*X)\n\
-\\     d/      \
+|x -> -|.(n*X)\n\
+\\     x/      \
 """
     ucode_str = u("""\
 ⎛    1⎞      \n\
-⎜d ↦ ─⎟˳(n⋅X)\n\
-⎝    d⎠      \
+⎜x ↦ ─⎟˳(n⋅X)\n\
+⎝    x⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
