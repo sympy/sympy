@@ -28,7 +28,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
 from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
-    raises, nocache_fail)
+    raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -306,7 +306,7 @@ def test_F3():
 
 @XFAIL
 def test_F4():
-    assert combsimp((2**n * factorial(n) * product(2*k - 1, (k, 1, n)))) == factorial(2*n)
+    assert combsimp(2**n * factorial(n) * product(2*k - 1, (k, 1, n))) == factorial(2*n)
 
 
 @XFAIL
@@ -479,7 +479,7 @@ def test_H14():
 
 
 def test_H15():
-    assert simplify((Mul(*[x - r for r in solveset(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
+    assert simplify(Mul(*[x - r for r in solveset(x**3 + x**2 - 7)])) == x**3 + x**2 - 7
 
 
 def test_H16():
@@ -934,14 +934,14 @@ def test_M14():
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
-@nocache_fail
 def test_M15():
     n = Dummy('n')
-    # This test fails when running with the cache off:
-    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
-                                           Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+    got = solveset(sin(x) - S.Half)
+    assert any(got.dummy_eq(i) for i in (
+        Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
+        Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers))))
 
 
 @XFAIL

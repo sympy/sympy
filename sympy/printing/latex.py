@@ -206,28 +206,35 @@ class LatexPrinter(Printer):
             self._settings['imaginary_unit_latex'] = \
                 self._settings['imaginary_unit']
 
+    def _add_parens(self, s):
+        return r"\left({}\right)".format(s)
+
+    # TODO: merge this with the above, which requires a lot of test changes
+    def _add_parens_lspace(self, s):
+        return r"\left( {}\right)".format(s)
+
     def parenthesize(self, item, level, is_neg=False, strict=False):
         prec_val = precedence_traditional(item)
         if is_neg and strict:
-            return r"\left({}\right)".format(self._print(item))
+            return self._add_parens(self._print(item))
 
         if (prec_val < level) or ((not strict) and prec_val <= level):
-            return r"\left({}\right)".format(self._print(item))
+            return self._add_parens(self._print(item))
         else:
             return self._print(item)
 
     def parenthesize_super(self, s):
-        """ Parenthesize s if there is a superscript in s"""
-        if "^" in s and self._settings['parenthesize_super']:
-            return r"\left({}\right)".format(s)
-        elif "^" in s and not self._settings['parenthesize_super']:
-            return self.embed_super(s)
-        return s
+        """
+        Protect superscripts in s
 
-    def embed_super(self, s):
-        """ Embed s in {} if there is a superscript in s"""
+        If the parenthesize_super option is set, protect with parentheses, else
+        wrap in braces.
+        """
         if "^" in s:
-            return "{{{}}}".format(s)
+            if self._settings['parenthesize_super']:
+                return self._add_parens(s)
+            else:
+                return "{{{}}}".format(s)
         return s
 
     def doprint(self, expr):
@@ -600,7 +607,7 @@ class LatexPrinter(Printer):
             base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
             p, q = expr.exp.p, expr.exp.q
             # issue #12886: add parentheses for superscripts raised to powers
-            if '^' in base and expr.base.is_Symbol:
+            if expr.base.is_Symbol:
                 base = self.parenthesize_super(base)
             if expr.base.is_Function:
                 return self._print(expr.base, exp="%s/%s" % (p, q))
@@ -624,7 +631,7 @@ class LatexPrinter(Printer):
         # issue #12886: add parentheses around superscripts raised
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-        if '^' in base and expr.base.is_Symbol:
+        if expr.base.is_Symbol:
             base = self.parenthesize_super(base)
         elif (isinstance(expr.base, Derivative)
             and base.startswith(r'\left(')
@@ -1506,25 +1513,23 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        result = self._deal_with_super_sub(expr.name) if \
-            '\\' not in expr.name else expr.name
-
-        if style == 'bold':
-            result = r"\mathbf{{{}}}".format(result)
-
-        return result
+        return self._deal_with_super_sub(expr.name, style=style)
 
     _print_RandomSymbol = _print_Symbol
 
-    def _deal_with_super_sub(self, string):
+    def _deal_with_super_sub(self, string, style='plain'):
         if '{' in string:
-            return string
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
 
-        name, supers, subs = split_super_sub(string)
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
 
-        name = translate(name)
-        supers = [translate(sup) for sup in supers]
-        subs = [translate(sub) for sub in subs]
+        # apply the style only to the name
+        if style == 'bold':
+            name = "\\mathbf{{{}}}".format(name)
 
         # glue all items together:
         if supers:
@@ -1864,14 +1869,19 @@ class LatexPrinter(Printer):
                     self._print(expr.args[0]), self._print(exp))
 
     def _print_tuple(self, expr):
-        if self._settings['decimal_separator'] =='comma':
-            return r"\left( %s\right)" % \
-                r"; \  ".join([self._print(i) for i in expr])
-        elif self._settings['decimal_separator'] =='period':
-            return r"\left( %s\right)" % \
-                r", \  ".join([self._print(i) for i in expr])
+        if self._settings['decimal_separator'] == 'comma':
+            sep = ";"
+        elif self._settings['decimal_separator'] == 'period':
+            sep = ","
         else:
             raise ValueError('Unknown Decimal Separator')
+
+        if len(expr) == 1:
+            # 1-tuple needs a trailing separator
+            return self._add_parens_lspace(self._print(expr[0]) + sep)
+        else:
+            return self._add_parens_lspace(
+                (sep + r" \  ").join([self._print(i) for i in expr]))
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -2480,6 +2490,20 @@ class LatexPrinter(Printer):
         return r"{{{}}} : {{{}}} \to {{{}}}".format(self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
+    def _print_Manifold(self, manifold):
+        return r'\text{%s}' % manifold.name
+
+    def _print_Patch(self, patch):
+        return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
+
+    def _print_CoordSystem(self, coords):
+        return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
+            coords.name, coords.patch.name, coords.patch.manifold.name
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
@@ -2545,7 +2569,6 @@ class LatexPrinter(Printer):
             return r'\left(\Omega\left(%s\right)\right)^{%s}' % \
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
-
 
 def translate(s):
     r'''

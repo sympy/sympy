@@ -218,9 +218,8 @@ def test_Lambda():
 
     assert unchanged(Lambda, (x,), x**2)
     assert Lambda(x, x**2) == Lambda((x,), x**2)
-    assert Lambda(x, x**2) == Lambda(y, y**2)
-    assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
-    assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
+    assert Lambda(x, x**2) != Lambda(x, x**2 + 1)
+    assert Lambda((x, y), x**y) != Lambda((y, x), y**x)
     assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
     assert Lambda((x, y), x**y)(x, y) == x**y
@@ -239,7 +238,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
 
-    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    eq = Lambda(x, 2*x) + Lambda(y, 2*y)
+    assert eq != 2*Lambda(x, 2*x)
+    assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
@@ -300,12 +301,19 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) == Lambda(y, 2*y)
-    # although variables are casts as Dummies, the expressions
-    # should still compare equal
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    # these, of course, should never be equal
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
+    # But it is tempting to want expressions that differ only
+    # in bound symbols to compare the same.  But this is not what
+    # Python's `==` is intended to do; two objects that compare
+    # as equal means that they are indistibguishable and cache to the
+    # same value.  We wouldn't want to expression that are
+    # mathematically the same but written in different variables to be
+    # interchanged else what is the point of allowing for different
+    # variable names?
+    assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
 def test_Subs():

@@ -20,7 +20,7 @@ from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, bet
                    Lambda)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
-from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.rv import _value_check, is_random
 
 
 __all__ = ['Geometric',
@@ -39,7 +39,7 @@ def rv(symbol, cls, *args):
     dist = cls(*args)
     dist.check(*args)
     pspace = SingleDiscretePSpace(symbol, dist)
-    if any(isinstance(arg, RandomSymbol) for arg in args):
+    if any(is_random(arg) for arg in args):
         pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 

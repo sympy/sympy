@@ -5,9 +5,21 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import RandomSymbol, probability, expectation
+from sympy.stats.rv import RandomSymbol, probability, expectation, is_random
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
+
+
+@is_random.register(Expr)
+def _(x):
+    atoms = x.free_symbols
+    if len(atoms) == 1 and next(iter(atoms)) == x:
+        return False
+    return any([is_random(i) for i in atoms])
+
+@is_random.register(RandomSymbol)
+def _(x):
+    return True
 
 
 class Probability(Expr):
@@ -89,11 +101,11 @@ class Expectation(Expr):
     >>> Expectation(X + Y)
     Expectation(X + Y)
 
-    To expand the ``Expectation`` into its expression, use ``doit()``:
+    To expand the ``Expectation`` into its expression, use ``expand()``:
 
-    >>> Expectation(X + Y).doit()
+    >>> Expectation(X + Y).expand()
     Expectation(X) + Expectation(Y)
-    >>> Expectation(a*X + Y).doit()
+    >>> Expectation(a*X + Y).expand()
     a*Expectation(X) + Expectation(Y)
     >>> Expectation(a*X + Y)
     Expectation(a*X + Y)
@@ -102,7 +114,7 @@ class Expectation(Expr):
     def __new__(cls, expr, condition=None, **kwargs):
         expr = _sympify(expr)
         if condition is None:
-            if not expr.has(RandomSymbol):
+            if not is_random(expr):
                 return expr
             obj = Expr.__new__(cls, expr)
         else:
@@ -111,20 +123,20 @@ class Expectation(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         expr = self.args[0]
         condition = self._condition
 
-        if not expr.has(RandomSymbol):
+        if not is_random(expr):
             return expr
 
         if isinstance(expr, Add):
-            return Add(*[Expectation(a, condition=condition).doit() for a in expr.args])
+            return Add(*[Expectation(a, condition=condition).expand() for a in expr.args])
         elif isinstance(expr, Mul):
             rv = []
             nonrv = []
             for a in expr.args:
-                if isinstance(a, RandomSymbol) or a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
                 else:
                     nonrv.append(a)
@@ -205,13 +217,13 @@ class Variance(Expr):
     >>> Variance(a*X)
     Variance(a*X)
 
-    To expand the variance in its expression, use ``doit()``:
+    To expand the variance in its expression, use ``expand()``:
 
-    >>> Variance(a*X).doit()
+    >>> Variance(a*X).expand()
     a**2*Variance(X)
     >>> Variance(X + Y)
     Variance(X + Y)
-    >>> Variance(X + Y).doit()
+    >>> Variance(X + Y).expand()
     2*Covariance(X, Y) + Variance(X) + Variance(Y)
 
     """
@@ -225,11 +237,11 @@ class Variance(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         arg = self.args[0]
         condition = self._condition
 
-        if not arg.has(RandomSymbol):
+        if not is_random(arg):
             return S.Zero
 
         if isinstance(arg, RandomSymbol):
@@ -237,17 +249,17 @@ class Variance(Expr):
         elif isinstance(arg, Add):
             rv = []
             for a in arg.args:
-                if a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
-            variances = Add(*map(lambda xv: Variance(xv, condition).doit(), rv))
-            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).doit()
+            variances = Add(*map(lambda xv: Variance(xv, condition).expand(), rv))
+            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
             return variances + covariances
         elif isinstance(arg, Mul):
             nonrv = []
             rv = []
             for a in arg.args:
-                if a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
                 else:
                     nonrv.append(a**2)
@@ -304,19 +316,19 @@ class Covariance(Expr):
     >>> cexpr.rewrite(Expectation)
     Expectation(X*Y) - Expectation(X)*Expectation(Y)
 
-    In order to expand the argument, use ``doit()``:
+    In order to expand the argument, use ``expand()``:
 
     >>> from sympy.abc import a, b, c, d
     >>> Covariance(a*X + b*Y, c*Z + d*W)
     Covariance(a*X + b*Y, c*Z + d*W)
-    >>> Covariance(a*X + b*Y, c*Z + d*W).doit()
+    >>> Covariance(a*X + b*Y, c*Z + d*W).expand()
     a*c*Covariance(X, Z) + a*d*Covariance(W, X) + b*c*Covariance(Y, Z) + b*d*Covariance(W, Y)
 
     This class is aware of some properties of the covariance:
 
-    >>> Covariance(X, X).doit()
+    >>> Covariance(X, X).expand()
     Variance(X)
-    >>> Covariance(a*X, b*Y).doit()
+    >>> Covariance(a*X, b*Y).expand()
     a*b*Covariance(X, Y)
     """
 
@@ -335,17 +347,17 @@ class Covariance(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         arg1 = self.args[0]
         arg2 = self.args[1]
         condition = self._condition
 
         if arg1 == arg2:
-            return Variance(arg1, condition).doit()
+            return Variance(arg1, condition).expand()
 
-        if not arg1.has(RandomSymbol):
+        if not is_random(arg1):
             return S.Zero
-        if not arg2.has(RandomSymbol):
+        if not is_random(arg2):
             return S.Zero
 
         arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
@@ -370,13 +382,13 @@ class Covariance(Expr):
             for a in expr.args:
                 if isinstance(a, Mul):
                     outval.append(cls._get_mul_nonrv_rv_tuple(a))
-                elif isinstance(a, RandomSymbol):
+                elif is_random(a):
                     outval.append((S.One, a))
 
             return outval
         elif isinstance(expr, Mul):
             return [cls._get_mul_nonrv_rv_tuple(expr)]
-        elif expr.has(RandomSymbol):
+        elif is_random(expr):
             return [(S.One, expr)]
 
     @classmethod
@@ -384,7 +396,7 @@ class Covariance(Expr):
         rv = []
         nonrv = []
         for a in m.args:
-            if a.has(RandomSymbol):
+            if is_random(a):
                 rv.append(a)
             else:
                 nonrv.append(a)

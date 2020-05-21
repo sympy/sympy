@@ -28,6 +28,7 @@ from sympy.ntheory import multiplicity, perfect_power
 class ExpBase(Function):
 
     unbranched = True
+    _singularities = (S.ComplexInfinity,)
 
     def inverse(self, argindex=1):
         """
@@ -572,6 +573,7 @@ class log(Function):
     exp
 
     """
+    _singularities = (S.Zero, S.ComplexInfinity)
 
     def fdiff(self, argindex=1):
         """

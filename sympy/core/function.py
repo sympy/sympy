@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import has_dups, sift
@@ -602,6 +602,33 @@ class Function(Application, Expr):
 
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
+
+    def _eval_is_meromorphic(self, x, a):
+        if not self.args:
+            return True
+        if any(arg.has(x) for arg in self.args[1:]):
+            return False
+
+        arg = self.args[0]
+        if not arg._eval_is_meromorphic(x, a):
+            return None
+
+        return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
+
+    _singularities = None  # indeterminate
+
+    @classmethod
+    def is_singular(cls, a):
+        """
+        Tests whether the argument is an essential singularity
+        or a branch point, or the functions is non-holomorphic.
+        """
+        ss = cls._singularities
+        if ss in (True, None, False):
+            return ss
+
+        return fuzzy_or(a.is_infinite if s is S.ComplexInfinity
+                        else (a - s).is_zero for s in ss)
 
     def as_base_exp(self):
         """
@@ -1891,6 +1918,9 @@ class Lambda(Expr):
     'lambda x: expr'. A function of several variables is written as
     Lambda((x, y, ...), expr).
 
+    Examples
+    ========
+
     A simple example:
 
     >>> from sympy import Lambda
@@ -2029,24 +2059,6 @@ class Lambda(Expr):
         rmatch(sig, args)
 
         return symargmap
-
-    def __eq__(self, other):
-        if not isinstance(other, Lambda):
-            return False
-        if self.nargs != other.nargs:
-            return False
-
-        try:
-            d = self._match_signature(other.signature, self.signature)
-        except BadArgumentsError:
-            return False
-        return self.args == other.xreplace(d).args
-
-    def __hash__(self):
-        return super().__hash__()
-
-    def _hashable_content(self):
-        return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
@@ -3061,7 +3073,7 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
-    from sympy import Integral, Symbol
+    from sympy import Integral, Sum, Symbol
     from sympy.core.relational import Relational
     from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
@@ -3129,18 +3141,22 @@ def count_ops(expr, visual=False):
                 ops.append(DIV)
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if (a.is_Mul or
-                a.is_Pow or
-                a.is_Function or
-                isinstance(a, Derivative) or
-                    isinstance(a, Integral)):
-
+            if a.is_Mul or isinstance(a, LatticeOp):
                 o = Symbol(a.func.__name__.upper())
                 # count the args
-                if (a.is_Mul or isinstance(a, LatticeOp)):
-                    ops.append(o*(len(a.args) - 1))
-                else:
-                    ops.append(o)
+                ops.append(o*(len(a.args) - 1))
+            elif a.args and (
+                    a.is_Pow or
+                    a.is_Function or
+                    isinstance(a, Derivative) or
+                    isinstance(a, Integral) or
+                    isinstance(a, Sum)):
+                # if it's not in the list above we don't
+                # consider a.func something to count, e.g.
+                # Tuple, MatrixSymbol, etc...
+                o = Symbol(a.func.__name__.upper())
+                ops.append(o)
+
             if not a.is_Symbol:
                 args.extend(a.args)
 

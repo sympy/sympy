@@ -22,7 +22,7 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
 from sympy import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
-from sympy.stats.rv import _value_check, Density, RandomSymbol
+from sympy.stats.rv import _value_check, Density, is_random
 
 
 __all__ = ['FiniteRV',
@@ -202,7 +202,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     def pmf(self, x):
         x = sympify(x)
-        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
@@ -384,7 +384,7 @@ class BinomialDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         n, p = self.n, self.p
         x = sympify(x)
-        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)

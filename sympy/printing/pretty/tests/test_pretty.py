@@ -3248,13 +3248,13 @@ def test_MatrixExpressions():
     expr = (n*X).applyfunc(lamda)
     ascii_str = """\
 /     1\\      \n\
-|d -> -|.(n*X)\n\
-\\     d/      \
+|x -> -|.(n*X)\n\
+\\     x/      \
 """
     ucode_str = u("""\
 ⎛    1⎞      \n\
-⎜d ↦ ─⎟˳(n⋅X)\n\
-⎝    d⎠      \
+⎜x ↦ ─⎟˳(n⋅X)\n\
+⎝    x⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -7003,3 +7003,14 @@ def test_issue_18272():
     '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
     '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
     '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    m = Manifold('M', 2)
+    assert pretty(m) == 'M'
+    p = Patch('P', m)
+    assert pretty(p) == "P"
+    rect = CoordSystem('rect', p)
+    assert pretty(rect) == "rect"
+    b = BaseScalarField(rect, 0)
+    assert pretty(b) == "rect_0"
