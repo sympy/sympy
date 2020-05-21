@@ -17,6 +17,7 @@ class Determinant(Expr):
     >>> Determinant(eye(3)).doit()
     1
     """
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)

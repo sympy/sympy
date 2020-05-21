@@ -867,7 +867,7 @@ def test_MatrixExpressions():
 
     lamda = Lambda(x, 1/x)
     expr = (n*X).applyfunc(lamda)
-    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
+    assert str(expr) == 'Lambda(x, 1/x).(n*X)'
 
 
 def test_Subs_printing():

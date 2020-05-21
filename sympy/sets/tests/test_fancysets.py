@@ -562,8 +562,8 @@ def test_infinitely_indexed_set_1():
             imageset(Lambda(n, 2*n + 1), S.Integers)) is S.EmptySet
 
     assert imageset(Lambda(m, 2*m), S.Integers).intersect(
-                imageset(Lambda(n, 3*n), S.Integers)) == \
-            ImageSet(Lambda(t, 6*t), S.Integers)
+                imageset(Lambda(n, 3*n), S.Integers)).dummy_eq(
+            ImageSet(Lambda(t, 6*t), S.Integers))
 
     assert imageset(x, x/2 + Rational(1, 3), S.Integers).intersect(S.Integers) is S.EmptySet
     assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
@@ -649,37 +649,38 @@ def test_imageset_intersect_diophantine():
             ImageSet(Lambda(n, -(n - 3)**2), S.Integers)) == FiniteSet(0)
     # Single parametric solution for diophantine solution:
     assert ImageSet(Lambda(n, n**2 + 5), S.Integers).intersect(
-            ImageSet(Lambda(m, 2*m), S.Integers)) == ImageSet(
-            Lambda(n, 4*n**2 + 4*n + 6), S.Integers)
+            ImageSet(Lambda(m, 2*m), S.Integers)).dummy_eq(ImageSet(
+            Lambda(n, 4*n**2 + 4*n + 6), S.Integers))
     # 4 non-parametric solution couples for dioph. equation:
     assert ImageSet(Lambda(n, n**2 - 9), S.Integers).intersect(
             ImageSet(Lambda(m, -m**2), S.Integers)) == FiniteSet(-9, 0)
     # Double parametric solution for diophantine solution:
     assert ImageSet(Lambda(m, m**2 + 40), S.Integers).intersect(
-            ImageSet(Lambda(n, 41*n), S.Integers)) == Intersection(
+            ImageSet(Lambda(n, 41*n), S.Integers)).dummy_eq(Intersection(
             ImageSet(Lambda(m, m**2 + 40), S.Integers),
-            ImageSet(Lambda(n, 41*n), S.Integers))
+            ImageSet(Lambda(n, 41*n), S.Integers)))
     # Check that diophantine returns *all* (8) solutions (permute=True)
     assert ImageSet(Lambda(n, n**4 - 2**4), S.Integers).intersect(
             ImageSet(Lambda(m, -m**4 + 3**4), S.Integers)) == FiniteSet(0, 65)
     assert ImageSet(Lambda(n, pi/12 + n*5*pi/12), S.Integers).intersect(
-            ImageSet(Lambda(n, 7*pi/12 + n*11*pi/12), S.Integers)) == ImageSet(
-            Lambda(n, 55*pi*n/12 + 17*pi/4), S.Integers)
+            ImageSet(Lambda(n, 7*pi/12 + n*11*pi/12), S.Integers)).dummy_eq(ImageSet(
+            Lambda(n, 55*pi*n/12 + 17*pi/4), S.Integers))
     # TypeError raised by diophantine (#18081)
-    assert ImageSet(Lambda(n, n*log(2)), S.Integers).intersection(S.Integers) \
-            == Intersection(ImageSet(Lambda(n, n*log(2)), S.Integers), S.Integers)
+    assert ImageSet(Lambda(n, n*log(2)), S.Integers).intersection(
+        S.Integers).dummy_eq(Intersection(ImageSet(
+        Lambda(n, n*log(2)), S.Integers), S.Integers))
     # NotImplementedError raised by diophantine (no solver for cubic_thue)
     assert ImageSet(Lambda(n, n**3 + 1), S.Integers).intersect(
-            ImageSet(Lambda(n, n**3), S.Integers)) == Intersection(
+            ImageSet(Lambda(n, n**3), S.Integers)).dummy_eq(Intersection(
             ImageSet(Lambda(n, n**3 + 1), S.Integers),
-            ImageSet(Lambda(n, n**3), S.Integers))
+            ImageSet(Lambda(n, n**3), S.Integers)))
 
 
 def test_infinitely_indexed_set_3():
     from sympy.abc import n, m, t
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
-            imageset(Lambda(n, 3*pi*n), S.Integers)) == \
-        ImageSet(Lambda(t, 6*pi*t), S.Integers)
+            imageset(Lambda(n, 3*pi*n), S.Integers)).dummy_eq(
+        ImageSet(Lambda(t, 6*pi*t), S.Integers))
     assert imageset(Lambda(n, 2*n + 1), S.Integers) == \
         imageset(Lambda(n, 2*n - 1), S.Integers)
     assert imageset(Lambda(n, 3*n + 2), S.Integers) == \

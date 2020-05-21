@@ -1866,7 +1866,7 @@ def test_ElementwiseApplyFunction():
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
-    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
+    assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():
@@ -2567,16 +2567,19 @@ def test_latex_decimal_separator():
     assert(latex([1, 2.3, 4.5], decimal_separator='comma') == r'\left[ 1; \  2{,}3; \  4{,}5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='comma') == r'\left\{1; 2{,}3; 4{,}5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'comma') == r'\left( 1; \  2{,}3; \  4{,}6\right)')
+    assert(latex((1,), decimal_separator='comma') == r'\left( 1;\right)')
 
     # period decimal_separator
     assert(latex([1, 2.3, 4.5], decimal_separator='period') == r'\left[ 1, \  2.3, \  4.5\right]' )
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='period') == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'period') == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,), decimal_separator='period') == r'\left( 1,\right)')
 
     # default decimal_separator
     assert(latex([1, 2.3, 4.5]) == r'\left[ 1, \  2.3, \  4.5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5)) == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6)) == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,)) == r'\left( 1,\right)')
 
     assert(latex(Mul(3.4,5.3), decimal_separator = 'comma') ==r'18{,}02')
     assert(latex(3.4*5.3, decimal_separator = 'comma')==r'18{,}02')

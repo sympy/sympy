@@ -182,6 +182,7 @@ class AssocOp(Basic):
         # make sure expr is Expr if pattern is Expr
         from .expr import Add, Expr
         from sympy import Mul
+        repl_dict = repl_dict.copy()
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
 
@@ -201,6 +202,13 @@ class AssocOp(Basic):
             binary=True)
         if not exact_part:
             wild_part = list(ordered(wild_part))
+            if self.is_Add:
+                # in addition to normal ordered keys, impose
+                # sorting on Muls with leading Number to put
+                # them in order
+                wild_part = sorted(wild_part, key=lambda x:
+                    x.args[0] if x.is_Mul and x.args[0].is_Number else
+                    0)
         else:
             exact = self._new_rawargs(*exact_part)
             free = expr.free_symbols
@@ -221,7 +229,15 @@ class AssocOp(Basic):
         saw = set()
         while expr not in saw:
             saw.add(expr)
-            expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
+            args = tuple(ordered(self.make_args(expr)))
+            if self.is_Add and expr.is_Add:
+                # in addition to normal ordered keys, impose
+                # sorting on Muls with leading Number to put
+                # them in order
+                args = tuple(sorted(args, key=lambda x:
+                    x.args[0] if x.is_Mul and x.args[0].is_Number else
+                    0))
+            expr_list = (self.identity,) + args
             for last_op in reversed(expr_list):
                 for w in reversed(wild_part):
                     d1 = w.matches(last_op, repl_dict)
