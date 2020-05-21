@@ -1975,7 +1975,7 @@ def test_hooks():
         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
     assert Add(A(i0), B(i0), evaluate=False) == TensAdd(A(i0), B(i0))
-    assert Add(A(i0), B(i0)) == TensAdd(A(i0), B(i0)).doit()
+    assert Add(A(i0), B(i0)) == TensAdd(A(i0), B(i0)).doit() == A(i0) + B(i0)
     assert Mul(A(i0), A(-i0), evaluate=False) == TensMul(A(i0), A(-i0))
-    assert Mul(A(i0), A(-i0)) == TensMul(A(i0), A(-i0)).doit()
-    assert Pow(A(i0), 2) == A(i0) ** 2
+    assert Mul(A(i0), A(-i0)) == TensMul(A(i0), A(-i0)).doit() == A(i0) * A(-i0)
+    assert Pow(A(i0), 2) == A(i0) ** 2 == E**2 - px**2 - py**2 - pz**2

@@ -1917,26 +1917,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
 
-    def __pow__(self, other):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-            if self.data is None:
-                raise ValueError("No power without ndarray data.")
-        deprecate_data()
-        from .array import tensorproduct, tensorcontraction
-        free = self.free
-        marray = self.data
-        mdim = marray.rank()
-        for metric in free:
-            marray = tensorcontraction(
-                tensorproduct(
-                marray,
-                metric[0].tensor_index_type.data,
-                marray),
-                (0, mdim), (mdim+1, mdim+2)
-            )
-        return marray ** (other * S.Half)
-
     def __rpow__(self, other):
         raise NotImplementedError
 
