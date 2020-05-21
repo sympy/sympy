@@ -6,7 +6,8 @@ from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import (RandomSymbol, probability, pspace, random_symbols,
-                            given, sampling_E, RandomIndexedSymbol, is_random)
+                            given, sampling_E, RandomIndexedSymbol, is_random,
+                            PSpace)
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
@@ -204,6 +205,9 @@ class Expectation(Expr):
         if expr.is_Mul:
             if expr.atoms(Expectation):
                 return expr
+
+        if pspace(expr) == PSpace():
+            return self.func(expr)
         # Otherwise case is simple, pass work off to the ProbabilitySpace
         result = pspace(expr).compute_expectation(expr, evaluate=for_rewrite)
         if hasattr(result, 'doit') and for_rewrite:
