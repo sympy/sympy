@@ -432,7 +432,7 @@ def _linear_neq_order1_type2(match_):
     The solution of the above system is:
 
     .. math::
-        X = e^{A t} (\int e^{- A t} b\, dt\right + C)
+        X = e^{A t} ( \int e^{- A t} b \,dt + C)
 
     where $C$ is the vector of constants.
 
