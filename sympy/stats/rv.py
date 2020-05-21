@@ -742,6 +742,10 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
         evalf = kwargs.get('evalf', True)
         return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
 
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    if expr.has(StochasticProcess):
+        process = list(expr.atoms(StochasticProcess))[0]
+        return process.expectation(expr, condition, evaluate, **kwargs)
     if expr.has(RandomIndexedSymbol):
         return pspace(expr).compute_expectation(expr, condition, evaluate, **kwargs)
 
@@ -802,7 +806,10 @@ def probability(condition, given_condition=None, numsamples=None,
     condition = sympify(condition)
     given_condition = sympify(given_condition)
     from sympy.stats.stochastic_process_types import StochasticProcess
-    if condition.has(RandomIndexedSymbol) or condition.has(StochasticProcess):
+    if condition.has(StochasticProcess):
+        process = list(condition.atoms(StochasticProcess))[0]
+        return process.probability(condition, given_condition, evaluate, **kwargs)
+    if condition.has(RandomIndexedSymbol):
         return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
 
     if isinstance(given_condition, RandomSymbol):

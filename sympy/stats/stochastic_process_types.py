@@ -945,7 +945,8 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
 
 dict_rv_subs = {'Poisson': lambda rv: Poisson(rv.name, lamda=rv.pspace.process.lamda*rv.key),
-                'Bernoulli': lambda rv: Bernoulli(rv.name, p=rv.pspace.process.p, succ=rv.pspace.process.success, fail=rv.pspace.process.failure)
+                'Bernoulli': lambda rv: Bernoulli(rv.name, p=rv.pspace.process.p,
+                            succ=rv.pspace.process.success, fail=rv.pspace.process.failure)
                }
 
 
@@ -954,15 +955,15 @@ def _rvindexed_subs(process, expr, condition=None):
         Substitutes the RandomIndexedSymbol with the RandomSymbol with
         same name, distribution and probability as RandomIndexedSymbol.
 
-      Parameters
-      ==========
+        Parameters
+        ==========
 
-      process : str
+        process : str
            Key value of dict_rv_subs RandomVariable used to substitute
-      expr: RandomIndexedSymbol, Relational, Logic
+        expr: RandomIndexedSymbol, Relational, Logic
             Condition for which expectation has to be computed. Must
             contain a RandomIndexedSymbol of the process.
-      condition: Relational, Logic
+        condition: Relational, Logic
             The given conditions under which computations should be done.
 
         """
@@ -994,7 +995,7 @@ def _expectation_stoch(process, expr, condition=None, evaluate=True, **kwargs):
         ==========
 
 
-      process : str
+        process : str
            Key value of dict_rv_subs RandomVariable used to substitute
         expr: RandomIndexedSymbol, Relational, Logic
             Condition for which expectation has to be computed. Must
@@ -1027,7 +1028,7 @@ def _probability_stoch(process, condition, given_condition=None, evaluate=True, 
         Parameters
         ==========
 
-      process : str
+        process : str
            Key value of dict_rv_subs RandomVariable used to substitute
         condition: Relational
                 Condition for which probability has to be computed. Must
@@ -1086,7 +1087,7 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
 
     @property
     def state_space(self):
-        return S.Naturals0
+        return _set_converter(Interval(0, oo))
 
     @property
     def symbol(self):
@@ -1105,15 +1106,21 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
 
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
+        if given_condition is not None: # use of memory less property
+            if not isinstance(given_condition, Interval):
+                raise TypeError("Expecting an Interval as a given condition")
+            if not condition.has(PoissonProcess):
+                raise TypeError("expr should contain an instance of PoissonProcess")
+            lhs = condition.args[0](given_condition._sup - given_condition._inf)
+            condition = condition.__class__(lhs, condition.args[1])
         return _expectation_stoch('Poisson', expr, condition=condition, evaluate=True, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
-        if given_condition is not None: # use memory less property
+        if given_condition is not None: # use of memory less property
             if not isinstance(given_condition, Interval):
                 raise TypeError("Expecting an Interval as a given condition")
             if not condition.has(PoissonProcess):
                 raise TypeError("Condition should contain an instance of PoissonProcess")
             lhs = condition.args[0](given_condition._sup - given_condition._inf)
-            print(lhs)
             condition = condition.__class__(lhs, condition.args[1])
         return _probability_stoch('Poisson', condition, evaluate=True, **kwargs)
