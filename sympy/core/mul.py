@@ -1775,6 +1775,17 @@ class Mul(Expr, AssocOp):
                 res += Order(x**n, x)
             return res
 
+        cnt = 0
+        ords1 = []
+        for t in reversed(ords):
+            if cnt == 0:
+                min1 = t[1]
+                cnt = cnt + 1
+                ords1.append(min1)
+            else:
+                min1 = min(min1, t[1])
+                ords1.insert(0, min1)
+
         res = 0
         i = 0
 
@@ -1807,7 +1818,7 @@ class Mul(Expr, AssocOp):
             if (i + 2) == len(facs):
                 order = n
             else:
-                order = n - ords[i + 2][1]
+                order = n - ords1[i + 2]
 
 
             for s in facs1:
