@@ -1106,14 +1106,14 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
 
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
-        if given_condition is not None: # use of memory less property
-            if not isinstance(given_condition, Interval):
+        if condition is not None: # use of memory less property
+            if not isinstance(condition, Interval):
                 raise TypeError("Expecting an Interval as a given condition")
-            if not condition.has(PoissonProcess):
+            if not expr.has(PoissonProcess):
                 raise TypeError("expr should contain an instance of PoissonProcess")
-            lhs = condition.args[0](given_condition._sup - given_condition._inf)
-            condition = condition.__class__(lhs, condition.args[1])
-        return _expectation_stoch('Poisson', expr, condition=condition, evaluate=True, **kwargs)
+            lhs = expr.args[0](condition._sup - condition._inf)
+            expr = expr.__class__(lhs, expr.args[1])
+        return _expectation_stoch('Poisson', expr, evaluate=evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         if given_condition is not None: # use of memory less property
@@ -1123,4 +1123,4 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
                 raise TypeError("Condition should contain an instance of PoissonProcess")
             lhs = condition.args[0](given_condition._sup - given_condition._inf)
             condition = condition.__class__(lhs, condition.args[1])
-        return _probability_stoch('Poisson', condition, evaluate=True, **kwargs)
+        return _probability_stoch('Poisson', condition, evaluate=evaluate, **kwargs)
