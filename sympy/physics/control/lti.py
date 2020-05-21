@@ -64,12 +64,6 @@ class TransferFunction(Basic):
     def _repr_latex_(self):
         return '$' + latex(self.G) + '$'
 
-    def __str__(self):
-        return 'TransferFunctionModel(' + sstr(self.G) + ')'
-
-    def __repr__(self):
-        return sstr(self)
-
 
 def total_degree(tf):
     num, denom = tf.as_numer_denom()
