@@ -1,8 +1,8 @@
 from sympy import (
-    Symbol, Basic, Matrix, latex, ShapeError, Mul,
+    Basic, Matrix, latex, ShapeError, Mul,
     ImmutableMatrix, MutableMatrix, MutableDenseMatrix
 )
-from sympy.polys.polytools import degree, Poly
+from sympy.polys.polytools import degree
 from sympy.printing import sstr
 
 __all__ = ['TransferFunction']
