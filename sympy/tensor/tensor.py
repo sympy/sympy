@@ -53,6 +53,7 @@ from sympy.core.parameters import global_parameters
 from sympy.matrices import eye
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import memoize_property
+from sympy.testing.pytest import ignore_warnings
 import warnings
 
 
@@ -4245,8 +4246,7 @@ def Pow_hook(b, e, **options):
     if e.is_negative:
         raise ValueError('Cannot divide by a tensor')
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with ignore_warnings(SymPyDeprecationWarning):
         if b.data is None:
             raise ValueError("No power without ndarray data.")
     deprecate_data()
