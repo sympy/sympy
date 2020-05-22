@@ -1753,15 +1753,27 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import Integer, Order, ceiling, powsimp
+        from sympy import Integer, Mul, Order, ceiling, powsimp
+        from itertools import product
+
+        def coeff_exp(term, x):
+            coeff, exp = S.One, S.Zero
+            for factor in Mul.make_args(term):
+                if factor.has(x):
+                    base, exp = factor.as_base_exp()
+                    if base != x:
+                        return term.leadterm(x)
+                else:
+                    coeff *= factor
+            return coeff, exp
 
         ords = []
 
         try:
             for t in self.args:
-                coeff, exponent = t.leadterm(x)
+                coeff, exp = t.leadterm(x)
                 if isinstance(coeff, Integer) or isinstance(coeff, Rational):
-                    ords.append((t, exponent))
+                    ords.append((t, exp))
                 else:
                     raise ValueError
 
@@ -1775,60 +1787,15 @@ class Mul(Expr, AssocOp):
                 res += Order(x**n, x)
             return res
 
-        cnt = 0
-        ords1 = []
-        for t in reversed(ords):
-            if cnt == 0:
-                min1 = t[1]
-                cnt = cnt + 1
-                ords1.append(min1)
-            else:
-                min1 = min(min1, t[1])
-                ords1.insert(0, min1)
-
         res = 0
-        i = 0
+        ords2 = [Add.make_args(factor) for factor in facs]
 
-        for j in facs[1:]:
-            if i == 0:
-                fac1 = facs[i]
-            else:
-                fac1 = res
-
-            fac2 = j
-
-            if isinstance(fac1, Add):
-                facs1 = [t.leadterm(x) for t in fac1.args]
-            else:
-                if isinstance(fac1, int):
-                    facs1 = [(fac1, 0)]
-                else:
-                    facs1 = [fac1.leadterm(x)]
-
-            if isinstance(fac2, Add):
-                facs2 = [t.leadterm(x) for t in fac2.args]
-            else:
-                if isinstance(fac2, int):
-                    facs2 = [(fac2, 0)]
-                else:
-                    facs2 = [fac2.leadterm(x)]
-
-            res = 0
-
-            if (i + 2) == len(facs):
-                order = n
-            else:
-                order = n - ords1[i + 2]
-
-
-            for s in facs1:
-                for t in facs2:
-                    if (s[1] + t[1]) <= order:
-                        power = s[1] + t[1]
-                        coeff = s[0]*t[0]
-                        res += (coeff*(x**power))
-
-            i = i + 1
+        for fac in product(*ords2):
+            ords3 = [coeff_exp(term, x) for term in fac]
+            coeffs, powers = zip(*ords3)
+            power = sum(powers)
+            if power < n:
+                res += Mul(*coeffs)*(x**power)
 
         res += Order(x**n, x)
         return res
