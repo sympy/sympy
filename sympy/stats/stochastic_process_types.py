@@ -814,7 +814,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
 
 class BernoulliProcess(DiscreteTimeStochasticProcess):
-    """
+    r"""
     The Bernoulli process consists of repeated
     independent Bernoulli process trials with the same parameter `p`.
     It's assumed that the probability `p` applies to every
@@ -910,7 +910,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         return BernoulliDistribution(self.p)
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
-        """
+        r"""
         Computes expectation.
 
         Parameters
@@ -932,7 +932,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         return _expectation_stoch('Bernoulli', expr, condition, evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
-        """
+        r"""
         Computes probability.
 
         Parameters
@@ -966,135 +966,136 @@ dict_rv_subs = {'Poisson': lambda rv: Poisson(rv.name, lamda=rv.pspace.process.l
 
 
 def _rvindexed_subs(process, expr, condition=None):
-        """
-        Substitutes the RandomIndexedSymbol with the RandomSymbol with
-        same name, distribution and probability as RandomIndexedSymbol.
+    r"""
+    Substitutes the RandomIndexedSymbol with the RandomSymbol with
+    same name, distribution and probability as RandomIndexedSymbol.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        process : str
-           Key value of dict_rv_subs RandomVariable used to substitute
-        expr: RandomIndexedSymbol, Relational, Logic
-            Condition for which expectation has to be computed. Must
-            contain a RandomIndexedSymbol of the process.
-        condition: Relational, Logic
-            The given conditions under which computations should be done.
+    process : str
+       Key value of dict_rv_subs RandomVariable used to substitute
+    expr: RandomIndexedSymbol, Relational, Logic
+        Condition for which expectation has to be computed. Must
+        contain a RandomIndexedSymbol of the process.
+    condition: Relational, Logic
+        The given conditions under which computations should be done.
 
-        """
+    """
 
-        rvs_expr = random_symbols(expr)
-        if len(rvs_expr) != 0:
-            swapdict_expr = {}
-            for rv in rvs_expr:
-                if isinstance(rv, RandomIndexedSymbol):
-                    newrv = dict_rv_subs[process](rv)
-                    swapdict_expr[rv] = newrv
-            expr = expr.subs(swapdict_expr)
-        rvs_cond = random_symbols(condition)
-        if len(rvs_cond)!=0:
-            swapdict_cond = {}
-            for rv in rvs_cond:
-                if isinstance(rv, RandomIndexedSymbol):
-                    newrv = dict_rv_subs[process](rv)
-                    swapdict_cond[rv] = newrv
-            condition = condition.subs(swapdict_cond)
-        return expr, condition
+    rvs_expr = random_symbols(expr)
+    if len(rvs_expr) != 0:
+        swapdict_expr = {}
+        for rv in rvs_expr:
+            if isinstance(rv, RandomIndexedSymbol):
+                newrv = dict_rv_subs[process](rv)
+                swapdict_expr[rv] = newrv
+        expr = expr.subs(swapdict_expr)
+    rvs_cond = random_symbols(condition)
+    if len(rvs_cond)!=0:
+        swapdict_cond = {}
+        for rv in rvs_cond:
+            if isinstance(rv, RandomIndexedSymbol):
+                newrv = dict_rv_subs[process](rv)
+                swapdict_cond[rv] = newrv
+        condition = condition.subs(swapdict_cond)
+    return expr, condition
 
 
 def _expectation_stoch(process, expr, condition=None, evaluate=True, **kwargs):
-        """
-        Computes expectation.
+    r"""
+    Computes expectation.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
 
-        process : str
-           Key value of dict_rv_subs RandomVariable used to substitute
-        expr: RandomIndexedSymbol, Relational, Logic
-            Condition for which expectation has to be computed. Must
-            contain a RandomIndexedSymbol of the process.
-        condition: Relational, Logic
-            The given conditions under which computations should be done.
+    process : str
+       Key value of dict_rv_subs RandomVariable used to substitute
+    expr: RandomIndexedSymbol, Relational, Logic
+        Condition for which expectation has to be computed. Must
+        contain a RandomIndexedSymbol of the process.
+    condition: Relational, Logic
+        The given conditions under which computations should be done.
 
-        Returns
-        =======
+    Returns
+    =======
 
-        Expectation of the RandomIndexedSymbol.
+    Expectation of the RandomIndexedSymbol.
 
-        """
-        new_expr, new_condition = _rvindexed_subs(process, expr, condition)
+    """
+    new_expr, new_condition = _rvindexed_subs(process, expr, condition)
 
-        if not is_random(new_expr):
-            return new_expr
-        new_pspace = pspace(new_expr)
-        if new_condition is not None:
-            new_expr = given(new_expr, new_condition)
-        if new_expr.is_Add:  # As E is Linear
-            return Add(*[new_pspace.compute_expectation(
-                        expr=arg, evaluate=evaluate, **kwargs)
-                        for arg in new_expr.args])
-        return new_pspace.compute_expectation(
-                new_expr, evaluate=evaluate, **kwargs)
+    if not is_random(new_expr):
+        return new_expr
+    new_pspace = pspace(new_expr)
+    if new_condition is not None:
+        new_expr = given(new_expr, new_condition)
+    if new_expr.is_Add:  # As E is Linear
+        return Add(*[new_pspace.compute_expectation(
+                    expr=arg, evaluate=evaluate, **kwargs)
+                    for arg in new_expr.args])
+    return new_pspace.compute_expectation(
+            new_expr, evaluate=evaluate, **kwargs)
 
 def _probability_stoch(process, condition, given_condition=None, evaluate=True, **kwargs):
-        """
-        Computes probability.
+    r"""
+    Computes probability.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        process : str
-           Key value of dict_rv_subs RandomVariable used to substitute
-        condition: Relational
-                Condition for which probability has to be computed. Must
-                contain a RandomIndexedSymbol of the process.
-        given_condition: Relational/And
-                The given conditions under which computations should be done.
+    process : str
+       Key value of dict_rv_subs RandomVariable used to substitute
+    condition: Relational
+            Condition for which probability has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+    given_condition: Relational/And
+            The given conditions under which computations should be done.
 
-        Returns
-        =======
+    Returns
+    =======
 
-        Probability of the condition.
+    Probability of the condition.
 
-        """
-        new_condition, new_givencondition = _rvindexed_subs(process, condition, given_condition)
+    """
+    new_condition, new_givencondition = _rvindexed_subs(process, condition, given_condition)
 
-        if isinstance(new_givencondition, RandomSymbol):
-            condrv = random_symbols(new_condition)
-            if len(condrv) == 1 and condrv[0] == new_givencondition:
-                return BernoulliDistribution(_probability_stoch(process, new_condition), 0, 1)
+    if isinstance(new_givencondition, RandomSymbol):
+        condrv = random_symbols(new_condition)
+        if len(condrv) == 1 and condrv[0] == new_givencondition:
+            return BernoulliDistribution(_probability_stoch(process, new_condition), 0, 1)
 
-            if any([dependent(rv, new_givencondition) for rv in condrv]):
-                return Probability(new_condition, new_givencondition)
-            else:
-                return _probability_stoch(process, new_condition)
-
-        if new_givencondition is not None and \
-                not isinstance(new_givencondition, (Relational, Boolean)):
-            raise ValueError("%s is not a relational or combination of relationals"
-                    % (new_givencondition))
-        if new_givencondition == False:
-            return S.Zero
-        if new_condition == True:
-            return S.One
-        if new_condition == False:
-            return S.Zero
-        if not isinstance(new_condition, (Relational, Boolean)):
-            raise ValueError("%s is not a relational or combination of relationals"
-                    % (new_condition))
-        if new_givencondition is not None:  # If there is a condition
-        # Recompute on new conditional expr
-            return _probability_stoch(process, given(new_condition, new_givencondition, **kwargs), **kwargs)
-        result = pspace(new_condition).probability(new_condition, **kwargs)
-        if evaluate and hasattr(result, 'doit'):
-            return result.doit()
+        if any([dependent(rv, new_givencondition) for rv in condrv]):
+            return Probability(new_condition, new_givencondition)
         else:
-            return result
+            return _probability_stoch(process, new_condition)
+
+    if new_givencondition is not None and \
+            not isinstance(new_givencondition, (Relational, Boolean)):
+        raise ValueError("%s is not a relational or combination of relationals"
+                % (new_givencondition))
+    if new_givencondition == False:
+        return S.Zero
+    if new_condition == True:
+        return S.One
+    if new_condition == False:
+        return S.Zero
+    if not isinstance(new_condition, (Relational, Boolean)):
+        raise ValueError("%s is not a relational or combination of relationals"
+                % (new_condition))
+    if new_givencondition is not None:  # If there is a condition
+    # Recompute on new conditional expr
+        return _probability_stoch(process, given(new_condition, new_givencondition, **kwargs), **kwargs)
+    result = pspace(new_condition).probability(new_condition, **kwargs)
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
 
 def given_parser(expr, condition):
-    """Finds the appropriate interval for each time stamp in expr by parsing
+    r"""
+    Finds the appropriate interval for each time stamp in expr by parsing
     the given condition and returns intervals for each timestamp and
     dictionary that maps variable time-stamped Random Indexed Symbol to its
     corresponding Random Indexed variable with fixed time stamp.
@@ -1117,7 +1118,7 @@ def given_parser(expr, condition):
     >>> given_parser(x*X(t), (t < 1))
     ([Interval.Ropen(0, 1)], {X(t): X(1)})
     >>> given_parser((X(t)**2 + X(d)**2), (t >= 0) & (t < 1) & (d >= 1) & (d < 4))
-    ([Interval.Ropen(0, 1), Interval.Ropen(1, 4)], {X(t): X(1), X(d): X(3)})
+    ([Interval.Ropen(0, 1), Interval.Ropen(1, 4)], {X(d): X(3), X(t): X(1)})
 
     Returns
     =======
