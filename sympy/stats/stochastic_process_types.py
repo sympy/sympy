@@ -1026,6 +1026,8 @@ def _expectation_stoch(process, expr, condition=None, evaluate=True, **kwargs):
         """
         new_expr, new_condition = _rvindexed_subs(process, expr, condition)
 
+        if not is_random(new_expr):
+            return new_expr
         new_pspace = pspace(new_expr)
         if new_condition is not None:
             new_expr = given(new_expr, new_condition)
@@ -1091,6 +1093,68 @@ def _probability_stoch(process, condition, given_condition=None, evaluate=True, 
         else:
             return result
 
+def given_parser(expr, condition):
+    """Finds the appropriate interval for each time stamp in expr by parsing
+    the given condition and returns intervals for each timestamp and
+    dictionary that maps variable time-stamped Random Indexed Symbol to its
+    corresponding Random Indexed variable with fixed time stamp.
+
+    Parameters
+    ==========
+
+    expr: Sympy Expression
+        Expression containing Random Indexed Symbols with variable time stamps
+    condition: Relational/Boolean Expression
+        Expression containing time bounds of variable time stamps in expr
+
+    Examples
+    ========
+
+    >>> from sympy.stats.stochastic_process_types import given_parser, PoissonProcess
+    >>> from sympy import symbols
+    >>> x, t, d = symbols('x t d', positive=True)
+    >>> X = PoissonProcess("X", 3)
+    >>> given_parser(x*X(t), (t < 1))
+    ([Interval.Ropen(0, 1)], {X(t): X(1)})
+    >>> given_parser((X(t)**2 + X(d)**2), (t >= 0) & (t < 1) & (d >= 1) & (d < 4))
+    ([Interval.Ropen(0, 1), Interval.Ropen(1, 4)], {X(t): X(1), X(d): X(3)})
+
+    Returns
+    =======
+
+    intervals: List
+        List of Intervals/FiniteSet on which each time stamp is defined
+    rv_swap: dict
+        Dictionary mapping variable time Random Indexed Symbol to constant time
+        Random Indexed Variable
+
+    """
+
+    if not isinstance(condition, (Relational, Boolean)):
+        raise ValueError("%s is not a relational or combination of relationals"
+            % (condition))
+    expr_syms = random_indexed_symbols(expr)
+    if not isinstance(condition, Relational):
+        given_cond_args = condition.args
+    else:
+        given_cond_args = (condition, )
+    rv_swap = {}
+    intervals = []
+    for expr_sym in expr_syms:
+        rv_key = expr_sym.key
+        intv = Interval(0, oo)
+        for arg in given_cond_args:
+            if arg.has(rv_key):
+                intv = Intersection(intv, arg.as_set())
+        intervals.append(intv)
+        diff_key = intv._sup - intv._inf
+        if diff_key == oo:
+            raise ValueError("%s should have finite bounds" % str(rv_key))
+        elif diff_key == S.Zero: # has singleton set
+            diff_key = intv._sup
+        rv_swap[expr_sym] = expr_sym.subs({rv_key: diff_key})
+
+    return intervals, rv_swap
 
 class PoissonProcess(ContinuousTimeStochasticProcess):
 
@@ -1121,40 +1185,21 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
         return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
-        if condition is not None: # use of memory less property
-            if not isinstance(condition, Interval):
-                raise TypeError("Expecting an Interval as a given condition")
-            if not expr.has(PoissonProcess):
-                raise TypeError("expr should contain an instance of PoissonProcess")
-            lhs = expr.args[0](condition._sup - condition._inf)
-            expr = expr.__class__(lhs, expr.args[1])
+        if condition is not None:
+            intervals, rv_swap = given_parser(expr, condition)
+            if len(intervals)==1 or all(Intersection(*intv_comb) == EmptySet
+                for intv_comb in itertools.combinations(intervals, 2)): # they are independent
+                if expr.is_Add:
+                    return Add(*[self.expectation(arg, condition) for arg in expr.args])
+                expr = expr.subs(rv_swap)
+            else:
+                return Expectation(expr, condition)
+
         return _expectation_stoch('Poisson', expr, evaluate=evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         if given_condition is not None:
-            if not isinstance(given_condition, (Relational, Boolean)):
-                raise ValueError("%s is not a relational or combination of relationals"
-                    % (given_condition))
-            cond_syms = random_indexed_symbols(condition)
-            if not isinstance(given_condition, Relational):
-                given_cond_args = given_condition.args
-            else:
-                given_cond_args = (given_condition, )
-            rv_swap = {}
-            intervals = []
-            for cond_sym in cond_syms:
-                rv_key = cond_sym.key
-                intv = Interval(0, oo)
-                for arg in given_cond_args:
-                    if arg.has(rv_key):
-                        intv = Intersection(intv, arg.as_set())
-                intervals.append(intv)
-                diff_key = intv._sup - intv._inf
-                if diff_key == oo:
-                    raise ValueError("%s should have finite bounds" % str(rv_key))
-                elif diff_key == S.Zero: # has singleton set
-                    diff_key = intv._sup
-                rv_swap[cond_sym] = cond_sym.subs({rv_key: diff_key})
+            intervals, rv_swap = given_parser(condition, given_condition)
             if len(intervals)==1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)): # they are independent
                 if isinstance(condition, And):

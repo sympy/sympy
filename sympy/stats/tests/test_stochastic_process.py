@@ -236,3 +236,14 @@ def test_PoissonProcess():
     res2 = P(X(t) > 3, t < 5)
     assert res1 == 691*exp(-15)
     assert (res1 + res2).simplify() == 1
+    assert E(X(t)) == 3*t
+    assert E(X(t)**2 + X(d)*2 + X(y)**3, (t >= 0) & (t < 1) & (d >= 1)
+            & (d < 2) & (y >= 3) & (y < 4)) == 75
+    assert E(X(t)**2, (t >= 0) & (t < 1)) == 12
+    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), (t >= 0) & (t <= 1) & (d >= 1) & (d < 2)) == \
+            Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2), (d >= 1) & (t <= 1) & (d < 2))
+
+    raises(ValueError, lambda: E(X(t)**3, t > 3))
+    assert E((X(t) + X(d))*(X(t) - X(d)), (t >= 0) & (t < 1) & (d >= 1) & (d < 2)) == 0
+    assert E(X(2) + x*E(X(5))) == 15*x + 6
+    assert E(x*X(t) + y, Eq(t, 1)) == 3*x + y
