@@ -41,6 +41,13 @@ def test_goto_Label():
     assert ccode(l2) == ("early_exit:\n"
         "++(x);")
 
+    body = [PreIncrement(x), PreDecrement(y)]
+    l2 = Label(s, body)
+    assert l2.name == String("early_exit")
+    assert l2.body == CodeBlock(*body)
+    assert ccode(l2) == ("early_exit:\n"
+        "{\n   ++(x);\n   --(y);\n}")
+
 
 def test_PreDecrement():
     p = PreDecrement(x)
