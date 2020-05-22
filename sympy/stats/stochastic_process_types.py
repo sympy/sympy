@@ -1188,7 +1188,7 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         if condition is not None:
             intervals, rv_swap = given_parser(expr, condition)
-            if len(intervals)==1 or all(Intersection(*intv_comb) == EmptySet
+            if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)): # they are independent
                 if expr.is_Add:
                     return Add(*[self.expectation(arg, condition) for arg in expr.args])
@@ -1199,9 +1199,11 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
         return _expectation_stoch('Poisson', expr, evaluate=evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        if isinstance(condition, Not):
+            return S.One - self.probability(condition.args[0], given_condition, evaluate, **kwargs)
         if given_condition is not None:
             intervals, rv_swap = given_parser(condition, given_condition)
-            if len(intervals)==1 or all(Intersection(*intv_comb) == EmptySet
+            if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)): # they are independent
                 if isinstance(condition, And):
                     return Mul(*[self.probability(arg, given_condition) for arg in condition.args])

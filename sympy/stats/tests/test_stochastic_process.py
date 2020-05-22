@@ -10,6 +10,7 @@ from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.testing.pytest import raises
 from sympy.stats.frv_types import BernoulliDistribution
+from sympy.stats.drv_types import PoissonDistribution
 
 
 def test_DiscreteMarkovChain():
@@ -210,6 +211,7 @@ def test_PoissonProcess():
 
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
+    assert X.distribution(X(t)) == PoissonDistribution(3*t)
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-5))
@@ -236,6 +238,10 @@ def test_PoissonProcess():
     res2 = P(X(t) > 3, t < 5)
     assert res1 == 691*exp(-15)
     assert (res1 + res2).simplify() == 1
+    assert P(Not(Eq(X(t), 2) & (X(d) > 3)), (t <= 4) & (t >= 2) &
+            (d < 8) & (d >= 7)).simplify() == -18*exp(-6) + 234*exp(-9) + 1
+    assert P(Eq(X(t), 2) | Ne(X(t), 4), (t < 4) & (t >= 2)) == 1 - 36*exp(-6)
+    raises(ValueError, lambda: P(X(t) > 2, X(t) + X(d)))
     assert E(X(t)) == 3*t
     assert E(X(t)**2 + X(d)*2 + X(y)**3, (t >= 0) & (t < 1) & (d >= 1)
             & (d < 2) & (y >= 3) & (y < 4)) == 75
