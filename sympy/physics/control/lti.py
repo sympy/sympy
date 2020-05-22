@@ -60,17 +60,15 @@ class TransferFunction(Basic):
 
         return self.G * u
 
+    @property
+    def is_proper(self):
+        return all(degree(tf.as_numer_denom()[0]) <=
+                   degree(tf.as_numer_denom()[1]) for tf in self.G)
+
+    @property
+    def is_strictly_proper(self):
+        return all(degree(tf.as_numer_denom()[0]) <
+                   degree(tf.as_numer_denom()[1]) for tf in self.G)
+
     def _repr_latex_(self):
         return '$' + latex(self.G) + '$'
-
-
-def total_degree(tf):
-    num, denom = tf.as_numer_denom()
-    return degree(num) - degree(denom)
-
-
-def is_proper(m, strict=False):
-    if not strict:
-        return all(total_degree(tf) <= 0 for tf in m)
-    else:
-        return all(total_degree(tf) < 0 for tf in m)

@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, together, simplify
-from sympy.physics.control.lti import TransferFunction, is_proper
+from sympy.physics.control.lti import TransferFunction
 
 a, b, g, s, p = symbols('a, b, g, s, p')
 
@@ -98,9 +98,18 @@ def test_TransferFunction_negate():
     )
 
 
-def test_is_proper():
-    G = Matrix([2*p / (2 + p**2 - p), p / (1 + p**3)])
-    assert is_proper(G)
+def test_TransferFunction_is_proper():
+    G1 = Matrix([2*p / (2 + p**2 - p), p / (1 + p**3)])
+    assert TransferFunction(G1).is_proper
 
     G2 = Matrix([2*s**6/(2 + s**2 - s), (s**4)/(1 + s**2)])
-    assert not is_proper(G2)
+    assert not TransferFunction(G2).is_proper
+
+
+def test_TransferFunction_is_strictly_proper():
+    G1 = Matrix([2*s**6/(2 + s**2 - s), (s**4)/(1 + s**2)])
+    assert not TransferFunction(G1).is_strictly_proper
+
+    G2 = Matrix([[(4*p - 10) / (2*p**3 + 1), 3 / (p + 2)],
+            [1 / (2*p**2 + 5*p + 2), (p + 1) / (p**2 + 4*p + 4)]])
+    assert TransferFunction(G2).is_strictly_proper
