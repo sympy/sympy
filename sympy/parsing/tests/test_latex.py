@@ -5,7 +5,7 @@ from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan, Function, binomial
+    GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
@@ -39,8 +39,13 @@ def _factorial(a):
     return factorial(a, evaluate=False)
 
 
+def _exp(a):
+    return exp(a, evaluate=False)
+
+
 def _log(a, b):
     return log(a, b, evaluate=False)
+
 
 def _binomial(n, k):
     return binomial(n, k, evaluate=False)
@@ -167,6 +172,8 @@ GOOD_PAIRS = [
     ("\\prod_{a = b}^c x", Product(x, (a, b, c))),
     ("\\prod^{c}_{a = b} x", Product(x, (a, b, c))),
     ("\\prod^c_{a = b} x", Product(x, (a, b, c))),
+    ("\\exp x", _exp(x)),
+    ("\\exp(x)", _exp(x)),
     ("\\ln x", _log(x, E)),
     ("\\ln xy", _log(x*y, E)),
     ("\\log x", _log(x, 10)),
