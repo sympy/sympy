@@ -587,7 +587,10 @@ class C89CodePrinter(CodePrinter):
     def _print_Label(self, expr):
         if expr.body == none:
             return '%s:' % str(expr.name)
-        return '%s:\n%s' % (str(expr.name), self._print_CodeBlock(expr.body))
+        if len(expr.body.args) == 1:
+            return '%s:\n%s' % (str(expr.name), self._print_CodeBlock(expr.body))
+        return '%s:\n{\n%s\n}' % (str(expr.name), self._print_CodeBlock(expr.body))
+
 
     def _print_goto(self, expr):
         return 'goto %s;' % expr.label.name
