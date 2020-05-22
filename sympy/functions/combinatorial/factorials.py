@@ -981,8 +981,14 @@ class binomial(CombinatorialFunction):
             if not res.has(ff) and res.is_number:
                 return _mexpand(res) if res else res
 
+    def __init__(self, n, k, binom = False, **hints):
+        self.binom = binom
+        n, k = map(sympify, (n, k))
+        self.n = n
+        self.k = k
+
     @classmethod
-    def eval(cls, n, k):
+    def eval(cls, n, k, binom=False):
         from sympy import Pow
         n, k = map(sympify, (n, k))
         n_k = n - k
@@ -1047,6 +1053,8 @@ class binomial(CombinatorialFunction):
         if n.is_negative and k.is_negative:
             if n_k.is_nonnegative:
                 if kint and nint:
+                    if not binom:
+                        return S.Zero
                     n, k = -k - 1, n - k
                     res = cls._eval(n, k)
                     return res if res is None else Pow(S.NegativeOne, k)*res
@@ -1095,9 +1103,34 @@ class binomial(CombinatorialFunction):
             elif kint is False:
                 return cls._eval(n, k ,'gamma')
 
-    def _eval_Mod(self, q):
-        n, k = self.args
+    def _eval_evalf(self, prec):
+        from mpmath import mpf, mpc, workprec
+        from sympy import Expr
+        try:
+            args = [arg._to_mpmath(prec + 5) for arg in self.args[0:2]]
+            def bad(m):
+                if isinstance(m, mpf):
+                    m = m._mpf_
+                    return m[1] !=1 and m[-1] == 1
+                elif isinstance(m, mpc):
+                    m, n = m._mpc_
+                    return m[1] !=1 and m[-1] == 1 and \
+                        n[1] !=1 and n[-1] == 1
+                else:
+                    return False
+            if any(bad(a) for a in args):
+                raise ValueError  # one or more args failed to compute with significance
+        except ValueError:
+            return
 
+        with workprec(prec):
+            v = binomial(*args)
+
+        return Expr._from_mpmath(v, prec)
+
+    def _eval_Mod(self, q):
+        n = self.n
+        k = self.k
         if any(int_like(x) is False for x in (n, k, q)):
             raise ValueError("Integers expected for binomial Mod")
 
@@ -1194,7 +1227,8 @@ class binomial(CombinatorialFunction):
         if the summation limit is a nonnegative integer.
         """
         from sympy import Product
-        n, k = self.args
+        n = self.n
+        k = self.k
         # see if re-evaluation evaluates
         e = self.func(n, k)
         if e.func != self.func:
@@ -1210,7 +1244,7 @@ class binomial(CombinatorialFunction):
         i = Dummy('never_seen')
         return (Product(n - k + i, (i, 1, k))/factorial(k)).doit()
 
-    def _eval_rewrite_as_Piecewise(self, n, k, **kwargs):
+    def _eval_rewrite_as_Piecewise(self, n, k, binom=False, **kwargs):
         from sympy import gamma, Abs, Lt
         isint = lambda x: Eq(x, floor(x))
         nneg = lambda x: Or(Eq(x, 0), Eq(x/Abs(x), 1))
@@ -1230,10 +1264,10 @@ class binomial(CombinatorialFunction):
             (gamma(n + 1)/gamma(k + 1)/gamma(n - k + 1),
                 True))
 
-    def _eval_rewrite_as_factorial(self, n, k, **kwargs):
+    def _eval_rewrite_as_factorial(self, n, k, binom=False, **kwargs):
         from sympy import Pow
 
-        if n.is_nonnegative and k.is_nonnegative or any(x is False for x in [n.is_integer, k.is_integer]):
+        if not binom or n.is_nonnegative and k.is_nonnegative or any(x is False for x in [n.is_integer, k.is_integer]):
             if (n - k + 1).is_zero:
                 return S.Zero
             return factorial(n)/(factorial(k)*factorial(n - k))
@@ -1249,10 +1283,10 @@ class binomial(CombinatorialFunction):
                 if k.is_negative:
                     return S.Zero
 
-    def _eval_rewrite_as_gamma(self, n, k, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, k, binom=False, **kwargs):
         from sympy import gamma, Pow
 
-        if n.is_nonnegative and k.is_nonnegative or any(x is False for x in [n.is_integer, k.is_integer]):
+        if not binom or n.is_nonnegative and k.is_nonnegative or any(x is False for x in [n.is_integer, k.is_integer]):
             if (n - k + 1).is_zero:
                 return S.Zero
             return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
@@ -1266,19 +1300,20 @@ class binomial(CombinatorialFunction):
                 if k.is_negative:
                     return S.Zero
 
-    def _eval_rewrite_as_tractable(self, n, k, **kwargs):
-        g = self._eval_rewrite_as_gamma(n, k)
+    def _eval_rewrite_as_tractable(self, n, k, binom=False, **kwargs):
+        g = self._eval_rewrite_as_gamma(n, k, binom)
         if g is not None:
             return g.rewrite('tractable')
 
-    def _eval_rewrite_as_FallingFactorial(self, n, k, **kwargs):
-        if int_like(k) and k.is_nonnegative:
+    def _eval_rewrite_as_FallingFactorial(self, n, k, binom=False, **kwargs):
+        if not binom or (int_like(k) and k.is_nonnegative):
             return ff(n, k) / factorial(k)
         if int_like(n - k) and (n - k).is_nonnegative:
             return ff(n, n - k) / factorial(n - k)
 
     def _eval_is_integer(self):
-        n, k = self.args
+        n = self.n
+        k = self.k
         if k.is_integer:
             if n.is_integer or k.is_negative:
                 return True
@@ -1306,7 +1341,8 @@ class binomial(CombinatorialFunction):
             return False
 
     def _eval_is_nonnegative(self):
-        n, k = self.args
+        n = self.n
+        k = self.k
         if (n - k).is_zero or k.is_zero or n.is_nonnegative:
             return True
         if n.is_negative:
@@ -1413,7 +1449,7 @@ class multinomial(CombinatorialFunction):
         from sympy import binomial
 
         if len(args) == 2:
-            return binomial(sum(args), next(ordered(args)))
+            return binomial(sum(args), next(ordered(args)), True)
         if all(i.is_number for i in args) or symbolic:
             if len(set(args)) == 1:
                 return factorial(sum(args))/factorial(args[0])**len(args)
@@ -1423,7 +1459,7 @@ class multinomial(CombinatorialFunction):
                     t += i
                     yield t
             rv = Mul(*[
-                binomial(j, k) for j, k in zip(runsum(args), args)])
+                binomial(j, k, True) for j, k in zip(runsum(args), args)])
             if any(x.is_Float for x in args):
                 rv = _mexpand(rv)
             return rv
