@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, expand, together
+from sympy import symbols, Matrix, together, simplify
 from sympy.physics.control.lti import TransferFunction, is_proper
 
 a, b, g, s, p = symbols('a, b, g, s, p')
@@ -24,11 +24,14 @@ def test_TransferFunction_solve():
     G1 = Matrix([[1 / s + 2 / s**2],
             [2*s / (s**2 + 3*s + 5)]])
     u1 = Matrix([s + 1])
-    assert expand(TransferFunction(G1).solve(u1) - G1*u1).is_zero
+    expect = G1*u1
+    diff = Matrix([[0], [0]])
+    assert simplify(TransferFunction(G1).solve(u1) - expect) == diff
 
     G2 = Matrix([s / (1 + s**2), 1 / s])
     u2 = Matrix([1 / p])
-    assert expand(TransferFunction(G2).solve(u2) - G2*u2).is_zero
+    expect = G2*u2
+    assert simplify(TransferFunction(G2).solve(u2) - expect) == diff
 
 
 def test_TransferFunction_series():
