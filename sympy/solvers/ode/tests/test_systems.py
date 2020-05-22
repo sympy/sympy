@@ -920,15 +920,12 @@ def test_linear_new_order1_type2_de_lorentz():
     b1, b2, b3 = symbols("b1:4", real=True)
     v1, v2, v3 = symbols("v1:4", cls=Function, real=True)
 
-    El = Matrix([e1, e2, e3], real=True)
-    B = Matrix([b1, b2, b3], real=True)
-    V = Matrix([v1(t), v2(t), v3(t)], real=True)
-    A = Matrix([Derivative(v1(t), t), Derivative(v2(t), t), Derivative(v3(t), t)], real=True)
+    eqs = [
+        -e1 * q + m * Derivative(v1(t), t) - q * (-b2 * v3(t) + b3 * v2(t)),
+        -e2 * q + m * Derivative(v2(t), t) - q * (b1 * v3(t) - b3 * v1(t)),
+        -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
+    ]
 
-    # Force de Lorentz:
-    F = m * A - q * El - q * V.cross(B)
-
-    eqs = (F[0], F[1], F[2])
     sol = dsolve(eqs)
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
