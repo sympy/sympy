@@ -1071,10 +1071,15 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_log(self, expr, exp=None):
-        if not self._settings["ln_notation"]:
-            tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
+        args = expr.args
+        if len(args) == 1:
+            if self._settings["ln_notation"]:
+                tex = r"\ln{%s}" % self._add_parens(args[0])
+            else:
+                tex = r"\log{%s}" % self._add_parens(args[0])
         else:
-            tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
+            tex = r"\log_{%s}{%s}" % \
+                (self._print(args[1]), self._add_parens(args[0]))
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -2950,7 +2955,8 @@ def latex(expr, **settings):
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
     ln_notation : boolean, optional
-        If set to ``True``, ``\ln`` is used instead of default ``\log``.
+        If set to ``True``, ``\ln`` is used instead of default ``\log``
+        when the base is the exponential constant :math:`e`.
     long_frac_ratio : float or None, optional
         The allowed ratio of the width of the numerator to the width of the
         denominator before the printer breaks off long fractions. If ``None``
@@ -3114,9 +3120,9 @@ def latex(expr, **settings):
     Logarithms:
 
     >>> print(latex(log(10)))
-    \log{\left(10 \right)}
+    \log{\left(10\right)}
     >>> print(latex(log(10), ln_notation=True))
-    \ln{\left(10 \right)}
+    \ln{\left(10\right)}
 
     ``latex()`` also supports the builtin container types :class:`list`,
     :class:`tuple`, and :class:`dict`:
@@ -3182,21 +3188,21 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
     \begin{align*}
     x = & e^{i \alpha} \\
     & + \sin{\left(\alpha y \right)} \\
-    & - \cos{\left(\log{\left(y \right)} \right)}
+    & - \cos{\left(\log{\left(y\right)} \right)}
     \end{align*}
 
     Using at most two terms per line:
     >>> print(multiline_latex(x, expr, 2))
     \begin{align*}
     x = & e^{i \alpha} + \sin{\left(\alpha y \right)} \\
-    & - \cos{\left(\log{\left(y \right)} \right)}
+    & - \cos{\left(\log{\left(y\right)} \right)}
     \end{align*}
 
     Using ``eqnarray`` and dots:
     >>> print(multiline_latex(x, expr, terms_per_line=2, environment="eqnarray", use_dots=True))
     \begin{eqnarray}
     x & = & e^{i \alpha} + \sin{\left(\alpha y \right)} \dots\nonumber\\
-    & & - \cos{\left(\log{\left(y \right)} \right)}
+    & & - \cos{\left(\log{\left(y\right)} \right)}
     \end{eqnarray}
 
     Using ``IEEEeqnarray``:
@@ -3204,7 +3210,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
     \begin{IEEEeqnarray}{rCl}
     x & = & e^{i \alpha} \nonumber\\
     & & + \sin{\left(\alpha y \right)} \nonumber\\
-    & & - \cos{\left(\log{\left(y \right)} \right)}
+    & & - \cos{\left(\log{\left(y\right)} \right)}
     \end{IEEEeqnarray}
 
     Notes

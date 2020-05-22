@@ -256,7 +256,7 @@ def test_latex_basic():
 
 
     p = Symbol('p', positive=True)
-    assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
+    assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p\right)}"
 
 
 def test_latex_builtins():
@@ -938,7 +938,7 @@ def test_latex_subs():
 
 
 def test_latex_integrals():
-    assert latex(Integral(log(x), x)) == r"\int \log{\left(x \right)}\, dx"
+    assert latex(Integral(log(x), x)) == r"\int \log{\left(x\right)}\, dx"
     assert latex(Integral(x**2, (x, 0, 1))) == \
         r"\int\limits_{0}^{1} x^{2}\, dx"
     assert latex(Integral(x**2, (x, 10, 20))) == \
@@ -1388,15 +1388,21 @@ def test_latex_limits():
 
 
 def test_latex_log():
-    assert latex(log(x)) == r"\log{\left(x \right)}"
-    assert latex(log(x), ln_notation=True) == r"\ln{\left(x \right)}"
+    assert latex(log(x)) == r"\log{\left(x\right)}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left(x\right)}"
     assert latex(log(x) + log(y)) == \
-        r"\log{\left(x \right)} + \log{\left(y \right)}"
+        r"\log{\left(x\right)} + \log{\left(y\right)}"
     assert latex(log(x) + log(y), ln_notation=True) == \
-        r"\ln{\left(x \right)} + \ln{\left(y \right)}"
-    assert latex(pow(log(x), x)) == r"\log{\left(x \right)}^{x}"
+        r"\ln{\left(x\right)} + \ln{\left(y\right)}"
+    assert latex(pow(log(x), x)) == r"\log{\left(x\right)}^{x}"
     assert latex(pow(log(x), x), ln_notation=True) == \
-        r"\ln{\left(x \right)}^{x}"
+        r"\ln{\left(x\right)}^{x}"
+    assert latex(log(x, 10, evaluate=False), ln_notation=False) == \
+        latex(log(x, 10, evaluate=False), ln_notation=True) == \
+        r'\log_{10}{\left(x\right)}'
+    expr = log(x, 10, evaluate=False) + log(x)
+    assert latex(expr, ln_notation=True) == \
+        r'\ln{\left(x\right)} + \log_{10}{\left(x\right)}'
 
 
 def test_issue_3568():
@@ -1630,8 +1636,8 @@ def test_latex_mul_symbol():
 
 def test_latex_issue_4381():
     y = 4*4**log(2)
-    assert latex(y) == r'4 \cdot 4^{\log{\left(2 \right)}}'
-    assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left(2 \right)}}}'
+    assert latex(y) == r'4 \cdot 4^{\log{\left(2\right)}}'
+    assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left(2\right)}}}'
 
 
 def test_latex_issue_4576():
