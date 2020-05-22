@@ -723,24 +723,50 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq28) == sol28
     assert checksysodesol(eq28, sol28) == (True, [0, 0])
 
-    corner_cases = [(0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0),
-                    (0, 0, 1, 0), (0, 0, 0, 1), (1, 0, 0, I),
-                    (I, 0, 0, -I), (0, I, 0, 0), (0, I, I, 0)]
-    s1 = [[Eq(f(t), C1), Eq(g(t), C2)],
-        [Eq(f(t), C2*exp(t)), Eq(g(t), C1)],
-        [Eq(f(t), C1 + C2*t), Eq(g(t), C2)],
-        [Eq(f(t), C2), Eq(g(t), C1 + C2*t)],
-        [Eq(f(t), C1), Eq(g(t), C2*exp(t))],
-        [Eq(f(t), C1*exp(t)), Eq(g(t), C2*exp(I*t))],
-        [Eq(f(t), C2*exp(I*t)), Eq(g(t), C1*exp(-I*t))],
-        [Eq(f(t), I*(C1 + C2*t)), Eq(g(t), C2)],
-        [Eq(f(t), -C1*exp(-I*t) + C2*exp(I*t)), Eq(g(t), C1*exp(-I*t) + C2*exp(I*t))],
-        ]
-    for r, sol in zip(corner_cases, s1):
-        eq = [Eq(diff(f(t), t), r[0]*f(t) + r[1]*g(t)),
-              Eq(diff(g(t), t), r[2]*f(t) + r[3]*g(t))]
-        assert dsolve(eq) == sol
-        assert checksysodesol(eq, sol) == (True, [0, 0])
+    eq29 = [Eq(Derivative(f(t), t), 0), Eq(Derivative(g(t), t), 0)]
+    sol29 = [Eq(f(t), C1), Eq(g(t), C2)]
+    assert dsolve(eq29) == sol29
+    assert checksysodesol(eq29, sol29) == (True, [0, 0])
+
+    eq30 = [Eq(Derivative(f(t), t), f(t)), Eq(Derivative(g(t), t), 0)]
+    sol30 = [Eq(f(t), C2 * exp(t)), Eq(g(t), C1)]
+    assert dsolve(eq30) == sol30
+    assert checksysodesol(eq30, sol30) == (True, [0, 0])
+
+    eq31 = [Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), 0)]
+    sol31 = [Eq(f(t), C1 + C2 * t), Eq(g(t), C2)]
+    assert dsolve(eq31) == sol31
+    assert checksysodesol(eq31, sol31) == (True, [0, 0])
+
+    eq32 = [Eq(Derivative(f(t), t), 0), Eq(Derivative(g(t), t), f(t))]
+    sol32 = [Eq(f(t), C2), Eq(g(t), C1 + C2 * t)]
+    assert dsolve(eq32) == sol32
+    assert checksysodesol(eq32, sol32) == (True, [0, 0])
+
+    eq33 = [Eq(Derivative(f(t), t), 0), Eq(Derivative(g(t), t), g(t))]
+    sol33 = [Eq(f(t), C1), Eq(g(t), C2 * exp(t))]
+    assert dsolve(eq33) == sol33
+    assert checksysodesol(eq33, sol33) == (True, [0, 0])
+
+    eq34 = [Eq(Derivative(f(t), t), f(t)), Eq(Derivative(g(t), t), I * g(t))]
+    sol34 = [Eq(f(t), C1 * exp(t)), Eq(g(t), C2 * exp(I * t))]
+    assert dsolve(eq34) == sol34
+    assert checksysodesol(eq34, sol34) == (True, [0, 0])
+
+    eq35 = [Eq(Derivative(f(t), t), I * f(t)), Eq(Derivative(g(t), t), -I * g(t))]
+    sol35 = [Eq(f(t), C2 * exp(I * t)), Eq(g(t), C1 * exp(-I * t))]
+    assert dsolve(eq35) == sol35
+    assert checksysodesol(eq35, sol35) == (True, [0, 0])
+
+    eq36 = [Eq(Derivative(f(t), t), I * g(t)), Eq(Derivative(g(t), t), 0)]
+    sol36 = [Eq(f(t), I * (C1 + C2 * t)), Eq(g(t), C2)]
+    assert dsolve(eq36) == sol36
+    assert checksysodesol(eq36, sol36) == (True, [0, 0])
+
+    eq37 = [Eq(Derivative(f(t), t), I * g(t)), Eq(Derivative(g(t), t), I * f(t))]
+    sol37 = [Eq(f(t), -C1 * exp(-I * t) + C2 * exp(I * t)), Eq(g(t), C1 * exp(-I * t) + C2 * exp(I * t))]
+    assert dsolve(eq37) == sol37
+    assert checksysodesol(eq37, sol37) == (True, [0, 0])
 
 
 def test_sysode_linear_neq_order1_type2():
