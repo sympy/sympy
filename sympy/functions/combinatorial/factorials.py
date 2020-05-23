@@ -981,7 +981,7 @@ class binomial(CombinatorialFunction):
             if not res.has(ff) and res.is_number:
                 return _mexpand(res) if res else res
 
-    def __init__(self, n, k, binom = False, **hints):
+    def __init__(self, n, k, binom=False, **hints):
         self.binom = binom
         n, k = map(sympify, (n, k))
         self.n = n
@@ -1111,11 +1111,11 @@ class binomial(CombinatorialFunction):
             def bad(m):
                 if isinstance(m, mpf):
                     m = m._mpf_
-                    return m[1] !=1 and m[-1] == 1
+                    return m[1] != 1 and m[-1] == 1
                 elif isinstance(m, mpc):
                     m, n = m._mpc_
-                    return m[1] !=1 and m[-1] == 1 and \
-                        n[1] !=1 and n[-1] == 1
+                    return m[1] != 1 and m[-1] == 1 and \
+                        n[1] != 1 and n[-1] == 1
                 else:
                     return False
             if any(bad(a) for a in args):
