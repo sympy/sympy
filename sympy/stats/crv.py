@@ -149,16 +149,7 @@ class ContinuousDistribution(Basic):
         return self.pdf(*args)
 
 
-class SampleExternalContinuous:
-    """Base Class to sample values of Continuous random variables from
-    external libraries."""
-
-    def __new__(cls, dist, size, library):
-        _sample_class = _get_sample_class[library]
-        return _sample_class(dist, size)
-
-
-class SampleContinuousScipy(SampleExternalContinuous):
+class SampleContinuousScipy:
     """Returns the sample from scipy of the given distribution"""
     def __new__(cls, dist, size):
         return cls._sample_scipy(dist, size)
@@ -177,7 +168,7 @@ class SampleContinuousScipy(SampleExternalContinuous):
                     b=float(dist.set._sup), name='scipy_pdf')
         return scipy_rv.rvs(size=size)
 
-class SampleContinuousNumpy(SampleExternalContinuous):
+class SampleContinuousNumpy:
     """Returns the sample from numpy of the given distribution"""
 
     def __new__(cls, dist, size):
@@ -213,7 +204,7 @@ class SampleContinuousNumpy(SampleExternalContinuous):
 
         return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
 
-class SampleContinuousPymc(SampleExternalContinuous):
+class SampleContinuousPymc:
     """Returns the sample from pymc3 of the given distribution"""
 
     def __new__(cls, dist, size):
@@ -255,7 +246,7 @@ class SampleContinuousPymc(SampleExternalContinuous):
             cls.pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
-_get_sample_class = {
+_get_sample_class_crv = {
     'scipy': SampleContinuousScipy,
     'pymc3': SampleContinuousPymc,
     'numpy': SampleContinuousNumpy
@@ -298,7 +289,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = SampleExternalContinuous(self, size, library)
+        samps = _get_sample_class_crv[library](self, size)
 
         if samps is not None:
             return samps

@@ -26,15 +26,7 @@ class DiscreteDistribution(Basic):
         return self.pdf(*args)
 
 
-class SampleExternalDiscrete:
-    """Base Class to sample values of Discrete random variables from
-    external libraries."""
-
-    def __new__(cls, dist, size, library):
-        _sample_class = _get_sample_class[library]
-        return _sample_class(dist, size)
-
-class SampleDiscreteScipy(SampleExternalDiscrete):
+class SampleDiscreteScipy:
     """Returns the sample from scipy of the given distribution"""
     def __new__(cls, dist, size):
         return cls._sample_scipy(dist, size)
@@ -78,7 +70,7 @@ class SampleDiscreteScipy(SampleExternalDiscrete):
 
         return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
 
-class SampleDiscreteNumpy(SampleExternalDiscrete):
+class SampleDiscreteNumpy:
     """Returns the sample from numpy of the given distribution"""
 
     def __new__(cls, dist, size):
@@ -104,7 +96,7 @@ class SampleDiscreteNumpy(SampleExternalDiscrete):
 
         return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
 
-class SampleDiscretePymc(SampleExternalDiscrete):
+class SampleDiscretePymc:
     """Returns the sample from pymc3 of the given distribution"""
 
     def __new__(cls, dist, size):
@@ -131,7 +123,7 @@ class SampleDiscretePymc(SampleExternalDiscrete):
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 
-_get_sample_class = {
+_get_sample_class_drv = {
     'scipy': SampleDiscreteScipy,
     'pymc3': SampleDiscretePymc,
     'numpy': SampleDiscreteNumpy
@@ -169,7 +161,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = SampleExternalDiscrete(self, size, library)
+        samps = _get_sample_class_drv[library](self, size)
 
         if samps is not None:
             return samps
