@@ -1,6 +1,7 @@
 from sympy import (
-    Basic, Matrix, latex, ShapeError, Mul, cancel, together,
-    ImmutableMatrix, MutableMatrix, MutableDenseMatrix
+    Basic, Matrix, latex, ShapeError, Mul,
+    together, evaluate, expand, cancel,
+    ImmutableMatrix, MutableMatrix, MutableDenseMatrix,
 )
 from sympy.polys.polytools import degree
 
@@ -87,6 +88,7 @@ class SISOTransferFunction(Mul):
                 format(type(other)))
         res = cancel(self * other).as_numer_denom()
         num, den = res[0], res[1]
+
         return SISOTransferFunction(num, den)
 
     def parallel(self, other):
@@ -96,6 +98,7 @@ class SISOTransferFunction(Mul):
         # should `cancel` be wrapped around `together` or something else?
         res = together(self + other).as_numer_denom()
         num, den = res[0], res[1]
+
         return SISOTransferFunction(num, den)
 
     def neg(self):
