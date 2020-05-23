@@ -1,5 +1,5 @@
 from sympy import (
-    Basic, Matrix, latex, ShapeError, Mul,
+    Basic, Matrix, latex, ShapeError, Mul, cancel, together,
     ImmutableMatrix, MutableMatrix, MutableDenseMatrix
 )
 from sympy.polys.polytools import degree
@@ -72,3 +72,39 @@ class TransferFunction(Basic):
 
     def _repr_latex_(self):
         return '$' + latex(self.G) + '$'
+
+
+class SISOTransferFunction(Mul):
+    def __new__(cls, num, den):
+        obj = Mul.__new__(cls, num, 1/den)
+        obj.num = num
+        obj.den = den
+        return obj
+
+    def series(self, other):
+        if not isinstance(other, SISOTransferFunction):
+            raise TypeError("Argument must be of type SISOTransferFunction, not {}.".
+                format(type(other)))
+        res = cancel(self * other).as_numer_denom()
+        num, den = res[0], res[1]
+        return SISOTransferFunction(num, den)
+
+    def parallel(self, other):
+        if not isinstance(other, SISOTransferFunction):
+            raise TypeError("Argument must be of type SISOTransferFunction, not {}.".
+                format(type(other)))
+        # should `cancel` be wrapped around `together` or something else?
+        res = together(self + other).as_numer_denom()
+        num, den = res[0], res[1]
+        return SISOTransferFunction(num, den)
+
+    def neg(self):
+        return SISOTransferFunction(-self.num, self.den)
+
+    @property
+    def is_proper(self):
+        return degree(self.num) <= degree(self.den)
+
+    @property
+    def is_strictly_proper(self):
+        return degree(self.num) < degree(self.den)
