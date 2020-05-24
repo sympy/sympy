@@ -1004,7 +1004,7 @@ def _rvindexed_subs(process, expr, condition=None):
 
 def _expectation_stoch(process, expr, condition=None, evaluate=True, **kwargs):
     r"""
-    Computes expectation.
+    Internal method for computing expectation of indexed RV.
 
     Parameters
     ==========
@@ -1040,7 +1040,7 @@ def _expectation_stoch(process, expr, condition=None, evaluate=True, **kwargs):
 
 def _probability_stoch(process, condition, given_condition=None, evaluate=True, **kwargs):
     r"""
-    Computes probability.
+    Internal method for computing probability of indexed RV
 
     Parameters
     ==========
@@ -1093,7 +1093,7 @@ def _probability_stoch(process, condition, given_condition=None, evaluate=True, 
     else:
         return result
 
-def given_parser(expr, condition):
+def get_timerv_swaps(expr, condition):
     r"""
     Finds the appropriate interval for each time stamp in expr by parsing
     the given condition and returns intervals for each timestamp and
@@ -1111,19 +1111,19 @@ def given_parser(expr, condition):
     Examples
     ========
 
-    >>> from sympy.stats.stochastic_process_types import given_parser, PoissonProcess
+    >>> from sympy.stats.stochastic_process_types import get_timerv_swaps, PoissonProcess
     >>> from sympy import symbols
     >>> x, t, d = symbols('x t d', positive=True)
     >>> X = PoissonProcess("X", 3)
-    >>> given_parser(x*X(t), (t < 1))
+    >>> get_timerv_swaps(x*X(t), (t < 1))
     ([Interval.Ropen(0, 1)], {X(t): X(1)})
-    >>> given_parser((X(t)**2 + X(d)**2), (t >= 0) & (t < 1) & (d >= 1) & (d < 4)) # doctest: +SKIP
+    >>> get_timerv_swaps((X(t)**2 + X(d)**2), (t >= 0) & (t < 1) & (d >= 1) & (d < 4)) # doctest: +SKIP
     ([Interval.Ropen(1, 4), Interval.Ropen(0, 1)], {X(d): X(3), X(t): X(1)})
 
     Returns
     =======
 
-    intervals: List
+    intervals: list
         List of Intervals/FiniteSet on which each time stamp is defined
     rv_swap: dict
         Dictionary mapping variable time Random Indexed Symbol to constant time
@@ -1158,6 +1158,60 @@ def given_parser(expr, condition):
     return intervals, rv_swap
 
 class PoissonProcess(ContinuousTimeStochasticProcess):
+    r"""
+    The Poisson process is a counting process. It is usually used in scenarios
+    where we are counting the occurrences of certain events that appear
+    to happen at a certain rate, but completely at random.
+
+    Parameters
+    ==========
+
+    sym: Symbol/str
+    lamda: Positive number
+        Rate of the process, ``lamda > 0``
+
+    Examples
+    ========
+
+    >>> from sympy.stats import PoissonProcess, P, E
+    >>> from sympy import symbols, Eq, Ne
+    >>> X = PoissonProcess("X", lamda=3)
+    >>> X.state_space
+    Interval(0, oo)
+    >>> X.lamda
+    3
+    >>> t1, t2 = symbols('t1 t2', positive=True)
+    >>> P(X(t1) < 4)
+    (9*t1**3/2 + 9*t1**2/2 + 3*t1 + 1)*exp(-3*t1)
+    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), (t1 < 4) & (t1 >= 2))
+    1 - 36*exp(-6)
+    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), (t1 > 0) & (t1 <= 2) & (t2 > 2) & (t2 <= 4))
+    648*exp(-12)
+    >>> E(X(t1))
+    3*t1
+    >>> E(X(t1)**2 + 2*X(t2), (t1 > 0) & (t1 <= 1) & (t2 > 1) & (t2 <= 2))
+    18
+
+    Merging two Poisson Processes
+
+    >>> Y = PoissonProcess("Y", lamda=4)
+    >>> Z = X + Y
+    >>> Z.lamda
+    7
+
+    Splitting a Poisson Process into two independent Poisson Processes
+
+    >>> N, M = Z.split(l1=2, l2=5)
+    >>> N.lamda, M.lamda
+    (2, 5)
+
+    References
+    ==========
+
+    .. [1] https://www.probabilitycourse.com/chapter11
+    .. [2] https://en.wikipedia.org/wiki/Poisson_point_process
+
+    """
 
     index_set = _set_converter(Interval(0, oo))
 
@@ -1185,9 +1239,41 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
     def density(self, x):
         return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
 
+    def __add__(self, other):
+        return self.merge(other)
+
+    def merge(self, other):
+        if not isinstance(other, PoissonProcess):
+            raise ValueError("Only instances of Poisson Process can be merged")
+        return PoissonProcess(Dummy("z"), self.lamda + other.lamda)
+
+    def split(self, l1, l2):
+        if _sympify(l1 + l2) != self.lamda:
+            raise ValueError("Sum of l1 and l2 should be %s" % str(self.lamda))
+        return PoissonProcess(Dummy("l1"), l1), PoissonProcess(Dummy("l2"), l2)
+
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
+        r"""
+        Computes expectation
+
+        Parameters
+        ==========
+
+        expr: RandomIndexedSymbol, Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        condition: Relational, Boolean
+            The given conditions under which computations should be done, i.e,
+            the intervals on which each variable time stamp in expr is defined
+
+        Returns
+        =======
+
+        Expectation of the given expr
+
+        """
         if condition is not None:
-            intervals, rv_swap = given_parser(expr, condition)
+            intervals, rv_swap = get_timerv_swaps(expr, condition)
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)): # they are independent
                 if expr.is_Add:
@@ -1199,10 +1285,29 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
         return _expectation_stoch('Poisson', expr, evaluate=evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        r"""
+        Computes probability
+
+        Parameters
+        ==========
+
+        condition: Relational
+            Condition for which probability has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        given_condition: Relational, Boolean
+            The given conditions under which computations should be done, i.e,
+            the intervals on which each variable time stamp in expr is defined
+
+        Returns
+        =======
+
+        Probability of the condition
+
+        """
         if isinstance(condition, Not):
             return S.One - self.probability(condition.args[0], given_condition, evaluate, **kwargs)
         if given_condition is not None:
-            intervals, rv_swap = given_parser(condition, given_condition)
+            intervals, rv_swap = get_timerv_swaps(condition, given_condition)
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)): # they are independent
                 if isinstance(condition, And):

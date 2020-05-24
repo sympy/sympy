@@ -253,3 +253,11 @@ def test_PoissonProcess():
     assert E((X(t) + X(d))*(X(t) - X(d)), (t >= 0) & (t < 1) & (d >= 1) & (d < 2)) == 0
     assert E(X(2) + x*E(X(5))) == 15*x + 6
     assert E(x*X(t) + y, Eq(t, 1)) == 3*x + y
+    Y = PoissonProcess("Y", 6)
+    Z = X + Y
+    assert Z.lamda == X.lamda + Y.lamda == 9
+    raises(ValueError, lambda: X + 5)
+    N, M = Z.split(4, 5)
+    assert N.lamda == 4
+    assert M.lamda == 5
+    raises(ValueError, lambda: Z.split(3, 2))
