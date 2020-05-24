@@ -3201,11 +3201,15 @@ class Expr(Basic, EvalfMixin):
         n = 0
         series = self._eval_nseries(x, n=n, logx=logx)
         if not series.is_Order:
-            if series.is_Add:
-                yield series.removeO()
+            newseries = series.cancel()
+            if not newseries.is_Order:
+                if series.is_Add:
+                    yield series.removeO()
+                else:
+                    yield series
+                return
             else:
-                yield series
-            return
+                series = newseries
 
         while series.is_Order:
             n += 1
