@@ -324,7 +324,7 @@ def test_separatevars_advanced_factor():
 
 
 def test_hypersimp():
-    n, k = symbols('n,k', integer=True, nonnegative=True)
+    n, k = symbols('n, k', integer=True)
 
     assert hypersimp(factorial(k), k) == k + 1
     assert hypersimp(factorial(k**2), k) is None

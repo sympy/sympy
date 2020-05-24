@@ -431,9 +431,9 @@ def test_binomial():
 
     # if not (i == j == 0) check Identity
     i, j = symbols('i', positive=True, integer=True), symbols('i', negative=True, integer=True)
-    assert binomial(i, j).equals(binomial(i - 1, j - 1) + binomial(i - 1, j))
+    assert binomial(i, j, True).equals(binomial(i - 1, j - 1, True) + binomial(i - 1, j, True))
     i, j = j, i
-    assert binomial(i, j).equals(binomial(i - 1, j - 1) + binomial(i - 1, j))
+    assert binomial(i, j, True).equals(binomial(i - 1, j - 1, True) + binomial(i - 1, j, True))
 
     i, j = symbols('i, j', positive=True, integer=True)
 
@@ -512,8 +512,8 @@ def test_binomial():
     assert binomial(a, b).is_nonnegative is True
     assert binomial(kne, kne - 1).is_zero is False
     assert binomial(kne, kne - 2).is_nonnegative is True
-    assert binomial(kne, kne - 3).is_nonnegative is False
-    assert binomial(-2*kp, -4*kp - 1).is_nonnegative is False
+    assert binomial(kne, kne - 3, True).is_nonnegative is False
+    assert binomial(-2*kp, -4*kp - 1, True).is_nonnegative is False
     assert binomial(-2*kp, -4*kp - 2).is_nonnegative is True
     assert binomial(-3*kp, -2*kp - 1).is_nonnegative is True
     assert binomial(-1, 2, evaluate=False).is_nonnegative is True
@@ -528,7 +528,7 @@ def test_binomial():
     assert binomial(-7, -5) == 0
     assert binomial(-23, -12) == 0
     assert binomial(Rational(13, 2), -10) == 0
-    assert binomial(-49, -51) == 1225
+    assert binomial(-49, -51, True) == 1225
 
     assert binomial(19, Rational(-7, 2)) == S(-68719476736)/(911337863661225*pi)
     assert binomial(0, Rational(3, 2)) == S(-2)/(3*pi)
@@ -707,17 +707,11 @@ def test_binomial_rewrite():
     assert binomial(n, k).rewrite(gamma) == gamma(
         n + 1)/(gamma(k + 1)*gamma(n - k + 1))
     assert binomial(n, k).rewrite(ff) == ff(n, k) / factorial(k)
-    assert binomial(n, x).rewrite(ff) == binomial(n, x)
+    assert binomial(n, x).rewrite(ff) == ff(n, x)/factorial(x)
+    assert binomial(n, x, True).rewrite(ff) == binomial(n, x, True)
     assert binomial(n, k).rewrite('tractable') == exp(
         -loggamma(k + 1))*exp(loggamma(n + 1))*exp(-loggamma(-k + n + 1))
-    assert binomial(n, k).rewrite(factorial) == factorial(n)/(
-        factorial(k)*factorial(n - k))
-    assert binomial(n, k).rewrite(gamma) == gamma(
-        n + 1)/(gamma(k + 1)*gamma(n - k + 1))
-    assert binomial(n, k).rewrite(ff) == ff(n, k) / factorial(k)
-    assert binomial(n, x).rewrite(ff) == binomial(n, x)
-    assert binomial(n, k).rewrite('tractable') == exp(
-        -loggamma(k + 1))*exp(loggamma(n + 1))*exp(-loggamma(-k + n + 1))
+
 
     y, i = i, i_0  # tests igen, too
     h = S.Half
@@ -732,7 +726,7 @@ def test_binomial_rewrite():
             assert v[ix + 2] == binomial(i, j + h), [v[ix + 2], binomial(i, j + h, evaluate=False)]
             assert v[ix + 3] == binomial(i + h, j + h), [v[ix + 3], binomial(i + h, j + h, evaluate=False)]
             ix += 4
-    rw = binomial(x, y).rewrite(Piecewise)
+    rw = binomial(x, y, True).rewrite(Piecewise)
     # make sure that special cases produce Float
     assert rw.xreplace({x: 2, y: 1.}).is_Float
     assert rw.xreplace({x: 3., y: 2}).is_Float
@@ -741,12 +735,13 @@ def test_binomial_rewrite():
             for j in range(i - 1, i + 2):
                 for hi, hj in cartes((0, S.Half), (0, S.Half)):
                     x, y = i + hi, j + hj
-                    u = binomial(x, y, evaluate=False)
+                    u = binomial(x, y, True, evaluate=False)
                     if F == 'expand':
                         rw = expand_func(u)
                     else:
                         rw = u.rewrite(F)
-                    assert Eq(rw.n(), binomial(x, y).n()), (x, y, F)
+                    v = binomial(x, y, True)
+                    assert Eq(rw.n(), v.n()), (rw, v, x, y, F)
 
 
 def test_multinomial():
@@ -772,9 +767,9 @@ def test_multinomial():
     assert multinomial(3, S.Exp1, pi).args == (3, S.Exp1, pi)
     assert multinomial(pi, S.Exp1, 3).round() == 1442
 
-    assert multinomial(k, n + k) == binomial(2*k + n, k)
+    assert multinomial(k, n + k) == binomial(2*k + n, k, True)
     assert multinomial(k, n + k).rewrite(binomial
-        ) == binomial(2*k + n, k)
+        ) == binomial(2*k + n, k, True)
     m = multinomial(k, n - k)
     assert m.rewrite(binomial) == m
 
@@ -782,22 +777,22 @@ def test_multinomial():
     assert multinomial(nt, k).is_integer is None
     assert multinomial(sqrt(11)*I, 3) == -10
 
-    assert multinomial(n, -2) == binomial(n - 2, -2)
+    assert multinomial(n, -2) == binomial(n - 2, -2, True)
 
     assert multinomial(n, -pi).rewrite(gamma) == gamma(
         n - pi + 1)/(gamma(1 - pi)*gamma(n + 1)), multinomial(n, -pi)
     assert expand_func(multinomial(n, 2)) == (n + 1)*(n + 2)/2
     assert expand_func(multinomial(n, 2, 3)) == (n + 1)*(
         n + 2)*(n + 3)*(n + 4)*(n + 5)/12
-    assert multinomial(n, n + 3) == binomial(2*n + 3, n)
+    assert multinomial(n, n + 3) == binomial(2*n + 3, n, True)
 
     assert multinomial(n, 3).expand(func=True) ==  n**3/6 + n**2 + 11*n/6 + 1
 
-    assert multinomial(kp, kp + 1) == binomial(2*kp + 1, kp)
+    assert multinomial(kp, kp + 1) == binomial(2*kp + 1, kp, True)
 
     assert multinomial(n, z) == 1
     assert multinomial(z) == 1
-    assert multinomial(z, n, k) == binomial(k + n, k)
+    assert multinomial(z, n, k) == binomial(k + n, k, True)
     assert unchanged(multinomial, z, z, n, k, k) is False
     assert multinomial(*[x]*5) == factorial(5*x)/factorial(x)**5
 
@@ -808,7 +803,7 @@ def test_multinomial():
 def test_multinomial_rewrite():
     n, k = symbols('n k', integer=True, nonnegative=True)
     assert multinomial(n, k, k).rewrite(binomial) == binomial(
-        k + n, k)*binomial(2*k + n, k)
+        k + n, k, True)*binomial(2*k + n, k, True)
     assert multinomial(n, k, k).rewrite(factorial) == factorial(
         2*k + n)/(factorial(k)**2*factorial(n))
     assert multinomial(n, k, k).rewrite(gamma) == gamma(
