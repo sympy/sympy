@@ -458,7 +458,7 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
-        return str(self.ket) + str(self.bra)
+        return printer._print(self.ket) + printer._print(self.bra)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,
