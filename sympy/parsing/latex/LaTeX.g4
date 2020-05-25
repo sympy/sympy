@@ -12,6 +12,11 @@
   `sympy/parsing/latex/_antlr/*.py`.
 */
 
+/*
+References:
+    https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+ */
+
 grammar LaTeX;
 
 options {
@@ -75,10 +80,19 @@ CMD_TBINOM: '\\tbinom';
 
 CMD_MATHIT: '\\mathit';
 
+/*
+ subscript
+ */
 UNDERSCORE: '_';
+/*
+ superscript
+ */
 CARET: '^';
 COLON: ':';
 
+/* 
+ white space character
+ */
 fragment WS_CHAR: [ \t\r\n];
 DIFFERENTIAL: 'd' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+);
 
@@ -96,7 +110,17 @@ GTE: '\\geq';
 
 BANG: '!';
 
-SYMBOL: '\\' [a-zA-Z]+;
+/*
+ variable or constant
+ examples:
+ \\gamma
+ \\Gamma
+ \\pi
+ \\Pi
+ */
+SYMBOL: '\\' [a-zA-Z]+
+	|'\\' ([a-zA-Z]+ | [ :;])
+	|  [a-zA-Z]+'\\'[,:;];
 
 math: relation;
 
@@ -147,6 +171,11 @@ eval_at_sup:
     (expr | equality)
     R_BRACE;
 
+/*
+ "raise to the power"
+ example:
+ x^{2}
+ */
 exp:
     exp CARET (atom | L_BRACE expr R_BRACE) subexpr?
     | comp;
@@ -175,6 +204,11 @@ group:
     | L_BRACKET expr R_BRACKET
     | L_BRACE expr R_BRACE;
 
+/*
+ "absolute value"
+ example:
+ |x|
+ */
 abs_group: BAR expr BAR;
 
 atom: (LETTER | SYMBOL) subexpr? | NUMBER | DIFFERENTIAL | mathit;
@@ -182,6 +216,10 @@ atom: (LETTER | SYMBOL) subexpr? | NUMBER | DIFFERENTIAL | mathit;
 mathit: CMD_MATHIT L_BRACE mathit_text R_BRACE;
 mathit_text: LETTER*;
 
+/*
+ example:
+ \frac{1}{2}
+ */
 frac:
     CMD_FRAC L_BRACE
     upper=expr
