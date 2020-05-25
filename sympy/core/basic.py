@@ -7,8 +7,7 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered, Mapping
 from .singleton import S
-from ..printing.str import StrPrintable
-from ..printing.latex import LatexPrintable
+from ._print_helpers import StrPrintable, LatexPrintable
 
 from inspect import getmro
 
