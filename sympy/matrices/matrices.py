@@ -1,4 +1,3 @@
-from typing import Any
 import mpmath as mp
 
 from sympy.core.add import Add

@@ -1,7 +1,5 @@
 from __future__ import print_function, division
 
-from typing import Any
-
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
@@ -12,7 +10,7 @@ from sympy.printing.latex import LatexPrintable
 
 import itertools
 
-class NDimArray(object):
+class NDimArray(LatexPrintable):
     """
 
     Examples

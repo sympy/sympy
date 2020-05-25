@@ -4,6 +4,8 @@ Base classes to provide str and repr hooks.
 These are exposed publically in the `printing.str` and `printing.latex` modules.
 However, they cannot be defined there without causing circular imports
 """
+from typing import Any
+
 
 class StrPrintable:
     """
@@ -49,4 +51,4 @@ class LatexPrintable:
         s = latex(self, mode='plain')
         return "$\\displaystyle %s$" % s
 
-    _repr_latex_orig = _repr_latex_
+    _repr_latex_orig = _repr_latex_  # type: Any
