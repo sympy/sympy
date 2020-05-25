@@ -63,7 +63,11 @@ GOOD_PAIRS = [
     ("-3.14", _Mul(-1, 3.14)),
     ("(-7.13)(1.5)", _Mul(_Mul(-1, 7.13), 1.5)),
     ("x", x),
-    ("2x", 2*x),
+    ("2x", _Mul(2,x)),
+    ("2 x", _Mul(2, x)),
+    ("2\\ x", _Mul(2, x)), # space between 2 and x 
+    ("2\\, x", _Mul(2, x)), # "thinspace"; mathmode and text mode
+    ("2\\; x", _Mul(2, x)), # "thickspace"; mathmode only
     ("x^2", x**2),
     ("x^{3 + 1}", x**_Add(3, 1)),
     ("-c", -c),
@@ -187,7 +191,12 @@ GOOD_PAIRS = [
 def test_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
+        try:
+            assert parse_latex(latex_str) == sympy_expr
+        except AssertionError:
+            print(latex_str)
+            print(sympy_expr)
+            raise # https://docs.python.org/3/tutorial/errors.html#raising-exceptions
 
 # At time of migration from latex2sympy, should work but doesn't
 FAILING_PAIRS = [
