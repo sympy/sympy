@@ -149,13 +149,12 @@ class TensorProduct(Expr):
         return TensorProduct(*terms).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
-        from sympy.printing.str import sstr
         length = len(self.args)
         s = ''
         for i in range(length):
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + '('
-            s = s + sstr(self.args[i])
+            s = s + printer._print(self.args[i])
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + ')'
             if i != length - 1:
