@@ -81,7 +81,7 @@ def test_moment_generating_function():
 def test_sample_iter():
 
     X = Normal('X',0,1)
-    Y = DiscreteUniform('Y', [1,2,7])
+    Y = DiscreteUniform('Y', [1, 2, 7])
     Z = Poisson('Z', 2)
 
     scipy = import_module('scipy')
@@ -193,7 +193,7 @@ def test_Sample():
         skip('Scipy is not installed. Abort tests')
     with ignore_warnings(UserWarning):
         assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert isinstance(next(sample(X + Y))[0], float)
+        assert isinstance(next(sample(X + Y)), float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number

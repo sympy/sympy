@@ -141,7 +141,7 @@ def test_sample_discrete():
     if not scipy:
         skip('Scipy not installed. Abort tests')
     with ignore_warnings(UserWarning):
-        assert next(sample(X))[0] in X.pspace.domain.set
+        assert next(sample(X)) in X.pspace.domain.set
         samps = next(sample(X, size=2)) # This takes long time if ran without scipy
         for samp in samps:
             assert samp in X.pspace.domain.set

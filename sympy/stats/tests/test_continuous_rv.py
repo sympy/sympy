@@ -328,9 +328,9 @@ def test_sample_continuous():
     if not scipy:
         skip('Scipy is not installed. Abort tests')
     with ignore_warnings(UserWarning):
-        assert next(sample(Z))[0] in Z.pspace.domain.set
+        assert next(sample(Z)) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
-    assert sym == Z and val[0] in Interval(0, oo)
+    assert sym == Z and val in Interval(0, oo)
 
 
 def test_ContinuousRV():
@@ -759,7 +759,7 @@ def test_sampling_gamma_inverse():
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
     with ignore_warnings(UserWarning):
-        assert next(sample(X))[0] in X.pspace.domain.set
+        assert next(sample(X)) in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -888,7 +888,7 @@ def test_lognormal():
     with ignore_warnings(UserWarning):
         for i in range(3):
             X = LogNormal('x', i, 1)
-            assert next(sample(X))[0] in X.pspace.domain.set
+            assert next(sample(X)) in X.pspace.domain.set
 
     size = 5
     with ignore_warnings(UserWarning):
@@ -1015,7 +1015,7 @@ def test_sampling_gaussian_inverse():
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
     with ignore_warnings(UserWarning):
-        assert next(sample(X, library='scipy'))[0] in X.pspace.domain.set
+        assert next(sample(X, library='scipy')) in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)
@@ -1319,7 +1319,7 @@ def test_prefab_sampling():
     with ignore_warnings(UserWarning):
         for var in variables:
             for i in range(niter):
-                assert next(sample(var))[0] in var.pspace.domain.set
+                assert next(sample(var)) in var.pspace.domain.set
                 samps = next(sample(var, size=size))
                 for samp in samps:
                     assert samp in var.pspace.domain.set
