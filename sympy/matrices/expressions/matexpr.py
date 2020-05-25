@@ -643,7 +643,7 @@ def get_hook(cls):
 
         if mat_class == MatAdd:
             return mat_class(*matrices, **options).doit(deep=False)
-        return mat_class(cls._from_args(nonmatrices), *matrices, **options).doit(deep=False)
+        return mat_class(cls(*nonmatrices), *matrices, **options).doit(deep=False)
     return _hook
 
 @Add.dispatcher.register(MatrixExpr)

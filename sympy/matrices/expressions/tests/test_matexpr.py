@@ -1,5 +1,5 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
-                   expand, zeros, gcd_terms, Eq, Symbol)
+                   expand, zeros, gcd_terms, Eq, Symbol, Order)
 
 from sympy.core import S, symbols, Add, Mul, SympifyError, Rational
 from sympy.core.expr import unchanged
@@ -563,6 +563,8 @@ def test_Mul_hook():
     B = MatrixSymbol("B", 3,3)
     with raises(ShapeError):
         Mul(A,B, check=True)
+
+    assert Mul(Order(x), A, A**-1, x) == MatMul(Order(x**2), Identity(2))
 
 def test_Add_hook():
     # Some of these are nonsensical, but we do not raise errors for Add
