@@ -7,6 +7,7 @@ from io import BytesIO
 from sympy import latex as default_latex
 from sympy import preview
 from sympy.utilities.misc import debug
+from sympy.printing.latex import LatexPrintable
 
 
 def _init_python_printing(stringify_func, **settings):
@@ -134,15 +135,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return None
 
 
-    from sympy import Basic
-    from sympy.matrices import MatrixBase
-    from sympy.physics.vector import Vector, Dyadic
-    from sympy.tensor.array import NDimArray
-
-    # These should all have _repr_latex_ and _repr_latex_orig. If you update
-    # this also update printable_types below.
-    sympy_latex_types = (Basic, MatrixBase, Vector, Dyadic, NDimArray)
-
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
@@ -166,7 +158,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            elif isinstance(o, sympy_latex_types):
+            elif isinstance(o, LatexPrintable):
                 # types known to the printer
                 return True
             elif hasattr(o, '_latex'):
@@ -252,13 +244,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     import IPython
     if V(IPython.__version__) >= '0.11':
-        from sympy.core.basic import Basic
-        from sympy.matrices.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        from sympy.tensor.array import NDimArray
 
-        printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic, NDimArray, int]
+        printable_types = [LatexPrintable, float, tuple, list, set,
+                frozenset, dict, int]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 

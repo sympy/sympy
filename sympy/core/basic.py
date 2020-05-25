@@ -7,7 +7,8 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered, Mapping
 from .singleton import S
-from ..printing.defaults import DefaultPrinting
+from ..printing.str import StrPrintable
+from ..printing.latex import LatexPrintable
 
 from inspect import getmro
 
@@ -25,7 +26,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(DefaultPrinting, metaclass=ManagedProperties):
+class Basic(StrPrintable, LatexPrintable, metaclass=ManagedProperties):
     """
     Base class for all SymPy objects.
 
@@ -411,25 +412,6 @@ class Basic(DefaultPrinting, metaclass=ManagedProperties):
         tmp = dummy.__class__()
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
