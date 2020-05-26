@@ -80,6 +80,7 @@ class Set(Basic):
         try:
             infimum = expr.inf
             assert infimum.is_comparable
+            infimum = infimum.evalf()  # issue #18505
         except (NotImplementedError,
                 AttributeError, AssertionError, ValueError):
             infimum = S.Infinity
