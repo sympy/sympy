@@ -1437,6 +1437,11 @@ def test_issue_11174():
     assert Intersection(FiniteSet(x), S.Reals) == soln
 
 
+def test_issue_18505():
+    assert ImageSet(Lambda(n, sqrt(pi*n/2 - 1 + pi/2)), S.Integers).contains(0) == \
+            Contains(0, ImageSet(Lambda(n, sqrt(pi*n/2 - 1 + pi/2)), S.Integers))
+
+
 def test_finite_set_intersection():
     # The following should not produce recursion errors
     # Note: some of these are not completely correct. See
