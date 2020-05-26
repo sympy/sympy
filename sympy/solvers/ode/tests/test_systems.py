@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S, I,
-                   Eq, sqrt, simplify)
+                   Eq, sqrt, simplify, collect)
 from sympy.functions import exp, cos, sin, log
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
@@ -923,12 +923,41 @@ def test_linear_3eq_order1_type4_slow():
 @XFAIL
 def test_linear_neq_order1_type2_fail():
     i, r1, c1, r2, c2, t = symbols('i, r1, c1, r2, c2, t')
+    e1s, e2s, e3s, e4s, e5s = symbols('e1s e2s e3s e4s e5s')
     x1 = Function('x1')
     x2 = Function('x2')
     eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
     eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
     eq = [eq1, eq2]
     sol = dsolve(eq)
+    term1 = -t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1)
+    term3 = sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2)
+    term4 = 2*c1*c2*r1*r2
+    term6 = sqrt(e1s)*t/e2s + e3s*t
+    term7 = -sqrt(e1s)*t/e2s + e3s*t
+    sol_ = [Eq(s.lhs, Subs(s.rhs.subs({term3 ** 2: e1s, term4: e2s, term1: e3s * t}).subs({term6: e4s, term7: e5s}),
+                           (e1s, e2s, e3s, e4s, e5s), (term3 ** 2, term4, collect(term1, t)/t, term6, term7)))
+            for s in sol]
+    sol = [Eq(x1(t), Subs(-2*C1*c2*r2*exp(e5s)/(c1*r1 + c1*r2 - c2*r2 + sqrt(e1s)) -
+                          2*C2*c2*r2*exp(e4s)/(c1*r1 + c1*r2 - c2*r2 - sqrt(e1s)) - 2*c2*r2*Piecewise((-e2s*i*\
+                            r2*exp(-e5s)/(c1*sqrt(e1s)*r1 + c1*sqrt(e1s)*r2 + c2*sqrt(e1s)*r2 + e1s),
+                            Ne(c1*sqrt(e1s)*r1 + c1*sqrt(e1s)*r2 + c2*sqrt(e1s)*r2 + e1s, 0)),
+                            (-i*r2*t/sqrt(e1s), True))*exp(e5s)/(c1*r1 + c1*r2 - c2*r2 + sqrt(e1s)) -
+                            2*c2*r2*Piecewise((-e2s*i*r2*exp(-e4s)/(-c1*sqrt(e1s)*r1 - c1*sqrt(e1s)*r2 -
+                            c2*sqrt(e1s)*r2 + e1s), Ne(c1*sqrt(e1s)*r1 + c1*sqrt(e1s)*r2 + c2*sqrt(e1s)*r2 - e1s, 0)),
+                            (i*r2*t/sqrt(e1s), True))*exp(e4s)/(c1*r1 + c1*r2 - c2*r2 - sqrt(e1s)),
+                            (e1s, e2s, e3s, e4s, e5s), (c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 +
+                            2*c1*c2*r2**2 + c2**2*r2**2, 2*c1*c2*r1*r2, -1/(2*c2*r2) - 1/(2*c2*r1) - 1/(2*c1*r1),
+                            sqrt(e1s)*t/e2s + e3s*t, -sqrt(e1s)*t/e2s + e3s*t))),
+            Eq(x2(t), Subs(C1*exp(e5s) + C2*exp(e4s) + Piecewise((-e2s*i*r2*exp(-e4s)/(-c1*sqrt(e1s)*r1 - c1*sqrt(e1s)*r2
+                            - c2*sqrt(e1s)*r2 + e1s), Ne(c1*sqrt(e1s)*r1 + c1*sqrt(e1s)*r2 + c2*sqrt(e1s)*r2 - e1s, 0)),
+                            (i*r2*t/sqrt(e1s), True))*exp(e4s) + Piecewise((-e2s*i*r2*exp(-e5s)/(c1*sqrt(e1s)*r1 +
+                            c1*sqrt(e1s)*r2 + c2*sqrt(e1s)*r2 + e1s), Ne(c1*sqrt(e1s)*r1 + c1*sqrt(e1s)*r2 +
+                            c2*sqrt(e1s)*r2 + e1s, 0)), (-i*r2*t/sqrt(e1s), True))*exp(e5s), (e1s, e2s, e3s, e4s, e5s),
+                            (c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2,
+                            2*c1*c2*r1*r2, -1/(2*c2*r2) - 1/(2*c2*r1) - 1/(2*c1*r1), sqrt(e1s)*t/e2s + e3s*t, -sqrt(e1s)*t/e2s\
+                            + e3s*t)))]
+    assert sol == sol_
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
