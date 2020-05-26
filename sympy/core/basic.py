@@ -8,6 +8,7 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered, Mapping
 from .singleton import S
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from inspect import getmro
 
@@ -1802,6 +1803,12 @@ class Basic(metaclass=ManagedProperties):
         # expression has a `_constructor_postprocessor_mapping` attribute, it will
         # be interpreted as a dictionary containing lists of postprocessing
         # functions for matching expression node names.
+
+        SymPyDeprecationWarning(
+                feature="_exec_constructor_postprocessors method",
+                useinstead="singledispatch hook for each class",
+                issue=18769,
+                deprecated_since_version="1.7").warn()
 
         clsname = obj.__class__.__name__
         postprocessors = defaultdict(list)
