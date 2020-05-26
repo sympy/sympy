@@ -178,7 +178,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         if not isinstance(rv, dict):
             return rv.xreplace(urep)
         else:
-            return {urep.get(k, k): v for k, v in rv.items()}
+            return {urep.get(k, k): v.xreplace(urep) for k, v in rv.items()}
 
     if evaluate is None:
         evaluate = global_parameters.evaluate
