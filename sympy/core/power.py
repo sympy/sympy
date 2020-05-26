@@ -328,7 +328,6 @@ class Pow(Expr):
                 if obj is not None:
                     return obj
         obj = Expr.__new__(cls, b, e)
-        obj = cls._exec_constructor_postprocessors(obj)
         if not isinstance(obj, Pow):
             return obj
         obj.is_commutative = (b.is_commutative and e.is_commutative)
