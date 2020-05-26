@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S, I,
-                   Eq, sqrt, simplify, collect)
+                   Eq, sqrt, simplify, collect, Piecewise, Subs, Ne)
 from sympy.functions import exp, cos, sin, log
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
