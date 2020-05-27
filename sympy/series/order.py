@@ -484,20 +484,21 @@ def Add_hook(*seq, **options):
     if not evaluate:
         return None
 
+    newseq = []
+    for o in seq:
+        if o.is_Add:
+            newseq.extend(o.args)
+        else:
+            newseq.append(o)
+
     order_factors = []
     other_terms = []
 
-    for o in seq:
+    for o in newseq:
 
-        Order_in_o = o.getO()
-        if not Order_in_o:  # o has nothing to do with O
+        if not o.is_Order:
             other_terms.append(o)
             continue
-        else:
-            rv = o.removeO()
-            if rv:  # ex) o is x+O(x**2)
-                other_terms.append(rv)
-            o = Order_in_o
 
         if o.expr.is_zero:
             continue
@@ -526,8 +527,8 @@ def Add_hook(*seq, **options):
                 t = None
                 break
             # x + O(x**2) -> x + O(x**2)
-            if t is not None:
-                newseq2.append(t)
+        if t is not None:
+            newseq2.append(t)
     newseq = newseq2 + order_factors
     # 1 + O(1) -> O(1)
     for o in order_factors:

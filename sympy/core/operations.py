@@ -67,51 +67,25 @@ class AssocOp(Basic):
 
     @classmethod
     def _constructor_hook(cls, *args, ignore_hook=False, **options):
-        """
-        Select the hook from args, apply args and options to it and return the result.
+        # Select the hook from args, apply args and options to it and return the result.
+        # cls.dispatcher must be defined which returns the hook function of given argument and
+        # None for unregistered type.
+        # Also, If None is returned from this method, hook is not applied.
+        # See https://github.com/sympy/sympy/pull/18769
 
-        Explanation
-        ===========
-
-        This method is implemented to relieve the complexity of class constructors, and let them
-        return their subclasses if needed. For this, ``cls.dispatcher`` must be defined which
-        returns the hook function of given argument. This dispatcher is ``functools.dispatcher``, and
-        should return ``None`` for unregistered type.
-        If ``None`` is returned from this method, hook is not applied.
-        Currently, different arguments with different hooks are not supported.
-
-        Parameters
-        ==========
-
-        args
-            Arguments for the constructor
-
-        options
-            Options for the constructor
-
-        ignore_hook : bool
-            If True, hook is skipped
-
-        Examples
-        ========
-
-        >>> from sympy import Add, MatrixSymbol, MatrixExpr
-        >>> A = MatrixSymbol('A', 2,2)
-        >>> B = MatrixSymbol('B', 2,2)
-        >>> isinstance(Add(A,B), MatrixExpr) # Hook applied: returns MatAdd
-        True
-        >>> isinstance(Add(A,B, ignore_hook=True), MatrixExpr) # Hook not applied: returns Add
-        False
-
-        See Also
-        ========
-
-        https://github.com/sympy/sympy/pull/18769
-
-        """
         # ignore the hook
         if ignore_hook:
             return None
+
+        hook = cls._find_hook(cls, *args)
+        if hook is None:     # No hook is defined for args, so hook cannot be applied.
+            return None
+        else:
+            return hook(*args, **options)
+
+    @classmethod
+    def _find_hook(cls, *args):
+        # Helper for _constructor_hook.
 
         dispatcher = cls.__dict__.get('dispatcher') # do not allow inheritance of dispatcher
         if dispatcher is None:  # No hook is applied if cls isn't designed for hook
@@ -119,15 +93,18 @@ class AssocOp(Basic):
 
         hooks = []
         for a in args:
-            hook = dispatcher(a)
+            if isinstance(a, cls):  # To find hook in e.g. Add(1, Order(x))
+                hook = cls._find_hook(*a.args)
+            else:
+                hook = dispatcher(a)
             if hook is not None:    # None means unregistered type
                 hooks.append(hook)
 
         if len(hooks) == 0:
-            return None     # No hook is defined for args, so hook cannot be applied.
-        else:   # This is the case where different args define same hook
+            return None     # No hook is defined for args.
+        else:
             hook = hooks.pop()
-            return hook(*args, **options)
+            return hook
 
     @classmethod
     def _from_args(cls, args, is_commutative=None):
