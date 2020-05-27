@@ -1,6 +1,6 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
-                   Piecewise, factorial, Interval, oo)
+                   Piecewise, factorial, Interval, oo, Contains)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess)
@@ -223,36 +223,43 @@ def test_PoissonProcess():
                 12**X(4)*18**X(6)*exp(-30)/(factorial(X(4))*factorial(X(6)))))
 
     assert P(X(t) < 1) == exp(-3*t)
-    assert P(Eq(X(t), 0), (t > 3) & (t <= 5)) == exp(-6) # exp(-2*lamda)
-    res = P(Eq(X(t), 1), (t > 3) & (t <= 4))
+    assert P(Eq(X(t), 0), Contains(X(t), Interval.Lopen(3, 5))) == exp(-6) # exp(-2*lamda)
+    res = P(Eq(X(t), 1), Contains(X(t), Interval.Lopen(3, 4)))
     assert res == 3*exp(-3)
-    assert P(Eq(X(t), 1) & Eq(X(d), 1) & Eq(X(x), 1) & Eq(X(y), 1),
-    (t >= 0) & (t < 1) & (d >= 1) & (d < 2) &(x >= 2) & (x < 3) & (y >= 3) & (y < 4)) == res**4
-    assert P(Eq(X(t), 2) & Eq(X(d), 3), (t > 0) & (t <= 2) & (d > 1) & (d <= 4)) == \
-                Probability(Eq(X(d), 3) & Eq(X(t), 2), (d <= 4) & (t <= 2) & (d > 1))
+    assert P(Eq(X(t), 1) & Eq(X(d), 1) & Eq(X(x), 1) & Eq(X(y), 1), Contains(X(t), Interval.Lopen(0, 1))
+    & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(x), Interval.Lopen(2, 3))
+    & Contains(X(y), Interval.Lopen(3, 4))) == res**4
+    assert P(Eq(X(t), 2) & Eq(X(d), 3), Contains(X(t), Interval.Lopen(0, 2))
+    & Contains(X(d), Interval.Ropen(2, 4))) == \
+                Probability(Eq(X(d), 3) & Eq(X(t), 2), Contains(X(t), Interval.Lopen(0, 2))
+                & Contains(X(d), Interval.Ropen(2, 4)))
 
-    raises(ValueError, lambda: P(Eq(X(t), 2) & Eq(X(d), 3), (t > 0) & (t <= 2) & (d > 1))) # no bound on d
-    assert P(Eq(X(t), 2), Eq(t, 3)) == 81*exp(-9)/2
-    assert P(Eq(X(t), 2), t < 5) == 225*exp(-15)/2
-    res1 = P(X(t) <= 3, t < 5)
-    res2 = P(X(t) > 3, t < 5)
+    raises(ValueError, lambda: P(Eq(X(t), 2) & Eq(X(d), 3),
+    Contains(X(t), Interval.Lopen(0, 4)) & Contains(X(d), Interval.Lopen(3, oo)))) # no bound on d
+    assert P(Eq(X(3), 2)) == 81*exp(-9)/2
+    assert P(Eq(X(t), 2), Contains(X(t), Interval.Lopen(0, 5))) == 225*exp(-15)/2
+    res1 = P(X(t) <= 3, Contains(X(t), Interval.Lopen(0, 5)))
+    res2 = P(X(t) > 3, Contains(X(t), Interval.Lopen(0, 5)))
     assert res1 == 691*exp(-15)
     assert (res1 + res2).simplify() == 1
-    assert P(Not(Eq(X(t), 2) & (X(d) > 3)), (t <= 4) & (t >= 2) &
-            (d < 8) & (d >= 7)).simplify() == -18*exp(-6) + 234*exp(-9) + 1
-    assert P(Eq(X(t), 2) | Ne(X(t), 4), (t < 4) & (t >= 2)) == 1 - 36*exp(-6)
+    assert P(Not(Eq(X(t), 2) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) & \
+            Contains(X(d), Interval.Lopen(7, 8))).simplify() == -18*exp(-6) + 234*exp(-9) + 1
+    assert P(Eq(X(t), 2) | Ne(X(t), 4), Contains(X(t), Interval.Ropen(2, 4))) == 1 - 36*exp(-6)
     raises(ValueError, lambda: P(X(t) > 2, X(t) + X(d)))
     assert E(X(t)) == 3*t
-    assert E(X(t)**2 + X(d)*2 + X(y)**3, (t >= 0) & (t < 1) & (d >= 1)
-            & (d < 2) & (y >= 3) & (y < 4)) == 75
-    assert E(X(t)**2, (t >= 0) & (t < 1)) == 12
-    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), (t >= 0) & (t <= 1) & (d >= 1) & (d < 2)) == \
-            Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2), (d >= 1) & (t <= 1) & (d < 2))
+    assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(X(t), Interval.Lopen(0, 1))
+        & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(y), Interval.Ropen(3, 4))) == 75
+    assert E(X(t)**2, Contains(X(t), Interval.Lopen(0, 1))) == 12
+    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
+    & Contains(X(d), Interval.Ropen(1, 2))) == \
+            Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2), Contains(X(t), Interval.Lopen(0, 1))
+            & Contains(X(d), Interval.Ropen(1, 2)))
 
-    raises(ValueError, lambda: E(X(t)**3, t > 3))
-    assert E((X(t) + X(d))*(X(t) - X(d)), (t >= 0) & (t < 1) & (d >= 1) & (d < 2)) == 0
+    raises(ValueError, lambda: E(X(t)**3, Contains(X(t), Interval.Lopen(0, oo))))
+    assert E((X(t) + X(d))*(X(t) - X(d)), Contains(X(t), Interval.Lopen(0, 1))
+        & Contains(X(d), Interval.Lopen(1, 2))) == 0
     assert E(X(2) + x*E(X(5))) == 15*x + 6
-    assert E(x*X(t) + y, Eq(t, 1)) == 3*x + y
+    assert E(x*X(1) + y) == 3*x + y
     Y = PoissonProcess("Y", 6)
     Z = X + Y
     assert Z.lamda == X.lamda + Y.lamda == 9

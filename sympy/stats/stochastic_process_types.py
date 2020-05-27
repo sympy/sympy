@@ -1110,13 +1110,14 @@ def get_timerv_swaps(expr, condition):
     ========
 
     >>> from sympy.stats.stochastic_process_types import get_timerv_swaps, PoissonProcess
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Contains, Interval
     >>> x, t, d = symbols('x t d', positive=True)
     >>> X = PoissonProcess("X", 3)
-    >>> get_timerv_swaps(x*X(t), (t < 1))
-    ([Interval.Ropen(0, 1)], {X(t): X(1)})
-    >>> get_timerv_swaps((X(t)**2 + X(d)**2), (t >= 0) & (t < 1) & (d >= 1) & (d < 4)) # doctest: +SKIP
-    ([Interval.Ropen(1, 4), Interval.Ropen(0, 1)], {X(d): X(3), X(t): X(1)})
+    >>> get_timerv_swaps(x*X(t), Contains(X(t), Interval.Lopen(0, 1)))
+    ([Interval.Lopen(0, 1)], {X(t): X(1)})
+    >>> get_timerv_swaps((X(t)**2 + X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
+    ... & Contains(X(d), Interval.Ropen(1, 4)))) # doctest: +SKIP
+    ([Interval.Ropen(1, 4), Interval.Lopen(0, 1)], {X(d): X(3), X(t): X(1)})
 
     Returns
     =======
@@ -1133,26 +1134,23 @@ def get_timerv_swaps(expr, condition):
         raise ValueError("%s is not a relational or combination of relationals"
             % (condition))
     expr_syms = random_indexed_symbols(expr)
-    if not isinstance(condition, Relational):
+    if isinstance(condition, (And, Or)):
         given_cond_args = condition.args
-    else:
+    else: # single condition
         given_cond_args = (condition, )
     rv_swap = {}
     intervals = []
     for expr_sym in expr_syms:
-        rv_key = expr_sym.key
-        intv = expr_sym.pspace.process.index_set
         for arg in given_cond_args:
-            if arg.has(rv_key):
-                intv = Intersection(intv, arg.as_set())
-        intervals.append(intv)
-        diff_key = intv._sup - intv._inf
-        if diff_key == oo:
-            raise ValueError("%s should have finite bounds" % str(rv_key))
-        elif diff_key == S.Zero: # has singleton set
-            diff_key = intv._sup
-        rv_swap[expr_sym] = expr_sym.subs({rv_key: diff_key})
-
+            if arg.has(expr_sym):
+                intv = _set_converter(arg.args[1])
+                diff_key = intv._sup - intv._inf
+                if diff_key == oo:
+                    raise ValueError("%s should have finite bounds" % str(expr_sym.name))
+                elif diff_key == S.Zero: # has singleton set
+                    diff_key = intv._sup
+                rv_swap[expr_sym] = expr_sym.subs({expr_sym.key: diff_key})
+                intervals.append(intv)
     return intervals, rv_swap
 
 class PoissonProcess(ContinuousTimeStochasticProcess):
@@ -1172,7 +1170,7 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
     ========
 
     >>> from sympy.stats import PoissonProcess, P, E
-    >>> from sympy import symbols, Eq, Ne
+    >>> from sympy import symbols, Eq, Ne, Contains, Interval
     >>> X = PoissonProcess("X", lamda=3)
     >>> X.state_space
     Interval(0, oo)
@@ -1181,13 +1179,15 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
     >>> t1, t2 = symbols('t1 t2', positive=True)
     >>> P(X(t1) < 4)
     (9*t1**3/2 + 9*t1**2/2 + 3*t1 + 1)*exp(-3*t1)
-    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), (t1 < 4) & (t1 >= 2))
+    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), Contains(X(t1), Interval.Ropen(2, 4)))
     1 - 36*exp(-6)
-    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), (t1 > 0) & (t1 <= 2) & (t2 > 2) & (t2 <= 4))
+    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), Contains(X(t1), Interval.Lopen(0, 2))
+    ... & Contains(X(t2), Interval.Lopen(2, 4)))
     648*exp(-12)
     >>> E(X(t1))
     3*t1
-    >>> E(X(t1)**2 + 2*X(t2), (t1 > 0) & (t1 <= 1) & (t2 > 1) & (t2 <= 2))
+    >>> E(X(t1)**2 + 2*X(t2),  Contains(X(t1), Interval.Lopen(0, 1))
+    ... & Contains(X(t2), Interval.Lopen(1, 2)))
     18
 
     Merging two Poisson Processes
