@@ -5,6 +5,7 @@ from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.parameters import global_parameters
 from sympy.sets.sets import Complement
 from sympy.utilities.iterables import uniq
 
@@ -472,5 +473,80 @@ class Order(Expr):
 
     def __neg__(self):
         return self
+
+def Add_hook(*seq, **options):
+    from sympy.core.add import _addsort
+    from sympy.matrices import MatAdd
+
+    evaluate = options.get('evaluate')
+    if evaluate is None:
+        evaluate = global_parameters.evaluate
+    if not evaluate:
+        return None
+
+    order_factors = []
+    other_terms = []
+
+    for o in seq:
+
+        Order_in_o = o.getO()
+        if not Order_in_o:  # o has nothing to do with O
+            other_terms.append(o)
+            continue
+        else:
+            rv = o.removeO()
+            if rv:  # ex) o is x+O(x**2)
+                other_terms.append(rv)
+            o = Order_in_o
+
+        if o.expr.is_zero:
+            continue
+        for o1 in order_factors:
+            if o1.contains(o):
+                o = None
+                break
+        if o is None:
+            continue
+        order_factors = [o] + [
+            o1 for o1 in order_factors if not o.contains(o1)]
+        continue
+
+    other_Add = Add(*other_terms, **options)
+    if not order_factors:
+        return other_Add
+
+    commutative = other_Add.is_commutative
+    coeff, other_terms = other_Add.as_coeff_add()
+
+    newseq2 = []
+    for t in other_terms:
+        for o in order_factors:
+            # x + O(x) -> O(x)
+            if o.contains(t):
+                t = None
+                break
+            # x + O(x**2) -> x + O(x**2)
+            if t is not None:
+                newseq2.append(t)
+    newseq = newseq2 + order_factors
+    # 1 + O(1) -> O(1)
+    for o in order_factors:
+        if o.contains(coeff):
+            coeff = S.Zero
+            break
+
+    _addsort(newseq)
+    if coeff is not S.Zero:
+        newseq.insert(0, coeff)
+
+    options.update(evaluate=False)
+    result = Add(*newseq, ignore_hook=True, **options)
+    if isinstance(result, Add):
+        result.is_commutative = commutative
+    return result
+
+@Add.dispatcher.register(Order)
+def _(arg):
+    return Add_hook
 
 O = Order

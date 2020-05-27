@@ -118,22 +118,8 @@ class Add(Expr, AssocOp):
 
         for o in seq:
 
-            # O(x)
-            if o.is_Order:
-                if o.expr.is_zero:
-                    continue
-                for o1 in order_factors:
-                    if o1.contains(o):
-                        o = None
-                        break
-                if o is None:
-                    continue
-                order_factors = [o] + [
-                    o1 for o1 in order_factors if not o.contains(o1)]
-                continue
-
-            # 3 or NaN
-            elif o.is_Number:
+            # NaN
+            if o.is_Number:
                 if (o is S.NaN or coeff is S.ComplexInfinity and
                         o.is_finite is False):
                     # we know for sure the result will be nan
@@ -236,25 +222,6 @@ class Add(Expr, AssocOp):
             # portion of zoo, e.g., infinite_real - infinite_real.
             newseq = [c for c in newseq if not (c.is_finite and
                                                 c.is_extended_real is not None)]
-
-        # process O(x)
-        if order_factors:
-            newseq2 = []
-            for t in newseq:
-                for o in order_factors:
-                    # x + O(x) -> O(x)
-                    if o.contains(t):
-                        t = None
-                        break
-                # x + O(x**2) -> x + O(x**2)
-                if t is not None:
-                    newseq2.append(t)
-            newseq = newseq2 + order_factors
-            # 1 + O(1) -> O(1)
-            for o in order_factors:
-                if o.contains(coeff):
-                    coeff = S.Zero
-                    break
 
         # order args canonically
         _addsort(newseq)
