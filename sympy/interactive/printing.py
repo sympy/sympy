@@ -7,6 +7,7 @@ from io import BytesIO
 from sympy import latex as default_latex
 from sympy import preview
 from sympy.utilities.misc import debug
+from sympy.printing.str import StrPrintable
 from sympy.printing.latex import LatexPrintable
 
 
@@ -250,7 +251,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-        for cls in printable_types:
+        # Note that `printable_types` really contains the types that are
+        # printable with latex. See gh-19444.
+        for cls in printable_types + [StrPrintable]:
             plaintext_formatter.for_type(cls, _print_plain)
 
         svg_formatter = ip.display_formatter.formatters['image/svg+xml']
