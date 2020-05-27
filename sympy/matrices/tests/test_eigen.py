@@ -8,6 +8,7 @@ from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.testing.pytest import slow
+from sympy.testing.matrices import allclose
 
 
 def test_eigen():
@@ -383,6 +384,11 @@ def test_diagonalize():
 
     _, D2 = m.diagonalize(reals_only=True)
     assert D == D2
+
+    m = Matrix(
+        [[0, 1, 0, 0], [1, 0, 0, 0.002], [0.002, 0, 0, 1], [0, 0, 1, 0]])
+    P, D = m.diagonalize()
+    assert allclose(P*D, m*P)
 
 
 def test_is_diagonalizable():
