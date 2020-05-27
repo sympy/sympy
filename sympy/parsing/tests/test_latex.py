@@ -65,9 +65,12 @@ GOOD_PAIRS = [
     ("x", x),
     ("2x", _Mul(2,x)),
     ("2 x", _Mul(2, x)),
-    ("\\theta\\ x", _Mul(theta, x)), # space between 2 and x 
-    ("\\theta\\, x", _Mul(theta, x)), # "thinspace"; mathmode and text mode
-    ("\\theta\\; x", _Mul(theta, x)), # "thickspace"; mathmode only
+    ("\\theta x", _Mul(theta, x)) 
+    ("x 2", _Mul(x, 2))
+    ("x \\theta", _Mul(x, theta))
+    ("x\\theta", _Mul(x, theta))
+    ("2\\theta", _Mul(2, theta))
+    ("2 \\theta", _Mul(2, theta))
     ("x^2", x**2),
     ("x^{3 + 1}", x**_Add(3, 1)),
     ("-c", -c),

@@ -118,9 +118,7 @@ BANG: '!';
  \\pi
  \\Pi
  */
-SYMBOL: '\\' [a-zA-Z]+
-	|'\\' ([a-zA-Z]+ | [ :;])
-	|  [a-zA-Z]+'\\'[,:;];
+SYMBOL: '\\' [a-zA-Z]+;
 
 math: relation;
 
