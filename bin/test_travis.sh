@@ -6,7 +6,6 @@ set -e
 set -x
 
 if [[ "${TEST_FLAKE8}" == "true" ]]; then
-    flake8 sympy;
     flake8 --doctests --per-file-ignores='sympy/interactive/session.py:F821' sympy;
 fi
 
