@@ -320,7 +320,7 @@ def log_to_real(h, q, x, t):
 
         >>> from sympy.integrals.rationaltools import log_to_real
         >>> from sympy.abc import x, y
-        >>> from sympy import Poly, sqrt, S
+        >>> from sympy import Poly, S
         >>> log_to_real(Poly(x + 3*y/2 + S(1)/2, x, domain='QQ[y]'),
         ... Poly(3*y**2 + 1, y, domain='ZZ'), x, y)
         2*sqrt(3)*atan(2*sqrt(3)*x/3 + sqrt(3)/3)/3

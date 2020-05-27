@@ -46,7 +46,8 @@ class SingletonRegistry(Registry):
     When using ``is`` comparison, make sure the argument is sympified. For
     instance,
 
-    >>> 0 is S.Zero
+    >>> x = 0
+    >>> x is S.Zero
     False
 
     This problem is not an issue when using ``==``, which is recommended for
@@ -137,7 +138,6 @@ class Singleton(ManagedProperties):
 
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
-        >>> from sympy.core.compatibility import with_metaclass
         >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()

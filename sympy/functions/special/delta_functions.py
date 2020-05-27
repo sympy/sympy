@@ -58,7 +58,7 @@ class DiracDelta(Function):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, diff, pi, Piecewise
+    >>> from sympy import DiracDelta, diff, pi
     >>> from sympy.abc import x, y
 
     >>> DiracDelta(x)
@@ -160,7 +160,7 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, S, Subs
+        >>> from sympy import DiracDelta, S
         >>> from sympy.abc import x
 
         >>> DiracDelta(x)
@@ -335,7 +335,7 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, Piecewise, Symbol, SingularityFunction
+        >>> from sympy import DiracDelta, Piecewise, Symbol
         >>> x = Symbol('x')
 
         >>> DiracDelta(x).rewrite(Piecewise)
@@ -549,7 +549,7 @@ class Heaviside(Function):
         Examples
         ========
 
-        >>> from sympy import Heaviside, Piecewise, Symbol, pprint
+        >>> from sympy import Heaviside, Piecewise, Symbol
         >>> x = Symbol('x')
 
         >>> Heaviside(x).rewrite(Piecewise)

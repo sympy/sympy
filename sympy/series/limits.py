@@ -38,7 +38,7 @@ def limit(e, z, z0, dir="+"):
     Examples
     ========
 
-    >>> from sympy import limit, sin, Symbol, oo
+    >>> from sympy import limit, sin, oo
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
@@ -138,7 +138,7 @@ class Limit(Expr):
     Examples
     ========
 
-    >>> from sympy import Limit, sin, Symbol
+    >>> from sympy import Limit, sin
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
     Limit(sin(x)/x, x, 0)

@@ -554,7 +554,7 @@ class Basic(metaclass=ManagedProperties):
         ========
 
         >>> from sympy import Integral, Symbol
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> r = Symbol('r', real=True)
         >>> Integral(r, (r, x)).as_dummy()
         Integral(_0, (_0, x))
@@ -569,7 +569,6 @@ class Basic(metaclass=ManagedProperties):
         Any object that has structurally bound variables should have
         a property, `bound_symbols` that returns those symbols
         appearing in the object.
-
         """
         from sympy.core.symbol import Dummy, Symbol
         def can(x):

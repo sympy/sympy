@@ -307,7 +307,7 @@ def jones_2_stokes(e):
     --------
     The axes on the Poincaré sphere.
 
-    >>> from sympy import pprint, Matrix, pi
+    >>> from sympy import pprint, pi
     >>> from sympy.physics.optics.polarization import jones_vector
     >>> from sympy.physics.optics.polarization import jones_2_stokes
     >>> H = jones_vector(0, 0)
@@ -557,7 +557,7 @@ def mueller_matrix(J):
     --------
     Generic optical components.
 
-    >>> from sympy import pprint, symbols, pi, simplify
+    >>> from sympy import pprint, symbols
     >>> from sympy.physics.optics.polarization import (mueller_matrix,
     ...     linear_polarizer, half_wave_retarder, quarter_wave_retarder)
     >>> theta = symbols("theta", real=True)

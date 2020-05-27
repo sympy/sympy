@@ -975,7 +975,7 @@ def jacobi_symbol(m, n):
     ========
 
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
-    >>> from sympy import Mul, S
+    >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
     >>> jacobi_symbol(60, 121)
@@ -1516,7 +1516,6 @@ def polynomial_congruence(expr, m):
     ========
 
     >>> from sympy.ntheory import polynomial_congruence
-    >>> from sympy import Poly
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
     >>> polynomial_congruence(expr, 6125)

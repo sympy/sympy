@@ -43,7 +43,7 @@ class gamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma
+    >>> from sympy import S, I, pi, gamma
     >>> from sympy.abc import x
 
     Several special values are known:
@@ -868,7 +868,7 @@ class loggamma(Function):
 
     For half-integral values:
 
-    >>> from sympy import S, pi
+    >>> from sympy import S
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
@@ -1241,7 +1241,7 @@ class multigamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma, multigamma
+    >>> from sympy import S, multigamma
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> p = Symbol('p', positive=True, integer=True)

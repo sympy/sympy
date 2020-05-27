@@ -127,7 +127,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.fp_groups import (FpGroup, FpSubgroup)
+        >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])

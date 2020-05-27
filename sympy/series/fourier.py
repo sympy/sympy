@@ -48,7 +48,6 @@ def _process_limits(func, limits):
     Examples
     ========
 
-    >>> from sympy import pi
     >>> from sympy.series.fourier import _process_limits as pari
     >>> from sympy.abc import x
     >>> pari(x**2, (x, -2, 2))
@@ -645,9 +644,8 @@ def fourier_series(f, limits=None, finite=True):
 
     Computing the Fourier series of $f(x) = x^2$:
 
-    >>> from sympy import fourier_series, pi, cos
+    >>> from sympy import fourier_series, pi
     >>> from sympy.abc import x
-
     >>> f = x**2
     >>> s = fourier_series(f, (x, -pi, pi))
     >>> s1 = s.truncate(n=3)

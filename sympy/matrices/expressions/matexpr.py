@@ -414,7 +414,7 @@ class MatrixExpr(Expr):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+        >>> from sympy import MatrixSymbol, MatrixExpr, Sum
         >>> from sympy.abc import i, j, k, l, N
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)

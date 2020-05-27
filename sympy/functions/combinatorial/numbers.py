@@ -1081,8 +1081,8 @@ class catalan(Function):
     Examples
     ========
 
-    >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
-    ...             catalan, diff, combsimp, Rational, I)
+    >>> from sympy import (Symbol, binomial, gamma, hyper, catalan,
+    ...                    diff, combsimp, Rational, I)
 
     >>> [catalan(i) for i in range(1,10)]
     [1, 2, 5, 14, 42, 132, 429, 1430, 4862]

@@ -44,7 +44,7 @@ def variance(X, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Die, E, Bernoulli, variance
+    >>> from sympy.stats import Die, Bernoulli, variance
     >>> from sympy import simplify, Symbol
 
     >>> X = Die('X', 6)

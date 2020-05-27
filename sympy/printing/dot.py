@@ -33,7 +33,8 @@ def purestr(x, with_args=False):
     Examples
     ========
 
-    >>> from sympy import Integer, Float, Symbol, MatrixSymbol
+    >>> from sympy import Float, Symbol, MatrixSymbol
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.printing.dot import purestr
 
     Applying ``purestr`` for basic symbolic object:

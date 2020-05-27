@@ -327,7 +327,6 @@ def gauss_chebyshev_t(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_t
     >>> x, w = gauss_chebyshev_t(3, 5)
     >>> x
@@ -394,7 +393,6 @@ def gauss_chebyshev_u(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_u
     >>> x, w = gauss_chebyshev_u(3, 5)
     >>> x

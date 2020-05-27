@@ -299,8 +299,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.abc import N
         >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
@@ -362,8 +362,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.abc import N
         >>> from sympy.codegen.array_utils import parse_matrix_expression
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
@@ -402,8 +402,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.abc import N
         >>> from sympy.codegen.array_utils import parse_matrix_expression
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
@@ -566,7 +566,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
         >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
         >>> from sympy import MatrixSymbol
-        >>> from sympy.combinatorics import Permutation
 
         >>> M = MatrixSymbol("M", 3, 3)
         >>> N = MatrixSymbol("N", 3, 3)
@@ -1061,7 +1060,6 @@ def parse_indexed_expression(expr, first_indices=None):
 
     >>> from sympy.codegen.array_utils import parse_indexed_expression
     >>> from sympy import MatrixSymbol, Sum, symbols
-    >>> from sympy.combinatorics import Permutation
 
     >>> i, j, k, d = symbols("i j k d")
     >>> M = MatrixSymbol("M", d, d)
@@ -1250,7 +1248,7 @@ def recognize_matrix_expression(expr):
     Examples
     ========
 
-    >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+    >>> from sympy import MatrixSymbol, Sum
     >>> from sympy.abc import i, j, k, l, N
     >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
     >>> from sympy.codegen.array_utils import recognize_matrix_expression, parse_indexed_expression, parse_matrix_expression

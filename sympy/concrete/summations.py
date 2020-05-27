@@ -628,7 +628,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Sum, Symbol, sin, oo
+        >>> from sympy import Sum, Symbol, oo
         >>> n = Symbol('n', integer=True)
         >>> Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent()
         False

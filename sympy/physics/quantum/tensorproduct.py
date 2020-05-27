@@ -71,7 +71,7 @@ class TensorProduct(Expr):
 
     Start with a simple tensor product of sympy matrices::
 
-        >>> from sympy import I, Matrix, symbols
+        >>> from sympy import Matrix
         >>> from sympy.physics.quantum import TensorProduct
 
         >>> m1 = Matrix([[1,2],[3,4]])

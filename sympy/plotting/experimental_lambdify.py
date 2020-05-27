@@ -545,7 +545,7 @@ class Lambdifier(object):
         ========
 
         >>> from sympy.abc import x, y, z
-        >>> from sympy import Integral, sin
+        >>> from sympy import sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
         >>> str2tree = Lambdifier([x], x).str2tree
         >>> tree2str = Lambdifier([x], x).tree2str

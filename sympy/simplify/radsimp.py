@@ -46,7 +46,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ========
 
     >>> from sympy import S, collect, expand, factor, Wild
-    >>> from sympy.abc import a, b, c, x, y, z
+    >>> from sympy.abc import a, b, c, x, y
 
     This function can collect symbolic coefficients in polynomials or
     rational expressions. It will manage to find all integer or rational
@@ -634,7 +634,7 @@ def collect_const(expr, *vars, **kwargs):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.abc import a, s, x, y, z
+    >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -757,7 +757,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     Examples
     ========
 
-    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy import radsimp, sqrt, Symbol, pprint
     >>> from sympy import factor_terms, fraction, signsimp
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c

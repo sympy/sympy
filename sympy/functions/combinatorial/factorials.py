@@ -396,7 +396,8 @@ class factorial2(CombinatorialFunction):
     ========
 
     >>> from sympy import factorial2, var
-    >>> var('n')
+    >>> n = var('n')
+    >>> n
     n
     >>> factorial2(n + 1)
     factorial2(n + 1)
@@ -649,7 +650,7 @@ class FallingFactorial(CombinatorialFunction):
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols, Poly
+    >>> from sympy import ff, factorial, rf, gamma, binomial, symbols, Poly
     >>> from sympy.abc import x, k
     >>> n, m = symbols('n m', integer=True)
     >>> ff(x, 0)

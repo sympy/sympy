@@ -49,7 +49,7 @@ def _monotonic_sign(self):
     ========
 
     >>> from sympy.core.exprtools import _monotonic_sign as F
-    >>> from sympy import Dummy, S
+    >>> from sympy import Dummy
     >>> nn = Dummy(integer=True, nonnegative=True)
     >>> p = Dummy(integer=True, positive=True)
     >>> p2 = Dummy(integer=True, positive=True)

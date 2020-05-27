@@ -1796,7 +1796,7 @@ class ComplexInterval(object):
     Examples
     ========
 
-    >>> from sympy import CRootOf, Rational, S
+    >>> from sympy import CRootOf, S
     >>> from sympy.abc import x
     >>> CRootOf.clear_cache()  # for doctest reproducibility
     >>> root = CRootOf(x**10 - 2*x + 3, 9)

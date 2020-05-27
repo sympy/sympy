@@ -216,7 +216,6 @@ class FunctionClass(ManagedProperties):
         ========
 
         >>> from sympy.core.function import Function
-        >>> from sympy.abc import x, y
         >>> f = Function('f')
 
         If the function can take any number of arguments, the set of whole
@@ -1090,7 +1089,7 @@ class Derivative(Expr):
     automatically simplified in a fairly conservative fashion unless the
     keyword ``simplify`` is set to False.
 
-        >>> from sympy import cos, sin, sqrt, diff, Function, symbols
+        >>> from sympy import sqrt, diff, Function, symbols
         >>> from sympy.abc import x, y, z
         >>> f, g = symbols('f,g', cls=Function)
 
@@ -1524,7 +1523,7 @@ class Derivative(Expr):
         Examples
         ========
 
-        >>> from sympy import Derivative, Function, symbols, cos
+        >>> from sympy import Derivative, Function, symbols
         >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)

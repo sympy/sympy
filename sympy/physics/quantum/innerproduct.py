@@ -35,7 +35,7 @@ class InnerProduct(Expr):
 
     Create an InnerProduct and check its properties:
 
-        >>> from sympy.physics.quantum import Bra, Ket, InnerProduct
+        >>> from sympy.physics.quantum import Bra, Ket
         >>> b = Bra('b')
         >>> k = Ket('k')
         >>> ip = b*k

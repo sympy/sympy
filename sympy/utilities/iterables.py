@@ -2535,12 +2535,12 @@ def kbins(l, k, ordered=None):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import kbins
+    >>> from __future__ import print_function
 
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
-    >>> from __future__ import print_function
+    >>> from sympy.utilities.iterables import kbins
     >>> for p in kbins(list(range(5)), 2):
     ...     print(p)
     ...
@@ -2565,9 +2565,9 @@ def kbins(l, k, ordered=None):
         10 means A == D
         11 means A == A
 
-    >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print('ordered = %s' % ordered)
-    ...     for p in kbins(list(range(3)), 2, ordered=ordered):
+    >>> for ordered_flag in [None, 0, 1, 10, 11]:
+    ...     print('ordered = %s' % ordered_flag)
+    ...     for p in kbins(list(range(3)), 2, ordered=ordered_flag):
     ...         print('     %s' % p)
     ...
     ordered = None
