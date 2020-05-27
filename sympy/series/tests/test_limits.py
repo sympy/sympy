@@ -674,6 +674,10 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
 
+def test_issue_18992():
+    assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
+
+
 def test_issue_18997():
     assert limit(Abs(log(x)), x, 0) == oo
     assert limit(Abs(log(Abs(x))), x, 0) == oo

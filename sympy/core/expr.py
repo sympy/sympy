@@ -2717,8 +2717,8 @@ class Expr(Basic, EvalfMixin):
         False
 
         """
-        if not x.is_Symbol:
-            raise TypeError("{} should be of type Symbol".format(x))
+        if not x.is_symbol:
+            raise TypeError("{} should be of symbol type".format(x))
         a = sympify(a)
 
         return self._eval_is_meromorphic(x, a)

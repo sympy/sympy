@@ -211,13 +211,12 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
-        try:
-            if e.is_meromorphic(z, z0):
-                if abs(z0) is S.Infinity:
-                    newe = e.subs(z, -1/z)
-                else:
-                    newe = e.subs(z, z + z0)
-
+        if e.is_meromorphic(z, z0):
+            if abs(z0) is S.Infinity:
+                newe = e.subs(z, -1/z)
+            else:
+                newe = e.subs(z, z + z0)
+            try:
                 coeff, exp = newe.leadterm(z)
                 if coeff is not S.ComplexInfinity:
                     if exp > 0:
@@ -228,8 +227,8 @@ class Limit(Expr):
                         return S.Infinity*sign(coeff)
                     elif str(dir) == "-":
                         return S.NegativeInfinity*sign(coeff)
-        except ValueError:
-            pass
+            except ValueError:
+                pass
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
@@ -238,7 +237,7 @@ class Limit(Expr):
         if z0.is_extended_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
-        if abs(z0) is S.Infinity and not e.has(S.Infinity, S.NegativeInfinity, S.NaN, S.ComplexInfinity):
+        if e.is_Mul and abs(z0) is S.Infinity:
             e = factor_terms(e)
             u = Dummy('u', positive=True)
             if z0 is S.NegativeInfinity:
