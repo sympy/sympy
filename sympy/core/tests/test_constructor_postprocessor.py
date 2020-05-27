@@ -1,6 +1,6 @@
 from sympy import Symbol, Mul, symbols, Basic
 
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, warns_deprecated_sympy
 
 class SymbolInMulOnce(Symbol):
     # Test class for a symbol that can only appear once in a `Mul` expression.
@@ -37,36 +37,38 @@ class SubclassSymbolRemovesOtherSymbols(SymbolRemovesOtherSymbols):
 
 
 def test_constructor_postprocessors1():
-    x = SymbolInMulOnce("x")
-    y = SymbolInMulOnce("y")
-    assert isinstance(3*x, Mul)
-    assert (3*x).args == (3, x)
-    assert x*x == x
-    assert 3*x*x == 3*x
-    assert 2*x*x + x == 3*x
-    assert x**3*y*y == x*y
-    assert x**5 + y*x**3 == x + x*y
+    with warns_deprecated_sympy():
+        x = SymbolInMulOnce("x")
+        y = SymbolInMulOnce("y")
+        assert isinstance(3*x, Mul)
+        assert (3*x).args == (3, x)
+        assert x*x == x
+        assert 3*x*x == 3*x
+        assert 2*x*x + x == 3*x
+        assert x**3*y*y == x*y
+        assert x**5 + y*x**3 == x + x*y
 
-    w = SymbolRemovesOtherSymbols("w")
-    assert x*w == w
-    assert (3*w).args == (3, w)
-    assert set((w + x).args) == set((x, w))
+        w = SymbolRemovesOtherSymbols("w")
+        assert x*w == w
+        assert (3*w).args == (3, w)
+        assert set((w + x).args) == set((x, w))
 
 def test_constructor_postprocessors2():
-    x = SubclassSymbolInMulOnce("x")
-    y = SubclassSymbolInMulOnce("y")
-    assert isinstance(3*x, Mul)
-    assert (3*x).args == (3, x)
-    assert x*x == x
-    assert 3*x*x == 3*x
-    assert 2*x*x + x == 3*x
-    assert x**3*y*y == x*y
-    assert x**5 + y*x**3 == x + x*y
+    with warns_deprecated_sympy():
+        x = SubclassSymbolInMulOnce("x")
+        y = SubclassSymbolInMulOnce("y")
+        assert isinstance(3*x, Mul)
+        assert (3*x).args == (3, x)
+        assert x*x == x
+        assert 3*x*x == 3*x
+        assert 2*x*x + x == 3*x
+        assert x**3*y*y == x*y
+        assert x**5 + y*x**3 == x + x*y
 
-    w = SubclassSymbolRemovesOtherSymbols("w")
-    assert x*w == w
-    assert (3*w).args == (3, w)
-    assert set((w + x).args) == set((x, w))
+        w = SubclassSymbolRemovesOtherSymbols("w")
+        assert x*w == w
+        assert (3*w).args == (3, w)
+        assert set((w + x).args) == set((x, w))
 
 
 @XFAIL

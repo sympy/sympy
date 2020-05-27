@@ -1804,12 +1804,6 @@ class Basic(metaclass=ManagedProperties):
         # functions for matching expression node names.
         from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-        SymPyDeprecationWarning(
-                feature="_exec_constructor_postprocessors method",
-                useinstead="singledispatch hook for each class",
-                issue=18769,
-                deprecated_since_version="1.7").warn()
-
         clsname = obj.__class__.__name__
         postprocessors = defaultdict(list)
         for i in obj.args:
@@ -1823,6 +1817,13 @@ class Basic(metaclass=ManagedProperties):
                     postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
             except TypeError:
                 pass
+
+        if postprocessors:
+            SymPyDeprecationWarning(
+                feature="_exec_constructor_postprocessors method",
+                useinstead="singledispatch hook for each class",
+                issue=18769,
+                deprecated_since_version="1.7").warn()
 
         for f in postprocessors.get(clsname, []):
             obj = f(obj)
