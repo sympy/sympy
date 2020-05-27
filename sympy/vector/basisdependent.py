@@ -351,6 +351,8 @@ def Mul_hook(*args, **options):
     return result
 
 def Pow_hook(b, e, **options):
+    if e == 1:
+        return b
     if isinstance(b, BasisDependent):
         if e.is_negative:
             raise TypeError("Invalid divisor for division")
