@@ -106,9 +106,10 @@ def test_vector():
     raises(TypeError, lambda: v1.dot(1))
 
 def test_vector_hooks():
-    assert Add(i,j, evaluate=True) == VectorAdd(i,j)
-    assert Add(i,i, evaluate=True) == VectorMul(2,i)
-    assert Mul(i,2, evaluate=True) == VectorMul(2,i)
+    assert Add(i,j, evaluate=True) == i+j == VectorAdd(i,j)
+    assert Add(i,i, evaluate=True) == i+i == VectorMul(2,i)
+    assert Mul(i,2, evaluate=True) == 2*i == VectorMul(2,i)
+    assert Pow(i, 1) == i**1 == i
     raises(TypeError, lambda: Pow(i,-1))
     raises(TypeError, lambda: Pow(2, i))
     raises(NotImplementedError, lambda: Pow(i,2))
