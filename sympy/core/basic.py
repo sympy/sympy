@@ -7,7 +7,7 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered, Mapping
 from .singleton import S
-from ._print_helpers import StrPrintable, LatexPrintable
+from ._print_helpers import Printable
 
 from inspect import getmro
 
@@ -25,7 +25,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(StrPrintable, LatexPrintable, metaclass=ManagedProperties):
+class Basic(Printable, metaclass=ManagedProperties):
     """
     Base class for all SymPy objects.
 

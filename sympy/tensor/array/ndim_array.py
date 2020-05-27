@@ -6,11 +6,11 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import SYMPY_INTS, Iterable
-from sympy.printing.latex import LatexPrintable
+from sympy.printing.defaults import Printable
 
 import itertools
 
-class NDimArray(LatexPrintable):
+class NDimArray(Printable):
     """
 
     Examples

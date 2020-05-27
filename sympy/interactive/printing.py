@@ -7,8 +7,7 @@ from io import BytesIO
 from sympy import latex as default_latex
 from sympy import preview
 from sympy.utilities.misc import debug
-from sympy.printing.str import StrPrintable
-from sympy.printing.latex import LatexPrintable
+from sympy.printing.defaults import Printable
 
 
 def _init_python_printing(stringify_func, **settings):
@@ -87,7 +86,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
-        if _can_print_latex(arg):
+        if _can_print(arg):
             p.text(stringify_func(arg))
         else:
             p.text(IPython.lib.pretty.pretty(arg))
@@ -136,11 +135,15 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return None
 
 
-    def _can_print_latex(o):
-        """Return True if type o can be printed with LaTeX.
+    # Hook methods for builtin sympy printers
+    printing_hooks = ('_latex', '_sympystr', '_pretty', '_sympyrepr')
+
+
+    def _can_print(o):
+        """Return True if type o can be printed with one of the sympy printers.
 
         If o is a container type, this is True if and only if every element of
-        o can be printed with LaTeX.
+        o can be printed in this way.
         """
 
         try:
@@ -154,15 +157,15 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 if (type(o).__str__ not in (i.__str__ for i in builtin_types) or
                     type(o).__repr__ not in (i.__repr__ for i in builtin_types)):
                     return False
-                return all(_can_print_latex(i) for i in o)
+                return all(_can_print(i) for i in o)
             elif isinstance(o, dict):
-                return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+                return all(_can_print(i) and _can_print(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            elif isinstance(o, LatexPrintable):
-                # types known to the printer
+            elif isinstance(o, Printable):
+                # types known to sympy
                 return True
-            elif hasattr(o, '_latex'):
+            elif any(hasattr(o, hook) for hook in printing_hooks):
                 # types which add support themselves
                 return True
             elif isinstance(o, (float, int)) and print_builtin:
@@ -179,7 +182,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by an external latex
         distribution, falling back to matplotlib rendering
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
             if latex_mode == 'plain':
                 s = '$\\displaystyle %s$' % s
@@ -197,7 +200,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a svg rendered by an external latex
         distribution, no fallback available.
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
             if latex_mode == 'plain':
                 s = '$\\displaystyle %s$' % s
@@ -211,7 +214,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         A function that returns a png rendered by mathtext
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode='inline', **settings)
             return _matplotlib_wrapper(s)
 
@@ -219,7 +222,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         A function to generate the latex representation of sympy expressions.
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
             if latex_mode == 'plain':
                 return '$\\displaystyle %s$' % s
@@ -246,14 +249,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     import IPython
     if V(IPython.__version__) >= '0.11':
 
-        printable_types = [LatexPrintable, float, tuple, list, set,
+        printable_types = [Printable, float, tuple, list, set,
                 frozenset, dict, int]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-        # Note that `printable_types` really contains the types that are
-        # printable with latex. See gh-19444.
-        for cls in printable_types + [StrPrintable]:
+        for cls in printable_types:
             plaintext_formatter.for_type(cls, _print_plain)
 
         svg_formatter = ip.display_formatter.formatters['image/svg+xml']
@@ -291,7 +292,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
-            LatexPrintable._repr_latex_ = LatexPrintable._repr_latex_orig
+            Printable._repr_latex_ = Printable._repr_latex_orig
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -300,7 +301,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
 
-            LatexPrintable._repr_latex_ = None
+            Printable._repr_latex_ = None
 
     else:
         ip.set_hook('result_display', _result_display)

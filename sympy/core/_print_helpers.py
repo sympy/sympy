@@ -7,7 +7,7 @@ However, they cannot be defined there without causing circular imports
 from typing import Any
 
 
-class StrPrintable:
+class Printable:
     """
     The default implementation of printing for SymPy classes.
 
@@ -16,6 +16,7 @@ class StrPrintable:
     even if ``str()`` was explicitly requested. Mix in this trait into
     a class to get proper default printing.
 
+    This also adds support for LaTeX printing in jupyter notebooks.
     """
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
@@ -25,14 +26,6 @@ class StrPrintable:
         return sstr(self, order=None)
 
     __repr__ = __str__
-
-
-class LatexPrintable:
-    """
-    The default implementation of latex printing for SymPy classes.
-
-    Mix in this trait into a class to get proper latex printing with IPython.
-    """
 
     # We don't define _repr_png_ here because it would add a large amount of
     # data to any notebook containing SymPy expressions, without adding

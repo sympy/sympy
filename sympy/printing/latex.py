@@ -16,8 +16,6 @@ from sympy.core.operations import AssocOp
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
 
-from sympy.core._print_helpers import LatexPrintable
-
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer
@@ -121,9 +119,6 @@ _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
     re.compile(r'[{ ]*[-+0-9]'),  # match
 )
-
-
-LatexPrintable.__module__ = __name__
 
 
 class LatexPrinter(Printer):

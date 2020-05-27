@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.printing.str import StrPrintable
+from sympy.core._print_helpers import Printable
 
-class DefaultPrinting(StrPrintable):
-    """ Alias for StrPrintable, prefer the latter """
-    pass
+# alias for compatibility
+Printable.__module__ = __name__
+DefaultPrinting = Printable

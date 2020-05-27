@@ -1,13 +1,13 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import unicode
-from sympy.printing.latex import LatexPrintable
+from sympy.printing.defaults import Printable
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
 
 __all__ = ['Dyadic']
 
 
-class Dyadic(LatexPrintable):
+class Dyadic(Printable):
     """A Dyadic object.
 
     See:

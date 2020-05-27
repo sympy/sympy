@@ -15,10 +15,6 @@ from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
 from sympy.utilities import default_sort_key
 
-from sympy.core._print_helpers import StrPrintable
-
-StrPrintable.__module__ = __name__
-
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"

@@ -15,7 +15,7 @@ from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
-from sympy.printing.latex import LatexPrintable
+from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
@@ -753,7 +753,7 @@ class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
                  MatrixCommon,
-                 LatexPrintable):
+                 Printable):
     """Base class for matrix objects."""
     # Added just for numpy compatibility
     __array_priority__ = 11
