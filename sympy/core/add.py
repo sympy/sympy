@@ -114,7 +114,6 @@ class Add(Expr, AssocOp):
 
         coeff = S.Zero  # coefficient (Number or zoo) to always be in slot 0
                         # e.g. 3 + ...
-        order_factors = []
 
         for o in seq:
 
