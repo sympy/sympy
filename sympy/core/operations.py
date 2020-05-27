@@ -71,7 +71,7 @@ class AssocOp(Basic):
         if ignore_hook:
             return None
 
-        hook = cls._find_hook(cls, *args)
+        _, _, hook = cls._find_hook(cls, *args)
         if hook is None:     # No hook is defined for args, so hook cannot be applied.
             return None
         else:
@@ -79,26 +79,47 @@ class AssocOp(Basic):
 
     @classmethod
     def _find_hook(cls, *args):
-        # Helper for _constructor_hook.
+        # Helper for _constructor_hook. This method selects the highst hook and the class which has it.
+        # Returns: (func, op_priority of func, hook of func)
 
         dispatcher = cls.__dict__.get('dispatcher') # do not allow inheritance of dispatcher
         if dispatcher is None:  # No hook is applied if cls isn't designed for hook
-            return None
+            return None, None, None
 
         hooks = []
         for a in args:
             if isinstance(a, cls):  # To find hook in e.g. Add(1, Order(x))
-                hook = cls._find_hook(*a.args)
+                func, op_priority, hook = cls._find_hook(*a.args)
             else:
-                hook = dispatcher(a)
+                # if _op_priority is not defined for a, it gets lowest priority.
+                func, op_priority, hook = type(a), getattr(a, '_op_priority', 0), dispatcher(a)
             if hook is not None:    # None means unregistered type
-                hooks.append(hook)
+                hooks.append((func, op_priority, hook))
 
         if len(hooks) == 0:
-            return None     # No hook is defined for args.
-        else:
-            hook = hooks.pop()
-            return hook
+            return None, None, None     # No hook is defined for args.
+        elif len(hooks) == 1:
+            return hooks[0]     # Only one hook found - use that!
+
+        # Multiple hook found: use op_priority to choose one.
+        max_priority = max(hooks, key=lambda x:x[1])[1]
+        hooks = [tup for tup in hooks if tup[1]==max_priority]
+        if len(hooks) == 1:
+            return hooks[0]
+
+        # Multiple hook has same op_priority: prefer the subclass
+        new_hooks = []
+        while hooks:
+            tup = hooks[0]
+            # (otup means other tuple)
+            if any((issubclass(tup[0], otup[0]) and tup[0] != otup[0]) for otup in hooks):
+                pass
+            else:
+                new_hooks.append(tup)
+            del hooks[0]
+
+        # Return the first-coming hook. This also resolves the case where multiple hooks still collide.
+        return new_hooks[0]
 
     @classmethod
     def _from_args(cls, args, is_commutative=None):
