@@ -469,6 +469,10 @@ def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
 
 
+def test_issue_9558():
+    assert limit(sin(x)**15, x, 0, '-') == 0
+
+
 def test_issue_10801():
     # make sure limits work with binomial
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
@@ -672,10 +676,6 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
-
-
-def test_issue_18992():
-    assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
 
 
 def test_issue_18997():
