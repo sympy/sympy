@@ -2,10 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.numbers import GoldenRatio
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -193,6 +191,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
+        from sympy import sign
         from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
@@ -212,6 +211,26 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        try:
+            if e.is_meromorphic(z, z0):
+                if abs(z0) is S.Infinity:
+                    newe = e.subs(z, -1/z)
+                else:
+                    newe = e.subs(z, z + z0)
+
+                coeff, exp = newe.leadterm(z)
+                if coeff is not S.ComplexInfinity:
+                    if exp > 0:
+                        return S.Zero
+                    elif exp == 0:
+                        return coeff
+                    if str(dir) == "+" or not(int(exp) & 1):
+                        return S.Infinity*sign(coeff)
+                    elif str(dir) == "-":
+                        return S.NegativeInfinity*sign(coeff)
+        except ValueError:
+            pass
+
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
@@ -219,29 +238,23 @@ class Limit(Expr):
         if z0.is_extended_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
-        if e.is_Mul:
-            if abs(z0) is S.Infinity:
-                e = factor_terms(e)
-                e = e.rewrite(fibonacci, GoldenRatio)
-                ok = lambda w: (z in w.free_symbols and
-                                any(a.is_polynomial(z) or
-                                    any(z in m.free_symbols and m.is_polynomial(z)
-                                        for m in Mul.make_args(a))
-                                    for a in Add.make_args(w)))
-                if all(ok(w) for w in e.as_numer_denom()):
-                    u = Dummy(positive=True)
-                    if z0 is S.NegativeInfinity:
-                        inve = e.subs(z, -1/u)
+        if abs(z0) is S.Infinity and not e.has(S.Infinity, S.NegativeInfinity, S.NaN, S.ComplexInfinity):
+            e = factor_terms(e)
+            u = Dummy('u', positive=True)
+            if z0 is S.NegativeInfinity:
+                inve = e.subs(z, -1/u)
+            else:
+                inve = e.subs(z, 1/u)
+            try:
+                f = inve.as_leading_term(u)
+                if f.is_meromorphic(u, S.Zero):
+                    r = limit(f, u, S.Zero, "+")
+                    if isinstance(r, Limit):
+                        return self
                     else:
-                        inve = e.subs(z, 1/u)
-                    try:
-                        r = limit(inve.as_leading_term(u), u, S.Zero, "+")
-                        if isinstance(r, Limit):
-                            return self
-                        else:
-                            return r
-                    except ValueError:
-                        pass
+                        return r
+            except (ValueError, NotImplementedError, PoleError):
+                pass
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
