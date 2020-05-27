@@ -476,7 +476,6 @@ class Order(Expr):
 
 def Add_hook(*seq, **options):
     from sympy.core.add import _addsort
-    from sympy.matrices import MatAdd
 
     evaluate = options.get('evaluate')
     if evaluate is None:
@@ -546,8 +545,32 @@ def Add_hook(*seq, **options):
         result.is_commutative = commutative
     return result
 
+def Mul_hook(*seq, **options):
+    evaluate = options.get('evaluate')
+    if evaluate is None:
+        evaluate = global_parameters.evaluate
+    if not evaluate:
+        return None
+
+    order_symbols = None
+    other_terms = []
+
+    for o in seq:
+        if o.is_Order:
+            o, order_symbols = o.as_expr_variables(order_symbols)
+        other_terms.append(o)
+
+    obj = Mul(*other_terms, **options)
+    if order_symbols is not None:
+        obj = Order(obj, *order_symbols)
+    return obj
+
 @Add.dispatcher.register(Order)
 def _(arg):
     return Add_hook
+
+@Mul.dispatcher.register(Order)
+def _(arg):
+    return Mul_hook
 
 O = Order

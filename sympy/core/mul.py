@@ -247,9 +247,6 @@ class Mul(Expr, AssocOp):
         #
         # NOTE: this is optimized for all-objects-are-commutative case
         for o in seq:
-            # O(x)
-            if o.is_Order:
-                o, order_symbols = o.as_expr_variables(order_symbols)
 
             # Mul([...])
             if o.is_Mul:
