@@ -112,7 +112,7 @@ class Mul(Expr, AssocOp):
 
     @classmethod
     def flatten(cls, seq):
-        """Return commutative, noncommutative and order arguments by
+        """Return commutative and noncommutative arguments by
         combining related terms.
 
         Notes
@@ -200,7 +200,7 @@ class Mul(Expr, AssocOp):
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul
-                        rv = [cls(a*r, b, evaluate=False)], [], None
+                        rv = [cls(a*r, b, evaluate=False)], []
                     elif global_parameters.distribute and b.is_commutative:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
@@ -209,7 +209,7 @@ class Mul(Expr, AssocOp):
                         if ar:
                             bargs.insert(0, ar)
                         bargs = [Add._from_args(bargs)]
-                        rv = bargs, [], None
+                        rv = bargs, []
             if rv:
                 return rv
 
@@ -232,8 +232,6 @@ class Mul(Expr, AssocOp):
 
         pnum_rat = {}       # (num-base, Rat-exp)          1/2
                             # e.g.  (3, 1/2)  for  ... * 3     * ...
-
-        order_symbols = None
 
         # --- PART 1 ---
         #
@@ -271,18 +269,18 @@ class Mul(Expr, AssocOp):
             elif o.is_Number:
                 if o is S.NaN or coeff is S.ComplexInfinity and o.is_zero:
                     # we know for sure the result will be nan
-                    return [S.NaN], [], None
+                    return [S.NaN], []
                 elif coeff.is_Number:  # it could be zoo
                     coeff *= o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
-                        return [S.NaN], [], None
+                        return [S.NaN], []
                 continue
 
             elif o is S.ComplexInfinity:
                 if not coeff:
                     # 0 * zoo = NaN
-                    return [S.NaN], [], None
+                    return [S.NaN], []
                 coeff = S.ComplexInfinity
                 continue
 
@@ -423,7 +421,7 @@ class Mul(Expr, AssocOp):
                     if (b.is_Add or b.is_Mul) and any(infty in b.args
                         for infty in (S.ComplexInfinity, S.Infinity,
                                       S.NegativeInfinity)):
-                        return [S.NaN], [], None
+                        return [S.NaN], []
                     continue
                 if e is S.One:
                     if b.is_Number:
@@ -593,8 +591,8 @@ class Mul(Expr, AssocOp):
             # we know for sure the result will be 0 except the multiplicand
             # is infinity
             if any(c.is_finite == False for c in c_part):
-                return [S.NaN], [], order_symbols
-            return [coeff], [], order_symbols
+                return [S.NaN], []
+            return [coeff], []
 
         # check for straggling Numbers that were produced
         _new = []
@@ -619,7 +617,7 @@ class Mul(Expr, AssocOp):
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
-        return c_part, nc_part, order_symbols
+        return c_part, nc_part
 
     def _eval_power(b, e):
 

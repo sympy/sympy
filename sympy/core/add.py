@@ -83,7 +83,7 @@ class Add(Expr, AssocOp):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
 
-        Returns: (commutative_part, noncommutative_part, order_symbols)
+        Returns: (commutative_part, noncommutative_part)
 
         Applies associativity, all terms are commutable with respect to
         addition.
@@ -103,11 +103,11 @@ class Add(Expr, AssocOp):
                 a, b = b, a
             if a.is_Rational:
                 if b.is_Mul:
-                    rv = [a, b], [], None
+                    rv = [a, b], []
             if rv:
                 if all(s.is_commutative for s in rv[0]):
                     return rv
-                return [], rv[0], None
+                return [], rv[0]
 
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
@@ -123,18 +123,18 @@ class Add(Expr, AssocOp):
                 if (o is S.NaN or coeff is S.ComplexInfinity and
                         o.is_finite is False):
                     # we know for sure the result will be nan
-                    return [S.NaN], [], None
+                    return [S.NaN], []
                 if coeff.is_Number:
                     coeff += o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
-                        return [S.NaN], [], None
+                        return [S.NaN], []
                 continue
 
             elif o is S.ComplexInfinity:
                 if coeff.is_finite is False:
                     # we know for sure the result will be nan
-                    return [S.NaN], [], None
+                    return [S.NaN], []
                 coeff = S.ComplexInfinity
                 continue
 
@@ -173,7 +173,7 @@ class Add(Expr, AssocOp):
                 terms[s] += c
                 if terms[s] is S.NaN:
                     # we know for sure the result will be nan
-                    return [S.NaN], [], None
+                    return [S.NaN], []
             else:
                 terms[s] = c
 
@@ -232,9 +232,9 @@ class Add(Expr, AssocOp):
 
         # we are done
         if noncommutative:
-            return [], newseq, None
+            return [], newseq
         else:
-            return newseq, [], None
+            return newseq, []
 
     @classmethod
     def class_key(cls):

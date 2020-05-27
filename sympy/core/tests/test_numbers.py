@@ -1566,7 +1566,7 @@ def test_zoo():
     assert zoo**2 is zoo
     assert 1/zoo is S.Zero
 
-    assert Mul.flatten([S.NegativeOne, oo, S(0)]) == ([S.NaN], [], None)
+    assert Mul.flatten([S.NegativeOne, oo, S(0)]) == ([S.NaN], [])
 
 
 def test_issue_4122():

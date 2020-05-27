@@ -29,7 +29,6 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
-        from sympy import Order
         args = list(map(_sympify, args))
 
         obj = cls._constructor_hook(*args, **options)
@@ -56,13 +55,10 @@ class AssocOp(Basic):
         if len(args) == 1:
             return args[0]
 
-        c_part, nc_part, order_symbols = cls.flatten(args)
+        c_part, nc_part = cls.flatten(args)
         is_commutative = not nc_part
         obj = cls._from_args(c_part + nc_part, is_commutative)
         obj = cls._exec_constructor_postprocessors(obj)
-
-        if order_symbols is not None:
-            return Order(obj, *order_symbols)
         return obj
 
     @classmethod
@@ -186,8 +182,8 @@ class AssocOp(Basic):
                 new_seq.append(o)
         new_seq.reverse()
 
-        # c_part, nc_part, order_symbols
-        return [], new_seq, None
+        # c_part, nc_part
+        return [], new_seq
 
     def _matches_commutative(self, expr, repl_dict={}, old=False):
         """
