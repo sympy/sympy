@@ -9,6 +9,7 @@ from zipfile import ZipFile
 from shutil import copytree
 
 
+
 def main(sympy_doc_git, doc_html_zip, version, push=None):
     """Run this as ./update_docs.py SYMPY_DOC_GIT DOC_HTML_ZIP VERSION [--push]
 
@@ -40,35 +41,13 @@ def main(sympy_doc_git, doc_html_zip, version, push=None):
     update_docs(sympy_doc_git, doc_html_zip, version, push)
 
 
-
 def update_docs(sympy_doc_git, doc_html_zip, version, push):
 
-    def run(*cmdline):
-        """Run subprocess with cwd in sympy_doc"""
-        print()
-        print('Running: $ ' + ' '.join(cmdline))
-        print()
-        return subprocess.run(cmdline, cwd=sympy_doc_git, check=True)
-
-    @contextmanager
-    def hard_reset_on_error():
-        """Revert any uncomitted changes on error"""
-        try:
-            yield
-        except Exception as e:
-            run('git', 'reset', '--hard')
-            raise e from None
-
-    run('git', 'diff', '--exit-code') # Error if tree is unclean
-
     # We started with a clean tree so restore it on error
-    with hard_reset_on_error():
+    with git_rollback_on_error(sympy_doc_git, branch='gh-pages') as run:
 
-        run('git', 'checkout', 'gh-pages')
-        run('git', 'pull')
-
+        # Update releases.txt file
         update_releases_txt(sympy_doc_git, version)
-
         run('git', 'diff') # Show change to releases.txt
         run('git', 'add', 'releases.txt')
         run('git', 'commit', '-m', 'Add sympy %s to releases.txt' % version)
@@ -79,6 +58,7 @@ def update_docs(sympy_doc_git, doc_html_zip, version, push):
         # Extract new docs in replacement
         extract_docs(sympy_doc_git, doc_html_zip, version)
 
+        # Commit new docs
         run('git', 'add', 'latest')
         run('git', 'add', version)
         run('git', 'commit', '-m', 'Add sympy %s docs' % version)
@@ -88,7 +68,42 @@ def update_docs(sympy_doc_git, doc_html_zip, version, push):
         run('git', 'diff')
         run('git', 'commit', '-a', '-m', 'Update indexes')
 
-        run('git', 'push')
+        if push:
+            run('git', 'push')
+        else:
+            print('Results are committed but not pushed')
+
+
+@contextmanager
+def git_rollback_on_error(gitroot_path, branch='master'):
+
+    def run(*cmdline, **kwargs):
+        """Run subprocess with cwd in sympy_doc"""
+        print()
+        print('Running: $ ' + ' '.join(cmdline))
+        print()
+        return subprocess.run(cmdline, cwd=gitroot_path, check=True, **kwargs)
+
+    unclean_msg = "The git repo should be completely clean before running this"
+
+    try:
+        run('git', 'diff', '--exit-code') # Error if tree is unclean
+    except subprocess.CalledProcessError:
+        raise ValueError(unclean_msg)
+    if run('git', 'clean', '-n', stdout=subprocess.PIPE).stdout:
+        raise ValueError(unclean_msg)
+
+    run('git', 'checkout', branch)
+    run('git', 'pull')
+
+    bsha_start = run('git', 'rev-parse', 'HEAD', stdout=subprocess.PIPE).stdout
+    sha_start = bsha_start.strip().decode('ascii')
+
+    try:
+        yield run
+    except Exception as e:
+        run('git', 'reset', '--hard', sha_start)
+        raise e from None
 
 
 def update_releases_txt(sympy_doc_git, version):
