@@ -186,7 +186,7 @@ def test_Matrix_mul():
 
 
 def test_Matrix_array():
-    class matarray(object):
+    class matarray:
         def __array__(self):
             from numpy import array
             return array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])

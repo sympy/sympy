@@ -1,9 +1,12 @@
+from sympy import Trace
+from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det, ZeroMatrix)
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix)
 from sympy.core import Tuple, symbols, Expr
@@ -44,8 +47,9 @@ def test_block_plus_ident():
     C = MatrixSymbol('C', m, n)
     D = MatrixSymbol('D', m, m)
     X = BlockMatrix([[A, B], [C, D]])
-    assert bc_block_plus_ident(X+Identity(m+n)) == \
-            BlockDiagMatrix(Identity(n), Identity(m)) + X
+    Z = MatrixSymbol('Z', n + m, n + m)
+    assert bc_block_plus_ident(X + Identity(m + n) + Z) == \
+            BlockDiagMatrix(Identity(n), Identity(m)) + X + Z
 
 def test_BlockMatrix():
     A = MatrixSymbol('A', n, m)
@@ -118,6 +122,7 @@ def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
     assert trace(X) == trace(A) + trace(D)
+    assert trace(BlockMatrix([ZeroMatrix(n, n)])) == 0
 
 def test_BlockMatrix_Determinant():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
@@ -127,6 +132,8 @@ def test_BlockMatrix_Determinant():
         assert det(X) == det(A) * det(D - C*A.I*B)
 
     assert isinstance(det(X), Expr)
+    assert det(BlockMatrix([A])) == det(A)
+    assert det(BlockMatrix([ZeroMatrix(n, n)])) == 0
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
@@ -146,9 +153,6 @@ def test_squareBlockMatrix():
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
 
     assert block_collapse(Y.I) == A.I
-    assert block_collapse(X.inverse()) == BlockMatrix([
-        [(-B*D.I*C + A).I, -A.I*B*(D + -C*A.I*B).I],
-        [-(D - C*A.I*B).I*C*A.I, (D - C*A.I*B).I]])
 
     assert isinstance(X.inverse(), Inverse)
 
@@ -156,6 +160,97 @@ def test_squareBlockMatrix():
 
     Z = BlockMatrix([[Identity(n), B], [C, D]])
     assert not Z.is_Identity
+
+
+def test_BlockMatrix_2x2_inverse_symbolic():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', n, k - m)
+    C = MatrixSymbol('C', k - n, m)
+    D = MatrixSymbol('D', k - n, k - m)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert X.is_square and X.shape == (k, k)
+    assert isinstance(block_collapse(X.I), Inverse)  # Can't invert when none of the blocks is square
+
+    # test code path where only A is invertible
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', n, m)
+    C = MatrixSymbol('C', m, n)
+    D = ZeroMatrix(m, m)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix([
+        [A.I + A.I * B * (D - C * A.I * B).I * C * A.I, -A.I * B * (D - C * A.I * B).I],
+        [-(D - C * A.I * B).I * C * A.I, (D - C * A.I * B).I],
+    ])
+
+    # test code path where only B is invertible
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', n, n)
+    C = ZeroMatrix(m, m)
+    D = MatrixSymbol('D', m, n)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix(([
+        [-(C - D * B.I * A).I * D * B.I, (C - D * B.I * A).I],
+        [B.I + B.I * A * (C - D * B.I * A).I * D * B.I, -B.I * A * (C - D * B.I * A).I],
+    ]))
+
+    # test code path where only C is invertible
+    A = MatrixSymbol('A', n, m)
+    B = ZeroMatrix(n, n)
+    C = MatrixSymbol('C', m, m)
+    D = MatrixSymbol('D', m, n)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix([
+        [-C.I * D * (B - A * C.I * D).I, C.I + C.I * D * (B - A * C.I * D).I * A * C.I],
+        [(B - A * C.I * D).I, -(B - A * C.I * D).I * A * C.I],
+    ])
+
+    # test code path where only D is invertible
+    A = ZeroMatrix(n, n)
+    B = MatrixSymbol('B', n, m)
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', m, m)
+    X = BlockMatrix([[A, B], [C, D]])
+    assert block_collapse(X.inverse()) == BlockMatrix([
+        [(A - B * D.I * C).I, -(A - B * D.I * C).I * B * D.I],
+        [-D.I * C * (A - B * D.I * C).I, D.I + D.I * C * (A - B * D.I * C).I * B * D.I],
+    ])
+
+
+def test_BlockMatrix_2x2_inverse_numeric():
+    """Test 2x2 block matrix inversion numerically for all 4 formulas"""
+    M = Matrix([[1, 2], [3, 4]])
+    # rank deficient matrices that have full rank when two of them combined
+    D1 = Matrix([[1, 2], [2, 4]])
+    D2 = Matrix([[1, 3], [3, 9]])
+    D3 = Matrix([[1, 4], [4, 16]])
+    assert D1.rank() == D2.rank() == D3.rank() == 1
+    assert (D1 + D2).rank() == (D2 + D3).rank() == (D3 + D1).rank() == 2
+
+    # Only A is invertible
+    K = BlockMatrix([[M, D1], [D2, D3]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+    # Only B is invertible
+    K = BlockMatrix([[D1, M], [D2, D3]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+    # Only C is invertible
+    K = BlockMatrix([[D1, D2], [M, D3]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+    # Only D is invertible
+    K = BlockMatrix([[D1, D2], [D3, M]])
+    assert block_collapse(K.inv()).as_explicit() == K.as_explicit().inv()
+
+
+@slow
+def test_BlockMatrix_3x3_symbolic():
+    # Only test one of these, instead of all permutations, because it's slow
+    rowblocksizes = (n, m, k)
+    colblocksizes = (m, k, n)
+    K = BlockMatrix([
+        [MatrixSymbol('M%s%s' % (rows, cols), rows, cols) for cols in colblocksizes]
+        for rows in rowblocksizes
+    ])
+    collapse = block_collapse(K.I)
+    assert isinstance(collapse, BlockMatrix)
 
 
 def test_BlockDiagMatrix():
@@ -172,6 +267,7 @@ def test_BlockDiagMatrix():
     assert all(X.blocks[i, j].is_ZeroMatrix if i != j else X.blocks[i, j] in [A, B, C]
             for i in range(3) for j in range(3))
     assert X.__class__(*X.args) == X
+    assert X.get_diag_blocks() == (A, B, C)
 
     assert isinstance(block_collapse(X.I * X), Identity)
 
@@ -189,10 +285,61 @@ def test_BlockDiagMatrix():
     assert (X._blockmul(M)).is_MatMul
     assert (X._blockadd(M)).is_MatAdd
 
+def test_BlockDiagMatrix_nonsquare():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', k, l)
+    X = BlockDiagMatrix(A, B)
+    assert X.shape == (n + k, m + l)
+    assert X.shape == (n + k, m + l)
+    assert X.rowblocksizes == [n, k]
+    assert X.colblocksizes == [m, l]
+    C = MatrixSymbol('C', n, m)
+    D = MatrixSymbol('D', k, l)
+    Y = BlockDiagMatrix(C, D)
+    assert block_collapse(X + Y) == BlockDiagMatrix(A + C, B + D)
+    assert block_collapse(X * Y.T) == BlockDiagMatrix(A * C.T, B * D.T)
+    raises(NonInvertibleMatrixError, lambda: BlockDiagMatrix(A, C.T).inverse())
+
+def test_BlockDiagMatrix_determinant():
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', m, m)
+    assert det(BlockDiagMatrix()) == 1
+    assert det(BlockDiagMatrix(A)) == det(A)
+    assert det(BlockDiagMatrix(A, B)) == det(A) * det(B)
+
+    # non-square blocks
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', n, m)
+    assert det(BlockDiagMatrix(C, D)) == 0
+
+def test_BlockDiagMatrix_trace():
+    assert trace(BlockDiagMatrix()) == 0
+    assert trace(BlockDiagMatrix(ZeroMatrix(n, n))) == 0
+    A = MatrixSymbol('A', n, n)
+    assert trace(BlockDiagMatrix(A)) == trace(A)
+    B = MatrixSymbol('B', m, m)
+    assert trace(BlockDiagMatrix(A, B)) == trace(A) + trace(B)
+
+    # non-square blocks
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', n, m)
+    assert isinstance(trace(BlockDiagMatrix(C, D)), Trace)
+
+def test_BlockDiagMatrix_transpose():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', k, l)
+    assert transpose(BlockDiagMatrix()) == BlockDiagMatrix()
+    assert transpose(BlockDiagMatrix(A)) == BlockDiagMatrix(A.T)
+    assert transpose(BlockDiagMatrix(A, B)) == BlockDiagMatrix(A.T, B.T)
+
+def test_issue_2460():
+    bdm1 = BlockDiagMatrix(Matrix([i]), Matrix([j]))
+    bdm2 = BlockDiagMatrix(Matrix([k]), Matrix([l]))
+    assert block_collapse(bdm1 + bdm2) == BlockDiagMatrix(Matrix([i + k]), Matrix([j + l]))
+
 def test_blockcut():
     A = MatrixSymbol('A', n, m)
     B = blockcut(A, (n/2, n/2), (m/2, m/2))
-    assert A[i, j] == B[i, j]
     assert B == BlockMatrix([[A[:n/2, :m/2], A[:n/2, m/2:]],
                              [A[n/2:, :m/2], A[n/2:, m/2:]]])
 
@@ -232,3 +379,19 @@ def test_block_collapse_type():
     assert block_collapse(Transpose(bm1)).__class__ == BlockDiagMatrix
     assert bc_transpose(Transpose(bm1)).__class__ == BlockDiagMatrix
     assert bc_inverse(Inverse(bm1)).__class__ == BlockDiagMatrix
+
+def test_invalid_block_matrix():
+    raises(ValueError, lambda: BlockMatrix([
+        [Identity(2), Identity(5)],
+    ]))
+    raises(ValueError, lambda: BlockMatrix([
+        [Identity(n), Identity(m)],
+    ]))
+    raises(ValueError, lambda: BlockMatrix([
+        [ZeroMatrix(n, n), ZeroMatrix(n, n)],
+        [ZeroMatrix(n, n - 1), ZeroMatrix(n, n + 1)],
+    ]))
+    raises(ValueError, lambda: BlockMatrix([
+        [ZeroMatrix(n - 1, n), ZeroMatrix(n, n)],
+        [ZeroMatrix(n + 1, n), ZeroMatrix(n, n)],
+    ]))

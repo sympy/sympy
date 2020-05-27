@@ -1910,6 +1910,13 @@ def test_tensor_replacement():
     repl = {H(i, -i): 42}
     assert expr._extract_data(repl) == ([], 42)
 
+    expr = H(i, -i)
+    repl = {
+        H(-i, -j): Array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]),
+        L: Array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]),
+    }
+    assert expr._extract_data(repl) == ([], 4)
+
     # Replace with array, raise exception if indices are not compatible:
     expr = A(i)*A(j)
     repl = {A(i): [1, 2]}

@@ -1,15 +1,14 @@
-from __future__ import print_function, division
-
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
+from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
 from .matexpr import \
-    MatrixExpr, ShapeError, Identity, ZeroMatrix, GenericIdentity
+    MatrixExpr, Identity, ZeroMatrix, OneMatrix, GenericIdentity
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
@@ -332,12 +331,17 @@ def combine_powers(mul):
         if A_base == B_base:
             new_exp = A_exp + B_exp
             new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-        elif not isinstance(B_base, MatrixBase) and \
-            A_base == B_base.inverse():
-            new_exp = A_exp - B_exp
-            new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
-        else:
-            new_args.append(B)
+            continue
+        elif not isinstance(B_base, MatrixBase):
+            try:
+                B_base_inv = B_base.inverse()
+            except NonInvertibleMatrixError:
+                B_base_inv = None
+            if B_base_inv is not None and A_base == B_base_inv:
+                new_exp = A_exp - B_exp
+                new_args[-1] = MatPow(A_base, new_exp).doit(deep=False)
+                continue
+        new_args.append(B)
 
     return newmul(factor, *new_args)
 
@@ -363,8 +367,28 @@ def combine_permutations(mul):
 
     return MatMul(*result)
 
+def combine_one_matrices(mul):
+    """
+    Combine products of OneMatrix
+
+    e.g. OneMatrix(2, 3) * OneMatrix(3, 4) -> 3 * OneMatrix(2, 4)
+    """
+    factor, args = mul.as_coeff_matrices()
+    new_args = [args[0]]
+
+    for B in args[1:]:
+        A = new_args[-1]
+        if not isinstance(A, OneMatrix) or not isinstance(B, OneMatrix):
+            new_args.append(B)
+            continue
+        new_args.pop()
+        new_args.append(OneMatrix(A.shape[0], B.shape[1]))
+        factor *= A.shape[1]
+
+    return newmul(factor, *new_args)
+
 rules = (
-    any_zeros, remove_ids, combine_powers, unpack, rm_id(lambda x: x == 1),
+    any_zeros, remove_ids, combine_one_matrices, combine_powers, unpack, rm_id(lambda x: x == 1),
     merge_explicit, factor_in_front, flatten, combine_permutations)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))

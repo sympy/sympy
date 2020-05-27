@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.compatibility import as_int
 
 
@@ -154,8 +152,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     n = as_int(n)
     if m < 2*n or n == 1:
         mc = multinomial_coefficients(m, n)
-        for k, v in mc.items():
-            yield(k, v)
+        yield from mc.items()
     else:
         mc = multinomial_coefficients(n, n)
         mc1 = {}

@@ -98,8 +98,8 @@ class InnerProduct(Expr):
             printer._print(self.bra, *args), printer._print(self.ket, *args))
 
     def _sympystr(self, printer, *args):
-        sbra = str(self.bra)
-        sket = str(self.ket)
+        sbra = printer._print(self.bra)
+        sket = printer._print(self.ket)
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):

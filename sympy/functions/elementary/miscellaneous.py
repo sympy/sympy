@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -131,10 +129,7 @@ def sqrt(arg, evaluate=None):
     >>> sqrt(x).has(sqrt)
     Traceback (most recent call last):
       ...
-    sympy.core.sympify.SympifyError: Sympify of expression 'could not parse
-    '<function sqrt at 0x7f79ad860f80>'' failed, because of exception being
-    raised:
-    SyntaxError: invalid syntax
+    sympy.core.sympify.SympifyError: SympifyError: <function sqrt at 0x10e8900d0>
 
     To find ``sqrt`` look for ``Pow`` with an exponent of ``1/2``:
 
@@ -571,8 +566,7 @@ class MinMaxBase(Expr, LatticeOp):
             elif arg == cls.identity:
                 continue
             elif arg.func == cls:
-                for x in arg.args:
-                    yield x
+                yield from arg.args
             else:
                 yield arg
 

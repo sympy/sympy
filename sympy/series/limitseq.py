@@ -242,5 +242,6 @@ def limit_seq(expr, n=None, trials=5):
         # Maybe the absolute value is easier to deal with (though not if
         # it has a Sum). If it tends to 0, the limit is 0.
         elif not expr.has(Sum):
-            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials).is_zero:
+            lim = _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials)
+            if lim is not None and lim.is_zero:
                 return S.Zero

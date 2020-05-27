@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
@@ -111,6 +111,9 @@ def test_NumPyPrinter():
     # Workaround for numpy negative integer power errors
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'
+
+    expr = Pow(2, -1, evaluate=False)
+    assert p.doprint(expr) == "2**(-1.0)"
 
     assert p.doprint(S.Exp1) == 'numpy.e'
     assert p.doprint(S.Pi) == 'numpy.pi'
@@ -284,3 +287,39 @@ def test_beta():
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
+
+def test_airy():
+    from sympy import airyai, airybi
+
+    expr1 = airyai(x)
+    expr2 = airybi(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybi\nairybi(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybi\nairybi(x)'
+
+def test_airy_prime():
+    from sympy import airyaiprime, airybiprime
+
+    expr1 = airyaiprime(x)
+    expr2 = airybiprime(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybiprime\nairybiprime(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'

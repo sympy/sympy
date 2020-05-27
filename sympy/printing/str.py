@@ -48,10 +48,7 @@ class StrPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
 
         PREC = precedence(expr)
         l = []
@@ -258,18 +255,18 @@ class StrPrinter(Printer):
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def strslice(x):
+        def strslice(x, dim):
             x = list(x)
             if x[2] == 1:
                 del x[2]
-            if x[1] == x[0] + 1:
-                del x[1]
             if x[0] == 0:
                 x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return ':'.join(map(lambda arg: self._print(arg), x))
-        return (self._print(expr.parent) + '[' +
-                strslice(expr.rowslice) + ', ' +
-                strslice(expr.colslice) + ']')
+        return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
+                strslice(expr.rowslice, expr.parent.rows) + ', ' +
+                strslice(expr.colslice, expr.parent.cols) + ']')
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -866,6 +863,15 @@ class StrPrinter(Printer):
     def _print_Category(self, category):
         return 'Category("%s")' % category.name
 
+    def _print_Manifold(self, manifold):
+        return manifold.name
+
+    def _print_Patch(self, patch):
+        return patch.name
+
+    def _print_CoordSystem(self, coords):
+        return coords.name
+
     def _print_BaseScalarField(self, field):
         return field._coord_sys._names[field._index]
 
@@ -882,7 +888,6 @@ class StrPrinter(Printer):
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
-
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
