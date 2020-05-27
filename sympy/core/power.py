@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from math import log as _log
 
 from .sympify import _sympify
@@ -622,6 +620,10 @@ class Pow(Expr):
         if b.is_Number and e.is_Number:
             check = self.func(*self.args)
             return check.is_Integer
+        if e.is_negative and b.is_positive and (b - 1).is_positive:
+            return False
+        if e.is_negative and b.is_negative and (b + 1).is_negative:
+            return False
 
     def _eval_is_extended_real(self):
         from sympy import arg, exp, log, Mul
@@ -1363,6 +1365,43 @@ class Pow(Expr):
         else:
             return True
 
+    def _eval_is_meromorphic(self, x, a):
+        # f**g is meromorphic if g is an integer and f is meromorphic.
+        # E**(log(f)*g) is meromorphic if log(f)*g is meromorphic
+        # and finite.
+        base_merom = self.base._eval_is_meromorphic(x, a)
+        exp_integer = self.exp.is_integer
+        if exp_integer:
+            return base_merom
+
+        exp_merom = self.exp._eval_is_meromorphic(x, a)
+        if base_merom is False:
+            # f**g = E**(log(f)*g) may be meromorphic if the
+            # singularities of log(f) and g cancel each other,
+            # for example, if g = 1/log(f). Hence,
+            return False if exp_merom else None
+        elif base_merom is None:
+            return None
+
+        b = self.base.subs(x, a)
+        # b is extended complex as base is meromorphic.
+        # log(base) is finite and meromorphic when b != 0, zoo.
+        b_zero = b.is_zero
+        if b_zero:
+            log_defined = False
+        else:
+            log_defined = fuzzy_and((b.is_finite, fuzzy_not(b_zero)))
+
+        if log_defined is False: # zero or pole of base
+            return exp_integer  # False or None
+        elif log_defined is None:
+            return None
+
+        if not exp_merom:
+            return exp_merom  # False or None
+
+        return self.exp.subs(x, a).is_finite
+
     def _eval_is_algebraic_expr(self, syms):
         if self.exp.has(*syms):
             return False
@@ -1424,11 +1463,11 @@ class Pow(Expr):
 
     def matches(self, expr, repl_dict={}, old=False):
         expr = _sympify(expr)
+        repl_dict = repl_dict.copy()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
-            d = repl_dict.copy()
-            d = self.exp.matches(S.Zero, d)
+            d = self.exp.matches(S.Zero, repl_dict)
             if d is not None:
                 return d
 
@@ -1463,7 +1502,7 @@ class Pow(Expr):
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
         # where e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
-        from sympy import ceiling, collect, exp, log, O, Order, powsimp
+        from sympy import ceiling, collect, exp, log, O, Order, powsimp, powdenest
         b, e = self.args
         if e.is_Integer:
             if e > 0:
@@ -1493,6 +1532,7 @@ class Pow(Expr):
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
+                    b = powdenest(b)
                     prefactor = b.as_leading_term(x)
 
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)

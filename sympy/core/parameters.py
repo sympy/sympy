@@ -63,7 +63,7 @@ class _global_parameters(local):
     def __setattr__(self, name, value):
         if getattr(self, name) != value:
             clear_cache()
-        return super(_global_parameters, self).__setattr__(name, value)
+        return super().__setattr__(name, value)
 
 global_parameters = _global_parameters(evaluate=True, distribute=True)
 

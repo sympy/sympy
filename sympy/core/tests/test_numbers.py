@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import numbers as nums
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
@@ -276,11 +275,11 @@ def _test_rational_new(cls):
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
     assert cls('1') is S.One
-    assert cls(u'-1') is S.NegativeOne
+    assert cls('-1') is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u'10'))
+    assert _strictly_equal(i, cls('10'))
     assert _strictly_equal(i, cls(int(10)))
     assert _strictly_equal(i, cls(i))
 
@@ -545,14 +544,14 @@ def test_Float():
     assert Float(decimal.Decimal('Infinity')) is S.Infinity
     assert Float(decimal.Decimal('-Infinity')) is S.NegativeInfinity
 
-    assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
-    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
+    assert '{:.3f}'.format(Float(4.236622)) == '4.237'
+    assert '{:.35f}'.format(Float(pi.n(40), 40)) == \
         '3.14159265358979323846264338327950288'
 
     # unicode
-    assert Float(u'0.73908513321516064100000000') == \
+    assert Float('0.73908513321516064100000000') == \
         Float('0.73908513321516064100000000')
-    assert Float(u'0.73908513321516064100000000', 28) == \
+    assert Float('0.73908513321516064100000000', 28) == \
         Float('0.73908513321516064100000000', 28)
 
     # binary precision
@@ -1617,7 +1616,7 @@ def test_as_content_primitive():
 
 def test_hashing_sympy_integers():
     # Test for issue 5072
-    assert set([Integer(3)]) == set([int(3)])
+    assert {Integer(3)} == {int(3)}
     assert hash(Integer(4)) == hash(int(4))
 
 
@@ -1872,7 +1871,7 @@ def test_tribonacci_constant_rewrite_as_sqrt():
 
 
 def test_comparisons_with_unknown_type():
-    class Foo(object):
+    class Foo:
         """
         Class that is unaware of Basic, and relies on both classes returning
         the NotImplemented singleton for equivalence to evaluate to False.
@@ -1896,7 +1895,7 @@ def test_comparisons_with_unknown_type():
         raises(TypeError, lambda: n >= foo)
         raises(TypeError, lambda: foo <= n)
 
-    class Bar(object):
+    class Bar:
         """
         Class that considers itself equal to any instance of Number except
         infinities and nans, and relies on sympy types returning the

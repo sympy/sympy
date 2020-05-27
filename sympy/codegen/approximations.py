@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
-
 import math
 from sympy import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
@@ -50,7 +48,7 @@ class SumApprox(Optimization):
     """
 
     def __init__(self, bounds, reltol, **kwargs):
-        super(SumApprox, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.bounds = bounds
         self.reltol = reltol
 
@@ -137,7 +135,7 @@ class SeriesApprox(Optimization):
 
     """
     def __init__(self, bounds, reltol, max_order=4, n_point_checks=4, **kwargs):
-        super(SeriesApprox, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.bounds = bounds
         self.reltol = reltol
         self.max_order = max_order

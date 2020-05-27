@@ -70,7 +70,6 @@ def test_constructor_postprocessors2():
         assert (3*w).args == (3, w)
         assert set((w + x).args) == set((x, w))
 
-
 @XFAIL
 def test_subexpression_postprocessors():
     # The postprocessors used to work with subexpressions, but the

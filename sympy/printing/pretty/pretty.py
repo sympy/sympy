@@ -52,7 +52,9 @@ class PrettyPrinter(Printer):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
-        self.emptyPrinter = lambda x: prettyForm(xstr(x))
+
+    def emptyPrinter(self, expr):
+        return prettyForm(xstr(expr))
 
     @property
     def _use_unicode(self):
@@ -810,18 +812,21 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixSlice(self, m):
         # XXX works only for applied functions
+        from sympy.matrices import MatrixSymbol
         prettyFunc = self._print(m.parent)
-        def ppslice(x):
+        if not isinstance(m.parent, MatrixSymbol):
+            prettyFunc = prettyForm(*prettyFunc.parens())
+        def ppslice(x, dim):
             x = list(x)
             if x[2] == 1:
                 del x[2]
-            if x[1] == x[0] + 1:
-                del x[1]
             if x[0] == 0:
                 x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return prettyForm(*self._print_seq(x, delimiter=':'))
-        prettyArgs = self._print_seq((ppslice(m.rowslice),
-            ppslice(m.colslice)), delimiter=', ').parens(left='[', right=']')[0]
+        prettyArgs = self._print_seq((ppslice(m.rowslice, m.parent.rows),
+            ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']')[0]
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1704,10 +1709,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
 
         def pretty_negative(pform, index):
@@ -2574,6 +2576,15 @@ class PrettyPrinter(Printer):
             ' %s> ' % hobj('-', 2), self._print(h.codomain)))
         return pform
 
+    def _print_Manifold(self, manifold):
+        return self._print(manifold.name)
+
+    def _print_Patch(self, patch):
+        return self._print(patch.name)
+
+    def _print_CoordSystem(self, coords):
+        return self._print(coords.name)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
         return self._print(pretty_symbol(string))
@@ -2632,7 +2643,6 @@ class PrettyPrinter(Printer):
         r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
-
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

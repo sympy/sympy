@@ -92,7 +92,7 @@ class CoordSys3D(Basic):
                 pass
             else:
                 raise TypeError("transformation: "
-                                "wrong type {0}".format(type(transformation)))
+                                "wrong type {}".format(type(transformation)))
 
         # If orientation information has been provided, store
         # the rotation matrix accordingly
@@ -187,10 +187,10 @@ class CoordSys3D(Basic):
         # positioned/oriented wrt different parents, even though
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
-            obj = super(CoordSys3D, cls).__new__(
+            obj = super().__new__(
                 cls, Symbol(name), transformation, parent)
         else:
-            obj = super(CoordSys3D, cls).__new__(
+            obj = super().__new__(
                 cls, Symbol(name), transformation)
         obj._name = name
         # Initialize the base vectors

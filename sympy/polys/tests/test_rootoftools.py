@@ -574,3 +574,13 @@ def test_issue_15920():
     r = rootof(x**5 - x + 1, 0)
     p = Integral(x, (x, 1, y))
     assert unchanged(Eq, r, p)
+
+
+def test_issue_19113():
+    eq = y**3 - y + 1
+    # generator is a canonical x in RootOf
+    assert str(Poly(eq).real_roots()) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq.subs(y, tan(y))).real_roots()
+        ) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq.subs(y, tan(x))).real_roots()
+        ) == '[CRootOf(x**3 - x + 1, 0)]'

@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 from sympy.sets import FiniteSet
 from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
-from .rv import (probability, expectation, density, where, given, pspace, cdf,
+from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-                 sampling_density, moment_generating_function, quantile)
+                 sampling_density, moment_generating_function, quantile, is_random)
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -57,6 +57,10 @@ def variance(X, condition=None, **kwargs):
     >>> simplify(variance(B))
     p*(1 - p)
     """
+    if is_random(X) and pspace(X) == PSpace():
+        from sympy.stats.symbolic_probability import Variance
+        return Variance(X, condition)
+
     return cmoment(X, 2, condition, **kwargs)
 
 
@@ -148,6 +152,10 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> covariance(X, Y + rate*X)
     1/lambda
     """
+    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()):
+        from sympy.stats.symbolic_probability import Covariance
+        return Covariance(X, Y, condition)
+
     return expectation(
         (X - expectation(X, condition, **kwargs)) *
         (Y - expectation(Y, condition, **kwargs)),
@@ -395,6 +403,65 @@ def median(X, evaluate=True, **kwargs):
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)
         return result
     raise NotImplementedError("The median of %s is not implemeted."%str(pspace(X)))
+
+
+def coskewness(X, Y, Z, condition=None, **kwargs):
+    r"""
+    Calculates the co-skewness of three random variables.
+    Mathematically Coskewness is defined as
+
+    .. math::
+        coskewness(X,Y,Z)=\frac{E[(X-E[X]) * (Y-E[Y]) * (Z-E[Z])]} {\sigma_{X}\sigma_{Y}\sigma_{Z}}
+
+    Parameters
+    ==========
+
+    X : RandomSymbol
+            Random Variable used to calculate coskewness
+    Y : RandomSymbol
+            Random Variable used to calculate coskewness
+    Z : RandomSymbol
+            Random Variable used to calculate coskewness
+    condition : Expr containing RandomSymbols
+            A conditional expression
+
+    Examples
+    ========
+
+    >>> from sympy.stats import coskewness, Exponential, skewness
+    >>> from sympy import symbols
+    >>> p = symbols('p', positive=True)
+    >>> X = Exponential('X', p)
+    >>> Y = Exponential('Y', 2*p)
+    >>> coskewness(X, Y, Y)
+    0
+    >>> coskewness(X, Y + X, Y + 2*X)
+    16*sqrt(85)/85
+    >>> coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3)
+    9*sqrt(170)/85
+    >>> coskewness(Y, Y, Y) == skewness(Y)
+    True
+    >>> coskewness(X, Y + p*X, Y + 2*p*X)
+    4/(sqrt(1 + 1/(4*p**2))*sqrt(4 + 1/(4*p**2)))
+
+    Returns
+    =======
+
+    coskewness : The coskewness of the three random variables
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Coskewness
+
+    """
+    num = expectation((X - expectation(X, condition, **kwargs)) \
+         * (Y - expectation(Y, condition, **kwargs)) \
+         * (Z - expectation(Z, condition, **kwargs)), condition, **kwargs)
+    den = std(X, condition, **kwargs) * std(Y, condition, **kwargs) \
+         * std(Z, condition, **kwargs)
+    return num/den
+
 
 P = probability
 E = expectation
