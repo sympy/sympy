@@ -48,6 +48,7 @@ class AssocOp(Basic):
             evaluate = global_parameters.evaluate
         if not evaluate:
             obj = cls._from_args(args)
+            obj = cls._exec_constructor_postprocessors(obj)
             return obj
 
         if len(args) == 0:
@@ -58,6 +59,7 @@ class AssocOp(Basic):
         c_part, nc_part, order_symbols = cls.flatten(args)
         is_commutative = not nc_part
         obj = cls._from_args(c_part + nc_part, is_commutative)
+        obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
             return Order(obj, *order_symbols)
