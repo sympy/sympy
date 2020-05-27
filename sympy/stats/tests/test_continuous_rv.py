@@ -1589,7 +1589,10 @@ def test_sample_numpy():
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
                     assert sam in X.pspace.domain.set
-
+            raises(NotImplementedError,
+                lambda: next(sample(Chi("C", 1), library='numpy')))
+    raises(NotImplementedError,
+            lambda: Chi("C", 1).pspace.distribution.sample(library='tensorflow'))
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -1649,6 +1652,8 @@ def test_sample_pymc3():
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:
                     assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Chi("C", 1), library='pymc3')))
 
 
 def test_issue_16318():

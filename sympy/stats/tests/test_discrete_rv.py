@@ -300,7 +300,10 @@ def test_sample_numpy():
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
                     assert sam in X.pspace.domain.set
-
+            raises(NotImplementedError,
+                lambda: next(sample(Skellam('S', 1, 1), library='numpy')))
+    raises(NotImplementedError,
+            lambda: Skellam('S', 1, 1).pspace.distribution.sample(library='tensorflow'))
 
 def test_sample_scipy():
     p = S(2)/3
@@ -350,3 +353,5 @@ def test_sample_pymc3():
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:
                     assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))
