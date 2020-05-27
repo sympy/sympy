@@ -1,4 +1,4 @@
-from sympy import Integer, S, symbols, Mul
+from sympy import Integer, S, symbols, Mul, Expr
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError
@@ -64,3 +64,40 @@ def test_AssocOp_flatten():
     assert v.args == (u, d)
     # like Add, any unevaluated outer call will flatten inner args
     assert MyAssoc(a, v).args == (a, b, c, d)
+
+def test_AssocOp_find_hook():
+    class A1(Expr):
+        _op_priority = 11
+    class A2(A1):
+        pass
+    class B(Expr):
+        _op_priority = 11
+    class C(Expr):
+        _op_priority = 10
+    @Add.dispatcher.register(A1)
+    @Mul.dispatcher.register(A1)
+    def _(arg):
+        return lambda *args, **kwargs: "A1's hook"
+    @Add.dispatcher.register(A2)
+    @Mul.dispatcher.register(A2)
+    def _(arg):
+        return lambda *args, **kwargs: "A2's hook"
+    @Add.dispatcher.register(B)
+    @Mul.dispatcher.register(B)
+    def _(arg):
+        return lambda *args, **kwargs: "B's hook"
+    @Add.dispatcher.register(C)
+    @Mul.dispatcher.register(C)
+    def _(arg):
+        return lambda *args, **kwargs: "C's hook"
+    a1, a2, b, c = A1(), A2(), B(), C()
+
+    # step 1: highest _op_priority is preferred
+    assert Add(a1, c) == Add(c, a1) == Mul(a1, c) == Mul(c, a1) == "A1's hook"
+
+    # step 2: subclass is preferred
+    assert Add(a1, a2) == Add(a2, a1) == Mul(a1, a2) == Mul(a2, a1) == "A2's hook"
+
+    # step 3: first-coming one is preferred
+    assert Add(a1, b) == Mul(a1, b) == "A1's hook"
+    assert Add(b, a1) == Mul(b, a1) == "B's hook"

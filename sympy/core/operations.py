@@ -112,7 +112,7 @@ class AssocOp(Basic):
         while hooks:
             tup = hooks[0]
             # (otup means other tuple)
-            if any((issubclass(tup[0], otup[0]) and tup[0] != otup[0]) for otup in hooks):
+            if any((issubclass(otup[0], tup[0]) and otup[0] != tup[0]) for otup in hooks):
                 pass
             else:
                 new_hooks.append(tup)
