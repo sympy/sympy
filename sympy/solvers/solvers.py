@@ -137,7 +137,6 @@ def denoms(eq, *symbols):
 
     >>> from sympy.solvers.solvers import denoms
     >>> from sympy.abc import x, y, z
-    >>> from sympy import sqrt
 
     >>> denoms(x/y)
     {y}
@@ -2866,7 +2865,6 @@ def nsolve(*args, **kwargs):
     ========
 
     >>> from sympy import Symbol, nsolve
-    >>> import sympy
     >>> import mpmath
     >>> mpmath.mp.dps = 15
     >>> x1 = Symbol('x1')
@@ -2910,7 +2908,6 @@ def nsolve(*args, **kwargs):
     independently verify the solution.
 
     >>> from sympy import cos, cosh
-    >>> from sympy.abc import i
     >>> f = cos(x)*cosh(x) - 1
     >>> nsolve(f, 3.14*100)
     Traceback (most recent call last):
@@ -3283,7 +3280,7 @@ def unrad(eq, *syms, **flags):
 
     >>> from sympy.solvers.solvers import unrad
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, Rational, root, real_roots, solve
+    >>> from sympy import sqrt, Rational, root
 
     >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
     (x**5 - 64, [])

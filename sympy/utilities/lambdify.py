@@ -351,7 +351,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions. This may be preferable to using ``evalf`` (which uses mpmath on
     the backend) in some cases.
 
-    >>> import mpmath
     >>> f = lambdify(x, sin(x), 'mpmath')
     >>> f(1)
     0.8414709848078965
@@ -1287,7 +1286,6 @@ def implemented_function(symfunc, implementation):
 
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

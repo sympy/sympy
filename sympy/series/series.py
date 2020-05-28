@@ -32,7 +32,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     Examples
     ========
 
-    >>> from sympy import Symbol, series, tan, oo
+    >>> from sympy import series, tan, oo
     >>> from sympy.abc import x
     >>> f = tan(x)
     >>> series(f, x, 2, 6, "+")

@@ -480,11 +480,10 @@ class Set(Basic):
         Examples
         ========
 
-        >>> from sympy import EmptySet, FiniteSet, Interval, PowerSet
+        >>> from sympy import EmptySet, FiniteSet, Interval
 
         A power set of an empty set:
 
-        >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet
         >>> A.powerset()
         FiniteSet(EmptySet)
@@ -815,7 +814,7 @@ class ProductSet(Set):
         Examples
         ========
 
-        >>> from sympy import FiniteSet, Interval, ProductSet
+        >>> from sympy import FiniteSet, Interval
         >>> I = Interval(0, 1)
         >>> A = FiniteSet(1, 2, 3, 4, 5)
         >>> I.is_iterable
@@ -2201,8 +2200,8 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
-    >>> from sympy.abc import x, y
+    >>> from sympy import S, Interval, imageset, sin, Lambda
+    >>> from sympy.abc import x
 
     >>> imageset(x, 2*x, Interval(0, 2))
     Interval(0, 4)

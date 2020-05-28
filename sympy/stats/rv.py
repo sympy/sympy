@@ -575,7 +575,6 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
@@ -1004,7 +1003,7 @@ def where(condition, given_condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import where, Die, Normal
-    >>> from sympy import symbols, And
+    >>> from sympy import And
 
     >>> D1, D2 = Die('a', 6), Die('b', 6)
     >>> a, b = D1.symbol, D2.symbol

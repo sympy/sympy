@@ -27,6 +27,8 @@ def as_Boolean(e):
     >>> from sympy import true, false, nan
     >>> from sympy.logic.boolalg import as_Boolean
     >>> from sympy.abc import x
+    >>> as_Boolean(0) is false
+    True
     >>> as_Boolean(1) is true
     True
     >>> as_Boolean(x)
@@ -35,6 +37,10 @@ def as_Boolean(e):
     Traceback (most recent call last):
     ...
     TypeError: expecting bool or Boolean, not `2`.
+    >>> as_Boolean(nan)
+    Traceback (most recent call last):
+    ...
+    TypeError: expecting bool or Boolean, not `nan`.
 
     """
     from sympy.core.symbol import Symbol
@@ -651,7 +657,6 @@ class And(LatticeOp, BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
     >>> from sympy.logic.boolalg import And
     >>> x & y
@@ -798,7 +803,6 @@ class Or(LatticeOp, BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
     >>> from sympy.logic.boolalg import Or
     >>> x | y
@@ -1323,7 +1327,7 @@ class Equivalent(BooleanFunction):
     ========
 
     >>> from sympy.logic.boolalg import Equivalent, And
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> Equivalent(False, False, False)
     True
     >>> Equivalent(True, False, False)

@@ -222,8 +222,6 @@ def warns_deprecated_sympy():
 
     >>> from sympy.testing.pytest import warns_deprecated_sympy
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> import warnings
-
     >>> with warns_deprecated_sympy():
     ...     SymPyDeprecationWarning("Don't use", feature="old thing",
     ...         deprecated_since_version="1.0", issue=123).warn()

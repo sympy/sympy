@@ -37,7 +37,7 @@ def _symbol(s, matching_symbol=None, **assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Dummy
+    >>> from sympy import Symbol
     >>> from sympy.core.symbol import _symbol
     >>> _symbol('y')
     y
@@ -116,7 +116,7 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
     Examples
     ========
 
-    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
+    >>> from sympy.core.symbol import _uniquely_named_symbol as usym
     >>> from sympy.abc import x
     >>> usym('x', x)
     _x
@@ -720,17 +720,17 @@ def var(names, **args):
 
     >>> var('x')
     x
-    >>> x
+    >>> x # noqa: F821
     x
 
     >>> var('a,ab,abc')
     (a, ab, abc)
-    >>> abc
+    >>> abc # noqa: F821
     abc
 
     >>> var('x,y', real=True)
     (x, y)
-    >>> x.is_real and y.is_real
+    >>> x.is_real and y.is_real # noqa: F821
     True
 
     See :func:`symbols` documentation for more details on what kinds of

@@ -362,7 +362,7 @@ class frac(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, frac, Rational, floor, ceiling, I
+    >>> from sympy import Symbol, frac, Rational, floor, I
     >>> frac(Rational(4, 3))
     1/3
     >>> frac(-Rational(4, 3))

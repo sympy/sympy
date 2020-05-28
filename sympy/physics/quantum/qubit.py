@@ -446,7 +446,6 @@ def matrix_to_qubit(matrix):
     Represent a state and then go back to its qubit form:
 
         >>> from sympy.physics.quantum.qubit import matrix_to_qubit, Qubit
-        >>> from sympy.physics.quantum.gate import Z
         >>> from sympy.physics.quantum.represent import represent
         >>> q = Qubit('01')
         >>> matrix_to_qubit(represent(q))
@@ -556,7 +555,7 @@ def measure_all(qubit, format='sympy', normalize=True):
     ========
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
-        >>> from sympy.physics.quantum.gate import H, X, Y, Z
+        >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')
@@ -614,7 +613,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
     ========
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
-        >>> from sympy.physics.quantum.gate import H, X, Y, Z
+        >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')

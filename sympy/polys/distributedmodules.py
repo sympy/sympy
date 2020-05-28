@@ -381,7 +381,7 @@ def sdm_to_vector(f, gens, K, n=None):
 
     >>> from sympy.polys.distributedmodules import sdm_to_vector
     >>> from sympy.abc import x, y, z
-    >>> from sympy.polys import QQ, lex
+    >>> from sympy.polys import QQ
     >>> f = [((1, 0, 0, 1), QQ(2)), ((0, 2, 0, 0), QQ(1)), ((0, 0, 2, 0), QQ(1))]
     >>> sdm_to_vector(f, [x, y, z], QQ)
     [x**2 + y**2, 2*z]

@@ -262,7 +262,7 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
         :format: doctest
         :include-source: True
 
-        >>> from sympy import plot_implicit, cos, sin, symbols, Eq, And
+        >>> from sympy import plot_implicit, symbols, Eq, And
         >>> x, y = symbols('x y')
 
     Without any ranges for the symbols in the expression:

@@ -51,7 +51,7 @@ class Operator(QExpr):
     Create an operator and examine its attributes::
 
         >>> from sympy.physics.quantum import Operator
-        >>> from sympy import symbols, I
+        >>> from sympy import I
         >>> A = Operator('A')
         >>> A
         A

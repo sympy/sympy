@@ -482,8 +482,7 @@ class BaseScalarField(Expr):
     Define boilerplate Manifold, Patch and coordinate systems:
 
     >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.diffgeom import (
-    ...        Manifold, Patch, CoordSystem, Point, BaseScalarField)
+    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     >>> r0, theta0 = symbols('r0, theta0')
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -574,7 +573,7 @@ class BaseVectorField(Expr):
 
     Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy import symbols, pi, Function
+    >>> from sympy import symbols, Function
     >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
     >>> from sympy import pprint
@@ -681,7 +680,6 @@ class Commutator(Expr):
 
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import Commutator
-    >>> from sympy import pprint
     >>> from sympy.simplify import simplify
 
     Vector fields:
@@ -1204,7 +1202,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Use the predefined R2 manifold:
 
     >>> from sympy.abc import t, x, y
-    >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_series
 
     Specify a starting point and a vector field:

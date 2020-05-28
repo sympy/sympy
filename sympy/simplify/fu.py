@@ -451,7 +451,6 @@ def TR4(rv):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR4
     >>> from sympy import pi
     >>> from sympy import cos, sin, tan, cot
     >>> for s in (0, pi/6, pi/4, pi/3, pi/2):
@@ -599,7 +598,7 @@ def TR8(rv, first=True):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR8, TR7
+    >>> from sympy.simplify.fu import TR8
     >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
     cos(5)/2 + cos(1)/2
@@ -816,8 +815,8 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy import cos, sin, pi, Add, Mul, sqrt, Symbol
-    >>> from sympy.abc import x, y
+    >>> from sympy import cos, sin, sqrt
+    >>> from sympy.abc import x
 
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
@@ -1088,7 +1087,6 @@ def TR12(rv, first=True):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR12
     >>> from sympy.abc import x, y
     >>> from sympy import tan
     >>> from sympy.simplify.fu import TR12
@@ -1250,7 +1248,7 @@ def TR13(rv):
     ========
 
     >>> from sympy.simplify.fu import TR13
-    >>> from sympy import tan, cot, cos
+    >>> from sympy import tan, cot
     >>> TR13(tan(3)*tan(2))
     -tan(2)/tan(5) - tan(3)/tan(5) + 1
     >>> TR13(cot(3)*cot(2))
@@ -1541,7 +1539,7 @@ def TR15(rv, max=4, pow=False):
 
     >>> from sympy.simplify.fu import TR15
     >>> from sympy.abc import x
-    >>> from sympy import cos, sin
+    >>> from sympy import sin
     >>> TR15(1 - 1/sin(x)**2)
     -cot(x)**2
 
@@ -1570,7 +1568,7 @@ def TR16(rv, max=4, pow=False):
 
     >>> from sympy.simplify.fu import TR16
     >>> from sympy.abc import x
-    >>> from sympy import cos, sin
+    >>> from sympy import cos
     >>> TR16(1 - 1/cos(x)**2)
     -tan(x)**2
 

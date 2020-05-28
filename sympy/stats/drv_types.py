@@ -592,7 +592,7 @@ def Skellam(name, mu1, mu2):
     ========
 
     >>> from sympy.stats import Skellam, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> z = Symbol("z", integer=True)
     >>> mu1 = Symbol("mu1", positive=True)

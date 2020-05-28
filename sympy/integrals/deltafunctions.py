@@ -115,7 +115,7 @@ def deltaintegrate(f, x):
 
         >>> from sympy.abc import x, y, z
         >>> from sympy.integrals.deltafunctions import deltaintegrate
-        >>> from sympy import sin, cos, DiracDelta, Heaviside
+        >>> from sympy import sin, cos, DiracDelta
         >>> deltaintegrate(x*sin(x)*cos(x)*DiracDelta(x - 1), x)
         sin(1)*cos(1)*Heaviside(x - 1)
         >>> deltaintegrate(y**2*DiracDelta(x - z)*DiracDelta(y - z), y)

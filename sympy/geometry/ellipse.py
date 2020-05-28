@@ -635,7 +635,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> from sympy import Ellipse, Point, Line
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
@@ -879,7 +879,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Line, Point, Ellipse
+        >>> from sympy import Point, Ellipse
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
@@ -1016,7 +1016,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(1, 2)
         >>> Ellipse(c, 8, 7).auxiliary_circle()
         Circle(Point2D(1, 2), 8)
@@ -1040,7 +1040,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(3,8)
         >>> Ellipse(c, 7, 9).director_circle()
         Circle(Point2D(3, 8), sqrt(130))
@@ -1094,7 +1094,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse, Segment
+        >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
         Point2D(...)

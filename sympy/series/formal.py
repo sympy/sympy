@@ -57,7 +57,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Examples
     ========
 
-    >>> from sympy import log, atan, I
+    >>> from sympy import log, atan
     >>> from sympy.series.formal import rational_algorithm as ra
     >>> from sympy.abc import x, k
 
@@ -1172,7 +1172,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(sin(x))
         >>> f2 = fps(exp(x))
@@ -1264,7 +1264,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(sin(x))
@@ -1337,7 +1337,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy import fps, exp, cos
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(cos(x))
@@ -1531,7 +1531,7 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(sin(x))
         >>> f2 = fps(exp(x))
@@ -1596,7 +1596,7 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(sin(x))
@@ -1681,7 +1681,7 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         Examples
         ========
 
-        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy import fps, exp, cos
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(cos(x))
@@ -1751,7 +1751,7 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     Examples
     ========
 
-    >>> from sympy import fps, O, ln, atan, sin
+    >>> from sympy import fps, ln, atan, sin
     >>> from sympy.abc import x, n
 
     Rational Functions

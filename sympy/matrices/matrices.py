@@ -1517,7 +1517,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Symbol, Matrix, exp, S, log
+        >>> from sympy import Symbol, Matrix, S, log
 
         >>> x = Symbol('x')
         >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])

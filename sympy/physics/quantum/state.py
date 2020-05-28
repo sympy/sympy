@@ -354,7 +354,7 @@ class Ket(State, KetBase):
 
     Create a simple Ket and looking at its properties::
 
-        >>> from sympy.physics.quantum import Ket, Bra
+        >>> from sympy.physics.quantum import Ket
         >>> from sympy import symbols, I
         >>> k = Ket('psi')
         >>> k
@@ -418,7 +418,7 @@ class Bra(State, BraBase):
 
     Create a simple Bra and look at its properties::
 
-        >>> from sympy.physics.quantum import Ket, Bra
+        >>> from sympy.physics.quantum import Bra
         >>> from sympy import symbols, I
         >>> b = Bra('psi')
         >>> b
@@ -600,7 +600,6 @@ class TimeDepBra(TimeDepState, BraBase):
     ========
 
         >>> from sympy.physics.quantum import TimeDepBra
-        >>> from sympy import symbols, I
         >>> b = TimeDepBra('psi', 't')
         >>> b
         <psi;t|
@@ -629,7 +628,7 @@ class OrthogonalKet(OrthogonalState, KetBase):
     The inner product of two states with different labels will give zero,
     states with the same label will give one.
 
-        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet, qapply
+        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet
         >>> from sympy.abc import m, n
         >>> (OrthogonalBra(n)*OrthogonalKet(n)).doit()
         1
@@ -968,7 +967,7 @@ class Wavefunction(Function):
         ========
 
             >>> from sympy import symbols, pi
-            >>> from sympy.functions import sqrt, sin
+            >>> from sympy.functions import sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x = symbols('x', real=True)
             >>> L = symbols('L', positive=True)
@@ -994,7 +993,7 @@ class Wavefunction(Function):
         ========
 
             >>> from sympy import symbols, pi
-            >>> from sympy.functions import sqrt, sin
+            >>> from sympy.functions import sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x, L = symbols('x,L', real=True)
             >>> n = symbols('n', integer=True)
