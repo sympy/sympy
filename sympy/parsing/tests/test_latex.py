@@ -196,9 +196,7 @@ def test_parseable():
         try:
             assert parse_latex(latex_str) == sympy_expr
         except AssertionError:
-            print(latex_str)
-            print(sympy_expr)
-            raise # https://docs.python.org/3/tutorial/errors.html#raising-exceptions
+            raise AssertionError(latex_str + str(sympy_expr))
 
 # At time of migration from latex2sympy, should work but doesn't
 FAILING_PAIRS = [
