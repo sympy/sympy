@@ -60,7 +60,7 @@ def test_basic1():
     assert limit(1/x**2, x, 0, dir="+-") is oo
 
     # test failing bi-directional limits
-    raises(ValueError, lambda: limit(1/x, x, 0, dir="+-"))
+    assert limit(1/x, x, 0, dir="+-") is zoo
     # approaching 0
     # from dir="+"
     assert limit(1 + 1/x, x, 0) is oo
@@ -590,7 +590,7 @@ def test_issue_17325():
     assert Limit(sin(x)/x, x, 0, dir="+-").doit() == 1
     assert Limit(x**2, x, 0, dir="+-").doit() == 0
     assert Limit(1/x**2, x, 0, dir="+-").doit() is oo
-    raises(ValueError, lambda: Limit(1/x, x, 0, dir="+-").doit())
+    assert Limit(1/x, x, 0, dir="+-").doit() is zoo
 
 
 def test_issue_10978():
@@ -686,6 +686,11 @@ def test_issue_18997():
 def test_issue_19026():
     x = Symbol('x', positive=True)
     assert limit(Abs(log(x) + 1)/log(x), x, oo) == 1
+
+
+def test_issue_19067():
+    x = Symbol('x')
+    assert limit(gamma(x)/(gamma(x - 1)*gamma(x + 2)), x, 0) == -1
 
 
 def test_issue_13715():

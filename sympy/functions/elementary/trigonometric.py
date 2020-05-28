@@ -468,7 +468,7 @@ class sin(TrigonometricFunction):
         if x in arg.free_symbols and Order(1, x).contains(arg):
             return arg
         else:
-            if not self.is_meromorphic(x, 0):
+            if not arg.subs(x, 0).is_finite:
                 return self
             else:
                 return self.func(arg)
@@ -911,7 +911,7 @@ class cos(TrigonometricFunction):
         if x in arg.free_symbols and Order(1, x).contains(arg):
             return S.One
         else:
-            if not self.is_meromorphic(x, 0):
+            if not arg.subs(x, 0).is_finite:
                 return self
             else:
                 return self.func(arg)

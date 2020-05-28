@@ -45,10 +45,7 @@ def limit(e, z, z0, dir="+"):
     >>> limit(1/x, x, 0, dir="-")
     -oo
     >>> limit(1/x, x, 0, dir='+-')
-    Traceback (most recent call last):
-        ...
-    ValueError: The limit does not exist since left hand limit = -oo and right hand limit = oo
-
+    zoo
     >>> limit(1/x, x, oo)
     0
 
@@ -227,6 +224,8 @@ class Limit(Expr):
                         return S.Infinity*sign(coeff)
                     elif str(dir) == "-":
                         return S.NegativeInfinity*sign(coeff)
+                    else:
+                        return S.ComplexInfinity
             except ValueError:
                 pass
 
