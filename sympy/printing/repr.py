@@ -144,6 +144,16 @@ class ReprPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
+    def _print_dict(self, expr):
+        sep = ", "
+        dict_kvs = ["%s: %s" % (self.doprint(key), self.doprint(value)) for key, value in expr.items()]
+        return "{%s}" % sep.join(dict_kvs)
+
+    def _print_set(self, expr):
+        if not expr:
+            return "set()"
+        return "{%s}" % self.reprify(expr, ", ")
+
     def _print_MatrixBase(self, expr):
         # special case for some empty matrices
         if (expr.rows == 0) ^ (expr.cols == 0):
@@ -315,6 +325,30 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
+    def _print_Manifold(self, manifold):
+        class_name = manifold.func.__name__
+        name = self._print(manifold.name)
+        dim = self._print(manifold.dim)
+        return "%s(%s, %s)" % (class_name, name, dim)
+
+    def _print_Patch(self, patch):
+        class_name = patch.func.__name__
+        name = self._print(patch.name)
+        manifold = self._print(patch.manifold)
+        return "%s(%s, %s)" % (class_name, name, manifold)
+
+    def _print_CoordSystem(self, coords):
+        class_name = coords.func.__name__
+        name = self._print(coords.name)
+        patch = self._print(coords.patch)
+        names = self._print(coords._names)
+        return "%s(%s, %s, %s)" % (class_name, name, patch, names)
+
+    def _print_BaseScalarField(self, bsf):
+        class_name = bsf.func.__name__
+        coords = self._print(bsf._coord_sys)
+        idx = self._print(bsf._index)
+        return "%s(%s, %s)" % (class_name, coords, idx)
 
 def srepr(expr, **settings):
     """return expr in repr form"""

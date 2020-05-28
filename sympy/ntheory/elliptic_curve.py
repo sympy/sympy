@@ -241,7 +241,6 @@ class EllipticCurve:
         Examples
         ========
 
-        >>> from sympy.polys.domains import FF
         >>> from sympy.ntheory.elliptic_curve import EllipticCurve
         >>> e2 = EllipticCurve(1, 0, modulus=19)
         >>> e2.order

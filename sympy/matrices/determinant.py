@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
@@ -544,10 +542,15 @@ def _det(M, method="bareiss", iszerofunc=None):
     Examples
     ========
 
-    >>> from sympy import Matrix, MatrixSymbol, eye, det
+    >>> from sympy import Matrix, eye, det
+    >>> I3 = eye(3)
+    >>> det(I3)
+    1
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> M.det()
+    >>> det(M)
     -2
+    >>> det(M) == M.det()
+    True
     """
 
     # sanitize `method`

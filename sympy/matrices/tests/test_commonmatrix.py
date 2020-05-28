@@ -16,6 +16,7 @@ from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
     MutableDenseMatrix, MutableSparseMatrix, ImmutableDenseMatrix,
     ImmutableSparseMatrix)
+from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
@@ -429,10 +430,10 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2, 2, [0, 1, 2, 3]
-        ).values()) == set([1, 2, 3])
+        ).values()) == {1, 2, 3}
     x = Symbol('x', real=True)
     assert set(PropertiesOnlyMatrix(2, 2, [x, 0, 0, 1]
-        ).values()) == set([x, 1])
+        ).values()) == {x, 1}
 
 
 # OperationsOnlyMatrix tests
@@ -1002,3 +1003,19 @@ def test_issue_13774():
     v = [1, 1, 1]
     raises(TypeError, lambda: M*v)
     raises(TypeError, lambda: v*M)
+
+
+def test_companion():
+    x = Symbol('x')
+    y = Symbol('y')
+    raises(ValueError, lambda: Matrix.companion(1))
+    raises(ValueError, lambda: Matrix.companion(Poly([1], x)))
+    raises(ValueError, lambda: Matrix.companion(Poly([2, 1], x)))
+    raises(ValueError, lambda: Matrix.companion(Poly(x*y, [x, y])))
+
+    c0, c1, c2 = symbols('c0:3')
+    assert Matrix.companion(Poly([1, c0], x)) == Matrix([-c0])
+    assert Matrix.companion(Poly([1, c1, c0], x)) == \
+        Matrix([[0, -c0], [1, -c1]])
+    assert Matrix.companion(Poly([1, c2, c1, c0], x)) == \
+        Matrix([[0, 0, -c0], [1, 0, -c1], [0, 1, -c2]])

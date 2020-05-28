@@ -27,6 +27,7 @@ def _filter_assumptions(kwargs):
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
 
+
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
     the matching_symbol if the names are the same or else a new symbol
@@ -36,7 +37,7 @@ def _symbol(s, matching_symbol=None, **assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Dummy
+    >>> from sympy import Symbol
     >>> from sympy.core.symbol import _symbol
     >>> _symbol('y')
     y
@@ -115,7 +116,7 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
     Examples
     ========
 
-    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
+    >>> from sympy.core.symbol import _uniquely_named_symbol as usym
     >>> from sympy.abc import x
     >>> usym('x', x)
     _x
@@ -269,10 +270,12 @@ class Symbol(AtomicExpr, Boolean):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        return Dummy(self.name)
+        # only put commutativity in explicitly if it is False
+        return Dummy(self.name) if self.is_commutative is not False \
+            else Dummy(self.name, commutative=self.is_commutative)
 
     def as_real_imag(self, deep=True, **hints):
         from sympy import im, re
@@ -359,7 +362,7 @@ class Dummy(Symbol):
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (
-            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
+            2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
@@ -717,17 +720,17 @@ def var(names, **args):
 
     >>> var('x')
     x
-    >>> x
+    >>> x # noqa: F821
     x
 
     >>> var('a,ab,abc')
     (a, ab, abc)
-    >>> abc
+    >>> abc # noqa: F821
     abc
 
     >>> var('x,y', real=True)
     (x, y)
-    >>> x.is_real and y.is_real
+    >>> x.is_real and y.is_real # noqa: F821
     True
 
     See :func:`symbols` documentation for more details on what kinds of

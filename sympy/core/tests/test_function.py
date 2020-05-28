@@ -218,9 +218,8 @@ def test_Lambda():
 
     assert unchanged(Lambda, (x,), x**2)
     assert Lambda(x, x**2) == Lambda((x,), x**2)
-    assert Lambda(x, x**2) == Lambda(y, y**2)
-    assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
-    assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
+    assert Lambda(x, x**2) != Lambda(x, x**2 + 1)
+    assert Lambda((x, y), x**y) != Lambda((y, x), y**x)
     assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
     assert Lambda((x, y), x**y)(x, y) == x**y
@@ -239,7 +238,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
 
-    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    eq = Lambda(x, 2*x) + Lambda(y, 2*y)
+    assert eq != 2*Lambda(x, 2*x)
+    assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
@@ -300,12 +301,19 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) == Lambda(y, 2*y)
-    # although variables are casts as Dummies, the expressions
-    # should still compare equal
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    # these, of course, should never be equal
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
+    # But it is tempting to want expressions that differ only
+    # in bound symbols to compare the same.  But this is not what
+    # Python's `==` is intended to do; two objects that compare
+    # as equal means that they are indistibguishable and cache to the
+    # same value.  We wouldn't want to expression that are
+    # mathematically the same but written in different variables to be
+    # interchanged else what is the point of allowing for different
+    # variable names?
+    assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
 def test_Subs():
@@ -529,19 +537,19 @@ def test_function__eval_nseries():
     assert sin(x)._eval_nseries(x, 2, None) == x + O(x**2)
     assert sin(x + 1)._eval_nseries(x, 2, None) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1 - x))._eval_nseries(x, 2, None) == pi*x + O(x**2)
-    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x**2) + O(x**2)
+    assert acos(1 - x**2)._eval_nseries(x, 2, None) == sqrt(2)*x + O(x**2)
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
     assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
-    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*I*sqrt(x) + O(x)  # XXX: wrong, branch cuts
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
     # issue 6725:
     assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
-        2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
+        2 - 2*sqrt(pi)*I*sqrt(x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
         sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 

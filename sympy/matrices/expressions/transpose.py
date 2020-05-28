@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Basic
 from sympy.functions import adjoint, conjugate
 

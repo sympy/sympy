@@ -42,7 +42,7 @@ def JointRV(symbol, pdf, _set=None):
     Examples
     ========
 
-    >>> from sympy import symbols, exp, pi, Indexed, S
+    >>> from sympy import exp, pi, Indexed, S
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv_types import JointRV
 
@@ -518,7 +518,6 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     ========
 
     >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma
     >>> from sympy import symbols, S
     >>> v = 1
@@ -573,7 +572,6 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     ========
 
     >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega
     >>> from sympy import Matrix, symbols, S
     >>> omega = Matrix([[1, S.Half, S.Half], [S.Half, 1, S.Half], [S.Half, S.Half, 1]])

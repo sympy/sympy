@@ -217,18 +217,6 @@ Linear, 2 equations, Order 1, Type 2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type2
 
-Linear, 2 equations, Order 1, Type 3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type3
-
-Linear, 2 equations, Order 1, Type 4
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type4
-
-Linear, 2 equations, Order 1, Type 5
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type5
-
 Linear, 2 equations, Order 1, Type 6
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type6
@@ -281,25 +269,25 @@ Linear, 2 equations, Order 2, Type 11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode._linear_2eq_order2_type11
 
-Linear, 3 equations, Order 1, Type 1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type1
+Linear ODE to matrix
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.linear_ode_to_matrix
 
-Linear, 3 equations, Order 1, Type 2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type2
+Matrix Exponential Jordan Form
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.matrix_exp_jordan_form
 
-Linear, 3 equations, Order 1, Type 3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type3
-
-Linear, 3 equations, Order 1, Type 4
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type4
+Matrix Exponential
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems.matrix_exp
 
 Linear, n equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_neq_order1_type1
+.. autofunction:: sympy.solvers.ode.systems._linear_neq_order1_type1
+
+Linear, n equations, Order 1, Type 3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems._linear_neq_order1_type3
 
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

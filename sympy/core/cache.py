@@ -77,7 +77,7 @@ except ImportError:
            ...    return a+b
 
            >>> @cacheit
-           ... def f(a, b):
+           ... def f(a, b): # noqa: F811
            ...    return [a, b] # <-- WRONG, returns mutable object
 
            to force cacheit to check returned results mutability and consistency,
@@ -120,7 +120,7 @@ else:
            ...    return a+b
 
            >>> @cacheit
-           ... def f(a, b):
+           ... def f(a, b): # noqa: F811
            ...    return [a, b] # <-- WRONG, returns mutable object
 
            to force cacheit to check returned results mutability and consistency,

@@ -46,7 +46,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ========
 
     >>> from sympy import S, collect, expand, factor, Wild
-    >>> from sympy.abc import a, b, c, x, y, z
+    >>> from sympy.abc import a, b, c, x, y
 
     This function can collect symbolic coefficients in polynomials or
     rational expressions. It will manage to find all integer or rational
@@ -159,8 +159,26 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collect_const, collect_sqrt, rcollect
     """
+    from sympy.core.assumptions import assumptions
+    from sympy.utilities.iterables import sift
+    from sympy.core.symbol import Dummy, Wild
     expr = sympify(expr)
-    syms = list(syms) if iterable(syms) else [syms]
+    syms = [sympify(i) for i in (syms if iterable(syms) else [syms])]
+    # replace syms[i] if it is not x, -x or has Wild symbols
+    cond = lambda x: x.is_Symbol or (-x).is_Symbol or bool(
+        x.atoms(Wild))
+    _, nonsyms = sift(syms, cond, binary=True)
+    if nonsyms:
+        reps = dict(zip(nonsyms, [Dummy(**assumptions(i)) for i in nonsyms]))
+        syms = [reps.get(s, s) for s in syms]
+        rv = collect(expr.subs(reps), syms,
+            func=func, evaluate=evaluate, exact=exact,
+            distribute_order_term=distribute_order_term)
+        urep = {v: k for k, v in reps.items()}
+        if not isinstance(rv, dict):
+            return rv.xreplace(urep)
+        else:
+            return {urep.get(k, k): v.xreplace(urep) for k, v in rv.items()}
 
     if evaluate is None:
         evaluate = global_parameters.evaluate
@@ -616,7 +634,7 @@ def collect_const(expr, *vars, **kwargs):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.abc import a, s, x, y, z
+    >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -739,7 +757,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     Examples
     ========
 
-    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy import radsimp, sqrt, Symbol, pprint
     >>> from sympy import factor_terms, fraction, signsimp
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c

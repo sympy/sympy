@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from typing import Any
 import mpmath as mp
 
@@ -41,7 +39,6 @@ from .eigen import (
     _eigenvals, _eigenvects,
     _bidiagonalize, _bidiagonal_decomposition,
     _is_diagonalizable, _diagonalize,
-    _eval_is_positive_definite,
     _is_positive_definite, _is_positive_semidefinite,
     _is_negative_definite, _is_negative_semidefinite, _is_indefinite,
     _jordan_form, _left_eigenvects, _singular_values)
@@ -194,10 +191,10 @@ class MatrixReductions(MatrixDeterminant):
             # we need two cols to swap. It doesn't matter
             # how they were specified, so gather them together and
             # remove `None`
-            cols = set((col, k, col1, col2)).difference([None])
+            cols = {col, k, col1, col2}.difference([None])
             if len(cols) > 2:
                 # maybe the user left `k` by mistake?
-                cols = set((col, col1, col2)).difference([None])
+                cols = {col, col1, col2}.difference([None])
             if len(cols) != 2:
                 raise ValueError("For a {0} operation 'n<->m' you must provide the "
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
@@ -366,9 +363,6 @@ class MatrixEigen(MatrixSubspaces):
     Should not be instantiated directly. See ``eigen.py`` for their
     implementations."""
 
-    def _eval_is_positive_definite(self, method="eigen"):
-        return _eval_is_positive_definite(self, method=method)
-
     def eigenvals(self, error_when_incomplete=True, **flags):
         return _eigenvals(self, error_when_incomplete=error_when_incomplete, **flags)
 
@@ -418,7 +412,6 @@ class MatrixEigen(MatrixSubspaces):
     def singular_values(self):
         return _singular_values(self)
 
-    _eval_is_positive_definite.__doc__ = _eval_is_positive_definite.__doc__
     eigenvals.__doc__                  = _eigenvals.__doc__
     eigenvects.__doc__                 = _eigenvects.__doc__
     is_diagonalizable.__doc__          = _is_diagonalizable.__doc__
@@ -770,9 +763,6 @@ class MatrixBase(MatrixDeprecated,
     zero = S.Zero
     one = S.One
 
-    # Mutable:
-    __hash__ = None  # type: ignore
-
     # Defined here the same as on Basic.
 
     # We don't define _repr_png_ here because it would add a large amount of
@@ -911,6 +901,23 @@ class MatrixBase(MatrixDeprecated,
       return cls._new(rows)
 
     @classmethod
+    def _handle_ndarray(cls, arg):
+        # NumPy array or matrix or some other object that implements
+        # __array__. So let's first use this method to get a
+        # numpy.array() and then make a python list out of it.
+        arr = arg.__array__()
+        if len(arr.shape) == 2:
+            rows, cols = arr.shape[0], arr.shape[1]
+            flat_list = [cls._sympify(i) for i in arr.ravel()]
+            return rows, cols, flat_list
+        elif len(arr.shape) == 1:
+            flat_list = [cls._sympify(i) for i in arr]
+            return arr.shape[0], 1, flat_list
+        else:
+            raise NotImplementedError(
+                "SymPy supports just 1D and 2D matrices")
+
+    @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
 
@@ -983,23 +990,7 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
-                # NumPy array or matrix or some other object that implements
-                # __array__. So let's first use this method to get a
-                # numpy.array() and then make a python list out of it.
-                arr = args[0].__array__()
-                if len(arr.shape) == 2:
-                    rows, cols = arr.shape[0], arr.shape[1]
-                    flat_list = [cls._sympify(i) for i in arr.ravel()]
-                    return rows, cols, flat_list
-                elif len(arr.shape) == 1:
-                    rows, cols = arr.shape[0], 1
-                    flat_list = [cls.zero] * rows
-                    for i in range(len(arr)):
-                        flat_list[i] = cls._sympify(arr[i])
-                    return rows, cols, flat_list
-                else:
-                    raise NotImplementedError(
-                        "SymPy supports just 1D and 2D matrices")
+                return cls._handle_ndarray(args[0])
 
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
             elif is_sequence(args[0]) \
@@ -1033,7 +1024,7 @@ class MatrixBase(MatrixDeprecated,
                     cols = 1 if rows else 0
                 elif evaluate and all(ismat(i) for i in dat):
                     # a column as a list of matrices
-                    ncol = set(i.cols for i in dat if any(i.shape))
+                    ncol = {i.cols for i in dat if any(i.shape)}
                     if ncol:
                         if len(ncol) != 1:
                             raise ValueError('mismatched dimensions')
@@ -1074,13 +1065,19 @@ class MatrixBase(MatrixDeprecated,
                         if not is_sequence(row) and \
                                 not getattr(row, 'is_Matrix', False):
                             raise ValueError('expecting list of lists')
-                        if not row:
+
+                        if hasattr(row, '__array__'):
+                            if 0 in row.shape:
+                                continue
+                        elif not row:
                             continue
+
                         if evaluate and all(ismat(i) for i in row):
                             r, c, flatT = cls._handle_creation_inputs(
                                 [i.T for i in row])
                             T = reshape(flatT, [c])
-                            flat = [T[i][j] for j in range(c) for i in range(r)]
+                            flat = \
+                                [T[i][j] for j in range(c) for i in range(r)]
                             r, c = c, r
                         else:
                             r = 1
@@ -1270,10 +1267,12 @@ class MatrixBase(MatrixDeprecated,
         multiply
         multiply_elementwise
         """
-        if not is_sequence(b):
+        from sympy.matrices.expressions.matexpr import MatrixExpr
+
+        if not isinstance(b, MatrixBase) and not isinstance(b, MatrixExpr):
             raise TypeError(
-                "`b` must be an ordered iterable or Matrix, not %s." %
-                type(b))
+                "{} must be a Matrix, not {}.".format(b, type(b)))
+
         if not (self.rows * self.cols == b.rows * b.cols == 3):
             raise ShapeError("Dimensions incorrect for cross product: %s x %s" %
                              ((self.rows, self.cols), (b.rows, b.cols)))
@@ -1518,7 +1517,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Symbol, Matrix, exp, S, log
+        >>> from sympy import Symbol, Matrix, S, log
 
         >>> x = Symbol('x')
         >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])

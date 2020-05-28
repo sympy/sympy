@@ -6,8 +6,6 @@ Contains
 
 """
 
-from __future__ import division, print_function
-
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
 from sympy.core.parameters import global_parameters
@@ -119,7 +117,7 @@ class Ellipse(GeometrySet):
                                            self.vradius == o.vradius)
 
     def __hash__(self):
-        return super(Ellipse, self).__hash__()
+        return super().__hash__()
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
@@ -134,7 +132,7 @@ class Ellipse(GeometrySet):
             center = Point(center, dim=2)
 
         if len(center) != 2:
-            raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
+            raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError(filldedent('''
@@ -637,7 +635,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> from sympy import Ellipse, Point, Line
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
@@ -734,7 +732,7 @@ class Ellipse(GeometrySet):
             if isinstance(intersect, Ellipse):
                 return True
             elif intersect:
-                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
+                return all((self.tangent_lines(i)[0]).equals(o.tangent_lines(i)[0]) for i in intersect)
             else:
                 return False
         elif isinstance(o, Line2D):
@@ -881,7 +879,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Line, Point, Ellipse
+        >>> from sympy import Point, Ellipse
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
@@ -1018,7 +1016,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(1, 2)
         >>> Ellipse(c, 8, 7).auxiliary_circle()
         Circle(Point2D(1, 2), 8)
@@ -1042,7 +1040,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(3,8)
         >>> Ellipse(c, 7, 9).director_circle()
         Circle(Point2D(3, 8), sqrt(130))
@@ -1096,7 +1094,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse, Segment
+        >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
         Point2D(...)
@@ -1204,7 +1202,7 @@ class Ellipse(GeometrySet):
         if self.hradius == self.vradius:
             return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
-            return super(Ellipse, self).rotate(angle, pt)
+            return super().rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes

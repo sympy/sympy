@@ -16,7 +16,6 @@ match, add the key and call to the antiderivative function to integral_steps.
 To enable simple substitutions, add the match to find_substitutions.
 
 """
-from __future__ import print_function, division
 
 from typing import Dict as tDict, Optional
 
@@ -1166,7 +1165,7 @@ distribute_expand_rule = rewriter(
 trig_expand_rule = rewriter(
     # If there are trig functions with different arguments, expand them
     lambda integrand, symbol: (
-        len(set(a.args[0] for a in integrand.atoms(TrigonometricFunction))) > 1),
+        len({a.args[0] for a in integrand.atoms(TrigonometricFunction)}) > 1),
     lambda integrand, symbol: integrand.expand(trig=True))
 
 def derivative_rule(integral):
@@ -1214,7 +1213,7 @@ def integral_steps(integrand, symbol, **options):
     Examples
     ========
 
-    >>> from sympy import exp, sin, cos
+    >>> from sympy import exp, sin
     >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \

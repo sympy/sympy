@@ -281,8 +281,8 @@ def test_LDLdecomposition():
     A = Matrix(((4, -2*I, 2 + 2*I), (2*I, 2, -1 + I), (2 - 2*I, -1 - I, 11)))
     L, D = A.LDLdecomposition()
     assert expand_mul(L * D * L.H) == A
-    assert L == Matrix(((1, 0, 0), (I/2, 1, 0), (S.Half - I/2, 0, 1)))
-    assert D == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
+    assert L.expand() == Matrix([[1, 0, 0], [I/2, 1, 0], [S.Half - I/2, 0, 1]])
+    assert D.expand() == Matrix(((4, 0, 0), (0, 1, 0), (0, 0, 9)))
 
     raises(NonSquareMatrixError, lambda: SparseMatrix((1, 2)).LDLdecomposition())
     raises(ValueError, lambda: SparseMatrix(((1, 2), (3, 4))).LDLdecomposition())

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
@@ -364,7 +362,7 @@ class frac(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, frac, Rational, floor, ceiling, I
+    >>> from sympy import Symbol, frac, Rational, floor, I
     >>> frac(Rational(4, 3))
     1/3
     >>> frac(-Rational(4, 3))

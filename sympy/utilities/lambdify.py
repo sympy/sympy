@@ -3,8 +3,6 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 import inspect
@@ -353,7 +351,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions. This may be preferable to using ``evalf`` (which uses mpmath on
     the backend) in some cases.
 
-    >>> import mpmath
     >>> f = lambdify(x, sin(x), 'mpmath')
     >>> f(1)
     0.8414709848078965
@@ -858,7 +855,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     func = funclocals[funcname]
 
     # Apply the docstring
-    sig = "func({0})".format(", ".join(str(i) for i in names))
+    sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
     expr_str = str(expr)
     if len(expr_str) > 78:
@@ -1012,7 +1009,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
-class _EvaluatorPrinter(object):
+class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
         self._dummify = dummify
 
@@ -1289,7 +1286,6 @@ def implemented_function(symfunc, implementation):
 
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

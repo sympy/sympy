@@ -403,7 +403,7 @@ def test_issue_5740():
 def test_issue_6366():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
-    assert limit(r, x, 1).simplify() == n/2
+    assert limit(r, x, 1) == n/2
 
 
 def test_factorial():
@@ -465,6 +465,12 @@ def test_issue_4503():
         exp(x)/(2*sqrt(exp(x) + 1))
 
 
+def test_issue_8481():
+    k = Symbol('k', integer=True, nonnegative=True)
+    lamda = Symbol('lamda', real=True, positive=True)
+    limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+
+
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
 
@@ -472,6 +478,10 @@ def test_issue_8730():
 def test_issue_10801():
     # make sure limits work with binomial
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
+
+
+def test_issue_9041():
+    assert limit(factorial(n) / ((n/exp(1))**n * sqrt(2*pi*n)), n, oo) == 1
 
 
 def test_issue_9205():
@@ -617,8 +627,19 @@ def test_issue_14393():
     assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a)*y**b/a
 
 
+def test_issue_14556():
+    assert limit(factorial(n + 1)**(1/(n + 1)) - factorial(n)**(1/n), n, oo) == exp(-1)
+
+
 def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
+
+
+def test_issue_16722():
+    z = symbols('z', positive=True)
+    assert limit(binomial(n + z, n)*n**-z, n, oo) == 1/gamma(z + 1)
+    z = symbols('z', positive=True, integer=True)
+    assert limit(binomial(n + z, n)*n**-z, n, oo) == 1/gamma(z + 1)
 
 
 def test_issue_17431():
@@ -633,12 +654,24 @@ def test_issue_17671():
     assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
 
 
+def test_issue_17792():
+    assert limit(factorial(n)/sqrt(n)*(exp(1)/n)**n, n, oo) == sqrt(2)*sqrt(pi)
+
+
 def test_issue_18306():
     assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
 
 
+def test_issue_18378():
+    assert limit(log(exp(3*x) + x)/log(exp(x) + x**100), x, oo) == 3
+
+
 def test_issue_18442():
     assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == AccumBounds(-oo, oo)
+
+
+def test_issue_18482():
+    assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 
 
 def test_issue_18501():
@@ -649,6 +682,10 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
+
+
+def test_issue_18992():
+    assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
 
 
 def test_issue_18997():

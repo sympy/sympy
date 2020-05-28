@@ -1,5 +1,3 @@
-from __future__ import (absolute_import, division, print_function)
-
 import glob
 import os
 import shutil
@@ -74,7 +72,7 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
     destdir = destdir or '.'
     if not os.path.isdir(destdir):
         if os.path.exists(destdir):
-            raise IOError("{} is not a directory".format(destdir))
+            raise OSError("{} is not a directory".format(destdir))
         else:
             make_dirs(destdir)
     if cwd is None:
@@ -507,13 +505,6 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     =======
 
     The imported module from of the python extension.
-
-    Examples
-    ========
-
-    >>> mod = compile_link_import_py_ext(['fft.f90', 'conv.cpp', '_fft.pyx'])  # doctest: +SKIP
-    >>> Aprim = mod.fft(A)  # doctest: +SKIP
-
     """
     if extname is None:
         extname = os.path.splitext(os.path.basename(sources[-1]))[0]
@@ -544,7 +535,7 @@ def _write_sources_to_build_dir(sources, build_dir):
         sha256_in_mem = sha256_of_string(src.encode('utf-8')).hexdigest()
         if os.path.exists(dest):
             if os.path.exists(dest + '.sha256'):
-                sha256_on_disk = open(dest + '.sha256', 'rt').read()
+                sha256_on_disk = open(dest + '.sha256').read()
             else:
                 sha256_on_disk = sha256_of_file(dest).hexdigest()
 

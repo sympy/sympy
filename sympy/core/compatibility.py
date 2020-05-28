@@ -553,8 +553,11 @@ def _nodes(e):
     for which the sum of nodes is returned).
     """
     from .basic import Basic
+    from .function import Derivative
 
     if isinstance(e, Basic):
+        if isinstance(e, Derivative):
+            return _nodes(e.expr) + len(e.variables)
         return e.count(Basic)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)

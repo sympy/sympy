@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -30,6 +28,7 @@ from sympy.ntheory import multiplicity, perfect_power
 class ExpBase(Function):
 
     unbranched = True
+    _singularities = (S.ComplexInfinity,)
 
     def inverse(self, argindex=1):
         """
@@ -74,8 +73,14 @@ class ExpBase(Function):
         """
         return self.func(1), Mul(*self.args)
 
+    def _eval_adjoint(self):
+        return self.func(self.args[0].adjoint())
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
+
+    def _eval_transpose(self):
+        return self.func(self.args[0].transpose())
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -427,7 +432,7 @@ class exp(ExpBase):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -442,7 +447,7 @@ class exp(ExpBase):
         except NotImplementedError:
             cf = 0
         if cf and cf > 0:
-            nterms = (n/cf).ceiling()
+            nterms = ceiling(n/cf)
         exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         if cf and cf > 1:
@@ -463,7 +468,7 @@ class exp(ExpBase):
         for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
-            l.append(g)
+            l.append(g.removeO())
         return Add(*l)
 
     def _eval_as_leading_term(self, x):
@@ -568,6 +573,7 @@ class log(Function):
     exp
 
     """
+    _singularities = (S.Zero, S.ComplexInfinity)
 
     def fdiff(self, argindex=1):
         """
@@ -1074,7 +1080,7 @@ class LambertW(Function):
                 s = S.Zero
 
             return s + Order(x**n, x)
-        return super(LambertW, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _eval_is_zero(self):
         x = self.args[0]

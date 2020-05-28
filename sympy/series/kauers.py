@@ -11,9 +11,8 @@ def finite_diff(expression, variable, increment=1):
     Examples
     ========
 
-    >>> from sympy.abc import x, y, z, k, n
+    >>> from sympy.abc import x, y, z
     >>> from sympy.series.kauers import finite_diff
-    >>> from  sympy import Sum
     >>> finite_diff(x**2, x)
     2*x + 1
     >>> finite_diff(y**3 + 2*y**2 + 3*y + 4, y)

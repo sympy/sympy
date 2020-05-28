@@ -47,8 +47,10 @@ def test_imageset():
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
-    assert imageset(lambda x, y: Add(x, y), Interval(1, 2), Interval(2, 3)) == \
-        ImageSet(Lambda((x1, x2), x1+x2), Interval(1, 2), Interval(2, 3))
+    assert imageset(lambda x, y:
+        Add(x, y), Interval(1, 2), Interval(2, 3)).dummy_eq(
+        ImageSet(Lambda((x1, x2), x1 + x2),
+        Interval(1, 2), Interval(2, 3)))
 
 
 def test_is_empty():
@@ -1433,6 +1435,11 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+
+def test_issue_18505():
+    assert ImageSet(Lambda(n, sqrt(pi*n/2 - 1 + pi/2)), S.Integers).contains(0) == \
+            Contains(0, ImageSet(Lambda(n, sqrt(pi*n/2 - 1 + pi/2)), S.Integers))
 
 
 def test_finite_set_intersection():
