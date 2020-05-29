@@ -1,6 +1,8 @@
 from sympy import (
-    Rational, gammasimp, factorial, gamma, binomial, multinomial, pi,
+    Rational, gammasimp, factorial, gamma, binomial, pi,
     S, sin, exp, powsimp, sqrt, simplify, symbols, cos, rf)
+
+from sympy.functions.combinatorial.factorials import multinomial
 
 from sympy.abc import x, y
 

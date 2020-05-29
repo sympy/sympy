@@ -1296,12 +1296,15 @@ class binomial(CombinatorialFunction):
             if (n - k + 1).is_zero:
                 return S.Zero
             return (gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1)))
-        if n.is_integer and k.is_integer:
+        if n.is_integer:
             if n.is_negative:
-                if k.is_nonnegative:
-                    return(Pow(-1, k)*gamma(k - n)/(gamma(-n)*gamma(k + 1)))
-                if k.is_negative:
-                    return (Pow(-1, n - k)*gamma(-k)/(gamma(-n)*gamma(n - k + 1)))
+                if k.is_integer:
+                    if k.is_nonnegative:
+                        return(Pow(-1, k)*gamma(k - n)/(gamma(-n)*gamma(k + 1)))
+                    if k.is_negative:
+                        return (Pow(-1, n - k)*gamma(-k)/(gamma(-n)*gamma(n - k + 1)))
+                if k.is_integer is False:
+                    return S.ComplexInfinity
             if n.is_nonnegative:
                 if k.is_negative:
                     return S.Zero
@@ -1384,7 +1387,8 @@ class multinomial(CombinatorialFunction):
     Examples
     ========
 
-    >>> from sympy import Symbol, Rational, multinomial, expand_func, symbols, gamma
+    >>> from sympy import Symbol, Rational, expand_func, symbols, gamma
+    >>> from sympy.functions.combinatorial.factorials import multinomial
 
     Consider the following polynomial in three variables:
 
