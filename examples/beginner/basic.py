@@ -31,7 +31,8 @@ def squared_equation_example():
     pprint(e)
     print('')
 
-
-if __name__ == "__main__":
+def main():
     squared_equation_example()
     normal_equation()
+if __name__ == "__main__":
+    main()
