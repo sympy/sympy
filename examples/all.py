@@ -165,7 +165,8 @@ def run_example(example, *, reporter=None):
     try:
         mod = load_example_module(example)
         if reporter:
-            suppress_output(mod.main)
+            suppress_output(mod.squared_equation_example)
+            suppress_output(mod.normal_equation)
             reporter.write("[PASS]", "Green", align="right")
         else:
             mod.main()
