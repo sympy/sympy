@@ -1,5 +1,5 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
+                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, Sum,
                    Piecewise)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
@@ -194,3 +194,11 @@ def test_BernoulliProcess():
     assert P(B[5] > 0, B[5]) == BernoulliDistribution(0.6, 0, 1)
     raises(ValueError, lambda: P(3))
     raises(ValueError, lambda: P(B[3] > 0, 3))
+
+    # test issue 19456
+    expr = Sum(B[t], (t, 0, 4))
+    expr2 = Sum(B[t], (t, 1, 3))
+    expr3 = Sum(B[t]**2, (t, 1, 3))
+    assert expr.doit() == B[0] + B[1] + B[2] + B[3] + B[4]
+    assert expr2.doit() == Y
+    assert expr3.doit() == B[1]**2 + B[2]**2 + B[3]**2
