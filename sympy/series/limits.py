@@ -215,19 +215,19 @@ class Limit(Expr):
                 newe = e.subs(z, z + z0)
             try:
                 coeff, exp = newe.leadterm(z)
-                if coeff is not S.ComplexInfinity:
-                    if exp > 0:
-                        return S.Zero
-                    elif exp == 0:
-                        return coeff
-                    if str(dir) == "+" or not(int(exp) & 1):
-                        return S.Infinity*sign(coeff)
-                    elif str(dir) == "-":
-                        return S.NegativeInfinity*sign(coeff)
-                    else:
-                        return S.ComplexInfinity
             except ValueError:
                 pass
+            else:
+                if exp > 0:
+                    return S.Zero
+                elif exp == 0:
+                    return coeff
+                if str(dir) == "+" or not(int(exp) & 1):
+                    return S.Infinity*sign(coeff)
+                elif str(dir) == "-":
+                    return S.NegativeInfinity*sign(coeff)
+                else:
+                    return S.ComplexInfinity
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.

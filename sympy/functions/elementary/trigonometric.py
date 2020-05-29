@@ -1230,13 +1230,13 @@ class tan(TrigonometricFunction):
         return y
 
     def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+        arg = self.args[0]
+        x0 = arg.subs(x, 0)
+        n = x0/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi).as_leading_term(x)
+            return lt if n.is_even else -1/lt
+        return self.func(arg)
 
     def _eval_is_extended_real(self):
         # FIXME: currently tan(pi/2) return zoo
@@ -1782,6 +1782,14 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = (x0 + S.Pi/2)/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
+            return ((-1)**n)/lt
+        return self.func(x0)
 
 class csc(ReciprocalTrigonometricFunction):
     """
