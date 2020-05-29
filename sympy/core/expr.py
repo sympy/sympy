@@ -2717,8 +2717,8 @@ class Expr(Basic, EvalfMixin):
         False
 
         """
-        if not x.is_Symbol:
-            raise TypeError("{} should be of type Symbol".format(x))
+        if not x.is_symbol:
+            raise TypeError("{} should be of symbol type".format(x))
         a = sympify(a)
 
         return self._eval_is_meromorphic(x, a)
@@ -3869,7 +3869,8 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_meromorphic(self, x, a):
-        return True
+        from sympy.calculus.util import AccumBounds
+        return (not self.is_Number or self.is_finite) and not isinstance(self, AccumBounds)
 
     def _eval_is_algebraic_expr(self, syms):
         return True

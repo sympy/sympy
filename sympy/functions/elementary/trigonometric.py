@@ -468,7 +468,10 @@ class sin(TrigonometricFunction):
         if x in arg.free_symbols and Order(1, x).contains(arg):
             return arg
         else:
-            return self.func(arg)
+            if not arg.subs(x, 0).is_finite:
+                return self
+            else:
+                return self.func(arg)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -908,7 +911,10 @@ class cos(TrigonometricFunction):
         if x in arg.free_symbols and Order(1, x).contains(arg):
             return S.One
         else:
-            return self.func(arg)
+            if not arg.subs(x, 0).is_finite:
+                return self
+            else:
+                return self.func(arg)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:

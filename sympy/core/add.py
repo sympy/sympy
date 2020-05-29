@@ -901,7 +901,7 @@ class Add(Expr, AssocOp):
                 if not min or order not in min:
                     min = order
                     new_expr = term
-                elif order == min:
+                elif min in order:
                     new_expr += term
 
         except TypeError:

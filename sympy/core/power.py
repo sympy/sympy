@@ -1340,7 +1340,7 @@ class Pow(Expr):
         # E**(log(f)*g) is meromorphic if log(f)*g is meromorphic
         # and finite.
         base_merom = self.base._eval_is_meromorphic(x, a)
-        exp_integer = self.exp.is_integer
+        exp_integer = self.exp.is_Integer
         if exp_integer:
             return base_merom
 
