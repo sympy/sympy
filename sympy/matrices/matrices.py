@@ -9,7 +9,7 @@ from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol
+from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
@@ -1780,7 +1780,7 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
-        x = _uniquely_named_symbol('x', self)
+        x = uniquely_named_symbol('x', self, modify=lambda s: '_' + s)
         p = self.charpoly(x)
         if p.args[0] == x ** self.rows:
             return True
