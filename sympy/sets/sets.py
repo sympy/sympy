@@ -19,7 +19,7 @@ from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
+from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
@@ -2266,7 +2266,8 @@ def imageset(*args):
             s = inspect.signature(f).parameters
 
         dexpr = _sympify(f(*[Dummy() for i in s]))
-        var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
+        var = tuple(uniquely_named_symbol(
+            Symbol(i), dexpr) for i in s)
         f = Lambda(var, f(*var))
     else:
         raise TypeError(filldedent('''

@@ -2,7 +2,7 @@ from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import _uniquely_named_symbol
+from sympy.core.symbol import uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
@@ -401,14 +401,14 @@ def _charpoly(M, x='lambda', simplify=_simplify):
         raise NonSquareMatrixError()
     if M.is_lower or M.is_upper:
         diagonal_elements = M.diagonal()
-        x = _uniquely_named_symbol(x, diagonal_elements)
+        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
         m = 1
         for i in diagonal_elements:
             m = m * (x - simplify(i))
         return PurePoly(m, x)
 
     berk_vector = _berkowitz_vector(M)
-    x = _uniquely_named_symbol(x, berk_vector)
+    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
 
     return PurePoly([simplify(a) for a in berk_vector], x)
 
