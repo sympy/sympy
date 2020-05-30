@@ -26,14 +26,20 @@ def _pt_add(P, Q, diff, n):
     Q : point on the curve in Montgomery form
     diff = P - Q
     n = modulus
+
+    References
+    ==========
+
+    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+        Algorithm - 3
     """
 
     u = (P.x - P.z)*(Q.x + Q.z)
     v = (P.x + P.z)*(Q.x - Q.z)
-    s, d = u + v, u - v
-    x = diff.z*s*s % n
-    z = diff.x*d*d % n
-    return Point(x, z)
+    add, subt = u + v, u - v
+    x_cor = diff.z*add*add % n
+    z_cor = diff.x*subt*subt % n
+    return Point(x_cor, z_cor)
 
 def _pt_double(P, n, a24):
     """
@@ -45,14 +51,20 @@ def _pt_double(P, n, a24):
     P : Point on the curve
     a24 : Parameter for doubling
     n : modulus
+
+    References
+    ==========
+
+    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+        Algorithm - 3
     """
 
     u, v = P.x + P.z, P.x - P.z
     u, v = u*u, v*v
-    t = u - v
-    x = u*v % n
-    z = t*(v + a24*t) % n
-    return Point(x, z)
+    diff = u - v
+    x_cor = u*v % n
+    z_cor = diff*(v + a24*diff) % n
+    return Point(x_cor, z_cor)
 
 def _mont_ladder(k, P, n, a24):
     """
@@ -62,10 +74,16 @@ def _mont_ladder(k, P, n, a24):
     Parameters:
     ==========
 
-    k : Integer
-    P : Poin on the curve in Montgomery form
+    k : The positive integer multiplier
+    P : Point on the curve in Montgomery form
     n : modulus
-    a24 : Parameter for doubling
+    a24 : Property of the curve
+
+    References
+    ==========
+
+    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+        Algorithm - 3
     """
 
     Q = P
@@ -109,6 +127,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("The Bounds should be an even integer")
     sieve.extend(B2)
+
     if isprime(n):
         return n
 
@@ -120,6 +139,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     for p in sieve.primerange(1, B1 + 1):
         k *= pow(p, integer_log(B1, p)[0])
     g = 1
+
     while(curve <= max_curve):
         curve += 1
 
@@ -131,13 +151,15 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         u_3 = pow(u, 3, n)
 
         try:
-            A = (pow(diff, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2) % n
+            C = (pow(diff, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2) % n
         except ValueError:
-            return g
-        a24 = (A + 2)*mod_inverse(4, n) % n
-        P = Point(u_3 , pow(v, 3, n))
-        Q = _mont_ladder(k, P, n, a24)
-        g = gcd(n, Q.z)
+            #If the mod_inverse(4*u_3*v, n) doesn't exist
+            return gcd(4*u_3*v, n)
+
+        a24 = (C + 2)*mod_inverse(4, n) % n
+        Q = Point(u_3 , pow(v, 3, n))
+        Q = _mont_ladder(k, Q, n, a24)
+        g = gcd(Q.z, n)
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -152,17 +174,19 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         for d in range(3, D + 1):
             S[d] = _pt_add(S[d - 1], S[1], S[d - 2], n)
             beta[d] = (S[d].x*S[d].z) % n
+
         g = 1
         B = B1 - 1
-        R = _mont_ladder(B, Q, n, a24)
         T = _mont_ladder(B - 2*D, Q, n, a24)
+        R = _mont_ladder(B, Q, n, a24)
 
         for r in  range(B, B2, 2*D):
             alpha = (R.x*R.z) % n
             for q in sieve.primerange(r + 2, r + 2*D + 1):
-                d = (q - r) // 2
-                f = (R.x - S[d].x)*(R.z + S[d].z) - alpha + beta[d]
+                delta = (q - r) // 2
+                f = (R.x - S[d].x)*(R.z + S[d].z) - alpha + beta[delta]
                 g = (g*f) % n
+            #Swap
             TT = R
             R = _pt_add(R, S[D], T, n)
             T = TT
