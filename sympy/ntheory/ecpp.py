@@ -121,3 +121,19 @@ def c_smith(p, D):
     sols = [(b, sqrt(t // D))]
     sols.append((-sols[0][0], -sols[0][1]))
     return sols
+
+
+def gen_next_discriminant(start=0):
+    from sympy.ntheory.factor_ import core
+
+    while(1):
+        start -= 1
+        if -start % 16 not in {3, 4, 7, 8, 11, 15}:
+            continue
+        odd_part = start
+        while(odd_part % 2 == 0):
+            odd_part //= 2
+        if core(-odd_part, 2) != -odd_part:
+            continue
+        break
+    return start
