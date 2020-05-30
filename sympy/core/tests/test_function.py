@@ -553,6 +553,12 @@ def test_function__eval_nseries():
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
         sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
+    # issue 19065:
+    xi = Symbol('xi')
+    xi0, xi1, xi2 = symbols('xi0:3')
+    s = f(xi, xi0, xi1, xi2).series(xi1)
+    assert s.getO().expr.args[0].name == 'xi1'
+
 
 def test_doit():
     n = Symbol('n', integer=True)

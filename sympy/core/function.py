@@ -671,6 +671,7 @@ class Function(Application, Expr):
 
         """
         from sympy import Order
+        from sympy.core.symbol import _uniquely_named_symbol
         from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
@@ -725,7 +726,20 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
-                _x = Dummy('x')
+
+                # choose dummy name which isn't in self.args
+                def _modify(s):
+                    # each time applied, return xi0, xi1, xi2, ...
+                    root_char = ''
+                    for c in s:
+                        if not c.isnumeric():
+                            root_char += c
+                        else:
+                            break
+                    num_char = s.lstrip(root_char)
+                    num = 0 if not num_char else int(num_char)+1
+                    return root_char + str(num)
+                _x = _uniquely_named_symbol('xi', self, modify=_modify)
                 e = e.subs(x, _x)
                 for i in range(n - 1):
                     i += 1
