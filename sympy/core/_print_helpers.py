@@ -1,8 +1,8 @@
 """
-Base classes to provide str and repr hooks.
+Base class to provide str and repr hooks that `init_printing` can overwrite.
 
-These are exposed publically in the `printing.str` and `printing.latex` modules.
-However, they cannot be defined there without causing circular imports
+This is exposed publicly in the `printing.defaults` module,
+but cannot be defined there without causing circular imports.
 """
 from typing import Any
 
