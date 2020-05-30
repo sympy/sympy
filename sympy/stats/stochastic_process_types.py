@@ -1104,7 +1104,7 @@ def get_timerv_swaps(expr, condition):
     >>> get_timerv_swaps(x*X(t), Contains(X(t), Interval.Lopen(0, 1)))
     ([Interval.Lopen(0, 1)], {X(t): X(1)})
     >>> get_timerv_swaps((X(t)**2 + X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
-    ... & Contains(X(d), Interval.Ropen(1, 4)))) # doctest: +SKIP
+    ... & Contains(X(d), Interval.Ropen(1, 4))) # doctest: +SKIP
     ([Interval.Ropen(1, 4), Interval.Lopen(0, 1)], {X(d): X(3), X(t): X(1)})
 
     Returns
