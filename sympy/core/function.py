@@ -671,7 +671,7 @@ class Function(Application, Expr):
 
         """
         from sympy import Order
-        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.symbol import uniquely_named_symbol
         from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
@@ -727,19 +727,7 @@ class Function(Application, Expr):
                 series = term
                 fact = S.One
 
-                # choose dummy name which isn't in self.args
-                def _modify(s):
-                    # each time applied, return xi0, xi1, xi2, ...
-                    root_char = ''
-                    for c in s:
-                        if not c.isnumeric():
-                            root_char += c
-                        else:
-                            break
-                    num_char = s.lstrip(root_char)
-                    num = 0 if not num_char else int(num_char)+1
-                    return root_char + str(num)
-                _x = _uniquely_named_symbol('xi', self, modify=_modify)
+                _x = uniquely_named_symbol('xi', self)
                 e = e.subs(x, _x)
                 for i in range(n - 1):
                     i += 1

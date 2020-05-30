@@ -555,10 +555,8 @@ def test_function__eval_nseries():
 
     # issue 19065:
     xi = Symbol('xi')
-    xi0, xi1, xi2 = symbols('xi0:3')
-    s = f(xi, xi0, xi1, xi2).series(xi1)
-    assert s.getO().expr.args[0].name == 'xi1'
-
+    s = f(xi, y).series(y, n=2)
+    assert {i.name for i in s.atoms(Symbol)} == ('xi', 'xi0', 'y')
 
 def test_doit():
     n = Symbol('n', integer=True)
