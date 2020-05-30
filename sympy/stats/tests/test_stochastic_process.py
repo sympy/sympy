@@ -4,7 +4,6 @@ from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess)
-from sympy.stats.stochastic_process_types import random_indexed_symbols
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
@@ -196,12 +195,6 @@ def test_BernoulliProcess():
     assert P(B[5] > 0, B[5]) == BernoulliDistribution(0.6, 0, 1)
     raises(ValueError, lambda: P(3))
     raises(ValueError, lambda: P(B[3] > 0, 3))
-
-def test_random_indexed_symbols():
-    t = symbols('t', positive=True, integer=True)
-    X, Y = BernoulliProcess("X", 0.4), PoissonProcess("Y", 3)
-    assert random_indexed_symbols(X[t] + Y(t)**3) == [X[t], Y(t)]
-    assert not random_indexed_symbols(t + t**2)
 
 def test_PoissonProcess():
     X = PoissonProcess("X", 3)

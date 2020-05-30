@@ -20,7 +20,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Not)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -801,6 +801,9 @@ def probability(condition, given_condition=None, numsamples=None,
 
     condition = sympify(condition)
     given_condition = sympify(given_condition)
+
+    if isinstance(condition, Not):
+        return S.One - probability(condition.args[0], given_condition, evaluate, **kwargs)
 
     if condition.has(RandomIndexedSymbol):
         return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)

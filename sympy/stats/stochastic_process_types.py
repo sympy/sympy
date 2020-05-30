@@ -88,18 +88,6 @@ def _sym_sympify(arg):
     else:
         return _sympify(arg)
 
-def random_indexed_symbols(expr):
-    """
-    Returns all RandomIndexedSymbols within a SymPy Expression.
-    """
-    atoms = getattr(expr, 'atoms', None)
-    if atoms is not None:
-        comp = lambda rv: rv.symbol.name
-        l = list(atoms(RandomIndexedSymbol))
-        return sorted(l, key=comp)
-    else:
-        return []
-
 def _matrix_checks(matrix):
     if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
         raise TypeError("Transition probabilities either should "
@@ -933,7 +921,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
         """
 
-        return SubstituteRV._expectation(expr, condition, evaluate, **kwargs)
+        return _SubstituteRV._expectation(expr, condition, evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
@@ -955,14 +943,14 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
         """
 
-        return SubstituteRV._probability(condition, given_condition, evaluate, **kwargs)
+        return _SubstituteRV._probability(condition, given_condition, evaluate, **kwargs)
 
     def density(self, x):
         return Piecewise((self.p, Eq(x, self.success)),
                          (1 - self.p, Eq(x, self.failure)),
                          (S.Zero, True))
 
-class SubstituteRV:
+class _SubstituteRV:
     """
     Internal class to handle the queries of expectation and probability
     by substitution.
@@ -1133,7 +1121,7 @@ def get_timerv_swaps(expr, condition):
     if not isinstance(condition, (Relational, Boolean)):
         raise ValueError("%s is not a relational or combination of relationals"
             % (condition))
-    expr_syms = random_indexed_symbols(expr)
+    expr_syms = list(expr.atoms(RandomIndexedSymbol))
     if isinstance(condition, (And, Or)):
         given_cond_args = condition.args
     else: # single condition
@@ -1280,7 +1268,7 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
             else:
                 return Expectation(expr, condition)
 
-        return SubstituteRV._expectation(expr, evaluate=evaluate, **kwargs)
+        return _SubstituteRV._expectation(expr, evaluate=evaluate, **kwargs)
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
@@ -1302,8 +1290,6 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
         Probability of the condition
 
         """
-        if isinstance(condition, Not):
-            return S.One - self.probability(condition.args[0], given_condition, evaluate, **kwargs)
         if given_condition is not None:
             intervals, rv_swap = get_timerv_swaps(condition, given_condition)
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
@@ -1316,4 +1302,4 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
             else:
                 return Probability(condition, given_condition)
 
-        return SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
+        return _SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
