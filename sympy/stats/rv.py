@@ -312,8 +312,10 @@ class RandomIndexedSymbol(RandomSymbol):
 
     @property
     def free_symbols(self):
-        if isinstance(self.key, Symbol):
-            return {self, self.key}
+        if self.key.free_symbols:
+            free_syms = self.key.free_symbols
+            free_syms.add(self)
+            return free_syms
         return {self}
 
 class RandomMatrixSymbol(MatrixSymbol):
