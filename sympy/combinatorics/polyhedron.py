@@ -425,7 +425,6 @@ class Polyhedron(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, Cycle
         >>> from sympy.combinatorics.polyhedron import tetrahedron
         >>> tetrahedron = tetrahedron.copy()
         >>> tetrahedron.array_form

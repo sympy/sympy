@@ -52,7 +52,7 @@ class Curve(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import sin, cos, Symbol, interpolate
+    >>> from sympy import sin, cos, interpolate
     >>> from sympy.abc import t, a
     >>> from sympy.geometry import Curve
     >>> C = Curve((sin(t), cos(t)), (t, 0, 2))
@@ -257,7 +257,6 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy import cos, sin
         >>> from sympy.abc import t
         >>> Curve((t, t), (t, 0, 1)).length
         sqrt(2)
@@ -290,7 +289,7 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy import Curve, sin
-        >>> from sympy.abc import x, t, s
+        >>> from sympy.abc import x, s
         >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()
         [t, 1, 2]
         >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval(s)
@@ -337,7 +336,6 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy import pi
         >>> from sympy.abc import x
         >>> Curve((x, x), (x, 0, 1)).scale(2)
         Curve((2*x, x), (x, 0, 1))
@@ -355,7 +353,6 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.geometry.curve import Curve
-        >>> from sympy import pi
         >>> from sympy.abc import x
         >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
         Curve((x + 1, x + 2), (x, 0, 1))

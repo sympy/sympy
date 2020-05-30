@@ -285,7 +285,7 @@ class RigidBody(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Particle, Point, outer
+        >>> from sympy.physics.mechanics import Point, outer
         >>> from sympy.physics.mechanics import RigidBody, ReferenceFrame
         >>> from sympy import symbols
         >>> b = ReferenceFrame('b')

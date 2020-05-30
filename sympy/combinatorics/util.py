@@ -139,7 +139,6 @@ def _distribute_gens_by_base(base, gens):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.util import _distribute_gens_by_base
     >>> D = DihedralGroup(3)
@@ -206,7 +205,6 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.util import _handle_precomputed_bsgs
     >>> D = DihedralGroup(3)
@@ -265,16 +263,13 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
-    >>> from sympy.combinatorics.util import _orbits_transversals_from_bsgs
-    >>> from sympy.combinatorics.util import (_orbits_transversals_from_bsgs,
-    ... _distribute_gens_by_base)
+    >>> from sympy.combinatorics.util import _distribute_gens_by_base
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
-    >>> _orbits_transversals_from_bsgs(S.base, strong_gens_distr)
-    ([[0, 1, 2], [1, 2]], [{0: (2), 1: (0 1 2), 2: (0 2 1)}, {1: (2), 2: (1 2)}])
+    >>> (S.base, strong_gens_distr)
+    ([0, 1], [[(0 1 2), (2)(0 1), (1 2)], [(1 2)]])
 
     See Also
     ========
@@ -326,7 +321,6 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     ========
 
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.util import _remove_gens
     >>> from sympy.combinatorics.testutil import _verify_bsgs
     >>> S = SymmetricGroup(15)
@@ -408,7 +402,6 @@ def _strip(g, base, orbits, transversals):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.util import _strip
@@ -501,7 +494,6 @@ def _strong_gens_from_distr(strong_gens_distr):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> from sympy.combinatorics.util import (_strong_gens_from_distr,
     ... _distribute_gens_by_base)

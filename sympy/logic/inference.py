@@ -144,7 +144,7 @@ def pl_true(expr, model={}, deep=False):
     Examples
     ========
 
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B: True})
     True

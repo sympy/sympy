@@ -55,7 +55,7 @@ class SingleODEProblem:
     This class is used internally by dsolve. To instantiate an instance
     directly first define an ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -152,7 +152,7 @@ class SingleODESolver:
     You can use a subclass of SingleODEProblem to solve a particular type of
     ODE. We first define a particular ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -466,8 +466,8 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint, sin, cos
+    >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -650,7 +650,7 @@ class Factorable(SingleODESolver):
         Examples
         ========
 
-        >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
@@ -727,7 +727,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     and is valid when neither `a` nor `b` are zero and either `c` or `d` is
     zero.
 
-    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.abc import x, a, b, c, d
     >>> from sympy.solvers.ode import dsolve, checkodesol
     >>> from sympy import pprint, Function
     >>> f = Function('f')

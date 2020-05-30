@@ -306,7 +306,7 @@ def rep_expectation(expr, **options):
     Examples
     ========
 
-    >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
+    >>> from sympy.physics.quantum.cartesian import XOp, PxOp, PxKet
     >>> from sympy.physics.quantum.represent import rep_expectation
     >>> rep_expectation(XOp())
     x_1*DiracDelta(x_1 - x_2)

@@ -42,7 +42,7 @@ def crt(m, v, symmetric=False, check=True):
     As an example consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
 
-       >>> from sympy.ntheory.modular import crt, solve_congruence
+       >>> from sympy.ntheory.modular import crt
 
        >>> crt([99, 97, 95], [49, 76, 65])
        (639985, 912285)

@@ -1759,11 +1759,51 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import Order, powsimp
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(Order):
-            res += Order(x**n, x)
+        from sympy import Integer, Mul, Order, ceiling, powsimp
+        from itertools import product
+
+        def coeff_exp(term, x):
+            coeff, exp = S.One, S.Zero
+            for factor in Mul.make_args(term):
+                if factor.has(x):
+                    base, exp = factor.as_base_exp()
+                    if base != x:
+                        return term.leadterm(x)
+                else:
+                    coeff *= factor
+            return coeff, exp
+
+        ords = []
+
+        try:
+            for t in self.args:
+                coeff, exp = t.leadterm(x)
+                if isinstance(coeff, Integer) or isinstance(coeff, Rational):
+                    ords.append((t, exp))
+                else:
+                    raise ValueError
+
+            n0 = sum(t[1] for t in ords)
+            facs = [t.series(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
+
+        except (ValueError, NotImplementedError, TypeError, AttributeError):
+            facs = [t.nseries(x, n=n, logx=logx) for t in self.args]
+            res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
+            if res.has(Order):
+                res += Order(x**n, x)
+            return res
+
+        res = 0
+        ords2 = [Add.make_args(factor) for factor in facs]
+
+        for fac in product(*ords2):
+            ords3 = [coeff_exp(term, x) for term in fac]
+            coeffs, powers = zip(*ords3)
+            power = sum(powers)
+            if power < n:
+                res += Mul(*coeffs)*(x**power)
+
+        res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):

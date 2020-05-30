@@ -766,7 +766,7 @@ def primorial(n, nth=True):
     Examples
     ========
 
-    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy.ntheory.generate import primorial, primerange
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210

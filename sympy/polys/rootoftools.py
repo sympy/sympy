@@ -43,7 +43,7 @@ class _pure_key_dict(object):
     Only the following actions are guaranteed:
 
     >>> from sympy.polys.rootoftools import _pure_key_dict
-    >>> from sympy import S, PurePoly
+    >>> from sympy import PurePoly
     >>> from sympy.abc import x, y
 
     1) creation
@@ -907,7 +907,7 @@ class ComplexRootOf(RootOf):
         ensure the decimal representation of the approximation will be
         correct (including rounding) to 6 digits:
 
-        >>> from sympy import S, legendre_poly, Symbol
+        >>> from sympy import legendre_poly, Symbol
         >>> x = Symbol("x")
         >>> p = legendre_poly(4, x, polys=True)
         >>> r = p.real_roots()[-1]

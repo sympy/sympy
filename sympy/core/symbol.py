@@ -37,7 +37,7 @@ def _symbol(s, matching_symbol=None, **assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Dummy
+    >>> from sympy import Symbol
     >>> from sympy.core.symbol import _symbol
     >>> _symbol('y')
     y
@@ -94,11 +94,10 @@ def _symbol(s, matching_symbol=None, **assumptions):
     else:
         raise ValueError('symbol must be string for symbol name or Symbol')
 
-
-def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
     """Return a symbol which, when printed, will have a name unique
     from any other already in the expressions given. The name is made
-    unique by prepending underscores (default) but this can be
+    unique by appending numbers (default) but this can be
     customized with the keyword 'modify'.
 
     Parameters
@@ -111,16 +110,29 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
         modify : a single arg function that changes its string argument
-            in some way (the default is to prepend underscores)
+            in some way (the default is to append numbers)
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import _uniquely_named_symbol as usym, Dummy
+    >>> from sympy.core.symbol import uniquely_named_symbol
     >>> from sympy.abc import x
-    >>> usym('x', x)
-    _x
+    >>> uniquely_named_symbol('x', x)
+    x0
     """
+    from sympy.core.function import AppliedUndef
+
+    def numbered_string_incr(s, start=0):
+        if not s:
+            return str(start)
+        i = len(s) - 1
+        while i != -1:
+            if not s[i].isdigit():
+                break
+            i -= 1
+        n = str(int(s[i + 1:] or start - 1) + 1)
+        return s[:i + 1] + n
+
     default = None
     if is_sequence(xname):
         xname, default = xname
@@ -129,13 +141,15 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
         exprs = [exprs]
-    syms = set().union(*[e.free_symbols for e in exprs])
+    names = set().union((
+        [i.name for e in exprs for i in e.atoms(Symbol)] +
+        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)]))
     if modify is None:
-        modify = lambda s: '_' + s
-    while any(x == compare(s) for s in syms):
+        modify = numbered_string_incr
+    while any(x == compare(s) for s in names):
         x = modify(x)
     return _symbol(x, default, **assumptions)
-
+_uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
@@ -720,17 +734,17 @@ def var(names, **args):
 
     >>> var('x')
     x
-    >>> x
+    >>> x # noqa: F821
     x
 
     >>> var('a,ab,abc')
     (a, ab, abc)
-    >>> abc
+    >>> abc # noqa: F821
     abc
 
     >>> var('x,y', real=True)
     (x, y)
-    >>> x.is_real and y.is_real
+    >>> x.is_real and y.is_real # noqa: F821
     True
 
     See :func:`symbols` documentation for more details on what kinds of

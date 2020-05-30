@@ -234,7 +234,7 @@ class CircularUnitaryEnsemble(CircularEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import CircularUnitaryEnsemble as CUE, density
+    >>> from sympy.stats import CircularUnitaryEnsemble as CUE
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = CUE('U', 1)
     >>> joint_eigen_distribution(C)
@@ -257,7 +257,7 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import CircularOrthogonalEnsemble as COE, density
+    >>> from sympy.stats import CircularOrthogonalEnsemble as COE
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = COE('O', 1)
     >>> joint_eigen_distribution(C)
@@ -280,7 +280,7 @@ class CircularSymplecticEnsemble(CircularEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import CircularSymplecticEnsemble as CSE, density
+    >>> from sympy.stats import CircularSymplecticEnsemble as CSE
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = CSE('S', 1)
     >>> joint_eigen_distribution(C)

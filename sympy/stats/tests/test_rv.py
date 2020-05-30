@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from sympy import (S, Symbol, Interval, exp,
+from sympy import (S, Symbol, Interval, exp, Or,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
         DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
@@ -81,7 +81,7 @@ def test_moment_generating_function():
 def test_sample_iter():
 
     X = Normal('X',0,1)
-    Y = DiscreteUniform('Y', [1,2,7])
+    Y = DiscreteUniform('Y', [1, 2, 7])
     Z = Poisson('Z', 2)
 
     scipy = import_module('scipy')
@@ -193,7 +193,7 @@ def test_Sample():
         skip('Scipy is not installed. Abort tests')
     with ignore_warnings(UserWarning):
         assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert next(sample(X + Y))[0].is_Float
+        assert isinstance(next(sample(X + Y)), float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
@@ -377,3 +377,11 @@ def test_issue_12283():
     assert variance(RI) == Variance(RI)
     assert covariance(X, Y) == Covariance(X, Y)
     assert covariance(X, Z) == Covariance(X, Z)
+
+def test_issue_6810():
+    X = Die('X', 6)
+    Y = Normal('Y', 0, 1)
+    assert P(Eq(X, 2)) == S(1)/6
+    assert P(Eq(Y, 0)) == 0
+    assert P(Or(X > 2, X < 3)) == 1
+    assert P(And(X > 3, X > 2)) == S(1)/2

@@ -434,7 +434,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import log, Integral, cos, sin, pi
+        >>> from sympy import Integral, cos, sin, pi
         >>> from sympy.core.function import Function
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2717,8 +2717,8 @@ class Expr(Basic, EvalfMixin):
         False
 
         """
-        if not x.is_Symbol:
-            raise TypeError("{} should be of type Symbol".format(x))
+        if not x.is_symbol:
+            raise TypeError("{} should be of symbol type".format(x))
         a = sympify(a)
 
         return self._eval_is_meromorphic(x, a)
@@ -2827,7 +2827,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import cos, exp, tan, oo, series
+        >>> from sympy import cos, exp, tan
         >>> from sympy.abc import x, y
         >>> cos(x).series()
         1 - x**2/2 + x**4/24 + O(x**6)
@@ -3043,7 +3043,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import sin, exp
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> e = sin(1/x + exp(-x)) - sin(1/x)
 
@@ -3201,11 +3201,15 @@ class Expr(Basic, EvalfMixin):
         n = 0
         series = self._eval_nseries(x, n=n, logx=logx)
         if not series.is_Order:
-            if series.is_Add:
-                yield series.removeO()
+            newseries = series.cancel()
+            if not newseries.is_Order:
+                if series.is_Add:
+                    yield series.removeO()
+                else:
+                    yield series
+                return
             else:
-                yield series
-            return
+                series = newseries
 
         while series.is_Order:
             n += 1
@@ -3684,7 +3688,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import pi, E, I, S, Add, Mul, Number
+        >>> from sympy import pi, E, I, S, Number
         >>> pi.round()
         3
         >>> pi.round(2)
@@ -3865,7 +3869,8 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_meromorphic(self, x, a):
-        return True
+        from sympy.calculus.util import AccumBounds
+        return (not self.is_Number or self.is_finite) and not isinstance(self, AccumBounds)
 
     def _eval_is_algebraic_expr(self, syms):
         return True
@@ -3917,7 +3922,7 @@ class UnevaluatedExpr(Expr):
     ========
 
     >>> from sympy import UnevaluatedExpr
-    >>> from sympy.abc import a, b, x, y
+    >>> from sympy.abc import x
     >>> x*(1/x)
     1
     >>> x*UnevaluatedExpr(1/x)

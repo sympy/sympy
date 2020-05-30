@@ -115,7 +115,7 @@ def vring(symbols, domain, order=lex):
 
     >>> vring("x,y,z", ZZ, lex)
     Polynomial ring in x, y, z over ZZ with lex order
-    >>> x + y + z
+    >>> x + y + z # noqa:
     x + y + z
     >>> type(_)
     <class 'sympy.polys.rings.PolyElement'>
@@ -141,8 +141,6 @@ def sring(exprs, *symbols, **options):
 
     >>> from sympy.core import symbols
     >>> from sympy.polys.rings import sring
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.orderings import lex
 
     >>> x, y, z = symbols("x,y,z")
     >>> R, f = sring(x + 2*y + 3*z)

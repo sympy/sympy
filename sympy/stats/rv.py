@@ -19,8 +19,8 @@ from functools import singledispatch
 from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Not)
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta, Not,
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
@@ -408,7 +408,7 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(1,), library='scipy'):
+    def sample(self, size=(), library='scipy'):
         return {k: v for space in self.spaces
             for k, v in space.sample(size=size, library=library).items()}
 
@@ -575,7 +575,6 @@ def pspace(expr):
     ========
 
     >>> from sympy.stats import pspace, Normal
-    >>> from sympy.stats.rv import IndependentProductPSpace
     >>> X = Normal('X', 0, 1)
     >>> pspace(2*X + 1) == X.pspace
     True
@@ -738,33 +737,11 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
 
     if not is_random(expr):  # expr isn't random?
         return expr
-    if numsamples:  # Computing by monte carlo sampling?
-        evalf = kwargs.get('evalf', True)
-        return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
-
-    if expr.has(RandomIndexedSymbol):
-        return pspace(expr).compute_expectation(expr, condition, evaluate, **kwargs)
-
-    # Create new expr and recompute E
-    if condition is not None:  # If there is a condition
-        return expectation(given(expr, condition), evaluate=evaluate)
-
-    # A few known statements for efficiency
-
-    if expr.is_Add:  # We know that E is Linear
-        return Add(*[expectation(arg, evaluate=evaluate)
-                     for arg in expr.args])
-
-    # Otherwise case is simple, pass work off to the ProbabilitySpace
-    if pspace(expr) == PSpace():
-        from sympy.stats.symbolic_probability import Expectation
-        return Expectation(expr)
-
-    result = pspace(expr).compute_expectation(expr, evaluate=evaluate, **kwargs)
-    if evaluate and hasattr(result, 'doit'):
-        return result.doit(**kwargs)
-    else:
-        return result
+    kwargs['numsamples'] = numsamples
+    from sympy.stats.symbolic_probability import Expectation
+    if evaluate:
+        return Expectation(expr, condition).doit(**kwargs)
+    return Expectation(expr, condition).rewrite(Integral) # will return Sum in case of discrete RV
 
 
 def probability(condition, given_condition=None, numsamples=None,
@@ -1029,7 +1006,7 @@ def where(condition, given_condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import where, Die, Normal
-    >>> from sympy import symbols, And
+    >>> from sympy import And
 
     >>> D1, D2 = Die('a', 6), Die('b', 6)
     >>> a, b = D1.symbol, D2.symbol
@@ -1052,7 +1029,7 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
+def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
                                                                     **kwargs):
     """
     A realization of the random expression
@@ -1084,10 +1061,10 @@ def sample(expr, condition=None, size=(1,), library='scipy', numsamples=1,
 
     >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
     >>> N = Normal('N', 3, 4)
-    >>> samp = next(sample(N))[0] # doctest: +SKIP
+    >>> samp = next(sample(N)) # doctest: +SKIP
     >>> samp in N.pspace.domain.set # doctest: +SKIP
     True
-    >>> samp = next(sample(N, N>0))[0] # doctest: +SKIP
+    >>> samp = next(sample(N, N>0)) # doctest: +SKIP
     >>> samp > 0 # doctest: +SKIP
     True
     >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
@@ -1155,7 +1132,7 @@ def quantile(expr, evaluate=True, **kwargs):
     else:
         return result
 
-def sample_iter(expr, condition=None, size=(1,), library='scipy',
+def sample_iter(expr, condition=None, size=(), library='scipy',
                     numsamples=S.Infinity, **kwargs):
 
     """
@@ -1233,13 +1210,13 @@ def sample_iter(expr, condition=None, size=(1,), library='scipy',
             count += 1
     return return_generator()
 
-def sample_iter_lambdify(expr, condition=None, size=(1,), numsamples=S.Infinity,
+def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity,
                                                                     **kwargs):
 
     return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
                                                                         **kwargs)
 
-def sample_iter_subs(expr, condition=None, size=(1,), numsamples=S.Infinity,
+def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity,
                                                                     **kwargs):
 
     return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
@@ -1293,10 +1270,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     """
     samples = list(sample_iter(expr, given_condition, library=library,
                           numsamples=numsamples, **kwargs))
-    try:
-        result = Add(*[samp[0] for samp in samples]) / numsamples
-    except TypeError:
-        result = Add(*[samp for samp in samples]) / numsamples
+    result = Add(*[samp for samp in samples]) / numsamples
 
     if evalf:
         return result.evalf()
@@ -1318,10 +1292,7 @@ def sampling_density(expr, given_condition=None, library='scipy',
     results = {}
     for result in sample_iter(expr, given_condition, library=library,
                               numsamples=numsamples, **kwargs):
-        try:
-            results[result[0]] = results.get(result[0], 0) + 1
-        except TypeError:
-            results[result] = results.get(result, 0) + 1
+        results[result] = results.get(result, 0) + 1
 
     return results
 
