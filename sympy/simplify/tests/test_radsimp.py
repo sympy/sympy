@@ -1,7 +1,7 @@
 from sympy import (
     sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
     collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, radsimp, diff, root, Symbol, Rational, exp, Abs)
+    Mul, Pow, radsimp, diff, root, Symbol, Rational, exp, Abs)
 
 from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
@@ -411,6 +411,16 @@ def test_fraction():
 
     p = symbols('p', positive=True)
     assert fraction(exp(-p)*log(p), exact=True) == (exp(-p)*log(p), 1)
+
+    m = Mul(1, 1, S.Half, evaluate=False)
+    assert fraction(m) == (1, 2)
+    assert fraction(m, exact=True) == (Mul(1, 1, evaluate=False), 2)
+
+    m = Mul(1, 1, S.Half, S.Half, Pow(1, -1, evaluate=False), evaluate=False)
+    assert fraction(m) == (1, 4)
+    assert fraction(m, exact=True) == \
+            (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
+
 
 def test_issue_5615():
     aA, Re, a, b, D = symbols('aA Re a b D')

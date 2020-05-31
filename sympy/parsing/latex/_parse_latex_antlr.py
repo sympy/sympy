@@ -159,7 +159,12 @@ def convert_unary(unary):
     if unary.ADD():
         return convert_unary(nested_unary)
     elif unary.SUB():
-        return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
+        numabs = convert_unary(nested_unary)
+        if numabs == 1:
+            # Use Integer(-1) instead of Mul(-1, 1)
+            return -numabs
+        else:
+            return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
     elif postfix:
         return convert_postfix_list(postfix)
 
@@ -366,8 +371,11 @@ def convert_frac(frac):
 
     expr_top = convert_expr(frac.upper)
     expr_bot = convert_expr(frac.lower)
-    return sympy.Mul(
-        expr_top, sympy.Pow(expr_bot, -1, evaluate=False), evaluate=False)
+    inverse_denom = sympy.Pow(expr_bot, -1, evaluate=False)
+    if expr_top == 1:
+        return inverse_denom
+    else:
+        return sympy.Mul(expr_top, inverse_denom, evaluate=False)
 
 def convert_binom(binom):
     expr_n = convert_expr(binom.n)

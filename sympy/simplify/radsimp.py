@@ -1085,20 +1085,18 @@ def fraction(expr, exact=False):
                 numer.append(term)
             elif not exact and ex.is_Mul:
                 n, d = term.as_numer_denom()
-                numer.append(n)
+                if n != 1:
+                    numer.append(n)
                 denom.append(d)
             else:
                 numer.append(term)
-        elif term.is_Rational:
-            n, d = term.as_numer_denom()
-            numer.append(n)
-            denom.append(d)
+        elif term.is_Rational and not term.is_Integer:
+            if term.p != 1:
+                numer.append(term.p)
+            denom.append(term.q)
         else:
             numer.append(term)
-    if exact:
-        return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
-    else:
-        return Mul(*numer), Mul(*denom)
+    return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
 def numer(expr):
