@@ -132,6 +132,10 @@ class StochasticProcess(Basic):
     def state_space(self):
         return self.args[1]
 
+    @property
+    def distribution(self):
+        return None
+
     def __call__(self, time):
         """
         Overridden in ContinuousTimeStochasticProcess.
@@ -209,8 +213,7 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        distribution = getattr(self, 'distribution', None)
-        pspace_obj = StochasticPSpace(self.symbol, self, distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
 class ContinuousTimeStochasticProcess(StochasticProcess):
@@ -229,8 +232,7 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        distribution = getattr(self, 'distribution', None)
-        pspace_obj = StochasticPSpace(self.symbol, self, distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
@@ -1141,71 +1143,13 @@ def get_timerv_swaps(expr, condition):
                 intervals.append(intv)
     return intervals, rv_swap
 
-class PoissonProcess(ContinuousTimeStochasticProcess):
+
+class CountingProcess(ContinuousTimeStochasticProcess):
     """
-    The Poisson process is a counting process. It is usually used in scenarios
-    where we are counting the occurrences of certain events that appear
-    to happen at a certain rate, but completely at random.
-
-    Parameters
-    ==========
-
-    sym: Symbol/str
-    lamda: Positive number
-        Rate of the process, ``lamda > 0``
-
-    Examples
-    ========
-
-    >>> from sympy.stats import PoissonProcess, P, E
-    >>> from sympy import symbols, Eq, Ne, Contains, Interval
-    >>> X = PoissonProcess("X", lamda=3)
-    >>> X.state_space
-    Interval(0, oo)
-    >>> X.lamda
-    3
-    >>> t1, t2 = symbols('t1 t2', positive=True)
-    >>> P(X(t1) < 4)
-    (9*t1**3/2 + 9*t1**2/2 + 3*t1 + 1)*exp(-3*t1)
-    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), Contains(X(t1), Interval.Ropen(2, 4)))
-    1 - 36*exp(-6)
-    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), Contains(X(t1), Interval.Lopen(0, 2))
-    ... & Contains(X(t2), Interval.Lopen(2, 4)))
-    648*exp(-12)
-    >>> E(X(t1))
-    3*t1
-    >>> E(X(t1)**2 + 2*X(t2),  Contains(X(t1), Interval.Lopen(0, 1))
-    ... & Contains(X(t2), Interval.Lopen(1, 2)))
-    18
-
-    Merging two Poisson Processes
-
-    >>> Y = PoissonProcess("Y", lamda=4)
-    >>> Z = X + Y
-    >>> Z.lamda
-    7
-
-    Splitting a Poisson Process into two independent Poisson Processes
-
-    >>> N, M = Z.split(l1=2, l2=5)
-    >>> N.lamda, M.lamda
-    (2, 5)
-
-    References
-    ==========
-
-    .. [1] https://www.probabilitycourse.com/chapter11
-    .. [2] https://en.wikipedia.org/wiki/Poisson_point_process
-
+    This class handles the common methods of the Counting Processes
+    such as Poisson, Wiener and Gamma Processes
     """
-
     index_set = _set_converter(Interval(0, oo))
-
-    def __new__(cls, sym, lamda):
-        _value_check(lamda > 0, 'lamda should be a positive number.')
-        sym = _symbol_converter(sym)
-        lamda = _sympify(lamda)
-        return Basic.__new__(cls, sym, lamda)
 
     @property
     def state_space(self):
@@ -1214,29 +1158,6 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
     @property
     def symbol(self):
         return self.args[0]
-
-    @property
-    def lamda(self):
-        return self.args[1]
-
-    def distribution(self, rv):
-        return PoissonDistribution(self.lamda*rv.key)
-
-    def density(self, x):
-        return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
-
-    def simple_rv(self, rv):
-        return Poisson(rv.name, lamda=self.lamda*rv.key)
-
-    def __add__(self, other):
-        if not isinstance(other, PoissonProcess):
-            raise ValueError("Only instances of Poisson Process can be merged")
-        return PoissonProcess(Dummy("z"), self.lamda + other.lamda)
-
-    def split(self, l1, l2):
-        if _sympify(l1 + l2) != self.lamda:
-            raise ValueError("Sum of l1 and l2 should be %s" % str(self.lamda))
-        return PoissonProcess(Dummy("l1"), l1), PoissonProcess(Dummy("l2"), l2)
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
@@ -1303,3 +1224,90 @@ class PoissonProcess(ContinuousTimeStochasticProcess):
                 return Probability(condition, given_condition)
 
         return _SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
+
+class PoissonProcess(CountingProcess):
+    """
+    The Poisson process is a counting process. It is usually used in scenarios
+    where we are counting the occurrences of certain events that appear
+    to happen at a certain rate, but completely at random.
+
+    Parameters
+    ==========
+
+    sym: Symbol/str
+    lamda: Positive number
+        Rate of the process, ``lamda > 0``
+
+    Examples
+    ========
+
+    >>> from sympy.stats import PoissonProcess, P, E
+    >>> from sympy import symbols, Eq, Ne, Contains, Interval
+    >>> X = PoissonProcess("X", lamda=3)
+    >>> X.state_space
+    Interval(0, oo)
+    >>> X.lamda
+    3
+    >>> t1, t2 = symbols('t1 t2', positive=True)
+    >>> P(X(t1) < 4)
+    (9*t1**3/2 + 9*t1**2/2 + 3*t1 + 1)*exp(-3*t1)
+    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), Contains(X(t1), Interval.Ropen(2, 4)))
+    1 - 36*exp(-6)
+    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), Contains(X(t1), Interval.Lopen(0, 2))
+    ... & Contains(X(t2), Interval.Lopen(2, 4)))
+    648*exp(-12)
+    >>> E(X(t1))
+    3*t1
+    >>> E(X(t1)**2 + 2*X(t2),  Contains(X(t1), Interval.Lopen(0, 1))
+    ... & Contains(X(t2), Interval.Lopen(1, 2)))
+    18
+
+    Merging two Poisson Processes
+
+    >>> Y = PoissonProcess("Y", lamda=4)
+    >>> Z = X + Y
+    >>> Z.lamda
+    7
+
+    Splitting a Poisson Process into two independent Poisson Processes
+
+    >>> N, M = Z.split(l1=2, l2=5)
+    >>> N.lamda, M.lamda
+    (2, 5)
+
+    References
+    ==========
+
+    .. [1] https://www.probabilitycourse.com/chapter11
+    .. [2] https://en.wikipedia.org/wiki/Poisson_point_process
+
+    """
+
+    def __new__(cls, sym, lamda):
+        _value_check(lamda > 0, 'lamda should be a positive number.')
+        sym = _symbol_converter(sym)
+        lamda = _sympify(lamda)
+        return Basic.__new__(cls, sym, lamda)
+
+    @property
+    def lamda(self):
+        return self.args[1]
+
+    def distribution(self, rv):
+        return PoissonDistribution(self.lamda*rv.key)
+
+    def density(self, x):
+        return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
+
+    def simple_rv(self, rv):
+        return Poisson(rv.name, lamda=self.lamda*rv.key)
+
+    def __add__(self, other):
+        if not isinstance(other, PoissonProcess):
+            raise ValueError("Only instances of Poisson Process can be merged")
+        return PoissonProcess(Dummy("z"), self.lamda + other.lamda)
+
+    def split(self, l1, l2):
+        if _sympify(l1 + l2) != self.lamda:
+            raise ValueError("Sum of l1 and l2 should be %s" % str(self.lamda))
+        return PoissonProcess(Dummy("l1"), l1), PoissonProcess(Dummy("l2"), l2)
