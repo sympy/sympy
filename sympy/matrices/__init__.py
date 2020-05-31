@@ -28,7 +28,7 @@ from .expressions import (
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
-    PermutationMatrix, MatrixPermute, SingleEntryMatrix)
+    PermutationMatrix, MatrixPermute)
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
