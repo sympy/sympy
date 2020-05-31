@@ -162,8 +162,9 @@ def denoms(eq, *symbols):
     pot = preorder_traversal(eq)
     dens = set()
     for p in pot:
-        # lhs and rhs will be traversed after anyway
-        if isinstance(p, Relational):
+        # Here p might be Tuple or Relational
+        # Expr subtrees (e.g. lhs and rhs) will be traversed after by pot
+        if not isinstance(p, Expr):
             continue
         den = denom(p)
         if den is S.One:

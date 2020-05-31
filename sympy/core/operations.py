@@ -1,5 +1,7 @@
 from typing import Tuple
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -25,16 +27,29 @@ class AssocOp(Basic):
     # and keep it right here
     __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
+    _args_type = None
+
     @cacheit
     def __new__(cls, *args, **options):
         from sympy import Order
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        # XXX: Maybe only Expr should be allowed here...
-        from sympy.core.relational import Relational
-        if any(isinstance(arg, Relational) for arg in args):
-            raise TypeError("Relational can not be used in %s" % cls.__name__)
+        # Disallow non-Expr args in Add/Mul
+        typ = cls._args_type
+        if typ is not None:
+            from sympy.core.relational import Relational
+            if any(isinstance(arg, Relational) for arg in args):
+                raise TypeError("Relational can not be used in %s" % cls.__name__)
+
+            # This should raise TypeError once deprecation period is over:
+            if not all(isinstance(arg, typ) for arg in args):
+                SymPyDeprecationWarning(
+                    feature="Add/Mul with non-Expr args",
+                    useinstead="Expr args",
+                    issue=19445,
+                    deprecated_since_version="1.7"
+                ).warn()
 
         evaluate = options.get('evaluate')
         if evaluate is None:

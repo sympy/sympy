@@ -11,6 +11,7 @@ from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
@@ -273,10 +274,20 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
 
-        # XXX: Maybe only Expr should be allowed...
+        # XXX: This can be removed when non-Expr args are disallowed rather
+        # than deprecated.
         from sympy.core.relational import Relational
         if isinstance(b, Relational) or isinstance(e, Relational):
             raise TypeError('Relational can not be used in Pow')
+
+        # XXX: This should raise TypeError once deprecation period is over:
+        if not (isinstance(b, Expr) and isinstance(e, Expr)):
+            SymPyDeprecationWarning(
+                feature="Pow with non-Expr args",
+                useinstead="Expr args",
+                issue=19445,
+                deprecated_since_version="1.7"
+            ).warn()
 
         if evaluate:
             if e is S.ComplexInfinity:

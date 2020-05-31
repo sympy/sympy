@@ -73,6 +73,8 @@ class Add(Expr, AssocOp):
 
     is_Add = True
 
+    _args_type = Expr
+
     @classmethod
     def flatten(cls, seq):
         """

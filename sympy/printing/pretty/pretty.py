@@ -1933,8 +1933,7 @@ class PrettyPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) >= 1 and not has_variety(p.sets):
-            from sympy import Pow
-            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+            return self._print(p.sets[0]) ** self._print(len(p.sets))
         else:
             prod_char = u"\N{MULTIPLICATION SIGN}" if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,

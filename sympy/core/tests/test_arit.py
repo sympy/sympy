@@ -1,11 +1,12 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
+        FiniteSet
 )
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
 
 
@@ -1577,6 +1578,7 @@ def test_suppressed_evaluation():
     assert c.func is Pow
     assert c.args == (3, 2)
 
+
 def test_AssocOp_doit():
     a = Add(x,x, evaluate=False)
     b = Mul(y,y, evaluate=False)
@@ -1590,6 +1592,15 @@ def test_AssocOp_doit():
     assert d.doit(deep=False).args == (a, 2*S.One)
     assert d.doit().func == Mul
     assert d.doit().args == (4*S.One, Pow(x,2))
+
+
+def test_Add_Mul_Expr_args():
+    nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
+    for typ in [Add, Mul]:
+        for obj in nonexpr:
+            with warns_deprecated_sympy():
+                typ(obj, 1)
+
 
 def test_Add_as_coeff_mul():
     # issue 5524.  These should all be (1, self)
