@@ -38,8 +38,12 @@ L_PAREN: '(';
 R_PAREN: ')';
 L_BRACE: '{';
 R_BRACE: '}';
+L_BRACE_LITERAL: '\\{';
+R_BRACE_LITERAL: '\\}';
 L_BRACKET: '[';
 R_BRACKET: ']';
+CMD_LEFT: '\\left' -> skip;
+CMD_RIGHT: '\\right' -> skip;
 
 BAR: '|';
 
@@ -183,7 +187,7 @@ comp_nofunc:
 group:
     L_PAREN expr R_PAREN
     | L_BRACKET expr R_BRACKET
-    | L_BRACE expr R_BRACE;
+    | L_BRACE_LITERAL expr R_BRACE_LITERAL;
 
 abs_group: BAR expr BAR;
 
