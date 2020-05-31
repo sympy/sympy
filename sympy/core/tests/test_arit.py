@@ -304,6 +304,21 @@ def test_ncmul():
         {A, B, 2*(A + B)}
 
 
+def test_mul_add_identity():
+    m = Mul(1, 2)
+    assert isinstance(m, Rational) and m.p == 2 and m.q == 1
+    m = Mul(1, 2, evaluate=False)
+    assert isinstance(m, Mul) and m.args == (1, 2)
+    m = Mul(0, 1)
+    assert m is S.Zero
+    m = Mul(0, 1, evaluate=False)
+    assert isinstance(m, Mul) and m.args == (0, 1)
+    m = Add(0, 1)
+    assert m is S.One
+    m = Add(0, 1, evaluate=False)
+    assert isinstance(m, Add) and m.args == (0, 1)
+
+
 def test_ncpow():
     x = Symbol('x', commutative=False)
     y = Symbol('y', commutative=False)
@@ -1569,10 +1584,10 @@ def test_suppressed_evaluation():
     c = Pow(3, 2, evaluate=False)
     assert a != 6
     assert a.func is Add
-    assert a.args == (3, 2)
+    assert a.args == (0, 3, 2)
     assert b != 6
     assert b.func is Mul
-    assert b.args == (3, 2)
+    assert b.args == (1, 3, 2)
     assert c != 9
     assert c.func is Pow
     assert c.args == (3, 2)
