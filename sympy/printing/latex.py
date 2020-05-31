@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import S, Add, Symbol, Mod
+from sympy.core import Add, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
@@ -485,18 +485,7 @@ class LatexPrinter(Printer):
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
         from sympy.physics.units import Quantity
-        include_parens = False
-        if _coeff_isneg(expr):
-            expr = -expr
-            tex = "- "
-            if expr.is_Add:
-                tex += "("
-                include_parens = True
-        else:
-            tex = ""
-
         from sympy.simplify import fraction
-        numer, denom = fraction(expr, exact=True)
         separator = self._settings['mul_symbol_latex']
         numbersep = self._settings['mul_symbol_latex_numbers']
 
@@ -504,8 +493,6 @@ class LatexPrinter(Printer):
             if not expr.is_Mul:
                 return str(self._print(expr))
             else:
-                _tex = last_term_tex = ""
-
                 if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
                 else:
@@ -515,6 +502,11 @@ class LatexPrinter(Printer):
                 args = sorted(args, key=lambda x: isinstance(x, Quantity) or
                               (isinstance(x, Pow) and
                                isinstance(x.base, Quantity)))
+
+                return convert_args(args)
+
+        def convert_args(args):
+                _tex = last_term_tex = ""
 
                 for i, term in enumerate(args):
                     term_tex = self._print(term)
@@ -533,6 +525,28 @@ class LatexPrinter(Printer):
                     _tex += term_tex
                     last_term_tex = term_tex
                 return _tex
+
+        # Check for unevaluated Mul. In this case we need to make sure the
+        # identities are visible, multiple Rational factors are not combined
+        # etc so we display in a straight-forward form that fully preserves all
+        # args and their order.
+        # XXX: _print_Pow calls this routine with instances of Pow...
+        if isinstance(expr, Mul):
+            args = expr.args
+            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+                return convert_args(args)
+
+        include_parens = False
+        if _coeff_isneg(expr):
+            expr = -expr
+            tex = "- "
+            if expr.is_Add:
+                tex += "("
+                include_parens = True
+        else:
+            tex = ""
+
+        numer, denom = fraction(expr, exact=True)
 
         if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
             # use the original expression here, since fraction() may have

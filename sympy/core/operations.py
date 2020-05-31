@@ -98,7 +98,7 @@ class AssocOp(Basic):
            result in extra 1s being inserted they will show up in the result:
 
                >>> m = (x*y)._new_rawargs(S.One, x); m
-               x
+               1*x
                >>> m == x
                False
                >>> m.is_Mul

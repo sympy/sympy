@@ -6,7 +6,7 @@ from __future__ import print_function, division
 
 from typing import Any, Dict
 
-from sympy.core import S, Rational, Pow, Basic, Mul
+from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -274,6 +274,15 @@ class StrPrinter(Printer):
     def _print_Mul(self, expr):
 
         prec = precedence(expr)
+
+        # Check for unevaluated Mul. In this case we need to make sure the
+        # identities are visible, multiple Rational factors are not combined
+        # etc so we display in a straight-forward form that fully preserves all
+        # args and their order.
+        args = expr.args
+        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+            factors = [self.parenthesize(a, prec, strict=False) for a in args]
+            return '*'.join(factors)
 
         c, e = expr.as_coeff_Mul()
         if c < 0:

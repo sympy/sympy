@@ -1,4 +1,4 @@
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
     Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
@@ -41,6 +41,9 @@ def test_Add():
     assert str(x + y) == "x + y"
     assert str(x + 1) == "x + 1"
     assert str(x + x**2) == "x**2 + x"
+    assert str(Add(0, 1, evaluate=False)) == "0 + 1"
+    assert str(Add(0, 0, 1, evaluate=False)) == "0 + 0 + 1"
+    assert str(1.0*x) == "1.0*x"
     assert str(5 + x + y + x*y + x**2 + y**2) == "x**2 + x*y + x + y**2 + y + 5"
     assert str(1 + x + x**2/2 + x**3/3) == "x**3/3 + x**2/2 + x + 1"
     assert str(2*x - 7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
@@ -224,6 +227,19 @@ def test_Mul():
     assert str(-2*x/3) == '-2*x/3'
     assert str(-1.0*x) == '-1.0*x'
     assert str(1.0*x) == '1.0*x'
+    assert str(Mul(0, 1, evaluate=False)) == '0*1'
+    assert str(Mul(1, 0, evaluate=False)) == '1*0'
+    assert str(Mul(1, 1, evaluate=False)) == '1*1'
+    assert str(Mul(1, 1, 1, evaluate=False)) == '1*1*1'
+    assert str(Mul(1, 2, evaluate=False)) == '1*2'
+    assert str(Mul(1, S.Half, evaluate=False)) == '1*(1/2)'
+    assert str(Mul(1, 1, S.Half, evaluate=False)) == '1*1*(1/2)'
+    assert str(Mul(1, 1, 2, 3, x, evaluate=False)) == '1*1*2*3*x'
+    assert str(Mul(1, -1, evaluate=False)) == '1*(-1)'
+    assert str(Mul(-1, 1, evaluate=False)) == '(-1)*1'
+    assert str(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == '4*3*2*1*0*y*x'
+    assert str(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == '4*3*2*(z + 1)*0*y*x'
+    assert str(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == '(2/3)*(5/7)'
     # For issue 14160
     assert str(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
                                                 evaluate=False)) == '-2*x/(y*y)'
