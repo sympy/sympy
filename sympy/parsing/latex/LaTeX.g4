@@ -40,6 +40,7 @@ FUNC_INT:  '\\int';
 FUNC_SUM:  '\\sum';
 FUNC_PROD: '\\prod';
 
+FUNC_EXP:  '\\exp';
 FUNC_LOG:  '\\log';
 FUNC_LN:   '\\ln';
 FUNC_SIN:  '\\sin';
@@ -197,7 +198,7 @@ binom:
     R_BRACE;
 
 func_normal:
-    FUNC_LOG | FUNC_LN
+    FUNC_EXP | FUNC_LOG | FUNC_LN
     | FUNC_SIN | FUNC_COS | FUNC_TAN
     | FUNC_CSC | FUNC_SEC | FUNC_COT
     | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN

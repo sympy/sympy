@@ -393,6 +393,9 @@ def convert_func(func):
             name = "a" + name[2:]
             expr = getattr(sympy.functions, name)(arg, evaluate=False)
 
+        if name == "exp":
+            expr = sympy.exp(arg, evaluate=False)
+
         if (name == "log" or name == "ln"):
             if func.subexpr():
                 base = convert_expr(func.subexpr().expr())
