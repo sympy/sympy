@@ -67,8 +67,10 @@ def _set_function(f, x): # noqa:F811
         return
 
     try:
-        sing = [i for i in singularities(expr, var)
-            if i.is_real and i in x]
+        from sympy.polys.polyutils import _nsort
+        sing = list(singularities(expr, var, x))
+        if len(sing) > 1:
+            sing = _nsort(sing)
     except NotImplementedError:
         return
 
@@ -82,7 +84,10 @@ def _set_function(f, x): # noqa:F811
         _end = f(x.end)
 
     if len(sing) == 0:
-        solns = list(solveset(diff(expr, var), var))
+        soln_expr = solveset(diff(expr, var), var)
+        if not (isinstance(soln_expr, FiniteSet) or soln_expr is EmptySet):
+            return
+        solns = list(soln_expr)
 
         extr = [_start, _end] + [f(i) for i in solns
                                  if i.is_real and i in x]

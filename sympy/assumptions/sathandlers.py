@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.assumptions.ask import Q
@@ -247,7 +245,7 @@ class CheckIsPrime(UnevaluatedOnFree):
         res = Equivalent(arg, isprime(expr))
         return to_NNF(res)
 
-class CustomLambda(object):
+class CustomLambda:
     """
     Interface to lambda with rcall
 
@@ -271,7 +269,7 @@ class ClassFactRegistry(MutableMapping):
     def __init__(self, d=None):
         d = d or {}
         self.d = defaultdict(frozenset, d)
-        super(ClassFactRegistry, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, item):
         self.d[key] = frozenset(item)

@@ -1,7 +1,5 @@
 """Tools for setting up interactive sessions. """
 
-from __future__ import print_function, division
-
 from distutils.version import LooseVersion as V
 
 from sympy.interactive.printing import init_printing
@@ -97,8 +95,8 @@ def int_to_Integer(s):
     ========
 
     >>> from __future__ import division
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
-    >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
     '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
@@ -290,7 +288,7 @@ def init_python_session():
 
                     try:
                         readline.read_history_file(history)
-                    except IOError:
+                    except OSError:
                         pass
 
                     atexit.register(readline.write_history_file, history)

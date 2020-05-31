@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 from sympy import Basic, Expr, sympify, S
 from sympy.matrices.matrices import MatrixBase
-from .matexpr import ShapeError
+from sympy.matrices.common import NonSquareMatrixError
 
 
 class Trace(Expr):
@@ -17,6 +15,13 @@ class Trace(Expr):
     >>> A = MatrixSymbol('A', 3, 3)
     >>> Trace(A)
     Trace(A)
+    >>> Trace(eye(3))
+    Trace(Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]]))
+    >>> Trace(eye(3)).simplify()
+    3
     """
     is_Trace = True
     is_commutative = True
@@ -28,7 +33,7 @@ class Trace(Expr):
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 
         if not mat.is_square:
-            raise ShapeError("Trace of a non-square matrix")
+            raise NonSquareMatrixError("Trace of a non-square matrix")
 
         return Basic.__new__(cls, mat)
 
@@ -119,7 +124,7 @@ def trace(expr):
     Examples
     ========
 
-    >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
+    >>> from sympy import trace, Symbol, MatrixSymbol, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
     >>> trace(2*X)

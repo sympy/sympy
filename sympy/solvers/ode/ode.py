@@ -251,11 +251,11 @@ from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
-from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, tan, sqrt, \
+from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, sqrt, \
     atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import wronskian, Matrix, eye, zeros
+from sympy.matrices import wronskian, Matrix
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots, gcd)
 from sympy.polys.polyroots import roots_quartic
@@ -265,7 +265,7 @@ from sympy.series.series import series
 from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
     separatevars, simplify, trigsimp, posify, cse)
 from sympy.simplify.powsimp import powdenest
-from sympy.simplify.radsimp import collect_const, fraction
+from sympy.simplify.radsimp import collect_const
 from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
@@ -273,7 +273,6 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 from .subscheck import sub_func_doit
-from .single import NthAlgebraic, FirstLinear, AlmostLinear, Bernoulli, SingleODEProblem, SingleODESolver
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -572,6 +571,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
+
     if iterable(eq):
         match = classify_sysode(eq, func)
         eq = match['eq']
@@ -600,7 +600,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                if match['no_of_equation'] > 3:
+                # These conditions have to be improved upon in future for the new solvers
+                # added in systems.py
+                if match.get('is_general', False):
                     solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
                 else:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
@@ -986,10 +988,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     k = Wild('k', exclude=[df])
     n = Wild('n', exclude=[x, f(x), df])
     c1 = Wild('c1', exclude=[x])
-    a2 = Wild('a2', exclude=[x, f(x), df])
-    b2 = Wild('b2', exclude=[x, f(x), df])
-    c2 = Wild('c2', exclude=[x, f(x), df])
-    d2 = Wild('d2', exclude=[x, f(x), df])
     a3 = Wild('a3', exclude=[f(x), df, f(x).diff(x, 2)])
     b3 = Wild('b3', exclude=[f(x), df, f(x).diff(x, 2)])
     c3 = Wild('c3', exclude=[f(x), df, f(x).diff(x, 2)])
@@ -1038,11 +1036,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
-    # Factorable method
-    r = _ode_factorable_match(eq, func, kwargs.get('x0', 0))
-    if r:
-        matching_hints['factorable'] = r
-
     # Any ODE that can be solved with a combination of algebra and
     # integrals e.g.:
     # d^3/dx^3(x y) = F(x)
@@ -1051,9 +1044,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         NthAlgebraic: ('nth_algebraic',),
         FirstLinear: ('1st_linear',),
         AlmostLinear: ('almost_linear',),
-        Bernoulli: ('Bernoulli',)
-        }
-
+        Bernoulli: ('Bernoulli',),
+        Factorable: ('factorable',),
+        RiccatiSpecial: ('Riccati_special_minus2',),
+    }
     for solvercls in solvers:
         solver = solvercls(ode)
         if solver.matches():
@@ -1076,16 +1070,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-
-        ## Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
-        r = collect(reduced_eq,
-            f(x), exact=True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
-        if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
-            r['a2'] = a2
-            r['b2'] = b2
-            r['c2'] = c2
-            r['d2'] = d2
-            matching_hints["Riccati_special_minus2"] = r
 
         # NON-REDUCED FORM OF EQUATION matches
         r = collect(eq, df, exact=True).match(d + e * df)
@@ -1163,12 +1147,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
-        if r is None and 'factorable' not in matching_hints:
-            roots = solve(reduced_eq, df)
-            if roots:
-                meq = Mul(*[(df - i) for i in roots])*Dummy()
-                m = _ode_factorable_match(meq, func, kwargs.get('x0', 0))
-                matching_hints['factorable'] = m
+
         if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
@@ -1249,24 +1228,58 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             # Try representing factor in terms of x^n*y
             # where n is lowest power of x in factor;
             # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
-            u = None
-            for mul in ordered(factor.atoms(Mul)):
-                if mul.has(x):
-                    _, u = mul.as_independent(x, f(x))
-                    break
-            if u and u.has(f(x)):
-                h = x**(degree(Poly(u.subs(f(x), y), gen=x)))*f(x)
-                p = Wild('p')
-                if (u/h == 1) or ((u/h).simplify().match(x**p)):
-                    t = Dummy('t')
-                    r2 = {'t': t}
-                    xpart, ypart = u.as_independent(f(x))
-                    test = factor.subs(((u, t), (1/u, 1/t)))
-                    free = test.free_symbols
-                    if len(free) == 1 and free.pop() == t:
-                        r2.update({'power': xpart.as_base_exp()[1], 'u': test})
-                        matching_hints["separable_reduced"] = r2
-                        matching_hints["separable_reduced_Integral"] = r2
+            num, dem = factor.as_numer_denom()
+            num = expand(num)
+            dem = expand(dem)
+            def _degree(expr, x):
+                # Made this function to calculate the degree of
+                # x in an expression. If expr will be of form
+                # x**p*y, (wheare p can be variables/rationals) then it
+                # will return p.
+                for val in expr:
+                    if val.has(x):
+                        if isinstance(val, Pow) and val.as_base_exp()[0] == x:
+                            return (val.as_base_exp()[1])
+                        elif val == x:
+                            return (val.as_base_exp()[1])
+                        else:
+                            return _degree(val.args, x)
+                return 0
+
+            def _powers(expr):
+                # this function will return all the different relative power of x w.r.t f(x).
+                # expr = x**p * f(x)**q then it will return {p/q}.
+                pows = set()
+                if isinstance(expr, Add):
+                    exprs = expr.atoms(Add)
+                elif isinstance(expr, Mul):
+                    exprs = expr.atoms(Mul)
+                elif isinstance(expr, Pow):
+                    exprs = expr.atoms(Pow)
+                else:
+                    exprs = {expr}
+
+                for arg in exprs:
+                    if arg.has(x):
+                        _, u = arg.as_independent(x, f(x))
+                        pow = _degree((u.subs(f(x), y), ), x)/_degree((u.subs(f(x), y), ), y)
+                        pows.add(pow)
+                return pows
+
+            pows = _powers(num)
+            pows.update(_powers(dem))
+            pows = list(pows)
+            if(len(pows)==1) and pows[0]!=zoo:
+                t = Dummy('t')
+                r2 = {'t': t}
+                num = num.subs(x**pows[0]*f(x), t)
+                dem = dem.subs(x**pows[0]*f(x), t)
+                test = num/dem
+                free = test.free_symbols
+                if len(free) == 1 and free.pop() == t:
+                    r2.update({'power' : pows[0], 'u' : test})
+                    matching_hints['separable_reduced'] = r2
+                    matching_hints["separable_reduced_Integral"] = r2
 
 
     elif order == 2:
@@ -1752,6 +1765,7 @@ def match_2nd_linear_bessel(r, func):
     rn['b4'] = point
     return rn
 
+
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""
     Returns a dictionary of parameter names and values that define the system
@@ -1759,7 +1773,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     The parameters are further used in
     :py:meth:`~sympy.solvers.ode.dsolve` for solving that system.
 
-    The parameter names and values are:
+    Some parameter names and values are:
 
     'is_linear' (boolean), which tells whether the given system is linear.
     Note that "linear" here refers to the operator: terms such as ``x*diff(x,t)`` are
@@ -1772,10 +1786,12 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'order' (dict) with the maximum derivative for each element of the 'func'
     parameter.
 
-    'func_coeff' (dict) with the coefficient for each triple ``(equation number,
+    'func_coeff' (dict or Matrix) with the coefficient for each triple ``(equation number,
     function, order)```. The coefficients are those subexpressions that do not
     appear in 'func', and hence can be considered constant for purposes of ODE
-    solving.
+    solving. The value of this parameter can also be a  Matrix if the system of ODEs are
+    linear first order of the form X' = AX where X is the vector of dependent variables.
+    Here, this function returns the coefficient matrix A.
 
     'eq' (list) with the equations from ``eq``, sympified and transformed into
     expressions (we are solving for these expressions to be zero).
@@ -1784,6 +1800,15 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     'type_of_equation' (string) is an internal classification of the type of
     ODE.
+
+    'is_constant' (boolean), which tells if the system of ODEs is constant coefficient
+    or not. This key is temporary addition for now and is in the match dict only when
+    the system of ODEs is linear first order constant coefficient homogeneous. So, this
+    key's value is True for now if it is available else it doesn't exist.
+
+    'is_homogeneous' (boolean), which tells if the system of ODEs is homogeneous. Like the
+    key 'is_constant', this key is a temporary addition and it is True since this key value
+    is available only when the system is linear first order constant coefficient homogeneous.
 
     References
     ==========
@@ -1800,20 +1825,20 @@ def classify_sysode(eq, funcs=None, **kwargs):
     >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
     >>> x1 = diff(x(t), t) ; y1 = diff(y(t), t)
     >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
-    >>> eq = (Eq(5*x1, 12*x(t) - 6*y(t)), Eq(2*y1, 11*x(t) + 3*y(t)))
+    >>> eq = (Eq(x1, 12*x(t) - 6*y(t)), Eq(y1, 11*x(t) + 3*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t), -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)],
-    'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 5, (0, y(t), 0): 6,
-    (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 2},
-    'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
-    >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
+    {'eq': [-12*x(t) + 6*y(t) + Derivative(x(t), t), -11*x(t) - 3*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
+    [-12,  6],
+    [-11, -3]]), 'is_constant': True, 'is_general': True, 'is_homogeneous': True, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
+    >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t) + 2), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
-    'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
-    (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
-    'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type4'}
+    {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
+     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
+     (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
+     'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
 
     """
+    from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
 
     # Sympify equations and convert iterables of equations into
     # a list of equations
@@ -1821,15 +1846,16 @@ def classify_sysode(eq, funcs=None, **kwargs):
         return list(map(sympify, eq if iterable(eq) else [eq]))
 
     eq, funcs = (_sympify(w) for w in [eq, funcs])
-    if len(eq) == 0:
-        raise ValueError("classify_sysode() works for systems of ODEs. "
-        "For scalar ODEs, classify_ode should be used")
     for i, fi in enumerate(eq):
         if isinstance(fi, Equality):
             eq[i] = fi.lhs - fi.rhs
+
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if i==0:
+        raise ValueError("classify_sysode() works for systems of ODEs. "
+        "For scalar ODEs, classify_ode should be used")
 
     # find all the functions if not given
     order = dict()
@@ -1840,9 +1866,16 @@ def classify_sysode(eq, funcs=None, **kwargs):
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 funcs.append(func_)
+
+    temp_eqs = eq
+    match = neq_nth_linear_constant_coeff_match(temp_eqs, funcs, t)
+    if match is not None:
+        return match
+
     funcs = list(set(funcs))
     if len(funcs) != len(eq):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
+
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
@@ -1853,10 +1886,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                     max_order = order_
                     eq_no = i
             if eq_no in func_dict:
-                list_func = []
-                list_func.append(func_dict[eq_no])
-                list_func.append(func)
-                func_dict[eq_no] = list_func
+                func_dict[eq_no] = [func_dict[eq_no], func]
             else:
                 func_dict[eq_no] = func
             order[func] = max_order
@@ -1920,6 +1950,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     matching_hints['func_coeff'] = func_coef
     matching_hints['is_linear'] = is_linear
 
+
     if len(set(order.values())) == 1:
         order_eq = list(matching_hints['order'].values())[0]
         if matching_hints['is_linear'] == True:
@@ -1928,21 +1959,14 @@ def classify_sysode(eq, funcs=None, **kwargs):
                     type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
                 elif order_eq == 2:
                     type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
 
-            elif matching_hints['no_of_equation'] == 3:
-                if order_eq == 1:
-                    type_of_equation = check_linear_3eq_order1(eq, funcs, func_coef)
-                    if type_of_equation is None:
-                        type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+            # If the equation doesn't match up with any of the
+            # general case solvers in systems.py and the number
+            # of equations is greater than 2, then NotImplementedError
+            # should be raised.
             else:
-                if order_eq == 1:
-                    type_of_equation = check_linear_neq_order1(eq, funcs, func_coef)
-                else:
-                    type_of_equation = None
+                type_of_equation = None
+
         else:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
@@ -2020,17 +2044,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
         else:
             r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
             r['c1'] = r['c1']/r['a1'] ; r['c2'] = r['c2']/r['a2']
-            if (r['b1'] == r['c2']) and (r['c1'] == r['b2']):
-                # Equation for type 3 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), g(t)*x(t) + f(t)*y(t))
-                return "type3"
-            elif (r['b1'] == r['c2']) and (r['c1'] == -r['b2']) or (r['b1'] == -r['c2']) and (r['c1'] == r['b2']):
-                # Equation for type 4 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), -g(t)*x(t) + f(t)*y(t))
-                return "type4"
-            elif (not cancel(r['b2']/r['c1']).has(t) and not cancel((r['c2']-r['b1'])/r['c1']).has(t)) \
-            or (not cancel(r['b1']/r['c2']).has(t) and not cancel((r['c1']-r['b2'])/r['c2']).has(t)):
-                # Equations for type 5 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), a*g(t)*x(t) + [f(t) + b*g(t)]*y(t)
-                return "type5"
-            elif p:
+            if p:
                 return "type6"
             else:
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
@@ -2133,62 +2147,6 @@ def check_linear_2eq_order2(eq, func, func_coef):
 
         else:
             return None
-
-def check_linear_3eq_order1(eq, func, func_coef):
-    x = func[0].func
-    y = func[1].func
-    z = func[2].func
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
-    r['a1'] = fc[0,x(t),1]; r['a2'] = fc[1,y(t),1]; r['a3'] = fc[2,z(t),1]
-    r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
-    r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
-    r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
-    forcing = [S.Zero, S.Zero, S.Zero]
-    for i in range(3):
-        for j in Add.make_args(eq[i]):
-            if not j.has(x(t), y(t), z(t)):
-                forcing[i] += j
-    if forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t):
-        # We can handle homogeneous case and simple constant forcings.
-        # Issue #9244: nonhomogeneous linear systems are not supported
-        return None
-
-    if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
-        if r['c1']==r['d1']==r['d2']==0:
-            return 'type1'
-        elif r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
-        and r['b1'] == r['c2'] == r['d3'] == 0:
-            return 'type2'
-        elif r['b1'] == r['c2'] == r['d3'] == 0 and r['c1']/r['a1'] == -r['d1']/r['a1'] \
-        and r['d2']/r['a2'] == -r['b2']/r['a2'] and r['b3']/r['a3'] == -r['c3']/r['a3']:
-            return 'type3'
-        else:
-            return None
-    else:
-        for k1 in 'c1 d1 b2 d2 b3 c3'.split():
-            if r[k1] == 0:
-                continue
-            else:
-                if all(not cancel(r[k1]/r[k]).has(t) for k in 'd1 b2 d2 b3 c3'.split() if r[k]!=0) \
-                and all(not cancel(r[k1]/(r['b1'] - r[k])).has(t) for k in 'b1 c2 d3'.split() if r['b1']!=r[k]):
-                    return 'type4'
-                else:
-                    break
-    return None
-
-def check_linear_neq_order1(eq, func, func_coef):
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    n = len(eq)
-    for i in range(n):
-        for j in range(n):
-            if (fc[i, func[j], 0]/fc[i, func[i], 1]).has(t):
-                return None
-    if len(eq) == 3:
-        return 'type6'
-    return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
@@ -2578,7 +2536,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     such as ``min(listofsolutions, key=lambda i: ode_sol_simplicity(i,
     f(x)))``.
 
-    >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
+    >>> from sympy import symbols, Function, Eq, tan, Integral
     >>> from sympy.solvers.ode.ode import ode_sol_simplicity
     >>> x, C1, C2 = symbols('x, C1, C2')
     >>> f = Function('f')
@@ -2879,7 +2837,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     Examples
     ========
 
-    >>> from sympy import symbols, Eq, pprint
+    >>> from sympy import symbols
     >>> from sympy.solvers.ode.ode import constant_renumber
     >>> x, C1, C2, C3 = symbols('x,C1:4')
     >>> expr = C3 + C2*x + C1*x**2
@@ -3001,33 +2959,6 @@ def _handle_Integral(expr, func, hint):
         sol = expr
     return sol
 
-def _ode_factorable_match(eq, func, x0):
-
-    from sympy.polys.polytools import factor
-    eqs = factor(eq)
-    eqs = fraction(eqs)[0] # p/q =0, So we need to solve only p=0
-    eqns = []
-    r = None
-    if isinstance(eqs, Pow):
-        # if f(x)**p=0 then f(x)=0 (p>0)
-        if eqs.exp.is_positive:
-            eq = eqs.base
-        if isinstance(eq, Pow):
-            return None
-        else:
-            r = _ode_factorable_match(eq, func, x0)
-            if r is None:
-                r = {'eqns' : [eq], 'x0': x0}
-            return r
-
-    if isinstance(eqs, Mul):
-        fac = eqs.args
-        for i in fac:
-            if i.has(func):
-                eqns.append(i)
-        if len(eqns)>0:
-            r = {'eqns' : eqns, 'x0' : x0}
-    return r
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
@@ -3443,56 +3374,6 @@ def homogeneous_order(eq, *symbols):
         return e
 
 
-
-def ode_Riccati_special_minus2(eq, func, order, match):
-    r"""
-    The general Riccati equation has the form
-
-    .. math:: dy/dx = f(x) y^2 + g(x) y + h(x)\text{.}
-
-    While it does not have a general solution [1], the "special" form, `dy/dx
-    = a y^2 - b x^c`, does have solutions in many cases [2].  This routine
-    returns a solution for `a(dy/dx) = b y^2 + c y/x + d/x^2` that is obtained
-    by using a suitable change of variables to reduce it to the special form
-    and is valid when neither `a` nor `b` are zero and either `c` or `d` is
-    zero.
-
-    >>> from sympy.abc import x, y, a, b, c, d
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
-    >>> f = Function('f')
-    >>> y = f(x)
-    >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
-    >>> sol = dsolve(genform, y)
-    >>> pprint(sol, wrap_line=False)
-            /                                 /        __________________       \\
-            |           __________________    |       /                2        ||
-            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
-           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
-            \                                 \                 2*a             //
-    f(x) = ------------------------------------------------------------------------
-                                            2*b*x
-
-    >>> checkodesol(genform, sol, order=1)[0]
-    True
-
-    References
-    ==========
-
-    1. http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    2. http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-       http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
-    """
-
-    x = func.args[0]
-    f = func.func
-    r = match  # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
-    a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
-    C1 = get_numbered_constants(eq, num=1)
-    mu = sqrt(4*d2*b2 - (a2 - c2)**2)
-    return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x) + C1))/(2*b2*x))
-
-
 def ode_Liouville(eq, func, order, match):
     r"""
     Solves 2nd order Liouville differential equations.
@@ -3584,7 +3465,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     ========
 
     >>> from sympy import dsolve, Function, pprint
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
@@ -3721,7 +3602,7 @@ def ode_2nd_linear_airy(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy import dsolve, Function
     >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) - x*f(x)
@@ -3778,7 +3659,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     ========
 
     >>> from sympy import dsolve, Function, pprint
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
@@ -3879,11 +3760,11 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy.abc import x, y, a
+    >>> from sympy.abc import x
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
@@ -4222,7 +4103,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     :py:obj:`~.ComplexRootOf` instance will be returned
     instead.
 
-    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
@@ -4477,7 +4358,6 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     sol = _solve_variation_of_parameters(eq, func, order, match)
     return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
 
-
 def _linear_coeff_match(expr, func):
     r"""
     Helper function to match hint ``linear_coefficients``.
@@ -4589,8 +4469,8 @@ def ode_linear_coefficients(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -4627,7 +4507,7 @@ def ode_separable_reduced(eq, func, order, match):
 
     The general solution is:
 
-        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x, n
         >>> f, g = map(Function, ['f', 'g'])
         >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
@@ -4654,8 +4534,8 @@ def ode_separable_reduced(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -4710,8 +4590,8 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, exp
-    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import Function, pprint, exp
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
@@ -4791,7 +4671,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     :py:class:`~sympy.polys.rootoftools.ComplexRootOf` instance will be return
     instead.
 
-    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
@@ -4965,10 +4845,10 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     >>> pprint(dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) -
     ... 4*exp(-x)*x**2 + cos(2*x), f(x),
     ... hint='nth_linear_constant_coeff_undetermined_coefficients'))
-           /             4\
-           |            x |  -x   4*sin(2*x)   3*cos(2*x)
-    f(x) = |C1 + C2*x + --|*e   - ---------- + ----------
-           \            3 /           25           25
+           /       /      3\\
+           |       |     x ||  -x   4*sin(2*x)   3*cos(2*x)
+    f(x) = |C1 + x*|C2 + --||*e   - ---------- + ----------
+           \       \     3 //           25           25
 
     References
     ==========
@@ -5269,10 +5149,9 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
     ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
     ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-           /                     3                \
-           |                2   x *(6*log(x) - 11)|  x
-    f(x) = |C1 + C2*x + C3*x  + ------------------|*e
-           \                            36        /
+           /       /       /     x*log(x)   11*x\\\  x
+    f(x) = |C1 + x*|C2 + x*|C3 + -------- - ----|||*e
+           \       \       \        6        36 ///
 
     References
     ==========
@@ -5348,45 +5227,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
 
-def ode_factorable(eq, func, order, match):
-    r"""
-    Solves equations having a solvable factor.
-
-    This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
-    will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
-    list of solutions.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, dsolve, Eq, pprint, Derivative
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
-    >>> pprint(dsolve(eq, f(x)))
-                                     -x
-    [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
-
-
-    """
-    eqns = match['eqns']
-    x0 = match['x0']
-    sols = []
-    for eq in eqns:
-        try:
-            sol = dsolve(eq, func, x0=x0)
-        except NotImplementedError:
-            continue
-        else:
-            if isinstance(sol, list):
-                sols.extend(sol)
-            else:
-                sols.append(sol)
-
-    if sols == []:
-       raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-            + " the factorable group method")
-    return sols
 
 def ode_separable(eq, func, order, match):
     r"""
@@ -5667,7 +5507,7 @@ def ode_lie_group(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, exp, pprint
+    >>> from sympy import Function, dsolve, exp, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
@@ -5780,7 +5620,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
 
     The infinitesimals can be found by solving the following PDE:
 
-        >>> from sympy import Function, diff, Eq, pprint
+        >>> from sympy import Function, Eq, pprint
         >>> from sympy.abc import x, y
         >>> xi, eta, h = map(Function, ['xi', 'eta', 'h'])
         >>> h = h(x, y)  # dy/dx = h
@@ -5808,8 +5648,8 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     Examples
     ========
 
-    >>> from sympy import Function, diff
-    >>> from sympy.solvers.ode import infinitesimals
+    >>> from sympy import Function
+    >>> from sympy.solvers.ode.ode import infinitesimals
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = f(x).diff(x) - x**2*f(x)
@@ -6677,24 +6517,18 @@ def sysode_linear_2eq_order1(match_):
         raise NotImplementedError("Only homogeneous problems are supported" +
                                   " (and constant inhomogeneity)")
 
-    if match_['type_of_equation'] == 'type1':
-        sol = _linear_2eq_order1_type1(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type2':
         gsol = _linear_2eq_order1_type1(x, y, t, r, eq)
         psol = _linear_2eq_order1_type2(x, y, t, r, eq)
         sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
-    if match_['type_of_equation'] == 'type3':
-        sol = _linear_2eq_order1_type3(x, y, t, r, eq)
-    if match_['type_of_equation'] == 'type4':
-        sol = _linear_2eq_order1_type4(x, y, t, r, eq)
-    if match_['type_of_equation'] == 'type5':
-        sol = _linear_2eq_order1_type5(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type6':
         sol = _linear_2eq_order1_type6(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type7':
         sol = _linear_2eq_order1_type7(x, y, t, r, eq)
     return sol
 
+# To remove Linear 2 Eq, Order 1, Type 1 when
+# Linear 2 Eq, Order 1, Type 2 is removed.
 def _linear_2eq_order1_type1(x, y, t, r, eq):
     r"""
     It is classified under system of two linear homogeneous first-order constant-coefficient
@@ -6880,99 +6714,6 @@ def _linear_2eq_order1_type2(x, y, t, r, eq):
             sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
         psol = [sol1, sol2]
     return psol
-
-def _linear_2eq_order1_type3(x, y, t, r, eq):
-    r"""
-    The equations of this type of ode are
-
-    .. math:: x' = f(t) x + g(t) y
-
-    .. math:: y' = g(t) x + f(t) y
-
-    The solution of such equations is given by
-
-    .. math:: x = e^{F} (C_1 e^{G} + C_2 e^{-G}) , y = e^{F} (C_1 e^{G} - C_2 e^{-G})
-
-    where `C_1` and `C_2` are arbitrary constants, and
-
-    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    F = Integral(r['a'], t)
-    G = Integral(r['b'], t)
-    sol1 = exp(F)*(C1*exp(G) + C2*exp(-G))
-    sol2 = exp(F)*(C1*exp(G) - C2*exp(-G))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order1_type4(x, y, t, r, eq):
-    r"""
-    The equations of this type of ode are .
-
-    .. math:: x' = f(t) x + g(t) y
-
-    .. math:: y' = -g(t) x + f(t) y
-
-    The solution is given by
-
-    .. math:: x = F (C_1 \cos(G) + C_2 \sin(G)), y = F (-C_1 \sin(G) + C_2 \cos(G))
-
-    where `C_1` and `C_2` are arbitrary constants, and
-
-    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    if r['b'] == -r['c']:
-        F = exp(Integral(r['a'], t))
-        G = Integral(r['b'], t)
-        sol1 = F*(C1*cos(G) + C2*sin(G))
-        sol2 = F*(-C1*sin(G) + C2*cos(G))
-    # FIXME: the case below doesn't seem correct, is only XFAIL tested and doesn't
-    # match the description in the docstring above. It can be triggered with:
-    # dsolve([Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), x*f(x) - g(x))])
-    elif r['d'] == -r['a']:
-        F = exp(Integral(r['b'], t))
-        G = Integral(r['d'], t)
-        sol1 = F*(-C1*sin(G) + C2*cos(G))
-        sol2 = F*(C1*cos(G) + C2*sin(G))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order1_type5(x, y, t, r, eq):
-    r"""
-    The equations of this type of ode are .
-
-    .. math:: x' = f(t) x + g(t) y
-
-    .. math:: y' = a g(t) x + [f(t) + b g(t)] y
-
-    The transformation of
-
-    .. math:: x = e^{\int f(t) \,dt} u , y = e^{\int f(t) \,dt} v , T = \int g(t) \,dt
-
-    leads to a system of constant coefficient linear differential equations
-
-    .. math:: u'(T) = v , v'(T) = au + bv
-
-    """
-    u, v = symbols('u, v', cls=Function)
-    T = Symbol('T')
-    if not cancel(r['c']/r['b']).has(t):
-        p = cancel(r['c']/r['b'])
-        q = cancel((r['d']-r['a'])/r['b'])
-        eq = (Eq(diff(u(T),T), v(T)), Eq(diff(v(T),T), p*u(T)+q*v(T)))
-        sol = dsolve(eq)
-        sol1 = exp(Integral(r['a'], t))*sol[0].rhs.subs(T, Integral(r['b'], t))
-        sol2 = exp(Integral(r['a'], t))*sol[1].rhs.subs(T, Integral(r['b'], t))
-    # The case below isn't tested and doesn't match the description in the
-    # docstring above. Perhaps this should be removed...
-    if not cancel(r['a']/r['d']).has(t):
-        p = cancel(r['a']/r['d'])
-        q = cancel((r['b']-r['c'])/r['d'])
-        sol = dsolve(Eq(diff(u(T),T), v(T)), Eq(diff(v(T),T), p*u(T)+q*v(T)))
-        sol1 = exp(Integral(r['c'], t))*sol[1].rhs.subs(T, Integral(r['d'], t))
-        sol2 = exp(Integral(r['c'], t))*sol[0].rhs.subs(T, Integral(r['d'], t))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order1_type6(x, y, t, r, eq):
     r"""
@@ -7734,322 +7475,17 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
     sol2 = C4*t + t*Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def sysode_linear_3eq_order1(match_):
-    x = match_['func'][0].func
-    y = match_['func'][1].func
-    z = match_['func'][2].func
-    func = match_['func']
-    fc = match_['func_coeff']
-    eq = match_['eq']
-    r = dict()
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    for i in range(3):
-        eqs = 0
-        for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],1]
-        eq[i] = eqs
-    # for equations:
-    #   Eq(g1*diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
-    #   Eq(g2*diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2), and
-    #   Eq(g3*diff(z(t),t), a3*x(t)+b3*y(t)+c3*z(t)+d3)
-    r['a1'] = fc[0,x(t),0]/fc[0,x(t),1]; r['a2'] = fc[1,x(t),0]/fc[1,y(t),1];
-    r['a3'] = fc[2,x(t),0]/fc[2,z(t),1]
-    r['b1'] = fc[0,y(t),0]/fc[0,x(t),1]; r['b2'] = fc[1,y(t),0]/fc[1,y(t),1];
-    r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
-    r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
-    r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    for i in range(3):
-        for j in Add.make_args(eq[i]):
-            if not j.has(x(t), y(t), z(t)):
-                raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
-    if match_['type_of_equation'] == 'type1':
-        sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
-    if match_['type_of_equation'] == 'type2':
-        sol = _linear_3eq_order1_type2(x, y, z, t, r, eq)
-    if match_['type_of_equation'] == 'type3':
-        sol = _linear_3eq_order1_type3(x, y, z, t, r, eq)
-    if match_['type_of_equation'] == 'type4':
-        sol = _linear_3eq_order1_type4(x, y, z, t, r, eq)
-    if match_['type_of_equation'] == 'type6':
-        sol = _linear_neq_order1_type1(match_)
+
+def sysode_linear_neq_order1(match):
+    from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
+        _linear_neq_order1_type3)
+
+    if match['type_of_equation'] == 'type1':
+        sol = _linear_neq_order1_type1(match)
+    elif match['type_of_equation'] == 'type3':
+        sol = _linear_neq_order1_type3(match)
     return sol
 
-def _linear_3eq_order1_type1(x, y, z, t, r, eq):
-    r"""
-    .. math:: x' = ax
-
-    .. math:: y' = bx + cy
-
-    .. math:: z' = dx + ky + pz
-
-    Solution of such equations are forward substitution. Solving first equations
-    gives the value of `x`, substituting it in second and third equation and
-    solving second equation gives `y` and similarly substituting `y` in third
-    equation give `z`.
-
-    .. math:: x = C_1 e^{at}
-
-    .. math:: y = \frac{b C_1}{a - c} e^{at} + C_2 e^{ct}
-
-    .. math:: z = \frac{C_1}{a - p} (d + \frac{bk}{a - c}) e^{at} + \frac{k C_2}{c - p} e^{ct} + C_3 e^{pt}
-
-    where `C_1, C_2` and `C_3` are arbitrary constants.
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    a = -r['a1']; b = -r['a2']; c = -r['b2']
-    d = -r['a3']; k = -r['b3']; p = -r['c3']
-    sol1 = C1*exp(a*t)
-    sol2 = b*C1*exp(a*t)/(a-c) + C2*exp(c*t)
-    sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def _linear_3eq_order1_type2(x, y, z, t, r, eq):
-    r"""
-    The equations of this type are
-
-    .. math:: x' = cy - bz
-
-    .. math:: y' = az - cx
-
-    .. math:: z' = bx - ay
-
-    1. First integral:
-
-    .. math:: ax + by + cz = A             \qquad - (1)
-
-    .. math:: x^2 + y^2 + z^2 = B^2        \qquad - (2)
-
-    where `A` and `B` are arbitrary constants. It follows from these integrals
-    that the integral lines are circles formed by the intersection of the planes
-    `(1)` and sphere `(2)`
-
-    2. Solution:
-
-    .. math:: x = a C_0 + k C_1 \cos(kt) + (c C_2 - b C_3) \sin(kt)
-
-    .. math:: y = b C_0 + k C_2 \cos(kt) + (a C_2 - c C_3) \sin(kt)
-
-    .. math:: z = c C_0 + k C_3 \cos(kt) + (b C_2 - a C_3) \sin(kt)
-
-    where `k = \sqrt{a^2 + b^2 + c^2}` and the four constants of integration,
-    `C_1,...,C_4` are constrained by a single relation,
-
-    .. math:: a C_1 + b C_2 + c C_3 = 0
-
-    """
-    C0, C1, C2, C3 = get_numbered_constants(eq, num=4, start=0)
-    a = -r['c2']; b = -r['a3']; c = -r['b1']
-    k = sqrt(a**2 + b**2 + c**2)
-    C3 = (-a*C1 - b*C2)/c
-    sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
-    sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
-    sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def _linear_3eq_order1_type3(x, y, z, t, r, eq):
-    r"""
-    Equations of this system of ODEs
-
-    .. math:: a x' = bc (y - z)
-
-    .. math:: b y' = ac (z - x)
-
-    .. math:: c z' = ab (x - y)
-
-    1. First integral:
-
-    .. math:: a^2 x + b^2 y + c^2 z = A
-
-    where A is an arbitrary constant. It follows that the integral lines are plane curves.
-
-    2. Solution:
-
-    .. math:: x = C_0 + k C_1 \cos(kt) + a^{-1} bc (C_2 - C_3) \sin(kt)
-
-    .. math:: y = C_0 + k C_2 \cos(kt) + a b^{-1} c (C_3 - C_1) \sin(kt)
-
-    .. math:: z = C_0 + k C_3 \cos(kt) + ab c^{-1} (C_1 - C_2) \sin(kt)
-
-    where `k = \sqrt{a^2 + b^2 + c^2}` and the four constants of integration,
-    `C_1,...,C_4` are constrained by a single relation
-
-    .. math:: a^2 C_1 + b^2 C_2 + c^2 C_3 = 0
-
-    """
-    C0, C1, C2, C3 = get_numbered_constants(eq, num=4, start=0)
-    c = sqrt(r['b1']*r['c2'])
-    b = sqrt(r['b1']*r['a3'])
-    a = sqrt(r['c2']*r['a3'])
-    C3 = (-a**2*C1-b**2*C2)/c**2
-    k = sqrt(a**2 + b**2 + c**2)
-    sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
-    sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
-    sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def _linear_3eq_order1_type4(x, y, z, t, r, eq):
-    r"""
-    Equations:
-
-    .. math:: x' = (a_1 f(t) + g(t)) x + a_2 f(t) y + a_3 f(t) z
-
-    .. math:: y' = b_1 f(t) x + (b_2 f(t) + g(t)) y + b_3 f(t) z
-
-    .. math:: z' = c_1 f(t) x + c_2 f(t) y + (c_3 f(t) + g(t)) z
-
-    The transformation
-
-    .. math:: x = e^{\int g(t) \,dt} u, y = e^{\int g(t) \,dt} v, z = e^{\int g(t) \,dt} w, \tau = \int f(t) \,dt
-
-    leads to the system of constant coefficient linear differential equations
-
-    .. math:: u' = a_1 u + a_2 v + a_3 w
-
-    .. math:: v' = b_1 u + b_2 v + b_3 w
-
-    .. math:: w' = c_1 u + c_2 v + c_3 w
-
-    These system of equations are solved by homogeneous linear system of constant
-    coefficients of `n` equations of first order. Then substituting the value of
-    `u, v` and `w` in transformed equation gives value of `x, y` and `z`.
-
-    """
-    u, v, w = symbols('u, v, w', cls=Function)
-    a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
-    f = cancel(r['b1']/a2)
-    b1 = cancel(r['a2']/f); b3 = cancel(r['c2']/f)
-    c1 = cancel(r['a3']/f); c2 = cancel(r['b3']/f)
-    a1, g = div(r['a1'],f)
-    b2 = div(r['b2'],f)[0]
-    c3 = div(r['c3'],f)[0]
-    trans_eq = (diff(u(t),t)-a1*u(t)-a2*v(t)-a3*w(t), diff(v(t),t)-b1*u(t)-\
-    b2*v(t)-b3*w(t), diff(w(t),t)-c1*u(t)-c2*v(t)-c3*w(t))
-    sol = dsolve(trans_eq)
-    sol1 = exp(Integral(g,t))*((sol[0].rhs).subs(t, Integral(f,t)))
-    sol2 = exp(Integral(g,t))*((sol[1].rhs).subs(t, Integral(f,t)))
-    sol3 = exp(Integral(g,t))*((sol[2].rhs).subs(t, Integral(f,t)))
-    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def sysode_linear_neq_order1(match_):
-    sol = _linear_neq_order1_type1(match_)
-    return sol
-
-def _linear_neq_order1_type1(match_):
-    r"""
-    System of n first-order constant-coefficient linear nonhomogeneous differential equation
-
-    .. math:: y'_k = a_{k1} y_1 + a_{k2} y_2 +...+ a_{kn} y_n; k = 1,2,...,n
-
-    or that can be written as `\vec{y'} = A . \vec{y}`
-    where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
-
-    Since these equations are equivalent to a first order homogeneous linear
-    differential equation. So the general solution will contain `n` linearly
-    independent parts and solution will consist some type of exponential
-    functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
-    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
-    `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
-
-    .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
-
-    .. math:: r \vec{v} = A \vec{v}
-
-    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
-    of `A` corresponding to `r`. There are three possibilities of eigenvalues of `A`
-
-    - `n` distinct real eigenvalues
-    - complex conjugate eigenvalues
-    - eigenvalues with multiplicity `k`
-
-    1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
-    `v_1,...v_n` then the solution is given by
-
-    .. math:: \vec{y} = C_1 e^{r_1 t} \vec{v_1} + C_2 e^{r_2 t} \vec{v_2} +...+ C_n e^{r_n t} \vec{v_n}
-
-    where `C_1,C_2,...,C_n` are arbitrary constants.
-
-    2. When some eigenvalues are complex then in order to make the solution real,
-    we take a linear combination: if `r = a + bi` has an eigenvector
-    `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
-    the system, replace the complex-valued solutions `e^{rx} \vec{v}`
-    with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
-    and for `r = a - bi` replace the solution `e^{-r x} \vec{v}` with
-    `e^{ax} (\vec{w_1} \sin(bx) + \vec{w_2} \cos(bx))`
-
-    3. If some eigenvalues are repeated. Then we get fewer than `n` linearly
-    independent eigenvectors, we miss some of the solutions and need to
-    construct the missing ones. We do this via generalized eigenvectors, vectors
-    which are not eigenvectors but are close enough that we can use to write
-    down the remaining solutions. For a eigenvalue `r` with eigenvector `\vec{w}`
-    we obtain `\vec{w_2},...,\vec{w_k}` using
-
-    .. math:: (A - r I) . \vec{w_2} = \vec{w}
-
-    .. math:: (A - r I) . \vec{w_3} = \vec{w_2}
-
-    .. math:: \vdots
-
-    .. math:: (A - r I) . \vec{w_k} = \vec{w_{k-1}}
-
-    Then the solutions to the system for the eigenspace are `e^{rt} [\vec{w}],
-    e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
-    ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
-    + \vec{w_k}]`
-
-    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
-    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
-
-    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
-
-    """
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-    M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
-    evector = M.eigenvects(simplify=True)
-    def is_complex(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
-    def is_complex_conjugate(mat, root):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
-    conjugate_root = []
-    e_vector = zeros(n,1)
-    for evects in evector:
-        if evects[0] not in conjugate_root:
-            # If number of column of an eigenvector is not equal to the multiplicity
-            # of its eigenvalue then the legt eigenvectors are calculated
-            if len(evects[2])!=evects[1]:
-                var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
-                Mnew = (M - evects[0]*eye(evects[2][-1].rows))*var_mat
-                w = [0 for i in range(evects[1])]
-                w[0] = evects[2][-1]
-                for r in range(1, evects[1]):
-                    w_ = Mnew - w[r-1]
-                    sol_dict = solve(list(w_), var_mat[1:])
-                    sol_dict[var_mat[0]] = var_mat[0]
-                    for key, value in sol_dict.items():
-                        sol_dict[key] = value.subs(var_mat[0],1)
-                    w[r] = Matrix(n, 1, lambda i,j: sol_dict[var_mat[i]])
-                    evects[2].append(w[r])
-            for i in range(evects[1]):
-                C = next(constants)
-                for j in range(i+1):
-                    if evects[0].has(I):
-                        evects[2][j] = simplify(evects[2][j])
-                        e_vector += C*is_complex(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                        C = next(constants)
-                        e_vector += C*is_complex_conjugate(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
-                    else:
-                        e_vector += C*evects[2][j]*t**(i-j)*exp(evects[0]*t)/factorial(i-j)
-            if evects[0].has(I):
-                conjugate_root.append(conjugate(evects[0]))
-    sol = []
-    for i in range(len(eq)):
-        sol.append(Eq(func[i],e_vector[i]))
-    return sol
 
 def sysode_nonlinear_2eq_order1(match_):
     func = match_['func']
@@ -8075,6 +7511,7 @@ def sysode_nonlinear_2eq_order1(match_):
     elif match_['type_of_equation'] == 'type4':
         sol = _nonlinear_2eq_order1_type4(x, y, t, eq)
     return sol
+
 
 def _nonlinear_2eq_order1_type1(x, y, t, eq):
     r"""
@@ -8592,3 +8029,8 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     sol2 = dsolve(diff(fv(t), t) - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))).rhs
     sol3 = dsolve(diff(fw(t), t) - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))).rhs
     return [sol1, sol2, sol3]
+
+
+#This import is written at the bottom to avoid circular imports.
+from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
+        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial)

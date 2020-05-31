@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Tuple
 
 from sympy.core.sympify import _sympify, sympify
@@ -31,7 +29,6 @@ class AssocOp(Basic):
     def __new__(cls, *args, **options):
         from sympy import Order
         args = list(map(_sympify, args))
-        args = [a for a in args if a is not cls.identity]
 
         # XXX: Maybe only Expr should be allowed here...
         from sympy.core.relational import Relational
@@ -45,6 +42,8 @@ class AssocOp(Basic):
             obj = cls._from_args(args)
             obj = cls._exec_constructor_postprocessors(obj)
             return obj
+
+        args = [a for a in args if a is not cls.identity]
 
         if len(args) == 0:
             return cls.identity
@@ -71,7 +70,7 @@ class AssocOp(Basic):
         elif len(args) == 1:
             return args[0]
 
-        obj = super(AssocOp, cls).__new__(cls, *args)
+        obj = super().__new__(cls, *args)
         if is_commutative is None:
             is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
@@ -96,12 +95,10 @@ class AssocOp(Basic):
            Note: use this with caution. There is no checking of arguments at
            all. This is best used when you are rebuilding an Add or Mul after
            simply removing one or more args. If, for example, modifications,
-           result in extra 1s being inserted (as when collecting an
-           expression's numerators and denominators) they will not show up in
-           the result but a Mul will be returned nonetheless:
+           result in extra 1s being inserted they will show up in the result:
 
                >>> m = (x*y)._new_rawargs(S.One, x); m
-               x
+               1*x
                >>> m == x
                False
                >>> m.is_Mul
@@ -184,6 +181,7 @@ class AssocOp(Basic):
         # make sure expr is Expr if pattern is Expr
         from .expr import Add, Expr
         from sympy import Mul
+        repl_dict = repl_dict.copy()
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
 
@@ -203,6 +201,13 @@ class AssocOp(Basic):
             binary=True)
         if not exact_part:
             wild_part = list(ordered(wild_part))
+            if self.is_Add:
+                # in addition to normal ordered keys, impose
+                # sorting on Muls with leading Number to put
+                # them in order
+                wild_part = sorted(wild_part, key=lambda x:
+                    x.args[0] if x.is_Mul and x.args[0].is_Number else
+                    0)
         else:
             exact = self._new_rawargs(*exact_part)
             free = expr.free_symbols
@@ -223,7 +228,15 @@ class AssocOp(Basic):
         saw = set()
         while expr not in saw:
             saw.add(expr)
-            expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
+            args = tuple(ordered(self.make_args(expr)))
+            if self.is_Add and expr.is_Add:
+                # in addition to normal ordered keys, impose
+                # sorting on Muls with leading Number to put
+                # them in order
+                args = tuple(sorted(args, key=lambda x:
+                    x.args[0] if x.is_Mul and x.args[0].is_Number else
+                    0))
+            expr_list = (self.identity,) + args
             for last_op in reversed(expr_list):
                 for w in reversed(wild_part):
                     d1 = w.matches(last_op, repl_dict)
@@ -375,6 +388,12 @@ class AssocOp(Basic):
         else:
             return (sympify(expr),)
 
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            terms = [term.doit(**hints) for term in self.args]
+        else:
+            terms = self.args
+        return self.func(*terms, evaluate=True)
 
 class ShortCircuit(Exception):
     pass
@@ -446,8 +465,7 @@ class LatticeOp(AssocOp):
             elif arg == ncls.identity:
                 continue
             elif arg.func == ncls:
-                for x in arg.args:
-                    yield x
+                yield from arg.args
             else:
                 yield arg
 

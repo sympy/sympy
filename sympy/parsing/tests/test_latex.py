@@ -5,7 +5,7 @@ from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan, Function
+    GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
@@ -39,8 +39,16 @@ def _factorial(a):
     return factorial(a, evaluate=False)
 
 
+def _exp(a):
+    return exp(a, evaluate=False)
+
+
 def _log(a, b):
     return log(a, b, evaluate=False)
+
+
+def _binomial(n, k):
+    return binomial(n, k, evaluate=False)
 
 
 def test_import():
@@ -70,6 +78,10 @@ GOOD_PAIRS = [
     ("a + b", a + b),
     ("a + b - a", _Add(a+b, -a)),
     ("a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2)),
+    ("1+1", Add(1, 1, evaluate=False)),
+    ("0+1", Add(0, 1, evaluate=False)),
+    ("1*2", Mul(1, 2, evaluate=False)),
+    ("0*1", Mul(0, 1, evaluate=False)),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),
@@ -88,8 +100,7 @@ GOOD_PAIRS = [
     ("\\lim_{x \\to 3^{+}} a", Limit(a, x, 3, dir='+')),
     ("\\lim_{x \\to 3^{-}} a", Limit(a, x, 3, dir='-')),
     ("\\infty", oo),
-    ("\\lim_{x \\to \\infty} \\frac{1}{x}",
-     Limit(_Mul(1, _Pow(x, -1)), x, oo)),
+    ("\\lim_{x \\to \\infty} \\frac{1}{x}", Limit(_Pow(x, -1), x, oo)),
     ("\\frac{d}{dx} x", Derivative(x, x)),
     ("\\frac{d}{dt} x", Derivative(x, t)),
     ("f(x)", f(x)),
@@ -164,6 +175,8 @@ GOOD_PAIRS = [
     ("\\prod_{a = b}^c x", Product(x, (a, b, c))),
     ("\\prod^{c}_{a = b} x", Product(x, (a, b, c))),
     ("\\prod^c_{a = b} x", Product(x, (a, b, c))),
+    ("\\exp x", _exp(x)),
+    ("\\exp(x)", _exp(x)),
     ("\\ln x", _log(x, E)),
     ("\\ln xy", _log(x*y, E)),
     ("\\log x", _log(x, 10)),
@@ -174,7 +187,11 @@ GOOD_PAIRS = [
     ("\\log_{a^2} x", _log(x, _Pow(a, 2))),
     ("[x]", x),
     ("[a + b]", _Add(a, b)),
-    ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
+    ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x)),
+    ("\\binom{n}{k}", _binomial(n, k)),
+    ("\\tbinom{n}{k}", _binomial(n, k)),
+    ("\\dbinom{n}{k}", _binomial(n, k)),
+    ("\\binom{n}{0}", _binomial(n, 0))
 ]
 
 def test_parseable():

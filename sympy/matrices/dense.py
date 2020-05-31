@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import random
 
 from sympy.core import SympifyError, Add
@@ -227,7 +225,6 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x
-        >>> from sympy import cos
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
         >>> A == B
@@ -292,6 +289,8 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
+    __hash__ = None
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 

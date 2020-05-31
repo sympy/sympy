@@ -16,21 +16,14 @@ Rademacher
 
 from __future__ import print_function, division
 
-import random
-
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Dummy, Eq, Intersection, Interval,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
-from sympy.external import import_module
-from sympy.tensor.array import ArrayComprehensionMap
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
-from sympy.stats.rv import _value_check, Density, RandomSymbol
+from sympy.stats.rv import _value_check, Density, is_random
 
-numpy = import_module('numpy')
-scipy = import_module('scipy')
-pymc3 = import_module('pymc3')
 
 __all__ = ['FiniteRV',
 'DiscreteUniform',
@@ -140,11 +133,6 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         else:
             return S.Zero
 
-    def _sample_random(self, size):
-        x = Symbol('x')
-        return ArrayComprehensionMap(lambda: self.args[random.randint(0, len(self.args)-1)], (x, 0, size)).doit()
-
-
 
 def DiscreteUniform(name, items):
     r"""
@@ -214,7 +202,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     def pmf(self, x):
         x = sympify(x)
-        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
@@ -396,7 +384,7 @@ class BinomialDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         n, p = self.n, self.p
         x = sympify(x)
-        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
@@ -496,11 +484,6 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
         n, a, b = self.n, self.alpha, self.beta
         return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
 
-    def _sample_pymc3(self, size):
-        n, a, b = int(self.n), float(self.alpha), float(self.beta)
-        with pymc3.Model():
-            pymc3.BetaBinomial('X', alpha=a, beta=b, n=n)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 def BetaBinomial(name, n, alpha, beta):
     r"""
@@ -574,10 +557,6 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         N, m, n = self.N, self.m, self.n
         return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
-    def _sample_scipy(self, size):
-        import scipy.stats # Make sure that stats is imported
-        N, m, n = int(self.N), int(self.m), int(self.n)
-        return scipy.stats.hypergeom.rvs(M=m, n=n, N=N, size=size)
 
 def Hypergeometric(name, N, m, n):
     r"""

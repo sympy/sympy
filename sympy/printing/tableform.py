@@ -96,7 +96,7 @@ class TableForm(object):
         Examples
         ========
 
-        >>> from sympy import TableForm, Matrix
+        >>> from sympy import TableForm, Symbol
         >>> TableForm([[5, 7], [4, 2], [10, 3]])
         5  7
         4  2
@@ -107,7 +107,7 @@ class TableForm(object):
         1 | .
         2 | . .
         3 | . . .
-        >>> TableForm([['.'*(j if not i%2 else 1) for i in range(3)]
+        >>> TableForm([[Symbol('.'*(j if not i%2 else 1)) for i in range(3)]
         ...            for j in range(4)], alignments='rcl')
             .
           . . .

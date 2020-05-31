@@ -1,6 +1,5 @@
 """Singleton mechanism"""
 
-from __future__ import print_function, division
 
 from typing import Any, Dict, Type
 
@@ -47,7 +46,8 @@ class SingletonRegistry(Registry):
     When using ``is`` comparison, make sure the argument is sympified. For
     instance,
 
-    >>> 0 is S.Zero
+    >>> x = 0
+    >>> x is S.Zero
     False
 
     This problem is not an issue when using ``==``, which is recommended for
@@ -138,7 +138,6 @@ class Singleton(ManagedProperties):
 
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
-        >>> from sympy.core.compatibility import with_metaclass
         >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()
@@ -165,7 +164,7 @@ class Singleton(ManagedProperties):
     "Maps singleton classes to their instances."
 
     def __new__(cls, *args, **kwargs):
-        result = super(Singleton, cls).__new__(cls, *args, **kwargs)
+        result = super().__new__(cls, *args, **kwargs)
         S.register(result)
         return result
 
@@ -175,7 +174,7 @@ class Singleton(ManagedProperties):
         # __call__ is invoked first, before __new__() and __init__().
         if self not in Singleton._instances:
             Singleton._instances[self] = \
-                super(Singleton, self).__call__(*args, **kwargs)
+                super().__call__(*args, **kwargs)
                 # Invokes the standard constructor of SomeClass.
         return Singleton._instances[self]
 

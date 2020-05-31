@@ -1,10 +1,9 @@
-from __future__ import division, print_function
-
 from sympy.core.function import expand_mul
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
+from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
 
 
@@ -234,7 +233,7 @@ def _cholesky_solve(M, rhs):
     elif not M.is_hermitian:
         reform = True
 
-    if reform or M.is_positive_definite is False:
+    if reform or _fuzzy_positive_definite(M) is False:
         H         = M.H
         M         = H.multiply(M)
         rhs       = H.multiply(rhs)
@@ -291,7 +290,7 @@ def _LDLsolve(M, rhs):
     elif not M.is_hermitian:
         reform = True
 
-    if reform or M.is_positive_definite is False:
+    if reform or _fuzzy_positive_definite(M) is False:
         H         = M.H
         M         = H.multiply(M)
         rhs       = H.multiply(rhs)
@@ -341,7 +340,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
         A, perm = M.LUdecomposition_Simple(
             iszerofunc=_iszero, rankcheck=True)
     except ValueError:
-        raise NotImplementedError("Underdetermined systems not supported.")
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     dps = _get_intermediate_simp()
     b   = rhs.permute_rows(perm).as_mutable()
@@ -559,8 +558,9 @@ def _gauss_jordan_solve(M, B, freevar=False):
 
     # Free parameters
     # what are current unnumbered free symbol names?
-    name = _uniquely_named_symbol('tau', aug,
-            compare=lambda i: str(i).rstrip('1234567890')).name
+    name = uniquely_named_symbol('tau', aug,
+            compare=lambda i: str(i).rstrip('1234567890'),
+            modify=lambda s: '_' + s).name
     gen  = numbered_symbols(name)
     tau  = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
             col - rank, B_cols)
@@ -669,7 +669,7 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
 
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
-        w                = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
+        w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
         arbitrary_matrix = M.__class__(cols, rows, w).T
 
     return A_pinv.multiply(B) + (eye(A.cols) -

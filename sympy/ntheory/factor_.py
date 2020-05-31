@@ -1,7 +1,6 @@
 """
 Integer factorization
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 import random
@@ -20,6 +19,7 @@ from sympy.core.power import integer_nthroot, Pow
 from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
+from .digits import digits
 from sympy.utilities.misc import filldedent
 
 
@@ -730,7 +730,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     With the default smoothness bound, this number can't be cracked:
 
-        >>> from sympy.ntheory import pollard_pm1, primefactors
+        >>> from sympy.ntheory import pollard_pm1
         >>> pollard_pm1(21477639576571)
 
     Increasing the smoothness bound helps:
@@ -740,7 +740,6 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     Looking at the smoothness of the factors of this number we find:
 
-        >>> from sympy.utilities import flatten
         >>> from sympy.ntheory.factor_ import smoothness_p, factorint
         >>> print(smoothness_p(21477639576571, visual=1))
         p**i=4410317**1 has p-1 B=1787, B-pow=1787
@@ -1048,7 +1047,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     You can easily switch between the two forms by sending them back to
     factorint:
 
-    >>> from sympy import Mul, Pow
+    >>> from sympy import Mul
     >>> regular = factorint(1764); regular
     {2: 2, 3: 2, 7: 2}
     >>> pprint(factorint(regular))
@@ -1512,8 +1511,7 @@ def _divisors(n, proper=False):
             if p != n:
                 yield p
     else:
-        for p in rec_gen():
-            yield p
+        yield from rec_gen()
 
 
 def divisors(n, generator=False, proper=False):
@@ -2130,40 +2128,6 @@ def core(n, t=2):
         y = 1
         for p, e in factorint(n).items():
             y *= p**(e % t)
-        return y
-
-
-def digits(n, b=10):
-    """
-    Return a list of the digits of n in base b. The first element in the list
-    is b (or -b if n is negative).
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import digits
-    >>> digits(35)
-    [10, 3, 5]
-    >>> digits(27, 2)
-    [2, 1, 1, 0, 1, 1]
-    >>> digits(65536, 256)
-    [256, 1, 0, 0]
-    >>> digits(-3958, 27)
-    [-27, 5, 11, 16]
-    """
-
-    b = as_int(b)
-    n = as_int(n)
-    if b <= 1:
-        raise ValueError("b must be >= 2")
-    else:
-        x, y = abs(n), []
-        while x >= b:
-            x, r = divmod(x, b)
-            y.append(r)
-        y.append(x)
-        y.append(-b if n < 0 else b)
-        y.reverse()
         return y
 
 

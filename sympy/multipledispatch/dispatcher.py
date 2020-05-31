@@ -43,7 +43,7 @@ def restart_ordering(on_ambiguity=ambiguity_warn):
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
-class Dispatcher(object):
+class Dispatcher:
     """ Dispatch methods based on type signature
 
     Use ``dispatch`` to add implementations
@@ -57,7 +57,7 @@ class Dispatcher(object):
     ...     return x + 1
 
     >>> @dispatch(float)
-    ... def f(x):
+    ... def f(x): # noqa: F811
     ...     return x - 1
 
     >>> f(3)

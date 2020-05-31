@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import random
 from collections import defaultdict
 
@@ -315,8 +313,7 @@ class Cycle(dict):
         return as_int(arg)
 
     def __iter__(self):
-        for i in self.list():
-            yield i
+        yield from self.list()
 
     def __call__(self, *other):
         """Return product of cycles processed from R to L.
@@ -325,7 +322,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
         (1 3 2)
 
@@ -358,7 +354,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -611,7 +606,7 @@ class Permutation(Atom):
     trigger an error. For this reason, it is better to start the cycle
     with the singleton:
 
-    The following fails because there is is no element 3:
+    The following fails because there is no element 3:
 
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
@@ -986,7 +981,7 @@ class Permutation(Atom):
         Permutation([2, 1, 3, 0])
 
         """
-        p = super(Permutation, cls).__new__(cls)
+        p = super().__new__(cls)
         p._array_form = perm
         p._size = len(perm)
         return p
@@ -1198,7 +1193,7 @@ class Permutation(Atom):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+        >>> from sympy.combinatorics.permutations import Permutation
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1307,6 +1302,9 @@ class Permutation(Atom):
         (1 3 2)
 
         """
+        from sympy.combinatorics.perm_groups import PermutationGroup, Coset
+        if isinstance(other, PermutationGroup):
+            return Coset(self, other, dir='-')
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
         b = other.array_form
@@ -1547,8 +1545,7 @@ class Permutation(Atom):
         >>> list(Permutation(range(3)))
         [0, 1, 2]
         """
-        for i in self.array_form:
-            yield i
+        yield from self.array_form
 
     def __repr__(self):
         from sympy.printing.repr import srepr
@@ -3021,5 +3018,5 @@ class AppliedPermutation(Expr):
             if x.is_Integer:
                 return perm.apply(x)
 
-        obj = super(AppliedPermutation, cls).__new__(cls, perm, x)
+        obj = super().__new__(cls, perm, x)
         return obj

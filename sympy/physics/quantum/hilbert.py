@@ -452,7 +452,6 @@ class DirectSumHilbertSpace(HilbertSpace):
     ========
 
     >>> from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace
-    >>> from sympy import symbols
 
     >>> c = ComplexSpace(2)
     >>> f = FockSpace()

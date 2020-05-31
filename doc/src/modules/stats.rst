@@ -38,6 +38,7 @@ Continuous Types
 .. autofunction:: Beta
 .. autofunction:: BetaNoncentral
 .. autofunction:: BetaPrime
+.. autofunction:: BoundedPareto
 .. autofunction:: Cauchy
 .. autofunction:: Chi
 .. autofunction:: ChiNoncentral
@@ -59,6 +60,7 @@ Continuous Types
 .. autofunction:: Logistic
 .. autofunction:: LogLogistic
 .. autofunction:: LogNormal
+.. autofunction:: Lomax
 .. autofunction:: Maxwell
 .. autofunction:: Moyal
 .. autofunction:: Nakagami
@@ -117,8 +119,6 @@ Interface
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
-.. autofunction:: sympy.stats.rv.sample_iter_lambdify
-.. autofunction:: sympy.stats.rv.sample_iter_subs
 .. autofunction:: sympy.stats.rv.sampling_density
 .. autofunction:: sympy.stats.rv.sampling_P
 .. autofunction:: sympy.stats.rv.sampling_E

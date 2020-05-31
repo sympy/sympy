@@ -1,6 +1,6 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
     count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
-    Equivalent, MatrixSymbol, Symbol, ITE, Rel, Rational
+    Equivalent, MatrixSymbol, Symbol, ITE, Rel, Rational, Sum
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -30,8 +30,8 @@ def test_count_ops_non_visual():
 
 
 def test_count_ops_visual():
-    ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
-        'Add Mul Pow sin cos exp And Derivative Integral'.upper())
+    ADD, MUL, POW, SIN, COS, EXP, AND, D, G, M = symbols(
+        'Add Mul Pow sin cos exp And Derivative Integral Sum'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
     LT, LE, GT, GE, EQ, NE = symbols('LT LE GT GE EQ NE')
     NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, _ITE, BASIC, TUPLE = symbols(
@@ -88,6 +88,7 @@ def test_count_ops_visual():
 
     assert count(Derivative(x, x)) == D
     assert count(Integral(x, x) + 2*x/(1 + x)) == G + DIV + MUL + 2*ADD
+    assert count(Sum(x, (x, 1, x + 1)) + 2*x/(1 + x)) == M + DIV + MUL + 3*ADD
     assert count(Basic()) is S.Zero
 
     assert count({x + 1: sin(x)}) == ADD + SIN

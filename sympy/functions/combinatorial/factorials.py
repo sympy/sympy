@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import List
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -398,7 +396,8 @@ class factorial2(CombinatorialFunction):
     ========
 
     >>> from sympy import factorial2, var
-    >>> var('n')
+    >>> n = var('n')
+    >>> n
     n
     >>> factorial2(n + 1)
     factorial2(n + 1)
@@ -651,7 +650,7 @@ class FallingFactorial(CombinatorialFunction):
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols, Poly
+    >>> from sympy import ff, factorial, rf, gamma, binomial, symbols, Poly
     >>> from sympy.abc import x, k
     >>> n, m = symbols('n m', integer=True)
     >>> ff(x, 0)
@@ -1012,7 +1011,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
         k = self.args[1]
-        if k.is_Add and n in k.args:
+        if (n-k).is_Integer:
             k = n - k
 
         if k.is_Integer:

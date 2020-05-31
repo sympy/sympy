@@ -82,8 +82,6 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
         >>> from sympy.polys.orderings import monomial_key
-        >>> from itertools import product
-        >>> from sympy.core import Mul
         >>> from sympy.abc import x, y
 
         >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), reverse=True, key=monomial_key('lex', [x, y]))
