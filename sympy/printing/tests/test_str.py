@@ -6,6 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
 from sympy.core import Expr, Mul
+from sympy.physics.control.lti import TransferFunction
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
@@ -586,6 +587,15 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
+
+
+def test_TransferFunction():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert str(tf1) == "TransferFunction(x - 1, x + 1, x)"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert str(tf2) == "TransferFunction(x + 1, 2 - y, x)"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert str(tf3) == "TransferFunction(y, y**2 + 2*y + 3, y)"
 
 
 def test_Quaternion_str_printer():

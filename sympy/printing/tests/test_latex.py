@@ -38,6 +38,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.control.lti import TransferFunction
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -2172,6 +2173,15 @@ def test_KroneckerProduct_printing():
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 2, 2)
     assert latex(KroneckerProduct(A, B)) == r'A \otimes B'
+
+
+def test_TransferFunction_printing():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert latex(tf1) == "TransferFunction\\left(x - 1, x + 1, x\\right)"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert latex(tf2) == "TransferFunction\\left(x + 1, 2 - y, x\\right)"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert latex(tf3) == "TransferFunction\\left(y, y^{2} + 2 y + 3, y\\right)"
 
 
 def test_Quaternion_latex_printing():
