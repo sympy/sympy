@@ -9,9 +9,9 @@ class ParametricRegion(Basic):
         Examples
         ========
 
-        >>> from sympy.abc import r, theta
+        >>> from sympy import symbols, cos, sin, pi
         >>> from sympy.vector import CoordSys3D, ParametricRegion
-        >>> from sympy import cos, sin
+        >>> r, theta = symbols("r theta")
         >>> C = CoordSys3D('C')
         >>> circle = ParametricRegion(C, r*cos(theta), r*sin(theta), (theta, 0, 2*pi))
         """
