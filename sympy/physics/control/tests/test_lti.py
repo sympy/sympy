@@ -238,8 +238,6 @@ def test_TransferFunction_addition_and_subtraction():
 
     # addition
     assert tf1 + tf2 == TransferFunction(2*s**2 + 5*s - 9, s**2 - 4*s - 5, s)
-    assert tf3 + tf4 == \
-        TransferFunction(p*s**2 + 2*s + 2, -p*s**2 - p*s - p**2 + 4*s + 2)
     assert tf1 + (s - 1) == TransferFunction(s**2 - 5*s + 11, s - 5, s)
     assert tf1 + 8 == TransferFunction(9*s - 34, s - 5, s)
 
@@ -247,6 +245,7 @@ def test_TransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
     raises(ValueError, lambda: tf4 + Quaternion(1, 2, 3, 4))
     raises(ValueError, lambda: tf2 + c)
+    raises(ValueError, lambda: tf3 + tf4)
 
     # subtraction
     assert tf1 - tf2 == TransferFunction(9*s + 21, s**2 - 4*s - 5, s)
@@ -284,6 +283,7 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
     raises(ValueError, lambda: G4 * Quaternion(1, 2, 3, 4))
     raises(ValueError, lambda: G1 * c)
+    raises(ValueError, lambda: G3 * G5)
 
     # division
     assert G5/G6 == TransferFunction(s**2 + 7*s + 6, s**2 - 2*s - 15, s)
@@ -293,6 +293,7 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
     raises(ValueError, lambda: G4 / Quaternion(1, 2, 3, 4))
     raises(ValueError, lambda: G6 / 0)
+    raises(ValueError, lambda: G3 / G5)
 
     p1 = -s**6 - 2*s**5 + 30*s**4 + 41*s**3 - 2*s**2 - 327*s - 315
     p2 = -s**6 + 7*s**5 + 5*s**4 - 66*s**3 - 63*s**2 - 45*s + 675

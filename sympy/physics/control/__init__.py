@@ -1,4 +1,3 @@
-from sympy.physics.control import lti
+from .lti import TransferFunction
 
-__all__ = ['lti']
-__all__.extend([lti.__all__])
+__all__ = ['TransferFunction',]
