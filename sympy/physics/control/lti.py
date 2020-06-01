@@ -1,6 +1,5 @@
 from sympy import (
-    Basic, Matrix, latex, ShapeError, Mul,
-    together, evaluate, expand, cancel,
+    Basic, Matrix, ShapeError, Mul,
     ImmutableMatrix, MutableMatrix, MutableDenseMatrix,
 )
 from sympy.polys.polytools import degree
