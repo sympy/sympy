@@ -1,15 +1,16 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
-                   Piecewise, factorial, Interval, oo, Contains)
+                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
+                   Piecewise, factorial, Interval, oo, Contains, sqrt, pi)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
-                         BernoulliProcess, PoissonProcess)
+                         BernoulliProcess, PoissonProcess, WienerProcess)
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.testing.pytest import raises
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
+from sympy.stats.crv_types import NormalDistribution
 
 
 def test_DiscreteMarkovChain():
@@ -261,3 +262,41 @@ def test_PoissonProcess():
     assert N.lamda == 4
     assert M.lamda == 5
     raises(ValueError, lambda: Z.split(3, 2))
+
+def test_WienerProcess():
+    X = WienerProcess("X")
+    assert X.state_space == Interval(0, oo)
+    assert X.index_set == Interval(0, oo)
+
+    t, d, x, y = symbols('t d x y', positive=True)
+    assert isinstance(X(t), RandomIndexedSymbol)
+    assert X.distribution(X(t)) == NormalDistribution(0, sqrt(t))
+    raises(ValueError, lambda: PoissonProcess("X", -1))
+    raises(NotImplementedError, lambda: X[t])
+    raises(IndexError, lambda: X(-2))
+
+    assert X.joint_distribution(X(2), X(3)) == JointDistributionHandmade(
+        Lambda((X(2), X(3)), sqrt(6)*exp(-X(2)**2/4)*exp(-X(3)**2/6)/(12*pi)))
+    assert X.joint_distribution(4, 6) == JointDistributionHandmade(
+        Lambda((X(4), X(6)), sqrt(6)*exp(-X(4)**2/8)*exp(-X(6)**2/12)/(24*pi)))
+
+    assert P(X(t) < 3).simplify() == erf(3*sqrt(2)/(2*sqrt(t)))/2 + S(1)/2
+    assert P(X(t) > 2, Contains(X(t), Interval.Lopen(3, 7))).simplify() == S(1)/2 -\
+                erf(sqrt(2)/2)/2
+    assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1),
+        Contains(X(t), Interval.Lopen(0, 1)) & Contains(X(d), Interval.Lopen(1, 2))
+        & Contains(X(x), Interval.Lopen(2, 3)) & Contains(X(y), Interval.Lopen(3, 4))).simplify() ==\
+        (1 - erf(sqrt(2)/2))*(1 - erf(sqrt(2)))*(1 - erf(3*sqrt(2)/2))*(1 - erf(2*sqrt(2)))/16
+
+    assert P((X(t)< 2) & (X(d)> 3), Contains(X(t), Interval.Lopen(0, 2))
+        & Contains(X(d), Interval.Ropen(2, 4))) == Probability((X(d) > 3) & (X(t) < 2),
+        Contains(X(d), Interval.Ropen(2, 4)) & Contains(X(t), Interval.Lopen(0, 2)))
+
+    assert str(P(Not((X(t) < 5) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) &
+        Contains(X(d), Interval.Lopen(7, 8))).simplify()) == \
+                '-(1 - erf(3*sqrt(2)/2))*(2 - erfc(5/2))/4 + 1'
+    assert E(X(t)) == 0
+    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
+    & Contains(X(d), Interval.Ropen(1, 2))) == Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2),
+    Contains(X(d), Interval.Ropen(1, 2)) & Contains(X(t), Interval.Lopen(0, 1)))
+    assert E(X(t) + x*E(X(3))) == 0

@@ -6,7 +6,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial,
-                   Union, Expr, Function, exp, cacheit,
+                   Union, Expr, Function, exp, cacheit, sqrt, pi,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -18,6 +18,7 @@ from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
 from sympy.stats.drv_types import Poisson, PoissonDistribution
+from sympy.stats.crv_types import Normal, NormalDistribution
 from sympy.core.sympify import _sympify
 
 __all__ = [
@@ -29,7 +30,8 @@ __all__ = [
     'GeneratorMatrixOf',
     'ContinuousMarkovChain',
     'BernoulliProcess',
-    'PoissonProcess'
+    'PoissonProcess',
+    'WienerProcess'
 ]
 
 
@@ -1278,7 +1280,7 @@ class PoissonProcess(CountingProcess):
     References
     ==========
 
-    .. [1] https://www.probabilitycourse.com/chapter11
+    .. [1] https://www.probabilitycourse.com
     .. [2] https://en.wikipedia.org/wiki/Poisson_point_process
 
     """
@@ -1311,3 +1313,53 @@ class PoissonProcess(CountingProcess):
         if _sympify(l1 + l2) != self.lamda:
             raise ValueError("Sum of l1 and l2 should be %s" % str(self.lamda))
         return PoissonProcess(Dummy("l1"), l1), PoissonProcess(Dummy("l2"), l2)
+
+class WienerProcess(CountingProcess):
+    """
+    The Wiener process is a real valued continuous-time stochastic process.
+    In physics it is used to study Brownian motion and therefore also known as
+    Brownian Motion.
+
+    Parameters
+    ==========
+
+    sym: Symbol/str
+
+    Examples
+    ========
+
+    >>> from sympy.stats import WienerProcess, P, E
+    >>> from sympy import symbols, Contains, Interval
+    >>> X = WienerProcess("X")
+    >>> X.state_space
+    Interval(0, oo)
+    >>> t1, t2 = symbols('t1 t2', positive=True)
+    >>> P(X(t1) < 7).simplify()
+    erf(7*sqrt(2)/(2*sqrt(t1)))/2 + 1/2
+    >>> P((X(t1) > 2) | (X(t1) < 4), Contains(X(t1), Interval.Ropen(2, 4))).simplify()
+    -erf(1)/2 + erf(2)/2 + 1
+    >>> E(X(t1))
+    0
+    >>> E(X(t1) + 2*X(t2),  Contains(X(t1), Interval.Lopen(0, 1))
+    ... & Contains(X(t2), Interval.Lopen(1, 2)))
+    0
+
+    References
+    ==========
+
+    .. [1] https://www.probabilitycourse.com
+    .. [2] https://en.wikipedia.org/wiki/Wiener_process
+
+    """
+    def __new__(cls, sym):
+        sym = _symbol_converter(sym)
+        return Basic.__new__(cls, sym)
+
+    def distribution(self, rv):
+        return NormalDistribution(0, sqrt(rv.key))
+
+    def density(self, x):
+        return exp(-x**2/(2*x.key)) / (sqrt(2*pi)*sqrt(x.key))
+
+    def simple_rv(self, rv):
+        return Normal(rv.name, 0, sqrt(rv.key))
