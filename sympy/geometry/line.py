@@ -82,7 +82,9 @@ class LinearEntity(GeometrySet):
 
     def __contains__(self, other):
         """Return a definitive answer or else raise an error if it cannot
-        be determined that other is on the boundaries of self."""
+        be determined that other is on the boundaries of self.
+
+        """
         result = self.contains(other)
 
         if result is not None:
@@ -95,7 +97,9 @@ class LinearEntity(GeometrySet):
         """Test whether the point `other` lies in the positive span of `self`.
         A point x is 'in front' of a point y if x.dot(y) >= 0.  Return
         -1 if `other` is behind `self.p1`, 0 if `other` is `self.p1` and
-        and 1 if `other` is in front of `self.p1`."""
+        and 1 if `other` is in front of `self.p1`.
+
+        """
 
         if self.p1 == other:
             return 0
@@ -119,17 +123,20 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        dimension : integer
+        int:
+            returns the dimension of line.
 
         Examples
         ========
 
+        2-dimensional example.
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> l1 = Line(p1, p2)
         >>> l1.ambient_dimension
         2
 
+        3-dimensional example.
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0, 0), Point(1, 1, 1)
         >>> l1 = Line(p1, p2)
@@ -150,10 +157,17 @@ class LinearEntity(GeometrySet):
         l1 : LinearEntity
         l2 : LinearEntity
 
+        Raises
+        ======
+
+        TypeError
+            if `l1` and `l2` both are not Linear entity.
+
         Returns
         =======
 
-        angle : angle in radians
+        angle :
+            angle in radians.
 
         Notes
         =====
@@ -166,14 +180,10 @@ class LinearEntity(GeometrySet):
         get the directional vectors of the two lines and readily
         find the angle between the two using the above formula.
 
-        See Also
-        ========
-
-        is_perpendicular, Ray2D.closing_angle
-
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line, pi
         >>> e = Line((0, 0), (1, 0))
         >>> ne = Line((0, 0), (1, 1))
@@ -189,6 +199,7 @@ class LinearEntity(GeometrySet):
         >>> sw.smallest_angle_between(e)
         pi/4
 
+        3-dimensional example
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(-1, 2, 0)
         >>> l1, l2 = Line3D(p1, p2), Line3D(p2, p3)
@@ -196,6 +207,12 @@ class LinearEntity(GeometrySet):
         acos(-sqrt(2)/3)
         >>> l1.smallest_angle_between(l2)
         acos(sqrt(2)/3)
+
+        See Also
+        ========
+
+        is_perpendicular, Ray2D.closing_angle, smallest_angle_between
+
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
@@ -213,28 +230,40 @@ class LinearEntity(GeometrySet):
         l1 : LinearEntity
         l2 : LinearEntity
 
+        Raises
+        ======
+
+        TypeError
+            if `l1` and `l2` both are not Linear entities.
+
         Returns
         =======
 
-        angle : angle in radians
-
-        See Also
-        ========
-
-        angle_between, is_perpendicular, Ray2D.closing_angle
+        angle :
+            angle in radians
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line, pi
         >>> p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, -2)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
         >>> l1.smallest_angle_between(l2)
         pi/4
 
+        3-dimensional example
+        >>> from sympy import Point, Line, pi
+        >>> p1, p2, p3 = Point(0, 0, 0), Point(0, 4, 5), Point(2, -2, 2)
+        >>> l1, l2 = Line(p1, p2), Line(p1, p3)
+        >>> l1.smallest_angle_between(l2)
+        acos(sqrt(123)/123)
+
         See Also
         ========
-        angle_between, Ray2D.closing_angle
+
+        angle_between, is_perpendicular, Ray2D.closing_angle
+
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
@@ -254,35 +283,39 @@ class LinearEntity(GeometrySet):
             first point used to define the line will be returned, and when
             it is 1 the second point will be returned.
 
-        Returns
-        =======
-
-        point : Point
-
         Raises
         ======
 
         ValueError
             When ``parameter`` already appears in the Line's definition.
 
-        See Also
-        ========
+        Returns
+        =======
 
-        sympy.geometry.point.Point
+        Point :
+            returns a point in parametric form.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.arbitrary_point()
         Point2D(4*t + 1, 3*t)
+
+        3-dimensional example
         >>> from sympy import Point3D, Line3D
         >>> p1, p2 = Point3D(1, 0, 0), Point3D(5, 3, 1)
         >>> l1 = Line3D(p1, p2)
         >>> l1.arbitrary_point()
         Point3D(4*t + 1, 3*t, t)
+
+        See Also
+        ========
+
+        Point, Line
 
         """
         t = _symbol(parameter, real=True)
@@ -310,17 +343,14 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        True : if the set of linear entities intersect in one point
-        False : otherwise.
-
-        See Also
-        ========
-
-        sympy.geometry.util.intersection
+        bool :
+            True : if the set of linear entities intersect in one point
+            False : otherwise.
 
         Examples
         ========
 
+        concurrency in lines lying in 2D space.
         >>> from sympy import Point, Line, Line3D
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
@@ -330,6 +360,8 @@ class LinearEntity(GeometrySet):
         >>> l4 = Line(p2, p3)
         >>> Line.are_concurrent(l2, l3, l4)
         False
+
+        concurrency in lines lying in 3D space.
         >>> from sympy import Point3D, Line3D
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(3, 5, 2)
         >>> p3, p4 = Point3D(-2, -2, -2), Point3D(0, 2, 1)
@@ -339,6 +371,11 @@ class LinearEntity(GeometrySet):
         >>> l4 = Line3D(p2, p3)
         >>> Line3D.are_concurrent(l2, l3, l4)
         False
+
+        See Also
+        ========
+
+        sympy.geometry.util.intersection
 
         """
 
@@ -351,7 +388,9 @@ class LinearEntity(GeometrySet):
         """Subclasses should implement this method and should return
             True if other is on the boundaries of self;
             False if not on the boundaries of self;
-            None if a determination cannot be made."""
+            None if a determination cannot be made.
+
+            """
         raise NotImplementedError()
 
     @property
@@ -361,12 +400,14 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        p : a Point; the ray from the origin to this point is the
-            direction of `self`
+        Point :
+            the ray from the origin to this point is the
+            direction of `self`.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy.geometry import Line
         >>> a, b = (1, 1), (1, 3)
         >>> Line(a, b).direction
@@ -378,6 +419,14 @@ class LinearEntity(GeometrySet):
 
         >>> Line(b, a).direction.unit
         Point2D(0, -1)
+
+        3-dimensional example
+        >>> from sympy.geometry import Line
+        >>> a, b = (1, 1, 0), (1, 3, 5)
+        >>> Line(a, b).direction
+        Point3D(0, 2, 5)
+        >>> Line(b, a).direction
+        Point3D(0, -2, -5)
 
         See Also
         ========
@@ -393,21 +442,18 @@ class LinearEntity(GeometrySet):
         Parameters
         ==========
 
-        o : Point or LinearEntity
+        other : Point or LinearEntity
 
         Returns
         =======
 
-        intersection : list of geometrical entities
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
+        list :
+            list of geometrical intersecting entities
 
         Examples
         ========
 
+        Intersection between 2D entities.
         >>> from sympy import Point, Line, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(7, 7)
         >>> l1 = Line(p1, p2)
@@ -421,6 +467,8 @@ class LinearEntity(GeometrySet):
         >>> s1 = Segment(p6, p7)
         >>> l1.intersection(s1)
         []
+
+        Intersection between 3D entities.
         >>> from sympy import Point3D, Line3D, Segment3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(7, 7, 7)
         >>> l1 = Line3D(p1, p2)
@@ -434,6 +482,11 @@ class LinearEntity(GeometrySet):
         >>> s1 = Segment3D(p6, p7)
         >>> l1.intersection(s1)
         []
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         def intersect_parallel_rays(ray1, ray2):
@@ -553,20 +606,23 @@ class LinearEntity(GeometrySet):
         l1 : LinearEntity
         l2 : LinearEntity
 
+        Raises
+        ======
+
+        TypeError
+            if `l1` and `l2` both are not Linear entities.
+
         Returns
         =======
 
-        True : if l1 and l2 are parallel,
-        False : otherwise.
-
-        See Also
-        ========
-
-        coefficients
+        bool :
+            True : if l1 and l2 are parallel.
+            False : otherwise.
 
         Examples
         ========
 
+        parallelism over 2D entities.
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> p3, p4 = Point(3, 4), Point(6, 7)
@@ -577,6 +633,8 @@ class LinearEntity(GeometrySet):
         >>> l3 = Line(p3, p5)
         >>> Line.is_parallel(l1, l3)
         False
+
+        parallelism over 3D entities.
         >>> from sympy import Point3D, Line3D
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(3, 4, 5)
         >>> p3, p4 = Point3D(2, 1, 1), Point3D(8, 9, 11)
@@ -604,20 +662,24 @@ class LinearEntity(GeometrySet):
         l1 : LinearEntity
         l2 : LinearEntity
 
+        Raises
+        ======
+
+        TypeError
+            if `l1` and `l2` both are not Linear entities.
+
         Returns
         =======
 
-        True : if l1 and l2 are perpendicular,
-        False : otherwise.
+        bool :
+            True : if l1 and l2 are perpendicular,
+            False : otherwise.
 
-        See Also
-        ========
-
-        coefficients
 
         Examples
         ========
 
+        perpendicularity over 2D entities.
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 1)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
@@ -627,12 +689,14 @@ class LinearEntity(GeometrySet):
         >>> l3 = Line(p1, p4)
         >>> l1.is_perpendicular(l3)
         False
+
+        perpendicularity over 3D entities.
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(-1, 2, 0)
         >>> l1, l2 = Line3D(p1, p2), Line3D(p2, p3)
         >>> l1.is_perpendicular(l2)
         False
-        >>> p4 = Point3D(5, 3, 7)
+        >>> p4 = Point3D(1, 1, -1)
         >>> l3 = Line3D(p1, p4)
         >>> l1.is_perpendicular(l3)
         False
@@ -644,26 +708,48 @@ class LinearEntity(GeometrySet):
         return S.Zero.equals(l1.direction.dot(l2.direction))
 
     def is_similar(self, other):
-        """
-        Return True if self and other are contained in the same line.
+        """Whether lines are same or different.
+
+        Parameters
+        ==========
+
+        other : GeometryEntity
+
+        Returns
+        =======
+
+        bool :
+            True : if self and other are contained in the same line.
+            False : otherwise.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = Line(p1, p3)
+        >>> p1, p2, p3, p4 = Point(0, 1), Point(3, 4), Point(2, 3), Point(0, 4)
+        >>> l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)
         >>> l1.is_similar(l2)
         True
+        >>> l1.is_similar(l3)
+        False
+
+        3-dimensional example
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3, p4 = Point(0, 0, 0), Point(0, 1, 1), Point(0, 2, 2), Point(2, 4, 6)
+        >>> l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)
+        >>> l1.is_similar(l2)
+        True
+        >>> l1.is_similar(l3)
+        False
+
         """
         l = Line(self.p1, self.p2)
         return l.contains(other)
 
     @property
     def length(self):
-        """
-        The length of the line.
+        """The length of the line.
 
         Examples
         ========
@@ -673,17 +759,13 @@ class LinearEntity(GeometrySet):
         >>> l1 = Line(p1, p2)
         >>> l1.length
         oo
+
         """
         return S.Infinity
 
     @property
     def p1(self):
         """The first defining point of a linear entity.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
 
         Examples
         ========
@@ -694,17 +776,17 @@ class LinearEntity(GeometrySet):
         >>> l.p1
         Point2D(0, 0)
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
         """
         return self.args[0]
 
     @property
     def p2(self):
         """The second defining point of a linear entity.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
 
         Examples
         ========
@@ -714,6 +796,11 @@ class LinearEntity(GeometrySet):
         >>> l = Line(p1, p2)
         >>> l.p2
         Point2D(5, 3)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         return self.args[1]
@@ -730,32 +817,35 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        line : Line
+        Line:
+            returns a line which is parallel to the entity
+            and passing through point ``p``.
+
+        Examples
+        ========
+
+        2-dimensional example
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
+        >>> l1 = Line(p1, p2)
+        >>> l2 = l1.parallel_line(p3)
+        Line2D(Point2D(-2, 2), Point2D(0, 5))
+        >>> l1.is_parallel(l2)
+        True
+
+        3-dimensional example
+        >>> from sympy import Point3D, Line3D
+        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(2, 3, 4), Point3D(-2, 2, 0)
+        >>> l1 = Line3D(p1, p2)
+        >>> l2 = l1.parallel_line(p3)
+        Line3D(Point3D(-2, 2, 0), Point3D(0, 5, 4))
+        >>> l1.is_parallel(l2)
+        True
 
         See Also
         ========
 
         is_parallel
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.parallel_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_parallel(l2)
-        True
-        >>> from sympy import Point3D, Line3D
-        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(2, 3, 4), Point3D(-2, 2, 0)
-        >>> l1 = Line3D(p1, p2)
-        >>> l2 = l1.parallel_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_parallel(l2)
-        True
 
         """
         p = Point(p, dim=self.ambient_dimension)
@@ -773,32 +863,35 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        line : Line
-
-        See Also
-        ========
-
-        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
+        Line :
+            returns a line which is perpendicular to the entity
+            and passing through point ``p``.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
         >>> l1 = Line(p1, p2)
         >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
+        Line2D(Point2D(-2, 2), Point2D(-5, 4))
         >>> l1.is_perpendicular(l2)
         True
+
+        3-dimensional example
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(2, 3, 4), Point3D(-2, 2, 0)
         >>> l1 = Line3D(p1, p2)
         >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
+        Line3D(Point3D(-2, 2, 0), Point3D(4/29, 6/29, 8/29))
         >>> l1.is_perpendicular(l2)
         True
+
+        See Also
+        ========
+
+        is_perpendicular, perpendicular_segment
 
         """
         p = Point(p, dim=self.ambient_dimension)
@@ -809,7 +902,7 @@ class LinearEntity(GeometrySet):
     def perpendicular_segment(self, p):
         """Create a perpendicular line segment from `p` to this line.
 
-        The enpoints of the segment are ``p`` and the closest point in
+        The end-points of the segment are ``p`` and the closest point in
         the line containing self. (If self is not a line, the point might
         not be in self.)
 
@@ -821,21 +914,19 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        segment : Segment
+        Segment :
+            returns a perpendicular line segment whose endpoints are ``p`` and
+            the closest point in the line containing self.
 
         Notes
         =====
 
         Returns `p` itself if `p` is on this linear entity.
 
-        See Also
-        ========
-
-        perpendicular_line
-
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 2)
         >>> l1 = Line(p1, p2)
@@ -846,6 +937,8 @@ class LinearEntity(GeometrySet):
         True
         >>> l1.perpendicular_segment(Point(4, 0))
         Segment2D(Point2D(4, 0), Point2D(2, 2))
+
+        3-dimensional example
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(0, 2, 0)
         >>> l1 = Line3D(p1, p2)
@@ -856,6 +949,11 @@ class LinearEntity(GeometrySet):
         True
         >>> l1.perpendicular_segment(Point3D(4, 0, 0))
         Segment3D(Point3D(4, 0, 0), Point3D(4/3, 4/3, 4/3))
+
+        See Also
+        ========
+
+        perpendicular_line
 
         """
         p = Point(p, dim=self.ambient_dimension)
@@ -874,21 +972,30 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        points : tuple of Points
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
+        Point :
+            returns a tuple of Points that define the linear entity.
 
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 11)
         >>> l1 = Line(p1, p2)
         >>> l1.points
         (Point2D(0, 0), Point2D(5, 11))
+
+        3D example
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0, 0), Point(5, 11, 4)
+        >>> l1 = Line(p1, p2)
+        >>> l1.points
+        (Point3D(0, 0, 0), Point3D(5, 11, 4))
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         return (self.p1, self.p2)
@@ -901,17 +1008,17 @@ class LinearEntity(GeometrySet):
 
         other : Point or LinearEntity (Line, Ray, Segment)
 
-        Returns
-        =======
-
-        projection : Point or LinearEntity (Line, Ray, Segment)
-            The return type matches the type of the parameter ``other``.
-
         Raises
         ======
 
         GeometryError
             When method is unable to perform projection.
+
+        Returns
+        =======
+
+        Point or LinearEntity (Line, Ray, Segment) :
+            Projection of ``other`` on this linear entity.
 
         Notes
         =====
@@ -924,14 +1031,10 @@ class LinearEntity(GeometrySet):
         on L that is closest to P. This point is the intersection
         of L and the line perpendicular to L that passes through P.
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point, perpendicular_line
-
         Examples
         ========
 
+        2-d projection
         >>> from sympy import Point, Line, Segment, Rational
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(Rational(1, 2), 0)
         >>> l1 = Line(p1, p2)
@@ -941,6 +1044,9 @@ class LinearEntity(GeometrySet):
         >>> s1 = Segment(p4, p5)
         >>> l1.projection(s1)
         Segment2D(Point2D(5, 5), Point2D(13/2, 13/2))
+
+        3-d projection
+        >>> from sympy import Point, Line, Segment
         >>> p1, p2, p3 = Point(0, 0, 1), Point(1, 1, 2), Point(2, 0, 1)
         >>> l1 = Line(p1, p2)
         >>> l1.projection(p3)
@@ -949,6 +1055,11 @@ class LinearEntity(GeometrySet):
         >>> s1 = Segment(p4, p5)
         >>> l1.projection(s1)
         Segment3D(Point3D(10/3, 10/3, 13/3), Point3D(5, 5, 6))
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point, perpendicular_line
 
         """
 
@@ -987,16 +1098,13 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        point : Point
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
+        Point :
+            returns a random point from the linear entity.
 
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Line, Ray, Segment
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> line = Line(p1, p2)
@@ -1009,6 +1117,25 @@ class LinearEntity(GeometrySet):
         Point2D(0.72, 0.432)
         >>> Segment(p1, p2).random_point(seed=42).n(3)
         Point2D(3.2, 1.92)
+
+        3D example
+        >>> from sympy import Point, Line, Ray, Segment
+        >>> p1, p2 = Point(0, 0, 0), Point(5, 3, 1)
+        >>> line = Line(p1, p2)
+        >>> r = line.random_point(seed=42)  # seed value is optional
+        >>> r.n(3)
+        Point3D(-0.72, -0.432, -0.144)
+        >>> r in line
+        True
+        >>> Ray(p1, p2).random_point(seed=42).n(3)
+        Point3D(0.72, 0.432, 0.144)
+        >>> Segment(p1, p2).random_point(seed=42).n(3)
+        Point3D(3.2, 1.92, 0.639)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         import random
@@ -1053,13 +1180,6 @@ class Line(LinearEntity):
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
 
-    See Also
-    ========
-
-    sympy.geometry.point.Point
-    sympy.geometry.line.Line2D
-    sympy.geometry.line.Line3D
-
     Examples
     ========
 
@@ -1097,8 +1217,16 @@ class Line(LinearEntity):
     If `x` or `y` has a different name, then they can be specified, too,
     as a string (to match the name) or symbol:
 
-    >>> Line(Eq(3*a + b, -18), x='a', y=b)
+    >>> Line(Eq(3*a + b, -18), x='a', y='b')
     Line2D(Point2D(0, -18), Point2D(1, -21))
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point
+    sympy.geometry.line.Line2D
+    sympy.geometry.line.Line3D
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -1147,12 +1275,24 @@ class Line(LinearEntity):
                 return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def contains(self, other):
-        """
-        Return True if `other` is on this Line, or False otherwise.
+        """Checks whether `other` is on Line or not.
+
+        Parameters
+        ==========
+
+        other : GeometryEntity
+
+        Returns
+        =======
+
+        bool :
+            True : if Line contains `other`.
+            False : otherwise.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Line,Point
         >>> p1, p2 = Point(0, 1), Point(3, 4)
         >>> l = Line(p1, p2)
@@ -1162,6 +1302,9 @@ class Line(LinearEntity):
         True
         >>> l.contains((0, 0))
         False
+
+        3-dimensional example
+        >>> from sympy import Line,Point
         >>> a = (0, 0, 0)
         >>> b = (1, 1, 1)
         >>> c = (2, 2, 2)
@@ -1182,17 +1325,29 @@ class Line(LinearEntity):
         return False
 
     def distance(self, other):
-        """
-        Finds the shortest distance between a line and a point.
+        """Finds the shortest distance between a line and a point `other`.
+
+        Parameters
+        ==========
+
+        other : Point
 
         Raises
         ======
 
-        NotImplementedError is raised if `other` is not a Point
+        NotImplementedError
+            If `other` is not a Point
+
+        Returns
+        =======
+
+        distance :
+            returns the shortest distance between the point and this line.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> s = Line(p1, p2)
@@ -1200,6 +1355,9 @@ class Line(LinearEntity):
         sqrt(2)
         >>> s.distance((-1, 2))
         3*sqrt(2)/2
+
+        3-dimensional example
+        >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0, 0), Point(1, 1, 1)
         >>> s = Line(p1, p2)
         >>> s.distance(Point(-1, 1, 1))
@@ -1219,7 +1377,9 @@ class Line(LinearEntity):
         return self.equals(other)
 
     def equals(self, other):
-        """Returns True if self and other are the same mathematical entities"""
+        """Returns True if self and other are the same mathematical entities.
+
+        """
         if not isinstance(other, Line):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
@@ -1238,8 +1398,9 @@ class Line(LinearEntity):
         Returns
         =======
 
-        plot_interval : list (plot interval)
-            [parameter, lower_bound, upper_bound]
+        list :
+            returns a list(plot interval) as below:
+                [parameter, lower_bound, upper_bound]
 
         Examples
         ========
@@ -1273,14 +1434,6 @@ class Ray(LinearEntity):
 
     source
 
-    See Also
-    ========
-
-    sympy.geometry.line.Ray2D
-    sympy.geometry.line.Ray3D
-    sympy.geometry.point.Point
-    sympy.geometry.line.Line
-
     Notes
     =====
 
@@ -1308,6 +1461,14 @@ class Ray(LinearEntity):
     >>> Ray(Point(0, 0), angle=pi/4).slope
     1
 
+    See Also
+    ========
+
+    sympy.geometry.line.Ray2D
+    sympy.geometry.line.Ray3D
+    sympy.geometry.point.Point
+    sympy.geometry.line.Line
+
     """
     def __new__(cls, p1, p2=None, **kwargs):
         p1 = Point(p1)
@@ -1331,6 +1492,7 @@ class Ray(LinearEntity):
             Multiplication factor for the SVG stroke-width.  Default is 1.
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
+
         """
 
         from sympy.core.evalf import N
@@ -1346,8 +1508,19 @@ class Ray(LinearEntity):
             ).format(2. * scale_factor, path, fill_color)
 
     def contains(self, other):
-        """
-        Is other GeometryEntity contained in this Ray?
+        """Is GeometryEntity `other` contained in this Ray?
+
+        Parameters
+        ==========
+
+        other : GeometryEntity
+
+        Returns
+        =======
+
+        bool :
+            True : if Ray contains `other`.
+            False : otherwise.
 
         Examples
         ========
@@ -1373,6 +1546,7 @@ class Ray(LinearEntity):
         >>> r1 = Ray((2, 2), (3, 5))
         >>> r.contains(r1)
         False
+
         """
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
@@ -1394,17 +1568,29 @@ class Ray(LinearEntity):
         return False
 
     def distance(self, other):
-        """
-        Finds the shortest distance between the ray and a point.
+        """Finds the shortest distance between the ray and a point.
+
+        Parameters
+        ==========
+
+        other : Point
 
         Raises
         ======
 
-        NotImplementedError is raised if `other` is not a Point
+        NotImplementedError
+            If `other` is not a Point
+
+        Returns
+        =======
+
+        distance :
+            the shortest distance between the point and this ray.
 
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Ray
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> s = Ray(p1, p2)
@@ -1412,6 +1598,9 @@ class Ray(LinearEntity):
         sqrt(2)
         >>> s.distance((-1, 2))
         3*sqrt(2)/2
+
+        3D example
+        >>> from sympy import Point, Ray
         >>> p1, p2 = Point(0, 0, 0), Point(1, 1, 2)
         >>> s = Ray(p1, p2)
         >>> s
@@ -1434,7 +1623,9 @@ class Ray(LinearEntity):
             return abs(other - self.source)
 
     def equals(self, other):
-        """Returns True if self and other are the same mathematical entities"""
+        """Returns True if self and other are the same mathematical entities.
+
+        """
         if not isinstance(other, Ray):
             return False
         return self.source == other.source and other.p2 in self
@@ -1453,8 +1644,9 @@ class Ray(LinearEntity):
         Returns
         =======
 
-        plot_interval : list
-            [parameter, lower_bound, upper_bound]
+        list :
+            returns a list(plot interval) as below:
+                [parameter, lower_bound, upper_bound]
 
         Examples
         ========
@@ -1472,23 +1664,32 @@ class Ray(LinearEntity):
     def source(self):
         """The point from which the ray emanates.
 
-        See Also
-        ========
+        Returns
+        =======
 
-        sympy.geometry.point.Point
+        Point :
+            returns a point from where the ray emanates.
 
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Ray
         >>> p1, p2 = Point(0, 0), Point(4, 1)
         >>> r1 = Ray(p1, p2)
         >>> r1.source
         Point2D(0, 0)
+
+        3D example
         >>> p1, p2 = Point(0, 0, 0), Point(4, 1, 5)
         >>> r1 = Ray(p2, p1)
         >>> r1.source
         Point3D(4, 1, 5)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         return self.p1
@@ -1508,14 +1709,6 @@ class Segment(LinearEntity):
 
     length : number or sympy expression
     midpoint : Point
-
-    See Also
-    ========
-
-    sympy.geometry.line.Segment2D
-    sympy.geometry.line.Segment3D
-    sympy.geometry.point.Point
-    sympy.geometry.line.Line
 
     Notes
     =====
@@ -1550,6 +1743,14 @@ class Segment(LinearEntity):
     >>> s.midpoint
     Point3D(5/2, 2, 8)
 
+    See Also
+    ========
+
+    sympy.geometry.line.Segment2D
+    sympy.geometry.line.Segment3D
+    sympy.geometry.point.Point
+    sympy.geometry.line.Line
+
     """
     def __new__(cls, p1, p2, **kwargs):
         p1, p2 = Point._normalize_dimension(Point(p1), Point(p2))
@@ -1562,18 +1763,32 @@ class Segment(LinearEntity):
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def contains(self, other):
-        """
-        Is the other GeometryEntity contained within this Segment?
+        """Is the `other` GeometryEntity contained within this Segment?
+
+        Parameters
+        ==========
+
+        other : GeometryEntity
+
+        Returns
+        =======
+
+        bool :
+            True : if Line contains `other`.
+            False : otherwise.
 
         Examples
         ========
 
+        2-dimensional example
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)
         >>> s = Segment(p1, p2)
         >>> s2 = Segment(p2, p1)
         >>> s.contains(s2)
         True
+
+        3-dimensional example
         >>> from sympy import Point3D, Segment3D
         >>> p1, p2 = Point3D(0, 1, 1), Point3D(3, 4, 5)
         >>> s = Segment3D(p1, p2)
@@ -1582,6 +1797,7 @@ class Segment(LinearEntity):
         True
         >>> s.contains((p1 + p2) / 2)
         True
+
         """
 
         if not isinstance(other, GeometryEntity):
@@ -1618,22 +1834,36 @@ class Segment(LinearEntity):
         return False
 
     def equals(self, other):
-        """Returns True if self and other are the same mathematical entities"""
+        """Returns True if self and other are the same mathematical entities.
+
+        """
         return isinstance(other, self.func) and list(
             ordered(self.args)) == list(ordered(other.args))
 
     def distance(self, other):
-        """
-        Finds the shortest distance between a line segment and a point.
+        """Finds the shortest distance between a line segment and a point.
+
+        Parameters
+        ==========
+
+        other : Point
 
         Raises
         ======
 
-        NotImplementedError is raised if `other` is not a Point
+        NotImplementedError
+            If `other` is not a Point
+
+        Returns
+        =======
+
+        distance :
+            returns the shortest distance between the point and line segment.
 
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 1), Point(3, 4)
         >>> s = Segment(p1, p2)
@@ -1641,6 +1871,8 @@ class Segment(LinearEntity):
         sqrt(170)
         >>> s.distance((0, 12))
         sqrt(73)
+
+        3D example
         >>> from sympy import Point3D, Segment3D
         >>> p1, p2 = Point3D(0, 0, 3), Point3D(1, 1, 4)
         >>> s = Segment3D(p1, p2)
@@ -1648,6 +1880,7 @@ class Segment(LinearEntity):
         sqrt(341)
         >>> s.distance((10, 15, 12))
         sqrt(341)
+
         """
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
@@ -1669,24 +1902,30 @@ class Segment(LinearEntity):
     def length(self):
         """The length of the line segment.
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point.distance
+        Returns
+        =======
 
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
         >>> s1.length
         5
+
+        3D example
         >>> from sympy import Point3D, Segment3D
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(4, 3, 3)
         >>> s1 = Segment3D(p1, p2)
         >>> s1.length
         sqrt(34)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point.distance
 
         """
         return Point.distance(self.p1, self.p2)
@@ -1695,24 +1934,27 @@ class Segment(LinearEntity):
     def midpoint(self):
         """The midpoint of the line segment.
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point.midpoint
-
         Examples
         ========
 
+        2D example
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
         >>> s1.midpoint
         Point2D(2, 3/2)
+
+        3D example
         >>> from sympy import Point3D, Segment3D
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(4, 3, 3)
         >>> s1 = Segment3D(p1, p2)
         >>> s1.midpoint
         Point3D(2, 3/2, 3/2)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point.midpoint
 
         """
         return Point.midpoint(self.p1, self.p2)
@@ -1733,12 +1975,8 @@ class Segment(LinearEntity):
         Returns
         =======
 
-        bisector : Line or Segment
-
-        See Also
-        ========
-
-        LinearEntity.perpendicular_segment
+        Line or Segment :
+            bisector of the segment.
 
         Examples
         ========
@@ -1751,6 +1989,11 @@ class Segment(LinearEntity):
 
         >>> s1.perpendicular_bisector(p3)
         Segment2D(Point2D(5, 1), Point2D(3, 3))
+
+        See Also
+        ========
+
+        LinearEntity.perpendicular_segment
 
         """
         l = self.perpendicular_line(self.midpoint)
@@ -1773,7 +2016,8 @@ class Segment(LinearEntity):
         Returns
         =======
 
-        plot_interval : list
+        list :
+            the plot interval as below:
             [parameter, lower_bound, upper_bound]
 
         Examples
@@ -1840,11 +2084,6 @@ class LinearEntity2D(LinearEntity):
 
         line : Line
 
-        See Also
-        ========
-
-        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
-
         Examples
         ========
 
@@ -1856,6 +2095,11 @@ class LinearEntity2D(LinearEntity):
         True
         >>> l1.is_perpendicular(l2)
         True
+
+        See Also
+        ========
+
+        sympy.geometry.line.LinearEntity.is_perpendicular, perpendicular_segment
 
         """
         p = Point(p, dim=self.ambient_dimension)
@@ -1870,12 +2114,8 @@ class LinearEntity2D(LinearEntity):
         Returns
         =======
 
-        slope : number or sympy expression
-
-        See Also
-        ========
-
-        coefficients
+        slope :
+            number or sympy expression
 
         Examples
         ========
@@ -1890,6 +2130,11 @@ class LinearEntity2D(LinearEntity):
         >>> l2 = Line(p1, p3)
         >>> l2.slope
         oo
+
+        See Also
+        ========
+
+        coefficients
 
         """
         d1, d2 = (self.p1 - self.p2).args
@@ -1910,11 +2155,6 @@ class Line2D(LinearEntity2D, Line):
     p1 : Point
     pt : Point
     slope : sympy expression
-
-    See Also
-    ========
-
-    sympy.geometry.point.Point
 
     Examples
     ========
@@ -1942,6 +2182,12 @@ class Line2D(LinearEntity2D, Line):
     >>> s = Segment((0, 0), (0, 1))
     >>> Line(s).equation()
     x
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point
+
     """
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
         if isinstance(p1, LinearEntity):
@@ -1984,6 +2230,7 @@ class Line2D(LinearEntity2D, Line):
             Multiplication factor for the SVG stroke-width.  Default is 1.
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
+
         """
 
         from sympy.core.evalf import N
@@ -2002,10 +2249,11 @@ class Line2D(LinearEntity2D, Line):
     def coefficients(self):
         """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
 
-        See Also
-        ========
+        Returns
+        =======
 
-        sympy.geometry.line.Line2D.equation
+        tuple :
+            A tuple containing coefficients of Line.
 
         Examples
         ========
@@ -2016,11 +2264,15 @@ class Line2D(LinearEntity2D, Line):
         >>> l = Line(p1, p2)
         >>> l.coefficients
         (-3, 5, 0)
-
         >>> p3 = Point(x, y)
         >>> l2 = Line(p1, p3)
         >>> l2.coefficients
         (-y, x, 0)
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line2D.equation
 
         """
         p1, p2 = self.points
@@ -2034,7 +2286,7 @@ class Line2D(LinearEntity2D, Line):
                        self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
     def equation(self, x='x', y='y'):
-        """The equation of the line: ax + by + c.
+        """The equation of the line: `ax + by + c`.
 
         Parameters
         ==========
@@ -2047,12 +2299,8 @@ class Line2D(LinearEntity2D, Line):
         Returns
         =======
 
-        equation : sympy expression
-
-        See Also
-        ========
-
-        sympy.geometry.line.Line2D.coefficients
+        equation :
+            It will generate sympy expression.
 
         Examples
         ========
@@ -2062,6 +2310,11 @@ class Line2D(LinearEntity2D, Line):
         >>> l1 = Line(p1, p2)
         >>> l1.equation()
         -3*x + 4*y + 3
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line2D.coefficients
 
         """
         x = _symbol(x, real=True)
@@ -2077,8 +2330,7 @@ class Line2D(LinearEntity2D, Line):
 
 
 class Ray2D(LinearEntity2D, Ray):
-    """
-    A Ray is a semi-line in the space with a source point and a direction.
+    """A Ray is a semi-line in the space with a source point and a direction.
 
     Parameters
     ==========
@@ -2096,11 +2348,6 @@ class Ray2D(LinearEntity2D, Ray):
     source
     xdirection
     ydirection
-
-    See Also
-    ========
-
-    sympy.geometry.point.Point, Line
 
     Examples
     ========
@@ -2122,6 +2369,11 @@ class Ray2D(LinearEntity2D, Ray):
     2
     >>> Ray(Point(0, 0), angle=pi/4).slope
     1
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point, Line
 
     """
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
@@ -2172,25 +2424,30 @@ class Ray2D(LinearEntity2D, Ray):
     def xdirection(self):
         """The x direction of the ray.
 
-        Positive infinity if the ray points in the positive x direction,
-        negative infinity if the ray points in the negative x direction,
-        or 0 if the ray is vertical.
+        Returns
+        =======
 
-        See Also
-        ========
-
-        ydirection
+            Positive infinity if the ray points in the positive x direction,
+            negative infinity if the ray points in the negative x direction,
+            or 0 if the ray is vertical.
 
         Examples
         ========
 
         >>> from sympy import Point, Ray
-        >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, -1)
-        >>> r1, r2 = Ray(p1, p2), Ray(p1, p3)
+        >>> p1, p2, p3, p4 = Point(0, 0), Point(1, 1), Point(0, -1), Point(-1, 1)
+        >>> r1, r2, r3 = Ray(p1, p2), Ray(p1, p3), Ray(p1, p4)
         >>> r1.xdirection
         oo
         >>> r2.xdirection
         0
+        >>> r3.xdirection
+        -oo
+
+        See Also
+        ========
+
+        ydirection
 
         """
         if self.p1.x < self.p2.x:
@@ -2204,25 +2461,30 @@ class Ray2D(LinearEntity2D, Ray):
     def ydirection(self):
         """The y direction of the ray.
 
-        Positive infinity if the ray points in the positive y direction,
-        negative infinity if the ray points in the negative y direction,
-        or 0 if the ray is horizontal.
+        Returns
+        =======
 
-        See Also
-        ========
-
-        xdirection
+            Positive infinity if the ray points in the positive y direction,
+            negative infinity if the ray points in the negative y direction,
+            or 0 if the ray is horizontal.
 
         Examples
         ========
 
         >>> from sympy import Point, Ray
-        >>> p1, p2, p3 = Point(0, 0), Point(-1, -1), Point(-1, 0)
-        >>> r1, r2 = Ray(p1, p2), Ray(p1, p3)
+        >>> p1, p2, p3, p4 = Point(0, 0), Point(-1, -1), Point(-1, 0), Point(0, 1)
+        >>> r1, r2, r3 = Ray(p1, p2), Ray(p1, p3), Ray(p1, p4)
         >>> r1.ydirection
         -oo
         >>> r2.ydirection
         0
+        >>> r3.ydirection
+        oo
+
+        See Also
+        ========
+
+        xdirection
 
         """
         if self.p1.y < self.p2.y:
@@ -2245,12 +2507,8 @@ class Ray2D(LinearEntity2D, Ray):
         Returns
         =======
 
-        angle : angle in radians (ccw angle is positive)
-
-        See Also
-        ========
-
-        LinearEntity.angle_between
+        angle :
+            angle in radians (counterclockwise angle is positive)
 
         Examples
         ========
@@ -2264,6 +2522,12 @@ class Ray2D(LinearEntity2D, Ray):
         True
         >>> r2.closing_angle(r1)
         -pi/2
+
+        See Also
+        ========
+
+        LinearEntity.angle_between
+
         """
         if not all(isinstance(r, Ray2D) for r in (r1, r2)):
             # although the direction property is defined for
@@ -2294,11 +2558,6 @@ class Segment2D(LinearEntity2D, Segment):
     length : number or sympy expression
     midpoint : Point
 
-    See Also
-    ========
-
-    sympy.geometry.point.Point, Line
-
     Examples
     ========
 
@@ -2316,6 +2575,11 @@ class Segment2D(LinearEntity2D, Segment):
     sqrt(13)
     >>> s.midpoint
     Point2D(5/2, 2)
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point, Line
 
     """
     def __new__(cls, p1, p2, **kwargs):
@@ -2337,6 +2601,7 @@ class Segment2D(LinearEntity2D, Segment):
             Multiplication factor for the SVG stroke-width.  Default is 1.
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
+
         """
 
         from sympy.core.evalf import N
@@ -2367,6 +2632,7 @@ class LinearEntity3D(LinearEntity):
     =====
 
     This is a base class and is not meant to be instantiated.
+
     """
 
     def __new__(cls, p1, p2, **kwargs):
@@ -2385,10 +2651,11 @@ class LinearEntity3D(LinearEntity):
     def direction_ratio(self):
         """The direction ratio of a given line in 3D.
 
-        See Also
-        ========
+        Returns
+        =======
 
-        sympy.geometry.line.Line3D.equation
+        list :
+            a list containing direction ratio of a line.
 
         Examples
         ========
@@ -2398,18 +2665,30 @@ class LinearEntity3D(LinearEntity):
         >>> l = Line3D(p1, p2)
         >>> l.direction_ratio
         [5, 3, 1]
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line3D.equation
+
         """
         p1, p2 = self.points
         return p1.direction_ratio(p2)
 
     @property
     def direction_cosine(self):
-        """The normalized direction ratio of a given line in 3D.
+        """The normalized direction cosine of a given line in 3D.
 
-        See Also
-        ========
+        Returns
+        =======
 
-        sympy.geometry.line.Line3D.equation
+        list :
+            a list containing direction cosines of a line.
+
+        Notes
+        =====
+
+            The sum of squares of direction cosines will always be 1.
 
         Examples
         ========
@@ -2421,6 +2700,12 @@ class LinearEntity3D(LinearEntity):
         [sqrt(35)/7, 3*sqrt(35)/35, sqrt(35)/35]
         >>> sum(i**2 for i in _)
         1
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line3D.equation
+
         """
         p1, p2 = self.points
         return p1.direction_cosine(p2)
@@ -2439,13 +2724,6 @@ class Line3D(LinearEntity3D, Line):
     pt : Point3D
     direction_ratio : list
 
-    See Also
-    ========
-
-    sympy.geometry.point.Point3D
-    sympy.geometry.line.Line
-    sympy.geometry.line.Line2D
-
     Examples
     ========
 
@@ -2456,6 +2734,14 @@ class Line3D(LinearEntity3D, Line):
     Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L.points
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point3D
+    sympy.geometry.line.Line
+    sympy.geometry.line.Line2D
+
     """
 
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
@@ -2492,7 +2778,8 @@ class Line3D(LinearEntity3D, Line):
         Returns
         =======
 
-        equation : Tuple of simultaneous equations
+        sympy.core.containers.Tuple (equation) :
+            Tuple of simultaneous equations
 
         Examples
         ========
@@ -2501,7 +2788,8 @@ class Line3D(LinearEntity3D, Line):
         >>> from sympy.abc import x, y, z
         >>> p1, p2 = Point3D(1, 0, 0), Point3D(5, 3, 0)
         >>> l1 = Line3D(p1, p2)
-        >>> eq = l1.equation(x, y, z); eq
+        >>> eq = l1.equation(x, y, z)
+        >>> eq
         (-3*x + 4*y + 3, z)
         >>> solve(eq.subs(z, 0), (x, y, z))
         {x: 4*y/3 + 1}
@@ -2528,8 +2816,7 @@ class Line3D(LinearEntity3D, Line):
 
 
 class Ray3D(LinearEntity3D, Ray):
-    """
-    A Ray is a semi-line in the space with a source point and a direction.
+    """A Ray is a semi-line in the space with a source point and a direction.
 
     Parameters
     ==========
@@ -2539,7 +2826,6 @@ class Ray3D(LinearEntity3D, Ray):
     p2 : Point or a direction vector
     direction_ratio: Determines the direction in which the Ray propagates.
 
-
     Attributes
     ==========
 
@@ -2547,12 +2833,6 @@ class Ray3D(LinearEntity3D, Ray):
     xdirection
     ydirection
     zdirection
-
-    See Also
-    ========
-
-    sympy.geometry.point.Point3D, Line3D
-
 
     Examples
     ========
@@ -2572,6 +2852,11 @@ class Ray3D(LinearEntity3D, Ray):
     oo
     >>> r.direction_ratio
     [1, 2, -4]
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point3D, Line3D
 
     """
 
@@ -2599,25 +2884,30 @@ class Ray3D(LinearEntity3D, Ray):
     def xdirection(self):
         """The x direction of the ray.
 
-        Positive infinity if the ray points in the positive x direction,
-        negative infinity if the ray points in the negative x direction,
-        or 0 if the ray is vertical.
+        Returns
+        =======
 
-        See Also
-        ========
-
-        ydirection
+            Positive infinity if the ray points in the positive x direction,
+            negative infinity if the ray points in the negative x direction,
+            or 0 if the ray is vertical.
 
         Examples
         ========
 
         >>> from sympy import Point3D, Ray3D
-        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(0, -1, 0)
-        >>> r1, r2 = Ray3D(p1, p2), Ray3D(p1, p3)
+        >>> p1, p2, p3, p4 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(0, -1, 0), Point3D(-1, 0, 0)
+        >>> r1, r2, r3 = Ray3D(p1, p2), Ray3D(p1, p3), Ray3D(p1, p4)
         >>> r1.xdirection
         oo
         >>> r2.xdirection
         0
+        >>> r3.xdirection
+        -oo
+
+        See Also
+        ========
+
+        ydirection, zdirection
 
         """
         if self.p1.x < self.p2.x:
@@ -2631,25 +2921,30 @@ class Ray3D(LinearEntity3D, Ray):
     def ydirection(self):
         """The y direction of the ray.
 
-        Positive infinity if the ray points in the positive y direction,
-        negative infinity if the ray points in the negative y direction,
-        or 0 if the ray is horizontal.
+        Returns
+        =======
 
-        See Also
-        ========
-
-        xdirection
+            Positive infinity if the ray points in the positive y direction,
+            negative infinity if the ray points in the negative y direction,
+            or 0 if the ray is horizontal.
 
         Examples
         ========
 
         >>> from sympy import Point3D, Ray3D
-        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(-1, -1, -1), Point3D(-1, 0, 0)
-        >>> r1, r2 = Ray3D(p1, p2), Ray3D(p1, p3)
+        >>> p1, p2, p3, p4 = Point3D(0, 0, 0), Point3D(-1, -1, -1), Point3D(-1, 0, 0), Point3D(0, 1, 0)
+        >>> r1, r2, r3 = Ray3D(p1, p2), Ray3D(p1, p3), Ray3D(p1, p4)
         >>> r1.ydirection
         -oo
         >>> r2.ydirection
         0
+        >>> r3.ydirection
+        oo
+
+        See Also
+        ========
+
+        xdirection, zdirection
 
         """
         if self.p1.y < self.p2.y:
@@ -2663,27 +2958,30 @@ class Ray3D(LinearEntity3D, Ray):
     def zdirection(self):
         """The z direction of the ray.
 
-        Positive infinity if the ray points in the positive z direction,
-        negative infinity if the ray points in the negative z direction,
-        or 0 if the ray is horizontal.
+        Returns
+        =======
 
-        See Also
-        ========
-
-        xdirection
+            Positive infinity if the ray points in the positive z direction,
+            negative infinity if the ray points in the negative z direction,
+            or 0 if the ray is horizontal.
 
         Examples
         ========
 
         >>> from sympy import Point3D, Ray3D
-        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(-1, -1, -1), Point3D(-1, 0, 0)
-        >>> r1, r2 = Ray3D(p1, p2), Ray3D(p1, p3)
-        >>> r1.ydirection
-        -oo
-        >>> r2.ydirection
+        >>> p1, p2, p3, p4 = Point3D(0, 0, 0), Point3D(1, 1, 0), Point3D(1, 1, 1), Point3D(1, 1, -1)
+        >>> r1, r2, r3 = Ray3D(p1, p2), Ray3D(p1, p3), Ray3D(p1, p4)
+        >>> r1.zdirection
         0
         >>> r2.zdirection
-        0
+        oo
+        >>> r3.zdirection
+        -oo
+
+        See Also
+        ========
+
+        xdirection, ydirection
 
         """
         if self.p1.z < self.p2.z:
@@ -2709,11 +3007,6 @@ class Segment3D(LinearEntity3D, Segment):
     length : number or sympy expression
     midpoint : Point3D
 
-    See Also
-    ========
-
-    sympy.geometry.point.Point3D, Line3D
-
     Examples
     ========
 
@@ -2729,6 +3022,11 @@ class Segment3D(LinearEntity3D, Segment):
     sqrt(17)
     >>> s.midpoint
     Point3D(5/2, 2, 8)
+
+    See Also
+    ========
+
+    sympy.geometry.point.Point3D, Line3D
 
     """
 
