@@ -29,6 +29,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
+from sympy.physics.control.lti import TransferFunction
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -52,7 +53,7 @@ import sympy as sym
 class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
-a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
+a, b, c, d, x, y, z, k, n, s, p = symbols('a,b,c,d,x,y,z,k,n,s,p')
 f = Function("f")
 th = Symbol('theta')
 ph = Symbol('phi')
@@ -2313,6 +2314,15 @@ u("""\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_pretty_TransferFunction():
+    tf1 = TransferFunction(s - 1, s + 1, s)
+    assert pretty(tf1) == 's - 1\n─────\ns + 1'
+    tf2 = TransferFunction(2*s + 1, 3 - p, s)
+    assert pretty(tf2) == '2⋅s + 1\n───────\n 3 - p '
+    tf3 = TransferFunction(p, p + 1, p)
+    assert pretty(tf3) == '  p  \n─────\np + 1'
 
 
 def test_pretty_order():

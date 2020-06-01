@@ -163,6 +163,11 @@ def test_TransferFunction_construction():
 
     raises(ValueError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
 
+    s, p = symbols('s, p', real=True)
+    raises(ValueError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, s))
+    raises(ValueError, lambda: TransferFunction(p + 1, 5 - p, p))
+    raises(ValueError, lambda: TransferFunction(s - 1, 4 - p, s))
+
 
 def test_TransferFunction_functions():
     # explicitly cancel poles and zeros.
@@ -177,9 +182,20 @@ def test_TransferFunction_functions():
     # purely symbolic polynomials.
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
-    tf_ = TransferFunction(p1, p2, s)
+    SP1 = TransferFunction(p1, p2, s)
     expect = TransferFunction(2*s + 1, 5*s**2 + 4*s + 3, s)
-    assert tf_.evalf(subs={a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect
+    assert SP1.evalf(subs={a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect
+
+    c1, d0, d1, d2 = symbols('c1, d0:3')
+    p3, p4 = c1*p, d2*p**3 + d1*p**2 - d0
+    SP2 = TransferFunction(p3, p4, p)
+    expect1 = TransferFunction(2*p, 5*p**3 + 2*p**2 - 3, p)
+    assert SP2.evalf(subs={c1: 2, d0: 3, d1: 2, d2: 5}) == expect1
+
+    p5 = a*s + b
+    SP3 = TransferFunction(p5, p, s)
+    expect2 = TransferFunction(3*s - 4, p, s)
+    assert SP3.evalf(subs={a: 3, b: -4}) == expect2
 
     # negation of TF.
     tf2 = TransferFunction(s + 3, s**2 - s**3 + 9, s)
