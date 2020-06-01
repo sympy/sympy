@@ -18,3 +18,22 @@ def test_elliptic_curve():
     assert EllipticCurve(-2731, -55146, 1, 0, 1).discriminant == 25088
     # Torsion points
     assert len(EllipticCurve(0, 1).torsion_points()) == 6
+
+    e1 = EllipticCurve(-17, 16, modulus=307)
+    assert e1(7, 213, 1)
+
+    # Discrete Log
+    e1 = EllipticCurve(319, 1007, modulus=2819)
+    p1 = e1(1201, 711)
+    p2 = e1(506, 435)
+    assert p1.discrete_log(p2) == 356
+    assert p1*356 == p2
+    assert p2.discrete_log(p1) == 421
+    assert p2*421 == p1
+    e1 = EllipticCurve(321, 231, modulus=509)
+    p1 = e1(422, 98)
+    p2 = e1(144, 210)
+    assert p1.discrete_log(p2) == 215
+    assert p1*215 == p2
+    assert p2.discrete_log(p1) == 17
+    assert p2*17 == p1

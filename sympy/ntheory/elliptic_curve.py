@@ -1,7 +1,7 @@
 from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
+from sympy.polys import Poly
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
 from sympy.solvers.solvers import solve
 from .factor_ import divisors
@@ -32,11 +32,11 @@ class EllipticCurve:
 
     """
 
-    def __init__(self, a4, a6, a1=0, a2=0, a3=0, modulus = 0):
+    def __init__(self, a4, a6, a1=0, a2=0, a3=0, modulus=0):
         if modulus == 0:
             domain = QQ
         else:
-            domain = FF(modulus)
+            domain = FF(modulus, symmetric=False)
         a1, a2, a3, a4, a6 = map(domain.convert, (a1, a2, a3, a4, a6))
         self._domain = domain
         self.modulus = modulus
@@ -54,7 +54,7 @@ class EllipticCurve:
         self._a6 = a6
         x, y, z = symbols('x y z')
         self.x, self.y, self.z = x, y, z
-        self._eq = Eq(y**2*z + a1*x*y*z + a3*y*z**2, x**3 + a2*x**2*z + a4*x*z**2 + a6*z**3)
+        self._eq = Poly(y**2*z + a1*x*y*z + a3*y*z**2 - x**3 - a2*x**2*z - a4*x*z**2 - a6*z**3, x, y, z, domain=domain)
         if isinstance(self._domain, FiniteField):
             self._rank = 0
         elif isinstance(self._domain, RationalField):
@@ -76,7 +76,9 @@ class EllipticCurve:
             raise ValueError('Invalid point.')
         if self.characteristic == 0 and z1 == 0:
             return True
-        return self._eq.subs({self.x: x1, self.y: y1, self.z: z1})
+        values = {self.x: x1, self.y: y1, self.z: z1}
+        val = self._eq.subs(values)
+        return val == 0
 
     def __repr__(self):
         return 'E({}): {}'.format(self._domain, self._eq)
@@ -92,7 +94,7 @@ class EllipticCurve:
 
         >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
         >>> e1.minimal()
-        E(QQ): Eq(y**2*z, x**3 - 13392*x*z**2 - 1080432*z**3)
+        E(QQ): Poly(-x**3 + 13392*x*z**2 + y**2*z + 1080432*z**3, x, y, z, domain='QQ')
 
         """
         char = self.characteristic
@@ -122,8 +124,8 @@ class EllipticCurve:
         all_pt = set()
         if char >= 1:
             for i in range(char):
-                congruence_eq = ((self._eq.lhs - self._eq.rhs).subs({self.x: i, self.z: 1}))
-                sol = polynomial_congruence(congruence_eq, char)
+                congruence_eq = self._eq.subs({self.x: i, self.z: 1})
+                sol = polynomial_congruence(congruence_eq.as_expr(), char)
                 for num in sol:
                     all_pt.add((i, num))
             return all_pt
@@ -136,8 +138,8 @@ class EllipticCurve:
         if self._domain == QQ:
             for y in solve(self._eq.subs(self.x, x)):
                     pt.append((x, y))
-        congruence_eq = ((self._eq.lhs - self._eq.rhs).subs({self.x: x, self.z: 1}))
-        for y in polynomial_congruence(congruence_eq, self.characteristic):
+        congruence_eq = self._eq.subs({self.x: x, self.z: 1})
+        for y in polynomial_congruence(congruence_eq.as_expr(), self.characteristic):
             pt.append((x, y))
         return pt
 
@@ -250,6 +252,7 @@ class EllipticCurve:
         """
         if self.characteristic == 0:
             raise NotImplementedError("Still not implemented")
+        # TODO : Implement Schoof's Algorithm to find order of finite curves
         return len(list(self.points()))
 
     @property
@@ -367,6 +370,45 @@ class EllipticCurvePoint:
 
     def __sub__(self, other):
         return self.__add__(-other)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.z == other.z
+
+    def __hash__(self):
+        return hash((self.x, self.y, self.z))
+
+    def discrete_log(self, p):
+        """
+        Elliptic Curve Discrete log.
+
+        """
+        from sympy import sqrt, ceiling
+        n = self._curve.modulus
+        if n == 0:
+            raise ValueError("Discrete log is valid for curves in finite field")
+
+        # Upper bound of order of the curve
+        # TODO : Use Schoof's algorithm to find order of the curve
+        m = ceiling(sqrt(n + 1 + 2 * sqrt(n)))
+
+        # TODO : Implement pollard's methods
+        def _baby_step(p1, p2, m):
+            table = {}
+            p_iter = p1 * 0
+            for i in range(m + 1):
+                table[p_iter] = i
+                p_iter += p1
+            p1_m = m * p1
+            p_iter = p1 * 0
+            for i in range(m + 1):
+                mul = p2 - p_iter
+                p_iter += p1_m
+                if mul in table:
+                    return table[mul] + i*m
+            raise ValueError("Log does not exist")
+
+        return _baby_step(self, p, m)
+
 
     def order(self):
         """
