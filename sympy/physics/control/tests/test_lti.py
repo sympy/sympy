@@ -151,22 +151,26 @@ def test_TransferFunction_construction():
     tf5_ = TransferFunction(s - 1, s - 1, s)
     assert tf5_.args == (s - 1, s - 1, s)
 
-    tf6 = TransferFunction(5, 6)
+    tf6 = TransferFunction(5, 6, s)
     assert tf6.num == 5
     assert tf6.den == 6
-    assert tf6.args == (5, 6)
+    assert tf6.args == (5, 6, s)
+
+    tf7 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, s)
+    tf8 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, p)
+    assert not tf7 == tf8
 
     # ValueError when denominator is zero.
-    raises(ValueError, lambda: TransferFunction(4, 0))
+    raises(ValueError, lambda: TransferFunction(4, 0, s))
     raises(ValueError, lambda: TransferFunction(s, 0, s))
-    raises(ValueError, lambda: TransferFunction(0, 0))
+    raises(ValueError, lambda: TransferFunction(0, 0, s))
 
     raises(ValueError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
 
-    s, p = symbols('s, p', real=True)
-    raises(ValueError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, s))
-    raises(ValueError, lambda: TransferFunction(p + 1, 5 - p, p))
-    raises(ValueError, lambda: TransferFunction(s - 1, 4 - p, s))
+    x, y = symbols('x, y', real=True)
+    raises(ValueError, lambda: TransferFunction(x**2 + 2*x - 1, x + 3, x))
+    raises(ValueError, lambda: TransferFunction(y + 1, 5 - y, y))
+    raises(ValueError, lambda: TransferFunction(x - 1, 4 - y, x))
 
 
 def test_TransferFunction_functions():
@@ -222,7 +226,7 @@ def test_TransferFunction_functions():
     tf_ = TransferFunction((s - 1)*(s + 3), s + 2, s)
     assert factor(tf) == TransferFunction(s - 1, (s - 1)**2, s)
     assert tf.num.subs(s, 2) == tf.den.subs(s, 2) == 1
-    assert tf.subs(s, 2) == TransferFunction(1, 1)
+    assert tf.subs(s, 2) == TransferFunction(1, 1, s)
     assert expand(tf_) == TransferFunction(s**2 + 2*s - 3, s + 2, s)
 
 
