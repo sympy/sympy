@@ -4918,13 +4918,18 @@ def test_sympy__vector__orienters__QuaternionOrienter():
     a, b, c, d = symbols('a b c d')
     assert _test_args(QuaternionOrienter(a, b, c, d))
 
+def test_sympy__vector__parametricregion__ParametricRegion():
+    from sympy.abc import t
+    from sympy.vector.coordsysrect import CoordSys3D
+    from sympy.vector.parametricregion import ParametricRegion
+    C = CoordSys3D('C')
+    assert _test_args(ParametricRegion(C, t, t**2, (t, 0, 1)))
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     from sympy.vector.coordsysrect import CoordSys3D
     C = CoordSys3D('C')
     assert _test_args(BaseScalar(0, C, ' ', ' '))
-
 
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
