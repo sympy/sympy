@@ -38,6 +38,6 @@ __all__ = [
 
     'Gradient', 'Divergence', 'Curl', 'Laplacian', 'gradient', 'curl',
     'divergence',
-    
+
     'ParametricRegion',
 ]
