@@ -15,87 +15,89 @@ class Point:
         self.x = x
         self.z = z
 
-def _pt_add(P, Q, diff, n):
-    """
-    Add two points P and Q where diff = P - Q.
+    @staticmethod
+    def _pt_add(P, Q, diff, n):
+        """
+        Add two points P and Q where diff = P - Q.
 
-    Parameters:
-    ===========
+        Parameters:
+        ===========
 
-    P : point on the curve in Montgomery form
-    Q : point on the curve in Montgomery form
-    diff = P - Q
-    n = modulus
+        P : point on the curve in Montgomery form
+        Q : point on the curve in Montgomery form
+        diff = P - Q
+        n = modulus
 
-    References
-    ==========
+        References
+        ==========
 
-    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
-        Algorithm - 3
-    """
+        .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+            Algorithm - 3
+        """
 
-    u = (P.x - P.z)*(Q.x + Q.z)
-    v = (P.x + P.z)*(Q.x - Q.z)
-    add, subt = u + v, u - v
-    x_cor = diff.z*add*add % n
-    z_cor = diff.x*subt*subt % n
-    return Point(x_cor, z_cor)
+        u = (P.x - P.z)*(Q.x + Q.z)
+        v = (P.x + P.z)*(Q.x - Q.z)
+        add, subt = u + v, u - v
+        x_cor = diff.z*add*add % n
+        z_cor = diff.x*subt*subt % n
+        return Point(x_cor, z_cor)
 
-def _pt_double(P, n, a24):
-    """
-    Doubles a point in an elliptic curve in Montgomery form.
+    @staticmethod
+    def _pt_double(P, n, a24):
+        """
+        Doubles a point in an elliptic curve in Montgomery form.
 
-    Parameter:
-    ==========
+        Parameter:
+        ==========
 
-    P : Point on the curve
-    a24 : Parameter for doubling
-    n : modulus
+        P : Point on the curve
+        a24 : Parameter for doubling
+        n : modulus
 
-    References
-    ==========
+        References
+        ==========
 
-    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
-        Algorithm - 3
-    """
+        .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+            Algorithm - 3
+        """
 
-    u, v = P.x + P.z, P.x - P.z
-    u, v = u*u, v*v
-    diff = u - v
-    x_cor = u*v % n
-    z_cor = diff*(v + a24*diff) % n
-    return Point(x_cor, z_cor)
+        u, v = P.x + P.z, P.x - P.z
+        u, v = u*u, v*v
+        diff = u - v
+        x_cor = u*v % n
+        z_cor = diff*(v + a24*diff) % n
+        return Point(x_cor, z_cor)
 
-def _mont_ladder(k, P, n, a24):
-    """
-    Scalar multiblication of a point in
-    Ellipic Curve in Montgomery form.
+    def _mont_ladder(self, k, n, a24):
+        """
+        Scalar multiblication of a point in
+        Ellipic Curve in Montgomery form.
 
-    Parameters:
-    ==========
+        Parameters:
+        ==========
 
-    k : The positive integer multiplier
-    P : Point on the curve in Montgomery form
-    n : modulus
-    a24 : Property of the curve
+        k : The positive integer multiplier
+        P : Point on the curve in Montgomery form
+        n : modulus
+        a24 : Property of the curve
 
-    References
-    ==========
+        References
+        ==========
 
-    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
-        Algorithm - 3
-    """
+        .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+            Algorithm - 3
+        """
 
-    Q = P
-    R = _pt_double(P, n, a24)
-    for i in bin(k)[3:]:
-        if  i  == '1':
-            Q = _pt_add(R, Q, P, n)
-            R = _pt_double(R, n, a24)
-        else:
-            R = _pt_add(Q, R, P, n)
-            Q = _pt_double(Q, n, a24)
-    return Q
+        Q = self
+        R = self._pt_double(self, n, a24)
+        for i in bin(k)[3:]:
+            if  i  == '1':
+                Q = self._pt_add(R, Q, self, n)
+                R = self._pt_double(R, n, a24)
+            else:
+                R = self._pt_add(Q, R, self, n)
+                Q = self._pt_double(Q, n, a24)
+        return Q
 
 def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     """Returns one factor of n using
@@ -158,7 +160,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
 
         a24 = (C + 2)*mod_inverse(4, n) % n
         Q = Point(u_3 , pow(v, 3, n))
-        Q = _mont_ladder(k, Q, n, a24)
+        Q = Q._mont_ladder(k, n, a24)
         g = gcd(Q.z, n)
 
         #Stage 1 factor
@@ -166,19 +168,19 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             return g
 
         #Stage 2 - Improved Standard Continuation
-        S[1] = _pt_double(Q, n, a24)
-        S[2] = _pt_double(S[1], n, a24)
+        S[1] = Q._pt_double(Q, n, a24)
+        S[2] = S[1]._pt_double(S[1], n, a24)
         beta[1] = (S[1].x*S[1].z) % n
         beta[2] = (S[2].x*S[2].z) % n
 
         for d in range(3, D + 1):
-            S[d] = _pt_add(S[d - 1], S[1], S[d - 2], n)
+            S[d] = S[d - 1]._pt_add(S[d - 1], S[1], S[d - 2], n)
             beta[d] = (S[d].x*S[d].z) % n
 
         g = 1
         B = B1 - 1
-        T = _mont_ladder(B - 2*D, Q, n, a24)
-        R = _mont_ladder(B, Q, n, a24)
+        T = Q._mont_ladder(B - 2*D, n, a24)
+        R = Q._mont_ladder(B, n, a24)
 
         for r in  range(B, B2, 2*D):
             alpha = (R.x*R.z) % n
@@ -188,7 +190,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
                 g = (g*f) % n
             #Swap
             TT = R
-            R = _pt_add(R, S[D], T, n)
+            R = R._pt_add(R, S[D], T, n)
             T = TT
         g = gcd(n, g)
 
