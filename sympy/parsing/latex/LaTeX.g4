@@ -20,6 +20,15 @@ options {
 
 WS: [ \t\r\n]+ -> skip;
 
+THINSPACE: ('\\,' | '\\thinspace') -> skip;
+MEDSPACE: ('\\:' | '\\medspace') -> skip;
+THICKSPACE: ('\\;' | '\\thickspace') -> skip;
+QUAD: '\\quad' -> skip;
+QQUAD: '\\qquad' -> skip;
+NEGTHINSPACE: ('\\!' | '\\negthinspace') -> skip;
+NEGMEDSPACE: '\\negmedspace' -> skip;
+NEGTHICKSPACE: '\\negthickspace' -> skip;
+
 ADD: '+';
 SUB: '-';
 MUL: '*';

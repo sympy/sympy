@@ -191,7 +191,20 @@ GOOD_PAIRS = [
     ("\\binom{n}{k}", _binomial(n, k)),
     ("\\tbinom{n}{k}", _binomial(n, k)),
     ("\\dbinom{n}{k}", _binomial(n, k)),
-    ("\\binom{n}{0}", _binomial(n, 0))
+    ("\\binom{n}{0}", _binomial(n, 0)),
+    ("a \\, b", _Mul(a, b)),
+    ("a \\thinspace b", _Mul(a, b)),
+    ("a \\: b", _Mul(a, b)),
+    ("a \\medspace b", _Mul(a, b)),
+    ("a \\; b", _Mul(a, b)),
+    ("a \\thickspace b", _Mul(a, b)),
+    ("a \\quad b", _Mul(a, b)),
+    ("a \\qquad b", _Mul(a, b)),
+    ("a \\! b", _Mul(a, b)),
+    ("a \\negthinspace b", _Mul(a, b)),
+    ("a \\negmedspace b", _Mul(a, b)),
+    ("a \\negthickspace b", _Mul(a, b)),
+    ("\\int x \\, dx", Integral(x, x)),
 ]
 
 def test_parseable():
