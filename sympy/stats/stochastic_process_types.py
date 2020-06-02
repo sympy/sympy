@@ -1369,7 +1369,7 @@ class WienerProcess(CountingProcess):
 class GammaProcess(CountingProcess):
     """
     A Gamma process is a random process with independent gamma distributed
-    increments.  It is a pure-jump increasing Lévy process.
+    increments.  It is a pure-jump increasing Levy process.
 
     Parameters
     ==========
