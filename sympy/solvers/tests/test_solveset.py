@@ -844,7 +844,7 @@ def test_solve_hyperbolic():
     assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
         log(sqrt(sqrt(5) - 2)))
     assert solveset_real(3*cosh(2*x) - 5, x) == FiniteSet(
-        log(sqrt(3)/3), log(sqrt(3)))
+        -log(3)/2, log(3)/2)
     assert solveset_real(sinh(x - 3) - 2, x) == FiniteSet(
         log((2 + sqrt(5))*exp(3)))
     assert solveset_real(cosh(2*x) + 2*sinh(x) - 5, x) == FiniteSet(
@@ -852,7 +852,7 @@ def test_solve_hyperbolic():
     assert solveset_real((coth(x) + sinh(2*x))/cosh(x) - 3, x) == FiniteSet(
         log(S.Half + sqrt(5)/2), log(1 + sqrt(2)))
     assert solveset_real(cosh(x)*sinh(x) - 2, x) == FiniteSet(
-        log(sqrt(4 + sqrt(17))))
+        log(4 + sqrt(17))/2)
     assert solveset_real(sinh(x) + tanh(x) - 1, x) == FiniteSet(
         log(sqrt(2)/2 + sqrt(-S(1)/2 + sqrt(2))))
     assert dumeq(solveset_complex(sinh(x) - I/2, x), Union(

@@ -42,7 +42,7 @@ from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf, factor)
+                         RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.solvers.solvers import (checksol, denoms, unrad,
@@ -558,22 +558,54 @@ def _solve_trig(f, symbol, domain):
 
 def _solve_trig1(f, symbol, domain):
     """Primary helper to solve trigonometric and hyperbolic equations"""
+    # Prepare change of variable
+    x = Dummy('x')
     if _is_function_class_equation(HyperbolicFunction, f, symbol):
-        cov = exp(symbol)
+        cov = exp(x)
         inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
     else:
-        cov = exp(I*symbol)
+        cov = exp(I*x)
         inverter = invert_complex
+
     f = trigsimp(f)
     f_original = f
+    trig_functions = f.atoms(TrigonometricFunction, HyperbolicFunction)
+    trig_arguments = [e.args[0] for e in trig_functions]
+    # trigsimp may have reduced the equation to an expression
+    # that is independent of 'symbol' (e.g. cos**2+sin**2)
+    if not any(a.has(symbol) for a in trig_arguments):
+        return solveset(f_original, symbol, domain)
+
+    denominators = []
+    numerators = []
+    for ar in trig_arguments:
+        try:
+            poly_ar = Poly(ar, symbol)
+        except ValueError:
+            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+        if poly_ar.degree() > 1:  # degree >1 still bad
+            raise ValueError("degree of variable inside polynomial should not exceed one")
+        if poly_ar.degree() == 0:  # degree 0, don't care
+            continue
+        c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
+        numerators.append(fraction(c)[0])
+        denominators.append(fraction(c)[1])
+
+    # lcm() and gcd() require more than one argument
+    if len(numerators) > 1:
+        mu = lcm(*denominators)/gcd(*numerators)
+    else:
+        mu = denominators[0]/numerators[0]
+
+    f = f.subs(symbol, mu*x)
     f = f.rewrite(exp)
     f = together(f)
     g, h = fraction(f)
     y = Dummy('y')
     g, h = g.expand(), h.expand()
     g, h = g.subs(cov, y), h.subs(cov, y)
-    if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), domain)
+    if g.has(x) or h.has(x):
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
     if isinstance(solns, ConditionSet):
@@ -582,6 +614,8 @@ def _solve_trig1(f, symbol, domain):
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
             raise NotImplementedError
+        # revert the change of variable
+        cov = cov.subs(x, symbol/mu)
         result = Union(*[inverter(cov, s, symbol)[1] for s in solns])
         # avoid spurious intersections with C in solution set
         if domain is S.Complexes:
