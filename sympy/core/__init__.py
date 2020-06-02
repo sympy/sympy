@@ -6,6 +6,7 @@ from .cache import cacheit
 from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
 from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
+from .equation import Equation, Eqn
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var
 from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
@@ -46,6 +47,8 @@ __all__ = [
     'Basic', 'Atom', 'preorder_traversal',
 
     'S',
+
+    'Equation', 'Eqn',
 
     'Expr', 'AtomicExpr', 'UnevaluatedExpr',
 
