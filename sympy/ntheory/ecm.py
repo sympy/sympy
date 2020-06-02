@@ -16,7 +16,7 @@ class Point:
         self.z = z
 
     @staticmethod
-    def _pt_add(P, Q, diff, n):
+    def add(P, Q, diff, n):
         """
         Add two points P and Q where diff = P - Q.
 
@@ -43,7 +43,7 @@ class Point:
         return Point(x_cor, z_cor)
 
     @staticmethod
-    def _pt_double(P, n, a24):
+    def double(P, n, a24):
         """
         Doubles a point in an elliptic curve in Montgomery form.
 
@@ -68,7 +68,7 @@ class Point:
         z_cor = diff*(v + a24*diff) % n
         return Point(x_cor, z_cor)
 
-    def _mont_ladder(self, k, n, a24):
+    def mont_ladder(self, k, n, a24):
         """
         Scalar multiblication of a point in
         Ellipic Curve in Montgomery form.
@@ -89,14 +89,14 @@ class Point:
         """
 
         Q = self
-        R = self._pt_double(self, n, a24)
+        R = self.double(self, n, a24)
         for i in bin(k)[3:]:
             if  i  == '1':
-                Q = self._pt_add(R, Q, self, n)
-                R = self._pt_double(R, n, a24)
+                Q = self.add(R, Q, self, n)
+                R = self.double(R, n, a24)
             else:
-                R = self._pt_add(Q, R, self, n)
-                Q = self._pt_double(Q, n, a24)
+                R = self.add(Q, R, self, n)
+                Q = self.double(Q, n, a24)
         return Q
 
 def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
@@ -160,7 +160,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
 
         a24 = (C + 2)*mod_inverse(4, n) % n
         Q = Point(u_3 , pow(v, 3, n))
-        Q = Q._mont_ladder(k, n, a24)
+        Q = Q.mont_ladder(k, n, a24)
         g = gcd(Q.z, n)
 
         #Stage 1 factor
@@ -168,19 +168,19 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             return g
 
         #Stage 2 - Improved Standard Continuation
-        S[1] = Q._pt_double(Q, n, a24)
-        S[2] = S[1]._pt_double(S[1], n, a24)
+        S[1] = Q.double(Q, n, a24)
+        S[2] = S[1].double(S[1], n, a24)
         beta[1] = (S[1].x*S[1].z) % n
         beta[2] = (S[2].x*S[2].z) % n
 
         for d in range(3, D + 1):
-            S[d] = S[d - 1]._pt_add(S[d - 1], S[1], S[d - 2], n)
+            S[d] = S[d - 1].add(S[d - 1], S[1], S[d - 2], n)
             beta[d] = (S[d].x*S[d].z) % n
 
         g = 1
         B = B1 - 1
-        T = Q._mont_ladder(B - 2*D, n, a24)
-        R = Q._mont_ladder(B, n, a24)
+        T = Q.mont_ladder(B - 2*D, n, a24)
+        R = Q.mont_ladder(B, n, a24)
 
         for r in  range(B, B2, 2*D):
             alpha = (R.x*R.z) % n
@@ -190,7 +190,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
                 g = (g*f) % n
             #Swap
             TT = R
-            R = R._pt_add(R, S[D], T, n)
+            R = R.add(R, S[D], T, n)
             T = TT
         g = gcd(n, g)
 
