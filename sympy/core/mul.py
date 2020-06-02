@@ -92,6 +92,8 @@ class Mul(Expr, AssocOp):
 
     is_Mul = True
 
+    _args_type = Expr
+
     def __neg__(self):
         c, args = self.as_coeff_mul()
         c = -c
