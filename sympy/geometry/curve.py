@@ -177,6 +177,24 @@ class Curve(GeometrySet):
 
     @property
     def ambient_dimension(self):
+        """The dimension of the curve.
+
+        Returns
+        =======
+
+        int:
+            returns the dimension of curve.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve((t, t**2), (t, 0, 2))
+        >>> C.ambient_dimension
+        2
+
+        """
         return len(self.args[0])
 
     @property
