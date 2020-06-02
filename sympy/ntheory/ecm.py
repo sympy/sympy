@@ -166,6 +166,9 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         #Stage 1 factor
         if g != 1 and g != n:
             return g
+        #Stage 1 failure. Q.z = 0, Try another curve
+        elif g == n:
+            continue
 
         #Stage 2 - Improved Standard Continuation
         S[1] = Q.double(Q, n, a24)
