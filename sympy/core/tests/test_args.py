@@ -4923,7 +4923,7 @@ def test_sympy__vector__parametricregion__ParametricRegion():
     from sympy.vector.coordsysrect import CoordSys3D
     from sympy.vector.parametricregion import ParametricRegion
     C = CoordSys3D('C')
-    assert _test_args(ParametricRegion(C, t, t**2, (t, 0, 1)))
+    assert _test_args(ParametricRegion(t, t**2, (t, 0, 1), system=C))
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar

@@ -3,46 +3,46 @@ from sympy.core.basic import Basic
 class ParametricRegion(Basic):
     """
     Represents a parametric region in space.
-    """
-    def __init__(self, system, *args):
-        """
-        Examples
-        ========
 
-        >>> from sympy import symbols, cos, sin, pi
-        >>> from sympy.vector import CoordSys3D, ParametricRegion
-        >>> r, theta = symbols("r theta")
-        >>> C = CoordSys3D('C')
-        >>> circle = ParametricRegion(C, r*cos(theta), r*sin(theta), (theta, 0, 2*pi))
-        """
-        self._definition = list()
-        self._bounds = list()
-        self._parameters = list()
-        self.system = system
+    Examples
+    ========
+
+    >>> from sympy import symbols, cos, sin, pi
+    >>> from sympy.vector import ParametricRegion
+    >>> r, theta = symbols("r theta")
+    >>> circle = ParametricRegion(r*cos(theta), r*sin(theta), (theta, 0, 2*pi))
+    """
+    def __new__(cls, *args, system=None):
+        definition = list()
+        bounds = list()
+        parameters = list()
 
         for arg in args:
             if isinstance(arg, tuple):
-                self.bounds.append(arg)
+                bounds.append(arg)
             else:
-                self.definition.append(arg)
+                definition.append(arg)
 
-        if len(self.definition) > 3:
-            raise ValueError("Only 3-D regions are supported")
+        for elem in bounds:
+            parameters.append(elem[0])
 
-        if len(self.bounds) > 3:
-            raise ValueError("Only 3-D regions are supported")
+        obj = super().__new__(cls, definition, bounds, parameters, system)
+        obj._system = system
 
-        for elem in self.bounds:
-            self.parameters.append(elem[0])
-
-    @property
-    def definition(self):
-        return self._definition
+        return obj
 
     @property
     def bounds(self):
-        return self._bounds
+        return self.args[1]
+
+    @property
+    def definition(self):
+        return self.args[0]
 
     @property
     def parameters(self):
-        return self._parameters
+        return self.args[2]
+
+    @property
+    def system(self):
+        return self._system
