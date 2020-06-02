@@ -6,7 +6,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial,
-                   Union, Expr, Function, exp, cacheit, sqrt, pi,
+                   Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -18,7 +18,7 @@ from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
 from sympy.stats.drv_types import Poisson, PoissonDistribution
-from sympy.stats.crv_types import Normal, NormalDistribution
+from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify
 
 __all__ = [
@@ -31,7 +31,8 @@ __all__ = [
     'ContinuousMarkovChain',
     'BernoulliProcess',
     'PoissonProcess',
-    'WienerProcess'
+    'WienerProcess',
+    'GammaProcess'
 ]
 
 
@@ -1363,3 +1364,71 @@ class WienerProcess(CountingProcess):
 
     def simple_rv(self, rv):
         return Normal(rv.name, 0, sqrt(rv.key))
+
+
+class GammaProcess(CountingProcess):
+    """
+    A Gamma process is a random process with independent gamma distributed
+    increments.  It is a pure-jump increasing Lévy process.
+
+    Parameters
+    ==========
+
+    sym: Symbol/str
+    lamda: Positive number
+        Jump size of the process, ``lamda > 0``
+    gama: Positive number
+        Rate of jump arrivals, ``gama > 0``
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GammaProcess, E, P, variance
+    >>> from sympy import symbols, Contains, Interval, Not
+    >>> t, d, x, l, g = symbols('t d x l g', positive=True)
+    >>> X = GammaProcess("X", l, g)
+    >>> E(X(t))
+    g*t/l
+    >>> variance(X(t)).simplify()
+    g*t/l**2
+    >>> X = GammaProcess('X', 1, 2)
+    >>> P(X(t) < 1).simplify()
+    lowergamma(2*t, 1)/gamma(2*t)
+    >>> P(Not((X(t) < 5) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) &
+    ... Contains(X(d), Interval.Lopen(7, 8))).simplify()
+    -4*exp(-3) + 472*exp(-8)/3 + 1
+    >>> E(X(2) + x*E(X(5)))
+    10*x + 4
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Gamma_process
+
+    """
+    def __new__(cls, sym, lamda, gama):
+        _value_check(lamda > 0, 'lamda should be a positive number')
+        _value_check(gama > 0, 'gama should be a positive number')
+        sym = _symbol_converter(sym)
+        gama = _sympify(gama)
+        lamda = _sympify(lamda)
+        return Basic.__new__(cls, sym, lamda, gama)
+
+    @property
+    def lamda(self):
+        return self.args[1]
+
+    @property
+    def gama(self):
+        return self.args[2]
+
+    def distribution(self, rv):
+        return GammaDistribution(self.gama*rv.key, 1/self.lamda)
+
+    def density(self, x):
+        k = self.gama*x.key
+        theta = 1/self.lamda
+        return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
+
+    def simple_rv(self, rv):
+        return Gamma(rv.name, self.gama*rv.key, 1/self.lamda)

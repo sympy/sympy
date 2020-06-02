@@ -1688,6 +1688,10 @@ def test_sympy__stats__stochastic_process_types__WienerProcess():
     from sympy.stats.stochastic_process_types import WienerProcess
     assert _test_args(WienerProcess("X"))
 
+def test_sympy__stats__stochastic_process_types__GammaProcess():
+    from sympy.stats.stochastic_process_types import GammaProcess
+    assert _test_args(GammaProcess("X", 1, 2))
+
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
     from sympy.stats.random_matrix_models import RandomMatrixEnsemble

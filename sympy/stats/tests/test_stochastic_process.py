@@ -1,16 +1,18 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
-                   Piecewise, factorial, Interval, oo, Contains, sqrt, pi)
+                   Piecewise, factorial, Interval, oo, Contains, sqrt, pi,
+                   gamma, lowergamma)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
-                         BernoulliProcess, PoissonProcess, WienerProcess)
+                         BernoulliProcess, PoissonProcess, WienerProcess,
+                         GammaProcess)
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.testing.pytest import raises
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
-from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.crv_types import NormalDistribution, GammaDistribution
 
 
 def test_DiscreteMarkovChain():
@@ -197,6 +199,7 @@ def test_BernoulliProcess():
     raises(ValueError, lambda: P(3))
     raises(ValueError, lambda: P(B[3] > 0, 3))
 
+
 def test_PoissonProcess():
     X = PoissonProcess("X", 3)
     assert X.state_space == Interval(0, oo)
@@ -263,6 +266,7 @@ def test_PoissonProcess():
     assert M.lamda == 5
     raises(ValueError, lambda: Z.split(3, 2))
 
+
 def test_WienerProcess():
     X = WienerProcess("X")
     assert X.state_space == Interval(0, oo)
@@ -300,3 +304,49 @@ def test_WienerProcess():
     & Contains(X(d), Interval.Ropen(1, 2))) == Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2),
     Contains(X(d), Interval.Ropen(1, 2)) & Contains(X(t), Interval.Lopen(0, 1)))
     assert E(X(t) + x*E(X(3))) == 0
+
+
+def test_GammaProcess_symbolic():
+    t, d, x, y, g, l = symbols('t d x y g l', positive=True)
+    X = GammaProcess("X", l, g)
+
+    raises(NotImplementedError, lambda: X[t])
+    raises(IndexError, lambda: X(-1))
+    assert isinstance(X(t), RandomIndexedSymbol)
+
+    assert X.distribution(X(t)) == GammaDistribution(g*t, 1/l)
+    assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
+        (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g
+        - 1)/(gamma(3*g)*gamma(5*g))))
+    assert E(X(t)) == g*t/l
+    assert variance(X(t)).simplify() == g*t/l**2
+    assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(X(t), Interval.Lopen(0, 1))
+        & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(y), Interval.Ropen(3, 4))) == \
+            2*g/l + (g**2 + g)/l**2 + (g**3 + 3*g**2 + 2*g)/l**3
+
+    assert P(X(t) > 3, Contains(X(t), Interval.Lopen(3, 4))).simplify() == \
+                                1 - lowergamma(g, 3*l)/gamma(g)
+
+def test_GammaProcess_numeric():
+    t, d, x, y = symbols('t d x y', positive=True)
+    X = GammaProcess("X", 1, 2)
+    assert X.state_space == Interval(0, oo)
+    assert X.index_set == Interval(0, oo)
+    assert X.lamda == 1
+    assert X.gama == 2
+
+    raises(ValueError, lambda: GammaProcess("X", -1, 2))
+    raises(ValueError, lambda: GammaProcess("X", 0, -2))
+    raises(ValueError, lambda: GammaProcess("X", -1, -2))
+
+    assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1), Contains(X(t),
+        Interval.Lopen(0, 1)) & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(x),
+        Interval.Lopen(2, 3)) & Contains(X(y), Interval.Lopen(3, 4))).simplify() == \
+                                                            120*exp(-10)
+    assert P(Not((X(t) < 5) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) &
+        Contains(X(d), Interval.Lopen(7, 8))).simplify() == -4*exp(-3) + 472*exp(-8)/3 + 1
+    assert P((X(t) > 2) | (X(t) < 4), Contains(X(t), Interval.Ropen(1, 4))).simplify() == \
+                                            -643*exp(-4)/15 + 109*exp(-2)/15 + 1
+
+    assert E(X(t)) == 2*t
+    assert E(X(2) + x*E(X(5))) == 10*x + 4
