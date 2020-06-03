@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi,
-                   gamma, lowergamma)
+                   gamma, lowergamma, Sum)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -155,7 +155,7 @@ def test_BernoulliProcess():
     H, T = symbols("H,T")
     assert E(X[1]+X[2]*X[3]) == H**2/9 + 4*H*T/9 + H/3 + 4*T**2/9 + 2*T/3
 
-    t = symbols('t', positive=True, integer=True)
+    t, x = symbols('t, x', positive=True, integer=True)
     assert isinstance(B[t], RandomIndexedSymbol)
 
     raises(ValueError, lambda: BernoulliProcess("X", p=1.1, success=1, failure=0))
@@ -198,6 +198,17 @@ def test_BernoulliProcess():
     assert P(B[5] > 0, B[5]) == BernoulliDistribution(0.6, 0, 1)
     raises(ValueError, lambda: P(3))
     raises(ValueError, lambda: P(B[3] > 0, 3))
+
+    # test issue 19456
+    expr = Sum(B[t], (t, 0, 4))
+    expr2 = Sum(B[t], (t, 1, 3))
+    expr3 = Sum(B[t]**2, (t, 1, 3))
+    assert expr.doit() == B[0] + B[1] + B[2] + B[3] + B[4]
+    assert expr2.doit() == Y
+    assert expr3.doit() == B[1]**2 + B[2]**2 + B[3]**2
+    assert B[2*t].free_symbols == {B[2*t], t}
+    assert B[4].free_symbols == {B[4]}
+    assert B[x*t].free_symbols == {B[x*t], x, t}
 
 
 def test_PoissonProcess():
