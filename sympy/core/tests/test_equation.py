@@ -6,20 +6,17 @@ from pytest import raises
 
 def test_define_equation():
     a,b,c=var('a b c')
-    raises(NotImplementedError, lambda: Equation(a,b/c,'>'))
     tsteqn = Eqn(a,b/c)
-    assert Equation(a,b/c) == Equation(a,b/c,'=')
-    assert tsteqn == Equation(a,b/c, '=')
-    assert tsteqn.lhs == Equation(a,b/c,'=').args[0]
-    assert tsteqn.rhs == Equation(a,b/c,'=').args[1]
-    assert tsteqn.relop == Equation(a,b/c,'=').args[2]
+    assert tsteqn == Equation(a,b/c)
+    assert tsteqn.lhs == Equation(a,b/c).args[0]
+    assert tsteqn.rhs == Equation(a,b/c).args[1]
     assert tsteqn.free_symbols == {a, b, c}
     
 def test_convert_equation():
     a,b,c=var('a b c')
     tsteqn = Eqn(a,b/c)
     assert tsteqn.as_Boolean() == Equality(a,b/c)
-    assert tsteqn.reversed == Equation(b/c,a,'=')
+    assert tsteqn.reversed == Equation(b/c,a)
     
 def test_binary_op():
     a,b,c=var('a b c')

@@ -2,17 +2,9 @@
 Algebraic Equations with SymPy
 ==============================
 
-author: Jonathan Gutow <gutow@uwosh.edu>
-
-Overrides of binary binary operations based on suggestions from [Oscar Benjamin](https://github.com/oscarbenjamin) 
-
-date: May 2020
-
-license: GPL V3+
-
 These tools define relations that all high school and college students would recognize as mathematical equations.
 They consist of a left hand side (lhs) and a right hand side (rhs) connected by a relation operator such as "=". At
-present only the "=" relation operator is recognized.
+present the "=" relation operator is the only option. The relation operator may not be set.
 
 This class should not be confused with the Boolean class ``Equality`` (abbreviated ``Eq``) which specifies
 that the equality of two expressions is ``True``.
@@ -25,33 +17,15 @@ in a stepwise fashion. In this way more people can successfully perform algebrai
 over missed details such as a negative sign. This mimics the capabilities available in [SageMath]
 (https://www.sagemath.org/) and [Maxima](http://maxima.sourceforge.net/), but can be installed in a generic python
 environment.
-
-_Setup/Installation_: Currently this tool is not available as a pip installable package. The file ``algebraic_equation.py``
-must be available for import in the directory space of the active Python, IPython or Jupyter notebook. To activate issue
-the command: ``from algebraic_equation import *``. This will also import the SymPy tools. If you want to isolate this tool
-from the global namespace you are working with change the import statement to ``import algebraic_equation as spa``, where 
-``spa`` stands for "SymPy Algebra". Then all calls would be made to ``spa.funcname()``.
-
-Usage examples can be found in the docstrings and the demonstration Jupyter notebook ``Demonstration of algebraic_equation.py.ipynb``.
-
-J.G 28-5-20
 """
 
 from .basic import Basic
 from .sympify import _sympify
-'''
-from sympy.simplify import simplify
-from sympy.core import Function
-from sympy.functions import *
-from sympy import functions
-from sympy import factorial
-'''
-
-#from sympy import * # Replace with more selective import when folded into SymPy
 
 class Equation(Basic):
     """
-    This class defines an equation with a left-hand-side (lhs) and a right-hand-side (rhs) connected by an operator (e.g. $p*V = n*R*T$).
+    This class defines an equation with a left-hand-side (lhs) and a right-hand-side (rhs) connected by the "=" operator 
+    (e.g. $p*V = n*R*T$).
     
     Explanation
     ===========
@@ -62,11 +36,8 @@ class Equation(Basic):
     in a stepwise fashion. In this way more people can successfully perform algebraic rearrangements without stumbling
     over missed details such as a negative sign.
     
-    __Note__ that this module imports Sympy into its namespace so there is no need to import Sympy separately.
-    
-    Create an equation with the call ``Equation(lhs,rhs,relation_operator)``, where ``lhs`` and ``rhs`` are any valid Sympy
-    expression. ``relation_operator`` defaults to the string "=" if not supplied. Currently,"=" is the only valid option.
-    ``Eqn(...)`` is a synonym for ``Equation(...)``.
+    Create an equation with the call ``Equation(lhs,rhs)``, where ``lhs`` and ``rhs`` are any valid Sympy
+    expression. ``Eqn(...)`` is a synonym for ``Equation(...)``.
     
     Examples
     ========
@@ -109,9 +80,7 @@ class Equation(Basic):
     [b/a]
     """
 
-    def __new__(cls, lhs, rhs, relop='='):
-        if not(relop == '='):
-           raise NotImplementedError('"=" is the only relational operator presently supported in Equations.')
+    def __new__(cls, lhs, rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if (lhs.is_number) and (rhs.is_number) and not (lhs == rhs):
@@ -209,8 +178,6 @@ class Equation(Basic):
 # Overrides of binary math operations
 #####
 
-    _op_priority = 11.0 # This makes sure the rules for equations are applied before those for expressions
-                        # which have _op_priority = 10.0
     @classmethod
     def _binary_op(cls, a, b, opfunc_ab):
         if isinstance(a, Equation) and not isinstance(b, Equation):
