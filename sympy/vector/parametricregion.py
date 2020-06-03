@@ -23,6 +23,10 @@ class ParametricRegion(Basic):
             else:
                 definition.append(arg)
 
+        for bound in bounds:
+            if len(bound) != 3:
+                raise ValueError("Parameters should be specified in the form (paramteter, lower bound, upper bound)")
+
         for elem in bounds:
             parameters.append(elem[0])
 
