@@ -83,9 +83,9 @@ class Equation(Basic):
     def __new__(cls, lhs, rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        if (lhs.is_number) and (rhs.is_number) and not (lhs == rhs):
-           print('WARNING: did your really mean to define unequal numbers as equal? ' + str(lhs) +'='+ str(rhs))
-        return super().__new__(cls, lhs, rhs, relop)
+        if (lhs.is_number) and (rhs.is_number) and (lhs != rhs):
+           print('WARNING: did your really mean to define unequal numbers as equal? ' + str(lhs) + '=' + str(rhs))
+        return super().__new__(cls, lhs, rhs)
 
     @property
     def lhs(self):
@@ -101,13 +101,6 @@ class Equation(Basic):
         """
         return self.args[1]
     
-    @property
-    def relop(self):
-        """
-        Returns the string representing the relationship operator.
-        """
-        return self.args[2]
-
     def as_Boolean(self):
         """
         Converts the equation to an Equality.
@@ -121,12 +114,6 @@ class Equation(Basic):
         Swaps the lhs and the rhs.
         """
         return Equation(self.rhs, self.lhs)
-    
-    @property
-    def free_symbols(self):
-        ret =self.lhs.free_symbols 
-        ret.update(self.rhs.free_symbols)
-        return ret
 
     def _applyfunc(self, func, *args, **kwargs):
         # Assume if the expression has an attribute of name `func` that should override any general function
@@ -135,7 +122,7 @@ class Equation(Basic):
         # not support the operation.
 
         side=kwargs.pop('Eqn_apply_side',None)
-        if (side=='both'):
+        if (side == 'both'):
             if (hasattr(self.lhs,str(func))) or (hasattr(self.rhs,str(func))):
                 return Equation(getattr(self.lhs,str(func))(*args, **kwargs),getattr(self.rhs,str(func))(*args, **kwargs))
             else:
@@ -232,11 +219,11 @@ class Equation(Basic):
 # Output helper functions
 #####
     def __repr__(self):
-        return(str(self.lhs)+self.relop+str(self.rhs))
+        return(str(self.lhs) + '=' + str(self.rhs))
 
     def _latex(self,obj,**kwargs):
         from sympy.printing import latex
-        return(latex(self.lhs)+self.relop+latex(self.rhs))
+        return(latex(self.lhs) + '=' + latex(self.rhs))
 
     def __str__(self):
         return(self.__repr__())
@@ -301,26 +288,5 @@ class Equation(Basic):
                 raise AttributeError('`side` must equal "lhs" or "rhs".')
 
 Eqn = Equation
-'''
-#####
-# Extension of the Function class. For incorporation into SymPy this should become part of the class
-#####
-class Function(Function):
-    def __new__(cls, *arg, **kwargs):
-        if (hasattr(arg[0],'applyfunc')):
-            return(arg[0].applyfunc(cls,*arg[1:],**kwargs))
-        else:
-            return(super().__new__(cls, *arg, **kwargs))
 
-for func in functions.__all__: # TODO: This will not be needed when incorporated into SymPy
-    # listed in `skip` cannot be extended because of `mro` error or `metaclass conflict`. Seems to reflect
-    #   expectation that a helper function will be defined within the object (e.g. `_eval_power()` for
-    #   all the flavors of `root`).
-    skip=('sqrt','root','Min','Max','Id','real_root','cbrt','unbranched_argument','polarify','unpolarify',
-         'piecewise_fold','E1','Eijk','bspline_basis','bspline_basis_set','interpolating_spline','jn_zeros',
-          'jacobi_normalized','Ynm_c')
-    if func not in skip:
-        execstr = 'class '+str(func)+'('+str(func)+',Function):\n    pass\n'
-        exec(execstr,globals(),locals())
-'''
 
