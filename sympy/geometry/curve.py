@@ -183,7 +183,7 @@ class Curve(GeometrySet):
         =======
 
         int:
-            returns the dimension of curve.
+            the dimension of curve.
 
         Examples
         ========
