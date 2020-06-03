@@ -31,7 +31,6 @@ class ParametricRegion(Basic):
             parameters.append(elem[0])
 
         obj = super().__new__(cls, definition, bounds, parameters, system)
-        obj._system = system
 
         return obj
 
@@ -49,4 +48,4 @@ class ParametricRegion(Basic):
 
     @property
     def system(self):
-        return self._system
+        return self.args[3]
