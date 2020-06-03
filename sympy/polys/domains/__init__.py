@@ -1,11 +1,15 @@
 """Implementation of mathematical domains. """
 
-__all__ = ['Domain', 'FiniteField', 'IntegerRing', 'RationalField',
-           'RealField', 'ComplexField', 'PythonFiniteField',
-           'GMPYFiniteField', 'PythonIntegerRing',
-           'GMPYIntegerRing', 'PythonRational',
-           'GMPYRationalField', 'AlgebraicField', 'PolynomialRing',
-           'FractionField', 'ExpressionDomain', 'PythonRational']
+__all__ = [
+    'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
+    'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
+    'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
+    'GMPYRationalField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
+    'ExpressionDomain', 'PythonRational',
+
+    'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX',
+]
 
 from .domain import Domain
 from .finitefield import FiniteField
@@ -55,10 +59,3 @@ from .gaussiandomains import ZZ_I, QQ_I
 GF = FF
 
 EX = ExpressionDomain()
-
-__all__.extend([
-    "FF_python", "FF_gmpy",
-    "ZZ_python", "ZZ_gmpy",
-    "QQ_python", "QQ_gmpy",
-    "GF", "FF", "ZZ", "QQ", "ZZ_I", "QQ_I", "RR", "CC", "EX",
-])
