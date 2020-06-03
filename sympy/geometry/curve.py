@@ -314,7 +314,7 @@ class Curve(GeometrySet):
         return [t] + list(self.limits[1:])
 
     def rotate(self, angle=0, pt=None):
-        """This function is used to rotate a curve along given point at given angle.
+        """This function is used to rotate a curve along given point ``pt`` at given angle(in radian).
 
         Parameters
         ==========
