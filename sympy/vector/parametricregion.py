@@ -25,7 +25,7 @@ class ParametricRegion(Basic):
 
         for bound in bounds:
             if len(bound) != 3:
-                raise ValueError("Parameters should be specified in the form (paramteter, lower bound, upper bound)")
+                raise ValueError("Parameters should be specified in the form (parameter, lower bound, upper bound)")
 
         for elem in bounds:
             parameters.append(elem[0])
