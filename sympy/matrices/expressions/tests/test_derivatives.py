@@ -9,7 +9,7 @@ from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
                    HadamardProduct, HadamardPower, KroneckerDelta, Sum,
                    Rational)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
-from sympy.matrices.expressions import hadamard_power
+from sympy.matrices.expressions import hadamard_power, SingleEntryMatrix
 
 k = symbols("k")
 i, j = symbols("i j")
@@ -68,6 +68,12 @@ def test_matrix_derivative_by_scalar():
     mu = symbols("mu")
     expr = (2*mu*x)
     assert expr.diff(x) == 2*mu*Identity(k)
+
+
+def test_matrix_derivative_by_matrix_element():
+    M = MatrixSymbol('M', 2, 2)
+    assert M[1, 1].diff(M) == SingleEntryMatrix(2, 2, 1, 1)
+    assert M.diff(M[0, 0]) == SingleEntryMatrix(2, 2, 0, 0)
 
 
 def test_matrix_derivative_non_matrix_result():

@@ -8,8 +8,9 @@ from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint, NonSquareMatrixError)
-from sympy.matrices.expressions.matexpr import (MatrixElement,
-                                                GenericZeroMatrix, GenericIdentity, OneMatrix)
+from sympy.matrices.expressions.matexpr import (
+    MatrixElement, GenericZeroMatrix, GenericIdentity, OneMatrix,
+    SingleEntryMatrix)
 from sympy.testing.pytest import raises, XFAIL
 
 
@@ -237,6 +238,30 @@ def test_Identity_doit():
     assert isinstance(Inn.rows, Add)
     assert Inn.doit() == Identity(2*n)
     assert isinstance(Inn.doit().rows, Mul)
+
+
+def test_SingleEntryMatrix():
+    assert SingleEntryMatrix(2, 2, 0, 0).as_explicit() == \
+        ImmutableMatrix([[1, 0], [0, 0]])
+    assert SingleEntryMatrix(2, 2, 1, 1).as_explicit() == \
+        ImmutableMatrix([[0, 0], [0, 1]])
+    raises(ValueError, lambda: SingleEntryMatrix(2, 2, 2, 2))
+    raises(ValueError, lambda: SingleEntryMatrix(2, 2, -1, -1))
+    raises(ValueError, lambda: SingleEntryMatrix(-1, -1, 0, 0))
+
+    n = Symbol('n', integer=False)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, 3, 3))
+    n = Symbol('n', integer=True, negative=True)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, 3, 3))
+    n = Symbol('n', integer=True, positive=True)
+    assert SingleEntryMatrix(n, n, 3, 3)
+
+    i, j = symbols('i j', integer=False)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, i, j))
+    i, j = symbols('i j', integer=True, nonnegative=False)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, i, j))
+    i, j = symbols('i j', integer=True, nonnegative=True)
+    assert SingleEntryMatrix(n, n, i, j)
 
 
 def test_addition():
