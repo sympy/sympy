@@ -5,10 +5,9 @@ from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
 from .evalf import EvalfMixin
-from .logic import fuzzy_not
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
-
+from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
@@ -16,6 +15,9 @@ __all__ = (
     'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
     'StrictGreaterThan', 'GreaterThan',
 )
+
+from .expr import Expr
+from sympy.multipledispatch import dispatch
 
 
 
@@ -1072,16 +1074,31 @@ def _n2(a, b):
             return dif
 
 
+@dispatch(Basic, Basic)
+def _eval_is_le(lhs, rhs):
+    return None
+
+
+@dispatch(Basic, Basic)
+def _eval_is_ge(lhs, rhs):
+    return None
+
+
+@dispatch(Basic, Basic)
+def _eval_Eq(lhs, rhs):
+    return None
+
+
 def is_lt(lhs, rhs):
-    return fuzzy_not(is_ge(lhs, rhs))
-
-
-def is_le(lhs, rhs):
-    return fuzzy_not(is_gt(lhs, rhs))
+    return fuzzy_and([is_le(lhs, rhs), is_neq(lhs, rhs)])
 
 
 def is_gt(lhs, rhs):
-    retval = lhs._eval_is_gt(rhs)
+    return fuzzy_and([is_ge(lhs, rhs), is_neq(lhs, rhs)])
+
+
+def is_le(lhs, rhs):
+    retval = _eval_is_le(lhs, rhs)
     if retval is not None:
         return retval
     else:
@@ -1091,18 +1108,21 @@ def is_gt(lhs, rhs):
             # otherwise get stuck in infinite recursion
             if n2 in (S.Infinity, S.NegativeInfinity):
                 n2 = float(n2)
-            return _sympify(n2 > 0)
+            return _sympify(n2 <= 0)
         if lhs.is_extended_real and rhs.is_extended_real:
-            if (lhs.is_infinite and lhs.is_extended_negative) or (rhs.is_infinite and rhs.is_extended_positive):
-                return S.false
+            if ((lhs.is_infinite and lhs.is_extended_negative) \
+                     or (rhs.is_infinite and rhs.is_extended_positive)):
+                return S.true
 
             diff = lhs - rhs
             if diff is not S.NaN:
-                return diff.is_extended_positive
+                rv = diff.is_extended_nonpositive
+                if rv is not None:
+                    return rv
 
 
 def is_ge(lhs, rhs):
-    retval = lhs._eval_is_ge(rhs)
+    retval = _eval_is_ge(lhs, rhs)
     if retval is not None:
         return retval
     else:
@@ -1125,21 +1145,21 @@ def is_ge(lhs, rhs):
 
 
 def is_neq(lhs, rhs):
+    from .logic import fuzzy_not
     return fuzzy_not(is_eq(lhs, rhs))
 
 
 def is_eq(lhs, rhs):
     from sympy.core.add import Add
-    from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
     from sympy.core.expr import Expr
-    retval = lhs._eval_Eq(rhs)
+    retval = _eval_Eq(lhs, rhs)
     if retval is not None:
         return retval
 
-    retval = rhs._eval_Eq(lhs)
+    retval = _eval_Eq(rhs, lhs)
     if retval is not None:
         return retval
     else:
@@ -1195,10 +1215,6 @@ def is_eq(lhs, rhs):
                     return S.false
                 if z:
                     return S.true
-            # evaluate numerically if possible
-            n2 = _n2(lhs, rhs)
-            if n2 is not None:
-                return n2 == 0
 
             # see if the ratio evaluates
             n, d = dif.as_numer_denom()

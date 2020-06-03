@@ -13,7 +13,7 @@ from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
 from sympy.sets.fancysets import ImageSet
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-
+from sympy.multipledispatch import dispatch
 
 def continuous_domain(f, symbol, domain):
     """
@@ -1372,77 +1372,7 @@ class AccumulationBounds(AtomicExpr):
         else:
             return self
 
-    def _eval_is_gt(self, other):
 
-        """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is greater than the range of values attained by `other`,
-        where other may be any value of type AccumulationBounds object or
-        extended real number value, False if `other` satisfies
-        the same property, else an unevaluated Relational.
-
-        Examples
-        ========
-
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) > AccumBounds(4, oo)
-        False
-        >>> AccumBounds(1, 4) > AccumBounds(3, 4)
-        AccumBounds(1, 4) > AccumBounds(3, 4)
-        >>> AccumBounds(1, oo) > -1
-        True
-
-        """
-        other = _sympify(other)
-        if isinstance(other, AccumBounds):
-            if self.min > other.max:
-                return True
-            if self.max <= other.min:
-                return False
-        elif not other.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(other), other))
-        elif other.is_comparable:
-            if self.min > other:
-                return True
-            if self.max <= other:
-                return False
-
-    def _eval_is_ge(self, other):
-        """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is less that the range of values attained by `other`, where
-        other may be any value of type AccumulationBounds object or extended
-        real number value, False if `other` satisfies the same
-        property, else an unevaluated Relational.
-
-        Examples
-        ========
-
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
-        False
-        >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
-        AccumBounds(1, 4) >= AccumBounds(3, 4)
-        >>> AccumBounds(1, oo) >= 1
-        True
-        """
-        other = _sympify(other)
-        if isinstance(other, AccumBounds):
-            if self.min >= other.max:
-                return True
-            if self.max < other.min:
-                return False
-        elif not other.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(other), other))
-        elif other.is_comparable:
-            if self.min >= other:
-                return True
-            if self.max < other:
-                return False
 
     def __contains__(self, other):
         """
@@ -1550,6 +1480,82 @@ class AccumulationBounds(AtomicExpr):
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
 
+@dispatch(AccumulationBounds, AccumulationBounds)
+def _eval_is_le(lhs, rhs):
+    if lhs.max <= rhs.min:
+        return True
+    if lhs.min > rhs.max:
+        return False
+
+@dispatch(AccumulationBounds, Basic)
+def _eval_is_le(lhs, rhs):
+
+    """
+    Returns True if range of values attained by `self` AccumulationBounds
+    object is greater than the range of values attained by `other`,
+    where other may be any value of type AccumulationBounds object or
+    extended real number value, False if `other` satisfies
+    the same property, else an unevaluated Relational.
+
+    Examples
+    ========
+
+    >>> from sympy import AccumBounds, oo
+    >>> AccumBounds(1, 3) > AccumBounds(4, oo)
+    False
+    >>> AccumBounds(1, 4) > AccumBounds(3, 4)
+    AccumBounds(1, 4) > AccumBounds(3, 4)
+    >>> AccumBounds(1, oo) > -1
+    True
+
+    """
+    if not rhs.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(rhs), rhs))
+    elif rhs.is_comparable:
+        if lhs.max <= rhs:
+            return True
+        if lhs.min > rhs:
+            return False
+
+@dispatch(AccumulationBounds, AccumulationBounds)
+def _eval_is_ge(lhs, rhs):
+    if lhs.min >= rhs.max:
+        return True
+    if lhs.max < rhs.min:
+        return False
+
+@dispatch(AccumulationBounds, Basic)
+def _eval_is_ge(lhs, rhs):
+    """
+    Returns True if range of values attained by `self` AccumulationBounds
+    object is less that the range of values attained by `other`, where
+    other may be any value of type AccumulationBounds object or extended
+    real number value, False if `other` satisfies the same
+    property, else an unevaluated Relational.
+
+    Examples
+    ========
+
+    >>> from sympy import AccumBounds, oo
+    >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
+    False
+    >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
+    AccumBounds(1, 4) >= AccumBounds(3, 4)
+    >>> AccumBounds(1, oo) >= 1
+    True
+    """
+
+    if not rhs.is_extended_real:
+        raise TypeError(
+            "Invalid comparison of %s %s" %
+            (type(rhs), rhs))
+    elif rhs.is_comparable:
+        if lhs.min >= rhs:
+            return True
+        if lhs.max < rhs:
+            return False
 
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds

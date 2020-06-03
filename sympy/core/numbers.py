@@ -16,7 +16,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
     int_info, gmpy)
 from sympy.core.cache import lru_cache
-
+from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp import bitcount
@@ -3266,10 +3266,6 @@ class NaN(Number, metaclass=Singleton):
     def __ne__(self, other):
         return other is not S.NaN
 
-    def _eval_Eq(self, other):
-        # NaN is not mathematically equal to anything, even NaN
-        return S.false
-
     # Expr will _sympify and raise TypeError
     __gt__ = Expr.__gt__
     __ge__ = Expr.__ge__
@@ -3278,6 +3274,9 @@ class NaN(Number, metaclass=Singleton):
 
 nan = S.NaN
 
+@dispatch(NaN, Expr)
+def _eval_Eq(a, b):
+    return S.false
 
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
@@ -3890,6 +3889,9 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 
 I = S.ImaginaryUnit
 
+@dispatch(Tuple, Number)
+def _eval_Eq(self, other):
+    return S.false
 
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)

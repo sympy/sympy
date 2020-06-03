@@ -1808,34 +1808,6 @@ class Basic(metaclass=ManagedProperties):
         return obj
 
 
-    def _eval_is_lt(self, other):
-        """
-        For internal use only. Use if we want to override the
-        'strict less' than evaluation on expressions.
-        """
-        return None
-
-    def _eval_is_gt(self, other):
-        """
-        For internal use only. Use if we want to override the
-        'strict greater than' evaluation on expressions.
-        """
-        return None
-
-    def _eval_is_ge(self, other):
-        """
-        For internal use only. Use if we want to override the
-        'greater than or equal to' evaluation on expressions.
-        """
-        return None
-
-    def _eval_Eq(self, other):
-        """
-        For internal use only. Use if we want to override the
-        'equal to' evaluation on expressions.
-        """
-        return None
-
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
@@ -2078,3 +2050,5 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+

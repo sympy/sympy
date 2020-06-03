@@ -27,7 +27,7 @@ from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
-
+from sympy.multipledispatch import dispatch
 from mpmath import mpi, mpf
 
 
@@ -757,15 +757,7 @@ class ProductSet(Set):
                     yield s
         return ProductSet(*_flatten(self.sets))
 
-    def _eval_Eq(self, other):
-        if not other.is_ProductSet:
-            return
 
-        if len(self.sets) != len(other.sets):
-            return false
-
-        eqs = (Eq(x, y) for x, y in zip(self.sets, other.sets))
-        return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
 
     def _contains(self, element):
         """
@@ -920,7 +912,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        if (end < start) == True:
+        if (end >= start) == False:
             return S.EmptySet
         elif (end - start).is_negative:
             return S.EmptySet
@@ -1123,11 +1115,6 @@ class Interval(Set, EvalfMixin):
             elif isinstance(other, Set):
                 return None
             return false
-
-        return And(Eq(self.left, other.left),
-                   Eq(self.right, other.right),
-                   self.left_open == other.left_open,
-                   self.right_open == other.right_open)
 
 
 class Union(Set, LatticeOp, EvalfMixin):
@@ -1776,24 +1763,6 @@ class FiniteSet(Set, EvalfMixin):
         obj._args_set = _args_set
         return obj
 
-    def _eval_Eq(self, other):
-        if not isinstance(other, FiniteSet):
-            # XXX: If Interval(x, x, evaluate=False) worked then the line
-            # below would mean that
-            #     FiniteSet(x) & Interval(x, x, evaluate=False) -> false
-            if isinstance(other, Interval):
-                return false
-            elif isinstance(other, Set):
-                return None
-            return false
-
-        def all_in_both():
-            s_set = set(self.args)
-            o_set = set(other.args)
-            yield fuzzy_and(self._contains(e) for e in o_set - s_set)
-            yield fuzzy_and(other._contains(e) for e in s_set - o_set)
-
-        return tfn[fuzzy_and(all_in_both())]
 
     def __iter__(self):
         return iter(self.args)
@@ -2504,3 +2473,43 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
+
+@dispatch(Interval, FiniteSet)
+def _eval_Eq(lhs, rhs):
+    return false
+
+@dispatch(FiniteSet, Interval)
+def _eval_Eq(lhs, rhs):
+    return false
+
+@dispatch(Interval, Interval)
+def _eval_Eq(lhs, rhs):
+    return And(Eq(lhs.left, rhs.left),
+               Eq(lhs.right, rhs.right),
+               lhs.left_open == rhs.left_open,
+               lhs.right_open == rhs.right_open)
+
+@dispatch(FiniteSet, Interval)
+def _eval_Eq(lhs, rhs):
+    return False
+
+
+@dispatch(FiniteSet, FiniteSet)
+def _eval_Eq(lhs, rhs):
+    def all_in_both():
+        s_set = set(lhs.args)
+        o_set = set(rhs.args)
+        yield fuzzy_and(lhs._contains(e) for e in o_set - s_set)
+        yield fuzzy_and(rhs._contains(e) for e in s_set - o_set)
+
+    return tfn[fuzzy_and(all_in_both())]
+
+@dispatch(ProductSet, ProductSet)
+def _eval_Eq(lhs, rhs):
+    if len(lhs.sets) != len(rhs.sets):
+        return false
+
+    eqs = (Eq(x, y) for x, y in zip(lhs.sets, rhs.sets))
+    return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
+

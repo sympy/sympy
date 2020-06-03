@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.polys.domains.field import Field
-from sympy.polys.domains.groundtypes import SymPyInteger
+
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
@@ -57,6 +57,7 @@ class FiniteField(Field, SimpleDomain):
         return self
 
     def to_sympy(self, a):
+        from sympy.polys.domains.groundtypes import SymPyInteger
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(int(a))
 
