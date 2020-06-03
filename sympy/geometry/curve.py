@@ -156,7 +156,7 @@ class Curve(GeometrySet):
         =======
 
         set :
-            Set of all non parameterized symbols.
+            Set of all non-parameterized symbols.
 
         Examples
         ========
