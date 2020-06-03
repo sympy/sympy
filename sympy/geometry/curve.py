@@ -310,7 +310,7 @@ class Curve(GeometrySet):
         =======
 
         List :
-            returns a list(plot interval) as below:
+            the plot interval as below:
                 [parameter, lower_bound, upper_bound]
 
         Examples
