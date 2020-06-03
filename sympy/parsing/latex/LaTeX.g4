@@ -187,6 +187,7 @@ comp_nofunc:
 group:
     L_PAREN expr R_PAREN
     | L_BRACKET expr R_BRACKET
+    | L_BRACE expr R_BRACE
     | L_BRACE_LITERAL expr R_BRACE_LITERAL;
 
 abs_group: BAR expr BAR;
