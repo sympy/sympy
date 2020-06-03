@@ -99,14 +99,14 @@ class Curve(GeometrySet):
 
         parameter : str or Symbol, optional
             Default value is 't'.
-            the Curve's parameter is selected with None or self.parameter
+            The Curve's parameter is selected with None or self.parameter
             otherwise the provided symbol is used.
 
         Returns
         =======
 
         Point :
-            returns a point in parametric form.
+            Returns a point in parametric form.
 
         Raises
         ======
@@ -182,7 +182,7 @@ class Curve(GeometrySet):
         Returns
         =======
 
-        int:
+        int :
             the dimension of curve.
 
         Examples
@@ -259,7 +259,7 @@ class Curve(GeometrySet):
         Returns
         =======
 
-        Symbol:
+        Symbol :
             returns a bound symbol.
 
         Examples
