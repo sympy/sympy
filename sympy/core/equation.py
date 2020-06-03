@@ -9,7 +9,7 @@ present the "=" relation operator is the only option. The relation operator may 
 This class should not be confused with the Boolean class ``Equality`` (abbreviated ``Eq``) which specifies
 that the equality of two expressions is ``True``.
 
-This tool applies operations to both sides of the equation simultaneously, just as students are taught to do when 
+This tool applies operations to both sides of the equation simultaneously, just as students are taught to do when
 attempting to isolate (solve for) a variable. Thus the statement ``Equation/b`` yields a new equation ``Equation.lhs/b = Equation.rhs/b``
 
 The intent is to allow using the mathematical tools in SymPy to rearrange equations and perform algebra
@@ -41,10 +41,11 @@ class Equation(Basic):
     
     Examples
     ========
+    >>> from sympy import var, Equation, Eqn
     >>> var('a b c')
-    >>> equ(a,b/c)
+    >>> Equation(a,b/c)
     a=b/c
-    >>> t=equ(a,b/c)
+    >>> t=Eqn(a,b/c)
     >>> t
     a=b/c
     >>> t*c
@@ -63,10 +64,11 @@ class Equation(Basic):
     >>> integrate(q,b,side='lhs')
     a*b*c
 
-    >>> # Make a pretty statement of integration from an equation 
+    Make a pretty statement of integration from an equation 
     >>> Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs'))                        
     Integral(a*c, b)=b**2/(2*c)
-    >>> # This is duplicated by the convenience function self.integ 
+
+    This is duplicated by the convenience function self.integ 
     >>> q.integ(b)                                                              
     Integral(a*c, b)=b**2/(2*c)
 
