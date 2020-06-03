@@ -16,7 +16,7 @@ class GaussianElement(DomainElement):
 
     __slots__ = ('x', 'y')
 
-    def __init__(self, x, y):
+    def __init__(self, x, y=0):
         conv = self.base.convert
         self.x = conv(x)
         self.y = conv(y)
@@ -81,6 +81,16 @@ class GaussianElement(DomainElement):
                                   self.x*y + self.y*x)
 
     __rmul__ = __mul__
+
+    def __pow__(self, exp):
+        if exp == 0:
+            return self.__class__(1, 0)
+        if exp < 0:
+            self, exp = 1/self, -exp
+        prod = self
+        for n in range(exp-1):
+            prod *= self
+        return prod
 
     def __bool__(self):
         return bool(self.x) or bool(self.y)
@@ -239,7 +249,7 @@ class GaussianDomain():
         else:
             raise CoercionFailed("{} is not Gaussian".format(a))
 
-    def convert(self, element):
+    def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``.
 
         Raises CoercionFailed on failure.
@@ -264,6 +274,8 @@ class GaussianIntegerRing(GaussianDomain, Ring):
     units = (one, imag_unit, -one, -imag_unit)  # powers of i
 
     rep = 'ZZ_I'
+
+    is_GaussianRing = True
 
     def __init__(self):  # override Domain.__init__
         """For constructing ZZ_I."""
@@ -302,6 +314,8 @@ class GaussianRationalField(GaussianDomain, Field):
     one = dtype(1, 0)
 
     rep = 'QQ_I'
+
+    is_GaussianField = True
 
     def __init__(self):  # override Domain.__init__
         """For constructing QQ_I."""

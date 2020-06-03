@@ -3,7 +3,9 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
+from sympy.core.evalf import pure_complex
 from sympy.polys.domains import ZZ, QQ, EX
+from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import parallel_dict_from_basic
@@ -12,33 +14,44 @@ from sympy.utilities import public
 
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
-    result, rationals, reals, algebraics = {}, False, False, False
+    rationals = reals = gaussians = algebraics = False
 
     if opt.extension is True:
         is_algebraic = lambda coeff: coeff.is_number and coeff.is_algebraic
     else:
         is_algebraic = lambda coeff: False
 
-    # XXX: add support for a + b*I coefficients
     for coeff in coeffs:
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
         elif coeff.is_Float:
-            if not algebraics:
-                reals = True
-            else:
+            if algebraics or gaussians:
                 # there are both reals and algebraics -> EX
                 return False
-        elif is_algebraic(coeff):
-            if not reals:
-                algebraics = True
             else:
-                # there are both algebraics and reals -> EX
-                return False
+                reals = True
         else:
-            # this is a composite domain, e.g. ZZ[X], EX
-            return None
+            is_complex = pure_complex(coeff)
+            if is_complex:
+                # there are both reals and algebraics -> EX
+                if reals:
+                    return False
+                x, y = is_complex
+                if x.is_Rational and y.is_Rational:
+                    gaussians = True
+                    if not (x.is_Integer and y.is_Integer):
+                        rationals = True
+                    continue
+            if is_algebraic(coeff):
+                if not reals:
+                    algebraics = True
+                else:
+                    # there are both algebraics and reals -> EX
+                    return False
+            else:
+                # this is a composite domain, e.g. ZZ[X], EX
+                return None
 
     if algebraics:
         domain, result = _construct_algebraic(coeffs, opt)
@@ -50,9 +63,9 @@ def _construct_simple(coeffs, opt):
             domain = RealField(prec=max_prec)
         else:
             if opt.field or rationals:
-                domain = QQ
+                domain = QQ_I if gaussians else QQ
             else:
-                domain = ZZ
+                domain = ZZ_I if gaussians else ZZ
 
         result = []
 

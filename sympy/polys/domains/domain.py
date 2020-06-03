@@ -30,6 +30,8 @@ class Domain(object):
     is_FiniteField = is_FF = False
     is_IntegerRing = is_ZZ = False
     is_RationalField = is_QQ = False
+    is_GaussianRing = is_ZZ_I = False
+    is_GaussianField = is_QQ_I = False
     is_RealField = is_RR = False
     is_ComplexField = is_CC = False
     is_AlgebraicField = is_Algebraic = False
@@ -322,6 +324,16 @@ class Domain(object):
         elif K0.is_AlgebraicField:
             return K0
         elif K1.is_AlgebraicField:
+            return K1
+
+        if K0.is_GaussianField:
+            return K0
+        if K1.is_GaussianField:
+            return K1
+
+        if K0.is_GaussianRing:
+            return K0
+        if K1.is_GaussianRing:
             return K1
 
         if K0.is_RationalField:

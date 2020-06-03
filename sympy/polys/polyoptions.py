@@ -423,6 +423,12 @@ class Domain(Option, metaclass=OptionType):
             if domain in ['Q', 'QQ']:
                 return sympy.polys.domains.QQ
 
+            if domain == 'ZZ_I':
+                return sympy.polys.domains.ZZ_I
+
+            if domain == 'QQ_I':
+                return sympy.polys.domains.QQ_I
+
             if domain == 'EX':
                 return sympy.polys.domains.EX
 
