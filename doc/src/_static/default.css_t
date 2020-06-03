@@ -301,6 +301,12 @@ pre {
     border-right: none;
 }
 
+@font-face {
+  font-family: 'Dejavu Sans Mono';
+  src: URL('DejavuSansMono.woff') format("woff"),
+       URL('DejavuSansMono.ttf') format("truetype");
+}
+
 tt {
     background-color: #ecf0f3;
     padding: 0 1px 0 1px;
