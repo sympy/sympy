@@ -103,12 +103,12 @@ class Equation(Basic):
             rsimp = rhs.simplify()
             if lhs.is_number and rhs.is_number and lsimp != rsimp:
                 from warnings import warn
-                warn('Did your really mean to define unequal numbers ' + str(
-                    lsimp) + ' and ' + str(
-                    rsimp) +
-                     ' as equal? To suppress this warning include '
-                     '`check=False` in the equation definition: '
-                     '`Eqn(lhs,rhs,check=False)`.')
+                warnstr = '\nDid your really mean to define unequal numbers '
+                warnstr += str(lsimp) + ' and ' + str(rsimp) + ' as equal?\n'
+                warnstr += 'To suppress this warning include `check=False`'
+                warnstr += ' in the equation definition: '
+                warnstr += '`Eqn(lhs,rhs, check=False)`.'
+                warn(warnstr)
         return super().__new__(cls, lhs, rhs)
 
     @property
