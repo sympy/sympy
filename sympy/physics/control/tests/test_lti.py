@@ -49,6 +49,13 @@ def test_TransferFunction_construction():
     tf8 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, p)
     assert not tf7 == tf8
 
+    # when just the numerator is 0, leave the denominator along.
+    tf9 = TransferFunction(0, p**2 - p + 1, p)
+    assert tf9.args == (0, p**2 - p + 1, p)
+
+    tf10 = TransferFunction(0, 1, s)
+    assert tf10.args == (0, 1, s)
+
     # ValueError when denominator is zero.
     raises(ValueError, lambda: TransferFunction(4, 0, s))
     raises(ValueError, lambda: TransferFunction(s, 0, s))
