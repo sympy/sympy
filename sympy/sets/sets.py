@@ -2512,4 +2512,3 @@ def _eval_Eq(lhs, rhs): # noqa: F811
 
     eqs = (Eq(x, y) for x, y in zip(lhs.sets, rhs.sets))
     return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
-
