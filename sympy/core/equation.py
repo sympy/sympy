@@ -98,9 +98,6 @@ class Equation(Basic):
         check = kwargs.pop('check', True)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        if lhs.is_number and rhs.is_number and lhs != rhs:
-            print('WARNING: did your really mean to define unequal numbers as '
-                  'equal? ' + str(lhs) + '=' + str(rhs))
         if check:
             lsimp = lhs.simplify()
             rsimp = rhs.simplify()
