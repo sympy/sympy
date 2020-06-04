@@ -815,16 +815,6 @@ def test_solve_trig():
     assert dumeq(solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x),
         ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
 
-    # Tests for _solve_trig2() function
-    assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),
-          Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
-                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
-                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6)))), S.Integers),
-                  ImageSet(Lambda(n, 2*n*pi - 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
-                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
-                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
-                  2*pi), S.Integers)))
-
     assert dumeq(solveset_real(2*tan(x)*sin(x) + 1, x), Union(
         ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 +sqrt(17))/
             (1 - sqrt(17))) + pi), S.Integers),
@@ -833,6 +823,17 @@ def test_solve_trig():
 
     assert dumeq(solveset_real(cos(2*x)*cos(4*x) - 1, x),
                             ImageSet(Lambda(n, n*pi), S.Integers))
+
+    # This is the only remaining test that actually ends up being solved
+    # by _solve_trig2(). All others are handled by the improved _solve_trig1.
+    assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),
+          Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
+                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
+                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6)))), S.Integers),
+                  ImageSet(Lambda(n, 2*n*pi - 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
+                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
+                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
+                  2*pi), S.Integers)))
 
 
 def test_solve_hyperbolic():
