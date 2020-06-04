@@ -394,6 +394,9 @@ class sign(Function):
         if arg.is_extended_real:
             return Heaviside(arg, H0=S(1)/2) * 2 - 1
 
+    def _eval_rewrite_as_Abs(self, arg, **kwargs):
+        return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
+
     def _eval_simplify(self, **kwargs):
         return self.func(self.args[0].factor())  # XXX include doit?
 
