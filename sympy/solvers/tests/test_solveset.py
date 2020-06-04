@@ -872,6 +872,11 @@ def test_solve_trig():
                   9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
                   2*pi), S.Integers)))
 
+    # issue #16870
+    assert dumeq(simplify(solveset(sin(x/180*pi) - S.Half, x, S.Reals)), Union(
+        ImageSet(Lambda(n, 360*n + 150), S.Integers),
+        ImageSet(Lambda(n, 360*n + 30), S.Integers)))
+
 
 def test_solve_hyperbolic():
     # actual solver: _solve_trig1
