@@ -27,6 +27,7 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
     Intersection, Interval, Union, imageset, ProductSet)
+from sympy.simplify import simplify
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
 
@@ -824,7 +825,43 @@ def test_solve_trig():
     assert dumeq(solveset_real(cos(2*x)*cos(4*x) - 1, x),
                             ImageSet(Lambda(n, n*pi), S.Integers))
 
-    # This is the only remaining test that actually ends up being solved
+    assert dumeq(solveset(sin(x/10) + Rational(3, 4)), Union(
+        ImageSet(Lambda(n, 20*n*pi + 10*atan(3*sqrt(7)/7) + 10*pi), S.Integers),
+        ImageSet(Lambda(n, 20*n*pi - 10*atan(3*sqrt(7)/7) + 20*pi), S.Integers)))
+
+    assert dumeq(solveset(cos(x/15) + cos(x/5)), Union(
+        ImageSet(Lambda(n, 30*n*pi + 15*pi/2), S.Integers),
+        ImageSet(Lambda(n, 30*n*pi + 45*pi/2), S.Integers),
+        ImageSet(Lambda(n, 30*n*pi + 75*pi/4), S.Integers),
+        ImageSet(Lambda(n, 30*n*pi + 45*pi/4), S.Integers),
+        ImageSet(Lambda(n, 30*n*pi + 105*pi/4), S.Integers),
+        ImageSet(Lambda(n, 30*n*pi + 15*pi/4), S.Integers)))
+
+    assert dumeq(solveset(sec(sqrt(2)*x/3) + 5), Union(
+        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*pi - pi + atan(2*sqrt(6)))/2), S.Integers),
+        ImageSet(Lambda(n, 3*sqrt(2)*(2*n*pi - atan(2*sqrt(6)) + pi)/2), S.Integers)))
+
+    assert dumeq(simplify(solveset(tan(pi*x) - cot(pi/2*x))), Union(
+        ImageSet(Lambda(n, 4*n + 1), S.Integers),
+        ImageSet(Lambda(n, 4*n + 3), S.Integers),
+        ImageSet(Lambda(n, 4*n + Rational(7, 3)), S.Integers),
+        ImageSet(Lambda(n, 4*n + Rational(5, 3)), S.Integers),
+        ImageSet(Lambda(n, 4*n + Rational(11, 3)), S.Integers),
+        ImageSet(Lambda(n, 4*n + Rational(1, 3)), S.Integers)))
+
+    assert dumeq(solveset(cos(9*x)), Union(
+        ImageSet(Lambda(n, 2*n*pi/9 + pi/18), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi/9 + pi/6), S.Integers)))
+
+    assert dumeq(solveset(sin(8*x) + cot(12*x), x, S.Reals), Union(
+        ImageSet(Lambda(n, n*pi/2 + pi/8), S.Integers),
+        ImageSet(Lambda(n, n*pi/2 + 3*pi/8), S.Integers),
+        ImageSet(Lambda(n, n*pi/2 + 5*pi/16), S.Integers),
+        ImageSet(Lambda(n, n*pi/2 + 3*pi/16), S.Integers),
+        ImageSet(Lambda(n, n*pi/2 + 7*pi/16), S.Integers),
+        ImageSet(Lambda(n, n*pi/2 + pi/16), S.Integers)))
+
+    # This is the only remaining solveset test that actually ends up being solved
     # by _solve_trig2(). All others are handled by the improved _solve_trig1.
     assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),
           Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
@@ -856,14 +893,41 @@ def test_solve_hyperbolic():
         log(4 + sqrt(17))/2)
     assert solveset_real(sinh(x) + tanh(x) - 1, x) == FiniteSet(
         log(sqrt(2)/2 + sqrt(-S(1)/2 + sqrt(2))))
+
     assert dumeq(solveset_complex(sinh(x) - I/2, x), Union(
         ImageSet(Lambda(n, I*(2*n*pi + 5*pi/6)), S.Integers),
         ImageSet(Lambda(n, I*(2*n*pi + pi/6)), S.Integers)))
+
     assert dumeq(solveset_complex(sinh(x) + sech(x), x), Union(
         ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers),
         ImageSet(Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers),
         ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers),
         ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers)))
+
+    assert dumeq(solveset(sinh(x/10) + Rational(3, 4)), Union(
+        ImageSet(Lambda(n, 10*I*(2*n*pi + pi) + 10*log(2)), S.Integers),
+        ImageSet(Lambda(n, 20*n*I*pi - 10*log(2)), S.Integers)))
+
+    assert dumeq(solveset(cosh(x/15) + cosh(x/5)), Union(
+        ImageSet(Lambda(n, 15*I*(2*n*pi + pi/2)), S.Integers),
+        ImageSet(Lambda(n, 15*I*(2*n*pi - pi/2)), S.Integers),
+        ImageSet(Lambda(n, 15*I*(2*n*pi - 3*pi/4)), S.Integers),
+        ImageSet(Lambda(n, 15*I*(2*n*pi + 3*pi/4)), S.Integers),
+        ImageSet(Lambda(n, 15*I*(2*n*pi - pi/4)), S.Integers),
+        ImageSet(Lambda(n, 15*I*(2*n*pi + pi/4)), S.Integers)))
+
+    assert dumeq(solveset(sech(sqrt(2)*x/3) + 5), Union(
+        ImageSet(Lambda(n, 3*sqrt(2)*I*(2*n*pi - pi + atan(2*sqrt(6)))/2), S.Integers),
+        ImageSet(Lambda(n, 3*sqrt(2)*I*(2*n*pi - atan(2*sqrt(6)) + pi)/2), S.Integers)))
+
+    assert dumeq(solveset(tanh(pi*x) - coth(pi/2*x)), Union(
+        ImageSet(Lambda(n, 2*I*(2*n*pi + pi/2)/pi), S.Integers),
+        ImageSet(Lambda(n, 2*I*(2*n*pi - pi/2)/pi), S.Integers)))
+
+    assert dumeq(solveset(cosh(9*x)), Union(
+        ImageSet(Lambda(n, I*(2*n*pi + pi/2)/9), S.Integers),
+        ImageSet(Lambda(n, I*(2*n*pi - pi/2)/9), S.Integers)))
+
     # issues #9606 / #9531:
     assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
     assert dumeq(solveset(sinh(x), x, S.Complexes), Union(
