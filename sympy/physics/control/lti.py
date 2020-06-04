@@ -1,4 +1,4 @@
-from sympy import Basic, Mul, degree
+from sympy import Basic, Mul, degree, Symbol, sympify
 
 __all__ = ['TransferFunction',]
 

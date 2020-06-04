@@ -64,9 +64,9 @@ def test_TransferFunction_construction():
     raises(ValueError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
 
     x, y = symbols('x, y', real=True)
-    raises(ValueError, lambda: TransferFunction(x**2 + 2*x - 1, x + 3, x))
-    raises(ValueError, lambda: TransferFunction(y + 1, 5 - y, y))
-    raises(ValueError, lambda: TransferFunction(x - 1, 4 - y, x))
+    raises(TypeError, lambda: TransferFunction(x**2 + 2*x - 1, x + 3, x))
+    raises(TypeError, lambda: TransferFunction(y + 1, 5 - y, y))
+    raises(TypeError, lambda: TransferFunction(x - 1, 4 - y, x))
 
 
 def test_TransferFunction_functions():
