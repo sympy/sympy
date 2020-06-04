@@ -1154,7 +1154,6 @@ def is_eq(lhs, rhs):
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
-    from sympy.core.expr import Expr
     retval = _eval_Eq(lhs, rhs)
     if retval is not None:
         return retval

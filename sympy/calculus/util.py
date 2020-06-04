@@ -1480,15 +1480,15 @@ class AccumulationBounds(AtomicExpr):
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
 
-@dispatch(AccumulationBounds, AccumulationBounds)
+@dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811
 def _eval_is_le(lhs, rhs):
     if lhs.max <= rhs.min:
         return True
     if lhs.min > rhs.max:
         return False
 
-@dispatch(AccumulationBounds, Basic)
-def _eval_is_le(lhs, rhs):
+@dispatch(AccumulationBounds, Basic) # type: ignore # noqa:F811
+def _eval_is_le(lhs, rhs): # noqa: F811
 
     """
     Returns True if range of values attained by `self` AccumulationBounds
@@ -1527,7 +1527,7 @@ def _eval_is_ge(lhs, rhs):
         return False
 
 @dispatch(AccumulationBounds, Basic)
-def _eval_is_ge(lhs, rhs):
+def _eval_is_ge(lhs, rhs): # noqa: F811
     """
     Returns True if range of values attained by `self` AccumulationBounds
     object is less that the range of values attained by `other`, where

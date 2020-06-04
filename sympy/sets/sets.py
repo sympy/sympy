@@ -2476,27 +2476,27 @@ def set_function(f, x):
 
 
 @dispatch(Interval, FiniteSet)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa: F811
     return false
 
 @dispatch(FiniteSet, Interval)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa: F811
     return false
 
 @dispatch(Interval, Interval)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa: F811
     return And(Eq(lhs.left, rhs.left),
                Eq(lhs.right, rhs.right),
                lhs.left_open == rhs.left_open,
                lhs.right_open == rhs.right_open)
 
 @dispatch(FiniteSet, Interval)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa: F811
     return False
 
 
 @dispatch(FiniteSet, FiniteSet)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa: F811
     def all_in_both():
         s_set = set(lhs.args)
         o_set = set(rhs.args)
@@ -2506,7 +2506,7 @@ def _eval_Eq(lhs, rhs):
     return tfn[fuzzy_and(all_in_both())]
 
 @dispatch(ProductSet, ProductSet)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa: F811
     if len(lhs.sets) != len(rhs.sets):
         return false
 
