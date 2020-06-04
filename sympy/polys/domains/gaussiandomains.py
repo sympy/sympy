@@ -322,6 +322,9 @@ class GaussianIntegerRing(GaussianDomain, Ring):
             a, b = b, a % b
         return self.normalize(a)
 
+    def lcm(self, a, b):
+        return (a * b) / self.gcd(a, b)
+
 ZZ_I = GaussianInteger._parent = GaussianIntegerRing()
 
 
