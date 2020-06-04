@@ -534,30 +534,26 @@ def _solve_as_rational(f, symbol, domain):
 
 def _solve_trig(f, symbol, domain):
     """Function to call other helpers to solve trigonometric equations """
-    sol1 = sol = None
+    sol = None
     try:
-        sol1 = _solve_trig1(f, symbol, domain)
-    except NotImplementedError:
-        pass
-    if sol1 is None or isinstance(sol1, ConditionSet):
+        sol = _solve_trig1(f, symbol, domain)
+    except (ValueError, NotImplementedError):
         try:
             sol = _solve_trig2(f, symbol, domain)
         except ValueError:
-            sol = sol1
-        if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
-            if sol1.count_ops() < sol.count_ops():
-                sol = sol1
-    else:
-        sol = sol1
-    if sol is None:
-        raise NotImplementedError(filldedent('''
-            Solution to this kind of trigonometric equations
-            is yet to be implemented'''))
+            raise NotImplementedError(filldedent('''
+                Solution to this kind of trigonometric equations
+                is yet to be implemented'''))
     return sol
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary helper to solve trigonometric and hyperbolic equations"""
+    """Primary helper to solve trigonometric and hyperbolic equations
+
+    Either returns solution set as ConditionSet (evaluated or unevaluated)
+    or raises NotImplementedError.
+
+    """
     # Prepare change of variable
     x = Dummy('x')
     if _is_function_class_equation(HyperbolicFunction, f, symbol):
@@ -605,27 +601,37 @@ def _solve_trig1(f, symbol, domain):
     g, h = g.expand(), h.expand()
     g, h = g.subs(cov, y), h.subs(cov, y)
     if g.has(x) or h.has(x):
-        return ConditionSet(symbol, Eq(f_original, 0), domain)
+        raise NotImplementedError("change of variable not possible")
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
     if isinstance(solns, ConditionSet):
-        raise NotImplementedError
+        raise NotImplementedError("polynomial has ConditionSet solution")
 
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
-            raise NotImplementedError
+            raise NotImplementedError("polynomial results in RootOf object")
         # revert the change of variable
         cov = cov.subs(x, symbol/mu)
         result = Union(*[inverter(cov, s, symbol)[1] for s in solns])
+        # In case of symbolic coefficients, the solution set is only valid
+        # if numerator and denominator of mu are non-zero.
+        if mu.has(Symbol):
+            syms = (mu).atoms(Symbol)
+            munum, muden = fraction(mu)
+            condnum = munum.as_independent(*syms, as_Add=False)[1]
+            condden = muden.as_independent(*syms, as_Add=False)[1]
+            cond = And(Ne(condnum, 0), Ne(condden, 0))
+        else:
+            cond = True
         # avoid spurious intersections with C in solution set
         if domain is S.Complexes:
-            return result
+            return ConditionSet(symbol, cond, result)
         else:
-            return Intersection(result, domain)
+            return ConditionSet(symbol, cond, Intersection(result, domain))
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(symbol, Eq(f_original, 0), domain)
+        raise NotImplementedError("polynomial solutions must form FiniteSet")
 
 
 def _solve_trig2(f, symbol, domain):
