@@ -332,8 +332,12 @@ class Domain(object):
             return K1
 
         if K0.is_GaussianRing:
+            if K1.is_RationalField:
+                K0 = K0.get_field()
             return K0
         if K1.is_GaussianRing:
+            if K0.is_RationalField:
+                K1 = K1.get_field()
             return K1
 
         if K0.is_RationalField:

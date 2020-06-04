@@ -272,13 +272,21 @@ class GaussianDomain():
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
 
-    # Override is_negative which is called from euclidtools.
+    # Override the negative etc handlers because this isn't an ordered domain.
+
     def is_negative(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    # Override is_positive which is called from euclidtools.
     def is_positive(self, element):
+        """Returns ``False`` for any ``GaussianElement``. """
+        return False
+
+    def is_nonnegative(self, element):
+        """Returns ``False`` for any ``GaussianElement``. """
+        return False
+
+    def is_nonpositive(self, element):
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
