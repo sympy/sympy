@@ -11,12 +11,13 @@ class Point:
     arithmetic operations use only the x and z coordinates.
     """
 
-    def __init__(self, x, z):
+    def __init__(self, x, z, a24, modulus):
         self.x = x
         self.z = z
+        self.a24 = a24
+        self.n = modulus
 
-    @staticmethod
-    def add(P, Q, diff, n):
+    def add(self, Q, diff):
         """
         Add two points P and Q where diff = P - Q.
 
@@ -35,15 +36,15 @@ class Point:
             Algorithm - 3
         """
 
-        u = (P.x - P.z)*(Q.x + Q.z)
-        v = (P.x + P.z)*(Q.x - Q.z)
+        u = (self.x - self.z)*(Q.x + Q.z)
+        v = (self.x + self.z)*(Q.x - Q.z)
         add, subt = u + v, u - v
-        x_cor = diff.z*add*add % n
-        z_cor = diff.x*subt*subt % n
-        return Point(x_cor, z_cor)
+        x_cor = diff.z*add*add % self.n
+        z_cor = diff.x*subt*subt % self.n
+        return Point(x_cor, z_cor, self.a24, self.n)
 
-    @staticmethod
-    def double(P, n, a24):
+
+    def double(self):
         """
         Doubles a point in an elliptic curve in Montgomery form.
 
@@ -61,14 +62,14 @@ class Point:
             Algorithm - 3
         """
 
-        u, v = P.x + P.z, P.x - P.z
+        u, v = self.x + self.z, self.x - self.z
         u, v = u*u, v*v
         diff = u - v
-        x_cor = u*v % n
-        z_cor = diff*(v + a24*diff) % n
-        return Point(x_cor, z_cor)
+        x_cor = u*v % self.n
+        z_cor = diff*(v + self.a24*diff) % self.n
+        return Point(x_cor, z_cor, self.a24, self.n)
 
-    def mont_ladder(self, k, n, a24):
+    def mont_ladder(self, k):
         """
         Scalar multiblication of a point in
         Ellipic Curve in Montgomery form.
@@ -89,14 +90,14 @@ class Point:
         """
 
         Q = self
-        R = self.double(self, n, a24)
+        R = self.double()
         for i in bin(k)[3:]:
             if  i  == '1':
-                Q = self.add(R, Q, self, n)
-                R = self.double(R, n, a24)
+                Q = R.add(Q, self)
+                R = R.double()
             else:
-                R = self.add(Q, R, self, n)
-                Q = self.double(Q, n, a24)
+                R = Q.add(R, self)
+                Q = Q.double()
         return Q
 
 def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
@@ -159,8 +160,8 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             return gcd(4*u_3*v, n)
 
         a24 = (C + 2)*mod_inverse(4, n) % n
-        Q = Point(u_3 , pow(v, 3, n))
-        Q = Q.mont_ladder(k, n, a24)
+        Q = Point(u_3 , pow(v, 3, n), a24, n)
+        Q = Q.mont_ladder(k)
         g = gcd(Q.z, n)
 
         #Stage 1 factor
@@ -171,19 +172,19 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             continue
 
         #Stage 2 - Improved Standard Continuation
-        S[1] = Q.double(Q, n, a24)
-        S[2] = S[1].double(S[1], n, a24)
+        S[1] = Q.double()
+        S[2] = S[1].double()
         beta[1] = (S[1].x*S[1].z) % n
         beta[2] = (S[2].x*S[2].z) % n
 
         for d in range(3, D + 1):
-            S[d] = S[d - 1].add(S[d - 1], S[1], S[d - 2], n)
+            S[d] = S[d - 1].add(S[1], S[d - 2])
             beta[d] = (S[d].x*S[d].z) % n
 
         g = 1
         B = B1 - 1
-        T = Q.mont_ladder(B - 2*D, n, a24)
-        R = Q.mont_ladder(B, n, a24)
+        T = Q.mont_ladder(B - 2*D)
+        R = Q.mont_ladder(B)
 
         for r in  range(B, B2, 2*D):
             alpha = (R.x*R.z) % n
@@ -193,7 +194,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
                 g = (g*f) % n
             #Swap
             TT = R
-            R = R.add(R, S[D], T, n)
+            R = R.add(S[D], T)
             T = TT
         g = gcd(n, g)
 
