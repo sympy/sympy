@@ -1,7 +1,7 @@
 """Domains of Gaussian type."""
 
 from sympy.core.basic import Basic
-from sympy.core.numbers import I
+from sympy.core.numbers import Rational, I
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.domains.domainelement import DomainElement
@@ -20,6 +20,9 @@ class GaussianElement(DomainElement):
         conv = self.base.convert
         self.x = conv(x)
         self.y = conv(y)
+
+    def as_expr(self):
+        return Rational(self.x) + I * Rational(self.y)
 
     def parent(self):
         return self._parent
@@ -79,6 +82,8 @@ class GaussianElement(DomainElement):
         if x is not None:
             return self.__class__(self.x*x - self.y*y,
                                   self.x*y + self.y*x)
+        else:
+            return NotImplemented
 
     __rmul__ = __mul__
 
@@ -262,6 +267,20 @@ class GaussianDomain():
             return self.from_sympy(element)
         else:  # convertible to base type or failure
             return self.new(element, 0)
+
+    def inject(self, *gens):
+        """Inject generators into this domain. """
+        return self.poly_ring(*gens)
+
+    # Override is_negative which is called from euclidtools.
+    def is_negative(self, element):
+        """Returns ``False`` for any ``GaussianElement``. """
+        return False
+
+    # Override is_positive which is called from euclidtools.
+    def is_positive(self, element):
+        """Returns ``False`` for any ``GaussianElement``. """
+        return False
 
 
 class GaussianIntegerRing(GaussianDomain, Ring):
