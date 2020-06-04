@@ -54,18 +54,18 @@ class Equation(Basic):
     >>> from sympy import var, Equation, Eqn, exp, log, integrate, Integral
     >>> from sympy import solve
     >>> a, b, c = var('a b c')
-    >>> Equation(a,b/c)
+    >>> str(Equation(a,b/c))
     a=b/c
     >>> t=Eqn(a,b/c)
-    >>> t
+    >>> str(t)
     a=b/c
-    >>> t*c
+    >>> str(t*c)
     a*c=b
-    >>> c*t
+    >>> str(c*t)
     a*c=b
-    >>> exp(t)
+    >>> str(exp(t))
     exp(a)=exp(b/c)
-    >>> exp(log(t))
+    >>> str(exp(log(t)))
     a=b/c
 
     Integration can only be performed on one side at a time.
@@ -76,11 +76,11 @@ class Equation(Basic):
     a*b*c
 
     Make a pretty statement of integration from an equation
-    >>> Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs'))
+    >>> str(Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs')))
     Integral(a*c, b)=b**2/(2*c)
 
     This is duplicated by the convenience function self.integ
-    >>> q.integ(b)
+    >>> str(q.integ(b))
     Integral(a*c, b)=b**2/(2*c)
 
     SymPy's solvers do not understand these equations. They expect an
@@ -88,7 +88,7 @@ class Equation(Basic):
     equation must be rearranged so that all non-zero symbols are on one side.
     Then just the non-zero symbolic side is passed to ``solve()``.
     >>> t2 = t-t.rhs
-    >>> t2
+    >>> str(t2)
     a-b/c=0
     >>> solve(t2.lhs,c)
     [b/a]
