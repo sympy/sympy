@@ -983,7 +983,7 @@ class _SubstituteRV:
             swapdict_expr = {}
             for rv in rvs_expr:
                 if isinstance(rv, RandomIndexedSymbol):
-                    newrv = rv.pspace.process.simple_rv(rv)
+                    newrv = rv.pspace.process.simple_rv(rv) # substitute with equivalent simple rv
                     swapdict_expr[rv] = newrv
             expr = expr.subs(swapdict_expr)
         rvs_cond = random_symbols(condition)
@@ -1184,8 +1184,9 @@ class CountingProcess(ContinuousTimeStochasticProcess):
         """
         if condition is not None:
             intervals, rv_swap = get_timerv_swaps(expr, condition)
+             # they are independent when they have non-overlapping intervals
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
-                for intv_comb in itertools.combinations(intervals, 2)): # they are independent
+                for intv_comb in itertools.combinations(intervals, 2)):
                 if expr.is_Add:
                     return Add(*[self.expectation(arg, condition) for arg in expr.args])
                 expr = expr.subs(rv_swap)
@@ -1216,8 +1217,9 @@ class CountingProcess(ContinuousTimeStochasticProcess):
         """
         if given_condition is not None:
             intervals, rv_swap = get_timerv_swaps(condition, given_condition)
+            # they are independent when they have non-overlapping intervals
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
-                for intv_comb in itertools.combinations(intervals, 2)): # they are independent
+                for intv_comb in itertools.combinations(intervals, 2)):
                 if isinstance(condition, And):
                     return Mul(*[self.probability(arg, given_condition) for arg in condition.args])
                 elif isinstance(condition, Or):
@@ -1377,8 +1379,8 @@ class GammaProcess(CountingProcess):
     sym: Symbol/str
     lamda: Positive number
         Jump size of the process, ``lamda > 0``
-    gama: Positive number
-        Rate of jump arrivals, ``gama > 0``
+    gamma: Positive number
+        Rate of jump arrivals, ``gamma > 0``
 
     Examples
     ========
@@ -1406,29 +1408,29 @@ class GammaProcess(CountingProcess):
     .. [1] https://en.wikipedia.org/wiki/Gamma_process
 
     """
-    def __new__(cls, sym, lamda, gama):
+    def __new__(cls, sym, lamda, gamma):
         _value_check(lamda > 0, 'lamda should be a positive number')
-        _value_check(gama > 0, 'gama should be a positive number')
+        _value_check(gamma > 0, 'gamma should be a positive number')
         sym = _symbol_converter(sym)
-        gama = _sympify(gama)
+        gamma = _sympify(gamma)
         lamda = _sympify(lamda)
-        return Basic.__new__(cls, sym, lamda, gama)
+        return Basic.__new__(cls, sym, lamda, gamma)
 
     @property
     def lamda(self):
         return self.args[1]
 
     @property
-    def gama(self):
+    def gamma(self):
         return self.args[2]
 
     def distribution(self, rv):
-        return GammaDistribution(self.gama*rv.key, 1/self.lamda)
+        return GammaDistribution(self.gamma*rv.key, 1/self.lamda)
 
     def density(self, x):
-        k = self.gama*x.key
+        k = self.gamma*x.key
         theta = 1/self.lamda
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
     def simple_rv(self, rv):
-        return Gamma(rv.name, self.gama*rv.key, 1/self.lamda)
+        return Gamma(rv.name, self.gamma*rv.key, 1/self.lamda)
