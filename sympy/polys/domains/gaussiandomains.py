@@ -331,7 +331,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         return self.normalize(a)
 
     def lcm(self, a, b):
-        return (a * b) / self.gcd(a, b)
+        return (a * b) // self.gcd(a, b)
 
 ZZ_I = GaussianInteger._parent = GaussianIntegerRing()
 
@@ -357,5 +357,13 @@ class GaussianRationalField(GaussianDomain, Field):
     def get_field(self):
         """Returns a field associated with ``self``. """
         return self
+
+    def denom(self, a):
+        """Get the denominator of ``a``."""
+        ZZ = self.base.get_ring()
+        QQ = self.base
+        ZZ_I = self.get_ring()
+        denom_ZZ = ZZ.lcm(QQ.denom(a.x), QQ.denom(a.y))
+        return ZZ_I(denom_ZZ, ZZ.zero)
 
 QQ_I = GaussianRational._parent = GaussianRationalField()
