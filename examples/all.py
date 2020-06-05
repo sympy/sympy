@@ -44,7 +44,6 @@ this_file = os.path.abspath(__file__)
 sympy_dir = os.path.join(os.path.dirname(this_file), "..")
 sympy_dir = os.path.normpath(sympy_dir)
 sys.path.insert(0, sympy_dir)
-import sympy
 
 TERMINAL_EXAMPLES = [
     "beginner.basic",
@@ -166,7 +165,6 @@ def run_example(example, *, reporter=None):
         mod = load_example_module(example)
         if reporter:
             suppress_output(mod.main)
-
             reporter.write("[PASS]", "Green", align="right")
         else:
             mod.main()
