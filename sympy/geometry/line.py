@@ -28,7 +28,6 @@ from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.geometry.exceptions import GeometryError
-from sympy.geometry.util import intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets import Intersection
@@ -436,7 +435,7 @@ class LinearEntity(GeometrySet):
         return self.p2 - self.p1
 
     def intersection(self, other):
-        """Returns the intersection with another geometrical entity.
+        """Generate the intersection with another geometrical entity.
 
         Parameters
         ==========
