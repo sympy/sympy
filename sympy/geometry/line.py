@@ -16,30 +16,29 @@ Ray3D
 Segment3D
 
 """
-from __future__ import division, print_function
-
 
 from sympy import Expr
 from sympy.core import S, sympify
 from sympy.core.compatibility import ordered
+from sympy.core.containers import Tuple
+from sympy.core.decorators import deprecated
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol, Dummy
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.logic.boolalg import And
-from sympy.simplify.simplify import simplify
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from sympy.geometry.exceptions import GeometryError
-from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
-from sympy.sets import Intersection
+from sympy.geometry.util import intersection
+from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
+from sympy.sets import Intersection
+from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import linear_coeffs
-from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point3D
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from .entity import GeometryEntity, GeometrySet
+from .point import Point, Point3D
 
 
 class LinearEntity(GeometrySet):
