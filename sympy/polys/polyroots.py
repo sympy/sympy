@@ -982,6 +982,10 @@ def roots(f, *gens, **flags):
     if auto and f.get_domain().is_Ring:
         f = f.to_field()
 
+    # Use EX instead of ZZ_I or QQ_I
+    if f.get_domain().is_QQ_I:
+        f = Poly(f.as_expr(), f.gens, domain='EX')
+
     rescale_x = None
     translate_x = None
 

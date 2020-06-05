@@ -303,6 +303,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
     rep = 'ZZ_I'
 
     is_GaussianRing = True
+    is_ZZ_I = True
 
     def __init__(self):  # override Domain.__init__
         """For constructing ZZ_I."""
@@ -346,6 +347,7 @@ class GaussianRationalField(GaussianDomain, Field):
     rep = 'QQ_I'
 
     is_GaussianField = True
+    is_QQ_I = True
 
     def __init__(self):  # override Domain.__init__
         """For constructing QQ_I."""
