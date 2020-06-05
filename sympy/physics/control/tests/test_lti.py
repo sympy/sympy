@@ -110,7 +110,9 @@ def test_TransferFunction_functions():
     expect1 = TransferFunction(p**2 + 8*p + 16, p**2 - 6*p + 9, p)
     assert tf4*tf4 == tf4**2 == pow(tf4, 2) == expect1
     assert tf5*tf5*tf5 == tf5**3 == pow(tf5, 3) == expect2
+    assert tf5**0 == pow(tf5, 0) == TransferFunction(1, 1, s)
     assert tf4**-1 == pow(tf4, -1) == TransferFunction(p - 3, p + 4, p)
+    assert tf5**-2 == pow(tf5, -2) == TransferFunction(s**2 - 2*s + 1, s**4 + 2*s**2 + 1, s)
 
     raises(ValueError, lambda: tf4**(s**2 + s - 1))
     raises(ValueError, lambda: tf5**s)
@@ -153,6 +155,7 @@ def test_TransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 - Matrix([1, 2, 3]))
     raises(ValueError, lambda: tf4 - Quaternion(3, 4, 5, 6))
     raises(ValueError, lambda: tf2 - c)
+    raises(ValueError, lambda: tf3 - tf4)
 
     assert tf1 - tf2 + tf3 == \
         TransferFunction(10*s**3 + 27*s**2 + 21*s + 16, s**4 - 3*s**3 - 8*s**2 - 9*s - 5, s)
@@ -167,7 +170,7 @@ def test_TransferFunction_multiplication_and_division():
     G6 = TransferFunction(s + 3, s + 1, s)
 
     # multiplication
-    expect1 = TransferFunction(-s**2 - 4*s - 3, s**4 - 5*s**3 -9*s + 45, s)
+    expect1 = TransferFunction(s**2 + 4*s + 3, -s**4 + 5*s**3 + 9*s - 45, s)
     assert G1*G2 == expect1
 
     expect2 = TransferFunction(p**2 + 4*p, p**5 - 5*p**4 - 6*p + 30, p)
