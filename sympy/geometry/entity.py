@@ -256,17 +256,10 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def encloses(self, o):
-        """
-        Return True if o is inside (not on or outside) the boundaries of self.
+        """Return True if o is inside (not on or outside) the boundaries of self.
 
         The object will be decomposed into Points and individual Entities need
         only define an encloses_point method for their class.
-
-        See Also
-        ========
-
-        sympy.geometry.ellipse.Ellipse.encloses_point
-        sympy.geometry.polygon.Polygon.encloses_point
 
         Examples
         ========
@@ -278,6 +271,12 @@ class GeometryEntity(Basic):
         True
         >>> t.encloses(t2)
         False
+
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
 
         """
 
@@ -308,8 +307,7 @@ class GeometryEntity(Basic):
         return self == o
 
     def intersection(self, o):
-        """
-        Returns a list of all of the intersections of self with o.
+        """Returns a list of all of the intersections of self with o.
 
         Notes
         =====
@@ -352,8 +350,7 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def reflect(self, line):
-        """
-        Reflects an object across a line.
+        """Reflects an object across a line.
 
         Parameters
         ==========
@@ -415,11 +412,6 @@ class GeometryEntity(Basic):
 
         The default pt is the origin, Point(0, 0)
 
-        See Also
-        ========
-
-        scale, translate
-
         Examples
         ========
 
@@ -429,6 +421,11 @@ class GeometryEntity(Basic):
         Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.rotate(pi/2) # vertex on y axis now
         Triangle(Point2D(0, 1), Point2D(-sqrt(3)/2, -1/2), Point2D(sqrt(3)/2, -1/2))
+
+        See Also
+        ========
+
+        scale, translate
 
         """
         newargs = []
@@ -445,11 +442,6 @@ class GeometryEntity(Basic):
         If pt is given, the scaling is done relative to that point; the
         object is shifted by -pt, scaled, and shifted by pt.
 
-        See Also
-        ========
-
-        rotate, translate
-
         Examples
         ========
 
@@ -462,6 +454,11 @@ class GeometryEntity(Basic):
         >>> t.scale(2, 2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
+        See Also
+        ========
+
+        rotate, translate
+
         """
         from sympy.geometry.point import Point
         if pt:
@@ -471,11 +468,6 @@ class GeometryEntity(Basic):
 
     def translate(self, x=0, y=0):
         """Shift the object by adding to the x,y-coordinates the values x and y.
-
-        See Also
-        ========
-
-        rotate, scale
 
         Examples
         ========
@@ -488,6 +480,11 @@ class GeometryEntity(Basic):
         Triangle(Point2D(3, 0), Point2D(3/2, sqrt(3)/2), Point2D(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
         Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2), Point2D(3/2, 2 - sqrt(3)/2))
+
+        See Also
+        ========
+
+        rotate, scale
 
         """
         newargs = []
@@ -514,6 +511,7 @@ class GeometryEntity(Basic):
         {t: 1/2}
         >>> Line(a, b).arbitrary_point(t).subs(_)
         Point2D(1, 1)
+
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
@@ -544,7 +542,7 @@ class GeometrySet(GeometryEntity, Set):
 @dispatch(GeometrySet, Set)  # type:ignore # noqa:F811
 def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
-    for use with sympy.sets.Set, if possible. """
+    for use with sympy.sets.Set, if possible."""
 
     from sympy.sets import Union, FiniteSet
 
@@ -562,8 +560,8 @@ def union_sets(self, o): # noqa:F811
 
 @dispatch(GeometrySet, Set)  # type: ignore # noqa:F811
 def intersection_sets(self, o): # noqa:F811
-    """ Returns a sympy.sets.Set of intersection objects,
-    if possible. """
+    """Returns a sympy.sets.Set of intersection objects,
+    if possible."""
 
     from sympy.sets import FiniteSet, Union
     from sympy.geometry import Point
@@ -617,6 +615,9 @@ def rotate(th):
     then the origin, translate the Point, do the rotation, and
     translate it back:
 
+    Example
+    =======
+
     >>> from sympy.geometry.entity import rotate, translate
     >>> from sympy import Point, pi
     >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
@@ -624,6 +625,7 @@ def rotate(th):
     Point2D(1, 1)
     >>> Point(0, 0).transform(rot_about_11)
     Point2D(2, 0)
+
     """
     s = sin(th)
     rv = eye(3)*cos(th)
