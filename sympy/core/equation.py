@@ -56,19 +56,21 @@ class Equation(Basic):
     >>> from sympy import var, Equation, Eqn, exp, log, integrate, Integral
     >>> from sympy import solve
     >>> a, b, c = var('a b c')
+    >>> Equation(a,b/c)
+    Equation(a,b/c)
     >>> str(Equation(a,b/c))
-    a=b/c
+    'a=b/c'
     >>> t=Eqn(a,b/c)
     >>> str(t)
-    a=b/c
+    'a=b/c'
     >>> str(t*c)
-    a*c=b
+    'a*c=b'
     >>> str(c*t)
-    a*c=b
+    'a*c=b'
     >>> str(exp(t))
-    exp(a)=exp(b/c)
+    'exp(a)=exp(b/c)'
     >>> str(exp(log(t)))
-    a=b/c
+    'a=b/c'
 
     Integration can only be performed on one side at a time.
     >>> q=Eqn(a*c,b/c)
@@ -79,11 +81,11 @@ class Equation(Basic):
 
     Make a pretty statement of integration from an equation
     >>> str(Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs')))
-    Integral(a*c, b)=b**2/(2*c)
+    'Integral(a*c, b)=b**2/(2*c)'
 
     This is duplicated by the convenience function self.integ
     >>> str(q.integ(b))
-    Integral(a*c, b)=b**2/(2*c)
+    'Integral(a*c, b)=b**2/(2*c)'
 
     SymPy's solvers do not understand these equations. They expect an
     expression that the solver assumes = 0. Thus to use the solver the
@@ -91,7 +93,7 @@ class Equation(Basic):
     Then just the non-zero symbolic side is passed to ``solve()``.
     >>> t2 = t-t.rhs
     >>> str(t2)
-    a-b/c=0
+    'a-b/c=0'
     >>> solve(t2.lhs,c)
     [b/a]
     """
