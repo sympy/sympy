@@ -51,6 +51,15 @@ class Equation(Basic):
     ``rhs`` are any valid Sympy expression. ``Eqn(...)`` is a synonym for
     ``Equation(...)``.
 
+    Parameters
+    ==========
+    lhs: sympy expression, ``class Expr``.
+    rhs: sympy expression, ``class Expr``.
+    kwargs: key word arguments from this list
+        - ``check=True/False`` use ``False`` to minimize computationally
+           expensive calls to ``simplify`` when ``Equation`` is called
+           programmatically.
+
     Examples
     ========
     >>> from sympy import var, Equation, Eqn, exp, log, integrate, Integral
@@ -105,12 +114,13 @@ class Equation(Basic):
         if not isinstance(lhs,Expr) or not isinstance(rhs,Expr):
             raise TypeError('lhs and rhs must be valid sympy expressions.')
         if check:
-            lsimp = lhs.simplify()
-            rsimp = rhs.simplify()
-            if lhs.is_number and rhs.is_number and lsimp != rsimp:
+            tst=(lhs-rhs).evalf()
+            if tst != 0 and tst.is_number:
                 from warnings import warn
-                warnstr = '\nDid your really mean to define unequal numbers '
-                warnstr += str(lsimp) + ' and ' + str(rsimp) + ' as equal?\n'
+                warnstr = '\nDid your really mean to define unequal '
+                warnstr += 'numbers '
+                warnstr += str(lhs) + ' and ' + str(rhs)
+                warnstr += ' as equal?\n'
                 warnstr += 'To suppress this warning include `check=False`'
                 warnstr += ' in the equation definition: '
                 warnstr += '`Eqn(lhs,rhs, check=False)`.'
@@ -183,7 +193,7 @@ class Equation(Basic):
     def applyfunc(self, func, *args, **kwargs):
         """
         If either side of the equation has a defined subfunction (attribute) of
-        name ``func``, that will be appliedinstead of the global function.
+        name ``func``, that will be applied instead of the global function.
         The operation is applied to both sides.
          """
         return self._applyfunc(func, *args, **kwargs, Eqn_apply_side='both')
