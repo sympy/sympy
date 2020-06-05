@@ -240,11 +240,14 @@ class ConditionSet(Set):
             # the base set should be filtered and if new is not in
             # the base set then this substitution is ignored
             return self.func(sym, cond, base)
-        cond = self.condition.subs(old, new)
-        base = self.base_set.subs(old, new)
-        if cond is S.true:
-            return ConditionSet(new, Contains(new, base), base)
-        return self.func(self.sym, cond, base)
+        else:
+            cond = self.condition.subs(old, new)
+            base = self.base_set.subs(old, new)
+            # The condition may have become true due to assumptions
+            # on 'sym'. In order for .subs() to be consistent with
+            # __new__ we *don't* check if 'sym' actually belongs to
+            # 'base'. In other words: assumptions are ignored.
+            return self.func(self.sym, cond, base)
 
     def dummy_eq(self, other, symbol=None):
         if not isinstance(other, self.func):
