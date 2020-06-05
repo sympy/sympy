@@ -100,6 +100,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     B1 : Stage 1 Bound
     B2 : Stage 2 Bound
     max_curve : Maximum number of curves generated
+    seed : Initialize pseudorandom generator
 
     References
     ==========
@@ -191,7 +192,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
 
 def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
     """Performs factorization using
-    Lenstra's Elliptic curve method
+    Lenstra's Elliptic curve method.
 
     Parameters:
     ===========
@@ -202,6 +203,16 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
     max_curve : Maximum number of curves generated
     increase_bound : If True, then the Stage 1 and 2 bounds increase
         by a factor of 10 incase of ECM failure
+    seed : Initialize pseudorandom generator
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import ecm
+    >>> ecm(25645121643901801)
+    {5394769, 4753701529}
+    >>> ecm(9804659461513846513)
+    {4641991, 2112166839943}
     """
     factor = set()
     for i in sieve.primerange(1, 100000):
