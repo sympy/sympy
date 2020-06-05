@@ -137,3 +137,35 @@ def gen_next_discriminant(start=0):
             continue
         break
     return start
+
+def choose_dis(n, start=0):
+    from sympy.ntheory import jacobi_symbol
+
+    D = gen_next_discriminant(start)
+    uv = c_smith(n, abs(D))
+    j = jacobi_symbol(D, n)
+
+    # If j == 0, then n is not prime
+    if j == 0:
+        return False
+
+    while(j != 1 or uv is None):
+
+        D = gen_next_discriminant(start)
+        uv = c_smith(n, abs(D))
+        j = jacobi_symbol(D, n)
+        # If j == 0, then n is not prime
+        if j == 0:
+            return False
+
+    u = uv[0]
+    v = uv[1]
+    m = [n + 1 + u, n + 1 - u]
+
+    if D == -4:
+        m.extend([n + 1 + 2*v, n + 1 - 2*v])
+    elif D == -3:
+        m.append([n + 1 + (u + 3*v)/2, n + 1 + (u - 3*v)/2, n + 1 - \
+                  (u + 3*v)/2, n + 1 - (u - 3*v)/2])
+
+    return D, m
