@@ -4,6 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.numbers import Rational, I
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
@@ -271,6 +272,10 @@ class GaussianDomain():
     def inject(self, *gens):
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
+
+    def as_AlgebraicField(self):
+        """Get equivalent domain as an ``AlgebraicField``. """
+        return AlgebraicField(self.base, I)
 
     # Override the negative etc handlers because this isn't an ordered domain.
 

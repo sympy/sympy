@@ -116,6 +116,16 @@ def apart(f, x=None, full=False, **options):
                     pass
             return f.xreplace(dict(reps))
 
+    # Factorization over ZZ_I or QQ_I is not supported so we use the
+    # factorization routines for AlgebraicField instead.
+    dom = P.domain
+    if dom.is_ZZ_I or dom.is_QQ_I:
+        if dom.is_ZZ_I:
+            dom = dom.get_field()
+        dom_alg = dom.as_AlgebraicField()
+        P = P.per(P.rep.convert(dom_alg))
+        Q = Q.per(Q.rep.convert(dom_alg))
+
     if P.is_multivariate:
         fc = f.cancel()
         if fc != f:

@@ -130,3 +130,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def from_AlgebraicField(K1, a, K0):
         """Convert AlgebraicField element 'a' to another AlgebraicField """
         return K1.from_sympy(K0.to_sympy(a))
+
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert GaussianInteger element 'a' to an AlgebraicField """
+        return K1.from_sympy(K0.to_sympy(a))
