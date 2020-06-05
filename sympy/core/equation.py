@@ -9,7 +9,7 @@ present the "=" relation operator is the only option. The relation operator may
 not be set.
 
 This class should not be confused with the Boolean class ``Equality``
-(abbreviated ``Eq``) which specifies that the equality of two expressions is
+(abbreviated ``Eq``) which specifies that the equality of two objects is
 ``True``.
 
 This tool applies operations to both sides of the equation simultaneously, just
@@ -25,6 +25,8 @@ in [SageMath](https://www.sagemath.org/) and
 [Maxima](http://maxima.sourceforge.net/).
 """
 
+
+from .expr import Expr
 from .basic import Basic
 from .sympify import _sympify
 
@@ -98,6 +100,8 @@ class Equation(Basic):
         check = kwargs.pop('check', True)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
+        if not isinstance(lhs,Expr) or not isinstance(rhs,Expr):
+            raise TypeError('lhs and rhs must be valid sympy expressions.')
         if check:
             lsimp = lhs.simplify()
             rsimp = rhs.simplify()

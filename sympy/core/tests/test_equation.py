@@ -1,5 +1,5 @@
 from sympy import var, integrate, simplify, expand, factor, log, Integral, \
-    diff
+    diff, FiniteSet
 from ..relational import Equality
 from ..equation import Equation, Eqn
 from pytest import raises
@@ -7,6 +7,7 @@ from pytest import raises
 
 def test_define_equation():
     a, b, c = var('a b c')
+    raises(TypeError, lambda: Eqn(FiniteSet(a), FiniteSet(b, c)))
     tsteqn = Eqn(a, b / c)
     assert tsteqn == Equation(a, b / c)
     assert tsteqn.lhs == Equation(a, b / c).args[0]
