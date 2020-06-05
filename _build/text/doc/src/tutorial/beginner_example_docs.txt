@@ -1,0 +1,79 @@
+Beginner Examples
+****************
+
+In beginner example includes examples like
+
+*Basic 
+
+*Differentiation
+
+*Expansion
+
+*Functions
+
+*Limited Examples
+
+
+Basic Example
+===========
+
+Basic Example tells us about how to print a normal equation using Sympy.
+
+Setting up Basic Example
+====================
+
+>>>from sympy import Symbol, pprint
+
+Symbol for representing the Symbol(Expressions) and pprint function for printing the whole equation.
+
+
+Differentiation Example
+====================
+
+Differentiation Example tells us how to use Sympy for differentiation.
+
+
+Setting up Differentiation Example
+==========================
+
+>>>from sympy import pprint, Symbol
+
+Symbol for representing the Symbol(Expressions) and pprint function for printing the whole equation.
+
+Expansion Example
+===================
+
+Expansion Example tells us how to expand Expressions.
+
+
+Setting up Expansion Example
+=========================
+
+>>>from sympy import pprint, Symbol
+
+Symbol for representing the Symbol(Expressions) and pprint function for printing the whole equation.
+
+Function Example
+====================
+
+Function Example tells us how to define function in Sympy.
+
+Setting up Function Example
+========================
+
+>>>from sympy import pprint, Symbol, log, exp
+
+Symbol for representing the Symbol(Expressions),pprint function for printing the whole equation, log for having the logarithm functions from use of Sympy and exp for having the use of e^x function.
+
+Limited Example
+=====================
+
+Limited Example helps us in limit example.
+
+
+Setting up Limited Example
+========================
+
+>>>from sympy import exp, log, Symbol, Rational, sin, limit, sqrt, oo
+
+Symbol for representing the Symbol(Expressions),pprint function for printing the whole equation, log for having the logarithm functions from use of Sympy and exp for having the use of e^x function.Rational for having the representation of rational number (p/q).Sin is for having the sin of the variable.Limit computes the limit of ``e(z)`` at the point.Sqrt, oo are also the functions used in it.
