@@ -184,7 +184,7 @@ class LinearEntity(GeometrySet):
         ========
 
         2-dimensional example
-        >>> from sympy import Point, Line, pi
+        >>> from sympy import Line
         >>> e = Line((0, 0), (1, 0))
         >>> ne = Line((0, 0), (1, 1))
         >>> sw = Line((1, 1), (0, 0))
@@ -246,14 +246,14 @@ class LinearEntity(GeometrySet):
         ========
 
         2-dimensional example
-        >>> from sympy import Point, Line, pi
+        >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, -2)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
         >>> l1.smallest_angle_between(l2)
         pi/4
 
         3-dimensional example
-        >>> from sympy import Point, Line, pi
+        >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0, 0), Point(0, 4, 5), Point(2, -2, 2)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
         >>> l1.smallest_angle_between(l2)
@@ -351,7 +351,7 @@ class LinearEntity(GeometrySet):
         ========
 
         concurrency in lines lying in 2D space.
-        >>> from sympy import Point, Line, Line3D
+        >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
         >>> l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)
@@ -437,7 +437,7 @@ class LinearEntity(GeometrySet):
         return self.p2 - self.p1
 
     def intersection(self, other):
-        """The intersection with another geometrical entity.
+        """Returns the intersection with another geometrical entity.
 
         Parameters
         ==========
@@ -2160,7 +2160,6 @@ class Line2D(LinearEntity2D, Line):
     ========
 
     >>> from sympy import Point
-    >>> from sympy.abc import L
     >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
@@ -2728,7 +2727,7 @@ class Line3D(LinearEntity3D, Line):
     ========
 
     >>> from sympy import Point3D
-    >>> from sympy.geometry import Line3D, Segment3D
+    >>> from sympy.geometry import Line3D
     >>> L = Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L
     Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
