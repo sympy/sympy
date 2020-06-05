@@ -1,4 +1,5 @@
 from sympy.core.basic import Basic
+from sympy.core.containers import Dict, Tuple
 
 class ParametricRegion(Basic):
     """
@@ -9,43 +10,38 @@ class ParametricRegion(Basic):
 
     >>> from sympy import symbols, cos, sin, pi
     >>> from sympy.vector import ParametricRegion
+
     >>> r, theta = symbols("r theta")
-    >>> circle = ParametricRegion(r*cos(theta), r*sin(theta), (theta, 0, 2*pi))
+    >>> circle = ParametricRegion((r, theta), r*cos(theta), r*sin(theta), limits={theta: (0, pi)})
     """
-    def __new__(cls, *args, system=None):
-        definition = list()
-        bounds = list()
-        parameters = list()
+    def __new__(cls, parameters, definition, limits, system=None):
+        if not isinstance(parameters, tuple):
+            parameters = (parameters,)
+        if not isinstance(definition, tuple):
+            definition = (definition,)
 
-        for arg in args:
-            if isinstance(arg, tuple):
-                bounds.append(arg)
-            else:
-                definition.append(arg)
+        for parameter, bounds in limits.items():
+            if parameter not in parameters:
+                raise ValueError("%s is not listed in parameter tuple" % parameter)
+            if len(bounds) != 2:
+                raise ValueError("Bounds should be in the form (lower_bound, upper_bound)")
 
-        for bound in bounds:
-            if len(bound) != 3:
-                raise ValueError("Parameters should be specified in the form (parameter, lower bound, upper bound)")
-
-        for elem in bounds:
-            parameters.append(elem[0])
-
-        obj = super().__new__(cls, definition, bounds, parameters, system)
-
+        obj = super().__new__(cls, Tuple(*parameters), Tuple(*definition), Dict(limits))
+        obj._system = system
         return obj
 
     @property
-    def bounds(self):
-        return self.args[1]
-
-    @property
-    def definition(self):
-        return self.args[0]
-
-    @property
-    def parameters(self):
+    def limits(self):
         return self.args[2]
 
     @property
+    def definition(self):
+        return self.args[1]
+
+    @property
+    def parameters(self):
+        return self.args[0]
+
+    @property
     def system(self):
-        return self.args[3]
+        return self._system
