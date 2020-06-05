@@ -813,9 +813,7 @@ def test_solve_trig():
         2*im(y))), S.Integers), S.Reals)))
 
     assert dumeq(solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x),
-        Union(ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers),
-              ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers),
-              ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+        ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
 
     # Tests for _solve_trig2() function
     assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),

@@ -78,11 +78,11 @@ def test_roots_quadratic():
 def test_issue_7724():
     eq = Poly(x**4*I + x**2 + I, x)
     assert roots(eq) == {
-            -sqrt(2)*sqrt(S.Half + sqrt(5)/2)/2 - sqrt(2)*I*sqrt(S.Half + sqrt(5)/2)/2: 1,
-            sqrt(2)*sqrt(S.Half + sqrt(5)/2)/2 + sqrt(2)*I*sqrt(S.Half + sqrt(5)/2)/2: 1,
-            -sqrt(2)*sqrt(-S.Half + sqrt(5)/2)/2 + sqrt(2)*I*sqrt(-S.Half + sqrt(5)/2)/2: 1,
-            sqrt(2)*sqrt(-S.Half + sqrt(5)/2)/2 - sqrt(2)*I*sqrt(-S.Half + sqrt(5)/2)/2: 1
-            }
+        sqrt(I/2 + sqrt(5)*I/2): 1,
+        sqrt(-sqrt(5)*I/2 + I/2): 1,
+        -sqrt(I/2 + sqrt(5)*I/2): 1,
+        -sqrt(-sqrt(5)*I/2 + I/2): 1}
+
 
 def test_issue_8438():
     p = Poly([1, y, -2, -3], x).as_expr()
