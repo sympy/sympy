@@ -1,5 +1,4 @@
 from sympy.ntheory import sieve, isprime
-from sympy import gcd, mod_inverse, sqrt
 from sympy.core.power import integer_log
 from sympy.core.compatibility import as_int
 import random
@@ -108,6 +107,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     .. [1]  Carl Pomerance and Richard Crandall "Prime Numbers:
         A Computational Perspective" (2nd Ed.), page 344
     """
+    from sympy import gcd, mod_inverse, sqrt
     n = as_int(n)
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("The Bounds should be an even integer")
