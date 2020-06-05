@@ -2,12 +2,14 @@ from sympy import var, integrate, simplify, expand, factor, log, Integral, \
     diff, FiniteSet
 from ..relational import Equality
 from ..equation import Equation, Eqn
-from pytest import raises
+from pytest import raises, warns
 
 
 def test_define_equation():
     a, b, c = var('a b c')
     raises(TypeError, lambda: Eqn(FiniteSet(a), FiniteSet(b, c)))
+    warns(UserWarning, lambda: Eqn(1,0))
+    assert Eqn(1, 0, check=False) == Equation(1, 0, check=False)
     tsteqn = Eqn(a, b / c)
     assert tsteqn == Equation(a, b / c)
     assert tsteqn.lhs == Equation(a, b / c).args[0]
