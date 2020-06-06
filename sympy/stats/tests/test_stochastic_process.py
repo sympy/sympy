@@ -288,6 +288,15 @@ def test_PoissonProcess():
     assert M.lamda == 5
     raises(ValueError, lambda: Z.split(3, 2)) # 2+3 != 9
 
+    # check if it handles queries with two random variables in one args
+    res1 = P(Eq(N(3), N(5)))
+    assert res1 == P(Eq(N(t), 0), Contains(t, Interval(3, 5)))
+    res2 = P(N(3) > N(1))
+    assert res2 == P((N(t) > 0), Contains(t, Interval(1, 3)))
+    assert P(N(3) < N(1)) == 0 # condition is not possible
+    res3 = P(N(3) <= N(1)) # holds only for Eq(N(3), N(1))
+    assert res3 == P(Eq(N(t), 0), Contains(t, Interval(1, 3)))
+
 
 def test_WienerProcess():
     X = WienerProcess("X")

@@ -1227,6 +1227,22 @@ class CountingProcess(ContinuousTimeStochasticProcess):
                 condition = condition.subs(rv_swap)
             else:
                 return Probability(condition, given_condition)
+        if isinstance(condition, (And, Or)):
+            cond_args = condition.args
+        else: # single condition
+            cond_args = (condition, )
+            for arg in cond_args:
+                if is_random(arg.args[0]) and is_random(arg.args[1]): # like: X(4) > X(2), Eq(X(2), X(3))
+                    if arg.args[0].key>=arg.args[1].key:
+                        diff_key = arg.args[0].key - arg.args[1].key
+                        rv = arg.args[0]
+                        condition = condition.subs({rv: rv.pspace.process(diff_key),
+                        arg.args[1]: 0})
+                    else:
+                        diff_key = arg.args[1].key - arg.args[0].key
+                        rv = arg.args[1]
+                        condition = condition.subs({rv: rv.pspace.process(diff_key),
+                        arg.args[0]: 0})
 
         return _SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
 
