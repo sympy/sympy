@@ -433,7 +433,7 @@ class LinearEntity(GeometrySet):
         return self.p2 - self.p1
 
     def intersection(self, other):
-        """Generate the intersection with another geometrical entity.
+        """The intersection with another geometrical entity.
 
         Parameters
         ==========
