@@ -1106,10 +1106,10 @@ def get_timerv_swaps(expr, condition):
     >>> from sympy import symbols, Contains, Interval
     >>> x, t, d = symbols('x t d', positive=True)
     >>> X = PoissonProcess("X", 3)
-    >>> get_timerv_swaps(x*X(t), Contains(X(t), Interval.Lopen(0, 1)))
+    >>> get_timerv_swaps(x*X(t), Contains(t, Interval.Lopen(0, 1)))
     ([Interval.Lopen(0, 1)], {X(t): X(1)})
-    >>> get_timerv_swaps((X(t)**2 + X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
-    ... & Contains(X(d), Interval.Ropen(1, 4))) # doctest: +SKIP
+    >>> get_timerv_swaps((X(t)**2 + X(d)**2), Contains(t, Interval.Lopen(0, 1))
+    ... & Contains(d, Interval.Ropen(1, 4))) # doctest: +SKIP
     ([Interval.Ropen(1, 4), Interval.Lopen(0, 1)], {X(d): X(3), X(t): X(1)})
 
     Returns
@@ -1135,7 +1135,7 @@ def get_timerv_swaps(expr, condition):
     intervals = []
     for expr_sym in expr_syms:
         for arg in given_cond_args:
-            if arg.has(expr_sym):
+            if arg.has(expr_sym.key):
                 intv = _set_converter(arg.args[1])
                 diff_key = intv._sup - intv._inf
                 if diff_key == oo:
@@ -1256,15 +1256,15 @@ class PoissonProcess(CountingProcess):
     >>> t1, t2 = symbols('t1 t2', positive=True)
     >>> P(X(t1) < 4)
     (9*t1**3/2 + 9*t1**2/2 + 3*t1 + 1)*exp(-3*t1)
-    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), Contains(X(t1), Interval.Ropen(2, 4)))
+    >>> P(Eq(X(t1), 2) | Ne(X(t1), 4), Contains(t1, Interval.Ropen(2, 4)))
     1 - 36*exp(-6)
-    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), Contains(X(t1), Interval.Lopen(0, 2))
-    ... & Contains(X(t2), Interval.Lopen(2, 4)))
+    >>> P(Eq(X(t1), 2) & Eq(X(t2), 3), Contains(t1, Interval.Lopen(0, 2))
+    ... & Contains(t2, Interval.Lopen(2, 4)))
     648*exp(-12)
     >>> E(X(t1))
     3*t1
-    >>> E(X(t1)**2 + 2*X(t2),  Contains(X(t1), Interval.Lopen(0, 1))
-    ... & Contains(X(t2), Interval.Lopen(1, 2)))
+    >>> E(X(t1)**2 + 2*X(t2),  Contains(t1, Interval.Lopen(0, 1))
+    ... & Contains(t2, Interval.Lopen(1, 2)))
     18
 
     Merging two Poisson Processes
@@ -1339,12 +1339,12 @@ class WienerProcess(CountingProcess):
     >>> t1, t2 = symbols('t1 t2', positive=True)
     >>> P(X(t1) < 7).simplify()
     erf(7*sqrt(2)/(2*sqrt(t1)))/2 + 1/2
-    >>> P((X(t1) > 2) | (X(t1) < 4), Contains(X(t1), Interval.Ropen(2, 4))).simplify()
+    >>> P((X(t1) > 2) | (X(t1) < 4), Contains(t1, Interval.Ropen(2, 4))).simplify()
     -erf(1)/2 + erf(2)/2 + 1
     >>> E(X(t1))
     0
-    >>> E(X(t1) + 2*X(t2),  Contains(X(t1), Interval.Lopen(0, 1))
-    ... & Contains(X(t2), Interval.Lopen(1, 2)))
+    >>> E(X(t1) + 2*X(t2),  Contains(t1, Interval.Lopen(0, 1))
+    ... & Contains(t2, Interval.Lopen(1, 2)))
     0
 
     References
@@ -1396,8 +1396,8 @@ class GammaProcess(CountingProcess):
     >>> X = GammaProcess('X', 1, 2)
     >>> P(X(t) < 1).simplify()
     lowergamma(2*t, 1)/gamma(2*t)
-    >>> P(Not((X(t) < 5) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) &
-    ... Contains(X(d), Interval.Lopen(7, 8))).simplify()
+    >>> P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
+    ... Contains(d, Interval.Lopen(7, 8))).simplify()
     -4*exp(-3) + 472*exp(-8)/3 + 1
     >>> E(X(2) + x*E(X(5)))
     10*x + 4

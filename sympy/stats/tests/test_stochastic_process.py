@@ -231,52 +231,52 @@ def test_PoissonProcess():
                 12**X(4)*18**X(6)*exp(-30)/(factorial(X(4))*factorial(X(6)))))
 
     assert P(X(t) < 1) == exp(-3*t)
-    assert P(Eq(X(t), 0), Contains(X(t), Interval.Lopen(3, 5))) == exp(-6) # exp(-2*lamda)
-    res = P(Eq(X(t), 1), Contains(X(t), Interval.Lopen(3, 4)))
+    assert P(Eq(X(t), 0), Contains(t, Interval.Lopen(3, 5))) == exp(-6) # exp(-2*lamda)
+    res = P(Eq(X(t), 1), Contains(t, Interval.Lopen(3, 4)))
     assert res == 3*exp(-3)
 
     # Equivalent to P(Eq(X(t), 1))**4 because of non-overlapping intervals
-    assert P(Eq(X(t), 1) & Eq(X(d), 1) & Eq(X(x), 1) & Eq(X(y), 1), Contains(X(t), Interval.Lopen(0, 1))
-    & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(x), Interval.Lopen(2, 3))
-    & Contains(X(y), Interval.Lopen(3, 4))) == res**4
+    assert P(Eq(X(t), 1) & Eq(X(d), 1) & Eq(X(x), 1) & Eq(X(y), 1), Contains(t, Interval.Lopen(0, 1))
+    & Contains(d, Interval.Lopen(1, 2)) & Contains(x, Interval.Lopen(2, 3))
+    & Contains(y, Interval.Lopen(3, 4))) == res**4
 
     # Return Probability because of overlapping intervals
-    assert P(Eq(X(t), 2) & Eq(X(d), 3), Contains(X(t), Interval.Lopen(0, 2))
-    & Contains(X(d), Interval.Ropen(2, 4))) == \
-                Probability(Eq(X(d), 3) & Eq(X(t), 2), Contains(X(t), Interval.Lopen(0, 2))
-                & Contains(X(d), Interval.Ropen(2, 4)))
+    assert P(Eq(X(t), 2) & Eq(X(d), 3), Contains(t, Interval.Lopen(0, 2))
+    & Contains(d, Interval.Ropen(2, 4))) == \
+                Probability(Eq(X(d), 3) & Eq(X(t), 2), Contains(t, Interval.Lopen(0, 2))
+                & Contains(d, Interval.Ropen(2, 4)))
 
     raises(ValueError, lambda: P(Eq(X(t), 2) & Eq(X(d), 3),
-    Contains(X(t), Interval.Lopen(0, 4)) & Contains(X(d), Interval.Lopen(3, oo)))) # no bound on d
+    Contains(t, Interval.Lopen(0, 4)) & Contains(d, Interval.Lopen(3, oo)))) # no bound on d
     assert P(Eq(X(3), 2)) == 81*exp(-9)/2
-    assert P(Eq(X(t), 2), Contains(X(t), Interval.Lopen(0, 5))) == 225*exp(-15)/2
+    assert P(Eq(X(t), 2), Contains(t, Interval.Lopen(0, 5))) == 225*exp(-15)/2
 
     # Check that probability works correctly by adding it to 1
-    res1 = P(X(t) <= 3, Contains(X(t), Interval.Lopen(0, 5)))
-    res2 = P(X(t) > 3, Contains(X(t), Interval.Lopen(0, 5)))
+    res1 = P(X(t) <= 3, Contains(t, Interval.Lopen(0, 5)))
+    res2 = P(X(t) > 3, Contains(t, Interval.Lopen(0, 5)))
     assert res1 == 691*exp(-15)
     assert (res1 + res2).simplify() == 1
 
     # Check Not and  Or
-    assert P(Not(Eq(X(t), 2) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) & \
-            Contains(X(d), Interval.Lopen(7, 8))).simplify() == -18*exp(-6) + 234*exp(-9) + 1
-    assert P(Eq(X(t), 2) | Ne(X(t), 4), Contains(X(t), Interval.Ropen(2, 4))) == 1 - 36*exp(-6)
+    assert P(Not(Eq(X(t), 2) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) & \
+            Contains(d, Interval.Lopen(7, 8))).simplify() == -18*exp(-6) + 234*exp(-9) + 1
+    assert P(Eq(X(t), 2) | Ne(X(t), 4), Contains(t, Interval.Ropen(2, 4))) == 1 - 36*exp(-6)
     raises(ValueError, lambda: P(X(t) > 2, X(t) + X(d)))
     assert E(X(t)) == 3*t  # property of the distribution at a given timestamp
-    assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(X(t), Interval.Lopen(0, 1))
-        & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(y), Interval.Ropen(3, 4))) == 75
-    assert E(X(t)**2, Contains(X(t), Interval.Lopen(0, 1))) == 12
-    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
-    & Contains(X(d), Interval.Ropen(1, 2))) == \
-            Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2), Contains(X(t), Interval.Lopen(0, 1))
-            & Contains(X(d), Interval.Ropen(1, 2)))
+    assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(t, Interval.Lopen(0, 1))
+        & Contains(d, Interval.Lopen(1, 2)) & Contains(y, Interval.Ropen(3, 4))) == 75
+    assert E(X(t)**2, Contains(t, Interval.Lopen(0, 1))) == 12
+    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(t, Interval.Lopen(0, 1))
+    & Contains(d, Interval.Ropen(1, 2))) == \
+            Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2), Contains(t, Interval.Lopen(0, 1))
+            & Contains(d, Interval.Ropen(1, 2)))
 
     # Value Error because of infinite time bound
-    raises(ValueError, lambda: E(X(t)**3, Contains(X(t), Interval.Lopen(0, oo))))
+    raises(ValueError, lambda: E(X(t)**3, Contains(t, Interval.Lopen(1, oo))))
 
     # Equivalent to E(X(t)**2) - E(X(d)**2) == E(X(1)**2) - E(X(1)**2) == 0
-    assert E((X(t) + X(d))*(X(t) - X(d)), Contains(X(t), Interval.Lopen(0, 1))
-        & Contains(X(d), Interval.Lopen(1, 2))) == 0
+    assert E((X(t) + X(d))*(X(t) - X(d)), Contains(t, Interval.Lopen(0, 1))
+        & Contains(d, Interval.Lopen(1, 2))) == 0
     assert E(X(2) + x*E(X(5))) == 15*x + 6
     assert E(x*X(1) + y) == 3*x + y
     Y = PoissonProcess("Y", 6)
@@ -307,28 +307,28 @@ def test_WienerProcess():
         Lambda((X(4), X(6)), sqrt(6)*exp(-X(4)**2/8)*exp(-X(6)**2/12)/(24*pi)))
 
     assert P(X(t) < 3).simplify() == erf(3*sqrt(2)/(2*sqrt(t)))/2 + S(1)/2
-    assert P(X(t) > 2, Contains(X(t), Interval.Lopen(3, 7))).simplify() == S(1)/2 -\
+    assert P(X(t) > 2, Contains(t, Interval.Lopen(3, 7))).simplify() == S(1)/2 -\
                 erf(sqrt(2)/2)/2
 
     # Equivalent to P(X(1)>1)**4
     assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1),
-        Contains(X(t), Interval.Lopen(0, 1)) & Contains(X(d), Interval.Lopen(1, 2))
-        & Contains(X(x), Interval.Lopen(2, 3)) & Contains(X(y), Interval.Lopen(3, 4))).simplify() ==\
+        Contains(t, Interval.Lopen(0, 1)) & Contains(d, Interval.Lopen(1, 2))
+        & Contains(x, Interval.Lopen(2, 3)) & Contains(y, Interval.Lopen(3, 4))).simplify() ==\
         (1 - erf(sqrt(2)/2))*(1 - erf(sqrt(2)))*(1 - erf(3*sqrt(2)/2))*(1 - erf(2*sqrt(2)))/16
 
     # Contains an overlapping interval so, return Probability
-    assert P((X(t)< 2) & (X(d)> 3), Contains(X(t), Interval.Lopen(0, 2))
-        & Contains(X(d), Interval.Ropen(2, 4))) == Probability((X(d) > 3) & (X(t) < 2),
-        Contains(X(d), Interval.Ropen(2, 4)) & Contains(X(t), Interval.Lopen(0, 2)))
+    assert P((X(t)< 2) & (X(d)> 3), Contains(t, Interval.Lopen(0, 2))
+        & Contains(d, Interval.Ropen(2, 4))) == Probability((X(d) > 3) & (X(t) < 2),
+        Contains(d, Interval.Ropen(2, 4)) & Contains(t, Interval.Lopen(0, 2)))
 
-    assert str(P(Not((X(t) < 5) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) &
-        Contains(X(d), Interval.Lopen(7, 8))).simplify()) == \
+    assert str(P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
+        Contains(d, Interval.Lopen(7, 8))).simplify()) == \
                 '-(1 - erf(3*sqrt(2)/2))*(2 - erfc(5/2))/4 + 1'
     # Distribution has mean 0 at each timestamp
     assert E(X(t)) == 0
-    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
-    & Contains(X(d), Interval.Ropen(1, 2))) == Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2),
-    Contains(X(d), Interval.Ropen(1, 2)) & Contains(X(t), Interval.Lopen(0, 1)))
+    assert E(x*(X(t) + X(d))*(X(t)**2+X(d)**2), Contains(t, Interval.Lopen(0, 1))
+    & Contains(d, Interval.Ropen(1, 2))) == Expectation(x*(X(d) + X(t))*(X(d)**2 + X(t)**2),
+    Contains(d, Interval.Ropen(1, 2)) & Contains(t, Interval.Lopen(0, 1)))
     assert E(X(t) + x*E(X(3))) == 0
 
 
@@ -349,11 +349,11 @@ def test_GammaProcess_symbolic():
     assert variance(X(t)).simplify() == g*t/l**2
 
     # Equivalent to E(2*X(1)) + E(X(1)**2) + E(X(1)**3), where E(X(1)) == g/l
-    assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(X(t), Interval.Lopen(0, 1))
-        & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(y), Interval.Ropen(3, 4))) == \
+    assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(t, Interval.Lopen(0, 1))
+        & Contains(d, Interval.Lopen(1, 2)) & Contains(y, Interval.Ropen(3, 4))) == \
             2*g/l + (g**2 + g)/l**2 + (g**3 + 3*g**2 + 2*g)/l**3
 
-    assert P(X(t) > 3, Contains(X(t), Interval.Lopen(3, 4))).simplify() == \
+    assert P(X(t) > 3, Contains(t, Interval.Lopen(3, 4))).simplify() == \
                                 1 - lowergamma(g, 3*l)/gamma(g) # equivalent to P(X(1)>3)
 
 def test_GammaProcess_numeric():
@@ -369,15 +369,15 @@ def test_GammaProcess_numeric():
     raises(ValueError, lambda: GammaProcess("X", -1, -2))
 
     # all are independent because of non-overlapping intervals
-    assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1), Contains(X(t),
-        Interval.Lopen(0, 1)) & Contains(X(d), Interval.Lopen(1, 2)) & Contains(X(x),
-        Interval.Lopen(2, 3)) & Contains(X(y), Interval.Lopen(3, 4))).simplify() == \
+    assert P((X(t) > 4) & (X(d) > 3) & (X(x) > 2) & (X(y) > 1), Contains(t,
+        Interval.Lopen(0, 1)) & Contains(d, Interval.Lopen(1, 2)) & Contains(x,
+        Interval.Lopen(2, 3)) & Contains(y, Interval.Lopen(3, 4))).simplify() == \
                                                             120*exp(-10)
 
     # Check working with Not and Or
-    assert P(Not((X(t) < 5) & (X(d) > 3)), Contains(X(t), Interval.Ropen(2, 4)) &
-        Contains(X(d), Interval.Lopen(7, 8))).simplify() == -4*exp(-3) + 472*exp(-8)/3 + 1
-    assert P((X(t) > 2) | (X(t) < 4), Contains(X(t), Interval.Ropen(1, 4))).simplify() == \
+    assert P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
+        Contains(d, Interval.Lopen(7, 8))).simplify() == -4*exp(-3) + 472*exp(-8)/3 + 1
+    assert P((X(t) > 2) | (X(t) < 4), Contains(t, Interval.Ropen(1, 4))).simplify() == \
                                             -643*exp(-4)/15 + 109*exp(-2)/15 + 1
 
     assert E(X(t)) == 2*t # E(X(t)) == gamma*t/l
