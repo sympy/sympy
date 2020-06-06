@@ -1,6 +1,6 @@
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
-    EmptySet, Union, Contains, imageset)
-from sympy import (Symbol, Eq, S, Abs, sin, asin, pi, Interval,
+    EmptySet, Union, Contains, ImageSet)
+from sympy import (Symbol, Eq, Ne, S, Abs, sin, asin, pi, Interval,
     And, Mod, oo, Function, Lambda)
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
@@ -132,8 +132,8 @@ def test_subs_CondSet():
 
     # issue 17341
     k = Symbol('k')
-    img1 = imageset(Lambda(k, 2*k*pi + asin(y)), S.Integers)
-    img2 = imageset(Lambda(k, 2*k*pi + asin(S.One/3)), S.Integers)
+    img1 = ImageSet(Lambda(k, 2*k*pi + asin(y)), S.Integers)
+    img2 = ImageSet(Lambda(k, 2*k*pi + asin(S.One/3)), S.Integers)
     assert ConditionSet(x, Contains(
         y, Interval(-1,1)), img1).subs(y, S.One/3).dummy_eq(img2)
 
@@ -154,7 +154,6 @@ def test_dummy_eq():
     assert c.dummy_eq(C(y, y < 1, I))
     assert c.dummy_eq(1) == False
     assert c.dummy_eq(C(x, x < 1, S.Reals)) == False
-    raises(ValueError, lambda: c.dummy_eq(C(x, x < 1, S.Reals), z))
 
     c1 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
     c2 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
@@ -163,6 +162,16 @@ def test_dummy_eq():
     assert c1.dummy_eq(c3) is False
     assert c.dummy_eq(c1) is False
     assert c1.dummy_eq(c) is False
+
+    # issue 19496
+    m = Symbol('m')
+    n = Symbol('n')
+    a = Symbol('a')
+    d1 = ImageSet(Lambda(m, m*pi), S.Integers)
+    d2 = ImageSet(Lambda(n, n*pi), S.Integers)
+    c1 = ConditionSet(x, Ne(a, 0), d1)
+    c2 = ConditionSet(x, Ne(a, 0), d2)
+    assert c1.dummy_eq(c2)
 
 
 def test_contains():
