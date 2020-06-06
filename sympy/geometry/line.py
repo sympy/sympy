@@ -642,6 +642,11 @@ class LinearEntity(GeometrySet):
         >>> Line3D.is_parallel(l1, l3)
         False
 
+        See Also
+        ========
+
+        coefficients
+
         """
 
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
@@ -692,10 +697,10 @@ class LinearEntity(GeometrySet):
         >>> l1, l2 = Line3D(p1, p2), Line3D(p2, p3)
         >>> l1.is_perpendicular(l2)
         False
-        >>> p4 = Point3D(1, 1, -1)
+        >>> p4 = Point3D(1, 1, -2)
         >>> l3 = Line3D(p1, p4)
         >>> l1.is_perpendicular(l3)
-        False
+        True
 
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
@@ -1373,9 +1378,7 @@ class Line(LinearEntity):
         return self.equals(other)
 
     def equals(self, other):
-        """Returns True if self and other are the same mathematical entities.
-
-        """
+        """Returns True if self and other are the same mathematical entities."""
         if not isinstance(other, Line):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
@@ -1619,9 +1622,7 @@ class Ray(LinearEntity):
             return abs(other - self.source)
 
     def equals(self, other):
-        """Returns True if self and other are the same mathematical entities.
-
-        """
+        """Returns True if self and other are the same mathematical entities."""
         if not isinstance(other, Ray):
             return False
         return self.source == other.source and other.p2 in self
