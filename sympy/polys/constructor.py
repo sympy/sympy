@@ -2,10 +2,9 @@
 
 from __future__ import print_function, division
 
-from sympy.core import sympify
+from sympy.core import S, sympify
 from sympy.core.evalf import pure_complex
-from sympy.polys.domains import ZZ, QQ, EX
-from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
+from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import parallel_dict_from_basic
@@ -177,7 +176,7 @@ def _construct_composite(coeffs, opt):
             coeffs.update(list(numer.values()))
             coeffs.update(list(denom.values()))
 
-    rationals, reals = False, False
+    rationals = reals = gaussians = complexes = False
 
     for coeff in coeffs:
         if coeff.is_Rational:
@@ -186,10 +185,27 @@ def _construct_composite(coeffs, opt):
         elif coeff.is_Float:
             reals = True
             break
+        else:
+            is_complex = pure_complex(coeff)
+            if is_complex is not None:
+                complexes = True
+                x, y = is_complex
+                if x.is_Rational and y.is_Rational:
+                    if not (x.is_Integer and y.is_Integer):
+                        rationals = True
+                    gaussians = True
+                else:
+                    pass # XXX: CC?
 
     if reals:
+        if complexes: 1/0 # XXX: CC?
         max_prec = max([c._prec for c in coeffs])
         ground = RealField(prec=max_prec)
+    elif gaussians:
+        if rationals:
+            ground = QQ_I
+        else:
+            ground = ZZ_I
     elif rationals:
         ground = QQ
     else:
