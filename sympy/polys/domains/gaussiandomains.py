@@ -234,6 +234,9 @@ class GaussianDomain():
     """Base class for Gaussian domains."""
     base = None  # base domain, ZZ or QQ
 
+    is_Numerical = True
+    is_Exact = True
+
     has_assoc_Ring = True
     has_assoc_Field = True
 

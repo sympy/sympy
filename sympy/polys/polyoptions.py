@@ -406,7 +406,7 @@ class Domain(Option, metaclass=OptionType):
     _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
     _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|R|RR|C|CC)\[(.+)\]$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|ZZ_I|QQ_I|R|RR|C|CC)\[(.+)\]$")
     _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
     _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
@@ -470,6 +470,10 @@ class Domain(Option, metaclass=OptionType):
                     return sympy.polys.domains.QQ.poly_ring(*gens)
                 elif ground in ['R', 'RR']:
                     return sympy.polys.domains.RR.poly_ring(*gens)
+                elif ground == 'ZZ_I':
+                    return sympy.polys.domains.ZZ_I.poly_ring(*gens)
+                elif ground == 'QQ_I':
+                    return sympy.polys.domains.QQ_I.poly_ring(*gens)
                 else:
                     return sympy.polys.domains.CC.poly_ring(*gens)
 
