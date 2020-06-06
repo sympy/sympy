@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
+from sympy.core import sympify
 from sympy.core.evalf import pure_complex
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.realfield import RealField
