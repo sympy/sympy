@@ -1519,3 +1519,9 @@ def _symbol_converter(sym):
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
+
+def sample_stochastic(process, max_time=S.Infinity):
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    if not isinstance(process, StochasticProcess):
+        raise ValueError("Process must be an instance of Stochastic Process")
+    return process.sample(max_time)

@@ -3,7 +3,8 @@ from sympy.sets import FiniteSet
 from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-                 sampling_density, moment_generating_function, quantile, is_random)
+                 sampling_density, moment_generating_function, quantile, is_random,
+                 sample_stochastic)
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -11,7 +12,7 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
         'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
         'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
-        'smoment', 'quantile']
+        'smoment', 'quantile', 'sample_stochastic']
 
 
 
