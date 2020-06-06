@@ -7,7 +7,8 @@ from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 
 
@@ -59,11 +60,7 @@ def test_DiscreteMarkovChain():
     raises(ValueError, lambda: DiscreteMarkovChain("Z", [0, 1, 2], MatrixSymbol('T', 3, 4)))
     raises(ValueError, lambda: E(Y[3], Eq(Y[2], 6)))
     raises(ValueError, lambda: E(Y[2], Eq(Y[3], 1)))
-    samps = list(sample_stochastic(Y, 5))
-    assert len(samps) == 5
-    for samp in samps:
-        assert samp in Y.state_space
-        assert next(sample_stochastic(Y)) in Y.state_space
+
 
     # extended tests for probability queries
     TO1 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
@@ -114,11 +111,29 @@ def test_DiscreteMarkovChain():
     assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
     assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
+
+
+def test_sample_stochastic():
+    if not import_module('scipy'):
+        skip('SciPy Not installed. Skip sampling tests')
+    T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    samps = list(sample_stochastic(Y, 5))
+    assert len(samps) == 5
+    for samp in samps:
+        assert samp in Y.state_space
+        assert next(sample_stochastic(Y)) in Y.state_space
+
+    T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
+                [Rational(1, 3), 0, Rational(2, 3)],
+                [S.Half, S.Half, 0]])
+    X = DiscreteMarkovChain('X', [0, 1, 2], T)
     samps = list(sample_stochastic(X, 10))
     assert len(samps) == 10
     for samp in samps:
         assert samp in X.state_space
         assert next(sample_stochastic(X)) in X.state_space
+
 
 def test_ContinuousMarkovChain():
     T1 = Matrix([[S(-2), S(2), S.Zero],
