@@ -85,6 +85,30 @@ def test_free_symbols():
         ).free_symbols == {z}
     assert ConditionSet(x, Eq(x, 0), FiniteSet(x, z)
         ).free_symbols == {x, z}
+    assert ConditionSet(x, Eq(x, 0), ImageSet(Lambda(y, y**2), S.Integers)
+        ).free_symbols == set()
+
+
+def test_bound_symbols():
+    assert ConditionSet(x, Eq(y, 0), FiniteSet(z)
+        ).bound_symbols == {x}
+    assert ConditionSet(x, Eq(x, 0), FiniteSet(x, y)
+        ).bound_symbols == {x}
+    assert ConditionSet(x, x < 10, ImageSet(Lambda(y, y**2), S.Integers)
+        ).bound_symbols == {x}
+    assert ConditionSet(x, x < 10, ConditionSet(y, y > 1, S.Integers)
+        ).bound_symbols == {x}
+
+
+def test_as_dummy():
+    _0 = Symbol('_0')
+    assert ConditionSet(x, x < 1, Interval(y, oo)
+        ).as_dummy() == ConditionSet(_0, _0 < 1, Interval(y, oo))
+    assert ConditionSet(x, x < 1, Interval(x, oo)
+        ).as_dummy() == ConditionSet(_0, _0 < 1, Interval(x, oo))
+    assert ConditionSet(x, x < 1, ImageSet(Lambda(y, y**2), S.Integers)
+        ).as_dummy() == ConditionSet(
+            _0, _0 < 1, ImageSet(Lambda(_0, _0**2), S.Integers))
 
 
 def test_subs_CondSet():
