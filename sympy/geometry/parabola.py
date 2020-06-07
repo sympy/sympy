@@ -1,7 +1,9 @@
 """Parabolic geometrical entity.
 
 Contains
-* Parabola
+========
+
+Parabola
 
 """
 
@@ -107,11 +109,6 @@ class Parabola(GeometrySet):
 
         axis_of_symmetry : Line
 
-        See Also
-        ========
-
-        sympy.geometry.line.Line
-
         Examples
         ========
 
@@ -119,6 +116,11 @@ class Parabola(GeometrySet):
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.axis_of_symmetry
         Line2D(Point2D(0, 0), Point2D(0, 1))
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line
 
         """
         return self.directrix.perpendicular_line(self.focus)
@@ -132,11 +134,6 @@ class Parabola(GeometrySet):
 
         directrix : Line
 
-        See Also
-        ========
-
-        sympy.geometry.line.Line
-
         Examples
         ========
 
@@ -146,6 +143,11 @@ class Parabola(GeometrySet):
         >>> p1.directrix
         Line2D(Point2D(5, 8), Point2D(7, 8))
 
+        See Also
+        ========
+
+        sympy.geometry.line.Line
+
         """
         return self.args[1]
 
@@ -153,21 +155,15 @@ class Parabola(GeometrySet):
     def eccentricity(self):
         """The eccentricity of the parabola.
 
-        Returns
-        =======
-
-        eccentricity : number
-
         A parabola may also be characterized as a conic section with an
         eccentricity of 1. As a consequence of this, all parabolas are
         similar, meaning that while they can be different sizes,
         they are all the same shape.
 
-        See Also
-        ========
+        Returns
+        =======
 
-        https://en.wikipedia.org/wiki/Parabola
-
+        eccentricity : number
 
         Examples
         ========
@@ -177,8 +173,13 @@ class Parabola(GeometrySet):
         >>> p1.eccentricity
         1
 
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Parabola
+
         Notes
-        -----
+        =====
         The eccentricity for every Parabola is 1 by definition.
 
         """
@@ -196,6 +197,7 @@ class Parabola(GeometrySet):
 
         Returns
         =======
+
         equation : sympy expression
 
         Examples
@@ -230,19 +232,7 @@ class Parabola(GeometrySet):
         Returns
         =======
 
-        focal_lenght : number or symbolic expression
-
-        Notes
-        =====
-
-        The distance between the vertex and the focus
-        (or the vertex and directrix), measured along the axis
-        of symmetry, is the "focal length".
-
-        See Also
-        ========
-
-        https://en.wikipedia.org/wiki/Parabola
+        focal length : number or symbolic expression
 
         Examples
         ========
@@ -251,6 +241,18 @@ class Parabola(GeometrySet):
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.focal_length
         4
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Parabola
+
+        Notes
+        =====
+
+        The distance between the vertex and the focus
+        (or the vertex and directrix), measured along the axis
+        of symmetry, is the "focal length".
 
         """
         distance = self.directrix.distance(self.focus)
@@ -267,11 +269,6 @@ class Parabola(GeometrySet):
 
         focus : Point
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
         Examples
         ========
 
@@ -280,6 +277,11 @@ class Parabola(GeometrySet):
         >>> p1 = Parabola(f1, Line(Point(5, 8), Point(7, 8)))
         >>> p1.focus
         Point2D(0, 0)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         return self.args[0]
@@ -295,7 +297,8 @@ class Parabola(GeometrySet):
         Returns
         =======
 
-        intersection : list of GeometryEntity objects
+        intersection : list
+             returns list of GeometryEntity objects.
 
         Examples
         ========
@@ -343,6 +346,19 @@ class Parabola(GeometrySet):
 
         p : number or symbolic expression
 
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.p_parameter
+        -4
+
+        References
+        ==========
+
+        http://www.sparknotes.com/math/precalc/conicsections/section2.rhtml
+
         Notes
         =====
 
@@ -351,20 +367,6 @@ class Parabola(GeometrySet):
         and horizontal that open right, give a positive value for p.
         Vertical parabolas that open down and horizontal that open left,
         give a negative value for p.
-
-
-        See Also
-        ========
-
-        http://www.sparknotes.com/math/precalc/conicsections/section2.rhtml
-
-        Examples
-        ========
-
-        >>> from sympy import Parabola, Point, Line
-        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
-        >>> p1.p_parameter
-        -4
 
         """
         if self.axis_of_symmetry.slope == 0:
@@ -384,11 +386,6 @@ class Parabola(GeometrySet):
 
         vertex : Point
 
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
         Examples
         ========
 
@@ -396,6 +393,11 @@ class Parabola(GeometrySet):
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.vertex
         Point2D(0, 4)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
 
         """
         focus = self.focus
