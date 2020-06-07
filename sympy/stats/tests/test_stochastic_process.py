@@ -279,6 +279,7 @@ def test_PoissonProcess():
         & Contains(d, Interval.Lopen(1, 2))) == 0
     assert E(X(2) + x*E(X(5))) == 15*x + 6
     assert E(x*X(1) + y) == 3*x + y
+    assert P(Eq(X(1), 2) & Eq(X(t), 3), Contains(t, Interval.Lopen(1, 2))) == 81*exp(-6)/4
     Y = PoissonProcess("Y", 6)
     Z = X + Y
     assert Z.lamda == X.lamda + Y.lamda == 9

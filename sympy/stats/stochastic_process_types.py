@@ -1135,7 +1135,7 @@ def get_timerv_swaps(expr, condition):
     intervals = []
     for expr_sym in expr_syms:
         for arg in given_cond_args:
-            if arg.has(expr_sym.key):
+            if arg.has(expr_sym.key) and isinstance(expr_sym.key, Symbol):
                 intv = _set_converter(arg.args[1])
                 diff_key = intv._sup - intv._inf
                 if diff_key == oo:
