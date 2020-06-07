@@ -90,7 +90,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
-    arithematic is used for fast computation of addition
+    arithmetic is used for fast computation of addition
     and doubling of points in elliptic curve.
 
     Parameters:
