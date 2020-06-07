@@ -97,17 +97,23 @@ class GeometryEntity(Basic):
         return (i1 > i2) - (i1 < i2)
 
     def __contains__(self, other):
-        """Subclasses should implement this method for anything more complex than equality."""
+        """Subclasses should implement this method for anything more complex than equality.
+
+        """
         if type(self) == type(other):
             return self == other
         raise NotImplementedError()
 
     def __getnewargs__(self):
-        """Returns a tuple that will be passed to __new__ on unpickling."""
+        """Returns a tuple that will be passed to __new__ on unpickling.
+
+        """
         return tuple(self.args)
 
     def __ne__(self, o):
-        """Test inequality of two geometrical entities."""
+        """Test inequality of two geometrical entities.
+
+        """
         return not self == o
 
     def __new__(cls, *args, **kwargs):
@@ -123,28 +129,40 @@ class GeometryEntity(Basic):
         return Basic.__new__(cls, *args)
 
     def __radd__(self, a):
-        """Implementation of reverse add method."""
+        """Implementation of reverse add method.
+
+        """
         return a.__add__(self)
 
     def __rdiv__(self, a):
-        """Implementation of reverse division method."""
+        """Implementation of reverse division method.
+
+        """
         return a.__div__(self)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
-        by sympy."""
+        by sympy.
+
+        """
         return type(self).__name__ + repr(self.args)
 
     def __rmul__(self, a):
-        """Implementation of reverse multiplication method."""
+        """Implementation of reverse multiplication method.
+
+        """
         return a.__mul__(self)
 
     def __rsub__(self, a):
-        """Implementation of reverse subtraction method."""
+        """Implementation of reverse subtraction method.
+
+        """
         return a.__sub__(self)
 
     def __str__(self):
-        """String representation of a GeometryEntity."""
+        """String representation of a GeometryEntity.
+
+        """
         from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
@@ -160,8 +178,9 @@ class GeometryEntity(Basic):
             return  self._subs(old, new)
 
     def _repr_svg_(self):
-        """SVG representation of a GeometryEntity suitable for IPython"""
+        """SVG representation of a GeometryEntity suitable for IPython.
 
+        """
         from sympy.core.evalf import N
 
         try:
@@ -231,7 +250,7 @@ class GeometryEntity(Basic):
         Parameters
         ==========
 
-        scale_factor : float
+        scale_factor : float, optional
             Multiplication factor for the SVG stroke-width.  Default is 1.
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
@@ -243,7 +262,9 @@ class GeometryEntity(Basic):
 
     @property
     def ambient_dimension(self):
-        """What is the dimension of the space that the object is contained in?"""
+        """What is the dimension of the space that the object is contained in?
+
+        """
         raise NotImplementedError()
 
     @property
@@ -256,17 +277,10 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def encloses(self, o):
-        """
-        Return True if o is inside (not on or outside) the boundaries of self.
+        """Return True if o is inside (not on or outside) the boundaries of self.
 
         The object will be decomposed into Points and individual Entities need
         only define an encloses_point method for their class.
-
-        See Also
-        ========
-
-        sympy.geometry.ellipse.Ellipse.encloses_point
-        sympy.geometry.polygon.Polygon.encloses_point
 
         Examples
         ========
@@ -278,6 +292,12 @@ class GeometryEntity(Basic):
         True
         >>> t.encloses(t2)
         False
+
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
 
         """
 
@@ -308,8 +328,12 @@ class GeometryEntity(Basic):
         return self == o
 
     def intersection(self, o):
-        """
-        Returns a list of all of the intersections of self with o.
+        """Returns a list of all of the intersections of self with o.
+
+        See Also
+        ========
+
+        sympy.geometry.util.intersection
 
         Notes
         =====
@@ -320,11 +344,6 @@ class GeometryEntity(Basic):
         higher index in ordering_of_classes should implement
         intersections with anything having a lower index.
 
-        See Also
-        ========
-
-        sympy.geometry.util.intersection
-
         """
         raise NotImplementedError()
 
@@ -333,6 +352,11 @@ class GeometryEntity(Basic):
 
         Two entities are similar if a uniform scaling (enlarging or
         shrinking) of one of the entities will allow one to obtain the other.
+
+        See Also
+        ========
+
+        scale
 
         Notes
         =====
@@ -343,17 +367,11 @@ class GeometryEntity(Basic):
         If two different types of entities can be similar, it is only
         required that one of them be able to determine this.
 
-        See Also
-        ========
-
-        scale
-
         """
         raise NotImplementedError()
 
     def reflect(self, line):
-        """
-        Reflects an object across a line.
+        """Reflects an object across a line.
 
         Parameters
         ==========
@@ -413,12 +431,12 @@ class GeometryEntity(Basic):
     def rotate(self, angle, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
-        The default pt is the origin, Point(0, 0)
+        Parameters
+        ==========
 
-        See Also
-        ========
-
-        scale, translate
+        angle
+        pt : Point, optional
+            point around which rotation will be made. The default pt is the origin, Point(0, 0)
 
         Examples
         ========
@@ -429,6 +447,11 @@ class GeometryEntity(Basic):
         Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.rotate(pi/2) # vertex on y axis now
         Triangle(Point2D(0, 1), Point2D(-sqrt(3)/2, -1/2), Point2D(sqrt(3)/2, -1/2))
+
+        See Also
+        ========
+
+        scale, translate
 
         """
         newargs = []
@@ -445,10 +468,14 @@ class GeometryEntity(Basic):
         If pt is given, the scaling is done relative to that point; the
         object is shifted by -pt, scaled, and shifted by pt.
 
-        See Also
-        ========
+        Parameters
+        ==========
 
-        rotate, translate
+        x : number, optional
+            default is 1.
+        y : number, optional
+            default is 1.
+        pt : Point, optional
 
         Examples
         ========
@@ -462,6 +489,11 @@ class GeometryEntity(Basic):
         >>> t.scale(2, 2)
         Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
+        See Also
+        ========
+
+        rotate, translate
+
         """
         from sympy.geometry.point import Point
         if pt:
@@ -472,10 +504,13 @@ class GeometryEntity(Basic):
     def translate(self, x=0, y=0):
         """Shift the object by adding to the x,y-coordinates the values x and y.
 
-        See Also
-        ========
+        Parameters
+        ==========
 
-        rotate, scale
+            x : number, optional
+                default value is 0.
+            y : number, optional
+                default value is 0.
 
         Examples
         ========
@@ -488,6 +523,11 @@ class GeometryEntity(Basic):
         Triangle(Point2D(3, 0), Point2D(3/2, sqrt(3)/2), Point2D(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
         Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2), Point2D(3/2, 2 - sqrt(3)/2))
+
+        See Also
+        ========
+
+        rotate, scale
 
         """
         newargs = []
@@ -532,10 +572,12 @@ class GeometryEntity(Basic):
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
+
     """
     def _contains(self, other):
-        """sympy.sets uses the _contains method, so include it for compatibility."""
+        """sympy.sets uses the _contains method, so include it for compatibility.
 
+        """
         if isinstance(other, Set) and other.is_FiniteSet:
             return all(self.__contains__(i) for i in other)
 
@@ -544,8 +586,9 @@ class GeometrySet(GeometryEntity, Set):
 @dispatch(GeometrySet, Set)  # type:ignore # noqa:F811
 def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
-    for use with sympy.sets.Set, if possible. """
+    for use with sympy.sets.Set, if possible.
 
+    """
     from sympy.sets import Union, FiniteSet
 
     # if its a FiniteSet, merge any points
@@ -563,8 +606,9 @@ def union_sets(self, o): # noqa:F811
 @dispatch(GeometrySet, Set)  # type: ignore # noqa:F811
 def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
-    if possible. """
+    if possible.
 
+    """
     from sympy.sets import FiniteSet, Union
     from sympy.geometry import Point
 
@@ -587,7 +631,9 @@ def intersection_sets(self, o): # noqa:F811
     return Union(*(non_points + [points]))
 
 def translate(x, y):
-    """Return the matrix to translate a 2-D point by x and y."""
+    """Return the matrix to translate a 2-D point by x and y.
+
+    """
     rv = eye(3)
     rv[2, 0] = x
     rv[2, 1] = y
@@ -597,7 +643,9 @@ def translate(x, y):
 def scale(x, y, pt=None):
     """Return the matrix to multiply a 2-D point's coordinates by x and y.
 
-    If pt is given, the scaling is done relative to that point."""
+    If pt is given, the scaling is done relative to that point.
+
+    """
     rv = eye(3)
     rv[0, 0] = x
     rv[1, 1] = y
