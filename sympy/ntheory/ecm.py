@@ -49,8 +49,8 @@ class Point:
         u = (self.x_corr - self.z_corr)*(Q.x_corr + Q.z_corr)
         v = (self.x_corr + self.z_corr)*(Q.x_corr - Q.z_corr)
         add, subt = u + v, u - v
-        x_corr = diff.z_corr*add*add % self.mod
-        z_corr = diff.x_corr*subt*subt % self.mod
+        x_corr = diff.z_corr * add * add % self.mod
+        z_corr = diff.x_corr * subt * subt % self.mod
         return Point(x_corr, z_corr, self.a_24, self.mod)
 
     def double(self):
@@ -214,18 +214,16 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
     >>> ecm(9804659461513846513)
     {4641991, 2112166839943}
     """
-    factor = set()
-    for i in sieve.primerange(1, 100000):
-        if n % i == 0:
-            factor.add(i)
-            while(n % i == 0):
-                n //= i
-    while(n % 2 == 0):
-        n //= 2
-        factor.add(2)
+    _factors = set()
+    for prime in sieve.primerange(1, 100000):
+        if n % prime == 0:
+            _factors.add(prime)
+            while(n % prime == 0):
+                n //= prime
+
     while(n > 1):
         try:
-            a = ecm_one_factor(n, B1, B2, max_curve, seed)
+            factor = ecm_one_factor(n, B1, B2, max_curve, seed)
         except ValueError:
             if increase_bound:
                 B1 *= 10
@@ -233,12 +231,13 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
             else:
                 raise ValueError("Increase the bounds")
             continue
-        factor.add(a)
-        n //= a
-    final = set()
-    for i in factor:
-        if isprime(i):
-            final.add(i)
+        _factors.add(factor)
+        n //= factor
+
+    factors = set()
+    for factor in _factors:
+        if isprime(factor):
+            factors.add(factor)
             continue
-        final |= ecm(i)
-    return final
+        factors |= ecm(factor)
+    return factors
