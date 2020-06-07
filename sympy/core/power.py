@@ -1472,231 +1472,112 @@ class Pow(Expr):
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
         # where e_i are numbers (not necessarily integers) and c_i are
         # expressions involving only numbers, the log function, and log(x).
-        from sympy import ceiling, collect, exp, log, O, Order, powsimp, powdenest
-        b, e = self.args
-        if e.is_Integer:
-            if e > 0:
-                # positive integer powers are easy to expand, e.g.:
-                # sin(x)**4 = (x - x**3/3 + ...)**4 = ...
-                return expand_multinomial(self.func(b._eval_nseries(x, n=n,
-                    logx=logx), e), deep=False)
-            elif e is S.NegativeOne:
-                # this is also easy to expand using the formula:
-                # 1/(1 + x) = 1 - x + x**2 - x**3 ...
-                # so we need to rewrite base to the form "1 + x"
+        # The series expansion of b**e is computed as follows:
+        # 1) We express b as f*(1 + g) where f is the leading term of b.
+        #    g has order O(x**d) where d is strictly positive.
+        # 2) Then b**e = (f**e)*((1 + g)**e).
+        #    (1 + g)**e is computed using binomial series.
+        from sympy import ceiling, polygamma, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
+        from itertools import product
+        self = powdenest(self, force=True).trigsimp()
+        b, e = self.as_base_exp()
+        b = b.removeO()
 
-                nuse = n
-                cf = 1
+        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+            raise PoleError()
 
-                try:
-                    ord = b.as_leading_term(x)
-                    cf = Order(ord, x).getn()
-                    if cf and cf.is_Number:
-                        nuse = n + 2*ceiling(cf)
-                    else:
-                        cf = 1
-                except NotImplementedError:
-                    pass
-
-                b_orig, prefactor = b, O(1, x)
-                while prefactor.is_Order:
-                    nuse += 1
-                    b = b_orig._eval_nseries(x, n=nuse, logx=logx)
-                    b = powdenest(b)
-                    prefactor = b.as_leading_term(x)
-
-                # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
-                rest = expand_mul((b - prefactor)/prefactor)
-                rest = rest.simplify() #test_issue_6364
-
-                if rest.is_Order:
-                    return 1/prefactor + rest/prefactor + O(x**n, x)
-
-                k, l = rest.leadterm(x)
-
-                if l.is_Rational and l > 0:
-                    pass
-                elif l.is_number and l > 0:
-                    l = l.evalf()
-                elif l == 0:
-                    k = k.simplify()
-                    if k == 0:
-                        # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
-                        # factor the w**4 out using collect:
-                        return 1/collect(prefactor, x)
-                    else:
-                        raise NotImplementedError()
+        def coeff_exp(term, x):
+            coeff, exp = S.One, S.Zero
+            for factor in Mul.make_args(term):
+                if factor.has(x):
+                    base, exp = factor.as_base_exp()
+                    if base != x:
+                        return term.leadterm(x)
                 else:
-                    raise NotImplementedError()
+                    coeff *= factor
+            return coeff, exp
 
-                if cf < 0:
-                    cf = S.One/abs(cf)
+        def prod(d1, d2):
+            prod1 = {}
+            for e1, e2 in product(d1, d2):
+                ex = e1 + e2
+                if ex < pow_upper:
+                    prod1[ex] = prod1.get(ex, S.Zero) + d1[e1]*d2[e2]
+            return prod1
 
-                try:
-                    dn = Order(1/prefactor, x).getn()
-                    if dn and dn < 0:
-                        pass
-                    else:
-                        dn = 0
-                except NotImplementedError:
-                    dn = 0
+        if logx is not None and b.has(log):
+            c, ex = symbols('c, ex', cls=Wild, exclude=[x])
+            b = b.replace(log(c*x**ex), log(c) + ex*logx)
+            self = b**e
 
-                terms = [1/prefactor]
-                for m in range(1, ceiling((n - dn + 1)/l*cf)):
-                    new_term = terms[-1]*(-rest)
-                    if new_term.is_Pow:
-                        new_term = new_term._eval_expand_multinomial(
-                            deep=False)
-                    else:
-                        new_term = expand_mul(new_term, deep=False)
-                    terms.append(new_term)
-                terms.append(O(x**n, x))
-                return powsimp(Add(*terms), deep=True, combine='exp')
-            else:
-                # negative powers are rewritten to the cases above, for
-                # example:
-                # sin(x)**(-4) = 1/(sin(x)**4) = ...
-                # and expand the denominator:
-                nuse, denominator = n, O(1, x)
-                while denominator.is_Order:
-                    denominator = (b**(-e))._eval_nseries(x, n=nuse, logx=logx)
-                    nuse += 1
-                if 1/denominator == self:
-                    return self
-                # now we have a type 1/f(x), that we know how to expand
-                return (1/denominator)._eval_nseries(x, n=n, logx=logx)
-
-        if e.has(Symbol):
+        if e.has(x):
             return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
-        # see if the base is as simple as possible
-        bx = b
-        while bx.is_Pow and bx.exp.is_Rational:
-            bx = bx.base
-        if bx == x:
-            return self
+        try:
+            if b.has(polygamma, EulerGamma) and logx is not None:
+                raise ValueError()
+            _, m = b.leadterm(x)
+        except ValueError:
+            b = b._eval_nseries(x, n=max(2, n), logx=logx).removeO()
+            if b.has(nan, zoo):
+                raise NotImplementedError()
+            _, m = b.leadterm(x)
 
-        # work for b(x)**e where e is not an Integer and does not contain x
-        # and hopefully has no other symbols
+        f = b.as_leading_term(x)
+        g = (b/f - S.One).cancel()
 
-        def e2int(e):
-            """return the integer value (if possible) of e and a
-            flag indicating whether it is bounded or not."""
-            n = e.limit(x, 0)
-            infinite = n.is_infinite
-            if not infinite:
-                # XXX was int or floor intended? int used to behave like floor
-                # so int(-Rational(1, 2)) returned -1 rather than int's 0
-                try:
-                    n = int(n)
-                except TypeError:
-                    # well, the n is something more complicated (like 1 + log(2))
-                    try:
-                        n = int(n.evalf()) + 1  # XXX why is 1 being added?
-                    except TypeError:
-                        pass  # hope that base allows this to be resolved
-                n = _sympify(n)
-            return n, infinite
+        if e.has(log):
+            e = logcombine(e).cancel()
 
-        order = O(x**n, x)
-        ei, infinite = e2int(e)
-        b0 = b.limit(x, 0)
-        if infinite and (b0 is S.One or b0.has(Symbol)):
-            # XXX what order
-            if b0 is S.One:
-                resid = (b - 1)
-                if resid.is_positive:
-                    return S.Infinity
-                elif resid.is_negative:
-                    return S.Zero
-                raise ValueError('cannot determine sign of %s' % resid)
+        if not (m.is_zero or e.is_number and e.is_real):
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
 
-            return b0**ei
+        pow_upper = (n - m*e)
 
-        if (b0 is S.Zero or b0.is_infinite):
-            if infinite is not False:
-                return b0**e  # XXX what order
+        if g.is_zero:
+            if pow_upper > S.Zero:
+                return f**e
+            return O(x**n, x)
 
-            if not ei.is_number:  # if not, how will we proceed?
-                raise ValueError(
-                    'expecting numerical exponent but got %s' % ei)
+        _, d = g.leadterm(x)
+        if not d.is_positive:
+            g = (b - f).simplify()/f
+            _, d = g.leadterm(x)
+            if not d.is_positive:
+                raise NotImplementedError()
 
-            nuse = n - ei
+        terms = g._eval_nseries(x, n=ceiling(pow_upper), logx=logx).removeO()
+        terms1 = {}
 
-            if e.is_real:
-                lt = b.as_leading_term(x)
+        for term in Add.make_args(terms):
+            co1, e1 = coeff_exp(term, x)
+            terms1[e1] = terms1.get(e1, S.Zero) + co1
 
-                # Try to correct nuse (= m) guess from:
-                # (lt + rest + O(x**m))**e =
-                # lt**e*(1 + rest/lt + O(x**m)/lt)**e =
-                # lt**e + ... + O(x**m)*lt**(e - 1) = ... + O(x**n)
-                try:
-                    cf = Order(lt, x).getn()
-                    nuse = ceiling(n - cf*(e - 1))
-                except NotImplementedError:
-                    pass
-
-            bs = b._eval_nseries(x, n=nuse, logx=logx)
-            terms = bs.removeO()
-            if terms.is_Add:
-                bs = terms
-                lt = terms.as_leading_term(x)
-
-                # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
-                return ((self.func(lt, e) * self.func((bs/lt).expand(), e).nseries(
-                    x, n=nuse, logx=logx)).expand() + order)
-
-            if bs.is_Add:
-                from sympy import O
-                # So, bs + O() == terms
-                c = Dummy('c')
-                res = []
-                for arg in bs.args:
-                    if arg.is_Order:
-                        arg = c*arg.expr
-                    res.append(arg)
-                bs = Add(*res)
-                rv = (bs**e).series(x).subs(c, O(1, x))
-                rv += order
-                return rv
-
-            rv = bs**e
-            if terms != bs:
-                rv += order
-            return rv
-
-        # either b0 is bounded but neither 1 nor 0 or e is infinite
-        # b -> b0 + (b - b0) -> b0 * (1 + (b/b0 - 1))
-        o2 = order*(b0**-e)
-        from sympy import AccumBounds
-        # Issue: #18795 -"XXX This can be removed and simply "z = (b - b0)/b0"
-        # would be enough when the operations on AccumBounds have been fixed."
-        if isinstance(b0, AccumBounds):
-            z = (b/b0 - 1)
-        else:
-            z = (b - b0)/b0
-        o = O(z, x)
-        if o is S.Zero or o2 is S.Zero:
-            infinite = True
-        else:
-            if o.expr.is_number:
-                e2 = log(o2.expr*x)/log(x)
+        k = S.Zero
+        fac = {}
+        while k*d < pow_upper:
+            if k.is_zero:
+                fac[S.Zero] = S.One
+                tk = terms1
             else:
-                e2 = log(o2.expr)/log(o.expr)
-            n, infinite = e2int(e2)
-        if infinite:
-            # requested accuracy gives infinite series,
-            # order is probably non-polynomial e.g. O(exp(-1/x), x).
-            r = 1 + z
-        else:
-            l = []
-            g = None
-            for i in range(n + 2):
-                g = self._taylor_term(i, z, g)
-                g = g.nseries(x, n=n, logx=logx)
-                l.append(g)
-            r = Add(*l)
-        return expand_mul(r*b0**e) + order
+                coeff = ff(e, k)/factorial(k)
+                for ex in tk:
+                    fac[ex] = fac.get(ex, S.Zero) + coeff*tk[ex]
+                tk = prod(tk, terms1)
+            k += S.One
+
+        inco, inex = coeff_exp(f**e, x)
+        res = S.Zero
+
+        for e1 in fac:
+            ex = e1 + inex
+            if ex < n:
+                res += fac[e1]*inco*x**(ex)
+
+        if res == self:
+            return res
+
+        return res + O(x**n, x)
 
     def _eval_as_leading_term(self, x):
         from sympy import exp, log

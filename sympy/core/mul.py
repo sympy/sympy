@@ -1778,7 +1778,7 @@ class Mul(Expr, AssocOp):
         try:
             for t in self.args:
                 coeff, exp = t.leadterm(x)
-                if isinstance(coeff, Integer) or isinstance(coeff, Rational):
+                if not coeff.has(x):
                     ords.append((t, exp))
                 else:
                     raise ValueError
@@ -1803,7 +1803,8 @@ class Mul(Expr, AssocOp):
             if power < n:
                 res += Mul(*coeffs)*(x**power)
 
-        res += Order(x**n, x)
+        if res != self:
+            res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):

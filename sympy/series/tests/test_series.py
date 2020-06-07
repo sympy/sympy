@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, atan, LambertW, Rational
+    Function, PoleError, log, sqrt, Symbol, Subs, pi, symbols, atan, LambertW, Rational
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -58,7 +58,7 @@ def test_issue_5223():
     assert (1 + x + O(x**2)).getn() == 2
     assert (1 + x).getn() is None
 
-    assert ((1/sin(x))**oo).series() is oo
+    raises(PoleError, lambda: ((1/sin(x))**oo).series())
     logx = Symbol('logx')
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
@@ -197,8 +197,19 @@ def test_issue_8805():
     assert series(1, n=8) == 1
 
 
+def test_issue_9549():
+    y = (x**2 + x + 1) / (x**3 + x**2)
+    assert series(y, x, oo) == x**(-5) - 1/x**4 + x**(-3) + 1/x + O(x**(-6), (x, oo))
+
+
 def test_issue_10761():
     assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
+
+
+def test_issue_12578():
+    y = (1 - 1/(x/2 - 1/(2*x))**4)**(S(1)/8)
+    assert y.series(x, 0, n=17) == 1 - 2*x**4 - 8*x**6 - 34*x**8 - 152*x**10 - 714*x**12 - \
+        3472*x**14 - 17318*x**16 + O(x**17)
 
 
 def test_issue_14885():
@@ -221,3 +232,9 @@ def test_issue_7259():
 
 def test_issue_11884():
     assert cos(x).series(x, 1, n=1) == cos(1) + O(x - 1, (x, 1))
+
+
+def test_issue_18008():
+    y = x*(1 + x*(1 - x))/((1 + x*(1 - x)) - (1 - x)*(1 - x))
+    assert y.series(x, oo, n=4) == -9/(32*x**3) - 3/(16*x**2) - 1/(8*x) + S(1)/4 + x/2 + \
+        O(x**(-4), (x, oo))
