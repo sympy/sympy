@@ -191,8 +191,12 @@ class ConditionSet(Set):
 
     @property
     def free_symbols(self):
-        s, c, b = self.args
-        return (c.free_symbols - s.free_symbols) | b.free_symbols
+        cond_syms = self.condition.free_symbols - self.sym.free_symbols
+        return cond_syms | self.base_set.free_symbols
+
+    @property
+    def bound_symbols(self):
+        return self.sym.free_symbols
 
     def _contains(self, other):
         return And(
@@ -246,21 +250,3 @@ class ConditionSet(Set):
             # __new__ we *don't* check if 'sym' actually belongs to
             # 'base'. In other words: assumptions are ignored.
             return self.func(self.sym, cond, base)
-
-    def dummy_eq(self, other, symbol=None):
-        if not isinstance(other, self.func):
-            return False
-        if isinstance(self.sym, Symbol) != isinstance(other.sym, Symbol):
-            # this test won't be necessary when unsolved equations
-            # syntax is removed
-            return False
-        if symbol:
-            raise ValueError('symbol arg not supported for ConditionSet')
-        o = other
-        if isinstance(self.sym, Symbol) and isinstance(other.sym, Symbol):
-            # this code will not need to be in an if-block when
-            # the unsolved equations syntax is removed
-            o = other.func(self.sym,
-                other.condition.subs(other.sym, self.sym),
-                other.base_set)
-        return self == o
