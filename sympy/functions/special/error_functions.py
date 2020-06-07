@@ -1350,6 +1350,16 @@ def E1(z):
 
     This is equivalent to ``expint(1, z)``.
 
+    Examples
+    ========
+
+    >>> from sympy import E1
+    >>> E1(0)
+    expint(1, 0)
+
+    >>> E1(5)
+    expint(1, 5)
+
     See Also
     ========
 
@@ -1399,6 +1409,12 @@ class li(Function):
     1/log(z)
 
     Defining the ``li`` function via an integral:
+    >>> from sympy import integrate
+    >>> integrate(li(z))
+    z*li(z) - Ei(2*log(z))
+
+    >>> integrate(li(z),z)
+    z*li(z) - Ei(2*log(z))
 
 
     The logarithmic integral can also be defined in terms of ``Ei``:

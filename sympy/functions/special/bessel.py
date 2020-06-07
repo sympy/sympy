@@ -984,6 +984,16 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     jn, yn, besselj, besselk, bessely
 
+    Parameters
+    ==========
+
+    n : integer
+        order of Bessel function
+
+    k : integer
+        number of zeros to return
+
+
     """
     from math import pi
 

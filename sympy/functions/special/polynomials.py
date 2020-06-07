@@ -243,6 +243,17 @@ def jacobi_normalized(n, a, b, x):
     >>> jacobi_normalized(n, a, b, x)
     jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
 
+    Parameters
+    ==========
+
+    n : integer degree of polynomial
+
+    a : alpha value
+
+    b : beta value
+
+    x : symbol
+
     See Also
     ========
 
