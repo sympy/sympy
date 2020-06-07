@@ -83,7 +83,7 @@ GOOD_PAIRS = [
     ("\\left( x + y\\right ) z", _Mul(_Add(x, y), z)),
     ("\\left(  x + y\\right ) z", _Mul(_Add(x, y), z)),
     ("\\left[x + y\\right] z", _Mul(_Add(x, y), z)),
-    ("\\left\{x + y\\right\} z", _Mul(_Add(x, y), z)),
+    ("\\left\\{x + y\\right\\} z", _Mul(_Add(x, y), z)),
     ("1+1", Add(1, 1, evaluate=False)),
     ("0+1", Add(0, 1, evaluate=False)),
     ("1*2", Mul(1, 2, evaluate=False)),
