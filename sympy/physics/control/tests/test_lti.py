@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, simplify, factor, expand
+from sympy import symbols, Matrix, factor, expand
 from sympy.algebras.quaternion import Quaternion
 from sympy.physics.control.lti import TransferFunction
 from sympy.testing.pytest import raises
