@@ -116,6 +116,11 @@ def test_DiscreteMarkovChain():
 def test_sample_stochastic():
     if not import_module('scipy'):
         skip('SciPy Not installed. Skip sampling tests')
+    import random
+    random.seed(0)
+    numpy = import_module('numpy')
+    if numpy:
+        numpy.random.seed(0) # scipy uses numpy to sample so to set its seed
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     samps = list(sample_stochastic(Y, 5))

@@ -1521,6 +1521,41 @@ def _symbol_converter(sym):
     return sym
 
 def sample_stochastic(process, max_time=S.Infinity):
+    """
+    Sampling from the stochastic processes
+
+    Parameters
+    ==========
+
+    process: StochasticProcess
+        Process used to extract the samples. It must be an instance of
+        StochasticProcess
+    max_time: Real Number
+        Time upto which the sample is to be extracted from the process.
+        By defaut is Infinity.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import sample_stochastic, DiscreteMarkovChain
+    >>> from sympy import Matrix
+    >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> samps = list(sample_stochastic(Y, 5)) # doctest: +SKIP
+    >>> [sam in Y.state_space for sam in samps] # doctest: +SKIP
+    [True, True, True, True, True]
+    >>> next(sample_stochastic(Y))  # doctest: +SKIP
+    0
+    >>> list(sample_stochastic(Y, 2)) # doctest: +SKIP
+    [1, 2]
+
+    Returns
+    =======
+
+    sample: iterator object
+        iterator object containing the sample of given process
+
+    """
     from sympy.stats.stochastic_process_types import StochasticProcess
     if not isinstance(process, StochasticProcess):
         raise ValueError("Process must be an instance of Stochastic Process")

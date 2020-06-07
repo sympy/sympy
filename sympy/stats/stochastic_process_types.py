@@ -191,7 +191,7 @@ class StochasticProcess(Basic):
         raise NotImplementedError("Abstract method for expectation queries.")
 
     def sample(self, max_time):
-        raise NotImplementedError()
+        raise NotImplementedError("Abstract method for sampling queries.")
 
 class DiscreteTimeStochasticProcess(StochasticProcess):
     """
@@ -731,13 +731,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.fixed_row_vector()
 
-    def sample(self, max_time):
+    def sample(self, max_time=S.Infinity):
         """
         Parameters
         ==========
 
         max_time: Positive Integer
-            Maximum Time upto which iteration is to be done. By default is None
+            Maximum Time upto which iteration is to be done. By default is Infinity
 
         Returns
         =======
@@ -752,10 +752,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         samps = [random.choice(list(self.state_space))]
         yield samps[0]
         time = 1
+        densities = {}
+        for state in self.state_space:
+            states = list(self.state_space)
+            densities[state] = {states[i]: Tlist[state][i]
+                        for i in range(len(states))}
         while time < max_time:
-            dist = Tlist[samps[time - 1]]
-            density = {list(self.state_space)[i]: dist[i] for i in range(len(dist))}
-            samps.append((next(sample_iter(FiniteRV("_", density)))))
+            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time-1]])))))
             yield samps[time]
             time += 1
 
