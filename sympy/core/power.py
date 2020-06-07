@@ -1574,7 +1574,7 @@ class Pow(Expr):
             if ex < n:
                 res += fac[e1]*inco*x**(ex)
 
-        if res == self:
+        if (res - self).cancel() == S.Zero:
             return res
 
         return res + O(x**n, x)
