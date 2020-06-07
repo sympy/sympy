@@ -232,12 +232,20 @@ class Expr(Basic, EvalfMixin):
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return Mul(self, Pow(other, S.NegativeOne))
+        denom = Pow(other, S.NegativeOne)
+        if self is S.One:
+            return denom
+        else:
+            return Mul(self, denom)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        return Mul(other, Pow(self, S.NegativeOne))
+        denom = Pow(self, S.NegativeOne)
+        if other is S.One:
+            return denom
+        else:
+            return Mul(other, denom)
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -2717,8 +2725,8 @@ class Expr(Basic, EvalfMixin):
         False
 
         """
-        if not x.is_Symbol:
-            raise TypeError("{} should be of type Symbol".format(x))
+        if not x.is_symbol:
+            raise TypeError("{} should be of symbol type".format(x))
         a = sympify(a)
 
         return self._eval_is_meromorphic(x, a)
@@ -3869,7 +3877,8 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_meromorphic(self, x, a):
-        return True
+        from sympy.calculus.util import AccumBounds
+        return (not self.is_Number or self.is_finite) and not isinstance(self, AccumBounds)
 
     def _eval_is_algebraic_expr(self, syms):
         return True

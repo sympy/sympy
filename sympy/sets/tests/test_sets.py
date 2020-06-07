@@ -45,7 +45,7 @@ def test_imageset():
     assert imageset((x, y), (1, z), ints, S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
-        in ('_x + x', 'x + _x'))
+        in ('x0 + x', 'x + x0'))
     x1, x2 = symbols("x1, x2")
     assert imageset(lambda x, y:
         Add(x, y), Interval(1, 2), Interval(2, 3)).dummy_eq(

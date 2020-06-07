@@ -310,6 +310,14 @@ class RandomIndexedSymbol(RandomSymbol):
         elif isinstance(self.symbol, Function):
             return self.symbol.args[0]
 
+    @property
+    def free_symbols(self):
+        if self.key.free_symbols:
+            free_syms = self.key.free_symbols
+            free_syms.add(self)
+            return free_syms
+        return {self}
+
 class RandomMatrixSymbol(MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
