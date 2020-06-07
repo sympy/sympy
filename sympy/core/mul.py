@@ -1759,7 +1759,7 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import Integer, Mul, Order, ceiling, powsimp
+        from sympy import Mul, Order, ceiling, powsimp
         from itertools import product
 
         def coeff_exp(term, x):
