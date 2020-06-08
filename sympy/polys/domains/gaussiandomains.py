@@ -355,8 +355,6 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def numer(self, a):
         """Get the numerator of ``a``."""
-        ZZ = self.base.get_ring()
-        QQ = self.base
         ZZ_I = self.get_ring()
         return ZZ_I.convert(a * self.denom(a))
 
