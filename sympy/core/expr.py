@@ -3217,10 +3217,15 @@ class Expr(Basic, EvalfMixin):
             series = self._eval_nseries(x, n=n, logx=logx)
         e = series.removeO()
         yield e
+
         brk_cnt = S.Zero
+        self = self.cancel()
         if self.is_polynomial():
             brk_cnt += S.One
-            _, exp = LM(self).leadterm(x)
+            if self.is_zero:
+                exp = S.Zero
+            else:
+                _, exp = LM(self).leadterm(x)
 
         while 1:
             while 1:

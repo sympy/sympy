@@ -1803,7 +1803,7 @@ class Mul(Expr, AssocOp):
             if power < n:
                 res += Mul(*coeffs)*(x**power)
 
-        if res != self:
+        if (res - self).cancel() is not S.Zero:
             res += Order(x**n, x)
         return res
 
