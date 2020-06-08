@@ -532,12 +532,15 @@ def _solve_as_rational(f, symbol, domain):
         return valid_solns - invalid_solns
 
 
+class _SolveTrig1Error(Exception):
+    """Raised when _solve_trig1 heuristics do not apply"""
+
 def _solve_trig(f, symbol, domain):
     """Function to call other helpers to solve trigonometric equations """
     sol = None
     try:
         sol = _solve_trig1(f, symbol, domain)
-    except (ValueError, NotImplementedError):
+    except _SolveTrig1Error:
         try:
             sol = _solve_trig2(f, symbol, domain)
         except ValueError:
@@ -548,10 +551,24 @@ def _solve_trig(f, symbol, domain):
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary helper to solve trigonometric and hyperbolic equations
+    """Primary solver for trigonometric and hyperbolic equations
 
-    Either returns solution set as ConditionSet (evaluated or unevaluated)
-    or raises NotImplementedError.
+    Returns either the solution set as a ConditionSet (auto-evaluated to a
+    union of ImageSets if no variables besides 'symbol' are involved) or
+    raises _SolveTrig1Error if f == 0 can't be solved.
+
+    Notes
+    =====
+    Algorithm:
+    1. Do a change of variable x -> mu*x in arguments to trigonometric and
+    hyperbolic functions, in order to reduce them to small integers. (This
+    step is crucial to keep the degrees of the polynomials of step 4 low.)
+    2. Rewrite trigonometric/hyperbolic functions as exponentials.
+    3. Proceed to a 2nd change of variable, replacing exp(I*x) or exp(x) by y.
+    4. Solve the resulting rational equation.
+    5. Use invert_complex or invert_real to return to the original variable.
+    6. If the coefficients of 'symbol' were symbolic in nature, add the
+    necessary consistency conditions in a ConditionSet.
 
     """
     # Prepare change of variable
@@ -578,9 +595,9 @@ def _solve_trig1(f, symbol, domain):
         try:
             poly_ar = Poly(ar, symbol)
         except PolynomialError:
-            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+            raise _SolveTrig1Error("trig argument is not a polynomial")
         if poly_ar.degree() > 1:  # degree >1 still bad
-            raise ValueError("degree of variable inside polynomial should not exceed one")
+            raise _SolveTrig1Error("degree of variable must not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
             continue
         c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
@@ -596,15 +613,15 @@ def _solve_trig1(f, symbol, domain):
     g, h = g.expand(), h.expand()
     g, h = g.subs(cov, y), h.subs(cov, y)
     if g.has(x) or h.has(x):
-        raise NotImplementedError("change of variable not possible")
+        raise _SolveTrig1Error("change of variable not possible")
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
     if isinstance(solns, ConditionSet):
-        raise NotImplementedError("polynomial has ConditionSet solution")
+        raise _SolveTrig1Error("polynomial has ConditionSet solution")
 
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
-            raise NotImplementedError("polynomial results in RootOf object")
+            raise _SolveTrig1Error("polynomial results in RootOf object")
         # revert the change of variable
         cov = cov.subs(x, symbol/mu)
         result = Union(*[inverter(cov, s, symbol)[1] for s in solns])
@@ -618,15 +635,19 @@ def _solve_trig1(f, symbol, domain):
             cond = And(Ne(condnum, 0), Ne(condden, 0))
         else:
             cond = True
-        # avoid spurious intersections with C in solution set
+        # Actual conditions are returned as part of the ConditionSet. Adding an
+        # intersection with C would only complicate some solution sets due to
+        # current limitations of intersection code. (e.g. #19154)
         if domain is S.Complexes:
+            # This is a slight abuse of ConditionSet. Ideally this should
+            # be some kind of "PiecewiseSet". (See #19507 discussion)
             return ConditionSet(symbol, cond, result)
         else:
             return ConditionSet(symbol, cond, Intersection(result, domain))
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        raise NotImplementedError("polynomial solutions must form FiniteSet")
+        raise _SolveTrig1Error("polynomial solutions must form FiniteSet")
 
 
 def _solve_trig2(f, symbol, domain):
