@@ -484,7 +484,7 @@ class GeometryEntity(Basic):
         return type(self)(*[a.scale(x, y) for a in self.args])  # if this fails, override this class
 
     def translate(self, x=0, y=0):
-        """Shift the object by adding to the x,y-coordinates the values x and y.
+        r"""Shift the object by adding to the x,y-coordinates the values x and y.
 
         Parameters
         ==========
