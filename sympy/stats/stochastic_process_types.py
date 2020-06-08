@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
-                   Lambda, Mul, Dummy, IndexedBase, Add, Sum,
+                   Lambda, Mul, Dummy, IndexedBase, Add, Sum, oo,
                    linsolve, eye, Or, Not, Intersection, EmptySet,
                    Union, Expr, Function, exp, cacheit, rsolve,
                    Ge, Piecewise, Symbol, NonSquareMatrixError)
@@ -1126,7 +1126,7 @@ def get_timerv_swaps(expr, condition):
     intervals = []
     for expr_sym in expr_syms:
         for arg in given_cond_args:
-            if arg.has(expr_sym):
+            if arg.has(expr_sym.key) and isinstance(expr_sym.key, Symbol):
                 intv = _set_converter(arg.args[1])
                 diff_key = intv._sup - intv._inf
                 if diff_key == oo:
@@ -1187,16 +1187,14 @@ class RandomWalk(DiscreteTimeStochasticProcess):
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         if given_condition is not None:
             if not isinstance(given_condition, (And, Or)) and \
-                given_condition.args[1] == self.state_space: # to handle queries with recurrence
+                given_condition == True: # to handle queries with recurrence
                 rv = list(condition.atoms(RandomIndexedSymbol))[0]
                 condition = condition.subs({rv: Dummy(rv.name)})
                 working_space = Intersection(self.state_space, condition.as_set())
                 if working_space == EmptySet:
                     return 0
                 else:
-                    n = Symbol('n', integer=True)
-                    return Sum(self.recurr_func(n),
-                            (n, working_space._inf, working_space._sup)).doit()
+                    return {n: self.recurr_func(n) for n in working_space}
 
             intervals, rv_swap = get_timerv_swaps(condition, given_condition)
             new_rv_swap = {}
