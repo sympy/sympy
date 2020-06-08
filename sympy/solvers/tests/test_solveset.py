@@ -817,7 +817,7 @@ def test_solve_trig():
         ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
 
     assert dumeq(solveset_real(2*tan(x)*sin(x) + 1, x), Union(
-        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 +sqrt(17))/
+        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/
             (1 - sqrt(17))) + pi), S.Integers),
         ImageSet(Lambda(n, 2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
             (1 - sqrt(17))) + pi), S.Integers)))

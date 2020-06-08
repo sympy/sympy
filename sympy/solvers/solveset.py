@@ -577,7 +577,7 @@ def _solve_trig1(f, symbol, domain):
     for ar in trig_arguments:
         try:
             poly_ar = Poly(ar, symbol)
-        except ValueError:
+        except PolynomialError:
             raise ValueError("give up, we can't solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
@@ -587,12 +587,7 @@ def _solve_trig1(f, symbol, domain):
         numerators.append(fraction(c)[0])
         denominators.append(fraction(c)[1])
 
-    # lcm() and gcd() require more than one argument
-    if len(numerators) > 1:
-        mu = lcm(*denominators)/gcd(*numerators)
-    else:
-        mu = denominators[0]/numerators[0]
-
+    mu = lcm(denominators)/gcd(numerators)
     f = f.subs(symbol, mu*x)
     f = f.rewrite(exp)
     f = together(f)
