@@ -961,9 +961,29 @@ def test_linear_neq_order1_type2_fail():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
+def test_linear_new_order1_type2_de_lorentz():
+    m = Symbol("m", real=True)
+    q = Symbol("q", real=True)
+    t = Symbol("t", real=True)
+
+    e1, e2, e3 = symbols("e1:4", real=True)
+    b1, b2, b3 = symbols("b1:4", real=True)
+    v1, v2, v3 = symbols("v1:4", cls=Function, real=True)
+
+    eqs = [
+        -e1 * q + m * Derivative(v1(t), t) - q * (-b2 * v3(t) + b3 * v2(t)),
+        -e2 * q + m * Derivative(v2(t), t) - q * (b1 * v3(t) - b3 * v1(t)),
+        -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
+    ]
+
+    # NOTE: With the current state of the solvers, the solution for this
+    # system is too complicated to be compared with the dsolve's output
+    dsolve(eqs)
+
+
 @slow
 @XFAIL
-def test_linear_new_order1_type2_de_lorentz():
+def test_linear_new_order1_type2_de_lorentz_fail():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
@@ -982,7 +1002,21 @@ def test_linear_new_order1_type2_de_lorentz():
     ]
 
     sol = dsolve(eqs)
+
+    # NOTE: checksysodesol states the dsolve's output is
+    # incorrect
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
+
+
+def test_linear_neq_order1_type2_fails():
+    RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
+    V = Function("V")
+    I = Function("I")
+    system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
+
+    # NOTE: With the current state of the solvers, the solution for this
+    # system is too complicated to be compared with the dsolve's output
+    dsolve(system)
 
 
 @slow
@@ -996,6 +1030,9 @@ def test_linear_neq_order1_type2_fails_too_slow():
     I = Function("I")
     system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
     sol = dsolve(system)
+
+    # NOTE: checksysodesol states the dsolve's output is
+    # incorrect
     assert checksysodesol(system, sol) == (True, [0, 0])
 
 
