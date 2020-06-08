@@ -2,9 +2,9 @@ from __future__ import print_function, division
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
-                   Lambda, Mul, Dummy, IndexedBase, Add,
-                   linsolve, eye, Or, Not, Intersection,
-                   Union, Expr, Function, exp, cacheit,
+                   Lambda, Mul, Dummy, IndexedBase, Add, Sum,
+                   linsolve, eye, Or, Not, Intersection, EmptySet,
+                   Union, Expr, Function, exp, cacheit, rsolve,
                    Ge, Piecewise, Symbol, NonSquareMatrixError)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -25,7 +25,8 @@ __all__ = [
     'StochasticStateSpaceOf',
     'GeneratorMatrixOf',
     'ContinuousMarkovChain',
-    'BernoulliProcess'
+    'BernoulliProcess',
+    'RandomWalk'
 ]
 
 def _set_converter(itr):
@@ -811,7 +812,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     ========
 
     >>> from sympy.stats import BernoulliProcess, P, E
-    >>> from sympy import Eq, Gt, Lt
+    >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     FiniteSet(0, 1)
@@ -883,33 +884,9 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def distribution(self):
         return BernoulliDistribution(self.p)
 
-    def _rvindexed_subs(self, expr, condition=None):
-        """
-        Substitutes the RandomIndexedSymbol with the RandomSymbol with
-        same name, distribution and probability as RandomIndexedSymbol.
-
-        """
-
-        rvs_expr = random_symbols(expr)
-        if len(rvs_expr) != 0:
-            swapdict_expr = {}
-            for rv in rvs_expr:
-                if isinstance(rv, RandomIndexedSymbol):
-                    newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
-                                      succ=self.success, fail=self.failure)
-                    swapdict_expr[rv] = newrv
-            expr = expr.subs(swapdict_expr)
-        rvs_cond = random_symbols(condition)
-        if len(rvs_cond)!=0:
-            swapdict_cond = {}
-            if condition is not None:
-                for rv in rvs_cond:
-                    if isinstance(rv, RandomIndexedSymbol):
-                        newrv = Bernoulli(rv.name, p=rv.pspace.process.p,
-                                          succ=self.success, fail=self.failure)
-                        swapdict_cond[rv] = newrv
-                condition = condition.subs(swapdict_cond)
-        return expr, condition
+    def simple_rv(self, rv):
+        return Bernoulli(rv.name, p=self.p,
+                succ=self.success, fail=self.failure)
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
@@ -930,8 +907,101 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Expectation of the RandomIndexedSymbol.
 
         """
+
+        return _SubstituteRV._expectation(expr, condition, evaluate, **kwargs)
+
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        """
+        Computes probability.
+
+        Parameters
+        ==========
+
+        condition: Relational
+                Condition for which probability has to be computed. Must
+                contain a RandomIndexedSymbol of the process.
+        given_condition: Relational/And
+                The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Probability of the condition.
+
+        """
+
+        return _SubstituteRV._probability(condition, given_condition, evaluate, **kwargs)
+
+    def density(self, x):
+        return Piecewise((self.p, Eq(x, self.success)),
+                         (1 - self.p, Eq(x, self.failure)),
+                         (S.Zero, True))
+
+class _SubstituteRV:
+    """
+    Internal class to handle the queries of expectation and probability
+    by substitution.
+    """
+
+    @staticmethod
+    def _rvindexed_subs(expr, condition=None):
+        """
+        Substitutes the RandomIndexedSymbol with the RandomSymbol with
+        same name, distribution and probability as RandomIndexedSymbol.
+
+        Parameters
+        ==========
+
+        expr: RandomIndexedSymbol, Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        condition: Relational, Logic
+            The given conditions under which computations should be done.
+
+        """
+
+        rvs_expr = random_symbols(expr)
+        if len(rvs_expr) != 0:
+            swapdict_expr = {}
+            for rv in rvs_expr:
+                if isinstance(rv, RandomIndexedSymbol):
+                    newrv = rv.pspace.process.simple_rv(rv)
+                    swapdict_expr[rv] = newrv
+            expr = expr.subs(swapdict_expr)
+        rvs_cond = random_symbols(condition)
+        if len(rvs_cond)!=0:
+            swapdict_cond = {}
+            for rv in rvs_cond:
+                if isinstance(rv, RandomIndexedSymbol):
+                    newrv = rv.pspace.process.simple_rv(rv)
+                    swapdict_cond[rv] = newrv
+            condition = condition.subs(swapdict_cond)
+        return expr, condition
+
+    @classmethod
+    def _expectation(self, expr, condition=None, evaluate=True, **kwargs):
+        """
+        Internal method for computing expectation of indexed RV.
+
+        Parameters
+        ==========
+
+        expr: RandomIndexedSymbol, Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        condition: Relational, Logic
+            The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Expectation of the RandomIndexedSymbol.
+
+        """
         new_expr, new_condition = self._rvindexed_subs(expr, condition)
 
+        if not is_random(new_expr):
+            return new_expr
         new_pspace = pspace(new_expr)
         if new_condition is not None:
             new_expr = given(new_expr, new_condition)
@@ -942,10 +1012,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         return new_pspace.compute_expectation(
                 new_expr, evaluate=evaluate, **kwargs)
 
-
-    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+    @classmethod
+    def _probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
-        Computes probability.
+        Internal method for computing probability of indexed RV
 
         Parameters
         ==========
@@ -967,12 +1037,12 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         if isinstance(new_givencondition, RandomSymbol):
             condrv = random_symbols(new_condition)
             if len(condrv) == 1 and condrv[0] == new_givencondition:
-                return BernoulliDistribution(self.probability(new_condition), 0, 1)
+                return BernoulliDistribution(self._probability(new_condition), 0, 1)
 
             if any([dependent(rv, new_givencondition) for rv in condrv]):
                 return Probability(new_condition, new_givencondition)
             else:
-                return self.probability(new_condition)
+                return self._probability(new_condition)
 
         if new_givencondition is not None and \
                 not isinstance(new_givencondition, (Relational, Boolean)):
@@ -989,10 +1059,152 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
                     % (new_condition))
         if new_givencondition is not None:  # If there is a condition
         # Recompute on new conditional expr
-            return self.probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
-        return pspace(new_condition).probability(new_condition, **kwargs)
+            return self._probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
+        result = pspace(new_condition).probability(new_condition, **kwargs)
+        if evaluate and hasattr(result, 'doit'):
+            return result.doit()
+        else:
+            return result
 
-    def density(self, x):
-        return Piecewise((self.p, Eq(x, self.success)),
-                         (1 - self.p, Eq(x, self.failure)),
-                         (S.Zero, True))
+def get_timerv_swaps(expr, condition):
+    """
+    Finds the appropriate interval for each time stamp in expr by parsing
+    the given condition and returns intervals for each timestamp and
+    dictionary that maps variable time-stamped Random Indexed Symbol to its
+    corresponding Random Indexed variable with fixed time stamp.
+
+    Parameters
+    ==========
+
+    expr: Sympy Expression
+        Expression containing Random Indexed Symbols with variable time stamps
+    condition: Relational/Boolean Expression
+        Expression containing time bounds of variable time stamps in expr
+
+    Examples
+    ========
+
+    >>> from sympy.stats.stochastic_process_types import get_timerv_swaps, PoissonProcess
+    >>> from sympy import symbols, Contains, Interval
+    >>> x, t, d = symbols('x t d', positive=True)
+    >>> X = PoissonProcess("X", 3)
+    >>> get_timerv_swaps(x*X(t), Contains(X(t), Interval.Lopen(0, 1)))
+    ([Interval.Lopen(0, 1)], {X(t): X(1)})
+    >>> get_timerv_swaps((X(t)**2 + X(d)**2), Contains(X(t), Interval.Lopen(0, 1))
+    ... & Contains(X(d), Interval.Ropen(1, 4))) # doctest: +SKIP
+    ([Interval.Ropen(1, 4), Interval.Lopen(0, 1)], {X(d): X(3), X(t): X(1)})
+
+    Returns
+    =======
+
+    intervals: list
+        List of Intervals/FiniteSet on which each time stamp is defined
+    rv_swap: dict
+        Dictionary mapping variable time Random Indexed Symbol to constant time
+        Random Indexed Variable
+
+    """
+
+    if not isinstance(condition, (Relational, Boolean)):
+        raise ValueError("%s is not a relational or combination of relationals"
+            % (condition))
+    expr_syms = list(expr.atoms(RandomIndexedSymbol))
+    if isinstance(condition, (And, Or)):
+        given_cond_args = condition.args
+    else: # single condition
+        given_cond_args = (condition, )
+    rv_swap = {}
+    intervals = []
+    for expr_sym in expr_syms:
+        for arg in given_cond_args:
+            if arg.has(expr_sym):
+                intv = _set_converter(arg.args[1])
+                diff_key = intv._sup - intv._inf
+                if diff_key == oo:
+                    raise ValueError("%s should have finite bounds" % str(expr_sym.name))
+                elif diff_key == S.Zero: # has singleton set
+                    diff_key = intv._sup
+                rv_swap[expr_sym] = expr_sym.subs({expr_sym.key: diff_key})
+                intervals.append(intv)
+    return intervals, rv_swap
+
+
+class RandomWalk(DiscreteTimeStochasticProcess):
+
+    index_set = S.Naturals0
+
+    def __new__(cls, sym, p=S.Half, success=1, failure=-1,
+                            state_space=S.Integers):
+        sym = _symbol_converter(sym)
+        state_space = _set_converter(state_space)
+        p = _sympify(p)
+        success = _sympify(success)
+        failure = _sympify(failure)
+        _value_check(p > 0 and p <=1, 'p should be between 0 and 1.')
+        _value_check(success.is_integer, 'success should be an integer')
+        _value_check(failure.is_integer, 'fail should be an integer')
+        y = Function('f')
+        n = Symbol('n', integer=True)
+        f = y(n) - p*y(n + success) - (1 - p)*y(n + failure)
+        func = rsolve(f, y(n), {y(state_space._inf): 0, y(state_space._sup): 1})
+        func = Lambda(n, func)
+        return Basic.__new__(cls, sym, p, success, failure, state_space,
+                                func)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def p(self):
+        return self.args[1]
+
+    @property
+    def success(self):
+        return self.args[2]
+
+    @property
+    def failure(self):
+        return self.args[3]
+
+    @property
+    def state_space(self):
+        return self.args[4]
+
+    @property
+    def recurr_func(self):
+        return self.args[5]
+
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        if given_condition is not None:
+            if not isinstance(given_condition, (And, Or)) and \
+                given_condition.args[1] == self.state_space: # to handle queries with recurrence
+                rv = list(condition.atoms(RandomIndexedSymbol))[0]
+                condition = condition.subs({rv: Dummy(rv.name)})
+                working_space = Intersection(self.state_space, condition.as_set())
+                if working_space == EmptySet:
+                    return 0
+                else:
+                    n = Symbol('n', integer=True)
+                    return Sum(self.recurr_func(n),
+                            (n, working_space._inf, working_space._sup)).doit()
+
+            intervals, rv_swap = get_timerv_swaps(condition, given_condition)
+            new_rv_swap = {}
+            for k, v in rv_swap.items():
+                t = Dummy('t', positive=True, integer=True)
+                B = BernoulliProcess('B', k.pspace.process.p, k.pspace.process.success,
+                                    k.pspace.process.failure)
+                new_rv_swap[k] = Sum(B[t], (t, 0, v.key)).doit()
+            condition = condition.subs(new_rv_swap)
+        else:
+            new_rv_swap = {}
+            rvs = list(condition.atoms(RandomIndexedSymbol))
+            for rv in rvs:
+                if isinstance(rv.pspace.process, RandomWalk):
+                    t = Dummy('t', positive=True, integer=True)
+                    B = BernoulliProcess('B', rv.pspace.process.p, rv.pspace.process.success,
+                                        rv.pspace.process.failure)
+                    new_rv_swap[rv] = Sum(B[t], (t, 0, rv.key)).doit()
+            condition = condition.subs(new_rv_swap)
+        return _SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
