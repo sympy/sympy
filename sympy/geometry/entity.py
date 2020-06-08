@@ -648,7 +648,7 @@ def rotate(th):
 
     Examples
     ========
-    
+
     >>> from sympy.geometry.entity import rotate, translate
     >>> from sympy import Point, pi
     >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
