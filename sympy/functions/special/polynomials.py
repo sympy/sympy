@@ -441,7 +441,7 @@ class chebyshevt(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevt, diff
     >>> from sympy.abc import n,x
     >>> chebyshevt(0, x)
     1
@@ -553,7 +553,7 @@ class chebyshevu(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevu, diff
     >>> from sympy.abc import n,x
     >>> chebyshevu(0, x)
     1
@@ -1169,7 +1169,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import laguerre, assoc_laguerre, diff
+    >>> from sympy import assoc_laguerre, diff
     >>> from sympy.abc import x, n, a
     >>> assoc_laguerre(0, a, x)
     1

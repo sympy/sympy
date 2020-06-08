@@ -496,3 +496,194 @@ __all__ = [
     # sympy.deprecated:
     'C', 'ClassRegistry', 'class_registry',
 ]
+
+
+#===========================================================================#
+#                                                                           #
+# XXX: The names below were importable before sympy 1.6 using               #
+#                                                                           #
+#          from sympy import *                                              #
+#                                                                           #
+# This happened implicitly because there was no __all__ defined in this     #
+# __init__.py file. Not every package is imported. The list matches what    #
+# would have been imported before. It is possible that these packages will  #
+# not be imported by a star-import from sympy in future.                    #
+#                                                                           #
+#===========================================================================#
+
+
+__all__.extend([
+    'algebras',
+    'assumptions',
+    'calculus',
+    'codegen',
+    'combinatorics',
+    'concrete',
+    'deprecated',
+    'discrete',
+    'external',
+    'functions',
+    'geometry',
+    'interactive',
+    'multipledispatch',
+    'ntheory',
+    'parsing',
+    'plotting',
+    'polys',
+    'printing',
+    'release',
+    'strategies',
+    'tensor',
+    'utilities',
+])
+
+
+#===========================================================================#
+#                                                                           #
+# XXX: The names listed in _DEPRECATED_IMPORTS below were importable before #
+# sympy 1.6 using                                                           #
+#                                                                           #
+#          from sympy import *                                              #
+#                                                                           #
+# This happened implicitly because there was no __all__ defined in this     #
+# __init__.py file. The plan is to remove them but for now they remain      #
+# importable but will give a deprecation warning when used. In future these #
+# names will be removed and will not be importable from here.               #
+#                                                                           #
+#===========================================================================#
+
+
+class DeprecatedImportModule:
+    # Add a docstring that someone can see if calling help on these objects
+    """Deprecated imported module object.
+
+    See https://github.com/sympy/sympy/pull/19316
+
+    This is a wrapper around a module that has been imported incorrectly.
+    Previously this module was importable using
+
+        from sympy import *
+
+    or (for example)
+
+        from sympy import add
+
+    However it was unintentional that this module would be imported in that
+    way and it will be removed in a future sympy version. If you do need to
+    use this module then the correct way to import it is to give its full
+    module path e.g.
+
+        import sympy.core.add as add
+    """
+
+    from sympy.utilities.exceptions import SymPyDeprecationWarning as Warn
+    import sys
+    sympy = sys.modules[__name__]
+
+    _DEPRECATED_IMPORTS = [
+        'sympy.concrete.expr_with_intlimits',
+        'sympy.concrete.expr_with_limits',
+        'sympy.concrete.gosper',
+        'sympy.concrete.products',
+        'sympy.concrete.summations',
+        'sympy.core.add',
+        'sympy.core.basic',
+        'sympy.core.cache',
+        'sympy.core.compatibility',
+        'sympy.core.containers',
+        'sympy.core.coreerrors',
+        'sympy.core.decorators',
+        'sympy.core.expr',
+        'sympy.core.exprtools',
+        'sympy.core.facts',
+        'sympy.core.function',
+        'sympy.core.logic',
+        'sympy.core.mod',
+        'sympy.core.mul',
+        'sympy.core.multidimensional',
+        'sympy.core.numbers',
+        'sympy.core.operations',
+        'sympy.core.power',
+        'sympy.core.relational',
+        'sympy.core.rules',
+        'sympy.core.singleton',
+        'sympy.core.symbol',
+        'sympy.discrete.convolutions',
+        'sympy.geometry.curve',
+        'sympy.geometry.ellipse',
+        'sympy.geometry.entity',
+        'sympy.geometry.exceptions',
+        'sympy.geometry.line',
+        'sympy.geometry.parabola',
+        'sympy.geometry.plane',
+        'sympy.geometry.point',
+        'sympy.geometry.polygon',
+        'sympy.geometry.util',
+        'sympy.integrals.integrals',
+        'sympy.integrals.manualintegrate',
+        'sympy.integrals.meijerint',
+        'sympy.integrals.singularityfunctions',
+        'sympy.integrals.transforms',
+        'sympy.integrals.trigonometry',
+        'sympy.logic.boolalg',
+        'sympy.logic.inference',
+        'sympy.matrices.common',
+        'sympy.matrices.dense',
+        'sympy.matrices.expressions',
+        'sympy.matrices.immutable',
+        'sympy.matrices.matrices',
+        'sympy.matrices.sparse',
+        'sympy.matrices.sparsetools',
+        'sympy.ntheory.factor_',
+        'sympy.ntheory.generate',
+        'sympy.ntheory.multinomial',
+        'sympy.ntheory.partitions_',
+        'sympy.ntheory.primetest',
+        'sympy.ntheory.residue_ntheory',
+        'sympy.sets.conditionset',
+        'sympy.sets.contains',
+        'sympy.sets.fancysets',
+        'sympy.sets.ordinals',
+        'sympy.sets.powerset',
+        'sympy.sets.sets',
+        'sympy.simplify.cse_main',
+        'sympy.simplify.cse_opts',
+        'sympy.simplify.epathtools',
+        'sympy.simplify.traversaltools',
+        'sympy.solvers.bivariate',
+        'sympy.solvers.deutils',
+        'sympy.solvers.inequalities',
+        'sympy.solvers.ode',
+        'sympy.solvers.pde',
+        'sympy.solvers.polysys',
+        'sympy.solvers.recurr',
+        'sympy.solvers.solvers',
+        'sympy.tensor.array',
+        'sympy.tensor.index_methods',
+        'sympy.tensor.indexed'
+    ]
+
+    def __init__(self, modname):
+        from importlib import import_module
+        self.modname = modname
+        self.mod = import_module(modname)
+
+    def __getattr__(self, name):
+        self.Warn(
+            feature="importing %s with 'from sympy import *'" % self.modname,
+            useinstead="import %s" % self.modname,
+            issue=18245,
+            deprecated_since_version="1.6").warn()
+        return getattr(self.mod, name)
+
+    @classmethod
+    def inject_imports(cls):
+        for modname in cls._DEPRECATED_IMPORTS:
+            name = modname.split('.')[-1]
+            deprecated_mod = cls(modname)
+            setattr(cls.sympy, name, deprecated_mod)
+            __all__.append(name)
+
+
+DeprecatedImportModule.inject_imports()
+del DeprecatedImportModule

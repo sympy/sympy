@@ -92,6 +92,8 @@ class Mul(Expr, AssocOp):
 
     is_Mul = True
 
+    _args_type = Expr
+
     def __neg__(self):
         c, args = self.as_coeff_mul()
         c = -c
@@ -198,8 +200,13 @@ class Mul(Expr, AssocOp):
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
-                        # leave the Mul as a Mul
-                        rv = [cls(a*r, b, evaluate=False)], [], None
+                        # leave the Mul as a Mul?
+                        ar = a*r
+                        if ar is S.One:
+                            arb = b
+                        else:
+                            arb = cls(a*r, b, evaluate=False)
+                        rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
@@ -952,6 +959,7 @@ class Mul(Expr, AssocOp):
 
     def matches(self, expr, repl_dict={}, old=False):
         expr = sympify(expr)
+        repl_dict = repl_dict.copy()
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
@@ -1000,6 +1008,7 @@ class Mul(Expr, AssocOp):
         expression, while `targets` is a list of arguments in the
         multiplication expression being matched against.
         """
+        repl_dict = repl_dict.copy()
         # List of possible future states to be considered
         agenda = []
         # The current matching state, storing index in nodes and targets
@@ -1757,11 +1766,51 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import Order, powsimp
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(Order):
-            res += Order(x**n, x)
+        from sympy import Integer, Mul, Order, ceiling, powsimp
+        from itertools import product
+
+        def coeff_exp(term, x):
+            coeff, exp = S.One, S.Zero
+            for factor in Mul.make_args(term):
+                if factor.has(x):
+                    base, exp = factor.as_base_exp()
+                    if base != x:
+                        return term.leadterm(x)
+                else:
+                    coeff *= factor
+            return coeff, exp
+
+        ords = []
+
+        try:
+            for t in self.args:
+                coeff, exp = t.leadterm(x)
+                if isinstance(coeff, Integer) or isinstance(coeff, Rational):
+                    ords.append((t, exp))
+                else:
+                    raise ValueError
+
+            n0 = sum(t[1] for t in ords)
+            facs = [t.series(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
+
+        except (ValueError, NotImplementedError, TypeError, AttributeError):
+            facs = [t.nseries(x, n=n, logx=logx) for t in self.args]
+            res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
+            if res.has(Order):
+                res += Order(x**n, x)
+            return res
+
+        res = 0
+        ords2 = [Add.make_args(factor) for factor in facs]
+
+        for fac in product(*ords2):
+            ords3 = [coeff_exp(term, x) for term in fac]
+            coeffs, powers = zip(*ords3)
+            power = sum(powers)
+            if power < n:
+                res += Mul(*coeffs)*(x**power)
+
+        res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):

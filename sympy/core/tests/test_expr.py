@@ -626,15 +626,15 @@ def test_is_meromorphic():
     assert f.is_meromorphic(x, zoo) is True
 
     g = 3 + 2*x**(log(3)/log(2) - 1)
-    assert g.is_meromorphic(x, 0) is None
+    assert g.is_meromorphic(x, 0) is False
     assert g.is_meromorphic(x, 1) is True
-    assert g.is_meromorphic(x, zoo) is None
+    assert g.is_meromorphic(x, zoo) is False
 
     n = Symbol('n', integer=True)
     h = sin(1/x)**n*x
     assert h.is_meromorphic(x, 0) is False
     assert h.is_meromorphic(x, 1) is True
-    assert h.is_meromorphic(x, zoo) is True
+    assert h.is_meromorphic(x, zoo) is False
 
     e = log(x)**pi
     assert e.is_meromorphic(x, 0) is False
@@ -643,7 +643,7 @@ def test_is_meromorphic():
     assert e.is_meromorphic(x, zoo) is False
 
     assert (log(x)**a).is_meromorphic(x, 0) is False
-    assert (log(x)**a).is_meromorphic(x, 1) is None
+    assert (log(x)**a).is_meromorphic(x, 1) is False
     assert (a**log(x)).is_meromorphic(x, 0) is None
     assert (3**log(x)).is_meromorphic(x, 0) is False
     assert (3**log(x)).is_meromorphic(x, 1) is True
@@ -909,7 +909,8 @@ def test_replace():
     # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
     assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
         simultaneous=False) == sin(x)/y
-    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e
+        ) == x**2/2 + O(x**3)
     assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
         simultaneous=False) == x**2/2 + O(x**3)
     assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \

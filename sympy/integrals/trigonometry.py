@@ -28,7 +28,7 @@ _u = Dummy('u')
 def trigintegrate(f, x, conds='piecewise'):
     """Integrate f = Mul(trig) over x
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
+       >>> from sympy import sin, cos, tan, sec
        >>> from sympy.integrals.trigonometry import trigintegrate
        >>> from sympy.abc import x
 

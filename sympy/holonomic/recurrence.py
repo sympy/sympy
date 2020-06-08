@@ -109,7 +109,7 @@ class RecurrenceOperator:
     ========
 
     >>> from sympy.holonomic.recurrence import RecurrenceOperator, RecurrenceOperators
-    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
     >>> n = symbols('n', integer=True)
     >>> R, Sn = RecurrenceOperators(ZZ.old_poly_ring(n),'Sn')

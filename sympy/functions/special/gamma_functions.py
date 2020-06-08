@@ -43,7 +43,7 @@ class gamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma
+    >>> from sympy import S, I, pi, gamma
     >>> from sympy.abc import x
 
     Several special values are known:
@@ -202,13 +202,15 @@ class gamma(Function):
         return sage.gamma(self.args[0]._sage_())
 
     def _eval_as_leading_term(self, x):
-        from sympy import Order
         arg = self.args[0]
-        arg_1 = arg.as_leading_term(x)
-        if Order(x, x).contains(arg_1):
-            return S(1) / arg_1
-        if Order(1, x).contains(arg_1):
-            return self.func(arg_1)
+        x0 = arg.subs(x, 0)
+
+        if x0.is_integer and x0.is_nonpositive:
+            n = -x0
+            res = (-1)**n/self.func(n + 1)
+            return res/(arg + n).as_leading_term(x)
+        elif x0.is_finite:
+            return self.func(x0)
         ####################################################
         # The correct result here should be 'None'.        #
         # Indeed arg in not bounded as x tends to 0.       #
@@ -868,7 +870,7 @@ class loggamma(Function):
 
     For half-integral values:
 
-    >>> from sympy import S, pi
+    >>> from sympy import S
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
@@ -1241,7 +1243,7 @@ class multigamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma, multigamma
+    >>> from sympy import S, multigamma
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> p = Symbol('p', positive=True, integer=True)

@@ -20,6 +20,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
+from sympy.polys.polytools import Poly
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -521,7 +522,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy import Matrix, SparseMatrix
+        >>> from sympy import Matrix
         >>> m = Matrix(3, 3, lambda i, j: j - i); m
         Matrix([
         [ 0,  1, 2],
@@ -606,7 +607,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy import Matrix, SparseMatrix
+        >>> from sympy import Matrix
         >>> M = Matrix.eye(3)
         >>> M.todok()
         {(0, 0): 1, (1, 1): 1, (2, 2): 1}
@@ -1106,6 +1107,48 @@ class MatrixSpecial(MatrixRequired):
 
         return klass._eval_zeros(rows, cols)
 
+    @classmethod
+    def companion(kls, poly):
+        """Returns a companion matrix of a polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Poly, Symbol, symbols
+        >>> x = Symbol('x')
+        >>> c0, c1, c2, c3, c4 = symbols('c0:5')
+        >>> p = Poly(c0 + c1*x + c2*x**2 + c3*x**3 + c4*x**4 + x**5, x)
+        >>> Matrix.companion(p)
+        Matrix([
+        [0, 0, 0, 0, -c0],
+        [1, 0, 0, 0, -c1],
+        [0, 1, 0, 0, -c2],
+        [0, 0, 1, 0, -c3],
+        [0, 0, 0, 1, -c4]])
+        """
+        poly = kls._sympify(poly)
+        if not isinstance(poly, Poly):
+            raise ValueError("{} must be a Poly instance.".format(poly))
+        if not poly.is_monic:
+            raise ValueError("{} must be a monic polynomial.".format(poly))
+        if not poly.is_univariate:
+            raise ValueError(
+                "{} must be a univariate polynomial.".format(poly))
+
+        size = poly.degree()
+        if not size >= 1:
+            raise ValueError(
+                "{} must have degree not less than 1.".format(poly))
+
+        coeffs = poly.all_coeffs()
+        def entry(i, j):
+            if j == size - 1:
+                return -coeffs[-1 - i]
+            elif i == j + 1:
+                return kls.one
+            return kls.zero
+        return kls._new(size, size, entry)
+
 
 class MatrixProperties(MatrixRequired):
     """Provides basic properties of a matrix."""
@@ -1203,6 +1246,12 @@ class MatrixProperties(MatrixRequired):
         Matrix([[x]])
         >>> _.atoms()
         {x}
+        >>> Matrix([[x, y], [y, x]])
+        Matrix([
+        [x, y],
+        [y, x]])
+        >>> _.atoms()
+        {x, y}
         """
 
         types = tuple(t if isinstance(t, type) else type(t) for t in types)

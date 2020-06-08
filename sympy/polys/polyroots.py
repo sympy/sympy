@@ -265,7 +265,7 @@ def roots_quartic(f):
     Examples
     ========
 
-        >>> from sympy import Poly, symbols, I
+        >>> from sympy import Poly
         >>> from sympy.polys.polyroots import roots_quartic
 
         >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))

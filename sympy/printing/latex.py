@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import S, Add, Symbol, Mod
+from sympy.core import Add, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
@@ -208,6 +208,10 @@ class LatexPrinter(Printer):
 
     def _add_parens(self, s):
         return r"\left({}\right)".format(s)
+
+    # TODO: merge this with the above, which requires a lot of test changes
+    def _add_parens_lspace(self, s):
+        return r"\left( {}\right)".format(s)
 
     def parenthesize(self, item, level, is_neg=False, strict=False):
         prec_val = precedence_traditional(item)
@@ -481,18 +485,7 @@ class LatexPrinter(Printer):
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
         from sympy.physics.units import Quantity
-        include_parens = False
-        if _coeff_isneg(expr):
-            expr = -expr
-            tex = "- "
-            if expr.is_Add:
-                tex += "("
-                include_parens = True
-        else:
-            tex = ""
-
         from sympy.simplify import fraction
-        numer, denom = fraction(expr, exact=True)
         separator = self._settings['mul_symbol_latex']
         numbersep = self._settings['mul_symbol_latex_numbers']
 
@@ -500,8 +493,6 @@ class LatexPrinter(Printer):
             if not expr.is_Mul:
                 return str(self._print(expr))
             else:
-                _tex = last_term_tex = ""
-
                 if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
                 else:
@@ -511,6 +502,11 @@ class LatexPrinter(Printer):
                 args = sorted(args, key=lambda x: isinstance(x, Quantity) or
                               (isinstance(x, Pow) and
                                isinstance(x.base, Quantity)))
+
+                return convert_args(args)
+
+        def convert_args(args):
+                _tex = last_term_tex = ""
 
                 for i, term in enumerate(args):
                     term_tex = self._print(term)
@@ -529,6 +525,28 @@ class LatexPrinter(Printer):
                     _tex += term_tex
                     last_term_tex = term_tex
                 return _tex
+
+        # Check for unevaluated Mul. In this case we need to make sure the
+        # identities are visible, multiple Rational factors are not combined
+        # etc so we display in a straight-forward form that fully preserves all
+        # args and their order.
+        # XXX: _print_Pow calls this routine with instances of Pow...
+        if isinstance(expr, Mul):
+            args = expr.args
+            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+                return convert_args(args)
+
+        include_parens = False
+        if _coeff_isneg(expr):
+            expr = -expr
+            tex = "- "
+            if expr.is_Add:
+                tex += "("
+                include_parens = True
+        else:
+            tex = ""
+
+        numer, denom = fraction(expr, exact=True)
 
         if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
             # use the original expression here, since fraction() may have
@@ -1865,14 +1883,19 @@ class LatexPrinter(Printer):
                     self._print(expr.args[0]), self._print(exp))
 
     def _print_tuple(self, expr):
-        if self._settings['decimal_separator'] =='comma':
-            return r"\left( %s\right)" % \
-                r"; \  ".join([self._print(i) for i in expr])
-        elif self._settings['decimal_separator'] =='period':
-            return r"\left( %s\right)" % \
-                r", \  ".join([self._print(i) for i in expr])
+        if self._settings['decimal_separator'] == 'comma':
+            sep = ";"
+        elif self._settings['decimal_separator'] == 'period':
+            sep = ","
         else:
             raise ValueError('Unknown Decimal Separator')
+
+        if len(expr) == 1:
+            # 1-tuple needs a trailing separator
+            return self._add_parens_lspace(self._print(expr[0]) + sep)
+        else:
+            return self._add_parens_lspace(
+                (sep + r" \  ").join([self._print(i) for i in expr]))
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -2560,6 +2583,13 @@ class LatexPrinter(Printer):
             return r'\left(\Omega\left(%s\right)\right)^{%s}' % \
                 (self._print(expr.args[0]), self._print(exp))
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
+    def emptyPrinter(self, expr):
+        # Checks what type of decimal separator to print.
+        expr = super().emptyPrinter(expr)
+        if self._settings['decimal_separator'] == 'comma':
+            expr = expr.replace('.', '{,}')
+        return expr
 
 def translate(s):
     r'''

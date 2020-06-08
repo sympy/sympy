@@ -40,7 +40,6 @@ class Plane(GeometryEntity):
     ========
 
     >>> from sympy import Plane, Point3D
-    >>> from sympy.abc import x
     >>> Plane(Point3D(1, 1, 1), Point3D(2, 3, 4), Point3D(2, 2, 2))
     Plane(Point3D(1, 1, 1), (-1, 2, -1))
     >>> Plane((1, 1, 1), (2, 3, 4), (2, 2, 2))
@@ -267,7 +266,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Point3D, Line, Line3D, Plane
+        >>> from sympy import Point3D, Line3D, Plane
         >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.distance(b)
@@ -362,7 +361,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Point3D, Line, Line3D, Plane
+        >>> from sympy import Point3D, Line3D, Plane
         >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.intersection(b)
@@ -438,7 +437,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D
+        >>> from sympy import Plane
         >>> o = (0, 0, 0)
         >>> p = Plane(o, (1, 1, 1))
         >>> p2 = Plane(o, (2, 2, 2))
@@ -621,7 +620,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D, Line3D
+        >>> from sympy import Plane, Point3D
         >>> a = Plane(Point3D(1,4,6), normal_vector=(2, 4, 6))
         >>> a.perpendicular_line(Point3D(9, 8, 7))
         Line3D(Point3D(9, 8, 7), Point3D(11, 12, 13))
@@ -656,7 +655,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D, Line3D
+        >>> from sympy import Plane, Point3D
         >>> a, b = Point3D(0, 0, 0), Point3D(0, 1, 0)
         >>> Z = (0, 0, 1)
         >>> p = Plane(a, normal_vector=Z)
@@ -722,7 +721,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Line, Line3D, Point, Point3D
+        >>> from sympy import Plane, Line, Line3D, Point3D
         >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Line(Point3D(1, 1), Point3D(2, 2))
         >>> a.projection_line(b)
@@ -764,7 +763,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point, Point3D
+        >>> from sympy import Plane, Point3D
         >>> A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
 
         The projection is along the normal vector direction, not the z
@@ -828,7 +827,8 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point, pi
+        >>> from sympy import pi
+        >>> from sympy.geometry import Plane
         >>> from sympy.abc import t, u, v
         >>> p = Plane((2, 0, 0), (0, 0, 1), (0, 1, 0))
 

@@ -1818,9 +1818,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy import Function, Eq, symbols, diff, Rational
+    >>> from sympy import Function, Eq, symbols, diff
     >>> from sympy.solvers.ode.ode import classify_sysode
-    >>> from sympy.matrices.dense import Matrix
     >>> from sympy.abc import t
     >>> f, x, y = symbols('f, x, y', cls=Function)
     >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -2537,7 +2536,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     such as ``min(listofsolutions, key=lambda i: ode_sol_simplicity(i,
     f(x)))``.
 
-    >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
+    >>> from sympy import symbols, Function, Eq, tan, Integral
     >>> from sympy.solvers.ode.ode import ode_sol_simplicity
     >>> x, C1, C2 = symbols('x, C1, C2')
     >>> f = Function('f')
@@ -2838,7 +2837,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     Examples
     ========
 
-    >>> from sympy import symbols, Eq, pprint
+    >>> from sympy import symbols
     >>> from sympy.solvers.ode.ode import constant_renumber
     >>> x, C1, C2, C3 = symbols('x,C1:4')
     >>> expr = C3 + C2*x + C1*x**2
@@ -3466,7 +3465,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     ========
 
     >>> from sympy import dsolve, Function, pprint
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
@@ -3603,7 +3602,7 @@ def ode_2nd_linear_airy(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy import dsolve, Function
     >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) - x*f(x)
@@ -3660,7 +3659,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     ========
 
     >>> from sympy import dsolve, Function, pprint
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
@@ -3761,11 +3760,11 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy.abc import x, y, a
+    >>> from sympy.abc import x
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
@@ -4104,7 +4103,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     :py:obj:`~.ComplexRootOf` instance will be returned
     instead.
 
-    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
@@ -4470,8 +4469,8 @@ def ode_linear_coefficients(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -4508,7 +4507,7 @@ def ode_separable_reduced(eq, func, order, match):
 
     The general solution is:
 
-        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x, n
         >>> f, g = map(Function, ['f', 'g'])
         >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
@@ -4535,8 +4534,8 @@ def ode_separable_reduced(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -4591,7 +4590,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, exp
+    >>> from sympy import Function, pprint, exp
     >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -4672,7 +4671,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     :py:class:`~sympy.polys.rootoftools.ComplexRootOf` instance will be return
     instead.
 
-    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
@@ -5508,7 +5507,7 @@ def ode_lie_group(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, exp, pprint
+    >>> from sympy import Function, dsolve, exp, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
@@ -5621,7 +5620,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
 
     The infinitesimals can be found by solving the following PDE:
 
-        >>> from sympy import Function, diff, Eq, pprint
+        >>> from sympy import Function, Eq, pprint
         >>> from sympy.abc import x, y
         >>> xi, eta, h = map(Function, ['xi', 'eta', 'h'])
         >>> h = h(x, y)  # dy/dx = h
@@ -5649,7 +5648,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     Examples
     ========
 
-    >>> from sympy import Function, diff
+    >>> from sympy import Function
     >>> from sympy.solvers.ode.ode import infinitesimals
     >>> from sympy.abc import x
     >>> f = Function('f')

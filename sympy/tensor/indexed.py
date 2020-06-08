@@ -496,7 +496,7 @@ class IndexedBase(Expr, NotIterable):
         Examples
         ========
 
-        >>> from sympy import IndexedBase, Idx, Symbol
+        >>> from sympy import IndexedBase, Idx
         >>> from sympy.abc import x, y
         >>> IndexedBase('A', shape=(x, y)).shape
         (x, y)
@@ -601,7 +601,7 @@ class Idx(Expr):
     Examples
     ========
 
-    >>> from sympy import IndexedBase, Idx, symbols, oo
+    >>> from sympy import Idx, symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 
     If a string is given for the label an integer ``Symbol`` is created and the

@@ -2280,7 +2280,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
        :format: doctest
        :include-source: True
 
-       >>> from sympy import plot, cos, sin, symbols
+       >>> from sympy import cos, sin, symbols
        >>> from sympy.plotting.plot import check_arguments
        >>> x = symbols('x')
        >>> check_arguments([cos(x), sin(x)], 2, 1)

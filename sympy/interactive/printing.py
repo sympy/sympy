@@ -166,9 +166,11 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-            # to use here, than these explicit imports.
             elif isinstance(o, sympy_latex_types):
+                # types known to the printer
+                return True
+            elif hasattr(o, '_latex'):
+                # types which add support themselves
                 return True
             elif isinstance(o, (float, int)) and print_builtin:
                 return True
