@@ -475,10 +475,6 @@ def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
 
 
-def test_issue_9308():
-    assert limit(subfactorial(x)/factorial(x), x, oo) == exp(-1)
-
-
 def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 

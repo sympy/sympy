@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.symbol import Dummy
-from sympy.functions.combinatorial.factorials import factorial, subfactorial
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -207,9 +207,6 @@ class Limit(Expr):
 
         if not e.has(z):
             return e
-
-        if e.has(subfactorial):
-            e = e.rewrite(factorial)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
