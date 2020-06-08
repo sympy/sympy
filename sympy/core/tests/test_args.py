@@ -4918,12 +4918,12 @@ def test_sympy__vector__orienters__QuaternionOrienter():
     a, b, c, d = symbols('a b c d')
     assert _test_args(QuaternionOrienter(a, b, c, d))
 
+
 def test_sympy__vector__parametricregion__ParametricRegion():
     from sympy.abc import t
-    from sympy.vector.coordsysrect import CoordSys3D
     from sympy.vector.parametricregion import ParametricRegion
-    C = CoordSys3D('C')
-    assert _test_args(ParametricRegion((t), (t, t**2), {t: (0, 1)}, system=C))
+    assert _test_args(ParametricRegion((t), (t, t**3), {t: (0, 2)}))
+
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
@@ -4931,60 +4931,74 @@ def test_sympy__vector__scalar__BaseScalar():
     C = CoordSys3D('C')
     assert _test_args(BaseScalar(0, C, ' ', ' '))
 
+
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
 
+
 def test_sympy__integrals__rubi__symbol__matchpyWC():
     from sympy.integrals.rubi.symbol import matchpyWC
     assert _test_args(matchpyWC(1, True, 'a'))
+
 
 def test_sympy__integrals__rubi__utility_function__rubi_unevaluated_expr():
     from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
     a = symbols('a')
     assert _test_args(rubi_unevaluated_expr(a))
 
+
 def test_sympy__integrals__rubi__utility_function__rubi_exp():
     from sympy.integrals.rubi.utility_function import rubi_exp
     assert _test_args(rubi_exp(5))
+
 
 def test_sympy__integrals__rubi__utility_function__rubi_log():
     from sympy.integrals.rubi.utility_function import rubi_log
     assert _test_args(rubi_log(5))
 
+
 def test_sympy__integrals__rubi__utility_function__Int():
     from sympy.integrals.rubi.utility_function import Int
     assert _test_args(Int(5, x))
+
 
 def test_sympy__integrals__rubi__utility_function__Util_Coefficient():
     from sympy.integrals.rubi.utility_function import Util_Coefficient
     a, x = symbols('a x')
     assert _test_args(Util_Coefficient(a, x))
 
+
 def test_sympy__integrals__rubi__utility_function__Gamma():
     from sympy.integrals.rubi.utility_function import Gamma
     assert _test_args(Gamma(5))
+
 
 def test_sympy__integrals__rubi__utility_function__Util_Part():
     from sympy.integrals.rubi.utility_function import Util_Part
     a, b = symbols('a b')
     assert _test_args(Util_Part(a + b, 0))
 
+
 def test_sympy__integrals__rubi__utility_function__PolyGamma():
     from sympy.integrals.rubi.utility_function import PolyGamma
     assert _test_args(PolyGamma(1, 1))
+
 
 def test_sympy__integrals__rubi__utility_function__ProductLog():
     from sympy.integrals.rubi.utility_function import ProductLog
     assert _test_args(ProductLog(1))
 
+
 def test_sympy__combinatorics__schur_number__SchurNumber():
     from sympy.combinatorics.schur_number import SchurNumber
     assert _test_args(SchurNumber(1))
 
+
 def test_sympy__combinatorics__perm_groups__SymmetricPermutationGroup():
     from sympy.combinatorics.perm_groups import SymmetricPermutationGroup
     assert _test_args(SymmetricPermutationGroup(5))
+
 
 def test_sympy__combinatorics__perm_groups__Coset():
     from sympy.combinatorics.permutations import Permutation
