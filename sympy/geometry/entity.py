@@ -645,7 +645,7 @@ def rotate(th):
     The angle is measured in radians. To Point a point about a point other
     then the origin, translate the Point, do the rotation, and
     translate it back:
-    
+
     Examples
     ========
     
