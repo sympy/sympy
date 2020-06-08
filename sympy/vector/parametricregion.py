@@ -7,18 +7,21 @@ class ParametricRegion(Basic):
 
     Examples
     ========
-
     >>> from sympy import symbols, cos, sin, pi
+
     >>> from sympy.vector import ParametricRegion
 
     >>> r, theta = symbols("r theta")
-    >>> circle = ParametricRegion((r, theta), r*cos(theta), r*sin(theta), limits={theta: (0, pi)})
+    >>> circle = ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), limits={theta: (0, pi)})
     """
-    def __new__(cls, parameters, definition, limits, system=None):
+    def __new__(cls, parameters, definition, limits=None, system=None):
         if not isinstance(parameters, tuple):
             parameters = (parameters,)
         if not isinstance(definition, tuple):
             definition = (definition,)
+
+        if limits is None:
+            limits = {}
 
         for parameter, bounds in limits.items():
             if parameter not in parameters:

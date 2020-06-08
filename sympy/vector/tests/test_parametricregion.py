@@ -30,6 +30,10 @@ def test_parametricregion():
     assert p1.parameters == (a, b)
     assert p1.limits == {a: (0, 2), b: (-1, 5)}
 
+    p2 = ParametricRegion(t, (t, t**3))
+    assert p2.parameters == (t,)
+    assert p2.limits == {}
+
     circle = ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), {theta: (0, 2*pi)})
     assert circle.definition == (r*cos(theta), r*sin(theta))
     assert circle.system == None
