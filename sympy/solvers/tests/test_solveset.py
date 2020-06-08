@@ -939,6 +939,19 @@ def test_solve_hyperbolic():
         ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers),
         ImageSet(Lambda(n, 2*n*I*pi), S.Integers)))
 
+    # issues #11218 / #18427
+    assert dumeq(solveset(sin(pi*x), x, S.Reals), Union(
+        ImageSet(Lambda(n, (2*n*pi + pi)/pi), S.Integers),
+        ImageSet(Lambda(n, 2*n), S.Integers)))
+    assert dumeq(solveset(sin(pi*x), x), Union(
+        ImageSet(Lambda(n, (2*n*pi + pi)/pi), S.Integers),
+        ImageSet(Lambda(n, 2*n), S.Integers)))
+
+    # issue #17543
+    assert dumeq(simplify(solveset(I*cot(8*x - 8*E), x)), Union(
+        ImageSet(Lambda(n, n*pi/4 - 13*pi/16 + E), S.Integers),
+        ImageSet(Lambda(n, n*pi/4 - 11*pi/16 + E), S.Integers)))
+
 
 def test_solve_trig_hyp_symbolic():
     # actual solver: _solve_trig1
