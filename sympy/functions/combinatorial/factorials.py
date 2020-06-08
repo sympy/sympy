@@ -363,6 +363,12 @@ class subfactorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_rewrite_as_factorial(self, arg, **kwargs):
+        from sympy import summation
+        i = Dummy('i')
+        f = S.NegativeOne**i / factorial(i)
+        return factorial(arg) * summation(f, (i, 0, arg))
+
     def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy import uppergamma
         return uppergamma(arg + 1, -1)/S.Exp1
