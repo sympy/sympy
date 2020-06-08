@@ -42,6 +42,9 @@ class TransferFunction(Basic):
         num_, den_ = tf[0], tf[1]
         return TransferFunction(num_, den_, self.var)
 
+    def expand(self):
+        return TransferFunction(expand(self.num), expand(self.den), self.var)
+
     def __add__(self, other):
         other = _sympify(other)
         if isinstance(other, (Integer, Float)):
@@ -66,6 +69,9 @@ class TransferFunction(Basic):
         else:
             raise ValueError("TransferFunction cannot be added with {}.".
                 format(type(other)))
+
+    def __radd__(self, other):
+        return self + other
 
     def __sub__(self, other):
         other = _sympify(other)
@@ -140,6 +146,11 @@ class TransferFunction(Basic):
 
     __truediv__ = __div__
 
+    def __rtruediv__(self, other):
+        return _sympify(other) * self**-1
+
+    __rdiv__ = __rtruediv__
+
     def __pow__(self, p):
         p = sympify(p)
         if not isinstance(p, Integer):
@@ -147,10 +158,10 @@ class TransferFunction(Basic):
         if p == 0:
             return TransferFunction(1, 1, self.var)
         elif p > 0:
-            num_, den_ = expand(self.num**p), expand(self.den**p)
+            num_, den_ = self.num**p, self.den**p
         else:
             p = abs(p)
-            num_, den_ = expand(self.den**p), expand(self.num**p)
+            num_, den_ = self.den**p, self.num**p
 
         return TransferFunction(num_, den_, self.var)
 

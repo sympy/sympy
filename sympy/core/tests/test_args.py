@@ -3074,6 +3074,11 @@ def test_sympy__matrices__expressions__permutation__MatrixPermute():
     A = MatrixSymbol('A', 3, 3)
     assert _test_args(MatrixPermute(A, Permutation([2, 0, 1])))
 
+def test_sympy__physics__control__lti__TransferFunction():
+    from sympy.physics.control.lti import TransferFunction
+    assert _test_args(TransferFunction(2, 3, x))
+
+
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym
     from sympy.physics.vector import ReferenceFrame

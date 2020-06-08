@@ -78,6 +78,13 @@ def test_TransferFunction_functions():
     b = TransferFunction(p + 3, p + 5, p)
     assert tf1.simplify() == b
 
+    # expand the numerator and the denominator.
+    G1 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
+    G2 = TransferFunction(1, -3, p)
+    assert G1.expand() == TransferFunction(s**2 - 2*s + 1, s**4 + 2*s**2 + 1, s)
+    assert tf1.expand() == TransferFunction(p**2 + 2*p - 3, p**2 + 4*p - 5, p)
+    assert G2.expand() == G2
+
     # purely symbolic polynomials.
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
@@ -105,13 +112,13 @@ def test_TransferFunction_functions():
     # taking power of a TF.
     tf4 = TransferFunction(p + 4, p - 3, p)
     tf5 = TransferFunction(s**2 + 1, 1 - s, s)
-    expect2 = TransferFunction(s**6 + 3*s**4 + 3*s**2 + 1, -s**3 + 3*s**2 - 3*s + 1, s)
-    expect1 = TransferFunction(p**2 + 8*p + 16, p**2 - 6*p + 9, p)
+    expect2 = TransferFunction((s**2 + 1)**3, (1 - s)**3, s)
+    expect1 = TransferFunction((p + 4)**2, (p - 3)**2, p)
     assert tf4*tf4 == tf4**2 == pow(tf4, 2) == expect1
     assert tf5*tf5*tf5 == tf5**3 == pow(tf5, 3) == expect2
     assert tf5**0 == pow(tf5, 0) == TransferFunction(1, 1, s)
     assert tf4**-1 == pow(tf4, -1) == TransferFunction(p - 3, p + 4, p)
-    assert tf5**-2 == pow(tf5, -2) == TransferFunction(s**2 - 2*s + 1, s**4 + 2*s**2 + 1, s)
+    assert tf5**-2 == pow(tf5, -2) == TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
 
     raises(ValueError, lambda: tf4**(s**2 + s - 1))
     raises(ValueError, lambda: tf5**s)
@@ -124,7 +131,6 @@ def test_TransferFunction_functions():
     assert factor(tf) == TransferFunction(s - 1, (s - 1)**2, s)
     assert tf.num.subs(s, 2) == tf.den.subs(s, 2) == 1
     assert tf.subs(s, 2) == TransferFunction(1, 1, s)
-    assert expand(tf_) == TransferFunction(s**2 + 2*s - 3, s + 2, s)
 
 
 def test_TransferFunction_addition_and_subtraction():
@@ -138,6 +144,7 @@ def test_TransferFunction_addition_and_subtraction():
     assert tf1 + tf2 == expect1
     assert tf1 + (s - 1) == TransferFunction(s + (s - 5)*(s - 1) + 6, s - 5, s)
     assert tf1 + 8 == TransferFunction(9*s - 34, s - 5, s)
+    assert (1 - p**3) + tf1 == TransferFunction(s + (1 - p**3)*(s - 5) + 6, s - 5, s)
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
@@ -189,6 +196,8 @@ def test_TransferFunction_multiplication_and_division():
     assert G5/G6 == TransferFunction((s + 1)*(s + 6), (s - 5)*(s + 3), s)
     assert G5/2 == TransferFunction(s + 6, 2*s - 10, s)
     assert G5/(s**2) == TransferFunction(s + 6, s**2*(s - 5), s)
+    assert (s - 4*s**2)/G2 == TransferFunction((s - 5)*(-4*s**2 + s), s + 1, s)
+    assert 0/G4 == TransferFunction(0, p + 4, p)
 
     raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
     raises(ValueError, lambda: G4 / Quaternion(1, 2, 3, 4))
