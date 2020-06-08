@@ -134,3 +134,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def from_GaussianIntegerRing(K1, a, K0):
         """Convert GaussianInteger element 'a' to an AlgebraicField """
         return K1.from_sympy(K0.to_sympy(a))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
+        return K1.from_sympy(K0.to_sympy(a))
