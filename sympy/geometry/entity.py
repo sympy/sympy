@@ -97,23 +97,17 @@ class GeometryEntity(Basic):
         return (i1 > i2) - (i1 < i2)
 
     def __contains__(self, other):
-        """Subclasses should implement this method for anything more complex than equality.
-
-        """
+        """Subclasses should implement this method for anything more complex than equality."""
         if type(self) == type(other):
             return self == other
         raise NotImplementedError()
 
     def __getnewargs__(self):
-        """Returns a tuple that will be passed to __new__ on unpickling.
-
-        """
+        """Returns a tuple that will be passed to __new__ on unpickling."""
         return tuple(self.args)
 
     def __ne__(self, o):
-        """Test inequality of two geometrical entities.
-
-        """
+        """Test inequality of two geometrical entities."""
         return not self == o
 
     def __new__(cls, *args, **kwargs):
@@ -129,40 +123,28 @@ class GeometryEntity(Basic):
         return Basic.__new__(cls, *args)
 
     def __radd__(self, a):
-        """Implementation of reverse add method.
-
-        """
+        """Implementation of reverse add method."""
         return a.__add__(self)
 
     def __rdiv__(self, a):
-        """Implementation of reverse division method.
-
-        """
+        """Implementation of reverse division method."""
         return a.__div__(self)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
-        by sympy.
-
-        """
+        by sympy."""
         return type(self).__name__ + repr(self.args)
 
     def __rmul__(self, a):
-        """Implementation of reverse multiplication method.
-
-        """
+        """Implementation of reverse multiplication method."""
         return a.__mul__(self)
 
     def __rsub__(self, a):
-        """Implementation of reverse subtraction method.
-
-        """
+        """Implementation of reverse subtraction method."""
         return a.__sub__(self)
 
     def __str__(self):
-        """String representation of a GeometryEntity.
-
-        """
+        """String representation of a GeometryEntity."""
         from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
@@ -178,9 +160,7 @@ class GeometryEntity(Basic):
             return  self._subs(old, new)
 
     def _repr_svg_(self):
-        """SVG representation of a GeometryEntity suitable for IPython.
-
-        """
+        """SVG representation of a GeometryEntity suitable for IPython."""
         from sympy.core.evalf import N
 
         try:
@@ -254,6 +234,7 @@ class GeometryEntity(Basic):
             Multiplication factor for the SVG stroke-width.  Default is 1.
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
+
         """
         raise NotImplementedError()
 
