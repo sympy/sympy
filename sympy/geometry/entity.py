@@ -306,6 +306,7 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def equals(self, o):
+        """Retuns true if ``o`` is same as ``self``."""
         return self == o
 
     def intersection(self, o):
@@ -535,6 +536,7 @@ class GeometryEntity(Basic):
         {t: 1/2}
         >>> Line(a, b).arbitrary_point(t).subs(_)
         Point2D(1, 1)
+        
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
@@ -556,9 +558,7 @@ class GeometrySet(GeometryEntity, Set):
 
     """
     def _contains(self, other):
-        """sympy.sets uses the _contains method, so include it for compatibility.
-
-        """
+        """sympy.sets uses the _contains method, so include it for compatibility."""
         if isinstance(other, Set) and other.is_FiniteSet:
             return all(self.__contains__(i) for i in other)
 
@@ -645,7 +645,10 @@ def rotate(th):
     The angle is measured in radians. To Point a point about a point other
     then the origin, translate the Point, do the rotation, and
     translate it back:
-
+    
+    Examples
+    ========
+    
     >>> from sympy.geometry.entity import rotate, translate
     >>> from sympy import Point, pi
     >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
@@ -653,6 +656,7 @@ def rotate(th):
     Point2D(1, 1)
     >>> Point(0, 0).transform(rot_about_11)
     Point2D(2, 0)
+
     """
     s = sin(th)
     rv = eye(3)*cos(th)
