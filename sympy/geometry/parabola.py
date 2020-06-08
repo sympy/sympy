@@ -44,6 +44,7 @@ class Parabola(GeometrySet):
 
     Raises
     ======
+
     ValueError
         When `focus` is not a two dimensional point.
         When `focus` is a point of directrix.
@@ -180,6 +181,7 @@ class Parabola(GeometrySet):
 
         Notes
         =====
+
         The eccentricity for every Parabola is 1 by definition.
 
         """
@@ -190,6 +192,7 @@ class Parabola(GeometrySet):
 
         Parameters
         ==========
+
         x : str, optional
             Label for the x-axis. Default value is 'x'.
         y : str, optional
