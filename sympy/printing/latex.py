@@ -2350,6 +2350,12 @@ class LatexPrinter(Printer):
         codomain = self._print(morphism.codomain)
         return "%s\\rightarrow %s" % (domain, codomain)
 
+    def _print_TransferFunction(self, expr):
+        from sympy.core.mul import Mul
+        num, den = expr.num, expr.den
+        res = Mul(num, 1/den, evaluate=False)
+        return self._print_Mul(res)
+
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)

@@ -2318,11 +2318,11 @@ u("""\
 
 def test_pretty_TransferFunction():
     tf1 = TransferFunction(s - 1, s + 1, s)
-    assert pretty(tf1) == 's - 1\n─────\ns + 1'
+    assert upretty(tf1) == u"s - 1\n─────\ns + 1"
     tf2 = TransferFunction(2*s + 1, 3 - p, s)
-    assert pretty(tf2) == '2⋅s + 1\n───────\n 3 - p '
+    assert upretty(tf2) == u"2⋅s + 1\n───────\n 3 - p "
     tf3 = TransferFunction(p, p + 1, p)
-    assert pretty(tf3) == '  p  \n─────\np + 1'
+    assert upretty(tf3) == u"  p  \n─────\np + 1"
 
 
 def test_pretty_order():

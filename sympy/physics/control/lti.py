@@ -15,8 +15,8 @@ class TransferFunction(Basic):
         if den == 0:
             raise ValueError("TransferFunction can't have a zero denominator.")
 
-        if (isinstance(num, Expr) and num.has(Symbol)) or isinstance(num, Integer):
-            if (isinstance(num, Expr) and num.has(Symbol)) or isinstance(num, Integer):
+        if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
+            ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
                 obj = super(TransferFunction, cls).__new__(cls, num, den, var)
                 obj._num = num
                 obj._den = den
@@ -37,7 +37,17 @@ class TransferFunction(Basic):
     def var(self):
         return self._var
 
-    def simplify(self):
+    @property
+    def bound_symbols(self):
+        return [self.var]
+
+    def _eval_subs(self, old, new):
+        arg_num = self.args[0].subs(old, new)
+        arg_den = self.args[1].subs(old, new)
+        argnew = TransferFunction(arg_num, arg_den, self.var)
+        return self if old in self.bound_symbols else argnew
+
+    def _eval_simplify(self, **kwargs):
         tf = cancel(Mul(self.num, 1/self.den)).as_numer_denom()
         num_, den_ = tf[0], tf[1]
         return TransferFunction(num_, den_, self.var)
@@ -47,9 +57,7 @@ class TransferFunction(Basic):
 
     def __add__(self, other):
         other = _sympify(other)
-        if isinstance(other, (Integer, Float)):
-            if isinstance(other, Float):
-                other = Float(other, 3)
+        if other.is_number:
             return TransferFunction(self.num + self.den*other, self.den, self.var)
 
         elif isinstance(other, TransferFunction):
@@ -75,9 +83,7 @@ class TransferFunction(Basic):
 
     def __sub__(self, other):
         other = _sympify(other)
-        if isinstance(other, (Integer, Float)):
-            if isinstance(other, Float):
-                other = Float(other, 3)
+        if other.is_number:
             return TransferFunction(self.num - self.den*other, self.den, self.var)
 
         elif isinstance(other, TransferFunction):
@@ -94,11 +100,12 @@ class TransferFunction(Basic):
             raise ValueError("{} cannot be subtracted from TransferFunction."
                 .format(type(other)))
 
+    def __rsub__(self, other):
+        return -self + other
+
     def __mul__(self, other):
         other = _sympify(other)
-        if isinstance(other, (Integer, Float)):
-            if isinstance(other, Float):
-                other = Float(other, 3)
+        if other.is_number:
             return TransferFunction(self.num*other, self.den, self.var)
 
         elif isinstance(other, TransferFunction):
@@ -123,11 +130,9 @@ class TransferFunction(Basic):
 
     def __div__(self, other):
         other = _sympify(other)
-        if isinstance(other, (Integer, Float)):
+        if other.is_number:
             if other == 0:
                 raise ValueError("TransferFunction cannot be divided by zero.")
-            if isinstance(other, Float):
-                other = Float(other, 3)
             return TransferFunction(self.num, self.den*other, self.var)
 
         elif isinstance(other, TransferFunction):

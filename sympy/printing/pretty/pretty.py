@@ -958,6 +958,11 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[', ']'))
         return D
 
+    def _print_TransferFunction(self, expr):
+        num, den = expr.num, expr.den
+        res = Mul(num, 1/den, evaluate=False)
+        return self._print_Mul(res)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 

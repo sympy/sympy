@@ -1,5 +1,4 @@
-from sympy import symbols, Matrix, factor, expand
-from sympy.algebras.quaternion import Quaternion
+from sympy import symbols, Matrix, factor, simplify
 from sympy.physics.control.lti import TransferFunction
 from sympy.testing.pytest import raises
 
@@ -45,6 +44,11 @@ def test_TransferFunction_construction():
     assert tf6.den == 6
     assert tf6.args == (5, 6, s)
 
+    tf6_ = TransferFunction(1/2, 4, s)
+    assert tf6_.num == 0.5
+    assert tf6_.den == 4
+    assert tf6_.args == (0.500000000000000, 4, s)
+
     tf7 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, s)
     tf8 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, p)
     assert not tf7 == tf8
@@ -72,11 +76,11 @@ def test_TransferFunction_functions():
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
     a = TransferFunction(-(s**4 + s**2 + 1), s - 1, s)
-    assert tf0.simplify() == a
+    assert tf0.simplify() == simplify(tf0) == a
 
     tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
     b = TransferFunction(p + 3, p + 5, p)
-    assert tf1.simplify() == b
+    assert tf1.simplify() == simplify(tf1) == b
 
     # expand the numerator and the denominator.
     G1 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
@@ -127,10 +131,11 @@ def test_TransferFunction_functions():
     # sympy's own functions.
     assert tf3.xreplace({p: s}) == TransferFunction(-3*s + 3, 1 - s, s)
     tf = TransferFunction(s - 1, s**2 - 2*s + 1, s)
-    tf_ = TransferFunction((s - 1)*(s + 3), s + 2, s)
+    tf6 = TransferFunction(s + p, p**2 - 5, s)
     assert factor(tf) == TransferFunction(s - 1, (s - 1)**2, s)
     assert tf.num.subs(s, 2) == tf.den.subs(s, 2) == 1
-    assert tf.subs(s, 2) == TransferFunction(1, 1, s)
+    assert tf.subs(s, 2) == TransferFunction(s - 1, s**2 - 2*s + 1, s)
+    assert tf6.subs(p, 3) == TransferFunction(s + 3, 4, s)
 
 
 def test_TransferFunction_addition_and_subtraction():
@@ -148,7 +153,6 @@ def test_TransferFunction_addition_and_subtraction():
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
-    raises(ValueError, lambda: tf4 + Quaternion(1, 2, 3, 4))
     raises(ValueError, lambda: tf2 + c)
     raises(ValueError, lambda: tf3 + tf4)
 
@@ -159,9 +163,10 @@ def test_TransferFunction_addition_and_subtraction():
         TransferFunction((s + 1)**2 - (s + 3)*(s**2 + s + 1), (s + 1)*(s**2 + s + 1), s)
     assert tf1 - (s - 1) == TransferFunction(s - (s - 5)*(s - 1) + 6, s - 5, s)
     assert tf1 - 8 == TransferFunction(-7*s + 46, s - 5, s)
+    assert (s + 5) - tf2 == TransferFunction(-s + (s + 1)*(s + 5) - 3, s + 1, s)
+    assert (1 + p**4) - tf1 == TransferFunction(-s + (p**4 + 1)*(s - 5) - 6, s - 5, s)
 
     raises(ValueError, lambda: tf1 - Matrix([1, 2, 3]))
-    raises(ValueError, lambda: tf4 - Quaternion(3, 4, 5, 6))
     raises(ValueError, lambda: tf3 - tf4)
 
     p1 = (s - 5)*(s + 1)**2 + ((s + 1)*(s + 6) - (s - 5)*(s + 3))*(s**2 + s + 1)
@@ -188,7 +193,6 @@ def test_TransferFunction_multiplication_and_division():
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
-    raises(ValueError, lambda: G4 * Quaternion(1, 2, 3, 4))
     raises(ValueError, lambda: G1 * c)
     raises(ValueError, lambda: G3 * G5)
 
@@ -200,7 +204,6 @@ def test_TransferFunction_multiplication_and_division():
     assert 0/G4 == TransferFunction(0, p + 4, p)
 
     raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
-    raises(ValueError, lambda: G4 / Quaternion(1, 2, 3, 4))
     raises(ValueError, lambda: G6 / 0)
     raises(ValueError, lambda: G3 / G5)
 
