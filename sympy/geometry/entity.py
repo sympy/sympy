@@ -489,10 +489,10 @@ class GeometryEntity(Basic):
         Parameters
         ==========
 
-            x : number, optional
-                default value is 0.
-            y : number, optional
-                default value is 0.
+        x : number, optional
+            default value is 0.
+        y : number, optional
+            default value is 0.
 
         Examples
         ========
