@@ -370,8 +370,8 @@ class subfactorial(CombinatorialFunction):
         return factorial(arg) * summation(f, (i, 0, arg))
 
     def _eval_rewrite_as_gamma(self, arg, **kwargs):
-        from sympy import exp, exp_polar, gamma, I, lowergamma
-        return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, exp_polar(I*pi)) + gamma(arg + 1))*exp(-1)
+        from sympy import exp, gamma, I, lowergamma
+        return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
 
     def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy import uppergamma
