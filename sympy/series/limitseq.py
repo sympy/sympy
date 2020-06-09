@@ -10,6 +10,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -212,7 +213,7 @@ def limit_seq(expr, n=None, trials=5):
         return expr
 
     expr = expr.rewrite(fibonacci, S.GoldenRatio)
-    expr = expr.rewrite(subfactorial, factorial)
+    expr = expr.rewrite(factorial, subfactorial, gamma)
     n_ = Dummy("n", integer=True, positive=True)
     n1 = Dummy("n", odd=True, positive=True)
     n2 = Dummy("n", even=True, positive=True)
