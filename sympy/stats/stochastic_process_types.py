@@ -1152,13 +1152,7 @@ class RandomWalk(DiscreteTimeStochasticProcess):
         _value_check(p > 0 and p <=1, 'p should be between 0 and 1.')
         _value_check(success.is_integer, 'success should be an integer')
         _value_check(failure.is_integer, 'fail should be an integer')
-        y = Function('f')
-        n = Symbol('n', integer=True)
-        f = y(n) - p*y(n + success) - (1 - p)*y(n + failure)
-        func = rsolve(f, y(n), {y(state_space._inf): 0, y(state_space._sup): 1})
-        func = Lambda(n, func)
-        return Basic.__new__(cls, sym, p, success, failure, state_space,
-                                func)
+        return Basic.__new__(cls, sym, p, success, failure, state_space)
 
     @property
     def symbol(self):
@@ -1182,7 +1176,12 @@ class RandomWalk(DiscreteTimeStochasticProcess):
 
     @property
     def recurr_func(self):
-        return self.args[5]
+        y = Function('f')
+        n = Symbol('n', integer=True)
+        f = y(n) - self.p*y(n + self.success) - (1 - self.p)*y(n + self.failure)
+        func = rsolve(f, y(n), {y(self.state_space._inf): 0, y(self.state_space._sup): 1})
+        func = Lambda(n, func)
+        return func
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         if given_condition is not None:
