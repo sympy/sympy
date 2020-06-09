@@ -276,6 +276,10 @@ class GaussianDomain():
     def from_ZZ_python(K1, a, K0):
         return K1(a)
 
+    def from_AlgebraicField(K1, a, K0):
+        if K0.ext.args[0] == I:
+            return K1.from_sympy(K0.to_sympy(a))
+
 
 class GaussianIntegerRing(GaussianDomain, Ring):
     """Ring of Gaussian integers."""
@@ -368,9 +372,5 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def from_GaussianIntegerRing(K1, a, K0):
         return K1.new(a.x, a.y)
-
-    def from_AlgebraicField(K1, a, K0):
-        if K0.ext.args[0] == I:
-            return K1.new(*a.rep[::-1])
 
 QQ_I = GaussianRational._parent = GaussianRationalField()

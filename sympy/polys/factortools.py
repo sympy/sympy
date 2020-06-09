@@ -1308,6 +1308,20 @@ def dup_factor_list_include(f, K):
 
 def dmp_factor_list(f, u, K0):
     """Factor multivariate polynomials into irreducibles in `K[X]`. """
+    if K0.is_GaussianRing:
+        K1 = K0.get_field()
+        f = dmp_convert(f, u, K0, K1)
+        coeff, factors = dmp_factor_list(f, u, K1)
+        new_factors = []
+        for fac, i in factors:
+            c, fac = dmp_clear_denoms(fac, u, K1)
+            coeff //= c ** i
+            new_factors.append((fac, i))
+        factors = new_factors
+        factors = [(dmp_convert(fac, u, K1, K0), i) for fac, i in factors]
+        coeff = K0.convert(coeff, K1)
+        return coeff, factors
+
     if K0.is_GaussianField:
         K1 = K0.as_AlgebraicField()
         f = dmp_convert(f, u, K0, K1)
