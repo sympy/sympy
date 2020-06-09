@@ -1,4 +1,5 @@
-from sympy import (Derivative, Symbol, expand, factor_terms)
+from sympy import (Derivative, Symbol, expand, factor_terms, powsimp, Poly,
+                   Mul, ratsimp, Add)
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
@@ -26,6 +27,22 @@ class ODEOrderError(ValueError):
 class ODENonlinearError(NonlinearError):
     """Raised by linear_ode_to_matrix if the system is nonlinear"""
     pass
+
+
+def simpsol(soleq):
+    lhs = soleq.lhs
+    sol = soleq.rhs
+    sol = powsimp(sol)
+    gens = list(sol.atoms(exp))
+    p = Poly(sol, *gens, expand=False)
+    gens = [factor_terms(g) for g in gens]
+    syms = [Symbol('C1'), Symbol('C2')]
+    terms = []
+    for coeff, monom in zip(p.coeffs(), p.monoms()):
+        coeff = ratsimp(coeff).collect(syms)
+        monom = Mul(*(g**i for g, i in zip(gens, monom)))
+        terms.append(coeff * monom)
+    return Eq(lhs, Add(*terms))
 
 
 def linear_ode_to_matrix(eqs, funcs, t, order):
