@@ -1481,10 +1481,44 @@ class Pow(Expr):
         from itertools import product
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        b = b.removeO()
 
         if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
             raise PoleError()
+
+        if e.has(x):
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+
+        if logx is not None and b.has(log):
+            c, ex = symbols('c, ex', cls=Wild, exclude=[x])
+            b = b.replace(log(c*x**ex), log(c) + ex*logx)
+            self = b**e
+
+        b = b.removeO()
+        try:
+            if b.has(polygamma, EulerGamma) and logx is not None:
+                raise ValueError()
+            _, m = b.leadterm(x)
+        except ValueError:
+            b = b._eval_nseries(x, n=max(2, n), logx=logx).removeO()
+            if b.has(nan, zoo):
+                raise NotImplementedError()
+            _, m = b.leadterm(x)
+
+        if e.has(log):
+            e = logcombine(e).cancel()
+
+        if not (m.is_zero or e.is_number and e.is_real):
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+
+        f = b.as_leading_term(x)
+        g = (b/f - S.One).cancel()
+        maxpow = n - m*e
+
+        if maxpow < S.Zero:
+            return O(x**(m*e), x)
+
+        if g.is_zero:
+            return f**e
 
         def coeff_exp(term, x):
             coeff, exp = S.One, S.Zero
@@ -1497,47 +1531,13 @@ class Pow(Expr):
                     coeff *= factor
             return coeff, exp
 
-        def prod(d1, d2):
-            prod1 = {}
+        def mul(d1, d2):
+            res = {}
             for e1, e2 in product(d1, d2):
                 ex = e1 + e2
-                if ex < pow_upper:
-                    prod1[ex] = prod1.get(ex, S.Zero) + d1[e1]*d2[e2]
-            return prod1
-
-        if logx is not None and b.has(log):
-            c, ex = symbols('c, ex', cls=Wild, exclude=[x])
-            b = b.replace(log(c*x**ex), log(c) + ex*logx)
-            self = b**e
-
-        if e.has(x):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
-
-        try:
-            if b.has(polygamma, EulerGamma) and logx is not None:
-                raise ValueError()
-            _, m = b.leadterm(x)
-        except ValueError:
-            b = b._eval_nseries(x, n=max(2, n), logx=logx).removeO()
-            if b.has(nan, zoo):
-                raise NotImplementedError()
-            _, m = b.leadterm(x)
-
-        f = b.as_leading_term(x)
-        g = (b/f - S.One).cancel()
-
-        if e.has(log):
-            e = logcombine(e).cancel()
-
-        if not (m.is_zero or e.is_number and e.is_real):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
-
-        pow_upper = (n - m*e)
-
-        if g.is_zero:
-            if pow_upper > S.Zero:
-                return f**e
-            return O(x**n, x)
+                if ex < maxpow:
+                    res[ex] = res.get(ex, S.Zero) + d1[e1]*d2[e2]
+            return res
 
         _, d = g.leadterm(x)
         if not d.is_positive:
@@ -1546,33 +1546,31 @@ class Pow(Expr):
             if not d.is_positive:
                 raise NotImplementedError()
 
-        terms = g._eval_nseries(x, n=ceiling(pow_upper), logx=logx).removeO()
-        terms1 = {}
+        gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx).removeO()
+        gterms = {}
 
-        for term in Add.make_args(terms):
+        for term in Add.make_args(gpoly):
             co1, e1 = coeff_exp(term, x)
-            terms1[e1] = terms1.get(e1, S.Zero) + co1
+            gterms[e1] = gterms.get(e1, S.Zero) + co1
 
-        k = S.Zero
-        fac = {}
-        while k*d < pow_upper:
-            if k.is_zero:
-                fac[S.Zero] = S.One
-                tk = terms1
-            else:
-                coeff = ff(e, k)/factorial(k)
-                for ex in tk:
-                    fac[ex] = fac.get(ex, S.Zero) + coeff*tk[ex]
-                tk = prod(tk, terms1)
+        k = S.One
+        terms = {S.Zero: S.One}
+        tk = gterms
+
+        while k*d < maxpow:
+            coeff = ff(e, k)/factorial(k)
+            for ex in tk:
+                terms[ex] = terms.get(ex, S.Zero) + coeff*tk[ex]
+            tk = mul(tk, gterms)
             k += S.One
 
         inco, inex = coeff_exp(f**e, x)
         res = S.Zero
 
-        for e1 in fac:
+        for e1 in terms:
             ex = e1 + inex
             if ex < n:
-                res += fac[e1]*inco*x**(ex)
+                res += terms[e1]*inco*x**(ex)
 
         if (res - self).cancel() == S.Zero:
             return res

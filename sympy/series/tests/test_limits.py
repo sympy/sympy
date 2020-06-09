@@ -5,7 +5,7 @@ from sympy import (
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erfi, LambertW, factorial, Ei, EulerGamma)
+    acos, erfi, LambertW, factorial, digamma, Ei, EulerGamma)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -590,6 +590,12 @@ def test_issue_10102():
 
 def test_issue_14377():
     raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
+
+
+def test_issue_15146():
+    e = (x/2) * (-2*x**3 - 2*(x**3 - 1) * x**2 * digamma(x**3 + 1) + \
+        2*(x**3 - 1) * x**2 * digamma(x**3 + x + 1) + x + 3)
+    assert limit(e, x, oo) == S(1)/3
 
 
 def test_issue_15984():
