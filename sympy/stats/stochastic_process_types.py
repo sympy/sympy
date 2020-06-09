@@ -1304,7 +1304,7 @@ class PoissonProcess(CountingProcess):
     >>> from sympy import symbols, Eq, Ne, Contains, Interval
     >>> X = PoissonProcess("X", lamda=3)
     >>> X.state_space
-    Interval(0, oo)
+    Naturals0
     >>> X.lamda
     3
     >>> t1, t2 = symbols('t1 t2', positive=True)
@@ -1368,7 +1368,7 @@ class PoissonProcess(CountingProcess):
     def __add__(self, other):
         if not isinstance(other, PoissonProcess):
             raise ValueError("Only instances of Poisson Process can be merged")
-        return PoissonProcess(Dummy("z"), self.lamda + other.lamda)
+        return PoissonProcess(Dummy(self.symbol.name + other.symbol.name), self.lamda + other.lamda)
 
     def split(self, l1, l2):
         if _sympify(l1 + l2) != self.lamda:
