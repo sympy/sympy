@@ -213,7 +213,7 @@ def test_BernoulliProcess():
 
 def test_PoissonProcess():
     X = PoissonProcess("X", 3)
-    assert X.state_space == Interval(0, oo)
+    assert X.state_space == S.Naturals0
     assert X.index_set == Interval(0, oo)
     assert X.lamda == 3
 
@@ -297,6 +297,13 @@ def test_PoissonProcess():
     assert P(N(3) < N(1)) == 0 # condition is not possible
     res3 = P(N(3) <= N(1)) # holds only for Eq(N(3), N(1))
     assert res3 == P(Eq(N(t), 0), Contains(t, Interval(1, 3)))
+
+    # tests from https://www.probabilitycourse.com/chapter11/11_1_2_basic_concepts_of_the_poisson_process.php
+    X = PoissonProcess('X', 2)
+    assert P(X(S(1)/2) < 1) == exp(-1)
+    assert P(Eq(X(3), 0), Eq(X(1), 0)) == exp(-4)
+    assert P(Eq(X(4), 4), Eq(X(2), 3)) == exp(-4)
+    assert P(X(3) < 1, Eq(X(1), 0)) == exp(-4)
 
 
 def test_WienerProcess():
