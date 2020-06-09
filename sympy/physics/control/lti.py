@@ -1,5 +1,5 @@
 from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr
-from sympy.core.numbers import Integer, Float
+from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
 __all__ = ['TransferFunction',]
@@ -23,7 +23,7 @@ class TransferFunction(Basic):
                 obj._var = var
                 return obj
         else:
-            raise ValueError("Unsupported type for numerator or denominator of TransferFunction.")
+            raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
     @property
     def num(self):
@@ -175,12 +175,12 @@ class TransferFunction(Basic):
 
     @property
     def is_proper(self):
-        return degree(self.num) <= degree(self.den)
+        return degree(self.num, self.var) <= degree(self.den, self.var)
 
     @property
     def is_strictly_proper(self):
-        return degree(self.num) < degree(self.den)
+        return degree(self.num, self.var) < degree(self.den, self.var)
 
     @property
     def is_biproper(self):
-        return degree(self.num) == degree(self.den)
+        return degree(self.num, self.var) == degree(self.den, self.var)

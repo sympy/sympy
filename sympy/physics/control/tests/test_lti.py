@@ -2,7 +2,7 @@ from sympy import symbols, Matrix, factor, simplify
 from sympy.physics.control.lti import TransferFunction
 from sympy.testing.pytest import raises
 
-a, b, s, p, a0, a1, b0, b1, b2 = symbols('a, b, s, p, a0:2, b0:3')
+a, b, s, g, d, p, a0, a1, b0, b1, b2 = symbols('a, b, s, g, d, p, a0:2, b0:3')
 
 
 def test_TransferFunction_construction():
@@ -10,11 +10,13 @@ def test_TransferFunction_construction():
     assert tf.num == (s + 1)
     assert tf.den == (s**2 + s + 1)
     assert tf.args == (s + 1, s**2 + s + 1, s)
+    assert tf.bound_symbols == [s]
 
     tf1 = TransferFunction(s + 4, s - 5, s)
     assert tf1.num == (s + 4)
     assert tf1.den == (s - 5)
     assert tf1.args == (s + 4, s - 5, s)
+    assert tf1.bound_symbols == [s]
 
     # using different polynomial variables.
     tf2 = TransferFunction(p + 3, p**2 - 9, p)
@@ -24,6 +26,7 @@ def test_TransferFunction_construction():
 
     tf3 = TransferFunction(p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
     assert tf3.args == (p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
+    assert tf3.bound_symbols == [p]
 
     # no pole-zero cancellation on its own.
     tf4 = TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)
@@ -32,12 +35,15 @@ def test_TransferFunction_construction():
 
     tf4_ = TransferFunction(p + 2, p + 2, p)
     assert tf4_.args == (p + 2, p + 2, p)
+    assert tf4_.bound_symbols == [p]
 
     tf5 = TransferFunction(s - 1, 4 - p, s)
     assert tf5.args == (s - 1, 4 - p, s)
+    assert tf5.bound_symbols == [s]
 
     tf5_ = TransferFunction(s - 1, s - 1, s)
     assert tf5_.args == (s - 1, s - 1, s)
+    assert tf5.bound_symbols == [s]
 
     tf6 = TransferFunction(5, 6, s)
     assert tf6.num == 5
@@ -53,19 +59,32 @@ def test_TransferFunction_construction():
     tf8 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, p)
     assert not tf7 == tf8
 
-    # when just the numerator is 0, leave the denominator along.
-    tf9 = TransferFunction(0, p**2 - p + 1, p)
-    assert tf9.args == (0, p**2 - p + 1, p)
+    tf9 = TransferFunction(a*s**3 + b*s**2 + g*s + d, d*p + g*p**2 + g*s, s)
+    assert tf9.args == (a*s**3 + b*s**2 + d + g*s, d*p + g*p**2 + g*s, s)
+    assert tf9.bound_symbols == [s]
 
-    tf10 = TransferFunction(0, 1, s)
-    assert tf10.args == (0, 1, s)
+    tf10 = TransferFunction(p**3 + d, g*s**2 + d*s + a, p)
+    assert tf10.args == (d + p**3, a + d*s + g*s**2, p)
+    assert tf10.bound_symbols == [p]
+
+    tf11 = TransferFunction(a1*s + a0, b2*s**2 + b1*s + b0, s)
+    assert tf11.num == (a0 + a1*s)
+    assert tf11.den == (b0 + b1*s + b2*s**2)
+    assert tf11.args == (a0 + a1*s, b0 + b1*s + b2*s**2, s)
+
+    # when just the numerator is 0, leave the denominator along.
+    tf12 = TransferFunction(0, p**2 - p + 1, p)
+    assert tf12.args == (0, p**2 - p + 1, p)
+
+    tf13 = TransferFunction(0, 1, s)
+    assert tf13.args == (0, 1, s)
 
     # ValueError when denominator is zero.
     raises(ValueError, lambda: TransferFunction(4, 0, s))
     raises(ValueError, lambda: TransferFunction(s, 0, s))
     raises(ValueError, lambda: TransferFunction(0, 0, s))
 
-    raises(ValueError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
+    raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
 
     raises(TypeError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, 3))
     raises(TypeError, lambda: TransferFunction(p + 1, 5 - p, 4))
@@ -223,23 +242,32 @@ def test_TransferFunction_multiplication_and_division():
 
 def test_TransferFunction_is_proper():
     G1 = TransferFunction(s**4 + s**3 - 2*s, s**4 - 1, s)
-    assert G1.is_proper
-
     G2 = TransferFunction(p**7, p - 4, p)
+    G3 = TransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
+    G4 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+    assert G1.is_proper
     assert not G2.is_proper
+    assert G3.is_proper
+    assert not G4.is_proper
 
 
 def test_TransferFunction_is_strictly_proper():
     tf1 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
-    assert tf1.is_strictly_proper
-
     tf2 = TransferFunction(p + 3, p - 4, p)
+    tf3 = TransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
+    tf4 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+    assert tf1.is_strictly_proper
     assert not tf2.is_strictly_proper
+    assert tf3.is_strictly_proper
+    assert not tf4.is_strictly_proper
 
 
 def test_TransferFunction_is_biproper():
     tf1 = TransferFunction(s - 1, s - 2, s)
-    assert tf1.is_biproper
-
     tf2 = TransferFunction(p**3 - 2, p**4 + 5*p + 6, p)
+    tf3 = TransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
+    tf4 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+    assert tf1.is_biproper
     assert not tf2.is_biproper
+    assert not tf3.is_biproper
+    assert not tf4.is_biproper
