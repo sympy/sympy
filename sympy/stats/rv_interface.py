@@ -4,7 +4,7 @@ from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewi
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
-                 sample_stochastic)
+                 sample_stochastic_process)
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',

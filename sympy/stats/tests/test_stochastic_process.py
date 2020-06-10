@@ -3,7 +3,7 @@ from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    Piecewise)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
-                         BernoulliProcess, sample_stochastic)
+                         BernoulliProcess, sample_stochastic_process)
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
@@ -25,8 +25,8 @@ def test_DiscreteMarkovChain():
     raises(TypeError, lambda: DiscreteMarkovChain(1))
     raises(NotImplementedError, lambda: X(t))
 
-    raises(ValueError, lambda: sample_stochastic(t))
-    raises(ValueError, lambda: next(sample_stochastic(X)))
+    raises(ValueError, lambda: sample_stochastic_process(t))
+    raises(ValueError, lambda: next(sample_stochastic_process(X)))
     # pass name and state_space
     Y = DiscreteMarkovChain("Y", [1, 2, 3])
     assert Y.transition_probabilities == None
@@ -34,7 +34,7 @@ def test_DiscreteMarkovChain():
     assert P(Eq(Y[2], 1), Eq(Y[0], 2)) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
     assert E(X[0]) == Expectation(X[0])
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
-    raises(ValueError, lambda: next(sample_stochastic(Y)))
+    raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -113,7 +113,7 @@ def test_DiscreteMarkovChain():
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
 
-def test_sample_stochastic():
+def test_sample_stochastic_process():
     if not import_module('scipy'):
         skip('SciPy Not installed. Skip sampling tests')
     import random
@@ -123,21 +123,15 @@ def test_sample_stochastic():
         numpy.random.seed(0) # scipy uses numpy to sample so to set its seed
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
-    samps = list(sample_stochastic(Y, 5))
-    assert len(samps) == 5
-    for samp in samps:
-        assert samp in Y.state_space
-        assert next(sample_stochastic(Y)) in Y.state_space
+    for samps in range(10):
+        assert next(sample_stochastic_process(Y)) in Y.state_space
 
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
                 [S.Half, S.Half, 0]])
     X = DiscreteMarkovChain('X', [0, 1, 2], T)
-    samps = list(sample_stochastic(X, 10))
-    assert len(samps) == 10
-    for samp in samps:
-        assert samp in X.state_space
-        assert next(sample_stochastic(X)) in X.state_space
+    for samps in range(10):
+        assert next(sample_stochastic_process(X)) in X.state_space
 
 
 def test_ContinuousMarkovChain():
