@@ -10,11 +10,13 @@ class ParametricRegion(Basic):
     ========
 
     >>> from sympy import cos, sin, pi
-    >>> from sympy.abc import r, theta, t, a, b
+    >>> from sympy.abc import r, theta, t, a, b, x, y
     >>> from sympy.vector import ParametricRegion
 
     >>> ParametricRegion(t, (t, t**2), limits={t: (-1, 2)})
     ParametricRegion((t,), (t, t**2), {t: (-1, 2)})
+    >>> ParametricRegion((x, y), (x, y), {x: (3, 4), y: (5, 6)})
+    ParametricRegion((x, y), (x, y), {x: (3, 4), y: (5, 6)})
     >>> ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), {r: (-2, 2), theta: (0, pi)})
     ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), {r: (-2, 2), theta: (0, pi)})
     >>> ParametricRegion(t, (a*cos(t), b*sin(t)))

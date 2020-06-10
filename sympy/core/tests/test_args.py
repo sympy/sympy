@@ -4922,7 +4922,7 @@ def test_sympy__vector__orienters__QuaternionOrienter():
 def test_sympy__vector__parametricregion__ParametricRegion():
     from sympy.abc import t
     from sympy.vector.parametricregion import ParametricRegion
-    assert _test_args(ParametricRegion((t), (t, t**3), {t: (0, 2)}))
+    assert _test_args(ParametricRegion(t, (t, t**3), {t: (0, 2)}))
 
 
 def test_sympy__vector__scalar__BaseScalar():

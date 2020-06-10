@@ -1,10 +1,10 @@
-from sympy import sin, cos, pi, symbols
+from sympy import sin, cos, pi
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.parametricregion import ParametricRegion
 from sympy.testing.pytest import raises
+from sympy.abc import a, b, r, t, z, theta, phi
 
 C = CoordSys3D('C')
-r, theta, phi, a, b, t = symbols('r theta phi a b t')
 
 def test_parametricregion():
 
@@ -44,8 +44,8 @@ def test_parametricregion():
     assert ellipse.parameters == (t,)
     assert ellipse.limits == {t: (0, 8)}
 
-    cylinder = ParametricRegion((r, theta, C.z), (cos(theta), r*sin(theta), C.z), {theta: (0, 2*pi), C.z: (0, 4)})
-    assert cylinder.parameters == (r, theta, C.z)
+    cylinder = ParametricRegion((r, theta, z), (cos(theta), r*sin(theta), C.z), {theta: (0, 2*pi), z: (0, 4)})
+    assert cylinder.parameters == (r, theta, z)
 
     sphere = ParametricRegion((r, theta, phi), (r*sin(phi)*cos(theta),r*sin(phi)*sin(theta), r*cos(phi)),
                             {theta: ( 0, 2*pi), phi: ( 0, pi)})
