@@ -4,7 +4,6 @@ from sympy import (
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
     )
 
-from sympy.core.compatibility import long
 from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
@@ -330,7 +329,7 @@ def test_trigsimp_groebner():
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
-    assert trigsimp_groebner(ex, hints=[long(2)]) in results
+    assert trigsimp_groebner(ex, hints=[int(2)]) in results
 
     # test "I"
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)

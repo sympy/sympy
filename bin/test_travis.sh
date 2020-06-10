@@ -5,6 +5,10 @@ set -e
 # Echo each command
 set -x
 
+if [[ "${TEST_FLAKE8}" == "true" ]]; then
+    flake8 sympy;
+fi
+
 if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
 fi
@@ -20,8 +24,13 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     make man
     make latex
     cd _build/latex
-    export LATEXOPTIONS="-interaction=nonstopmode"
-    make all
+    export LATEXMKOPTS="-halt-on-error -xelatex -silent"
+    make all || {
+        echo "An error had occured during the LaTeX build";
+        tail -n 1000 *.log;
+        sleep 1; # A guard against travis running tail concurrently.
+        exit -1;
+    }
 fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
@@ -136,10 +145,9 @@ import sympy
 test_list = [
     # numpy
     '*numpy*',
-    'sympy/core/tests/test_numbers.py',
+    'sympy/core/',
     'sympy/matrices/',
     'sympy/physics/quantum/',
-    'sympy/core/tests/test_sympify.py',
     'sympy/utilities/tests/test_lambdify.py',
 
     # scipy

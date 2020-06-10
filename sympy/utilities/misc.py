@@ -1,7 +1,5 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-from __future__ import print_function, division
-
 from typing import List
 
 import sys
@@ -229,7 +227,7 @@ def debug_decorator(func):
         _debug_tmp = oldtmp
         _debug_tmp.append(s)
         if _debug_iter == 0:
-            print((_debug_tmp[0]))
+            print(_debug_tmp[0])
             _debug_tmp = []
         return r
 
@@ -412,7 +410,6 @@ def translate(s, a, b=None, c=None):
     ========
 
     >>> from sympy.utilities.misc import translate
-    >>> from sympy.core.compatibility import unichr
     >>> abc = 'abc'
     >>> translate(abc, None, 'a')
     'bc'

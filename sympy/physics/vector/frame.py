@@ -341,7 +341,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -374,7 +374,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -942,7 +942,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -978,7 +978,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x

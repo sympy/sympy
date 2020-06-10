@@ -44,7 +44,7 @@ def test_dispatcher_as_decorator():
     def inc(x): # noqa:F811
         return x + 1
 
-    @f.register(float)
+    @f.register(float) # noqa:F811
     def inc(x): # noqa:F811
         return x - 1
 
@@ -54,7 +54,7 @@ def test_dispatcher_as_decorator():
 
 def test_register_instance_method():
 
-    class Test(object):
+    class Test:
         __init__ = MethodDispatcher('f')
 
         @__init__.register(list)
@@ -194,7 +194,7 @@ def test_halt_method_resolution():
 
     assert g == [1]
 
-    assert set(f.ordering) == set([(int, object), (object, int)])
+    assert set(f.ordering) == {(int, object), (object, int)}
 
 
 @XFAIL

@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.relational import Ne
@@ -27,6 +25,7 @@ class TrigonometricFunction(Function):
     """Base class for trigonometric functions. """
 
     unbranched = True
+    _singularities = (S.ComplexInfinity,)
 
     def _eval_is_rational(self):
         s = self.func(*self.args)
@@ -65,7 +64,7 @@ class TrigonometricFunction(Function):
         return (re, im)
 
     def _period(self, general_period, symbol=None):
-        f = self.args[0]
+        f = expand_mul(self.args[0])
         if symbol is None:
             symbol = tuple(f.free_symbols)[0]
 
@@ -138,7 +137,7 @@ def _pi_coeff(arg, cycles=1):
 
     >>> from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
     >>> from sympy import pi, Dummy
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> coeff(3*x*pi)
     3*x
     >>> coeff(11*pi/7)
@@ -469,7 +468,10 @@ class sin(TrigonometricFunction):
         if x in arg.free_symbols and Order(1, x).contains(arg):
             return arg
         else:
-            return self.func(arg)
+            if not arg.subs(x, 0).is_finite:
+                return self
+            else:
+                return self.func(arg)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -909,7 +911,10 @@ class cos(TrigonometricFunction):
         if x in arg.free_symbols and Order(1, x).contains(arg):
             return S.One
         else:
-            return self.func(arg)
+            if not arg.subs(x, 0).is_finite:
+                return self
+            else:
+                return self.func(arg)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -1225,13 +1230,13 @@ class tan(TrigonometricFunction):
         return y
 
     def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+        arg = self.args[0]
+        x0 = arg.subs(x, 0)
+        n = x0/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi).as_leading_term(x)
+            return lt if n.is_even else -1/lt
+        return self.func(arg)
 
     def _eval_is_extended_real(self):
         # FIXME: currently tan(pi/2) return zoo
@@ -1455,7 +1460,7 @@ class cot(TrigonometricFunction):
         re, im = self._as_real_imag(deep=deep, **hints)
         if im:
             denom = cos(2*re) - cosh(2*im)
-            return (-sin(2*re)/denom, -sinh(2*im)/denom)
+            return (-sin(2*re)/denom, sinh(2*im)/denom)
         else:
             return (self.func(re), S.Zero)
 
@@ -1575,6 +1580,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     """Base class for reciprocal functions of trigonometric functions. """
 
     _reciprocal_of = None       # mandatory, to be defined in subclass
+    _singularities = (S.ComplexInfinity,)
 
     # _is_even and _is_odd are used for correct evaluation of csc(-x), sec(-x)
     # TODO refactor into TrigonometricFunction common parts of
@@ -1640,7 +1646,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
             return 1/t
 
     def _period(self, symbol):
-        f = self.args[0]
+        f = expand_mul(self.args[0])
         return self._reciprocal_of(f).period(symbol)
 
     def fdiff(self, argindex=1):
@@ -1776,6 +1782,14 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = (x0 + S.Pi/2)/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
+            return ((-1)**n)/lt
+        return self.func(x0)
 
 class csc(ReciprocalTrigonometricFunction):
     """
@@ -1879,7 +1893,7 @@ class sinc(Function):
     Examples
     ========
 
-    >>> from sympy import sinc, oo, jn, Product, Symbol
+    >>> from sympy import sinc, oo, jn
     >>> from sympy.abc import x
     >>> sinc(x)
     sinc(x)
@@ -1912,6 +1926,7 @@ class sinc(Function):
     .. [1] https://en.wikipedia.org/wiki/Sinc_function
 
     """
+    _singularities = (S.ComplexInfinity,)
 
     def fdiff(self, argindex=1):
         x = self.args[0]
@@ -1963,6 +1978,7 @@ class sinc(Function):
 
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
+    _singularities = (1, -1, 0, S.ComplexInfinity)
 
     @staticmethod
     def _asin_table():
@@ -2055,11 +2071,15 @@ class asin(InverseTrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import asin, oo, pi
+    >>> from sympy import asin, oo
     >>> asin(1)
     pi/2
     >>> asin(-1)
     -pi/2
+    >>> asin(-oo)
+    oo*I
+    >>> asin(oo)
+    -oo*I
 
     See Also
     ========
@@ -2225,7 +2245,7 @@ class acos(InverseTrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import acos, oo, pi
+    >>> from sympy import acos, oo
     >>> acos(1)
     0
     >>> acos(0)
@@ -2393,7 +2413,7 @@ class atan(InverseTrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import atan, oo, pi
+    >>> from sympy import atan, oo
     >>> atan(0)
     0
     >>> atan(1)
@@ -2415,6 +2435,7 @@ class atan(InverseTrigonometricFunction):
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan
 
     """
+    _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2522,7 +2543,7 @@ class atan(InverseTrigonometricFunction):
         elif args0[0] is S.NegativeInfinity:
             return (-S.Pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
-            return super(atan, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
 
     def inverse(self, argindex=1):
         """
@@ -2588,6 +2609,7 @@ class acot(InverseTrigonometricFunction):
     .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
 
     """
+    _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2754,11 +2776,15 @@ class asec(InverseTrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import asec, oo, pi
+    >>> from sympy import asec, oo
     >>> asec(1)
     0
     >>> asec(-1)
     pi
+    >>> asec(0)
+    zoo
+    >>> asec(-oo)
+    pi/2
 
     See Also
     ========
@@ -2872,11 +2898,17 @@ class acsc(InverseTrigonometricFunction):
     Examples
     ========
 
-    >>> from sympy import acsc, oo, pi
+    >>> from sympy import acsc, oo
     >>> acsc(1)
     pi/2
     >>> acsc(-1)
     -pi/2
+    >>> acsc(oo)
+    0
+    >>> acsc(-oo) == acsc(oo)
+    True
+    >>> acsc(0)
+    zoo
 
     See Also
     ========
@@ -3155,4 +3187,4 @@ class atan2(InverseTrigonometricFunction):
     def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
-            return super(atan2, self)._eval_evalf(prec)
+            return super()._eval_evalf(prec)

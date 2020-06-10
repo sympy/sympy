@@ -40,7 +40,7 @@ def _nsort(roots, separated=False):
     # get the real part of the evaluated real and imaginary parts of each root
     key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
     # make sure the parts were computed with precision
-    if any(i._prec == 1 for k in key for i in k):
+    if len(roots) > 1 and any(i._prec == 1 for k in key for i in k):
         raise NotImplementedError("could not compute root with precision")
     # insert a key to indicate if the root has an imaginary part
     key = [(1 if i else 0, r, i) for r, i in key]

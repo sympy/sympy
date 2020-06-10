@@ -1,4 +1,3 @@
-from sympy.core.compatibility import PY3
 from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
@@ -324,9 +323,7 @@ def test_Range_set():
 
     raises(TypeError, lambda: Range(builtin_range(1)))
     assert S(builtin_range(10)) == Range(10)
-    if PY3:
-        assert S(builtin_range(1000000000000)) == \
-            Range(1000000000000)
+    assert S(builtin_range(1000000000000)) == Range(1000000000000)
 
     # test Range.as_relational
     assert Range(1, 4).as_relational(x) == (x >= 1) & (x <= 3) & Eq(x, floor(x))
@@ -449,6 +446,28 @@ def test_range_interval_intersection():
     assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
     assert Range(0).intersect(Interval(-oo, oo)) is S.EmptySet
 
+def test_range_is_finite_set():
+    assert Range(-100, 100).is_finite_set is True
+    assert Range(2, oo).is_finite_set is False
+    assert Range(-oo, 50).is_finite_set is False
+    assert Range(-oo, oo).is_finite_set is False
+    assert Range(oo, -oo).is_finite_set is True
+    assert Range(0, 0).is_finite_set is True
+    assert Range(oo, oo).is_finite_set is True
+    assert Range(-oo, -oo).is_finite_set is True
+    n = Symbol('n', integer=True)
+    m = Symbol('m', integer=True)
+    assert Range(n, n + 49).is_finite_set is True
+    assert Range(n, 0).is_finite_set is True
+    assert Range(-3, n + 7).is_finite_set is True
+    assert Range(n, m).is_finite_set is True
+    assert Range(n + m, m - n).is_finite_set is True
+    assert Range(n, n + m + n).is_finite_set is True
+    assert Range(n, oo).is_finite_set is False
+    assert Range(-oo, n).is_finite_set is False
+    # assert Range(n, -oo).is_finite_set is True
+    # assert Range(oo, n).is_finite_set is True
+    # Above tests fail due to a (potential) bug in sympy.sets.fancysets.Range.size (See issue #18999)
 
 def test_Integers_eval_imageset():
     ans = ImageSet(Lambda(x, 2*x + Rational(3, 7)), S.Integers)
@@ -543,8 +562,8 @@ def test_infinitely_indexed_set_1():
             imageset(Lambda(n, 2*n + 1), S.Integers)) is S.EmptySet
 
     assert imageset(Lambda(m, 2*m), S.Integers).intersect(
-                imageset(Lambda(n, 3*n), S.Integers)) == \
-            ImageSet(Lambda(t, 6*t), S.Integers)
+                imageset(Lambda(n, 3*n), S.Integers)).dummy_eq(
+            ImageSet(Lambda(t, 6*t), S.Integers))
 
     assert imageset(x, x/2 + Rational(1, 3), S.Integers).intersect(S.Integers) is S.EmptySet
     assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
@@ -630,37 +649,38 @@ def test_imageset_intersect_diophantine():
             ImageSet(Lambda(n, -(n - 3)**2), S.Integers)) == FiniteSet(0)
     # Single parametric solution for diophantine solution:
     assert ImageSet(Lambda(n, n**2 + 5), S.Integers).intersect(
-            ImageSet(Lambda(m, 2*m), S.Integers)) == ImageSet(
-            Lambda(n, 4*n**2 + 4*n + 6), S.Integers)
+            ImageSet(Lambda(m, 2*m), S.Integers)).dummy_eq(ImageSet(
+            Lambda(n, 4*n**2 + 4*n + 6), S.Integers))
     # 4 non-parametric solution couples for dioph. equation:
     assert ImageSet(Lambda(n, n**2 - 9), S.Integers).intersect(
             ImageSet(Lambda(m, -m**2), S.Integers)) == FiniteSet(-9, 0)
     # Double parametric solution for diophantine solution:
     assert ImageSet(Lambda(m, m**2 + 40), S.Integers).intersect(
-            ImageSet(Lambda(n, 41*n), S.Integers)) == Intersection(
+            ImageSet(Lambda(n, 41*n), S.Integers)).dummy_eq(Intersection(
             ImageSet(Lambda(m, m**2 + 40), S.Integers),
-            ImageSet(Lambda(n, 41*n), S.Integers))
+            ImageSet(Lambda(n, 41*n), S.Integers)))
     # Check that diophantine returns *all* (8) solutions (permute=True)
     assert ImageSet(Lambda(n, n**4 - 2**4), S.Integers).intersect(
             ImageSet(Lambda(m, -m**4 + 3**4), S.Integers)) == FiniteSet(0, 65)
     assert ImageSet(Lambda(n, pi/12 + n*5*pi/12), S.Integers).intersect(
-            ImageSet(Lambda(n, 7*pi/12 + n*11*pi/12), S.Integers)) == ImageSet(
-            Lambda(n, 55*pi*n/12 + 17*pi/4), S.Integers)
+            ImageSet(Lambda(n, 7*pi/12 + n*11*pi/12), S.Integers)).dummy_eq(ImageSet(
+            Lambda(n, 55*pi*n/12 + 17*pi/4), S.Integers))
     # TypeError raised by diophantine (#18081)
-    assert ImageSet(Lambda(n, n*log(2)), S.Integers).intersection(S.Integers) \
-            == Intersection(ImageSet(Lambda(n, n*log(2)), S.Integers), S.Integers)
+    assert ImageSet(Lambda(n, n*log(2)), S.Integers).intersection(
+        S.Integers).dummy_eq(Intersection(ImageSet(
+        Lambda(n, n*log(2)), S.Integers), S.Integers))
     # NotImplementedError raised by diophantine (no solver for cubic_thue)
     assert ImageSet(Lambda(n, n**3 + 1), S.Integers).intersect(
-            ImageSet(Lambda(n, n**3), S.Integers)) == Intersection(
+            ImageSet(Lambda(n, n**3), S.Integers)).dummy_eq(Intersection(
             ImageSet(Lambda(n, n**3 + 1), S.Integers),
-            ImageSet(Lambda(n, n**3), S.Integers))
+            ImageSet(Lambda(n, n**3), S.Integers)))
 
 
 def test_infinitely_indexed_set_3():
     from sympy.abc import n, m, t
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
-            imageset(Lambda(n, 3*pi*n), S.Integers)) == \
-        ImageSet(Lambda(t, 6*pi*t), S.Integers)
+            imageset(Lambda(n, 3*pi*n), S.Integers)).dummy_eq(
+        ImageSet(Lambda(t, 6*pi*t), S.Integers))
     assert imageset(Lambda(n, 2*n + 1), S.Integers) == \
         imageset(Lambda(n, 2*n - 1), S.Integers)
     assert imageset(Lambda(n, 3*n + 2), S.Integers) == \
@@ -694,6 +714,7 @@ def test_ImageSet_contains():
 
 
 def test_ComplexRegion_contains():
+    r = Symbol('r', real=True)
     # contains in ComplexRegion
     a = Interval(2, 3)
     b = Interval(4, 6)
@@ -706,6 +727,10 @@ def test_ComplexRegion_contains():
     assert 8 + 2.5*I in c2
     assert 2.5 + 6.1*I not in c1
     assert 4.5 + 3.2*I not in c1
+    assert c1.contains(x) == Contains(x, c1, evaluate=False)
+    assert c1.contains(r) == False
+    assert c2.contains(x) == Contains(x, c2, evaluate=False)
+    assert c2.contains(r) == False
 
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
@@ -719,6 +744,25 @@ def test_ComplexRegion_contains():
     assert 0 in c3
     assert 1 + I not in c3
     assert 1 - I not in c3
+    assert c3.contains(x) == Contains(x, c3, evaluate=False)
+    assert c3.contains(r + 2*I) == Contains(
+        r + 2*I, c3, evaluate=False)  # is in fact False
+    assert c3.contains(1/(1 + r**2)) == Contains(
+        1/(1 + r**2), c3, evaluate=False)  # is in fact True
+
+    r2 = Interval(0, 3)
+    theta2 = Interval(pi, 2*pi, left_open=True)
+    c4 = ComplexRegion(r2*theta2, polar=True)
+    assert c4.contains(0) == True
+    assert c4.contains(2 + I) == False
+    assert c4.contains(-2 + I) == False
+    assert c4.contains(-2 - I) == True
+    assert c4.contains(2 - I) == True
+    assert c4.contains(-2) == False
+    assert c4.contains(2) == True
+    assert c4.contains(x) == Contains(x, c4, evaluate=False)
+    assert c4.contains(3/(1 + r**2)) == Contains(
+        3/(1 + r**2), c4, evaluate=False)  # is in fact True
 
     raises(ValueError, lambda: ComplexRegion(r1*theta1, polar=2))
 

@@ -339,7 +339,7 @@ def convert_to_real_indices(seq, qubit_map):
 
     >>> from sympy import symbols
     >>> from sympy.physics.quantum.circuitutils import convert_to_real_indices
-    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> from sympy.physics.quantum.gate import X, Y, H
     >>> i0, i1 = symbols('i:2')
     >>> index_map = {i0 : 0, i1 : 1}
     >>> convert_to_real_indices(X(i0)*Y(i1)*H(i0)*X(i1), index_map)

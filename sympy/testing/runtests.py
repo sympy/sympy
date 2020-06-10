@@ -32,13 +32,14 @@ import subprocess
 import signal
 import stat
 import tempfile
+import warnings
+from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import (exec_, PY3, unwrap,
         unicode)
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -155,6 +156,21 @@ def setup_pprint():
     # Prevent init_printing() in doctests from affecting other doctests
     interactive_printing.NO_GLOBAL = True
     return use_unicode_prev
+
+
+@contextmanager
+def raise_on_deprecated():
+    """Context manager to make DeprecationWarning raise an error
+
+    This is to catch SymPyDeprecationWarning from library code while running
+    tests and doctests. It is important to use this context manager around
+    each individual test/doctest in case some tests modify the warning
+    filters.
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
+        yield
+
 
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
@@ -537,11 +553,6 @@ def _test(*paths, **kwargs):
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
 
-    # Show deprecation warnings
-    import warnings
-    warnings.simplefilter("error", SymPyDeprecationWarning)
-    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
-
     test_files = t.get_test_files('sympy')
 
     not_blacklisted = [f for f in test_files
@@ -785,11 +796,6 @@ def _doctest(*paths, **kwargs):
     # Disable showing up of plots
     from sympy.plotting.plot import unset_show
     unset_show()
-
-    # Show deprecation warnings
-    import warnings
-    warnings.simplefilter("error", SymPyDeprecationWarning)
-    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     r = PyTestReporter(verbose, split=split, colors=colors,\
                        force_colors=force_colors)
@@ -1278,11 +1284,12 @@ class SymPyTests(object):
             try:
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
-                if timeout:
-                    self._timeout(f, timeout, fail_on_timeout)
-                else:
-                    random.seed(self._seed)
-                    f()
+                with raise_on_deprecated():
+                    if timeout:
+                        self._timeout(f, timeout, fail_on_timeout)
+                    else:
+                        random.seed(self._seed)
+                        f()
             except KeyboardInterrupt:
                 if getattr(f, '_slow', False):
                     reporter.test_skip("KeyboardInterrupt")
@@ -1510,7 +1517,7 @@ class SymPyDocTests(object):
                             executables=(),
                             modules=(),
                             disable_viewers=(),
-                            python_version=(2,)):
+                            python_version=(3, 5)):
         """
         Checks if the dependencies for the test are installed.
 
@@ -1828,15 +1835,17 @@ class SymPyDocTestRunner(DocTestRunner):
         self.save_linecache_getlines = pdoctest.linecache.getlines
         linecache.getlines = self.__patched_linecache_getlines
 
-        try:
-            test.globs['print_function'] = print_function
-            return self.__run(test, compileflags, out)
-        finally:
-            sys.stdout = save_stdout
-            pdb.set_trace = save_set_trace
-            linecache.getlines = self.save_linecache_getlines
-            if clear_globs:
-                test.globs.clear()
+        # Fail for deprecation warnings
+        with raise_on_deprecated():
+            try:
+                test.globs['print_function'] = print_function
+                return self.__run(test, compileflags, out)
+            finally:
+                sys.stdout = save_stdout
+                pdb.set_trace = save_set_trace
+                linecache.getlines = self.save_linecache_getlines
+                if clear_globs:
+                    test.globs.clear()
 
 
 # We have to override the name mangled methods.

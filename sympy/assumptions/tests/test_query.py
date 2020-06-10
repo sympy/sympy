@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 import math
 
@@ -1930,8 +1930,8 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**Rational(17, 31)))) is True
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(17/pi)))) is False
+    assert ask(Q.algebraic(1 + I*sqrt(3)**Rational(17, 31))) is True
+    assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2101,7 +2101,7 @@ def test_known_facts_consistent():
     from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
     from os.path import abspath, dirname, join
     filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         assert f.read() == \
             compute_known_facts(get_known_facts(), get_known_facts_keys())
 
@@ -2164,15 +2164,6 @@ def test_issue_7246_failing():
     #Move this test to test_issue_7246 once
     #the new assumptions module is improved.
     assert ask(Q.positive(acos(x)), Q.zero(x)) is True
-
-
-def test_deprecated_Q_bounded():
-    with warns_deprecated_sympy():
-        Q.bounded
-
-def test_deprecated_Q_infinity():
-    with warns_deprecated_sympy():
-        Q.infinity
 
 
 def test_check_old_assumption():

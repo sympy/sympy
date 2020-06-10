@@ -3,6 +3,8 @@
 SymPy Modules Reference
 =======================
 
+.. module:: sympy
+
 Because every feature of SymPy must have a test case, when you are not sure how
 to use something, just look into the ``tests/`` directories, find that feature
 and read the tests for it, that will tell you everything you need to know.

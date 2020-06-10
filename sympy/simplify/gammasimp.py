@@ -46,7 +46,7 @@ def gammasimp(expr):
     ========
 
     >>> from sympy.simplify import gammasimp
-    >>> from sympy import gamma, factorial, Symbol
+    >>> from sympy import gamma, Symbol
     >>> from sympy.abc import x
     >>> n = Symbol('n', integer = True)
 

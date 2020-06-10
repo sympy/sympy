@@ -5,13 +5,13 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Lambda, Mul, Dummy, IndexedBase, Add,
                    linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, Piecewise, Symbol)
+                   Ge, Piecewise, Symbol, NonSquareMatrixError)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent)
+                           dependent, is_random)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
@@ -27,6 +27,15 @@ __all__ = [
     'ContinuousMarkovChain',
     'BernoulliProcess'
 ]
+
+
+@is_random.register(Indexed)
+def _(x):
+    return is_random(x.base)
+
+@is_random.register(RandomIndexedSymbol)
+def _(x):
+    return True
 
 def _set_converter(itr):
     """
@@ -80,7 +89,7 @@ def _matrix_checks(matrix):
         raise TypeError("Transition probabilities either should "
                             "be a Matrix or a MatrixSymbol.")
     if matrix.shape[0] != matrix.shape[1]:
-        raise ValueError("%s is not a square matrix"%(matrix))
+        raise NonSquareMatrixError("%s is not a square matrix"%(matrix))
     if isinstance(matrix, Matrix):
         matrix = ImmutableMatrix(matrix.tolist())
     return matrix
@@ -735,7 +744,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     ========
 
     >>> from sympy.stats import ContinuousMarkovChain
-    >>> from sympy import Matrix, S, MatrixSymbol
+    >>> from sympy import Matrix, S
     >>> G = Matrix([[-S(1), S(1)], [S(1), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1], gen_mat=G)
     >>> C.limiting_distribution()
@@ -811,7 +820,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     ========
 
     >>> from sympy.stats import BernoulliProcess, P, E
-    >>> from sympy import Eq, Gt, Lt
+    >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     FiniteSet(0, 1)
@@ -853,29 +862,35 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     def __new__(cls, sym, p, success=1, failure=0):
         _value_check(p >= 0 and p <= 1, 'Value of p must be between 0 and 1.')
-        p = _sympify(p)
         sym = _symbol_converter(sym)
+        p = _sympify(p)
         success = _sym_sympify(success)
         failure = _sym_sympify(failure)
-        state_space = _set_converter([success, failure])
-        return Basic.__new__(cls, sym, state_space, BernoulliDistribution(p), p,
-                             success, failure)
+        return Basic.__new__(cls, sym, p, success, failure)
+
+    @property
+    def symbol(self):
+        return self.args[0]
 
     @property
     def p(self):
-        return self.args[3]
-
-    @property
-    def distribution(self):
-        return self.args[2]
+        return self.args[1]
 
     @property
     def success(self):
-        return self.args[4]
+        return self.args[2]
 
     @property
     def failure(self):
-        return self.args[5]
+        return self.args[3]
+
+    @property
+    def state_space(self):
+        return _set_converter([self.success, self.failure])
+
+    @property
+    def distribution(self):
+        return BernoulliDistribution(self.p)
 
     def _rvindexed_subs(self, expr, condition=None):
         """

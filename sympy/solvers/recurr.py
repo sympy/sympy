@@ -136,7 +136,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in range(r + 1):
         for j in range(i, r + 1):
-            polys[i] += coeffs[j]*binomial(j, i)
+            polys[i] += coeffs[j]*(binomial(j, i).as_poly(n))
 
         if not polys[i].is_zero:
             (exp,), coeff = polys[i].LT()
@@ -620,7 +620,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i]*z**i for i in range(r + 1)], 0, n, symbols=True)
+            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, symbols=True)
 
             if C is not None and C is not S.Zero:
                 symbols |= set(s)
@@ -721,36 +721,34 @@ def rsolve(f, y, init=None):
     # y(n) + a*(y(n + 1) + y(n - 1))/2
     f = f.expand().collect(y.func(Wild('m', integer=True)))
 
-    h_part = defaultdict(lambda: S.Zero)
-    i_part = S.Zero
+    h_part = defaultdict(list)
+    i_part = []
     for g in Add.make_args(f):
-        coeff = S.One
-        kspec = None
-        for h in Mul.make_args(g):
-            if h.is_Function:
-                if h.func == y.func:
-                    result = h.args[0].match(n + k)
-
-                    if result is not None:
-                        kspec = int(result[k])
-                    else:
-                        raise ValueError(
-                            "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
-                else:
-                    raise ValueError(
-                        "'%s' expected, got '%s'" % (y.func, h.func))
-            else:
-                coeff *= h
-
-        if kspec is not None:
-            h_part[kspec] += coeff
-        else:
-            i_part += coeff
+        coeff, dep = g.as_coeff_mul(y.func)
+        if not dep:
+            i_part.append(coeff)
+            continue
+        for h in dep:
+            if h.is_Function and h.func == y.func:
+                result = h.args[0].match(n + k)
+                if result is not None:
+                    h_part[int(result[k])].append(coeff)
+                    continue
+            raise ValueError(
+                "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
+    for k in h_part:
+        h_part[k] = Add(*h_part[k])
+    h_part.default_factory = lambda: 0
+    i_part = Add(*i_part)
 
     for k, coeff in h_part.items():
         h_part[k] = simplify(coeff)
 
     common = S.One
+
+    if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
+       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), i_part.expand().args))):
+        raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():
         if coeff.is_rational_function(n):
@@ -813,10 +811,10 @@ def rsolve(f, y, init=None):
                     i = int(k.args[0])
                 else:
                     raise ValueError("Integer or term expected, got '%s'" % k)
-            try:
+
+            eq = solution.subs(n, i) - v
+            if eq.has(S.NaN):
                 eq = solution.limit(n, i) - v
-            except NotImplementedError:
-                eq = solution.subs(n, i) - v
             equations.append(eq)
 
         result = solve(equations, *symbols)

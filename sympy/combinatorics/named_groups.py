@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
@@ -18,7 +16,6 @@ def AbelianGroup(*cyclic_orders):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([

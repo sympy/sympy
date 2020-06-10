@@ -1,7 +1,6 @@
 import random
 
 from sympy import Integer, Matrix, Rational, sqrt, symbols, S
-from sympy.core.compatibility import long
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
@@ -153,7 +152,7 @@ def test_measure_partial():
     state = Qubit('01') + Qubit('10')
     assert measure_partial(state, (0,)) == \
         [(Qubit('10'), S.Half), (Qubit('01'), S.Half)]
-    assert measure_partial(state, long(0)) == \
+    assert measure_partial(state, int(0)) == \
         [(Qubit('10'), S.Half), (Qubit('01'), S.Half)]
     assert measure_partial(state, (0,)) == \
         measure_partial(state, (1,))[::-1]

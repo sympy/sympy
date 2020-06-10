@@ -1,6 +1,6 @@
 from sympy.core import (
-    Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, symbols, oo, zoo, N)
+    Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
+    Expr, I, nan, pi, symbols, oo, zoo, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -8,7 +8,12 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
+from sympy.polys import Poly
 from sympy.series.order import O
+from sympy.sets import FiniteSet
+from sympy.core.expr import unchanged
+
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_rational():
@@ -186,7 +191,15 @@ def test_issue_4362():
     e = sqrt(1/c)
     assert e.as_numer_denom() == (e, 1)
     i = Symbol('i', integer=True)
-    assert (((1 + x/y)**i)).as_numer_denom() == ((x + y)**i, y**i)
+    assert ((1 + x/y)**i).as_numer_denom() == ((x + y)**i, y**i)
+
+
+def test_Pow_Expr_args():
+    x = Symbol('x')
+    bases = [Basic(), Poly(x, x), FiniteSet(x)]
+    for base in bases:
+        with warns_deprecated_sympy():
+            Pow(base, S.One)
 
 
 def test_Pow_signs():
@@ -276,7 +289,7 @@ def test_issue_6100_12942_4473():
     # Pow != Symbol
     assert (x**1.0)**1.0 != x
     assert (x**1.0)**2.0 != x**2
-    b = Basic()
+    b = Expr()
     assert Pow(b, 1.0, evaluate=False) != b
     # if the following gets distributed as a Mul (x**1.0*y**1.0 then
     # __eq__ methods could be added to Symbol and Pow to detect the
@@ -434,7 +447,7 @@ def test_better_sqrt():
     i = symbols('i', imaginary=True)
     assert sqrt(3/i) == Mul(sqrt(3), 1/sqrt(i), evaluate=False)
     # multiples of 1/2; don't make this too automatic
-    assert sqrt((3 + 4*I))**3 == (2 + I)**3
+    assert sqrt(3 + 4*I)**3 == (2 + I)**3
     assert Pow(3 + 4*I, Rational(3, 2)) == 2 + 11*I
     assert Pow(6 + 8*I, Rational(3, 2)) == 2*sqrt(2)*(2 + 11*I)
     n, d = (3 + 4*I), (3 - 4*I)**3
@@ -507,3 +520,27 @@ def test_issue_17450():
 
 def test_issue_18190():
     assert sqrt(1 / tan(1 + I)) == 1 / sqrt(tan(1 + I))
+
+
+def test_issue_14815():
+    x = Symbol('x', real=True)
+    assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', real=False)
+    assert sqrt(x).is_extended_negative is None
+    x = Symbol('x', complex=True)
+    assert sqrt(x).is_extended_negative is False
+    x = Symbol('x', extended_real=True)
+    assert sqrt(x).is_extended_negative is False
+    assert sqrt(zoo, evaluate=False).is_extended_negative is None
+    assert sqrt(nan, evaluate=False).is_extended_negative is None
+
+
+def test_issue_18509():
+    assert unchanged(Mul, oo, 1/pi**oo)
+    assert (1/pi**oo).is_extended_positive == False
+
+
+def test_issue_18762():
+    e, p = symbols('e p')
+    g0 = sqrt(1 + e**2 - 2*e*cos(p))
+    assert len(g0.series(e, 1, 3).args) == 4

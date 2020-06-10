@@ -25,10 +25,9 @@ class Point(Basic):
                     parent_point))
         # Super class construction
         if parent_point is None:
-            obj = super(Point, cls).__new__(cls, Symbol(name), position)
+            obj = super().__new__(cls, Symbol(name), position)
         else:
-            obj = super(Point, cls).__new__(cls, Symbol(name),
-                                            position, parent_point)
+            obj = super().__new__(cls, Symbol(name), position, parent_point)
         # Decide the object parameters
         obj._name = name
         obj._pos = position
@@ -58,7 +57,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSys3D
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
@@ -110,7 +109,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSys3D
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p1.position_wrt(N.origin)
@@ -134,7 +133,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSys3D
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p2 = p1.locate_new('p2', 5 * N.j)

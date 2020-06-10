@@ -1,8 +1,6 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from __future__ import print_function, division
-
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
@@ -610,7 +608,7 @@ class erf2(Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, erf2
+    >>> from sympy import oo, erf2
     >>> from sympy.abc import x, y
 
     Several special values are known:
@@ -750,7 +748,7 @@ class erfinv(Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, erfinv
+    >>> from sympy import erfinv
     >>> from sympy.abc import x
 
     Several special values are known:
@@ -844,7 +842,7 @@ class erfcinv (Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, erfcinv
+    >>> from sympy import erfcinv
     >>> from sympy.abc import x
 
     Several special values are known:
@@ -920,7 +918,7 @@ class erf2inv(Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, erf2inv, erfinv, erfcinv
+    >>> from sympy import erf2inv, oo
     >>> from sympy.abc import x, y
 
     Several special values are known:
@@ -1066,7 +1064,7 @@ class Ei(Function):
     The exponential integral is related to many other special functions.
     For example:
 
-    >>> from sympy import uppergamma, expint, Shi
+    >>> from sympy import expint, Shi
     >>> Ei(x).rewrite(expint)
     -expint(1, x*exp_polar(I*pi)) - I*pi
     >>> Ei(x).rewrite(Shi)
@@ -1159,7 +1157,7 @@ class Ei(Function):
         if x0.is_zero:
             f = self._eval_rewrite_as_Si(*self.args)
             return f._eval_nseries(x, n, logx)
-        return super(Ei, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
 
 class expint(Function):
@@ -1336,7 +1334,7 @@ class expint(Function):
             elif nu.is_Integer and nu > 1:
                 f = self._eval_rewrite_as_Ei(*self.args)
                 return f._eval_nseries(x, n, logx)
-        return super(expint, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _sage_(self):
         import sage.all as sage
@@ -1351,6 +1349,16 @@ def E1(z):
     ===========
 
     This is equivalent to ``expint(1, z)``.
+
+    Examples
+    ========
+
+    >>> from sympy import E1
+    >>> E1(0)
+    expint(1, 0)
+
+    >>> E1(5)
+    expint(1, 5)
 
     See Also
     ========
@@ -1401,6 +1409,12 @@ class li(Function):
     1/log(z)
 
     Defining the ``li`` function via an integral:
+    >>> from sympy import integrate
+    >>> integrate(li(z))
+    z*li(z) - Ei(2*log(z))
+
+    >>> integrate(li(z),z)
+    z*li(z) - Ei(2*log(z))
 
 
     The logarithmic integral can also be defined in terms of ``Ei``:
@@ -1538,7 +1552,7 @@ class Li(Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, Li
+    >>> from sympy import Li
     >>> from sympy.abc import z
 
     The following special value is known:
@@ -1672,7 +1686,7 @@ class TrigonometricIntegral(Function):
         from sympy import log, EulerGamma, Pow
         n += 1
         if self.args[0].subs(x, 0) != 0:
-            return super(TrigonometricIntegral, self)._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx)
         baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
         if self._trigfunc(0) != 0:
             baseseries -= 1
@@ -2215,7 +2229,7 @@ class fresnels(FresnelIntegral):
 
     Defining the Fresnel functions via an integral:
 
-    >>> from sympy import integrate, pi, sin, gamma, expand_func
+    >>> from sympy import integrate, pi, sin, expand_func
     >>> integrate(sin(pi*z**2/2), z)
     3*fresnels(z)*gamma(3/4)/(4*gamma(7/4))
     >>> expand_func(integrate(sin(pi*z**2/2), z))
@@ -2299,7 +2313,7 @@ class fresnels(FresnelIntegral):
                 ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
-        return super(fresnels, self)._eval_aseries(n, args0, x, logx)
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 class fresnelc(FresnelIntegral):
@@ -2356,7 +2370,7 @@ class fresnelc(FresnelIntegral):
 
     Defining the Fresnel functions via an integral:
 
-    >>> from sympy import integrate, pi, cos, gamma, expand_func
+    >>> from sympy import integrate, pi, cos, expand_func
     >>> integrate(cos(pi*z**2/2), z)
     fresnelc(z)*gamma(1/4)/(4*gamma(5/4))
     >>> expand_func(integrate(cos(pi*z**2/2), z))
@@ -2440,7 +2454,7 @@ class fresnelc(FresnelIntegral):
                 ).subs(x, sqrt(2/pi)*x) + Order(1/z**n, x)
 
         # All other points are not handled
-        return super(fresnelc, self)._eval_aseries(n, args0, x, logx)
+        return super()._eval_aseries(n, args0, x, logx)
 
 
 ###############################################################################
@@ -2480,7 +2494,7 @@ class _erfs(Function):
             return (Add(*l))._eval_nseries(x, n, logx) + o
 
         # All other points are not handled
-        return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+        return super()._eval_aseries(n, args0, x, logx)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2528,4 +2542,4 @@ class _eis(Function):
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
-        return super(_eis, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)

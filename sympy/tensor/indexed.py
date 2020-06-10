@@ -111,7 +111,7 @@ from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
 from sympy.core.compatibility import (is_sequence, NotIterable,
                                       Iterable)
-from sympy.core.logic import fuzzy_bool
+from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -496,7 +496,7 @@ class IndexedBase(Expr, NotIterable):
         Examples
         ========
 
-        >>> from sympy import IndexedBase, Idx, Symbol
+        >>> from sympy import IndexedBase, Idx
         >>> from sympy.abc import x, y
         >>> IndexedBase('A', shape=(x, y)).shape
         (x, y)
@@ -601,7 +601,7 @@ class Idx(Expr):
     Examples
     ========
 
-    >>> from sympy import IndexedBase, Idx, symbols, oo
+    >>> from sympy import Idx, symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 
     If a string is given for the label an integer ``Symbol`` is created and the
@@ -663,7 +663,7 @@ class Idx(Expr):
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
-            if not (range.is_integer or range is S.Infinity):
+            if range is not S.Infinity and fuzzy_not(range.is_integer):
                 raise TypeError("Idx object requires an integer dimension.")
             args = label, Tuple(0, range - 1)
         elif range:

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import wraps
 
 from sympy import S, pi, I, Rational, Wild, cacheit, sympify
@@ -662,7 +660,6 @@ class jn(SphericalBesselBase):
     ========
 
     >>> from sympy import Symbol, jn, sin, cos, expand_func, besselj, bessely
-    >>> from sympy import simplify
     >>> z = Symbol("z")
     >>> nu = Symbol("nu", integer=True)
     >>> print(expand_func(jn(0, z)))
@@ -985,6 +982,16 @@ def jn_zeros(n, k, method="sympy", dps=15):
     ========
 
     jn, yn, besselj, besselk, bessely
+
+    Parameters
+    ==========
+
+    n : integer
+        order of Bessel function
+
+    k : integer
+        number of zeros to return
+
 
     """
     from math import pi
@@ -1744,7 +1751,7 @@ class marcumq(Function):
     ========
 
     >>> from sympy import marcumq
-    >>> from sympy.abc import m, a, b, x
+    >>> from sympy.abc import m, a, b
     >>> marcumq(m, a, b)
     marcumq(m, a, b)
 

@@ -28,6 +28,7 @@ if USE_PYTEST:
     SKIP = pytest.mark.skip
     slow = pytest.mark.slow
     nocache_fail = pytest.mark.nocache_fail
+    from _pytest.outcomes import Failed
 
 else:
     # Not using pytest so define the things that would have been imported from
@@ -221,8 +222,6 @@ def warns_deprecated_sympy():
 
     >>> from sympy.testing.pytest import warns_deprecated_sympy
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> import warnings
-
     >>> with warns_deprecated_sympy():
     ...     SymPyDeprecationWarning("Don't use", feature="old thing",
     ...         deprecated_since_version="1.0", issue=123).warn()

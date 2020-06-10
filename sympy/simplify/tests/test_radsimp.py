@@ -1,7 +1,7 @@
 from sympy import (
     sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
     collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, radsimp, diff, root, Symbol, Rational, exp, Abs)
+    Mul, Pow, radsimp, diff, root, Symbol, Rational, exp, Abs)
 
 from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
@@ -223,6 +223,12 @@ def test_collect_5():
                    [x, y]) == 1 + y + x*(1 + 2*y) + x**2 + y**2
 
 
+def test_collect_pr19431():
+    """Unevaluated collect with respect to a product"""
+    a = symbols('a')
+    assert collect(a**2*(a**2 + 1), a**2, evaluate=False)[a**2] == (a**2 + 1)
+
+
 def test_collect_D():
     D = Derivative
     f = Function('f')
@@ -363,8 +369,8 @@ def test_issue_13143():
 
 
 def test_issue_6097():
-    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == y**(2.0*x)*(a + b)
-    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == 2**(2.0*x)*(a + b)
+    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == (a + b)*(y**x)**2.0
+    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == (a + b)*(2**x)**2.0
 
 
 def test_fraction_expand():
@@ -406,6 +412,16 @@ def test_fraction():
     p = symbols('p', positive=True)
     assert fraction(exp(-p)*log(p), exact=True) == (exp(-p)*log(p), 1)
 
+    m = Mul(1, 1, S.Half, evaluate=False)
+    assert fraction(m) == (1, 2)
+    assert fraction(m, exact=True) == (Mul(1, 1, evaluate=False), 2)
+
+    m = Mul(1, 1, S.Half, S.Half, Pow(1, -1, evaluate=False), evaluate=False)
+    assert fraction(m) == (1, 4)
+    assert fraction(m, exact=True) == \
+            (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
+
+
 def test_issue_5615():
     aA, Re, a, b, D = symbols('aA Re a b D')
     e = ((D**3*a + b*aA**3)/Re).expand()
@@ -439,3 +455,8 @@ def test_collect_abs():
     # See https://github.com/sympy/sympy/issues/12910
     p = Symbol('p', positive=True)
     assert collect_abs(p/abs(1-p)).is_commutative is True
+
+
+def test_issue_19149():
+    eq = exp(3*x/4)
+    assert collect(eq, exp(x)) == eq

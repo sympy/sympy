@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
 from sympy.core.compatibility import as_int
 from sympy.core.function import Function, ArgumentIndexError
@@ -45,7 +43,7 @@ class gamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma
+    >>> from sympy import S, I, pi, gamma
     >>> from sympy.abc import x
 
     Several special values are known:
@@ -105,6 +103,7 @@ class gamma(Function):
     """
 
     unbranched = True
+    _singularities = (S.ComplexInfinity,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -194,7 +193,7 @@ class gamma(Function):
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):
-            return super(gamma, self)._eval_nseries(x, n, logx)
+            return super()._eval_nseries(x, n, logx)
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
@@ -203,13 +202,15 @@ class gamma(Function):
         return sage.gamma(self.args[0]._sage_())
 
     def _eval_as_leading_term(self, x):
-        from sympy import Order
         arg = self.args[0]
-        arg_1 = arg.as_leading_term(x)
-        if Order(x, x).contains(arg_1):
-            return S(1) / arg_1
-        if Order(1, x).contains(arg_1):
-            return self.func(arg_1)
+        x0 = arg.subs(x, 0)
+
+        if x0.is_integer and x0.is_nonpositive:
+            n = -x0
+            res = (-1)**n/self.func(n + 1)
+            return res/(arg + n).as_leading_term(x)
+        elif x0.is_finite:
+            return self.func(x0)
         ####################################################
         # The correct result here should be 'None'.        #
         # Indeed arg in not bounded as x tends to 0.       #
@@ -642,7 +643,7 @@ class polygamma(Function):
         # the mpmath polygamma implementation valid only for nonnegative integers
         if n.is_number and n.is_real:
             if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super(polygamma, self)._eval_evalf(prec)
+                return super()._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -672,7 +673,7 @@ class polygamma(Function):
         from sympy import Order
         if args0[1] != oo or not \
                 (self.args[0].is_Integer and self.args[0].is_nonnegative):
-            return super(polygamma, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
         z = self.args[1]
         N = self.args[0]
 
@@ -719,6 +720,10 @@ class polygamma(Function):
                 nz = unpolarify(z)
                 if z != nz:
                     return polygamma(n, nz)
+
+            if n.is_positive:
+                if z is S.Half:
+                    return (-1)**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
 
             if n is S.NegativeOne:
                 return loggamma(z)
@@ -865,7 +870,7 @@ class loggamma(Function):
 
     For half-integral values:
 
-    >>> from sympy import S, pi
+    >>> from sympy import S
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
@@ -989,12 +994,12 @@ class loggamma(Function):
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_nseries(x, n, logx)
-        return super(loggamma, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
         if args0[0] != oo:
-            return super(loggamma, self)._eval_aseries(n, args0, x, logx)
+            return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
         m = min(n, ceiling((n + S.One)/2))
         r = log(z)*(z - S.Half) - z + log(2*pi)/2
@@ -1238,7 +1243,7 @@ class multigamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma, multigamma
+    >>> from sympy import S, multigamma
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> p = Symbol('p', positive=True, integer=True)

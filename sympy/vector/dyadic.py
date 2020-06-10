@@ -209,12 +209,12 @@ class BaseDyadic(Dyadic, AtomicExpr):
         elif vector1 == Vector.zero or vector2 == Vector.zero:
             return Dyadic.zero
         # Initialize instance
-        obj = super(BaseDyadic, cls).__new__(cls, vector1, vector2)
+        obj = super().__new__(cls, vector1, vector2)
         obj._base_instance = obj
         obj._measure_number = 1
         obj._components = {obj: S.One}
         obj._sys = vector1._sys
-        obj._pretty_form = (u'(' + vector1._pretty_form + '|' +
+        obj._pretty_form = ('(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
         obj._latex_form = ('(' + vector1._latex_form + "{|}" +
                            vector2._latex_form + ')')
@@ -274,7 +274,7 @@ class DyadicZero(BasisDependentZero, Dyadic):
     """
 
     _op_priority = 13.1
-    _pretty_form = u'(0|0)'
+    _pretty_form = '(0|0)'
     _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):

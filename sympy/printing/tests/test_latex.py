@@ -8,7 +8,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
+    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -16,7 +16,7 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SeqPer, SeqFormula,
+    Contains, divisor_sigma, SeqPer, SeqFormula, MatrixSlice,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
@@ -85,6 +85,25 @@ def test_latex_basic():
     assert latex(3*x**2*y, mul_symbol='\\,') == r"3\,x^{2}\,y"
     assert latex(1.5*3**x, mul_symbol='\\,') == r"1.5 \cdot 3^{x}"
 
+    assert latex(Mul(0, 1, evaluate=False)) == r'0 \cdot 1'
+    assert latex(Mul(1, 0, evaluate=False)) == r'1 \cdot 0'
+    assert latex(Mul(1, 1, evaluate=False)) == r'1 \cdot 1'
+    assert latex(Mul(-1, 1, evaluate=False)) == r'\left(-1\right) 1'
+    assert latex(Mul(1, 1, 1, evaluate=False)) == r'1 \cdot 1 \cdot 1'
+    assert latex(Mul(1, 2, evaluate=False)) == r'1 \cdot 2'
+    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \frac{1}{2}'
+    assert latex(Mul(1, 1, S.Half, evaluate=False)) == \
+        r'1 \cdot 1 \frac{1}{2}'
+    assert latex(Mul(1, 1, 2, 3, x, evaluate=False)) == \
+        r'1 \cdot 1 \cdot 2 \cdot 3 x'
+    assert latex(Mul(1, -1, evaluate=False)) == r'1 \left(-1\right)'
+    assert latex(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == \
+        r'4 \cdot 3 \cdot 2 \cdot 1 \cdot 0 y x'
+    assert latex(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == \
+        r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
+    assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
+        r'\frac{2}{3} \frac{5}{7}'
+
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == "1 / x"
     assert latex(-S(3)/2) == r"- \frac{3}{2}"
@@ -103,6 +122,14 @@ def test_latex_basic():
     assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
     assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
         r"\frac{2 x}{3} \sqrt{2}"
+    assert latex(binomial(x, y)) == r"{\binom{x}{y}}"
+
+    x_star = Symbol('x^*')
+    f = Function('f')
+    assert latex(x_star**2) == r"\left(x^{*}\right)^{2}"
+    assert latex(x_star**2, parenthesize_super=False) == r"{x^{*}}^{2}"
+    assert latex(Derivative(f(x_star), x_star,2)) == r"\frac{d^{2}}{d \left(x^{*}\right)^{2}} f{\left(x^{*} \right)}"
+    assert latex(Derivative(f(x_star), x_star,2), parenthesize_super=False) == r"\frac{d^{2}}{d {x^{*}}^{2}} f{\left(x^{*} \right)}"
 
     assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
@@ -215,6 +242,14 @@ def test_latex_Float():
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
     assert latex(Float(1.0e-100), mul_symbol="times") == \
         r"1.0 \times 10^{-100}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=2) == \
+        r"1.0 \cdot 10^{4}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=4) == \
+        r"1.0 \cdot 10^{4}"
+    assert latex(Float('10000.0'), full_prec=False, min=-2, max=5) == \
+        r"10000.0"
+    assert latex(Float('0.099999'), full_prec=True,  min=-2, max=5) == \
+        r"9.99990000000000 \cdot 10^{-2}"
 
 
 def test_latex_vector_expressions():
@@ -364,6 +399,8 @@ def test_latex_functions():
         r"\sin^{-1} {x^{2}}"
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
+    assert latex(asinh(x), inv_trig_style="full") == \
+        r"\operatorname{arcsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -657,6 +694,11 @@ def test_latex_derivatives():
     assert latex(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
         r"\frac{\partial^{3}}{\partial y\partial x^{2}} " + latex(f(x, y))
 
+    # for negative nested Derivative
+    assert latex(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'\frac{d}{d x} \left(- \frac{d}{d x} y^{2}\right)'
+    assert latex(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
+        r'\frac{d^{2}}{d x^{2}} \left(- \frac{d^{2}}{d x^{2}} y\right)'
+
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int\limits_{0}^{\infty} e^{- x y}\, dx"
@@ -710,6 +752,12 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int\limits_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+    # for negative nested Integral
+    assert latex(Integral(-Integral(y**2,x),x)) == \
+        r'\int \left(- \int y^{2}\, dx\right)\, dx'
+    assert latex(Integral(-Integral(-Integral(y,x),x),x)) == \
+        r'\int \left(- \int \left(- \int y\, dx\right)\, dx\right)\, dx'
+
     # fix issue #10806
     assert latex(Integral(z, z)**2) == r"\left(\int z\, dz\right)^{2}"
     assert latex(Integral(x + z, z)) == r"\int \left(x + z\right)\, dz"
@@ -739,22 +787,23 @@ def test_latex_SetExpr():
 
 
 def test_latex_Range():
-    assert latex(Range(1, 51)) == \
-        r'\left\{1, 2, \ldots, 50\right\}'
+    assert latex(Range(1, 51)) == r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
-
     assert latex(Range(0, 3, 1)) == r'\left\{0, 1, 2\right\}'
-
     assert latex(Range(0, 30, 1)) == r'\left\{0, 1, \ldots, 29\right\}'
-
     assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
-
     assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots\right\}'
-
     assert latex(Range(oo, -2, -2)) == r'\left\{\ldots, 2, 0\right\}'
+    assert latex(Range(-2, -oo, -1)) == r'\left\{-2, -3, \ldots\right\}'
+    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
+    assert latex(Range(oo, -oo, -1)) == \
+        r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
-    assert latex(Range(-2, -oo, -1)) == \
-        r'\left\{-2, -3, \ldots\right\}'
+    a, b, c = symbols('a:c')
+    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
+    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
+    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
 
 
 def test_latex_sequences():
@@ -1399,7 +1448,8 @@ def test_latex_Lambda():
         r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
         r"\left( \left( x, \  y\right) \mapsto x + 1 \right)"
-
+    assert latex(Lambda(x, x)) == \
+        r"\left( x \mapsto x \right)"
 
 def test_latex_PolyElement():
     Ruv, u, v = ring("u,v", ZZ)
@@ -1564,11 +1614,36 @@ def test_matMul():
 
 
 def test_latex_MatrixSlice():
-    from sympy.matrices.expressions import MatrixSymbol
-    assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
-        r'X\left[:5, 1:9:2\right]'
-    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
-        r'X\left[5, :5:2\right]'
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert latex(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X\left[:, :\right]'
+    assert latex(X[x:x + 1, y:y + 1]) == r'X\left[x:x + 1, y:y + 1\right]'
+    assert latex(X[x:x + 1:2, y:y + 1:2]) == r'X\left[x:x + 1:2, y:y + 1:2\right]'
+    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
+    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
+    assert latex(X[x:, :y]) == r'X\left[x:, :y\right]'
+    assert latex(X[x:y, z:w]) == r'X\left[x:y, z:w\right]'
+    assert latex(X[x:y:t, w:t:x]) == r'X\left[x:y:t, w:t:x\right]'
+    assert latex(X[x::y, t::w]) == r'X\left[x::y, t::w\right]'
+    assert latex(X[:x:y, :t:w]) == r'X\left[:x:y, :t:w\right]'
+    assert latex(X[::x, ::y]) == r'X\left[::x, ::y\right]'
+    assert latex(MatrixSlice(X, (0, None, None), (0, None, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (None, n, None), (None, n, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (0, n, None), (0, n, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (0, n, 2), (0, n, 2))) == r'X\left[::2, ::2\right]'
+    assert latex(X[1:2:3, 4:5:6]) == r'X\left[1:2:3, 4:5:6\right]'
+    assert latex(X[1:3:5, 4:6:8]) == r'X\left[1:3:5, 4:6:8\right]'
+    assert latex(X[1:10:2]) == r'X\left[1:10:2, :\right]'
+    assert latex(Y[:5, 1:9:2]) == r'Y\left[:5, 1:9:2\right]'
+    assert latex(Y[:5, 1:10:2]) == r'Y\left[:5, 1::2\right]'
+    assert latex(Y[5, :5:2]) == r'Y\left[5:6, :5:2\right]'
+    assert latex(X[0:1, 0:1]) == r'X\left[:1, :1\right]'
+    assert latex(X[0:1:2, 0:1:2]) == r'X\left[:1:2, :1:2\right]'
+    assert latex((Y + Z)[2:, 2:]) == r'\left(Y + Z\right)\left[2:, 2:\right]'
 
 
 def test_latex_RandomDomain():
@@ -1811,7 +1886,7 @@ def test_ElementwiseApplyFunction():
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
-    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
+    assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():
@@ -2445,9 +2520,11 @@ def test_MatrixSymbol_bold():
     assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == \
         r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
 
-    A = MatrixSymbol("A_k", 3, 3)
-    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+    A_k = MatrixSymbol("A_k", 3, 3)
+    assert latex(A_k, mat_symbol_style='bold') == r"\mathbf{A}_{k}"
 
+    A = MatrixSymbol(r"\nabla_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{\nabla}_{k}"
 
 def test_AppliedPermutation():
     p = Permutation(0, 1, 2)
@@ -2480,7 +2557,7 @@ def test_text_re_im():
     assert latex(re(x), gothic_re_im=False) ==  r'\operatorname{re}{\left(x\right)}'
 
 
-def test_DiffGeomMethods():
+def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
     m = Manifold('M', 2)
@@ -2519,16 +2596,19 @@ def test_latex_decimal_separator():
     assert(latex([1, 2.3, 4.5], decimal_separator='comma') == r'\left[ 1; \  2{,}3; \  4{,}5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='comma') == r'\left\{1; 2{,}3; 4{,}5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'comma') == r'\left( 1; \  2{,}3; \  4{,}6\right)')
+    assert(latex((1,), decimal_separator='comma') == r'\left( 1;\right)')
 
     # period decimal_separator
     assert(latex([1, 2.3, 4.5], decimal_separator='period') == r'\left[ 1, \  2.3, \  4.5\right]' )
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='period') == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'period') == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,), decimal_separator='period') == r'\left( 1,\right)')
 
     # default decimal_separator
     assert(latex([1, 2.3, 4.5]) == r'\left[ 1, \  2.3, \  4.5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5)) == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6)) == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,)) == r'\left( 1,\right)')
 
     assert(latex(Mul(3.4,5.3), decimal_separator = 'comma') ==r'18{,}02')
     assert(latex(3.4*5.3, decimal_separator = 'comma')==r'18{,}02')
@@ -2555,8 +2635,3 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
-
-
-def test_issue_17857():
-    assert latex(Range(-oo, oo)) == r'\left\{\ldots, -1, 0, 1, \ldots\right\}'
-    assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'

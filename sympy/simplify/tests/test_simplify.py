@@ -67,8 +67,8 @@ def test_simplify_expr():
 
     f = Symbol('f')
     A = Matrix([[2*k - m*w**2, -k], [-k, k - m*w**2]]).inv()
-    assert simplify((A*Matrix([0, f]))[1]) == \
-        -f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2))
+    assert simplify((A*Matrix([0, f]))[1] -
+            (-f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2)))) == 0
 
     f = -x + y/(z + t) + z*x/(z + t) + z*a/(z + t) + t*x/(z + t)
     assert simplify(f) == (y + a*z)/(z + t)

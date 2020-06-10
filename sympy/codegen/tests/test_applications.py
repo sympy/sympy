@@ -1,6 +1,5 @@
 # This file contains tests that exercise multiple AST nodes
 
-from sympy.core.compatibility import PY3
 from sympy.external import import_module
 from sympy.printing.ccode import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c
@@ -29,7 +28,7 @@ def _render_compile_import(funcdef, build_dir):
     declar = ccode(FunctionPrototype.from_FunctionDefinition(funcdef))
     return compile_link_import_strings([
         ('our_test_func.c', code_str),
-        ('_our_test_func.pyx', ("#cython: language_level={}\n".format("3" if PY3 else "2") +
+        ('_our_test_func.pyx', ("#cython: language_level={}\n".format("3") +
                                 "cdef extern {declar}\n"
                                 "def _{fname}({typ}[:] inp, {typ}[:] out):\n"
                                 "    {fname}(inp.size, &inp[0], &out[0])").format(

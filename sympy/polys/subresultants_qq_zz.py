@@ -772,7 +772,7 @@ def subresultants_bezout(p, q, x):
 
         # apply Theorem 2.1 in the paper by Toca & Vega 2004
         # to get correct signs
-        SR_L.append((int((-1)**(j*(j-1)/2)) * Poly(coeff_L, x) / F).as_expr())
+        SR_L.append(int((-1)**(j*(j-1)/2)) * (Poly(coeff_L, x) / F).as_expr())
         j = j + 1
 
     return process_matrix_output(SR_L, x)

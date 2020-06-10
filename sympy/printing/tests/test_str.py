@@ -1,15 +1,15 @@
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
     Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
 from sympy.physics.control.lti import TransferFunction
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.geometry import Point, Circle
+from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 
 from sympy.testing.pytest import raises
 
@@ -42,6 +42,9 @@ def test_Add():
     assert str(x + y) == "x + y"
     assert str(x + 1) == "x + 1"
     assert str(x + x**2) == "x**2 + x"
+    assert str(Add(0, 1, evaluate=False)) == "0 + 1"
+    assert str(Add(0, 0, 1, evaluate=False)) == "0 + 0 + 1"
+    assert str(1.0*x) == "1.0*x"
     assert str(5 + x + y + x*y + x**2 + y**2) == "x**2 + x*y + x + y**2 + y + 5"
     assert str(1 + x + x**2/2 + x**3/3) == "x**3/3 + x**2/2 + x + 1"
     assert str(2*x - 7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
@@ -123,7 +126,15 @@ def test_Function():
 def test_Geometry():
     assert sstr(Point(0, 0)) == 'Point2D(0, 0)'
     assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point2D(0, 0), 3)'
-    # TODO test other Geometry entities
+    assert sstr(Ellipse(Point(1, 2), 3, 4)) == 'Ellipse(Point2D(1, 2), 3, 4)'
+    assert sstr(Triangle(Point(1, 1), Point(7, 8), Point(0, -1))) == \
+        'Triangle(Point2D(1, 1), Point2D(7, 8), Point2D(0, -1))'
+    assert sstr(Polygon(Point(5, 6), Point(-2, -3), Point(0, 0), Point(4, 7))) == \
+        'Polygon(Point2D(5, 6), Point2D(-2, -3), Point2D(0, 0), Point2D(4, 7))'
+    assert sstr(Triangle(Point(0, 0), Point(1, 0), Point(0, 1)), sympy_integers=True) == \
+        'Triangle(Point2D(S(0), S(0)), Point2D(S(1), S(0)), Point2D(S(0), S(1)))'
+    assert sstr(Ellipse(Point(1, 2), 3, 4), sympy_integers=True) == \
+        'Ellipse(Point2D(S(1), S(2)), S(3), S(4))'
 
 
 def test_GoldenRatio():
@@ -217,6 +228,19 @@ def test_Mul():
     assert str(-2*x/3) == '-2*x/3'
     assert str(-1.0*x) == '-1.0*x'
     assert str(1.0*x) == '1.0*x'
+    assert str(Mul(0, 1, evaluate=False)) == '0*1'
+    assert str(Mul(1, 0, evaluate=False)) == '1*0'
+    assert str(Mul(1, 1, evaluate=False)) == '1*1'
+    assert str(Mul(1, 1, 1, evaluate=False)) == '1*1*1'
+    assert str(Mul(1, 2, evaluate=False)) == '1*2'
+    assert str(Mul(1, S.Half, evaluate=False)) == '1*(1/2)'
+    assert str(Mul(1, 1, S.Half, evaluate=False)) == '1*1*(1/2)'
+    assert str(Mul(1, 1, 2, 3, x, evaluate=False)) == '1*1*2*3*x'
+    assert str(Mul(1, -1, evaluate=False)) == '1*(-1)'
+    assert str(Mul(-1, 1, evaluate=False)) == '(-1)*1'
+    assert str(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == '4*3*2*1*0*y*x'
+    assert str(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == '4*3*2*(z + 1)*0*y*x'
+    assert str(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == '(2/3)*(5/7)'
     # For issue 14160
     assert str(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
                                                 evaluate=False)) == '-2*x/(y*y)'
@@ -514,6 +538,10 @@ def test_Float():
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.0'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
+    assert sstr(Float("100"), full_prec=False, min=-2, max=2) == '1.0e+2'
+    assert sstr(Float("100"), full_prec=False, min=-2, max=3) == '100.0'
+    assert sstr(Float("0.1"), full_prec=False, min=-2, max=3) == '0.1'
+    assert sstr(Float("0.099"), min=-2, max=3) == '9.90000000000000e-2'
 
 
 def test_Relational():
@@ -765,13 +793,45 @@ def test_issue_6387():
 
 def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
-    assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
-        "2*(X + Y)"
+
+    X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
+    assert str(2*(X + Y)) == "2*(X + Y)"
+
+    assert str(I*X) == "I*X"
+    assert str(-I*X) == "-I*X"
+    assert str((1 + I)*X) == '(1 + I)*X'
+    assert str(-(1 + I)*X) == '(-1 - I)*X'
 
 def test_MatrixSlice():
-    from sympy.matrices.expressions import MatrixSymbol
-    assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
-    assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert str(MatrixSlice(X, (None, None, None), (None, None, None))) == 'X[:, :]'
+    assert str(X[x:x + 1, y:y + 1]) == 'X[x:x + 1, y:y + 1]'
+    assert str(X[x:x + 1:2, y:y + 1:2]) == 'X[x:x + 1:2, y:y + 1:2]'
+    assert str(X[:x, y:]) == 'X[:x, y:]'
+    assert str(X[:x, y:]) == 'X[:x, y:]'
+    assert str(X[x:, :y]) == 'X[x:, :y]'
+    assert str(X[x:y, z:w]) == 'X[x:y, z:w]'
+    assert str(X[x:y:t, w:t:x]) == 'X[x:y:t, w:t:x]'
+    assert str(X[x::y, t::w]) == 'X[x::y, t::w]'
+    assert str(X[:x:y, :t:w]) == 'X[:x:y, :t:w]'
+    assert str(X[::x, ::y]) == 'X[::x, ::y]'
+    assert str(MatrixSlice(X, (0, None, None), (0, None, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (None, n, None), (None, n, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (0, n, None), (0, n, None))) == 'X[:, :]'
+    assert str(MatrixSlice(X, (0, n, 2), (0, n, 2))) == 'X[::2, ::2]'
+    assert str(X[1:2:3, 4:5:6]) == 'X[1:2:3, 4:5:6]'
+    assert str(X[1:3:5, 4:6:8]) == 'X[1:3:5, 4:6:8]'
+    assert str(X[1:10:2]) == 'X[1:10:2, :]'
+    assert str(Y[:5, 1:9:2]) == 'Y[:5, 1:9:2]'
+    assert str(Y[:5, 1:10:2]) == 'Y[:5, 1::2]'
+    assert str(Y[5, :5:2]) == 'Y[5:6, :5:2]'
+    assert str(X[0:1, 0:1]) == 'X[:1, :1]'
+    assert str(X[0:1:2, 0:1:2]) == 'X[:1:2, :1:2]'
+    assert str((Y + Z)[2:, 2:]) == '(Y + Z)[2:, 2:]'
 
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "True"
@@ -826,14 +886,6 @@ def test_MatrixExpressions():
 
     assert str(X) == "X"
 
-    Y = X[1:2:3, 4:5:6]
-
-    assert str(Y) == "X[1:3, 4:6]"
-
-    Z = X[1:10:2]
-
-    assert str(Z) == "X[1:10:2, :n]"
-
     # Apply function elementwise (`ElementwiseApplyFunc`):
 
     expr = (X.T*X).applyfunc(sin)
@@ -841,7 +893,7 @@ def test_MatrixExpressions():
 
     lamda = Lambda(x, 1/x)
     expr = (n*X).applyfunc(lamda)
-    assert str(expr) == 'Lambda(_d, 1/_d).(n*X)'
+    assert str(expr) == 'Lambda(x, 1/x).(n*X)'
 
 
 def test_Subs_printing():
@@ -863,3 +915,14 @@ def test_str_special_matrices():
 
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    m = Manifold('M', 2)
+    assert str(m) == "M"
+    p = Patch('P', m)
+    assert str(p) == "P"
+    rect = CoordSystem('rect', p)
+    assert str(rect) == "rect"
+    b = BaseScalarField(rect, 0)
+    assert str(b) == "rect_0"

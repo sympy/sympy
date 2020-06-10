@@ -48,7 +48,7 @@ def test_R3():
 def test_point():
     x, y = symbols('x, y')
     p = R2_r.point([x, y])
-    #TODO assert p.free_symbols() == set([x, y])
+    assert p.free_symbols == {x, y}
     assert p.coords(R2_r) == p.coords() == Matrix([x, y])
     assert p.coords(R2_p) == Matrix([sqrt(x**2 + y**2), atan2(y, x)])
 

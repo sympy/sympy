@@ -9,6 +9,9 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.utilities import public
 
+eflags = dict(deep=False, mul=True, power_exp=False, power_base=False,
+              basic=False, multinomial=False, log=False)
+
 @public
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     """A class for arbitrary expressions. """
@@ -45,7 +48,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return f.__class__(f.ex.as_numer_denom()[1])
 
         def simplify(f, ex):
-            return f.__class__(ex.cancel())
+            return f.__class__(ex.cancel().expand(**eflags))
 
         def __abs__(f):
             return f.__class__(abs(f.ex))
@@ -200,7 +203,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def is_negative(self, a):
         """Returns True if ``a`` is negative. """
-        return a.ex.as_coeff_mul()[0].is_negative
+        return a.ex.could_extract_minus_sign()
 
     def is_nonpositive(self, a):
         """Returns True if ``a`` is non-positive. """

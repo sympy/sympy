@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.compatibility import as_int
 from sympy.core.function import Function
 from sympy.utilities.iterables import cartes
@@ -329,8 +327,7 @@ def sqrt_mod_iter(a, p, domain=int):
             res = _sqrt_mod_prime_power(a, p, 1)
         if res:
             if domain is ZZ:
-                for x in res:
-                    yield x
+                yield from res
             else:
                 for x in res:
                     yield domain(x)
@@ -628,18 +625,17 @@ def is_nthpow_residue(a, n, m):
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
 
     """
+    a = a % m
     a, n, m = as_int(a), as_int(n), as_int(m)
     if m <= 0:
         raise ValueError('m must be > 0')
     if n < 0:
         raise ValueError('n must be >= 0')
-    if a < 0:
-        raise ValueError('a must be >= 0')
     if n == 0:
         if m == 1:
             return False
         return a == 1
-    if a % m == 0:
+    if a == 0:
         return True
     if n == 1:
         return True
@@ -799,7 +795,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
     for x, y in dd.items():
         m.append(x)
         a.append(list(y))
-    return sorted(set(crt(m, list(i))[0] for i in cartes(*a)))
+    return sorted({crt(m, list(i))[0] for i in cartes(*a)})
 
 def _nthroot_mod_composite(a, n, m):
     """
@@ -835,7 +831,9 @@ def nthroot_mod(a, n, p, all_roots=False):
     23
     """
     from sympy.core.numbers import igcdex
+    a = a % p
     a, n, p = as_int(a), as_int(n), as_int(p)
+
     if n == 2:
         return sqrt_mod(a, p, all_roots)
     # see Hackman "Elementary Number Theory" (2009), page 76
@@ -977,7 +975,7 @@ def jacobi_symbol(m, n):
     ========
 
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
-    >>> from sympy import Mul, S
+    >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
     >>> jacobi_symbol(60, 121)
@@ -1487,10 +1485,9 @@ def _val_poly(root, coefficients, p):
 
 
 def _valid_expr(expr):
-    """This function is used by `polynomial_congruence`.
-    If `expr` is a univariate polynomial will integer
-    coefficients the it returns its coefficients,
-    otherwise it raises Valuerror
+    """
+    return coefficients of expr if it is a univariate polynomial
+    with integer coefficients else raise a ValueError.
     """
 
     from sympy import Poly
@@ -1519,20 +1516,20 @@ def polynomial_congruence(expr, m):
     ========
 
     >>> from sympy.ntheory import polynomial_congruence
-    >>> from sympy import Poly
     >>> from sympy.abc import x
     >>> expr = x**6 - 2*x**5 -35
     >>> polynomial_congruence(expr, 6125)
     [3257]
     """
     coefficients = _valid_expr(expr)
+    coefficients = [num % m for num in coefficients]
     rank = len(coefficients)
     if rank == 3:
-        return quadratic_congruence(coefficients[0], coefficients[1],
-            coefficients[2], m)
+        return quadratic_congruence(*coefficients, m)
     if rank == 2:
-        return quadratic_congruence(0, coefficients[0], coefficients[1],
-            m)
+        return quadratic_congruence(0, *coefficients, m)
+    if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
+        return nthroot_mod(-coefficients[-1], rank - 1, m, True)
     if isprime(m):
         return _polynomial_congruence_prime(coefficients, m)
     return _help(m,

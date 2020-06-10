@@ -231,6 +231,10 @@ def test_polygamma():
     assert polygamma(3, 5) == 6*(Rational(-22369, 20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
 
+    assert polygamma(1, S.Half) == pi**2 / 2
+    assert polygamma(2, S.Half) == -14*zeta(3)
+    assert polygamma(11, S.Half) == 176896*pi**12
+
     def t(m, n):
         x = S(m)/n
         r = polygamma(0, x)
@@ -571,16 +575,16 @@ def test_loggamma():
         assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
-    tN(2, 3)
+    tN(2, 2)
     tN(3, 3)
-    tN(4, 5)
+    tN(4, 4)
     tN(5, 5)
 
 
 def test_polygamma_expansion():
     # A. & S., pa. 259 and 260
     assert polygamma(0, 1/x).nseries(x, n=3) == \
-        -log(x) - x/2 - x**2/12 + O(x**4)
+        -log(x) - x/2 - x**2/12 + O(x**3)
     assert polygamma(1, 1/x).series(x, n=5) == \
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
