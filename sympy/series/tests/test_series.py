@@ -96,7 +96,7 @@ def test_issue_11313():
     assert 1 + Integral(exp(x), x).series(x) == exp(x).series(x)
 
     assert Derivative(log(x), x).series(x).doit() == (1/x).series(x)
-    assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
+    assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x).removeO()
 
 
 def test_series_of_Subs():

@@ -58,7 +58,7 @@ class Ordinal(Basic):
     Internally, this class is just a list of instances of OmegaPower
     Examples
     ========
-    >>> from sympy.sets import Ordinal, ord0, OmegaPower
+    >>> from sympy.sets import Ordinal, OmegaPower
     >>> from sympy.sets.ordinals import omega
     >>> w = omega
     >>> w.is_limit_ordinal

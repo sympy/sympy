@@ -7,7 +7,7 @@ SymPy Development Team
 .. literalinclude:: ../../AUTHORS
 
 
-You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.rst>`_.
+You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.md>`_.
 
 Financial and Infrastructure Support
 ------------------------------------

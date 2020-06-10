@@ -11,6 +11,7 @@ from .logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
@@ -273,10 +274,20 @@ class Pow(Expr):
         b = _sympify(b)
         e = _sympify(e)
 
-        # XXX: Maybe only Expr should be allowed...
+        # XXX: This can be removed when non-Expr args are disallowed rather
+        # than deprecated.
         from sympy.core.relational import Relational
         if isinstance(b, Relational) or isinstance(e, Relational):
             raise TypeError('Relational can not be used in Pow')
+
+        # XXX: This should raise TypeError once deprecation period is over:
+        if not (isinstance(b, Expr) and isinstance(e, Expr)):
+            SymPyDeprecationWarning(
+                feature="Pow with non-Expr args",
+                useinstead="Expr args",
+                issue=19445,
+                deprecated_since_version="1.7"
+            ).warn()
 
         if evaluate:
             if e is S.ComplexInfinity:
@@ -1335,6 +1346,43 @@ class Pow(Expr):
         else:
             return True
 
+    def _eval_is_meromorphic(self, x, a):
+        # f**g is meromorphic if g is an integer and f is meromorphic.
+        # E**(log(f)*g) is meromorphic if log(f)*g is meromorphic
+        # and finite.
+        base_merom = self.base._eval_is_meromorphic(x, a)
+        exp_integer = self.exp.is_Integer
+        if exp_integer:
+            return base_merom
+
+        exp_merom = self.exp._eval_is_meromorphic(x, a)
+        if base_merom is False:
+            # f**g = E**(log(f)*g) may be meromorphic if the
+            # singularities of log(f) and g cancel each other,
+            # for example, if g = 1/log(f). Hence,
+            return False if exp_merom else None
+        elif base_merom is None:
+            return None
+
+        b = self.base.subs(x, a)
+        # b is extended complex as base is meromorphic.
+        # log(base) is finite and meromorphic when b != 0, zoo.
+        b_zero = b.is_zero
+        if b_zero:
+            log_defined = False
+        else:
+            log_defined = fuzzy_and((b.is_finite, fuzzy_not(b_zero)))
+
+        if log_defined is False: # zero or pole of base
+            return exp_integer  # False or None
+        elif log_defined is None:
+            return None
+
+        if not exp_merom:
+            return exp_merom  # False or None
+
+        return self.exp.subs(x, a).is_finite
+
     def _eval_is_algebraic_expr(self, syms):
         if self.exp.has(*syms):
             return False
@@ -1396,11 +1444,11 @@ class Pow(Expr):
 
     def matches(self, expr, repl_dict={}, old=False):
         expr = _sympify(expr)
+        repl_dict = repl_dict.copy()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
-            d = repl_dict.copy()
-            d = self.exp.matches(S.Zero, d)
+            d = self.exp.matches(S.Zero, repl_dict)
             if d is not None:
                 return d
 

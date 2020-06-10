@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from types import FunctionType
 from collections import Counter
 
@@ -16,8 +14,7 @@ from sympy.polys import roots
 from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from .common import (MatrixError, NonSquareMatrixError,
-    NonPositiveDefiniteMatrixError)
+from .common import MatrixError, NonSquareMatrixError
 
 from .utilities import _iszero
 
@@ -79,7 +76,9 @@ def _eigenvects_mpmath(M):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvals(M, error_when_incomplete=True, **flags):
+def _eigenvals(
+    M, error_when_incomplete=True, *, simplify=False, multiple=False,
+    rational=False, **flags):
     r"""Return eigenvalues using the Berkowitz agorithm to compute
     the characteristic polynomial.
 
@@ -151,14 +150,12 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
     equation `\det(A - \lambda I) = 0`
     """
     if not M:
+        if multiple:
+            return []
         return {}
 
     if not M.is_square:
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
-
-    simplify = flags.pop('simplify', False)
-    multiple = flags.get('multiple', False)
-    rational = flags.pop('rational', True)
 
     if M.is_upper or M.is_lower:
         return _eigenvals_triangular(M, multiple=multiple)
@@ -170,32 +167,75 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
-    if isinstance(simplify, FunctionType):
-        eigs = roots(M.charpoly(simplify=simplify), **flags)
-    else:
-        eigs = roots(M.charpoly(), **flags)
+    if multiple:
+        return _eigenvals_list(
+            M, error_when_incomplete=error_when_incomplete, simplify=simplify,
+            **flags)
+    return _eigenvals_dict(
+        M, error_when_incomplete=error_when_incomplete, simplify=simplify,
+        **flags)
 
-    # make sure the algebraic multiplicity sums to the
-    # size of the matrix
-    if error_when_incomplete:
-        if not multiple and sum(eigs.values()) != M.rows or \
-            multiple and len(eigs) != M.cols:
-            raise MatrixError(
-                "Could not compute eigenvalues for {}".format(M))
 
-    # Since 'simplify' flag is unsupported in roots()
-    # simplify() function will be applied once at the end of the routine.
+def _eigenvals_list(
+    M, error_when_incomplete=True, simplify=False, **flags):
+    iblocks = M.connected_components()
+    all_eigs = []
+    for b in iblocks:
+        block = M[b, b]
+
+        if isinstance(simplify, FunctionType):
+            charpoly = block.charpoly(simplify=simplify)
+        else:
+            charpoly = block.charpoly()
+        eigs = roots(charpoly, multiple=True, **flags)
+
+        if error_when_incomplete:
+            if len(eigs) != block.rows:
+                raise MatrixError(
+                    "Could not compute eigenvalues for {}. if you see this "
+                    "error, please report to SymPy issue tracker."
+                    .format(block))
+
+        all_eigs += eigs
+
     if not simplify:
-        return eigs
+        return all_eigs
     if not isinstance(simplify, FunctionType):
         simplify = _simplify
+    return [simplify(value) for value in all_eigs]
 
-    # With 'multiple' flag set true, simplify() will be mapped for the list
-    # Otherwise, simplify() will be mapped for the keys of the dictionary
-    if not multiple:
-        return {simplify(key): value for key, value in eigs.items()}
-    else:
-        return [simplify(value) for value in eigs]
+
+def _eigenvals_dict(
+    M, error_when_incomplete=True, simplify=False, **flags):
+    iblocks = M.connected_components()
+    all_eigs = {}
+    for b in iblocks:
+        block = M[b, b]
+
+        if isinstance(simplify, FunctionType):
+            charpoly = block.charpoly(simplify=simplify)
+        else:
+            charpoly = block.charpoly()
+        eigs = roots(charpoly, multiple=False, **flags)
+
+        if error_when_incomplete:
+            if sum(eigs.values()) != block.rows:
+                raise MatrixError(
+                    "Could not compute eigenvalues for {}. if you see this "
+                    "error, please report to SymPy issue tracker."
+                    .format(block))
+
+        for k, v in eigs.items():
+            if k in all_eigs:
+                all_eigs[k] += v
+            else:
+                all_eigs[k] = v
+
+    if not simplify:
+        return all_eigs
+    if not isinstance(simplify, FunctionType):
+        simplify = _simplify
+    return {simplify(key): value for key, value in all_eigs.items()}
 
 
 def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
@@ -622,96 +662,53 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     return M.hstack(*p_cols), M.diag(*diag)
 
 
-def _eval_is_positive_definite(M, method="eigen"):
-    """Algorithm dump for computing positive-definiteness of a
-    matrix.
+def _fuzzy_positive_definite(M):
+    positive_diagonals = M._has_positive_diagonals()
+    if positive_diagonals is False:
+        return False
 
-    Parameters
-    ==========
+    if positive_diagonals and M.is_strongly_diagonally_dominant:
+        return True
 
-    method : str, optional
-        Specifies the method for computing positive-definiteness of
-        a matrix.
+    return None
 
-        If ``'eigen'``, it computes the full eigenvalues and decides
-        if the matrix is positive-definite.
-
-        If ``'CH'``, it attempts computing the Cholesky
-        decomposition to detect the definitiveness.
-
-        If ``'LDL'``, it attempts computing the LDL
-        decomposition to detect the definitiveness.
-    """
-
-    if M.is_hermitian:
-        if method == 'eigen':
-            eigen = M.eigenvals()
-            args  = [x.is_positive for x in eigen.keys()]
-
-            return fuzzy_and(args)
-
-        elif method == 'CH':
-            try:
-                M.cholesky(hermitian=True)
-            except NonPositiveDefiniteMatrixError:
-                return False
-
-            return True
-
-        elif method == 'LDL':
-            try:
-                M.LDLdecomposition(hermitian=True)
-            except NonPositiveDefiniteMatrixError:
-                return False
-
-            return True
-
-        else:
-            raise NotImplementedError()
-
-    elif M.is_square:
-        M_H = (M + M.H) / 2
-
-        return M_H._eval_is_positive_definite(method=method)
 
 def _is_positive_definite(M):
-    return M._eval_is_positive_definite()
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
+
+    fuzzy = _fuzzy_positive_definite(M)
+    if fuzzy is not None:
+        return fuzzy
+
+    return _is_positive_definite_GE(M)
+
 
 def _is_positive_semidefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_nonnegative for x in eigen.keys()]
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
 
-        return fuzzy_and(args)
+    nonnegative_diagonals = M._has_nonnegative_diagonals()
+    if nonnegative_diagonals is False:
+        return False
 
-    elif M.is_square:
-        return ((M + M.H) / 2).is_positive_semidefinite
+    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
+        return True
 
-    return None
+    return _is_positive_semidefinite_minors(M)
+
 
 def _is_negative_definite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_negative for x in eigen.keys()]
+    return _is_positive_definite(-M)
 
-        return fuzzy_and(args)
-
-    elif M.is_square:
-        return ((M + M.H) / 2).is_negative_definite
-
-    return None
 
 def _is_negative_semidefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_nonpositive for x in eigen.keys()]
+    return _is_positive_semidefinite(-M)
 
-        return fuzzy_and(args)
-
-    elif M.is_square:
-        return ((M + M.H) / 2).is_negative_semidefinite
-
-    return None
 
 def _is_indefinite(M):
     if M.is_hermitian:
@@ -724,9 +721,37 @@ def _is_indefinite(M):
         return fuzzy_and([any_positive, any_negative])
 
     elif M.is_square:
-        return ((M + M.H) / 2).is_indefinite
+        return (M + M.H).is_indefinite
 
-    return None
+    return False
+
+
+def _is_positive_definite_GE(M):
+    """A division-free gaussian elimination method for testing
+    positive-definiteness."""
+    M = M.as_mutable()
+    size = M.rows
+
+    for i in range(size):
+        is_positive = M[i, i].is_positive
+        if is_positive is not True:
+            return is_positive
+        for j in range(i+1, size):
+            M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
+    return True
+
+
+def _is_positive_semidefinite_minors(M):
+    """A method to evaluate all principal minors for testing
+    positive-semidefiniteness."""
+    size = M.rows
+    for i in range(size):
+        minor = M[:i+1, :i+1].det(method='berkowitz')
+        is_nonnegative = minor.is_nonnegative
+        if is_nonnegative is not True:
+            return is_nonnegative
+    return True
+
 
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.

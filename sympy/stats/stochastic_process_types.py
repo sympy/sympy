@@ -11,7 +11,7 @@ from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent)
+                           dependent, is_random)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
@@ -27,6 +27,15 @@ __all__ = [
     'ContinuousMarkovChain',
     'BernoulliProcess'
 ]
+
+
+@is_random.register(Indexed)
+def _(x):
+    return is_random(x.base)
+
+@is_random.register(RandomIndexedSymbol)
+def _(x):
+    return True
 
 def _set_converter(itr):
     """
@@ -735,7 +744,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     ========
 
     >>> from sympy.stats import ContinuousMarkovChain
-    >>> from sympy import Matrix, S, MatrixSymbol
+    >>> from sympy import Matrix, S
     >>> G = Matrix([[-S(1), S(1)], [S(1), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1], gen_mat=G)
     >>> C.limiting_distribution()
@@ -811,7 +820,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     ========
 
     >>> from sympy.stats import BernoulliProcess, P, E
-    >>> from sympy import Eq, Gt, Lt
+    >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     FiniteSet(0, 1)

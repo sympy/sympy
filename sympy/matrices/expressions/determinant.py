@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Basic, Expr, S, sympify
 from sympy.matrices.common import NonSquareMatrixError
 
@@ -19,6 +17,7 @@ class Determinant(Expr):
     >>> Determinant(eye(3)).doit()
     1
     """
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)

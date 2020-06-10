@@ -19,7 +19,7 @@ from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
+from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
@@ -80,6 +80,7 @@ class Set(Basic):
         try:
             infimum = expr.inf
             assert infimum.is_comparable
+            infimum = infimum.evalf()  # issue #18505
         except (NotImplementedError,
                 AttributeError, AssertionError, ValueError):
             infimum = S.Infinity
@@ -479,11 +480,10 @@ class Set(Basic):
         Examples
         ========
 
-        >>> from sympy import EmptySet, FiniteSet, Interval, PowerSet
+        >>> from sympy import EmptySet, FiniteSet, Interval
 
         A power set of an empty set:
 
-        >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet
         >>> A.powerset()
         FiniteSet(EmptySet)
@@ -814,7 +814,7 @@ class ProductSet(Set):
         Examples
         ========
 
-        >>> from sympy import FiniteSet, Interval, ProductSet
+        >>> from sympy import FiniteSet, Interval
         >>> I = Interval(0, 1)
         >>> A = FiniteSet(1, 2, 3, 4, 5)
         >>> I.is_iterable
@@ -1770,7 +1770,18 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        _args_set = set(args)
+        # keep the form of the first canonical arg
+        dargs = {}
+        for i in reversed(list(ordered(args))):
+            if i.is_Symbol:
+                dargs[i] = i
+            else:
+                try:
+                    dargs[i.as_dummy()] = i
+                except TypeError:
+                    # e.g. i = class without args like `Interval`
+                    dargs[i] = i
+        _args_set = set(dargs.values())
         args = list(ordered(_args_set, Set._infimum_key))
         obj = Basic.__new__(cls, *args)
         obj._args_set = _args_set
@@ -2189,8 +2200,8 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
-    >>> from sympy.abc import x, y
+    >>> from sympy import S, Interval, imageset, sin, Lambda
+    >>> from sympy.abc import x
 
     >>> imageset(x, 2*x, Interval(0, 2))
     Interval(0, 4)
@@ -2255,7 +2266,8 @@ def imageset(*args):
             s = inspect.signature(f).parameters
 
         dexpr = _sympify(f(*[Dummy() for i in s]))
-        var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
+        var = tuple(uniquely_named_symbol(
+            Symbol(i), dexpr) for i in s)
         f = Lambda(var, f(*var))
     else:
         raise TypeError(filldedent('''

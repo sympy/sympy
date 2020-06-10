@@ -248,7 +248,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
     {'ogf': (3*x + 5)/(-x**2 - x + 1)}
 
-    >>> from sympy import simplify, factorial
+    >>> from sympy import factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
     {'egf': 1/(1 - x)}
 
