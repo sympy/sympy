@@ -305,6 +305,13 @@ def test_PoissonProcess():
     assert P(Eq(X(4), 4), Eq(X(2), 3)) == exp(-4)
     assert P(X(3) < 1, Eq(X(1), 0)) == exp(-4)
 
+    # few properties check
+    assert P(Eq(X(2), 4), X(1) > 1) == P(Eq(X(1), 1) | (Eq(X(1), 0) | (Eq(X(1), 0))))
+    assert P(X(2) <= 3, X(1) >= 1) == 5*exp(-2)
+    assert P(X(2) <= 3, X(1) > 1) == P(Eq(X(2), 2), Eq(X(1), 2)) +\
+        P(Eq(X(2), 3), Eq(X(1), 2)) + P(Eq(X(2), 3), Eq(X(1), 3))
+    assert P(X(2) < 3, X(1) > 1) == P(Eq(X(1), 0))
+
 
 def test_WienerProcess():
     X = WienerProcess("X")

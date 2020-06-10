@@ -1212,12 +1212,18 @@ class CountingProcess(ContinuousTimeStochasticProcess):
         rvs = list(condition.atoms(RandomIndexedSymbol))
         if len(rvs) > 1:
             return None, None
-        working_set = Intersection(self.state_space, max_arg.as_set())
+        if not isinstance(max_arg, Eq):
+            working_set = Intersection(self.state_space, max_arg.as_set())
+        else:
+            working_set = Intersection(self.state_space, Interval(max_arg.args[1], 0))
         cond_args = (condition, )
         for arg in cond_args:
             if isinstance(arg.args[0], RandomIndexedSymbol) and arg.args[0].key.is_number:
                 rv = arg.args[0].pspace.process(abs(arg.args[0].key - max_key))
-                working_set = Intersection(working_set, arg.as_set())
+                if not isinstance(arg, Eq):
+                    working_set = Intersection(working_set, arg.as_set())
+                else:
+                    working_set = Intersection(working_set, Interval.Ropen(0, arg.args[1]))
             else:
                 return None, None
         return rv, working_set
@@ -1249,11 +1255,9 @@ class CountingProcess(ContinuousTimeStochasticProcess):
             if rv is not None:
                 if working_set == EmptySet:
                     return _SubstituteRV._probability(Eq(rv, 0), evaluate=evaluate, **kwargs)
-                cond1 = rv >= working_set._inf
-                if working_set._sup != oo:
-                    cond2 = rv <= working_set._sup
-                    return _SubstituteRV._probability(cond1 & cond2, evaluate=evaluate, **kwargs)
-                return _SubstituteRV._probability(cond1, evaluate=evaluate, **kwargs)
+                cond1 = rv >= 0
+                cond2 = rv <= (working_set._sup - working_set._inf)
+                return _SubstituteRV._probability(cond1 & cond2, evaluate=evaluate, **kwargs)
             intervals, rv_swap = get_timerv_swaps(condition, given_condition)
             # they are independent when they have non-overlapping intervals
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
