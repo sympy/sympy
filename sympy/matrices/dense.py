@@ -1,6 +1,6 @@
 import random
 
-from sympy.core import SympifyError, Add
+from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
@@ -156,7 +156,7 @@ class DenseMatrix(MatrixBase):
                 col_indices = range(col, other_len, other.cols)
                 vec = [mat[a]*other_mat[b] for a, b in zip(row_indices, col_indices)]
                 try:
-                    new_mat[i] = Add(*vec)
+                    new_mat[i] = sum(*vec)
                 except (TypeError, SympifyError):
                     # Some matrices don't work with `sum` or `Add`
                     # They don't work with `sum` because `sum` tries to add `0`
