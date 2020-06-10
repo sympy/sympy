@@ -276,12 +276,15 @@ class GaussianDomain():
     def from_ZZ_python(K1, a, K0):
         return K1(a)
 
+    def from_QQ_gmpy(K1, a, K0):
+        return K1(a)
+
+    def from_QQ_python(K1, a, K0):
+        return K1(a)
+
     def from_AlgebraicField(K1, a, K0):
         if K0.ext.args[0] == I:
             return K1.from_sympy(K0.to_sympy(a))
-
-    def from_QQ_gmpy(K1, a, K0):
-        return K1(a)
 
 
 class GaussianIntegerRing(GaussianDomain, Ring):
