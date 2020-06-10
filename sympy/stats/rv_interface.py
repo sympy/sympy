@@ -12,7 +12,7 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
         'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
         'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
-        'smoment', 'quantile', 'sample_stochastic']
+        'smoment', 'quantile', 'sample_stochastic_process']
 
 
 
