@@ -1,5 +1,5 @@
 from sympy import (Derivative, Symbol, expand, factor_terms, powsimp, Poly,
-                   Mul, ratsimp, Add)
+                   Mul, ratsimp, Add, Piecewise, piecewise_fold)
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
@@ -39,8 +39,12 @@ def simpsol(soleq):
     syms = [Symbol('C1'), Symbol('C2')]
     terms = []
     for coeff, monom in zip(p.coeffs(), p.monoms()):
-        coeff = ratsimp(coeff).collect(syms)
-        monom = Mul(*(g**i for g, i in zip(gens, monom)))
+        coeff = piecewise_fold(coeff)
+        if type(coeff) is Piecewise:
+            coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
+        else:
+            coeff = ratsimp(coeff).collect(syms)
+        monom = Mul(*(g ** i for g, i in zip(gens, monom)))
         terms.append(coeff * monom)
     return Eq(lhs, Add(*terms))
 
