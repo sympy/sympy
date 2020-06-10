@@ -3198,7 +3198,6 @@ class Expr(Basic, EvalfMixin):
         # we are calculating the series over and over again. Subclasses should
         # override this method and implement much more efficient yielding of
         # terms.
-        from sympy import LM
         n = 0
         series = self._eval_nseries(x, n=n, logx=logx)
         if not series.is_Order:
@@ -3217,15 +3216,8 @@ class Expr(Basic, EvalfMixin):
             series = self._eval_nseries(x, n=n, logx=logx)
         e = series.removeO()
         yield e
-
-        brk_cnt = S.Zero
-        self = self.cancel()
-        if self.is_polynomial():
-            brk_cnt += S.One
-            if self.is_zero:
-                exp = S.Zero
-            else:
-                _, exp = LM(self).leadterm(x)
+        if e.is_zero:
+            return
 
         while 1:
             while 1:
@@ -3233,14 +3225,10 @@ class Expr(Basic, EvalfMixin):
                 series = self._eval_nseries(x, n=n, logx=logx).removeO()
                 if e != series:
                     break
-                if brk_cnt == S.One and n > (exp + S.One):
-                    brk_cnt += S.One
-                    break
-            if brk_cnt != 2:
-                yield series - e
-                e = series
-            else:
-                break
+                if (series - self).cancel() is S.Zero:
+                    return
+            yield series - e
+            e = series
 
     def nseries(self, x=None, x0=0, n=6, dir='+', logx=None):
         """

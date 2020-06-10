@@ -546,10 +546,10 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
-    s1 = loggamma(x).series(x).simplify()
+    s1 = loggamma(x).series(x).cancel()
     assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
-    assert s1 == loggamma(x).rewrite('intractable').series(x).simplify()
+    assert s1 == loggamma(x).rewrite('intractable').series(x).cancel()
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert conjugate(loggamma(0)) is oo

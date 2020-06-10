@@ -914,7 +914,7 @@ class loggamma(Function):
     Series expansion is also supported:
 
     >>> from sympy import series
-    >>> series(loggamma(x), x, 0, 4).simplify()
+    >>> series(loggamma(x), x, 0, 4).cancel()
     -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + O(x**4)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision

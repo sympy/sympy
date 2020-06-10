@@ -1569,8 +1569,7 @@ class Pow(Expr):
 
         for e1 in terms:
             ex = e1 + inex
-            if ex < n:
-                res += terms[e1]*inco*x**(ex)
+            res += terms[e1]*inco*x**(ex)
 
         if (res - self).cancel() == S.Zero:
             return res
