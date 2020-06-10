@@ -1314,11 +1314,12 @@ def dmp_factor_list(f, u, K0):
         coeff, factors = dmp_factor_list(f, u, K1)
         new_factors = []
         for fac, i in factors:
-            c, fac = dmp_clear_denoms(fac, u, K1)
-            coeff //= c ** i
-            new_factors.append((fac, i))
+            fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
+            fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
+            content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K1)
+            coeff = (coeff * content**i) // fac_denom ** i
+            new_factors.append((fac_prim, i))
         factors = new_factors
-        factors = [(dmp_convert(fac, u, K1, K0), i) for fac, i in factors]
         coeff = K0.convert(coeff, K1)
         return coeff, factors
 
