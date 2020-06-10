@@ -280,6 +280,9 @@ class GaussianDomain():
         if K0.ext.args[0] == I:
             return K1.from_sympy(K0.to_sympy(a))
 
+    def from_QQ_gmpy(K1, a, K0):
+        return K1(a)
+
 
 class GaussianIntegerRing(GaussianDomain, Ring):
     """Ring of Gaussian integers."""
@@ -323,6 +326,9 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     def lcm(self, a, b):
         return (a * b) // self.gcd(a, b)
+
+    def from_GaussianIntegerRing(K1, a, K0):
+        return a
 
     def from_GaussianRationalField(K1, a, K0):
         return K1.new(ZZ.convert(a.x), ZZ.convert(a.y))
@@ -372,5 +378,10 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def from_GaussianIntegerRing(K1, a, K0):
         return K1.new(a.x, a.y)
+
+    def from_GaussianRationalField(K1, a, K0):
+        return a
+
+
 
 QQ_I = GaussianRational._parent = GaussianRationalField()
