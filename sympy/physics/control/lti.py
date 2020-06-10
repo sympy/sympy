@@ -107,7 +107,7 @@ class TransferFunction(Basic):
         p*s + s**2 + 3
         >>> G2 = TransferFunction((p + 5)*(p - 3), (p - 3)*(p + 1), p)
         >>> G2.num
-        (p - 3)*(p + 1)
+        (p - 3)*(p + 5)
 
         """
         return self._num
@@ -534,6 +534,7 @@ class TransferFunction(Basic):
         ========
 
         >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf1.is_biproper
         True
