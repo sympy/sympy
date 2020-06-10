@@ -392,7 +392,6 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
-    from sympy.functions import sign as sgn
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
