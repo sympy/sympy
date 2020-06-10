@@ -2275,7 +2275,7 @@ class MatrixOperations(MatrixRequired):
         Matrix([[x]])
         """
 
-        if isinstance(args[0], zip):
+        if len(args) == 1 and  not isinstance(args[0], (dict, set)) and iter(args[0]) and not is_sequence(args[0]):
             args = (list(args[0]),)
 
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
