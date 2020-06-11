@@ -1766,7 +1766,7 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
-        from sympy import Integer, Mul, Order, ceiling, powsimp
+        from sympy import Mul, Order, ceiling, powsimp
         from itertools import product
 
         def coeff_exp(term, x):
@@ -1785,7 +1785,7 @@ class Mul(Expr, AssocOp):
         try:
             for t in self.args:
                 coeff, exp = t.leadterm(x)
-                if isinstance(coeff, Integer) or isinstance(coeff, Rational):
+                if not coeff.has(x):
                     ords.append((t, exp))
                 else:
                     raise ValueError
@@ -1810,7 +1810,8 @@ class Mul(Expr, AssocOp):
             if power < n:
                 res += Mul(*coeffs)*(x**power)
 
-        res += Order(x**n, x)
+        if (res - self).cancel() is not S.Zero:
+            res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x):

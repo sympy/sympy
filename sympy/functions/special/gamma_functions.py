@@ -688,7 +688,7 @@ class polygamma(Function):
                 m = ceiling((n + 1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
-                o = Order(1/z**(2*m), x)
+                o = Order(1/z**n, x)
             return r._eval_nseries(x, n, logx) + o
         else:
             # proper polygamma function
@@ -914,7 +914,7 @@ class loggamma(Function):
     Series expansion is also supported:
 
     >>> from sympy import series
-    >>> series(loggamma(x), x, 0, 4)
+    >>> series(loggamma(x), x, 0, 4).cancel()
     -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + O(x**4)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
@@ -1001,14 +1001,13 @@ class loggamma(Function):
         if args0[0] != oo:
             return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
-        m = min(n, ceiling((n + S.One)/2))
         r = log(z)*(z - S.Half) - z + log(2*pi)/2
-        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, m)]
+        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
         o = None
-        if m == 0:
+        if n == 0:
             o = Order(1, x)
         else:
-            o = Order(1/z**(2*m - 1), x)
+            o = Order(1/z**n, x)
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
