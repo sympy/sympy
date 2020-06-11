@@ -1,11 +1,12 @@
 from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr
+from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
 __all__ = ['TransferFunction',]
 
 
-class TransferFunction(Basic):
+class TransferFunction(Basic, EvalfMixin):
     """TransferFunction(num, den, var)
 
     A class for representing Transfer Functions. This class is used to represent
@@ -174,6 +175,12 @@ class TransferFunction(Basic):
         arg_den = self.args[1].subs(old, new)
         argnew = TransferFunction(arg_num, arg_den, self.var)
         return self if old in self.bound_symbols else argnew
+
+    def _eval_evalf(self, prec):
+        return TransferFunction(
+            self.num._eval_evalf(prec),
+            self.den._eval_evalf(prec),
+            self.var)
 
     def _eval_simplify(self, **kwargs):
         tf = cancel(Mul(self.num, 1/self.den)).as_numer_denom()

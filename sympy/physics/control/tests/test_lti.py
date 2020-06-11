@@ -112,19 +112,22 @@ def test_TransferFunction_functions():
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
     SP1 = TransferFunction(p1, p2, s)
-    expect = TransferFunction(2*s + 1, 5*s**2 + 4*s + 3, s)
-    assert SP1.evalf(subs={a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect
+    expect1 = TransferFunction(2.0*s + 1.0, 5.0*s**2 + 4.0*s + 3.0, s)
+    assert SP1.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == expect1
 
     c1, d0, d1, d2 = symbols('c1, d0:3')
     p3, p4 = c1*p, d2*p**3 + d1*p**2 - d0
     SP2 = TransferFunction(p3, p4, p)
-    expect1 = TransferFunction(2*p, 5*p**3 + 2*p**2 - 3, p)
-    assert SP2.evalf(subs={c1: 2, d0: 3, d1: 2, d2: 5}) == expect1
+    expect2 = TransferFunction(2.0*p, 5.0*p**3 + 2.0*p**2 - 3.0, p)
+    assert SP2.subs({c1: 2, d0: 3, d1: 2, d2: 5}).evalf() == expect2
 
-    p5 = a*s + b
-    SP3 = TransferFunction(p5, p, s)
-    expect2 = TransferFunction(3*s - 4, p, s)
-    assert SP3.evalf(subs={a: 3, b: -4}) == expect2
+    SP3 = TransferFunction(a0*p**3 + a1*s**2 - b0*s + b1, a1*s + p, s)
+    expect3 = TransferFunction(2.0*p**3 + 4.0*s**2 - s + 5.0, p + 4.0*s, s)
+    assert SP3.subs({a0: 2, a1: 4, b0: 1, b1: 5}).evalf() == expect3
+
+    SP4 = TransferFunction(s - a1*p**3, a0*s + p, p)
+    expect4 = TransferFunction(7.0*p**3 + s, p - s, p)
+    assert SP4.subs({a0: -1, a1: -7}).evalf() == expect4
 
     # negation of TF.
     tf2 = TransferFunction(s + 3, s**2 - s**3 + 9, s)
