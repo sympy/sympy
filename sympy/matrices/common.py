@@ -2551,8 +2551,10 @@ class MatrixArithmetic(MatrixRequired):
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
-        # our first sanity check.
-        if hasattr(other, 'shape') and len(other.shape) == 2:
+        # our first sanity check. Double check other is not explicitly not a Matrix.
+        if (hasattr(other, 'shape') and len(other.shape) == 2 and
+            (getattr(other, 'is_Matrix', True) or
+             getattr(other, 'is_MatrixLike', True))):
             if self.shape[1] != other.shape[0]:
                 raise ShapeError("Matrix size mismatch: %s * %s." % (
                     self.shape, other.shape))
@@ -2721,8 +2723,10 @@ class MatrixArithmetic(MatrixRequired):
     def __rmul__(self, other):
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
-        # our first sanity check.
-        if hasattr(other, 'shape') and len(other.shape) == 2:
+        # our first sanity check. Double check other is not explicitly not a Matrix.
+        if (hasattr(other, 'shape') and len(other.shape) == 2 and
+            (getattr(other, 'is_Matrix', True) or
+             getattr(other, 'is_MatrixLike', True))):
             if self.shape[0] != other.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
@@ -2908,6 +2912,9 @@ def _matrixify(mat):
     `mat` is passed through without modification."""
 
     if getattr(mat, 'is_Matrix', False) or getattr(mat, 'is_MatrixLike', False):
+        return mat
+
+    if not(getattr(mat, 'is_Matrix', True) or getattr(mat, 'is_MatrixLike', True)):
         return mat
 
     shape = None
