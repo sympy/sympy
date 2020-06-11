@@ -36,6 +36,8 @@ def simpsol(soleq):
     gens = list(sol.atoms(exp))
     p = Poly(sol, *gens, expand=False)
     gens = [factor_terms(g) for g in gens]
+    if not gens:
+        gens = p.gens
     syms = [Symbol('C1'), Symbol('C2')]
     terms = []
     for coeff, monom in zip(p.coeffs(), p.monoms()):
