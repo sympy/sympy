@@ -829,12 +829,13 @@ def test_sysode_linear_neq_order1_type2():
     eq9 = (Eq(Derivative(f(t), t), 1 / (a * b) * (-2 * f(t) + g(t) + c)),
           Eq(Derivative(g(t), t), 1 / (a * b) * (-2 * g(t) + f(t) + h(t))),
           Eq(Derivative(h(t), t), 1 / (a * b) * (-2 * h(t) + g(t) + d)))
-    sol9 = [Eq(f(t), c/(4*sqrt(2) + 8) + c/4 + c/(8 - 4*sqrt(2)) - d/4 + d/(4*sqrt(2) + 8) + d/(8 - 4*sqrt(2)) +
-               (-C1 + C2*exp(-sqrt(2)*t/(a*b)) + C3*exp(sqrt(2)*t/(a*b)))*exp(-2*t/(a*b))),
-            Eq(g(t), -sqrt(2)*c/(4*sqrt(2) + 8) + sqrt(2)*c/(8 - 4*sqrt(2)) - sqrt(2)*d/(4*sqrt(2) + 8) +
-               sqrt(2)*d/(8 - 4*sqrt(2)) + (-sqrt(2)*C2*exp(-sqrt(2)*t/(a*b)) + sqrt(2)*C3*exp(sqrt(2)*t/(a*b)))*exp(-2*t/(a*b))),
-            Eq(h(t), -c/4 + c/(4*sqrt(2) + 8) + c/(8 - 4*sqrt(2)) + d/(4*sqrt(2) + 8) + d/4 + d/(8 - 4*sqrt(2)) +
-               (C1 + C2*exp(-sqrt(2)*t/(a*b)) + C3*exp(sqrt(2)*t/(a*b)))*exp(-2*t/(a*b)))]
+    sol9 = [Eq(f(t), -C1*exp(-2*t/(a*b)) + C2*exp(-2*t/(a*b))*exp(-sqrt(2)*t/(a*b)) + C3*exp(-2*t/(a*b))*exp(sqrt(2)*
+                t/(a*b)) + c/(4*sqrt(2) + 8) + c/4 + c/(8 - 4*sqrt(2)) - d/4 + d/(4*sqrt(2) + 8) + d/(8 - 4*sqrt(2))),
+            Eq(g(t), -sqrt(2)*C2*exp(-2*t/(a*b))*exp(-sqrt(2)*t/(a*b)) + sqrt(2)*C3*exp(-2*t/(a*b))*exp(sqrt(2)*t/(a*b))
+                - sqrt(2)*c/(4*sqrt(2) + 8) + sqrt(2)*c/(8 - 4*sqrt(2)) - sqrt(2)*d/(4*sqrt(2) + 8) + sqrt(2)*d/(8 - 4*
+                sqrt(2))),
+            Eq(h(t), C1*exp(-2*t/(a*b)) + C2*exp(-2*t/(a*b))*exp(-sqrt(2)*t/(a*b)) + C3*exp(-2*t/(a*b))*exp(sqrt(2)*t/
+                (a*b)) - c/4 + c/(4*sqrt(2) + 8) + c/(8 - 4*sqrt(2)) + d/(4*sqrt(2) + 8) + d/4 + d/(8 - 4*sqrt(2)))]
     assert dsolve(eq9) == sol9
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 

@@ -433,7 +433,8 @@ def _linear_neq_order1_type1(match_):
     Cvect = Matrix(list(next(constants) for _ in range(n)))
     sol_vector = P * (J * Cvect)
 
-    sol_vector = [collect(s, ordered(J.atoms(exp)), exact=True) for s in sol_vector]
+    gens = sol_vector.atoms(exp)
+    sol_vector = [collect(s, ordered(gens), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
     return sol_dict
@@ -474,8 +475,9 @@ def _linear_neq_order1_type2(match_):
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
     sol_vector = P * J * (integrate(J.inv() * P.inv() * b, t) + Cvect)
+    sol_vector = sol_vector.applyfunc(powsimp)
 
-    sol_vector = [collect(expand_mul(s), ordered(J.atoms(exp)), exact=True) for s in sol_vector]
+    sol_vector = [collect(expand_mul(s), sol_vector.atoms(exp), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
     return sol_dict
