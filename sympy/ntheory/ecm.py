@@ -15,12 +15,14 @@ class Point:
     In this form, the addition and doubling of points
     does not need any y-coordinate information thus
     decreasing the number of operation.
+    Using Montgomery form we try to perform point addition
+    and doubling in least amount of multiplications.
 
     Parameters:
     ===========
 
-    x_corr : X coordinate of the Point
-    z_corr : Z coordinate of the Point
+    x_cord : X coordinate of the Point
+    z_cord : Z coordinate of the Point
     a_24 : Parameter of the elliptic curve in Montgomery form
     mod : modulus
 
@@ -30,15 +32,17 @@ class Point:
     .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
     """
 
-    def __init__(self, x_corr, z_corr, a_24, mod):
-        self.x_corr = x_corr
-        self.z_corr = z_corr
+    def __init__(self, x_cord, z_cord, a_24, mod):
+        self.x_cord = x_cord
+        self.z_cord = z_cord
         self.a_24 = a_24
         self.mod = mod
 
     def add(self, Q, diff):
         """
-        Add two points P and Q where diff = P - Q.
+        Add two points P and Q where diff = P - Q. Moreover the assumption
+        is P.x_cord*Q.x_cord*(P.x_cord - Q.x_cord) != 0. This algorithm
+        requires 6 multiplications.
 
         Parameters:
         ===========
@@ -46,28 +50,31 @@ class Point:
         Q : point on the curve in Montgomery form
         diff : P - Q
         """
-        u = (self.x_corr - self.z_corr)*(Q.x_corr + Q.z_corr)
-        v = (self.x_corr + self.z_corr)*(Q.x_corr - Q.z_corr)
+        u = (self.x_cord - self.z_cord)*(Q.x_cord + Q.z_cord)
+        v = (self.x_cord + self.z_cord)*(Q.x_cord - Q.z_cord)
         add, subt = u + v, u - v
-        x_corr = diff.z_corr * add * add % self.mod
-        z_corr = diff.x_corr * subt * subt % self.mod
-        return Point(x_corr, z_corr, self.a_24, self.mod)
+        x_cord = diff.z_cord * add * add % self.mod
+        z_cord = diff.x_cord * subt * subt % self.mod
+        return Point(x_cord, z_cord, self.a_24, self.mod)
 
     def double(self):
         """
         Doubles a point in an elliptic curve in Montgomery form.
+        This algorithm requires 5 multiplications.
         """
-        u, v = self.x_corr + self.z_corr, self.x_corr - self.z_corr
+        u, v = self.x_cord + self.z_cord, self.x_cord - self.z_cord
         u, v = u*u, v*v
         diff = u - v
-        x_corr = u*v % self.mod
-        z_corr = diff*(v + self.a_24*diff) % self.mod
-        return Point(x_corr, z_corr, self.a_24, self.mod)
+        x_cord = u*v % self.mod
+        z_cord = diff*(v + self.a_24*diff) % self.mod
+        return Point(x_cord, z_cord, self.a_24, self.mod)
 
     def mont_ladder(self, k):
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
+        A total of 11 multiplications are required in each step of this
+        algorithm.
 
         Parameters:
         ==========
@@ -92,6 +99,27 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     with Suyama's Parameterization. Here Montgomery
     arithmetic is used for fast computation of addition
     and doubling of points in elliptic curve.
+
+    This ECM method considers elliptic curves in Montgomery
+    form (E : b*y**2*z = x**3 + a*x**2*z + x*z**2) and involves
+    elliptic curve operations (mod N), where the elements in
+    Z are reduced (mod N). Since N is not a prime, E over FF(N)
+    is not really an elliptic curve but we can still do point additions
+    and doubling as if FF(N) was a field.
+
+    Stage 1 : The basic algorithm involves taking a random point (P) on an
+    elliptic curve in FF(N). The compute k*P using Montgomery ladder algorithm.
+    Let q be an unknown factor of N. Then the order of the curve E, |E(FF(q))|,
+    might be a smooth number that divides k. Then we have k = l * |E(FF(q))|
+    for some l. For any point belonging to the curve E, |E(FF(q))|*P = O,
+    hence k*P = l*|E(FF(q))|*P. Thus kP.z_cord = 0 (mod q), and the unknownn
+    factor of N (q) can be recovered by taking gcd(kP.z_cord, N).
+
+    Stage 2 : This is a continuation of Stage 1 if k*P != O. The idea utilize
+    the fact that even if kP != 0, the value of k might miss just one large
+    prime divisor of |E(FF(q))|. In this case we only need to compute the
+    scalar multiplication by p to get p*k*P = O. Here a second bound B2
+    restrict the size of possible values of p.
 
     Parameters:
     ===========
@@ -131,7 +159,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
         curve += 1
 
         #Suyama's Paramatrization
-        sigma = random.randint(6, n)
+        sigma = random.randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
         diff = v - u
@@ -146,7 +174,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
         a24 = (C + 2)*mod_inverse(4, n) % n
         Q = Point(u_3 , pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
-        g = gcd(Q.z_corr, n)
+        g = gcd(Q.z_cord, n)
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -158,12 +186,12 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
         #Stage 2 - Improved Standard Continuation
         S[1] = Q.double()
         S[2] = S[1].double()
-        beta[1] = (S[1].x_corr*S[1].z_corr) % n
-        beta[2] = (S[2].x_corr*S[2].z_corr) % n
+        beta[1] = (S[1].x_cord*S[1].z_cord) % n
+        beta[2] = (S[2].x_cord*S[2].z_cord) % n
 
         for d in range(3, D + 1):
             S[d] = S[d - 1].add(S[1], S[d - 2])
-            beta[d] = (S[d].x_corr*S[d].z_corr) % n
+            beta[d] = (S[d].x_cord*S[d].z_cord) % n
 
         g = 1
         B = B1 - 1
@@ -171,10 +199,11 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
         R = Q.mont_ladder(B)
 
         for r in  range(B, B2, 2*D):
-            alpha = (R.x_corr*R.z_corr) % n
+            alpha = (R.x_cord*R.z_cord) % n
             for q in sieve.primerange(r + 2, r + 2*D + 1):
                 delta = (q - r) // 2
-                f = (R.x_corr - S[d].x_corr)*(R.z_corr + S[d].z_corr) - alpha + beta[delta]
+                f = (R.x_cord - S[d].x_cord)*(R.z_cord + S[d].z_cord) -\
+                alpha + beta[delta]
                 g = (g*f) % n
             #Swap
             TT = R
@@ -191,8 +220,13 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
 
 
 def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
-    """Performs factorization using
-    Lenstra's Elliptic curve method.
+    """Performs factorization using Lenstra's Elliptic curve method.
+
+    This function repeatedly calls `ecm_one_factor` to compute the factors
+    of n. First all the small factors and taken out using trial division.
+    Then `ecm_one_factor` is used to compute one factor at a time. If the
+    current bound fails to produce a factor then the bounds are increased
+    depending on whether increase_bound is True or not.
 
     Parameters:
     ===========
