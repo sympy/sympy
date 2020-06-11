@@ -6,6 +6,7 @@ from .contains import Contains
 from .conditionset import ConditionSet
 from .ordinals import Ordinal, OmegaPower, ord0
 from .powerset import PowerSet
+from .indicator import indicator
 from ..core.singleton import S
 
 Reals = S.Reals
@@ -29,6 +30,8 @@ __all__ = [
     'Ordinal', 'OmegaPower', 'ord0',
 
     'PowerSet',
+
+    'indicator',
 
     'Reals', 'Naturals', 'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
 ]
