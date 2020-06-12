@@ -79,7 +79,7 @@ class VarianceMatrix(Variance, MatrixExpr):
     """
     Variance of a random matrix probability expression. Also known as
     Covariance matrix, auto-covariance matrix, dispersion matrix,
-    or variance–covariance matrix
+    or variance-covariance matrix
 
     Examples
     ========
@@ -165,7 +165,7 @@ class VarianceMatrix(Variance, MatrixExpr):
 
 class CrossCovarianceMatrix(Covariance, MatrixExpr):
     """
-    Covariance of a random atrix probability expression.
+    Covariance of a random matrix probability expression.
 
     Examples
     ========
