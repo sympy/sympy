@@ -107,7 +107,7 @@ class TransferFunction(Basic, EvalfMixin):
     transfer function using ``-`` operator.
 
     >>> G1 - G2
-    TransferFunction((s + 1)*(s + 6) - (s - 5)*(s + 3), (s - 5)*(s + 1), s)
+    TransferFunction(-(s - 5)*(s + 3) + (s + 1)*(s + 6), (s - 5)*(s + 1), s)
     >>> G1 - 4
     TransferFunction(26 - 3*s, s - 5, s)
     >>> G2 - (b + 7)
