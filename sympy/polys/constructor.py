@@ -176,7 +176,7 @@ def _construct_composite(coeffs, opt):
             coeffs.update(list(numer.values()))
             coeffs.update(list(denom.values()))
 
-    rationals = reals = gaussians = complexes = False
+    rationals = reals = gaussians = False
 
     for coeff in coeffs:
         if coeff.is_Rational:
