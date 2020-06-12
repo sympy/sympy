@@ -1717,6 +1717,22 @@ def test_sympy__stats__random_matrix_models__CircularSymplecticEnsemble():
     from sympy.stats import CircularSymplecticEnsemble
     assert _test_args(CircularSymplecticEnsemble('S', 3))
 
+def test_sympy__stats__symbolic_multivariate_probability__ExpectationMatrix():
+    from sympy.stats import ExpectationMatrix
+    from sympy.stats.rv import RandomMatrixSymbol
+    assert _test_args(ExpectationMatrix(RandomMatrixSymbol('R', 2, 1)))
+
+def test_sympy__stats__symbolic_multivariate_probability__VarianceMatrix():
+    from sympy.stats import VarianceMatrix
+    from sympy.stats.rv import RandomMatrixSymbol
+    assert _test_args(VarianceMatrix(RandomMatrixSymbol('R', 3, 1)))
+
+def test_sympy__stats__symbolic_multivariate_probability__CrossCovarianceMatrix():
+    from sympy.stats import CrossCovarianceMatrix
+    from sympy.stats.rv import RandomMatrixSymbol
+    assert _test_args(CrossCovarianceMatrix(RandomMatrixSymbol('R', 3, 1),
+                        RandomMatrixSymbol('X', 3, 1)))
+
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))
