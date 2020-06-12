@@ -2187,6 +2187,11 @@ class LatexPrinter(Printer):
             self._print(s.base_set),
             self._print(s.condition))
 
+    def _print_indicator(self, expr):
+        set_name = self._print(expr.args[0])
+        element = self._print(expr.args[1])
+        return r"1_{%s}(%s)" % (set_name, element)
+
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
         return r"\left\{%s\; |\; %s \in %s \right\}" % (

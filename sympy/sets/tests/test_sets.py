@@ -4,6 +4,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
     Matrix, Range, Add, symbols, zoo, Rational)
+from sympy.sets.sets import indicator
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -1581,3 +1582,18 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_indicator_function():
+    A = Interval(0, 1)
+    assert indicator(A, 0.5) == 1
+    assert indicator(A, -0.5) == 0
+    B = Union(Interval(0, 1), Interval(2, 3))
+    assert indicator(B, 0.5) == 1
+    assert indicator(B, 1.5) == 0
+    assert indicator(B, 2.5) == 1
+    C = FiniteSet(1, 2, 3)
+    assert indicator(C, 0) == 0
+    assert indicator(C, 1) == 1
+    symbolic_indicator = indicator(A, x)
+    assert symbolic_indicator.subs({x: -1}) == 0
+    assert symbolic_indicator.subs({x: 1}) == 1

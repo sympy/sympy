@@ -13,6 +13,7 @@ from sympy.core.decorators import (deprecated, sympify_method_args,
 from sympy.core.evalf import EvalfMixin
 from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
+from sympy.core.function import Function
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
@@ -2516,3 +2517,56 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
+
+class indicator(Function):
+    r"""
+    Indicator function (or the Characteristic function)
+
+    .. math::
+        1_A:X  \rightarrow \{0, 1\}
+        1_A(x) :=  \begin{cases} 1 & \text{if x } \in \text{A} \\ 0 & \text{if x } \notin \text{A} \end{cases}
+
+    Parameters
+    ==========
+
+    A : the set
+    x : the value
+
+    Examples
+    ========
+
+    >>> from sympy.sets import Union, Interval, FiniteSet, indicator
+    >>> A = Union(Interval(0, 1), Interval(2, 3))
+    >>> indicator(A, 0.5)
+    1
+    >>> indicator(A, 1.5)
+    0
+    >>> indicator(A, 2.5)
+    1
+    >>> B = FiniteSet(1, 2, 3)
+    >>> indicator(B, 0)
+    0
+    >>> indicator(B, 1)
+    1
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Indicator_function
+    .. [2] https://mathworld.wolfram.com/CharacteristicFunction.html
+
+    """
+    is_integer = True
+    is_nonnegative = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, A: Set, x: Basic):
+        x_in_a = A.contains(x)
+        if x_in_a is true:
+            return 1
+        elif x_in_a is false:
+            return 0
+

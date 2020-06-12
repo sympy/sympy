@@ -48,7 +48,7 @@ from sympy import MatrixSymbol, ln
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
 from sympy.sets.sets import \
-    Union, Intersection, Complement, SymmetricDifference, ProductSet
+    Union, Intersection, Complement, SymmetricDifference, ProductSet, indicator
 
 import sympy as sym
 
@@ -1095,6 +1095,11 @@ def test_latex_ConditionSet():
         r"\left\{x \mid x \in \mathbb{R} \wedge x^{2} = 1 \right\}"
     assert latex(ConditionSet(x, Eq(x**2, 1), S.UniversalSet)) == \
         r"\left\{x \mid x^{2} = 1 \right\}"
+
+
+def test_latex_set_indicator():
+    assert latex(indicator(Interval(0, 1), x)) == r"1_{\left[0, 1\right]}(x)"
+    assert latex(indicator(FiniteSet(1, 3), x)) == r"1_{\left\{1, 3\right\}}(x)"
 
 
 def test_latex_ComplexRegion():
