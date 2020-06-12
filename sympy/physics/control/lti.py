@@ -83,8 +83,7 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf7 = TransferFunction(s + a, s - a, s)
     >>> tf7**3
     TransferFunction((a + s)**3, (-a + s)**3, s)
-    >>> tf7 = TransferFunction(s, s**2 + p, s)
-    >>> tf8**0
+    >>> tf7**0
     TransferFunction(1, 1, s)
     >>> tf8 = TransferFunction(p + 4, p - 3, p)
     >>> tf8**-1
