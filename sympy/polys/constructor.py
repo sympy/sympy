@@ -188,7 +188,6 @@ def _construct_composite(coeffs, opt):
         else:
             is_complex = pure_complex(coeff)
             if is_complex is not None:
-                complexes = True
                 x, y = is_complex
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):

@@ -871,11 +871,6 @@ def test_gaussian_domains():
             assert G.is_nonnegative(qi) is False
             assert G.is_nonpositive(qi) is False
 
-        domains = [
-            ZZ_gmpy(), ZZ_python(), QQ_gmpy(), QQ_python(),
-            AlgebraicField(QQ, I)
-        ]
-
         for K in [ZZ_gmpy(), ZZ_python(), QQ_gmpy(), QQ_python(), AlgebraicField(QQ, I)]:
             assert G.convert(K(2)) == G(2, 0)
             assert G.convert(K(2), K) == G(2, 0)

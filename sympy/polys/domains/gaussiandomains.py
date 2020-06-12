@@ -1,7 +1,6 @@
 """Domains of Gaussian type."""
 
-from sympy.core.basic import Basic
-from sympy.core.numbers import Rational, I
+from sympy.core.numbers import I
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.domains.algebraicfield import AlgebraicField
