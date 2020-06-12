@@ -1,5 +1,4 @@
 from sympy.core import S
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 
 from sympy.core import Add, Mul, Pow, S, Eq
@@ -113,7 +112,7 @@ class CythonCodePrinter(CodePrinter):
         """
         from sympy.matrices.expressions.matexpr import MatrixSymbol
 
-        if isinstance(assign_to, string_types):
+        if isinstance(assign_to, str):
             if expr.is_Matrix:
                 assign_to = MatrixSymbol(assign_to, *expr.shape)
             else:
@@ -379,7 +378,7 @@ class CythonCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

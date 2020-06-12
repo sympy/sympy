@@ -595,9 +595,9 @@ def test_ccode_unused_array_arg():
         '#include "test.h"\n'
         '#include <math.h>\n'
         'double test(double *x) {\n'
-        '   double test_result;\n'
-        '   test_result = 1.0;\n'
-        '   return test_result;\n'
+        '   double out1;\n'
+        '   out1 = 1.0;\n'
+        '   return out1;\n'
         '}\n'
     )
     assert source == expected

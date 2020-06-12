@@ -19,8 +19,6 @@ from functools import wraps
 from itertools import chain
 
 from sympy.core import S, Number
-from sympy.core.compatibility import string_types, range
-from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
@@ -407,7 +405,7 @@ class C89CodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
+        return ('for (int {target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
 

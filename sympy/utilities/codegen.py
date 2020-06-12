@@ -87,7 +87,7 @@ from collections import OrderedDict
 from sympy import __version__ as sympy_version
 from sympy.codegen import Assignment, WithBody
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO, string_types
+from sympy.core.compatibility import is_sequence, StringIO
 from sympy.printing.ccode import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
@@ -906,7 +906,8 @@ class CCodeGen(CodeGen):
     standard = 'c99'
 
     default_datatypes = {'int': 'int',
-                         'float': 'double'}
+                         'float': 'double',
+                         'complex': 'double'}
 
     def __init__(self, project="project", printer=None,
                  preprocessor_statements=None, cse=False, settings={}):
@@ -1143,16 +1144,18 @@ class FCodeGen(CCodeGen):
     interface_extension = "h"
 
     default_datatypes = {'int': 'INTEGER*4',
-                         'float': 'REAL*8'}
+                         'float': 'REAL*8',
+                         'complex': 'COMPLEX*16'}
 
     def __init__(self, project='project', printer=None, settings={}):
         super().__init__(project)
         self.printer = printer or FCodePrinter(settings)
 
-    def __init__(self, project='project', printer=None, settings={}):
+    def _get_header(self):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("!" + "*"*78 + '\n')
+        tmp = header_comment % {"version": sympy_version,
             "project": self.project}
         for line in tmp.splitlines():
             code_lines.append("!*%s*\n" % line.center(76))
@@ -1362,7 +1365,8 @@ class CythonCodeGen(CodeGen):
     has_output = False
 
     default_datatypes = {'int': 'int',
-                         'float': 'double'}
+                         'float': 'double',
+                         'complex': 'double'}
 
     def __init__(self, project='project', printer=None, settings={}):
         super(CythonCodeGen, self).__init__(project)
@@ -1538,7 +1542,7 @@ class NumPyCodeGen(CodeGen):
                 code_lines.append("#\n")
             else:
                 code_lines.append("#   %s\n" % line)
-        code_lines.append("import numpy")
+        code_lines.append("import numpy\n")
         return code_lines
 
     def _preprocessor_statements(self, prefix):
@@ -1943,7 +1947,8 @@ class RustCodeGen(CodeGen):
     code_extension = "rs"
 
     default_datatypes = {'int': 'i32',
-                         'float': 'f64'}
+                         'float': 'f64',
+                         'complex': 'float'}
 
     has_output = False
 
