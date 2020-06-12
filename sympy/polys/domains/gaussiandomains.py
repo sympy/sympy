@@ -24,12 +24,11 @@ class GaussianElement(DomainElement):
 
     @classmethod
     def new(cls, x, y):
+        """Create a new GaussianElement of the same domain."""
         return cls(x, y)
 
-    def as_expr(self):
-        return Rational(self.x) + I * Rational(self.y)
-
     def parent(self):
+        """The domain that this is an element of (ZZ_I or QQ_I)"""
         return self._parent
 
     def __hash__(self):
@@ -45,7 +44,7 @@ class GaussianElement(DomainElement):
         return self.new(-self.x, -self.y)
 
     def __repr__(self):
-        return "%s(%s, %s)" % (type(self).__name__, self.x, self.y)
+        return "%s(%s, %s)" % (self._parent.rep, self.x, self.y)
 
     def __str__(self):
         return str(self._parent.to_sympy(self))
@@ -96,9 +95,16 @@ class GaussianElement(DomainElement):
             return self.new(1, 0)
         if exp < 0:
             self, exp = 1/self, -exp
-        prod = self
-        for n in range(exp-1):
-            prod *= self
+        if exp == 1:
+            return self
+        pow2 = self
+        prod = self if exp % 2 else self._parent.one
+        exp //= 2
+        while exp:
+            pow2 *= pow2
+            if exp % 2:
+                prod *= pow2
+            exp //= 2
         return prod
 
     def __bool__(self):
@@ -234,20 +240,6 @@ class GaussianDomain():
         else:
             raise CoercionFailed("{} is not Gaussian".format(a))
 
-    def _convert(self, element, base=None):
-        """Convert ``element`` to ``self.dtype``.
-
-        Raises CoercionFailed on failure.
-        """
-        if isinstance(element, self.dtype):
-            return element
-        elif isinstance(element, GaussianElement):
-            return self.new(element.x, element.y)
-        elif isinstance(element, Basic):
-            return self.from_sympy(element)
-        else:  # convertible to base type or failure
-            return self.new(element, 0)
-
     def inject(self, *gens):
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
@@ -271,18 +263,23 @@ class GaussianDomain():
         return False
 
     def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY mpz to ``self.dtype``."""
         return K1(a)
 
     def from_ZZ_python(K1, a, K0):
+        """Convert a ZZ_python element to ``self.dtype``."""
         return K1(a)
 
     def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY mpq to ``self.dtype``."""
         return K1(a)
 
     def from_QQ_python(K1, a, K0):
+        """Convert a QQ_python element to ``self.dtype``."""
         return K1(a)
 
     def from_AlgebraicField(K1, a, K0):
+        """Convert an element from ZZ<I> or QQ<I> to ``self.dtype``."""
         if K0.ext.args[0] == I:
             return K1.from_sympy(K0.to_sympy(a))
 
@@ -323,17 +320,21 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         return (d,) + args if args else d
 
     def gcd(self, a, b):
+        """Greatest common divisor of a and b over ZZ_I."""
         while b:
             a, b = b, a % b
         return self.normalize(a)
 
     def lcm(self, a, b):
+        """Least common multiple of a and b over ZZ_I."""
         return (a * b) // self.gcd(a, b)
 
     def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a ZZ_I element to ZZ_I."""
         return a
 
     def from_GaussianRationalField(K1, a, K0):
+        """Convert a QQ_I element to ZZ_I."""
         return K1.new(ZZ.convert(a.x), ZZ.convert(a.y))
 
 ZZ_I = GaussianInteger._parent = GaussianIntegerRing()
@@ -380,11 +381,11 @@ class GaussianRationalField(GaussianDomain, Field):
         return ZZ_I(denom_ZZ, ZZ.zero)
 
     def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a ZZ_I element to QQ_I."""
         return K1.new(a.x, a.y)
 
     def from_GaussianRationalField(K1, a, K0):
+        """Convert a QQ_I element to QQ_I."""
         return a
-
-
 
 QQ_I = GaussianRational._parent = GaussianRationalField()

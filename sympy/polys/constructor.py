@@ -198,7 +198,6 @@ def _construct_composite(coeffs, opt):
                     pass # XXX: CC?
 
     if reals:
-        if complexes: 1/0 # XXX: CC?
         max_prec = max([c._prec for c in coeffs])
         ground = RealField(prec=max_prec)
     elif gaussians:
