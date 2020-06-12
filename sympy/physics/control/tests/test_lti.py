@@ -10,13 +10,11 @@ def test_TransferFunction_construction():
     assert tf.num == (s + 1)
     assert tf.den == (s**2 + s + 1)
     assert tf.args == (s + 1, s**2 + s + 1, s)
-    assert tf.bound_symbols == [s]
 
     tf1 = TransferFunction(s + 4, s - 5, s)
     assert tf1.num == (s + 4)
     assert tf1.den == (s - 5)
     assert tf1.args == (s + 4, s - 5, s)
-    assert tf1.bound_symbols == [s]
 
     # using different polynomial variables.
     tf2 = TransferFunction(p + 3, p**2 - 9, p)
@@ -26,7 +24,6 @@ def test_TransferFunction_construction():
 
     tf3 = TransferFunction(p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
     assert tf3.args == (p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
-    assert tf3.bound_symbols == [p]
 
     # no pole-zero cancellation on its own.
     tf4 = TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)
@@ -35,15 +32,12 @@ def test_TransferFunction_construction():
 
     tf4_ = TransferFunction(p + 2, p + 2, p)
     assert tf4_.args == (p + 2, p + 2, p)
-    assert tf4_.bound_symbols == [p]
 
     tf5 = TransferFunction(s - 1, 4 - p, s)
     assert tf5.args == (s - 1, 4 - p, s)
-    assert tf5.bound_symbols == [s]
 
     tf5_ = TransferFunction(s - 1, s - 1, s)
     assert tf5_.args == (s - 1, s - 1, s)
-    assert tf5.bound_symbols == [s]
 
     tf6 = TransferFunction(5, 6, s)
     assert tf6.num == 5
@@ -61,11 +55,9 @@ def test_TransferFunction_construction():
 
     tf9 = TransferFunction(a*s**3 + b*s**2 + g*s + d, d*p + g*p**2 + g*s, s)
     assert tf9.args == (a*s**3 + b*s**2 + d + g*s, d*p + g*p**2 + g*s, s)
-    assert tf9.bound_symbols == [s]
 
     tf10 = TransferFunction(p**3 + d, g*s**2 + d*s + a, p)
     assert tf10.args == (d + p**3, a + d*s + g*s**2, p)
-    assert tf10.bound_symbols == [p]
 
     tf11 = TransferFunction(a1*s + a0, b2*s**2 + b1*s + b0, s)
     assert tf11.num == (a0 + a1*s)
