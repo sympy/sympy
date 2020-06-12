@@ -143,7 +143,7 @@ __all__ = [
 
     'Probability', 'Expectation', 'Variance', 'Covariance',
 
-    'ExpectationMatrix', 'VarianceMatrix', 'CovarianceMatrix'
+    'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
 ]
 from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
@@ -188,4 +188,4 @@ from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance)
 
 from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
-        CovarianceMatrix)
+        CrossCovarianceMatrix)

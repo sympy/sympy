@@ -417,8 +417,8 @@ class Covariance(Expr):
         arg2 = _sympify(arg2)
 
         if arg1.is_Matrix or arg2.is_Matrix:
-            from sympy.stats.symbolic_multivariate_probability import CovarianceMatrix
-            return CovarianceMatrix(arg1, arg2, condition)
+            from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix
+            return CrossCovarianceMatrix(arg1, arg2, condition)
 
         if kwargs.pop('evaluate', global_parameters.evaluate):
             arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
