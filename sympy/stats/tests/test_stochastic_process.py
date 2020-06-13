@@ -289,6 +289,7 @@ def test_PoissonProcess():
     assert M.lamda == 5
     raises(ValueError, lambda: Z.split(3, 2)) # 2+3 != 9
 
+    raises(ValueError, lambda :P(Eq(X(t), 0), Contains(t, Interval.Lopen(1, 3)) & Eq(X(1), 0)))
     # check if it handles queries with two random variables in one args
     res1 = P(Eq(N(3), N(5)))
     assert res1 == P(Eq(N(t), 0), Contains(t, Interval(3, 5)))
@@ -299,19 +300,25 @@ def test_PoissonProcess():
     assert res3 == P(Eq(N(t), 0), Contains(t, Interval(1, 3)))
 
     # tests from https://www.probabilitycourse.com/chapter11/11_1_2_basic_concepts_of_the_poisson_process.php
-    X = PoissonProcess('X', 2)
+    X = PoissonProcess('X', 10) # 11.1
+    assert P(Eq(X(S(1)/3), 3) & Eq(X(1), 10)).evalf() == 0.0325439914084338
+    assert P(Eq(X(S(1)/3), 3), Eq(X(1), 10)).evalf() == 0.0325439914084338
+    assert P(Eq(X(1), 1), Eq(X(S(1)/3), 3)) == 0
+    assert P(Eq(X(1), 10), Eq(X(S(1)/3), 3)) == P(Eq(X(S(2)/3), 7))
+
+    X = PoissonProcess('X', 2) # 11.2
     assert P(X(S(1)/2) < 1) == exp(-1)
-    assert P(Eq(X(3), 0), Eq(X(1), 0)) == exp(-4)
-    assert P(Eq(X(4), 4), Eq(X(2), 3)) == exp(-4)
     assert P(X(3) < 1, Eq(X(1), 0)) == exp(-4)
+    assert P(Eq(X(4), 3), Eq(X(2), 3)) == exp(-4)
 
-    # few properties check
-    assert P(Eq(X(2), 4), X(1) > 1) == P(Eq(X(1), 1) | (Eq(X(1), 0) | (Eq(X(1), 0))))
-    assert P(X(2) <= 3, X(1) >= 1) == 5*exp(-2)
-    assert P(X(2) <= 3, X(1) > 1) == P(Eq(X(2), 2), Eq(X(1), 2)) +\
-        P(Eq(X(2), 3), Eq(X(1), 2)) + P(Eq(X(2), 3), Eq(X(1), 3))
-    assert P(X(2) < 3, X(1) > 1) == P(Eq(X(1), 0))
+    X = PoissonProcess('X', 3)
+    assert P(Eq(X(2), 5) & Eq(X(1), 2)) == Rational(81, 4)*exp(-6)
 
+    # check few properties
+    assert P(X(2) <= 3, X(1)>=1) == 3*P(Eq(X(1), 0)) + 2*P(Eq(X(1), 1)) + P(Eq(X(1), 2))
+    assert P(X(2) <= 3, X(1) > 1) == 2*P(Eq(X(1), 0)) + 1*P(Eq(X(1), 1))
+    assert P(Eq(X(2), 5) & Eq(X(1), 2)) == P(Eq(X(1), 3))*P(Eq(X(1), 2))
+    assert P(Eq(X(3), 4), Eq(X(1), 3)) == P(Eq(X(2), 1))
 
 def test_WienerProcess():
     X = WienerProcess("X")

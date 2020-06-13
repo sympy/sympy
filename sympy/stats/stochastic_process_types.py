@@ -5,7 +5,7 @@ import itertools
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
-                   linsolve, eye, Or, Not, Intersection, factorial,
+                   linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet)
 from sympy.core.relational import Relational
@@ -1066,15 +1066,14 @@ class _SubstituteRV:
                 not isinstance(new_givencondition, (Relational, Boolean)):
             raise ValueError("%s is not a relational or combination of relationals"
                     % (new_givencondition))
-        if new_givencondition == False:
+        if new_givencondition == False or new_condition == False:
             return S.Zero
         if new_condition == True:
             return S.One
-        if new_condition == False:
-            return S.Zero
         if not isinstance(new_condition, (Relational, Boolean)):
             raise ValueError("%s is not a relational or combination of relationals"
                     % (new_condition))
+
         if new_givencondition is not None:  # If there is a condition
         # Recompute on new conditional expr
             return self._probability(given(new_condition, new_givencondition, **kwargs), **kwargs)
@@ -1195,38 +1194,75 @@ class CountingProcess(ContinuousTimeStochasticProcess):
 
         return _SubstituteRV._expectation(expr, evaluate=evaluate, **kwargs)
 
-    def _check_given_condition(self, condition, given_condition, evaluate=True, **kwargs):
-        if isinstance(given_condition, (And, Or)):
-            given_cond_args = given_condition.args
+    def _solve_argwith_tworvs(self, arg):
+        if arg.args[0].key >= arg.args[1].key or isinstance(arg, Eq):
+            diff_key = abs(arg.args[0].key - arg.args[1].key)
+            rv = arg.args[0]
+            arg = arg.__class__(rv.pspace.process(diff_key), 0)
         else:
-            given_cond_args = (given_condition, )
-        max_key = 0
-        max_arg = given_cond_args[0]
-        for arg in given_cond_args:
-            if isinstance(arg.args[0], RandomIndexedSymbol) and arg.args[0].key.is_number:
-                if max_key < arg.args[0].key:
-                    max_key =  arg.args[0].key
-                    max_arg = arg
+            diff_key = arg.args[1].key - arg.args[0].key
+            rv = arg.args[1]
+            arg = arg.__class__(rv.pspace.process(diff_key), 0)
+        return arg
+
+    def _solve_numerical(self, condition, given_condition=None):
+        if isinstance(condition, And):
+            args_list = list(condition.args)
+        else:
+            args_list = [condition]
+        if given_condition is not None:
+            if isinstance(given_condition, And):
+                args_list.extend(list(given_condition.args))
             else:
-                return None, None
-        rvs = list(condition.atoms(RandomIndexedSymbol))
-        if len(rvs) > 1:
-            return None, None
-        if not isinstance(max_arg, Eq):
-            working_set = Intersection(self.state_space, max_arg.as_set())
-        else:
-            working_set = Intersection(self.state_space, Interval(max_arg.args[1], 0))
-        cond_args = (condition, )
-        for arg in cond_args:
-            if isinstance(arg.args[0], RandomIndexedSymbol) and arg.args[0].key.is_number:
-                rv = arg.args[0].pspace.process(abs(arg.args[0].key - max_key))
-                if not isinstance(arg, Eq):
-                    working_set = Intersection(working_set, arg.as_set())
+                args_list.extend([given_condition])
+        # sort the args based on timestamp to get the independent increments in
+        # each segment using all the condition args as well as given_condition args
+        args_list = sorted(args_list, key=lambda x: x.args[0].key)
+        result = []
+        cond_args = list(condition.args) if isinstance(condition, And) else [condition]
+        if args_list[0] in cond_args and not (is_random(args_list[0].args[0])
+                        and is_random(args_list[0].args[1])):
+            result.append(_SubstituteRV._probability(args_list[0]))
+
+        if is_random(args_list[0].args[0]) and is_random(args_list[0].args[1]):
+            arg = self._solve_argwith_tworvs(args_list[0])
+            result.append(_SubstituteRV._probability(arg))
+
+        for i in range(len(args_list) - 1):
+            curr, nex = args_list[i], args_list[i + 1]
+            diff_key = nex.args[0].key - curr.args[0].key
+            working_set = curr.args[0].pspace.process.state_space
+            if curr.args[1] > nex.args[1]: #impossible condition so return 0
+                result.append(0)
+                break
+            if isinstance(curr, Eq):
+                working_set = Intersection(working_set, Interval.Lopen(curr.args[1], oo))
+            else:
+                working_set = Intersection(working_set, curr.as_set())
+            if isinstance(nex, Eq):
+                working_set = Intersection(working_set, Interval(-oo, nex.args[1]))
+            else:
+                working_set = Intersection(working_set, nex.as_set())
+            if working_set == EmptySet:
+                rv = Eq(curr.args[0].pspace.process(diff_key), 0)
+                result.append(_SubstituteRV._probability(rv))
+            else:
+                if working_set.is_finite_set:
+                    if isinstance(curr, Eq) and isinstance(nex, Eq):
+                        rv = Eq(curr.args[0].pspace.process(diff_key), len(working_set))
+                        result.append(_SubstituteRV._probability(rv))
+                    elif isinstance(curr, Eq) ^ isinstance(nex, Eq):
+                        result.append(Add(*[_SubstituteRV._probability(Eq(
+                        curr.args[0].pspace.process(diff_key), x))
+                                for x in range(len(working_set))]))
+                    else:
+                        n = len(working_set)
+                        result.append(Add(*[(n - x)*_SubstituteRV._probability(Eq(
+                        curr.args[0].pspace.process(diff_key), x)) for x in range(n)]))
                 else:
-                    working_set = Intersection(working_set, Interval.Ropen(0, arg.args[1]))
-            else:
-                return None, None
-        return rv, working_set
+                    result.append(_SubstituteRV._probability(
+                    curr.args[0].pspace.process(diff_key) <= working_set._sup - working_set._inf))
+        return Mul(*result)
 
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
@@ -1249,15 +1285,43 @@ class CountingProcess(ContinuousTimeStochasticProcess):
         Probability of the condition
 
         """
+        check_numeric = True
+        if isinstance(condition, (And, Or)):
+            cond_args = condition.args
+        else:
+            cond_args = (condition, )
+        # check that condition args are numeric or not
+        if not all(arg.args[0].key.is_number for arg in cond_args):
+            check_numeric = False
         if given_condition is not None:
+            check_given_numeric = True
+            if isinstance(given_condition, (And, Or)):
+                given_cond_args = given_condition.args
+            else:
+                given_cond_args = (given_condition, )
+            # check that given condition args are numeric or not
+            if given_condition.has(Contains):
+                check_given_numeric = False
             # Handle numerical queries
-            rv, working_set = self._check_given_condition(condition, given_condition, evaluate, **kwargs)
-            if rv is not None:
-                if working_set == EmptySet:
-                    return _SubstituteRV._probability(Eq(rv, 0), evaluate=evaluate, **kwargs)
-                cond1 = rv >= 0
-                cond2 = rv <= (working_set._sup - working_set._inf)
-                return _SubstituteRV._probability(cond1 & cond2, evaluate=evaluate, **kwargs)
+            if check_numeric and check_given_numeric:
+                res = []
+                if isinstance(condition, Or):
+                    res.append(Add(*[self._solve_numerical(arg, given_condition)
+                            for arg in condition.args]))
+                if isinstance(given_condition, Or):
+                    res.append(Add(*[self._solve_numerical(condition, arg)
+                            for arg in given_condition.args]))
+                if res:
+                    return Add(*res)
+                return self._solve_numerical(condition, given_condition)
+
+            # No numeric queries, go by Contains?... then check that all the
+            # given condition are in form of `Contains`
+            if not all(arg.has(Contains) for arg in given_cond_args):
+                raise ValueError("If given condition is passed with `Contains`, then "
+                "please pass the evaluated condition with its corresponding information "
+                "in terms of intervals of each time stamp to be passed in given condition.")
+
             intervals, rv_swap = get_timerv_swaps(condition, given_condition)
             # they are independent when they have non-overlapping intervals
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
@@ -1269,23 +1333,8 @@ class CountingProcess(ContinuousTimeStochasticProcess):
                 condition = condition.subs(rv_swap)
             else:
                 return Probability(condition, given_condition)
-        if isinstance(condition, (And, Or)):
-            cond_args = condition.args
-        else: # single condition
-            cond_args = (condition, )
-            for arg in cond_args:
-                if is_random(arg.args[0]) and is_random(arg.args[1]): # like: X(4) > X(2), Eq(X(2), X(3))
-                    if arg.args[0].key>=arg.args[1].key:
-                        diff_key = arg.args[0].key - arg.args[1].key
-                        rv = arg.args[0]
-                        condition = condition.subs({rv: rv.pspace.process(diff_key),
-                        arg.args[1]: 0})
-                    else:
-                        diff_key = arg.args[1].key - arg.args[0].key
-                        rv = arg.args[1]
-                        condition = condition.subs({rv: rv.pspace.process(diff_key),
-                        arg.args[0]: 0})
-
+        if check_numeric:
+            return self._solve_numerical(condition)
         return _SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
 
 class PoissonProcess(CountingProcess):
