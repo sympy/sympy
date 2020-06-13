@@ -3224,12 +3224,17 @@ class Expr(Basic, EvalfMixin):
             series = self._eval_nseries(x, n=n, logx=logx)
         e = series.removeO()
         yield e
+        if e.is_zero:
+            return
+
         while 1:
             while 1:
                 n += 1
                 series = self._eval_nseries(x, n=n, logx=logx).removeO()
                 if e != series:
                     break
+                if (series - self).cancel() is S.Zero:
+                    return
             yield series - e
             e = series
 

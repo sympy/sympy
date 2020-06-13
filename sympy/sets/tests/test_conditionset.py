@@ -1,7 +1,7 @@
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
-    EmptySet, Union, Contains)
-from sympy import (Symbol, Eq, S, Abs, sin, pi, Interval,
-    And, Mod, oo, Function)
+    EmptySet, Union, Contains, ImageSet)
+from sympy import (Symbol, Eq, Ne, S, Abs, sin, asin, pi, Interval,
+    And, Mod, oo, Function, Lambda)
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 
@@ -85,6 +85,30 @@ def test_free_symbols():
         ).free_symbols == {z}
     assert ConditionSet(x, Eq(x, 0), FiniteSet(x, z)
         ).free_symbols == {x, z}
+    assert ConditionSet(x, Eq(x, 0), ImageSet(Lambda(y, y**2), S.Integers)
+        ).free_symbols == set()
+
+
+def test_bound_symbols():
+    assert ConditionSet(x, Eq(y, 0), FiniteSet(z)
+        ).bound_symbols == {x}
+    assert ConditionSet(x, Eq(x, 0), FiniteSet(x, y)
+        ).bound_symbols == {x}
+    assert ConditionSet(x, x < 10, ImageSet(Lambda(y, y**2), S.Integers)
+        ).bound_symbols == {x}
+    assert ConditionSet(x, x < 10, ConditionSet(y, y > 1, S.Integers)
+        ).bound_symbols == {x}
+
+
+def test_as_dummy():
+    _0 = Symbol('_0')
+    assert ConditionSet(x, x < 1, Interval(y, oo)
+        ).as_dummy() == ConditionSet(_0, _0 < 1, Interval(y, oo))
+    assert ConditionSet(x, x < 1, Interval(x, oo)
+        ).as_dummy() == ConditionSet(_0, _0 < 1, Interval(x, oo))
+    assert ConditionSet(x, x < 1, ImageSet(Lambda(y, y**2), S.Integers)
+        ).as_dummy() == ConditionSet(
+            _0, _0 < 1, ImageSet(Lambda(_0, _0**2), S.Integers))
 
 
 def test_subs_CondSet():
@@ -125,9 +149,17 @@ def test_subs_CondSet():
     assert ConditionSet(
         n, n < x, Interval(0, oo)).subs(x, p) == Interval(0, oo)
     assert ConditionSet(
-        n, n < x, Interval(-oo, 0)).subs(x, p) == S.EmptySet
+        n, n < x, Interval(-oo, 0)).subs(x, p) == Interval(-oo, 0)
+
     assert ConditionSet(f(x), f(x) < 1, {w, z}
         ).subs(f(x), y) == ConditionSet(y, y < 1, {w, z})
+
+    # issue 17341
+    k = Symbol('k')
+    img1 = ImageSet(Lambda(k, 2*k*pi + asin(y)), S.Integers)
+    img2 = ImageSet(Lambda(k, 2*k*pi + asin(S.One/3)), S.Integers)
+    assert ConditionSet(x, Contains(
+        y, Interval(-1,1)), img1).subs(y, S.One/3).dummy_eq(img2)
 
 
 def test_subs_CondSet_tebr():
@@ -146,7 +178,6 @@ def test_dummy_eq():
     assert c.dummy_eq(C(y, y < 1, I))
     assert c.dummy_eq(1) == False
     assert c.dummy_eq(C(x, x < 1, S.Reals)) == False
-    raises(ValueError, lambda: c.dummy_eq(C(x, x < 1, S.Reals), z))
 
     c1 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
     c2 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
@@ -155,6 +186,16 @@ def test_dummy_eq():
     assert c1.dummy_eq(c3) is False
     assert c.dummy_eq(c1) is False
     assert c1.dummy_eq(c) is False
+
+    # issue 19496
+    m = Symbol('m')
+    n = Symbol('n')
+    a = Symbol('a')
+    d1 = ImageSet(Lambda(m, m*pi), S.Integers)
+    d2 = ImageSet(Lambda(n, n*pi), S.Integers)
+    c1 = ConditionSet(x, Ne(a, 0), d1)
+    c2 = ConditionSet(x, Ne(a, 0), d2)
+    assert c1.dummy_eq(c2)
 
 
 def test_contains():

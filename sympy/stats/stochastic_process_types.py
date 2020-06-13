@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import random
 
 import itertools
 
@@ -13,10 +14,10 @@ from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent, is_random)
+                           dependent, is_random, sample_iter)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
+from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify
@@ -199,6 +200,9 @@ class StochasticProcess(Basic):
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
+
+    def sample(self):
+        raise NotImplementedError("Abstract method for sampling queries.")
 
 class DiscreteTimeStochasticProcess(StochasticProcess):
     """
@@ -736,6 +740,31 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         distribution of a discrete Markov chain.
         """
         return self.fixed_row_vector()
+
+    def sample(self):
+        """
+        Returns
+        =======
+
+        sample: iterator object
+            iterator object containing the sample
+
+        """
+        if not isinstance(self.transition_probabilities, (Matrix, ImmutableMatrix)):
+            raise ValueError("Transition Matrix must be provided for sampling")
+        Tlist = self.transition_probabilities.tolist()
+        samps = [random.choice(list(self.state_space))]
+        yield samps[0]
+        time = 1
+        densities = {}
+        for state in self.state_space:
+            states = list(self.state_space)
+            densities[state] = {states[i]: Tlist[state][i]
+                        for i in range(len(states))}
+        while time < S.Infinity:
+            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
+            yield samps[time]
+            time += 1
 
 class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     """

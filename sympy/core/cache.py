@@ -1,8 +1,5 @@
 """ Caching facility for SymPy """
 
-from distutils.version import LooseVersion as V
-
-
 class _cache(list):
     """ List of cached functions """
 
@@ -41,98 +38,49 @@ CACHE = _cache()
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-try:
-    import fastcache
-    from warnings import warn
-    # the version attribute __version__ is not present for all versions
-    if not hasattr(fastcache, '__version__'):
-        warn("fastcache version >= 0.4.0 required", UserWarning)
-        raise ImportError
-        # ensure minimum required version of fastcache is present
-    if V(fastcache.__version__) < '0.4.0':
-        warn("fastcache version >= 0.4.0 required, detected {}"\
-             .format(fastcache.__version__), UserWarning)
-        raise ImportError
-    # Do not use fastcache if running under pypy
-    import platform
-    if platform.python_implementation() == 'PyPy':
-        raise ImportError
-    lru_cache = fastcache.clru_cache
+from functools import lru_cache
 
-except ImportError:
-    from sympy.core.compatibility import lru_cache
+def __cacheit(maxsize):
+    """caching decorator.
 
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
+        important: the result of cached function must be *immutable*
 
 
-           Examples
-           ========
+        Examples
+        ========
 
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return a+b
+        >>> from sympy.core.cache import cacheit
+        >>> @cacheit
+        ... def f(a, b):
+        ...    return a+b
 
-           >>> @cacheit
-           ... def f(a, b): # noqa: F811
-           ...    return [a, b] # <-- WRONG, returns mutable object
+        >>> @cacheit
+        ... def f(a, b): # noqa: F811
+        ...    return [a, b] # <-- WRONG, returns mutable object
 
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-            from .decorators import wraps
+        to force cacheit to check returned results mutability and consistency,
+        set environment variable SYMPY_USE_CACHE to 'debug'
+    """
+    def func_wrapper(func):
+        from .decorators import wraps
 
-            cfunc = lru_cache(maxsize, typed=True)(func)
+        cfunc = lru_cache(maxsize, typed=True)(func)
 
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                try:
-                    retval = cfunc(*args, **kwargs)
-                except TypeError:
-                    retval = func(*args, **kwargs)
-                return retval
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                retval = cfunc(*args, **kwargs)
+            except TypeError:
+                retval = func(*args, **kwargs)
+            return retval
 
-            wrapper.cache_info = cfunc.cache_info
-            wrapper.cache_clear = cfunc.cache_clear
+        wrapper.cache_info = cfunc.cache_info
+        wrapper.cache_clear = cfunc.cache_clear
 
-            CACHE.append(wrapper)
-            return wrapper
+        CACHE.append(wrapper)
+        return wrapper
 
-        return func_wrapper
-else:
-
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
-
-
-           Examples
-           ========
-
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return a+b
-
-           >>> @cacheit
-           ... def f(a, b): # noqa: F811
-           ...    return [a, b] # <-- WRONG, returns mutable object
-
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-
-            cfunc = fastcache.clru_cache(maxsize, typed=True, unhashable='ignore')(func)
-            CACHE.append(cfunc)
-            return cfunc
-
-        return func_wrapper
+    return func_wrapper
 ########################################
 
 

@@ -20,7 +20,7 @@ from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
-    Pow, Unequality)
+    Pow, Unequality, Wild)
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
@@ -1444,6 +1444,25 @@ def _solve(f, *symbols, **flags):
                 sol = simplify(sol)
             return [sol]
 
+        poly = None
+        # check for a single non-symbol generator
+        dums = f_num.atoms(Dummy)
+        D = f_num.replace(
+            lambda i: isinstance(i, Add) and symbol in i.free_symbols,
+            lambda i: Dummy())
+        if not D.is_Dummy:
+            dgen = D.atoms(Dummy) - dums
+            if len(dgen) == 1:
+                d = dgen.pop()
+                w = Wild('g')
+                gen = f_num.match(D.xreplace({d: w}))[w]
+                spart = gen.as_independent(symbol)[1].as_base_exp()[0]
+                if spart == symbol:
+                    try:
+                        poly = Poly(f_num, spart)
+                    except PolynomialError:
+                        pass
+
         result = False  # no solution was obtained
         msg = ''  # there is no failure message
 
@@ -1457,7 +1476,8 @@ def _solve(f, *symbols, **flags):
         # generator is not a symbol
 
         try:
-            poly = Poly(f_num)
+            if poly is None:
+                poly = Poly(f_num)
             if poly is None:
                 raise ValueError('could not convert %s to Poly' % f_num)
         except GeneratorsNeeded:
