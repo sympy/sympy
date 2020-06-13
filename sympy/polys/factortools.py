@@ -1309,9 +1309,9 @@ def dup_factor_list(f, K0):
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
     elif K0.is_GaussianRing:
-        return dup_zz_i_factor(f, K0)
+        coeff, factors = dup_zz_i_factor(f, K0)
     elif K0.is_GaussianField:
-        return dup_qq_i_factor(f, K0)
+        coeff, factors = dup_qq_i_factor(f, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
@@ -1389,9 +1389,9 @@ def dmp_factor_list(f, u, K0):
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
     elif K0.is_GaussianRing:
-        return dmp_zz_i_factor(f, u, K0)
+        coeff, factors = dmp_zz_i_factor(f, u, K0)
     elif K0.is_GaussianField:
-        return dmp_qq_i_factor(f, u, K0)
+        coeff, factors = dmp_qq_i_factor(f, u, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
