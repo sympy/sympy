@@ -2,7 +2,6 @@
 Generating and counting primes.
 
 """
-from __future__ import print_function, division
 
 import random
 from bisect import bisect
@@ -705,8 +704,7 @@ def primerange(a, b):
         return
     # if we already have the range, return it
     if b <= sieve._list[-1]:
-        for i in sieve.primerange(a, b):
-            yield i
+        yield from sieve.primerange(a, b)
         return
     # otherwise compute, without storing, the desired range.
 
@@ -768,7 +766,7 @@ def primorial(n, nth=True):
     Examples
     ========
 
-    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy.ntheory.generate import primorial, primerange
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210

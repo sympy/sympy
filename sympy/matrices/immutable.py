@@ -1,6 +1,3 @@
-from __future__ import division, print_function
-
-from typing import Callable
 from mpmath.matrices.matrices import _matrix
 
 from sympy.core import Basic, Dict, Integer, S, Tuple
@@ -26,6 +23,7 @@ def sympify_mpmath_matrix(arg):
 
 
 sympify_converter[_matrix] = sympify_mpmath_matrix
+
 
 
 class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
@@ -56,7 +54,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
-    __hash__ = MatrixExpr.__hash__  # type: Callable[[MatrixExpr], int]
+    __hash__ = MatrixExpr.__hash__
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -68,20 +66,16 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
             rows, cols, flat_list = args
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-            flat_list = list(flat_list)  # create a shallow copy
-        rows = Integer(rows)
-        cols = Integer(cols)
-        if not isinstance(flat_list, Tuple):
-            flat_list = Tuple(*flat_list)
+            flat_list = list(flat_list) # create a shallow copy
 
-        return Basic.__new__(cls, rows, cols, flat_list)
-
-    @property
-    def _mat(self):
-        # self.args[2] is a Tuple.  Access to the elements
-        # of a tuple are significantly faster than Tuple,
-        # so return the internal tuple.
-        return self.args[2].args
+        obj = Basic.__new__(cls,
+            Integer(rows),
+            Integer(cols),
+            Tuple(*flat_list))
+        obj._rows = rows
+        obj._cols = cols
+        obj._mat = flat_list
+        return obj
 
     def _entry(self, i, j, **kwargs):
         return DenseMatrix.__getitem__(self, (i, j))
@@ -100,21 +94,21 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
 
     @property
     def cols(self):
-        return int(self.args[1])
+        return self._cols
 
     @property
     def rows(self):
-        return int(self.args[0])
+        return self._rows
 
     @property
     def shape(self):
-        return tuple(int(i) for i in self.args[:2])
+        return self._rows, self._cols
 
     def as_immutable(self):
         return self
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super(ImmutableDenseMatrix, self).is_diagonalizable(
+        return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
 
     is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
@@ -125,7 +119,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
 ImmutableMatrix = ImmutableDenseMatrix
 
 
-class ImmutableSparseMatrix(SparseMatrix, Basic):
+class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     """Create an immutable version of a sparse matrix.
 
     Examples
@@ -150,34 +144,46 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
     is_Matrix = True
     _class_priority = 9
 
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    __hash__ = MatrixExpr.__hash__
+
     @classmethod
     def _new(cls, *args, **kwargs):
         s = MutableSparseMatrix(*args)
-        rows = Integer(s.rows)
-        cols = Integer(s.cols)
-        mat = Dict(s._smat)
-        obj = Basic.__new__(cls, rows, cols, mat)
-        obj.rows = s.rows
-        obj.cols = s.cols
-        obj._smat = s._smat
+        rows, cols, smat = s.rows, s.cols, s._smat
+        obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
+        obj._rows = rows
+        obj._cols = cols
+        obj._smat = smat
         return obj
-
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
-    def __hash__(self):
-        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
+    def _entry(self, i, j, **kwargs):
+        return SparseMatrix.__getitem__(self, (i, j))
 
     # _eval_Eq = ImmutableDenseMatrix._eval_Eq
+
+    @property
+    def cols(self):
+        return self._cols
+
+    @property
+    def rows(self):
+        return self._rows
+
+    @property
+    def shape(self):
+        return self._rows, self._cols
 
     def as_immutable(self):
         return self
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super(ImmutableSparseMatrix, self).is_diagonalizable(
+        return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
 
     is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__

@@ -1,6 +1,7 @@
 from sympy import Q, ask, Symbol, DiagMatrix, DiagonalMatrix
+from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
-        OneMatrix, Trace, MatrixSlice, Determinant)
+        OneMatrix, Trace, MatrixSlice, Determinant, BlockMatrix, BlockDiagMatrix)
 from sympy.matrices.expressions.factorizations import LofLU
 from sympy.testing.pytest import XFAIL
 
@@ -41,6 +42,40 @@ def test_singular():
 @XFAIL
 def test_invertible_fullrank():
     assert ask(Q.invertible(X), Q.fullrank(X)) is True
+
+
+def test_invertible_BlockMatrix():
+    assert ask(Q.invertible(BlockMatrix([Identity(3)]))) == True
+    assert ask(Q.invertible(BlockMatrix([ZeroMatrix(3, 3)]))) == False
+
+    X = Matrix([[1, 2, 3], [3, 5, 4]])
+    Y = Matrix([[4, 2, 7], [2, 3, 5]])
+    # non-invertible A block
+    assert ask(Q.invertible(BlockMatrix([
+        [Matrix.ones(3, 3), Y.T],
+        [X, Matrix.eye(2)],
+    ]))) == True
+    # non-invertible B block
+    assert ask(Q.invertible(BlockMatrix([
+        [Y.T, Matrix.ones(3, 3)],
+        [Matrix.eye(2), X],
+    ]))) == True
+    # non-invertible C block
+    assert ask(Q.invertible(BlockMatrix([
+        [X, Matrix.eye(2)],
+        [Matrix.ones(3, 3), Y.T],
+    ]))) == True
+    # non-invertible D block
+    assert ask(Q.invertible(BlockMatrix([
+        [Matrix.eye(2), X],
+        [Y.T, Matrix.ones(3, 3)],
+    ]))) == True
+
+
+def test_invertible_BlockDiagMatrix():
+    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), Identity(5)))) == True
+    assert ask(Q.invertible(BlockDiagMatrix(ZeroMatrix(3, 3), Identity(5)))) == False
+    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), OneMatrix(5, 5)))) == False
 
 
 def test_symmetric():
@@ -236,7 +271,6 @@ def test_matrix_element_sets():
 
 
 def test_matrix_element_sets_slices_blocks():
-    from sympy.matrices.expressions import BlockMatrix
     X = MatrixSymbol('X', 4, 4)
     assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
     assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),

@@ -585,7 +585,7 @@ class Equality(Relational):
         ========
 
         >>> from sympy import Eq
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> Eq(x**2, 1).as_poly(x)
         Poly(x**2 - 1, x, domain='ZZ')
         '''

@@ -3,8 +3,7 @@ from __future__ import print_function, division
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
                    gamma, Product, Dummy, Sum, Abs, IndexedBase, I)
 from sympy.core.sympify import _sympify
-from sympy.stats.rv import (_symbol_converter, Density, RandomMatrixSymbol,
-                            RandomSymbol)
+from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol, is_random
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
@@ -22,6 +21,11 @@ __all__ = [
     'JointEigenDistribution',
     'level_spacing_distribution'
 ]
+
+@is_random.register(RandomMatrixSymbol)
+def _(x):
+    return True
+
 
 class RandomMatrixEnsemble(Basic):
     """
@@ -230,7 +234,7 @@ class CircularUnitaryEnsemble(CircularEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import CircularUnitaryEnsemble as CUE, density
+    >>> from sympy.stats import CircularUnitaryEnsemble as CUE
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = CUE('U', 1)
     >>> joint_eigen_distribution(C)
@@ -253,7 +257,7 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import CircularOrthogonalEnsemble as COE, density
+    >>> from sympy.stats import CircularOrthogonalEnsemble as COE
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = COE('O', 1)
     >>> joint_eigen_distribution(C)
@@ -276,7 +280,7 @@ class CircularSymplecticEnsemble(CircularEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import CircularSymplecticEnsemble as CSE, density
+    >>> from sympy.stats import CircularSymplecticEnsemble as CSE
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = CSE('S', 1)
     >>> joint_eigen_distribution(C)
@@ -351,7 +355,7 @@ def JointEigenDistribution(mat):
 
     """
     eigenvals = mat.eigenvals(multiple=True)
-    if any(not eigenval.has(RandomSymbol) for eigenval in set(eigenvals)):
+    if any(not is_random(eigenval) for eigenval in set(eigenvals)):
         raise ValueError("Eigen values don't have any random expression, "
                          "joint distribution cannot be generated.")
     return JointDistributionHandmade(*eigenvals)

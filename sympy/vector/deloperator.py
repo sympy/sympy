@@ -17,7 +17,7 @@ class Del(Basic):
                 deprecated_since_version="1.1",
                 issue=12866,
             ).warn()
-        obj = super(Del, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj._name = "delop"
         return obj
 

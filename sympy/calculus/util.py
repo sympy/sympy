@@ -720,7 +720,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, log, pi, pprint, stationary_points
+    >>> from sympy import Symbol, S, sin, pi, pprint, stationary_points
     >>> from sympy.sets import Interval
     >>> x = Symbol('x')
 

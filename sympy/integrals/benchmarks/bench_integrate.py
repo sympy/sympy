@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import integrate, Symbol, sin
 
 x = Symbol('x')

@@ -12,8 +12,7 @@ from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, _lambert
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
-    failing_assumptions
+    det_quick, det_perm, det_minor, _simple_dens, denoms
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -265,12 +264,6 @@ def test_quintics_1():
         CRootOf(x**5 + 3*x**3 + 7, 0).n()
 
 
-def test_highorder_poly():
-    # just testing that the uniq generator is unpacked
-    sol = solve(x**6 - 2*x + 2)
-    assert all(isinstance(i, CRootOf) for i in sol) and len(sol) == 6
-
-
 def test_quintics_2():
     f = x**5 + 15*x + 12
     s = solve(f, check=False)
@@ -282,6 +275,19 @@ def test_quintics_2():
     s = solve(f)
     for r in s:
         assert r.func == CRootOf
+
+    assert solve(x**5 - 6*x**3 - 6*x**2 + x - 6) == [
+        CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 0),
+        CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 1),
+        CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 2),
+        CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 3),
+        CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 4)]
+
+
+def test_highorder_poly():
+    # just testing that the uniq generator is unpacked
+    sol = solve(x**6 - 2*x + 2)
+    assert all(isinstance(i, CRootOf) for i in sol) and len(sol) == 6
 
 
 def test_solve_rational():
@@ -328,6 +334,13 @@ def test_linear_system():
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
+    # https://github.com/sympy/sympy/issues/6420
+    M = Matrix([[0,    15.0, 10.0, 700.0],
+                [1,    1,    1,    100.0],
+                [0,    10.0, 5.0,  200.0],
+                [-5.0, 0,    0,    0    ]])
+
+    assert solve_linear_system(M, x, y, z) == {x: 0, y: -60.0, z: 160.0}
 
 def test_linear_system_function():
     a = Function('a')
@@ -1224,8 +1237,12 @@ def test_issue_5849():
         ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
 
+# Should this work at all? Simpler examples fail e.g.:
+#    solve([x+y+z,x+y],[x,y])  ==  []
+# Here a solution only exists if I3 == I6 which is not generically true.
+@XFAIL
 def test_issue_5849_matrix():
-    '''Same as test_2750 but solved with the matrix solver.'''
+    '''Same as test_issue_5849 but solved with the matrix solver.'''
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
@@ -1355,21 +1372,6 @@ def test_float_handling():
 def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
-    assert check_assumptions(1, x) == True
-    raises(AssertionError, lambda: check_assumptions(2*x, x, positive=True))
-    raises(TypeError, lambda: check_assumptions(1, 1))
-
-
-def test_failing_assumptions():
-    x = Symbol('x', real=True, positive=True)
-    y = Symbol('y')
-    assert failing_assumptions(6*x + y, **x.assumptions0) == \
-    {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
-    'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
-    'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
-    'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
-    'extended_nonpositive': None, 'extended_nonzero': None,
-    'extended_positive': None }
 
 
 def test_issue_6056():
@@ -1755,7 +1757,7 @@ def test_issue_5114_6611():
     ans = solve(list(eqs), list(v), simplify=False)
     # If time is taken to simplify then then 2617 below becomes
     # 1168 and the time is about 50 seconds instead of 2.
-    assert sum([s.count_ops() for s in ans.values()]) <= 2617
+    assert sum([s.count_ops() for s in ans.values()]) <= 3093
 
 
 def test_det_quick():
@@ -2185,3 +2187,15 @@ def test_issue_19113_19102():
         -2*atan(-sqrt(5)/2 + h + sqrt(2)*sqrt(1 - sqrt(5))/2),
         -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2)]
     assert solve(3*cos(x) - sin(x)) == [atan(3)]
+
+
+def test_issue_19509():
+    a = S(3)/4
+    b = S(5)/8
+    c = sqrt(5)/8
+    d = sqrt(5)/4
+    assert solve(1/(x -1)**5 - 1) == [2,
+        -d + a - sqrt(-b + c),
+        -d + a + sqrt(-b + c),
+        d + a - sqrt(-b - c),
+        d + a + sqrt(-b - c)]

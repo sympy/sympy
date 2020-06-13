@@ -73,7 +73,7 @@ class ReplaceOptim(Optimization):
     Examples
     ========
 
-    >>> from sympy import Symbol, Pow
+    >>> from sympy import Symbol
     >>> from sympy.codegen.rewriting import ReplaceOptim
     >>> from sympy.codegen.cfunctions import exp2
     >>> x = Symbol('x')

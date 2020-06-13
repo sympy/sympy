@@ -14,7 +14,6 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from __future__ import print_function, division
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 from sympy.core.compatibility import reduce
@@ -986,7 +985,7 @@ def is_deriv_k(fa, fd, DE):
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.exts) != len(DE.D):
         if [i for i in DE.cases if i == 'tan'] or \
-                (set([i for i in DE.cases if i == 'primitive']) -
+                ({i for i in DE.cases if i == 'primitive'} -
                         set(DE.indices('log'))):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
@@ -1102,7 +1101,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.exts) != len(DE.D):
         if [i for i in DE.cases if i == 'tan'] or \
-                (set([i for i in DE.cases if i == 'primitive']) -
+                ({i for i in DE.cases if i == 'primitive'} -
                         set(DE.indices('log'))):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")

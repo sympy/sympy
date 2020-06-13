@@ -676,9 +676,9 @@ def test_asech():
     assert (sech(asech(sqrt(2 + 2/sqrt(5)))) / (sqrt(2 + 2/sqrt(5)))).simplify() == 1
     assert (sech(asech(-sqrt(2 + 2/sqrt(5)))) / (-sqrt(2 + 2/sqrt(5)))).simplify() == 1
     assert (sech(asech(sqrt(2*(2 + sqrt(2))))) / (sqrt(2*(2 + sqrt(2))))).simplify() == 1
-    assert expand_mul(sech(asech((1 + sqrt(5)))) / ((1 + sqrt(5)))) == 1
-    assert expand_mul(sech(asech((-1 - sqrt(5)))) / ((-1 - sqrt(5)))) == 1
-    assert expand_mul(sech(asech((-sqrt(6) - sqrt(2)))) / ((-sqrt(6) - sqrt(2)))) == 1
+    assert expand_mul(sech(asech(1 + sqrt(5))) / (1 + sqrt(5))) == 1
+    assert expand_mul(sech(asech(-1 - sqrt(5))) / (-1 - sqrt(5))) == 1
+    assert expand_mul(sech(asech(-sqrt(6) - sqrt(2))) / (-sqrt(6) - sqrt(2))) == 1
 
     # numerical evaluation
     assert str(asech(5*I).n(6)) == '0.19869 - 1.5708*I'
@@ -752,7 +752,7 @@ def test_acsch():
 
     # csch(acsch(x)) / x == 1
     assert expand_mul(csch(acsch(-I*(sqrt(6) + sqrt(2)))) / (-I*(sqrt(6) + sqrt(2)))) == 1
-    assert expand_mul(csch(acsch(I*(1 + sqrt(5)))) / ((I*(1 + sqrt(5))))) == 1
+    assert expand_mul(csch(acsch(I*(1 + sqrt(5)))) / (I*(1 + sqrt(5)))) == 1
     assert (csch(acsch(I*sqrt(2 - 2/sqrt(5)))) / (I*sqrt(2 - 2/sqrt(5)))).simplify() == 1
     assert (csch(acsch(-I*sqrt(2 - 2/sqrt(5)))) / (-I*sqrt(2 - 2/sqrt(5)))).simplify() == 1
 

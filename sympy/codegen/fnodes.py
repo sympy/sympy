@@ -454,7 +454,7 @@ def size(array, dim=None, kind=None):
 
     >>> from sympy import Symbol
     >>> from sympy.printing import fcode
-    >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
+    >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, size
     >>> a = Symbol('a', real=True)
     >>> body = [Return((sum_(a**2)/size(a))**.5)]
@@ -505,8 +505,8 @@ def bind_C(name=None):
 
     >>> from sympy import Symbol
     >>> from sympy.printing import fcode
-    >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
-    >>> from sympy.codegen.fnodes import array, sum_, size, bind_C
+    >>> from sympy.codegen.ast import FunctionDefinition, real, Return
+    >>> from sympy.codegen.fnodes import array, sum_, bind_C
     >>> a = Symbol('a', real=True)
     >>> s = Symbol('s', integer=True)
     >>> arr = array(a, dim=[s], intent='in')

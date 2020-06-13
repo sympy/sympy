@@ -73,6 +73,8 @@ class Add(Expr, AssocOp):
 
     is_Add = True
 
+    _args_type = Expr
+
     @classmethod
     def flatten(cls, seq):
         """
@@ -514,6 +516,10 @@ class Add(Expr, AssocOp):
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
+    def _eval_is_meromorphic(self, x, a):
+        return _fuzzy_group((arg.is_meromorphic(x, a) for arg in self.args),
+                            quick_exit=True)
+
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
@@ -897,7 +903,7 @@ class Add(Expr, AssocOp):
                 if not min or order not in min:
                     min = order
                     new_expr = term
-                elif order == min:
+                elif min in order:
                     new_expr += term
 
         except TypeError:

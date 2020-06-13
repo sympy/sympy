@@ -3,8 +3,6 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 import inspect
@@ -353,7 +351,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions. This may be preferable to using ``evalf`` (which uses mpmath on
     the backend) in some cases.
 
-    >>> import mpmath
     >>> f = lambdify(x, sin(x), 'mpmath')
     >>> f(1)
     0.8414709848078965
@@ -858,7 +855,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     func = funclocals[funcname]
 
     # Apply the docstring
-    sig = "func({0})".format(", ".join(str(i) for i in names))
+    sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
     expr_str = str(expr)
     if len(expr_str) > 78:
@@ -1012,7 +1009,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
-class _EvaluatorPrinter(object):
+class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
         self._dummify = dummify
 
@@ -1088,7 +1085,7 @@ class _EvaluatorPrinter(object):
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
-        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
@@ -1108,7 +1105,8 @@ class _EvaluatorPrinter(object):
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
-                        dummy = _uniquely_named_symbol(dummy.name, expr)
+                        dummy = uniquely_named_symbol(
+                            dummy.name, expr, modify=lambda s: '_' + s)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
@@ -1289,7 +1287,6 @@ def implemented_function(symfunc, implementation):
 
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

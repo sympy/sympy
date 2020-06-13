@@ -1,7 +1,6 @@
 """
 Integer factorization
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 import random
@@ -731,7 +730,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     With the default smoothness bound, this number can't be cracked:
 
-        >>> from sympy.ntheory import pollard_pm1, primefactors
+        >>> from sympy.ntheory import pollard_pm1
         >>> pollard_pm1(21477639576571)
 
     Increasing the smoothness bound helps:
@@ -741,7 +740,6 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     Looking at the smoothness of the factors of this number we find:
 
-        >>> from sympy.utilities import flatten
         >>> from sympy.ntheory.factor_ import smoothness_p, factorint
         >>> print(smoothness_p(21477639576571, visual=1))
         p**i=4410317**1 has p-1 B=1787, B-pow=1787
@@ -1049,7 +1047,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     You can easily switch between the two forms by sending them back to
     factorint:
 
-    >>> from sympy import Mul, Pow
+    >>> from sympy import Mul
     >>> regular = factorint(1764); regular
     {2: 2, 3: 2, 7: 2}
     >>> pprint(factorint(regular))
@@ -1513,8 +1511,7 @@ def _divisors(n, proper=False):
             if p != n:
                 yield p
     else:
-        for p in rec_gen():
-            yield p
+        yield from rec_gen()
 
 
 def divisors(n, generator=False, proper=False):

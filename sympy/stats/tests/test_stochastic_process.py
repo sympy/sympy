@@ -1,13 +1,14 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda,
+                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, Sum,
                    Piecewise)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
-                         BernoulliProcess)
+                         BernoulliProcess, sample_stochastic_process)
 from sympy.stats.joint_rv import JointDistribution, JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 
 
@@ -24,6 +25,8 @@ def test_DiscreteMarkovChain():
     raises(TypeError, lambda: DiscreteMarkovChain(1))
     raises(NotImplementedError, lambda: X(t))
 
+    raises(ValueError, lambda: sample_stochastic_process(t))
+    raises(ValueError, lambda: next(sample_stochastic_process(X)))
     # pass name and state_space
     Y = DiscreteMarkovChain("Y", [1, 2, 3])
     assert Y.transition_probabilities == None
@@ -31,6 +34,7 @@ def test_DiscreteMarkovChain():
     assert P(Eq(Y[2], 1), Eq(Y[0], 2)) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
     assert E(X[0]) == Expectation(X[0])
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
+    raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -108,6 +112,28 @@ def test_DiscreteMarkovChain():
     assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
+
+def test_sample_stochastic_process():
+    if not import_module('scipy'):
+        skip('SciPy Not installed. Skip sampling tests')
+    import random
+    random.seed(0)
+    numpy = import_module('numpy')
+    if numpy:
+        numpy.random.seed(0) # scipy uses numpy to sample so to set its seed
+    T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    for samps in range(10):
+        assert next(sample_stochastic_process(Y)) in Y.state_space
+
+    T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
+                [Rational(1, 3), 0, Rational(2, 3)],
+                [S.Half, S.Half, 0]])
+    X = DiscreteMarkovChain('X', [0, 1, 2], T)
+    for samps in range(10):
+        assert next(sample_stochastic_process(X)) in X.state_space
+
+
 def test_ContinuousMarkovChain():
     T1 = Matrix([[S(-2), S(2), S.Zero],
                  [S.Zero, S.NegativeOne, S.One],
@@ -151,7 +177,7 @@ def test_BernoulliProcess():
     H, T = symbols("H,T")
     assert E(X[1]+X[2]*X[3]) == H**2/9 + 4*H*T/9 + H/3 + 4*T**2/9 + 2*T/3
 
-    t = symbols('t', positive=True, integer=True)
+    t, x = symbols('t, x', positive=True, integer=True)
     assert isinstance(B[t], RandomIndexedSymbol)
 
     raises(ValueError, lambda: BernoulliProcess("X", p=1.1, success=1, failure=0))
@@ -194,3 +220,14 @@ def test_BernoulliProcess():
     assert P(B[5] > 0, B[5]) == BernoulliDistribution(0.6, 0, 1)
     raises(ValueError, lambda: P(3))
     raises(ValueError, lambda: P(B[3] > 0, 3))
+
+    # test issue 19456
+    expr = Sum(B[t], (t, 0, 4))
+    expr2 = Sum(B[t], (t, 1, 3))
+    expr3 = Sum(B[t]**2, (t, 1, 3))
+    assert expr.doit() == B[0] + B[1] + B[2] + B[3] + B[4]
+    assert expr2.doit() == Y
+    assert expr3.doit() == B[1]**2 + B[2]**2 + B[3]**2
+    assert B[2*t].free_symbols == {B[2*t], t}
+    assert B[4].free_symbols == {B[4]}
+    assert B[x*t].free_symbols == {B[x*t], x, t}

@@ -201,7 +201,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     Examples
     ========
 
-    >>> from sympy import Poly, Symbol
+    >>> from sympy import Symbol
     >>> from sympy.solvers.inequalities import reduce_rational_inequalities
 
     >>> x = Symbol('x', real=True)
@@ -374,7 +374,6 @@ def reduce_abs_inequalities(exprs, gen):
     ========
 
     >>> from sympy import Abs, Symbol
-    >>> from sympy.abc import x
     >>> from sympy.solvers.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', extended_real=True)
 
@@ -941,7 +940,6 @@ def reduce_inequalities(inequalities, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 

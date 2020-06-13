@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from collections import defaultdict
 
 from sympy.core import SympifyError, Add

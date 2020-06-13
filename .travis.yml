@@ -7,11 +7,9 @@ stages:
 
 env:
   matrix:
-  - SPLIT="1/2" TEST_SYMPY="true"
-  - SPLIT="2/2" TEST_SYMPY="true"
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
-  global:
-    - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
+  - TEST_SYMPY="true" SPLIT="1/2"
+  - TEST_SYMPY="true" SPLIT="2/2"
+  - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
 dist: trusty
 
 python:
@@ -38,24 +36,24 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
+        - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.8
       dist: xenial
       sudo: true
       env:
-        - SPLIT="1/2" TEST_SYMPY="true"
+        - TEST_SYMPY="true" SPLIT="1/2"
     - python: 3.8
       dist: xenial
       sudo: true
       env:
-        - SPLIT="2/2" TEST_SYMPY="true"
+        - TEST_SYMPY="true" SPLIT="2/2"
     - python: 3.7
       dist: xenial
       # At the time of writing this is Python 3.7 but it will become 3.8 when
       # all of the dependencies are supported on 3.8.
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib<3.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang lxml"
+        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.5.1 tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang lxml"
         - TEST_SAGE="true"
         - SYMPY_STRICT_COMPILER_CHECKS=1
       addons:
@@ -77,15 +75,15 @@ matrix:
     - python: 3.7
       dist: xenial
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_EXAMPLES="true"
+        - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.7
       dist: xenial
       env:
-        - SPLIT="1/2" TEST_SYMPY="true"
+        - TEST_SYMPY="true" SPLIT="1/2"
     - python: 3.7
       dist: xenial
       env:
-        - SPLIT="2/2" TEST_SYMPY="true"
+        - TEST_SYMPY="true" SPLIT="2/2"
 
     # Tensorflow 1 support
     - python: 3.6
@@ -97,7 +95,7 @@ matrix:
       dist: xenial
       env:
         - TEST_SPHINX="true"
-        - FASTCACHE="false"
+        - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
       addons:
         apt:
           packages:
@@ -129,33 +127,32 @@ matrix:
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - TEST_COVERAGE="true"
         - SPLIT="1/4"
+        - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - TEST_COVERAGE="true"
         - SPLIT="2/4"
+        - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - TEST_COVERAGE="true"
         - SPLIT="3/4"
+        - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - TEST_COVERAGE="true"
         - SPLIT="4/4"
+        - TEST_COVERAGE="true"
 
     # PyPy randomly fails because of some PyPy bugs
     # (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
-        - FASTCACHE="false"
       addons:
         apt:
           sources:
@@ -166,7 +163,6 @@ matrix:
       env:
         - TEST_SYMPY="true"
         - SPLIT="1/2"
-        - FASTCACHE="false"
       addons:
         apt:
           sources:
@@ -177,7 +173,6 @@ matrix:
       env:
         - TEST_SYMPY="true"
         - SPLIT="2/2"
-        - FASTCACHE="false"
       addons:
         apt:
           sources:
@@ -198,9 +193,6 @@ matrix:
 before_install:
   - set -e
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
-  - if [[ "${FASTCACHE}" != "false" ]]; then
-      pip install fastcache;
-    fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage;
       coverage debug sys;
@@ -240,7 +232,7 @@ before_install:
         pip list | grep "numpy" && pip uninstall -y numpy;
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx" "docutils" doctr "matplotlib<3.2" sphinx-math-dollar;
+      pip install "sphinx" "docutils" doctr matplotlib sphinx-math-dollar;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
       pip install asv;
