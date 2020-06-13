@@ -30,7 +30,7 @@ X2 = RandomMatrixSymbol("X2", 2, 1)
 normal = Normal("normal", 0, 1)
 
 m1 = Matrix([
-    [1, j],
+    [1, j*Normal("normal2", 2, 1)],
     [normal, 0]
 ])
 
@@ -58,6 +58,28 @@ def test_multivariate_expectation():
     expr = Expectation(A2*m1*B2*X2)
     assert expr.args[0].args == (A2, m1, B2, X2)
     assert expr.expand() == A2*ExpectationMatrix(m1*B2*X2)
+
+    expr = Expectation((X + Y)*(X - Y).T)
+    assert expr.expand() == ExpectationMatrix(X*X.T) - ExpectationMatrix(X*Y.T) +\
+                ExpectationMatrix(Y*X.T) - ExpectationMatrix(Y*Y.T)
+
+    expr = Expectation(A*X + B*Y)
+    assert expr.expand() == A*ExpectationMatrix(X) + B*ExpectationMatrix(Y)
+
+    assert Expectation(m1).doit() == Matrix([[1, 2*j], [0, 0]])
+
+    x1 = Matrix([
+    [Normal('N11', 11, 1), Normal('N12', 12, 1)],
+    [Normal('N21', 21, 1), Normal('N22', 22, 1)]
+    ])
+    x2 = Matrix([
+    [Normal('M11', 1, 1), Normal('M12', 2, 1)],
+    [Normal('M21', 3, 1), Normal('M22', 4, 1)]
+    ])
+
+    assert Expectation(Expectation(x1 + x2)).doit(deep=False) == ExpectationMatrix(x1 + x2)
+    assert Expectation(Expectation(x1 + x2)).doit() == Matrix([[12, 14], [24, 26]])
+
 
 def test_multivariate_variance():
     raises(ShapeError, lambda: Variance(A))

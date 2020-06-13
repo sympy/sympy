@@ -5,7 +5,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import (RandomSymbol, probability, pspace, random_symbols,
+from sympy.stats.rv import (RandomSymbol, probability, pspace,
                             given, sampling_E, RandomIndexedSymbol, is_random,
                             PSpace)
 
@@ -186,7 +186,7 @@ class Expectation(Expr):
         if deep:
             expr = expr.doit(**hints)
 
-        if not random_symbols(expr) or isinstance(expr, Expectation):  # expr isn't random?
+        if not is_random(expr) or isinstance(expr, Expectation):  # expr isn't random?
             return expr
         if numsamples:  # Computing by monte carlo sampling?
             evalf = hints.get('evalf', True)

@@ -1,9 +1,10 @@
 import itertools
 
-from sympy import MatrixExpr, Expr, ShapeError, ZeroMatrix, Add, Mul, MatMul, S
-from sympy.stats.rv import RandomSymbol
+from sympy import (MatrixExpr, Expr, ShapeError, ZeroMatrix,
+                    Add, Mul, MatMul, S, expand as _expand)
+from sympy.stats.rv import RandomSymbol, is_random
 from sympy.core.sympify import _sympify
-from sympy.stats.symbolic_probability import Variance, Covariance, Expectation, is_random
+from sympy.stats.symbolic_probability import Variance, Covariance, Expectation
 
 class ExpectationMatrix(Expectation, MatrixExpr):
     """
@@ -12,14 +13,36 @@ class ExpectationMatrix(Expectation, MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.stats import ExpectationMatrix
+    >>> from sympy.stats import ExpectationMatrix, Normal
     >>> from sympy.stats.rv import RandomMatrixSymbol
-    >>> from sympy import symbols, MatrixSymbol
+    >>> from sympy import symbols, MatrixSymbol, Matrix
     >>> k = symbols("k")
     >>> A, B = MatrixSymbol("A", k, k), MatrixSymbol("B", k, k)
     >>> X, Y = RandomMatrixSymbol("X", k, 1), RandomMatrixSymbol("Y", k, 1)
     >>> ExpectationMatrix(X)
     ExpectationMatrix(X)
+    >>> ExpectationMatrix(A*X).shape
+    (k, 1)
+
+    To expand the expectation in its expression, use ``expand()``:
+
+    >>> ExpectationMatrix(A*X + B*Y).expand()
+    A*ExpectationMatrix(X) + B*ExpectationMatrix(Y)
+    >>> ExpectationMatrix((X + Y)*(X - Y).T).expand()
+    ExpectationMatrix(X*X.T) - ExpectationMatrix(X*Y.T) + ExpectationMatrix(Y*X.T) - ExpectationMatrix(Y*Y.T)
+
+    To evaluate the ``ExpectationMatrix``, use ``doit()``:
+
+    >>> N11, N12 = Normal('N11', 11, 1), Normal('N12', 12, 1)
+    >>> N21, N22 = Normal('N21', 21, 1), Normal('N22', 22, 1)
+    >>> M11, M12 = Normal('M11', 1, 1), Normal('M12', 2, 1)
+    >>> M21, M22 = Normal('M21', 3, 1), Normal('M22', 4, 1)
+    >>> x1 = Matrix([[N11, N12], [N21, N22]])
+    >>> x2 = Matrix([[M11, M12], [M21, M22]])
+    >>> ExpectationMatrix(x1 + x2).doit()
+    Matrix([
+    [12, 14],
+    [24, 26]])
 
     """
     def __new__(cls, expr, condition=None):
@@ -49,6 +72,8 @@ class ExpectationMatrix(Expectation, MatrixExpr):
         if isinstance(expr, Add):
             return Add(*[Expectation(a, condition=condition).expand() for a in expr.args])
         elif isinstance(expr, (Mul, MatMul)):
+            if isinstance(_expand(expr), Add):
+                return Expectation(_expand(expr)).expand()
             rv = []
             nonrv = []
             postnon = []
@@ -183,7 +208,7 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
     >>> CrossCovarianceMatrix(X, Y).shape
     (k, k)
 
-    To expand the variance in its expression, use ``expand()``:
+    To expand the covariance in its expression, use ``expand()``:
 
     >>> CrossCovarianceMatrix(X + Y, Z).expand()
     CrossCovarianceMatrix(X, Z) + CrossCovarianceMatrix(Y, Z)
