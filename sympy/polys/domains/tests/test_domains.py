@@ -3,6 +3,8 @@
 from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi
 from sympy.abc import x, y, z
 
+from sympy.core.compatibility import HAS_GMPY
+
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
@@ -871,7 +873,11 @@ def test_gaussian_domains():
             assert G.is_nonnegative(qi) is False
             assert G.is_nonpositive(qi) is False
 
-        for K in [ZZ_gmpy(), ZZ_python(), QQ_gmpy(), QQ_python(), AlgebraicField(QQ, I)]:
+        domains = [ZZ_python(), QQ_python(), AlgebraicField(QQ, I)]
+        if HAS_GMPY:
+            domains += [ZZ_gmpy(), QQ_gmpy()]
+
+        for K in domains:
             assert G.convert(K(2)) == G(2, 0)
             assert G.convert(K(2), K) == G(2, 0)
 
