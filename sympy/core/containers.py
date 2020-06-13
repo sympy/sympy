@@ -204,6 +204,7 @@ class Dict(Basic):
     cannot be changed afterwards.  Otherwise it behaves identically
     to the Python dict.
 
+    >>> from sympy import Symbol
     >>> from sympy.core.containers import Dict
 
     >>> D = Dict({1: 'one', 2: 'two'})
@@ -217,7 +218,7 @@ class Dict(Basic):
 
     >>> 1 in D
     True
-    >>> D.has('one') # searches keys and values
+    >>> D.has(Symbol('one')) # searches keys and values
     True
     >>> 'one' in D # not in the keys
     False

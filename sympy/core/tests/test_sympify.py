@@ -497,7 +497,8 @@ def test_kernS():
     ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
     # issue 6687
-    assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
+    assert (kernS('Interval(-1,-2 - 4*(-3))')
+        == Interval(-1, Add(-2, Mul(12, 1, evaluate=False), evaluate=False)))
     assert kernS('_kern') == Symbol('_kern')
     assert kernS('E**-(x)') == exp(-x)
     e = 2*(x + y)*y

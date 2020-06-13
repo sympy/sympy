@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core.compatibility import as_int
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent

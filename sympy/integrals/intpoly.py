@@ -14,8 +14,6 @@ Computational Mechanics 56.6 (2015): 967-981
 PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
 
-from __future__ import print_function, division
-
 from functools import cmp_to_key
 
 from sympy.abc import x, y, z
@@ -166,7 +164,6 @@ def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     Examples
     ========
 
-    >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import main_integrate3d, \
     hyperplane_parameters
     >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
@@ -328,7 +325,6 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
     Examples
     ========
 
-    >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import polygon_integrate
     >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
                  (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
@@ -563,8 +559,8 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.integrals.intpoly import integration_reduction_dynamic,\
-    hyperplane_parameters, gradient_terms
+    >>> from sympy.integrals.intpoly import (integration_reduction_dynamic, \
+            hyperplane_parameters)
     >>> from sympy.geometry.point import Point
     >>> from sympy.geometry.polygon import Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
@@ -631,7 +627,6 @@ def left_integral3D(facets, index, expr, vertices, hp_param, degree):
     hp_param : The hyperplane parameters of the face
     degree : Degree of the expr
 
-    >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import left_integral3D
     >>> cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
                  (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
@@ -666,7 +661,6 @@ def gradient_terms(binomial_power=0, no_of_gens=2):
     Examples
     ========
 
-    >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import gradient_terms
     >>> gradient_terms(2)
     [[1, 0, 0, 0], [y, 0, 1, 0], [y**2, 0, 2, 0], [x, 1, 0, 0],

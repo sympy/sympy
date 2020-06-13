@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
-from sympy.core.symbol import _uniquely_named_symbol, _symbol
+from sympy.core.symbol import uniquely_named_symbol, _symbol
 
 from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
@@ -336,13 +336,13 @@ def test_unicode():
     raises(TypeError, lambda: Symbol(1))
 
 
-def test__uniquely_named_symbol_and__symbol():
-    F = _uniquely_named_symbol
+def testuniquely_named_symbol_and__symbol():
+    F = uniquely_named_symbol
     x = Symbol('x')
     assert F(x) == x
     assert F('x') == x
-    assert str(F('x', x)) == '_x'
-    assert str(F('x', (x + 1, 1/x))) == '_x'
+    assert str(F('x', x)) == 'x0'
+    assert str(F('x', (x + 1, 1/x))) == 'x0'
     _x = Symbol('x', real=True)
     assert F(('x', _x)) == _x
     assert F((x, _x)) == _x

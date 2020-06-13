@@ -18,12 +18,12 @@ def generate_test_file():
     '''
     res =[]
     file_name = 'test_1.m'
-    with open(file_name, 'r') as myfile:
+    with open(file_name) as myfile:
         fullform =myfile.read().replace('\n', '')
     fullform = fullform.replace('$VersionNumber', 'version_number')
     fullform = fullform.replace('Defer[Int][', 'Integrate[')
     path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    h = open(os.path.join(path_header, "header.py.txt"), "r").read()
+    h = open(os.path.join(path_header, "header.py.txt")).read()
     header = "import sys\nfrom sympy.external import import_module\nmatchpy = import_module({})".format('\"matchpy\"')
     header += "\nif not matchpy:\n    disabled = True\n"
     header += "if sys.version_info[:2] < (3, 6):\n    disabled = True\n"

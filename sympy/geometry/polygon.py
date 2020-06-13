@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols
@@ -77,7 +75,7 @@ class Polygon(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import Point, Polygon, pi
+    >>> from sympy import Polygon, pi
     >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
@@ -399,7 +397,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbols
+        >>> from sympy import Polygon, symbols
         >>> a, b = symbols('a, b')
         >>> p1, p2, p3, p4, p5 = [(0, 0), (a, 0), (a, b), (0, b), (a/3, b/3)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
@@ -720,7 +718,6 @@ class Polygon(GeometrySet):
         ========
 
         >>> from sympy import Polygon, Point
-        >>> from sympy.abc import t
         >>> p = Polygon((0, 0), (4, 0), (4, 4))
         >>> p.encloses_point(Point(2, 1))
         True
@@ -813,7 +810,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Polygon, S, Symbol
+        >>> from sympy import Polygon, Symbol
         >>> t = Symbol('t', real=True)
         >>> tri = Polygon((0, 0), (1, 0), (1, 1))
         >>> p = tri.arbitrary_point('t')
@@ -980,7 +977,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Symbol, Polygon, Line
+        >>> from sympy import Polygon, Line
         >>> a, b = 20, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
@@ -1295,8 +1292,8 @@ class Polygon(GeometrySet):
         from sympy.core.evalf import N
 
         verts = map(N, self.vertices)
-        coords = ["{0},{1}".format(p.x, p.y) for p in verts]
-        path = "M {0} L {1} z".format(coords[0], " L ".join(coords[1:]))
+        coords = ["{},{}".format(p.x, p.y) for p in verts]
+        path = "M {} L {} z".format(coords[0], " L ".join(coords[1:]))
         return (
             '<path fill-rule="evenodd" fill="{2}" stroke="#555555" '
             'stroke-width="{0}" opacity="0.6" d="{1}" />'
@@ -1921,7 +1918,7 @@ class RegularPolygon(Polygon):
         """Override GeometryEntity.rotate to first rotate the RegularPolygon
         about its center.
 
-        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> from sympy import Point, RegularPolygon, pi
         >>> t = RegularPolygon(Point(1, 0), 1, 3)
         >>> t.vertices[0] # vertex on x-axis
         Point2D(2, 0)
@@ -2034,7 +2031,7 @@ class RegularPolygon(Polygon):
         return self.args == o.args
 
     def __hash__(self):
-        return super(RegularPolygon, self).__hash__()
+        return super().__hash__()
 
 
 class Triangle(Polygon):
@@ -2627,7 +2624,7 @@ class Triangle(Polygon):
         The exradius touches the side of the triangle to which it is keyed, e.g.
         the exradius touching side 2 is:
 
-        >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
+        >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii[t.sides[2]]

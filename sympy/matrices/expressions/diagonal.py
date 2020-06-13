@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.expressions import MatrixExpr

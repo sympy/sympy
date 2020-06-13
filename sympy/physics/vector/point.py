@@ -110,7 +110,7 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -387,7 +387,7 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)

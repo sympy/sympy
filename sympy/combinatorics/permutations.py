@@ -322,7 +322,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
         (1 3 2)
 
@@ -355,7 +354,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -1187,7 +1185,7 @@ class Permutation(Atom):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+        >>> from sympy.combinatorics.permutations import Permutation
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
