@@ -1102,7 +1102,7 @@ def futrig(e, **kwargs):
 
     if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
-        e = f(_futrig(e))
+        e = f(bottom_up(e, _futrig))
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
