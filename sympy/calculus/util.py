@@ -1481,8 +1481,54 @@ class AccumulationBounds(AtomicExpr):
             return AccumBounds(other.min, Max(self.max, other.max))
 
 
-@dispatch(AccumulationBounds, Basic)
+@dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811
+def _eval_is_le(lhs, rhs):
+    if lhs.max <= rhs.min:
+        return True
+    if lhs.min > rhs.max:
+        return False
+
+@dispatch(AccumulationBounds, Basic) # type: ignore # noqa:F811
+def _eval_is_le(lhs, rhs): # noqa: F811
+
+    """
+    Returns True if range of values attained by `self` AccumulationBounds
+    object is greater than the range of values attained by `other`,
+    where other may be any value of type AccumulationBounds object or
+    extended real number value, False if `other` satisfies
+    the same property, else an unevaluated Relational.
+
+    Examples
+    ========
+
+    >>> from sympy import AccumBounds, oo
+    >>> AccumBounds(1, 3) > AccumBounds(4, oo)
+    False
+    >>> AccumBounds(1, 4) > AccumBounds(3, 4)
+    AccumBounds(1, 4) > AccumBounds(3, 4)
+    >>> AccumBounds(1, oo) > -1
+    True
+
+    """
+    if not rhs.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(rhs), rhs))
+    elif rhs.is_comparable:
+        if lhs.max <= rhs:
+            return True
+        if lhs.min > rhs:
+            return False
+
+@dispatch(AccumulationBounds, AccumulationBounds)
 def _eval_is_ge(lhs, rhs):
+    if lhs.min >= rhs.max:
+        return True
+    if lhs.max < rhs.min:
+        return False
+
+@dispatch(AccumulationBounds, Basic)
+def _eval_is_ge(lhs, rhs): # noqa: F811
     """
     Returns True if range of values attained by `lhs` AccumulationBounds
     object is less that the range of values attained by `rhs`, where

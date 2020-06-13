@@ -3890,7 +3890,7 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 I = S.ImaginaryUnit
 
 @dispatch(Tuple, Number)
-def _eval_Eq(self, other):
+def _eval_Eq(self, other): # noqa: F811
     return S.false
 
 def sympify_fractions(f):
