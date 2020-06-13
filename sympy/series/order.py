@@ -212,6 +212,8 @@ class Order(Expr):
                 # x*y (wrong order term!).  That's why we want to deal with
                 # expand()'ed expr (handled in "if expr.is_Add" branch below).
                 expr = expr.expand()
+            else:
+                expr = expr.factor()
 
             old_expr = None
             while old_expr != expr:
