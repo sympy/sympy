@@ -25,7 +25,7 @@ from .continued_fraction import continued_fraction_periodic, \
     continued_fraction_convergents, continued_fraction
 from .digits import count_digits, digits, is_palindromic
 from .egyptian_fraction import egyptian_fraction
-from .ecm import ecm
+from .ecm import ecm, Point
 
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
@@ -61,5 +61,5 @@ __all__ = [
 
     'egyptian_fraction',
 
-    'ecm',
+    'ecm', 'Point',
 ]

@@ -14,17 +14,9 @@ class Point:
     """Montgomery form of Points in an elliptic curve.
     In this form, the addition and doubling of points
     does not need any y-coordinate information thus
-    decreasing the number of operation.
+    decreasing the number of operations.
     Using Montgomery form we try to perform point addition
     and doubling in least amount of multiplications.
-
-    Parameters:
-    ===========
-
-    x_cord : X coordinate of the Point
-    z_cord : Z coordinate of the Point
-    a_24 : Parameter of the elliptic curve in Montgomery form
-    mod : modulus
 
     References
     ==========
@@ -33,6 +25,17 @@ class Point:
     """
 
     def __init__(self, x_cord, z_cord, a_24, mod):
+        """
+        Initial parameters for the Point class.
+
+        Parameters:
+        ===========
+
+        x_cord : X coordinate of the Point
+        z_cord : Z coordinate of the Point
+        a_24 : Parameter of the elliptic curve in Montgomery form
+        mod : modulus
+        """
         self.x_cord = x_cord
         self.z_cord = z_cord
         self.a_24 = a_24
@@ -223,7 +226,7 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls `ecm_one_factor` to compute the factors
-    of n. First all the small factors and taken out using trial division.
+    of n. First all the small factors are taken out using trial division.
     Then `ecm_one_factor` is used to compute one factor at a time. If the
     current bound fails to produce a factor then the bounds are increased
     depending on whether increase_bound is True or not.

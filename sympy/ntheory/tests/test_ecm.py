@@ -1,4 +1,4 @@
-from sympy.ntheory import ecm
+from sympy.ntheory import ecm, Point
 from sympy.testing.pytest import slow
 
 @slow
@@ -14,3 +14,18 @@ def test_ecm():
     assert ecm(168541512131094651323) == {79, 113, 11011069, 1714635721}
     #This takes ~10secs while factorint is not able to factorize this even in ~10mins
     assert ecm(7060005655815754299976961394452809, B1=100000, B2=1000000) == {6988699669998001, 1010203040506070809}
+
+
+def test_Point():
+    from sympy import mod_inverse
+    #The curve is of the form y**2 = x**3 + a*x**2 + x
+    mod = 101
+    a = 10
+    a_24 = (a + 2)*mod_inverse(4, mod)
+    p1 = Point(10, 10, a_24, mod)
+    p2 = p1.double()
+    assert p2 == Point(0, 48, a_24, mod)
+    p4 = p2.double()
+    assert p4 == Point(58, 0, a_24, mod)
+    p8 = p4.double()
+    assert p8 == Point(52, 0, a_24, mod)
