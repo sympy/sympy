@@ -52,7 +52,7 @@ def test_multivariate_expectation():
     assert isinstance(expr, ExpectationMatrix)
     assert expr.shape == (k, 1)
 
-    expr: ExpectationMatrix = Expectation(m1*X2)
+    expr = Expectation(m1*X2)
     assert expr.expand() == expr
 
     expr = Expectation(A2*m1*B2*X2)
@@ -76,23 +76,23 @@ def test_multivariate_variance():
     assert expr.cols == k
     assert isinstance(expr, VarianceMatrix)
 
-    expr: VarianceMatrix = Variance(A*X)
+    expr = Variance(A*X)
     assert expr == VarianceMatrix(A*X)
     assert expr.expand() == A*VarianceMatrix(X)*A.T
     assert isinstance(expr, VarianceMatrix)
     assert expr.shape == (k, k)
 
-    expr: VarianceMatrix = Variance(A*B*X)
+    expr = Variance(A*B*X)
     assert expr.expand() == A*B*VarianceMatrix(X)*B.T*A.T
 
-    expr: VarianceMatrix = Variance(m1*X2)
+    expr = Variance(m1*X2)
     assert expr.expand() == expr
 
     expr = Variance(A2*m1*B2*X2)
     assert expr.args[0].args == (A2, m1, B2, X2)
     assert expr.expand() == expr
 
-    expr: VarianceMatrix = Variance(A*X + B*Y)
+    expr = Variance(A*X + B*Y)
     assert expr.expand() == 2*A*CrossCovarianceMatrix(X, Y)*B.T +\
                     A*VarianceMatrix(X)*A.T + B*VarianceMatrix(Y)*B.T
 
