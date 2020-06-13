@@ -41,6 +41,11 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
+    def __eq__(self, other):
+        if self.a_24 != other.a_24 or self.mod != other.mod:
+            return False
+        return self.x_cord == other.x_cord and self.z_cord == other.z_c
+
     def add(self, Q, diff):
         """
         Add two points P and Q where diff = P - Q. Moreover the assumption
