@@ -2479,9 +2479,11 @@ def set_function(f, x):
 def _eval_Eq(lhs, rhs):
     return false
 
+
 @dispatch(FiniteSet, Interval)
 def _eval_Eq(lhs, rhs):
     return false
+
 
 @dispatch(Interval, Interval)
 def _eval_Eq(lhs, rhs):
@@ -2489,6 +2491,7 @@ def _eval_Eq(lhs, rhs):
                Eq(lhs.right, rhs.right),
                lhs.left_open == rhs.left_open,
                lhs.right_open == rhs.right_open)
+
 
 @dispatch(FiniteSet, Interval)
 def _eval_Eq(lhs, rhs):
@@ -2504,6 +2507,7 @@ def _eval_Eq(lhs, rhs):
         yield fuzzy_and(rhs._contains(e) for e in s_set - o_set)
 
     return tfn[fuzzy_and(all_in_both())]
+
 
 @dispatch(ProductSet, ProductSet)
 def _eval_Eq(lhs, rhs):

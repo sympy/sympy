@@ -14,7 +14,7 @@ from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from mpmath.libmp.libintmath import ifac
-
+from sympy.multipledispatch import dispatch
 
 def _af_rmul(a, b):
     """
@@ -952,15 +952,7 @@ class Permutation(Atom):
 
         return cls._af_new(aform)
 
-    def _eval_Eq(self, other):
-        other = _sympify(other)
-        if not isinstance(other, Permutation):
-            return None
 
-        if self._size != other._size:
-            return None
-
-        return as_Boolean(self._array_form == other._array_form)
 
     @classmethod
     def _af_new(cls, perm):
@@ -3022,3 +3014,10 @@ class AppliedPermutation(Expr):
 
         obj = super().__new__(cls, perm, x)
         return obj
+
+
+@dispatch(Permutation, Permutation)
+def _eval_Eq(lhs, rhs):
+    if lhs._size != rhs._size:
+        return None
+    return as_Boolean(lhs._array_form == rhs._array_form)

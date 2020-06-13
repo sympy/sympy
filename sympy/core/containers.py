@@ -145,15 +145,19 @@ class Tuple(Basic):
 converter[tuple] = lambda tup: Tuple(*tup)
 
 
-@dispatch(Tuple, Tuple)
-def _eval_Eq(self, other):
+@dispatch(Tuple, Basic)
+def _eval_Eq(lhs, rhs):
+    from sympy.core.function import AppliedUndef
     from sympy.core.logic import fuzzy_and, fuzzy_bool
     from sympy.core.relational import Eq
 
-    if len(self) != len(other):
+    if rhs.is_Symbol or isinstance(rhs, AppliedUndef):
+        return None
+
+    if not isinstance(rhs, Tuple) or len(lhs) != len(rhs):
         return S.false
 
-    r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(self, other))
+    r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(lhs, rhs))
     if r is True:
         return S.true
     elif r is False:

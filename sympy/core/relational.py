@@ -1089,36 +1089,17 @@ def _eval_Eq(lhs, rhs):
     return None
 
 
+
 def is_lt(lhs, rhs):
-    return fuzzy_and([is_le(lhs, rhs), is_neq(lhs, rhs)])
+    return fuzzy_not(is_ge(lhs, rhs))
 
 
 def is_gt(lhs, rhs):
-    return fuzzy_and([is_ge(lhs, rhs), is_neq(lhs, rhs)])
+    return fuzzy_not(is_le(lhs, rhs))
 
 
 def is_le(lhs, rhs):
-    retval = _eval_is_le(lhs, rhs)
-    if retval is not None:
-        return retval
-    else:
-        n2 = _n2(lhs, rhs)
-        if n2 is not None:
-            # use float comparison for infinity.
-            # otherwise get stuck in infinite recursion
-            if n2 in (S.Infinity, S.NegativeInfinity):
-                n2 = float(n2)
-            return _sympify(n2 <= 0)
-        if lhs.is_extended_real and rhs.is_extended_real:
-            if ((lhs.is_infinite and lhs.is_extended_negative) \
-                     or (rhs.is_infinite and rhs.is_extended_positive)):
-                return S.true
-
-            diff = lhs - rhs
-            if diff is not S.NaN:
-                rv = diff.is_extended_nonpositive
-                if rv is not None:
-                    return rv
+    return is_ge(rhs, lhs)
 
 
 def is_ge(lhs, rhs):
@@ -1154,7 +1135,7 @@ def is_eq(lhs, rhs):
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
-    from sympy.core.expr import Expr
+
     retval = _eval_Eq(lhs, rhs)
     if retval is not None:
         return retval
@@ -1215,6 +1196,10 @@ def is_eq(lhs, rhs):
                     return S.false
                 if z:
                     return S.true
+
+            n2 = _n2(lhs, rhs)
+            if n2 is not None:
+                return _sympify(n2 == 0)
 
             # see if the ratio evaluates
             n, d = dif.as_numer_denom()
