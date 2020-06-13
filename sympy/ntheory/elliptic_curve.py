@@ -54,7 +54,8 @@ class EllipticCurve:
         self._a6 = a6
         x, y, z = symbols('x y z')
         self.x, self.y, self.z = x, y, z
-        self._eq = Poly(y**2*z + a1*x*y*z + a3*y*z**2 - x**3 - a2*x**2*z - a4*x*z**2 - a6*z**3, x, y, z, domain=domain)
+        self._eq = Poly(y**2*z + a1*x*y*z + a3*y*z**2 - x**3 - a2*x**2*z - \
+                        a4*x*z**2 - a6*z**3, x, y, z, domain=domain)
         if isinstance(self._domain, FiniteField):
             self._rank = 0
         elif isinstance(self._domain, RationalField):
