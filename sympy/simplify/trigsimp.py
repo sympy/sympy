@@ -1098,7 +1098,7 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
+    e = bottom_up(e, _futrig)
 
     if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
@@ -1110,7 +1110,7 @@ def futrig(e, **kwargs):
     return e
 
 
-def _futrig(e, **kwargs):
+def _futrig(e):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
