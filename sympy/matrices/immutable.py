@@ -206,4 +206,3 @@ def _eval_Eq(lhs, rhs):
     if lhs.shape != rhs.shape:
         return S.false
     return (lhs - rhs).is_zero_matrix
-
