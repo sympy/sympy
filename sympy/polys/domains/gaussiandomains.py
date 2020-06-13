@@ -39,6 +39,11 @@ class GaussianElement(DomainElement):
         else:
             return NotImplemented
 
+    def __lt__(self, other):
+        if not isinstance(other, GaussianElement):
+            return NotImplemented
+        return [self.y, self.x] < [other.y, other.x]
+
     def __neg__(self):
         return self.new(-self.x, -self.y)
 
