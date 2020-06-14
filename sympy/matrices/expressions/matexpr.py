@@ -595,11 +595,11 @@ class MatrixExpr(Expr):
         return ElementwiseApplyFunction(func, self)
 
 @dispatch(MatrixExpr, Basic)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     return False
 
 @dispatch(MatrixExpr, MatrixExpr)
-def _eval_Eq(self, other):
+def _eval_Eq(self, other): # noqa:F811
     if self.shape != other.shape:
         return False
     if (self - other).is_ZeroMatrix:
