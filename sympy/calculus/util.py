@@ -1482,7 +1482,7 @@ class AccumulationBounds(AtomicExpr):
 
 
 @dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811
-def _eval_is_le(lhs, rhs):
+def _eval_is_le(lhs, rhs): # noqa:F811
     if lhs.max <= rhs.min:
         return True
     if lhs.min > rhs.max:
@@ -1521,7 +1521,7 @@ def _eval_is_le(lhs, rhs): # noqa: F811
             return False
 
 @dispatch(AccumulationBounds, AccumulationBounds)
-def _eval_is_ge(lhs, rhs):
+def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.min >= rhs.max:
         return True
     if lhs.max < rhs.min:
@@ -1560,7 +1560,7 @@ def _eval_is_ge(lhs, rhs): # noqa: F811
 
 
 @dispatch(Basic, AccumulationBounds)
-def _eval_is_ge(lhs, rhs):
+def _eval_is_ge(lhs, rhs): # noqa:F811
     if not lhs.is_extended_real:
         raise TypeError(
             "Invalid comparison of %s %s" %
@@ -1573,7 +1573,7 @@ def _eval_is_ge(lhs, rhs):
 
 
 @dispatch(AccumulationBounds, AccumulationBounds)
-def _eval_is_ge(lhs, rhs):
+def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.min >= rhs.max:
         return True
     if lhs.max < rhs.min:

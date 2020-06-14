@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import Number, Basic, Symbol
+from sympy import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
@@ -976,13 +976,13 @@ CRootOf = ComplexRootOf
 
 
 @dispatch(ComplexRootOf, ComplexRootOf)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     return sympify(lhs == rhs)
 
 
 @dispatch(ComplexRootOf, Basic)
-def _eval_Eq(lhs, rhs):
-    # CRootOf represents a Root, so if other is that root, it should set
+def _eval_Eq(lhs, rhs): # noqa:F811
+    # CRootOf represents a Root, so if rhs is that root, it should set
     # the expression to zero *and* it should be in the interval of the
     # CRootOf instance. It must also be a number that agrees with the
     # is_real value of the CRootOf instance.

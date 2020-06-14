@@ -191,15 +191,15 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
 
 
 @dispatch(ImmutableDenseMatrix, Basic)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     return S.false
 
 @dispatch(ImmutableDenseMatrix, MatrixExpr)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     return None
 
 @dispatch(ImmutableDenseMatrix, ImmutableDenseMatrix)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     """Helper method for Equality with matrices.sympy.
 
     Relational automatically converts matrices to ImmutableDenseMatrix
