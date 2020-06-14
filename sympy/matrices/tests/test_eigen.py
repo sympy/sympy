@@ -579,5 +579,7 @@ def test_definite():
         [0, 1, 2],
         [0, 2, 1]
     ])
+    assert not m.is_positive_definite, (
+        f'The matrix \n\tm = {m}\nIs not positive definite, but m.is_positive_definite == True')
     assert not m.is_positive_semidefinite, (
         f'The matrix \n\tm = {m}\nIs not positive semidefinite, but m.is_positive_semidefinite == True')
