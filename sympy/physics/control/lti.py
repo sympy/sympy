@@ -1,4 +1,4 @@
-from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr
+from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr, exp
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
@@ -14,7 +14,8 @@ class TransferFunction(Basic, EvalfMixin):
     are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a variable used to anchor these polynomials of the transfer function. ``num`` and ``den`` can
-    be either sympy expressions or numbers, whereas ``var`` has to be a Symbol.
+    be either sympy expressions (with no time delay terms) or numbers, whereas ``var``
+    has to be a Symbol.
 
     Parameters
     ==========
@@ -31,7 +32,8 @@ class TransferFunction(Basic, EvalfMixin):
 
     TypeError
         When ``var`` is not a Symbol or when ``num`` or ``den`` is not
-        a number or expression/polynomial.
+        a number or expression/polynomial. Also, when ``num`` or ``den`` has
+        a time delay term.
     ValueError
         When ``den`` is zero.
 
@@ -150,8 +152,8 @@ class TransferFunction(Basic, EvalfMixin):
         if den == 0:
             raise ValueError("TransferFunction can't have a zero denominator.")
 
-        if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
-            ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
+        if (((isinstance(num, Expr) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
+            ((isinstance(den, Expr) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
                 obj = super(TransferFunction, cls).__new__(cls, num, den, var)
                 obj._num = num
                 obj._den = den

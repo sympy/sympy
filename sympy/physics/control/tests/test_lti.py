@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, factor, simplify, exp, log, pi
+from sympy import symbols, Matrix, factor, simplify, exp
 from sympy.physics.control.lti import TransferFunction
 from sympy.testing.pytest import raises
 
@@ -85,16 +85,7 @@ def test_TransferFunction_construction():
     tf15 = TransferFunction(a2**2*p**(1/4) + a1*s**(-4/5), a0*s - p, p)
     assert tf15.args == (a1*s**(-0.8) + a2**2*p**0.25, a0*s - p, p)
 
-    tf16 = TransferFunction(s**pi*exp(s)/log(s), s, s)
-    assert tf16.num == s**pi*exp(s)/log(s)
-    assert tf16.args == (s**pi*exp(s)/log(s), s, s)
-
-    tau, omega_o, k_p, k_o, k_i = symbols('tau, omega_o, k_p, k_o, k_i')
-    tf17 = TransferFunction(exp(-tau*s), log(p)**s*s, s)
-    assert tf17.num == exp(-s*tau)
-    assert tf17.den == s*log(p)**s
-    assert tf17.args == (exp(-s*tau), s*log(p)**s, s)
-
+    omega_o, k_p, k_o, k_i = symbols('omega_o, k_p, k_o, k_i')
     tf18 = TransferFunction((k_p + k_o*s + k_i/s), s**2 + 2*omega_o*s + omega_o**2, s)
     assert tf18.num == k_i/s + k_o*s + k_p
     assert tf18.args == (k_i/s + k_o*s + k_p, omega_o**2 + 2*omega_o*s + s**2, s)
@@ -147,7 +138,7 @@ def test_TransferFunction_functions():
     assert SP1.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == expect1
     assert expect1_.evalf() == expect1
 
-    tau, c1, d0, d1, d2 = symbols('tau, c1, d0:3')
+    c1, d0, d1, d2 = symbols('c1, d0:3')
     p3, p4 = c1*p, d2*p**3 + d1*p**2 - d0
     SP2 = TransferFunction(p3, p4, p)
     expect2 = TransferFunction(2.0*p, 5.0*p**3 + 2.0*p**2 - 3.0, p)
@@ -166,12 +157,6 @@ def test_TransferFunction_functions():
     expect4_ = TransferFunction(7*p**3 + s, p - s, p)
     assert SP4.subs({a0: -1, a1: -7}).evalf() == expect4
     assert expect4_.evalf() == expect4
-
-    SP5 = TransferFunction(tau*p**s, exp(-tau*p)/s, s)
-    expect5_ = TransferFunction(-4*4**s, exp(16)/s, s)
-    expect5 = TransferFunction(-4.0*4.0**s, 8886110.52050787/s, s)
-    assert str(SP5.subs({tau: -4, p: 4}).evalf()) == str(expect5)
-    assert str(expect5_.evalf()) == str(expect5)
 
     # negation of TF.
     tf2 = TransferFunction(s + 3, s**2 - s**3 + 9, s)
@@ -293,14 +278,13 @@ def test_TransferFunction_multiplication_and_division():
     p6 = (9 - s**3)*(s - 1)*(s + 1)*(s + 3)
     assert G1/G2 - G3_/G6 == TransferFunction(p5, p6, s)
 
-    omega_o, zeta, tau = symbols('omega_o, zeta, tau')
+    omega_o, zeta = symbols('omega_o, zeta')
     G7 = TransferFunction(a0*s**p + a1*p**s, a2*p*zeta - s, zeta)
     G8 = TransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, zeta)
     G9 = TransferFunction(zeta - s**3, zeta + p**4, zeta)
-    G10 = TransferFunction(exp(-tau*s*zeta), log(p)**s*s, zeta)
-    num = (p**4 + zeta)*(a0*s**p + a1*p**s)*(omega_o**2 + omega_o*p*s*zeta + s**2)*exp(-s*tau*zeta)
-    den = s*(omega_o**2*(p**4 + zeta) - (-s**3 + zeta)*(omega_o**2 + omega_o*p*s*zeta + s**2))
-    assert G7*G10 / (G8 - G9) == TransferFunction(num, den*(a2*p*zeta - s)*log(p)**s, zeta)
+    num = (p**4 + zeta)*(a0*s**p + a1*p**s)*(omega_o**2 + omega_o*p*s*zeta + s**2)
+    den = (omega_o**2*(p**4 + zeta) - (-s**3 + zeta)*(omega_o**2 + omega_o*p*s*zeta + s**2))
+    assert G7 / (G8 - G9) == TransferFunction(num, den*(a2*p*zeta - s), zeta)
 
 
 def test_TransferFunction_is_proper():
@@ -328,12 +312,12 @@ def test_TransferFunction_is_strictly_proper():
 
 
 def test_TransferFunction_is_biproper():
-    tau = symbols('tau')
-    tf1 = TransferFunction(a0*s**5 + log(p)*s + a1, b0*s**4 + b1*s**2 - b2*s, s)
+    tau, omega_o, zeta = symbols('tau, omega_o, zeta')
+    tf1 = TransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, omega_o)
     tf2 = TransferFunction(tau - s**3, tau + p**4, tau)
     tf3 = TransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
     tf4 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
-    assert not tf1.is_biproper
+    assert tf1.is_biproper
     assert tf2.is_biproper
     assert not tf3.is_biproper
     assert not tf4.is_biproper
