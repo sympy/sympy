@@ -1475,7 +1475,7 @@ class Pow(Expr):
             return Expr.matches(self, expr, repl_dict)
         return d
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE! This function is an important part of the gruntz algorithm
         #       for computing limits. It has to return a generalized power
         #       series with coefficients in C(log, log(x)). In more detail:
@@ -1537,7 +1537,10 @@ class Pow(Expr):
                 if factor.has(x):
                     base, exp = factor.as_base_exp()
                     if base != x:
-                        return term.leadterm(x)
+                        try:
+                            return term.leadterm(x)
+                        except ValueError:
+                            return term, S.Zero
                 else:
                     coeff *= factor
             return coeff, exp

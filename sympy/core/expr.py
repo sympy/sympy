@@ -1020,6 +1020,17 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
+    def dir(self, x, cdir):
+        minexp = S.Zero
+        arg = self
+        while arg:
+            minexp += S.One
+            arg = arg.diff(x)
+            coeff = arg.subs(x, 0)
+            if coeff != S.Zero:
+                break
+        return coeff*cdir**minexp
+
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import conjugate
         if (self.is_complex or self.is_infinite):
@@ -2793,7 +2804,7 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x=None, x0=0, n=6, dir="+", logx=None):
+    def series(self, x=None, x0=0, n=6, dir="+", logx=None, cdir=0):
         """
         Series expansion of "self" around ``x = x0`` yielding either terms of
         the series one by one (the lazy series given when n=None), else
@@ -3180,7 +3191,7 @@ class Expr(Basic, EvalfMixin):
         _x = Dummy('x')
         return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / factorial(n)
 
-    def lseries(self, x=None, x0=0, dir='+', logx=None):
+    def lseries(self, x=None, x0=0, dir='+', logx=None, cdir=0):
         """
         Wrapper for series yielding an iterator of the terms of the series.
 
@@ -3200,7 +3211,7 @@ class Expr(Basic, EvalfMixin):
         """
         return self.series(x, x0, n=None, dir=dir, logx=logx)
 
-    def _eval_lseries(self, x, logx=None):
+    def _eval_lseries(self, x, logx=None, cdir=0):
         # default implementation of lseries is using nseries(), and adaptively
         # increasing the "n". As you can see, it is not very efficient, because
         # we are calculating the series over and over again. Subclasses should
@@ -3238,7 +3249,7 @@ class Expr(Basic, EvalfMixin):
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+', logx=None):
+    def nseries(self, x=None, x0=0, n=6, dir='+', logx=None, cdir=0):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 

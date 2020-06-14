@@ -905,10 +905,10 @@ class log(Function):
     def _eval_is_extended_nonnegative(self):
         return (self.args[0] - 1).is_extended_nonnegative
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import cancel, Order, logcombine
+        from sympy import im, cancel, I, Order, logcombine
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -937,6 +937,10 @@ class log(Function):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if a.is_real and a.is_negative and im(cdir) < 0:
+            return log(a) -2*I*S.Pi + b*logx + Add(*l) + Order(p**n, x)
         return log(a) + b*logx + Add(*l) + Order(p**n, x)
 
     def _eval_as_leading_term(self, x):

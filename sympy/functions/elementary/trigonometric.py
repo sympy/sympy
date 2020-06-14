@@ -2195,6 +2195,40 @@ class asin(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import Dummy, im, O
+        arg0 = self.args[0].subs(x, 0)
+        if arg0 is S.One:
+            t = Dummy('t', positive=True)
+            ser = asin(S.One - t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One - self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        if arg0 is S.NegativeOne:
+            t = Dummy('t', positive=True)
+            ser = asin(S.NegativeOne + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if im(cdir) < 0 and arg0.is_real and arg0 < S.NegativeOne:
+            return -S.Pi - res
+        elif im(cdir) > 0 and arg0.is_real and arg0 > S.One:
+            return S.Pi - res
+        return res
+
     def _eval_rewrite_as_acos(self, x, **kwargs):
         return S.Pi/2 - acos(x)
 
@@ -2360,8 +2394,39 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_nonnegative(self):
         return self._eval_is_extended_real()
 
-    def _eval_nseries(self, x, n, logx):
-        return self._eval_rewrite_as_log(self.args[0])._eval_nseries(x, n, logx)
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import Dummy, im, O
+        arg0 = self.args[0].subs(x, 0)
+        if arg0 is S.One:
+            t = Dummy('t', positive=True)
+            ser = acos(S.One - t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One - self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        if arg0 is S.NegativeOne:
+            t = Dummy('t', positive=True)
+            ser = acos(S.NegativeOne + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if im(cdir) < 0 and arg0.is_real and arg0 < S.NegativeOne:
+            return 2*S.Pi - res
+        elif im(cdir) > 0 and arg0.is_real and arg0 > S.One:
+            return -res
+        return res
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.Pi/2 + S.ImaginaryUnit*\
@@ -2532,6 +2597,20 @@ class atan(InverseTrigonometricFunction):
             return arg
         else:
             return self.func(arg)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import im, re
+        arg0 = self.args[0].subs(x, 0)
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if re(cdir) < 0 and re(arg0).is_zero and im(arg0) > S.One:
+            return res - S.Pi
+        elif re(cdir) > 0 and re(arg0).is_zero and im(arg0) < S.NegativeOne:
+            return res + S.Pi
+        return res
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(S.One - S.ImaginaryUnit*x)
@@ -2707,6 +2786,20 @@ class acot(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import im, re
+        arg0 = self.args[0].subs(x, 0)
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if re(cdir) > 0 and re(arg0).is_zero and im(arg0) > S.Zero and im(arg0) < S.One:
+            return res + S.Pi
+        if re(cdir) < 0 and re(arg0).is_zero and im(arg0) < S.Zero and im(arg0) > S.NegativeOne:
+            return res - S.Pi
+        return res
+
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] is S.Infinity:
             return (S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
@@ -2857,6 +2950,40 @@ class asec(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import Dummy, im, O
+        arg0 = self.args[0].subs(x, 0)
+        if arg0 is S.One:
+            t = Dummy('t', positive=True)
+            ser = asec(S.One + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.NegativeOne + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        if arg0 is S.NegativeOne:
+            t = Dummy('t', positive=True)
+            ser = asec(S.NegativeOne - t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.NegativeOne - self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if im(cdir) < 0 and arg0.is_real and arg0 > S.Zero and arg0 < S.One:
+            return -res
+        elif im(cdir) > 0 and arg0.is_real and arg0 < S.Zero and arg0 > S.NegativeOne:
+            return 2*S.Pi - res
+        return res
+
     def _eval_is_extended_real(self):
         x = self.args[0]
         if x.is_extended_real is False:
@@ -2986,6 +3113,40 @@ class acsc(InverseTrigonometricFunction):
             return log(arg)
         else:
             return self.func(arg)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import Dummy, im, O
+        arg0 = self.args[0].subs(x, 0)
+        if arg0 is S.One:
+            t = Dummy('t', positive=True)
+            ser = acsc(S.One + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.NegativeOne + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        if arg0 is S.NegativeOne:
+            t = Dummy('t', positive=True)
+            ser = acsc(S.NegativeOne - t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.NegativeOne - self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if im(cdir) < 0 and arg0.is_real and arg0 > S.Zero and arg0 < S.One:
+            return S.Pi - res
+        elif im(cdir) > 0 and arg0.is_real and arg0 < S.Zero and arg0 > S.NegativeOne:
+            return -S.Pi - res
+        return res
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))

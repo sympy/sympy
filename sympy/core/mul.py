@@ -1765,7 +1765,7 @@ class Mul(Expr, AssocOp):
             margs = [Pow(new, cdid)] + margs
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy import Mul, Order, ceiling, powsimp
         from itertools import product
 
@@ -1775,7 +1775,10 @@ class Mul(Expr, AssocOp):
                 if factor.has(x):
                     base, exp = factor.as_base_exp()
                     if base != x:
-                        return term.leadterm(x)
+                        try:
+                            return term.leadterm(x)
+                        except ValueError:
+                            return term, S.Zero
                 else:
                     coeff *= factor
             return coeff, exp
@@ -1791,7 +1794,7 @@ class Mul(Expr, AssocOp):
                     raise ValueError
 
             n0 = sum(t[1] for t in ords)
-            facs = [t.series(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
+            facs = [t.nseries(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
 
         except (ValueError, NotImplementedError, TypeError, AttributeError):
             facs = [t.nseries(x, n=n, logx=logx) for t in self.args]

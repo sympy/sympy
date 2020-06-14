@@ -5,14 +5,14 @@ from sympy import (
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erfi, LambertW, factorial, digamma, Ei, EulerGamma)
+    acos, erf, erfi, LambertW, factorial, digamma, Ei, EulerGamma)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.testing.pytest import XFAIL, raises, nocache_fail
+from sympy.testing.pytest import XFAIL, raises
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -602,16 +602,8 @@ def test_issue_15984():
     assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
 
 
-@nocache_fail
 def test_issue_13575():
-    # This fails with infinite recursion when run without the cache:
-    result = limit(acos(erfi(x)), x, 1)
-    assert isinstance(result, Add)
-
-    re, im = result.evalf().as_real_imag()
-
-    assert abs(re) < 1e-12
-    assert abs(im - 1.08633774961570) < 1e-12
+    assert limit(acos(erfi(x)), x, 1).cancel() == acos(-I*erf(I))
 
 
 def test_issue_17325():
