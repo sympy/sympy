@@ -136,7 +136,7 @@ class Point:
         return Q
 
 
-def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
+def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -171,7 +171,6 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     B1 : Stage 1 Bound
     B2 : Stage 2 Bound
     max_curve : Maximum number of curves generated
-    seed : Initialize pseudorandom generator
 
     References
     ==========
@@ -197,7 +196,6 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=1234):
         k *= pow(p, integer_log(B1, p)[0])
     g = 1
 
-    random.seed(seed)
     while(curve <= max_curve):
         curve += 1
 
@@ -297,10 +295,10 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
             _factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-
+    random.seed(seed)
     while(n > 1):
         try:
-            factor = ecm_one_factor(n, B1, B2, max_curve, seed)
+            factor = ecm_one_factor(n, B1, B2, max_curve)
         except ValueError:
             if increase_bound:
                 B1 *= 10
