@@ -700,10 +700,8 @@ def _is_positive_semidefinite(M):
     if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
         return True
 
-    if M.rows <= 5:
-        return _is_positive_semidefinite_by_minors(M)
+    return _is_positive_semidefinite_by_minors(M)
 
-    return _is_positive_semidefinite_by_eigenvalues(M)
 
 def _is_negative_definite(M):
     return _is_positive_definite(-M)
@@ -752,10 +750,6 @@ def _is_positive_semidefinite_by_minors(M):
         for minor_size in range(1, M.rows+1)
         for idx in itertools.combinations(range(M.rows), minor_size)
     )
-
-
-def _is_positive_semidefinite_by_eigenvalues(M):
-    return all(eigenvalue.is_nonnegative for eigenvalue in M.eigenvals())
 
 
 _doc_positive_definite = \
