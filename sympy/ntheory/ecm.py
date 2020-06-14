@@ -44,7 +44,7 @@ class Point:
     def __eq__(self, other):
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
-        return self.x_cord == other.x_cord and self.z_cord == other.z_c
+        return self.x_cord == other.x_cord and self.z_cord == other.z_cord
 
     def add(self, Q, diff):
         """

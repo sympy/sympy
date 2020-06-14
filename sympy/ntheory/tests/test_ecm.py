@@ -22,10 +22,24 @@ def test_Point():
     mod = 101
     a = 10
     a_24 = (a + 2)*mod_inverse(4, mod)
-    p1 = Point(10, 10, a_24, mod)
+    p1 = Point(10, 17, a_24, mod)
     p2 = p1.double()
-    assert p2 == Point(0, 48, a_24, mod)
+    assert p2 == Point(68, 56, a_24, mod)
     p4 = p2.double()
-    assert p4 == Point(58, 0, a_24, mod)
+    assert p4 == Point(22, 64, a_24, mod)
     p8 = p4.double()
-    assert p8 == Point(52, 0, a_24, mod)
+    assert p8 == Point(71, 95, a_24, mod)
+    p16 = p8.double()
+    assert p16 == Point(5, 16, a_24, mod)
+    p32 = p16.double()
+    assert p32 == Point(33, 96, a_24, mod)
+
+    # p3 = p2 + p1
+    p3 = p2.add(p1, p1)
+    assert p3 == Point(1, 61, a_24, mod)
+    # p5 = p3 + p2
+    p5 = p3.add(p2, p1)
+    assert p5 == Point(49, 90, a_24, mod)
+    # p9 = p5 + p4
+    p9 = p5.add(p4, p1)
+    assert p9 == Point(56, 99, a_24, mod)
