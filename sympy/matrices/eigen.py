@@ -1,5 +1,6 @@
 from types import FunctionType
 from collections import Counter
+import itertools
 
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
@@ -744,13 +745,11 @@ def _is_positive_definite_GE(M):
 def _is_positive_semidefinite_minors(M):
     """A method to evaluate all principal minors for testing
     positive-semidefiniteness."""
-    size = M.rows
-    for i in range(size):
-        minor = M[:i+1, :i+1].det(method='berkowitz')
-        is_nonnegative = minor.is_nonnegative
-        if is_nonnegative is not True:
-            return is_nonnegative
-    return True
+    return all(
+        M[idx, idx].det(method='berkowitz').is_nonnegative
+        for minor_size in range(1, M.rows+1)
+        for idx in itertools.combinations(range(M.rows), minor_size)
+    )
 
 
 _doc_positive_definite = \
