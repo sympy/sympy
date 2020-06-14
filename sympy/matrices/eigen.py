@@ -745,12 +745,15 @@ def _is_positive_definite_GE(M):
 def _is_positive_semidefinite_minors(M):
     """A method to evaluate all principal minors for testing
     positive-semidefiniteness."""
-    return all(
-        M[idx, idx].det(method='berkowitz').is_nonnegative
-        for minor_size in range(1, M.rows+1)
-        for idx in itertools.combinations(range(M.rows), minor_size)
-    )
-
+    if M.rows <= 5:
+        # Sylvestre's criterion
+        return all(
+            M[idx, idx].det(method='berkowitz').is_nonnegative
+            for minor_size in range(1, M.rows+1)
+            for idx in itertools.combinations(range(M.rows), minor_size)
+        )
+    # Check that all eigenvalues are non-negative
+    return all(eigenvalue.is_nonnegative for eigenvalue in M.eigenvals())
 
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.
