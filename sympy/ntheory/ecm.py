@@ -42,9 +42,10 @@ class Point:
         self.mod = mod
 
     def __eq__(self, other):
+        from sympy import mod_inverse
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
-        return self.x_cord == other.x_cord and self.z_cord == other.z_cord
+        return self.x_cord * mod_inverse(self.z_cord, self.mod) % self.mod == other.x_cord * mod_inverse(other.z_cord, self.mod) % self.mod
 
     def add(self, Q, diff):
         """
@@ -57,6 +58,18 @@ class Point:
 
         Q : point on the curve in Montgomery form
         diff : P - Q
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory import Point
+        >>> p1 = Point(11, 16, 7, 29)
+        >>> p2 = Point(13, 10, 7, 29)
+        >>> p3 = p2.add(p1, p1)
+        >>> p3.x_cord
+        23
+        >>> p3.z_cord
+        17
         """
         u = (self.x_cord - self.z_cord)*(Q.x_cord + Q.z_cord)
         v = (self.x_cord + self.z_cord)*(Q.x_cord - Q.z_cord)
@@ -69,6 +82,17 @@ class Point:
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory import Point
+        >>> p1 = Point(11, 16, 7, 29)
+        >>> p2 = p1.double()
+        >>> p2.x_cord
+        13
+        >>> p2.z_cord
+        10
         """
         u, v = self.x_cord + self.z_cord, self.x_cord - self.z_cord
         u, v = u*u, v*v
@@ -88,6 +112,17 @@ class Point:
         ==========
 
         k : The positive integer multiplier
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory import Point
+        >>> p1 = Point(11, 16, 7, 29)
+        >>> p3 = p1.mont_ladder(3)
+        >>> p3.x_cord
+        23
+        >>> p3.z_cord
+        17
         """
         Q = self
         R = self.double()
