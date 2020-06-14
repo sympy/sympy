@@ -1,5 +1,3 @@
-import datetime
-
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
