@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, factor, simplify, exp
+from sympy import symbols, Matrix, factor, simplify, exp, pi
 from sympy.physics.control.lti import TransferFunction
 from sympy.testing.pytest import raises
 
@@ -96,6 +96,7 @@ def test_TransferFunction_construction():
     raises(ValueError, lambda: TransferFunction(0, 0, s))
 
     raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
+    raises(TypeError, lambda: TransferFunction(s**pi*exp(s), s, s))
 
     raises(TypeError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, 3))
     raises(TypeError, lambda: TransferFunction(p + 1, 5 - p, 4))
