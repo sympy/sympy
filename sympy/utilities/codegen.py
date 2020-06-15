@@ -86,10 +86,9 @@ from collections import OrderedDict
 
 from sympy import __version__ as sympy_version
 from sympy.codegen import Assignment, WithBody
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
+from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO
 from sympy.printing.ccode import c_code_printers
-from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.printing.cython import CythonCodePrinter
@@ -542,7 +541,6 @@ class CodeGen:
             for e in expr:
                 if not e.is_Equality:
                     raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
-            lhs = [e.lhs for e in expr]
 
             # create a list of right hand sides and simplify them
             rhs = [e.rhs for e in expr]
@@ -635,7 +633,6 @@ class CodeGen:
                         # avoid duplicate arguments
                         symbols.remove(symbol)
                 elif isinstance(expr, WithBody): # we should add all the classes which have a CodeBlock
-                    body = extract(expr.body.args, return_index)
                     new_expr.append(expr)
                 elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
                     # Create a "dummy" MatrixSymbol to use as the Output arg
@@ -1475,13 +1472,11 @@ class CythonCodeGen(CodeGen):
             if isinstance(arg, ResultBase) and not arg.dimensions:
                 dereference.append(arg.name)
 
-        return_val = None
         for result in routine.result_variables:
             if isinstance(result, Result):
                 assign_to = result.name
                 t = self._get_type(result.datatype)
                 code_lines.append("{0} {1};\n".format(t, str(assign_to)))
-                return_val = assign_to
 
         for statement in routine.statements:
             expr = statement
@@ -1789,7 +1784,6 @@ class OctaveCodeGen(CodeGen):
                         # it doesn't become an input.
                         symbols.remove(symbol)
                 elif isinstance(expr, WithBody): # we should add all the classes which have a CodeBlock
-                    body = extract(expr.body.args, return_index)
                     new_expr.append(expr)
                 else:
                     r = Result(expr, 'out' + str(return_index))

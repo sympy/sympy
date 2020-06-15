@@ -54,7 +54,7 @@ __all__ = [
 
     'MatrixSlice', 'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix',
     'Identity', 'Inverse', 'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr',
-    'MatrixSymbol', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',
+    'MatrixSymbol', 'MatrixElement', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',
     'blockcut', 'block_collapse', 'matrix_symbols', 'Adjoint',
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',

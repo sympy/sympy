@@ -5,8 +5,7 @@ This module contains python code printers for plain python as well as NumPy & Sc
 """
 from collections import defaultdict
 from itertools import chain
-from sympy.core import sympify, S
-from sympy.core import Add
+from sympy.core import S, Add
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -869,6 +868,8 @@ class NumPyPrinter(PythonCodePrinter):
         return self._expand_fold_binary_op('numpy.add', expr.args)
 
     def _print_Indexed(self, expr):
+        from sympy.tensor.indexed import Idx
+
         elem = []
         for i in range(expr.rank):
             e = expr.indices[i]
@@ -904,7 +905,8 @@ class NumPyPrinter(PythonCodePrinter):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices import MatrixBase, MatrixSlice
-        from sympy.tensor.indexed import IndexedBase
+        from sympy.codegen.ast import Assignment
+
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines

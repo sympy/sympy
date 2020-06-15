@@ -18,7 +18,7 @@ from typing import Any, Dict, Tuple
 from functools import wraps
 from itertools import chain
 
-from sympy.core import S, Number
+from sympy.core import S
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,

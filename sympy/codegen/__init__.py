@@ -18,7 +18,7 @@ from .ast import (
 )
 
 __all__ = [
-    'Assignment', 'aug_assign', 'CodeBlock', 'For', 'Attribute', 'Variable',
+    'Assignment', 'aug_assign', 'CodeBlock', 'WithBody', 'For', 'Attribute', 'Variable',
     'Declaration', 'While', 'Scope', 'Print', 'FunctionPrototype',
     'FunctionDefinition', 'FunctionCall',
 ]

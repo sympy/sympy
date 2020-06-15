@@ -1,12 +1,8 @@
-from sympy.core import S
 from sympy.printing.codeprinter import CodePrinter
 
-from sympy.core import Add, Mul, Pow, S, Eq
+from sympy.core import sympify, Eq
 from sympy.core.basic import Basic
-from sympy.core.relational import Relational
-from sympy.core.sympify import _sympify, sympify
 from sympy.core.symbol import Symbol
-from sympy.printing.str import StrPrinter
 from sympy.codegen.ast import Assignment
 
 from sympy.printing.precedence import precedence
@@ -157,7 +153,6 @@ class CythonCodePrinter(CodePrinter):
         return result
 
     def _get_expression_indices(self, expr, assign_to):
-        from sympy.tensor import get_indices
         from sympy.tensor.indexed import Idx
 
         # need to remove not Idx indices !!!
@@ -229,17 +224,18 @@ class CythonCodePrinter(CodePrinter):
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_If(self, expr):
-        lines = []
-        for c, e in expr.statement:
-            #temp1, temp2, cond = self.doprint(c)
-            c = c.replace(Eq, AssignmentIf)
-            lines.append("if %s:"%self._print(c))
-            for ee in e:
-                temp1, temp2, output = self.doprint(ee)
-                lines.append(output)
-        lines.append("#end")
-        return "\n".join(lines)
+    # TODO Loic: fix
+    # def _print_If(self, expr):
+    #     lines = []
+    #     for c, e in expr.statement:
+    #         #temp1, temp2, cond = self.doprint(c)
+    #         c = c.replace(Eq, AssignmentIf)
+    #         lines.append("if %s:"%self._print(c))
+    #         for ee in e:
+    #             temp1, temp2, output = self.doprint(ee)
+    #             lines.append(output)
+    #     lines.append("#end")
+    #     return "\n".join(lines)
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -283,7 +279,6 @@ class CythonCodePrinter(CodePrinter):
                 expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-
         name = super(CythonCodePrinter, self)._print_Symbol(expr)
 
         if expr in self._dereference:
@@ -305,7 +300,6 @@ class CythonCodePrinter(CodePrinter):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices import MatrixBase, MatrixSlice
-        from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
@@ -337,40 +331,40 @@ class CythonCodePrinter(CodePrinter):
                 return ""
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
-    def _print_AssignmentIf(self, expr):
-        from sympy.functions.elementary.piecewise import Piecewise
-        from sympy.matrices.expressions.matexpr import MatrixSymbol
-        from sympy.matrices import MatrixBase
-        from sympy.tensor.indexed import IndexedBase
-        lhs = expr.lhs
-        rhs = expr.rhs
-        # We special case assignments that take multiple lines
-        if isinstance(expr.rhs, Piecewise):
-            # Here we modify Piecewise so each expression is now
-            # an Assignment, and then continue on the print.
-            expressions = []
-            conditions = []
-            for (e, c) in rhs.args:
-                expressions.append(Assignment(lhs, e))
-                conditions.append(c)
-            temp = Piecewise(*zip(expressions, conditions))
-            return self._print(temp)
-        elif isinstance(lhs, (MatrixBase, MatrixSymbol)):
-            # Here we form an Assignment for each element in the array,
-            # printing each one.
-            lines = []
-            for (i, j) in self._traverse_matrix_indices(lhs):
-                temp = Assignment(lhs[i, j], rhs[i, j])
-                code0 = self._print(temp)
-                lines.append(code0)
-            return "\n".join(lines)
-        else:
-            lhs_code = self._print(lhs)
-            rhs_code = self._print(rhs)
-            # hack to avoid the printing of m[i] = m[i]
-            if lhs_code == rhs_code:
-                return ""
-            return self._get_statement("%s == %s" % (lhs_code, rhs_code))
+    # TODO Loic: fix
+    # def _print_AssignmentIf(self, expr):
+    #     from sympy.functions.elementary.piecewise import Piecewise
+    #     from sympy.matrices.expressions.matexpr import MatrixSymbol
+    #     from sympy.matrices import MatrixBase
+    #     lhs = expr.lhs
+    #     rhs = expr.rhs
+    #     # We special case assignments that take multiple lines
+    #     if isinstance(expr.rhs, Piecewise):
+    #         # Here we modify Piecewise so each expression is now
+    #         # an Assignment, and then continue on the print.
+    #         expressions = []
+    #         conditions = []
+    #         for (e, c) in rhs.args:
+    #             expressions.append(Assignment(lhs, e))
+    #             conditions.append(c)
+    #         temp = Piecewise(*zip(expressions, conditions))
+    #         return self._print(temp)
+    #     elif isinstance(lhs, (MatrixBase, MatrixSymbol)):
+    #         # Here we form an Assignment for each element in the array,
+    #         # printing each one.
+    #         lines = []
+    #         for (i, j) in self._traverse_matrix_indices(lhs):
+    #             temp = Assignment(lhs[i, j], rhs[i, j])
+    #             code0 = self._print(temp)
+    #             lines.append(code0)
+    #         return "\n".join(lines)
+    #     else:
+    #         lhs_code = self._print(lhs)
+    #         rhs_code = self._print(rhs)
+    #         # hack to avoid the printing of m[i] = m[i]
+    #         if lhs_code == rhs_code:
+    #             return ""
+    #         return self._get_statement("%s == %s" % (lhs_code, rhs_code))
 
     def _print_sign(self, func):
         return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))

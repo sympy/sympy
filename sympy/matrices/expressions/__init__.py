@@ -32,8 +32,8 @@ __all__ = [
 
     'MatAdd',
 
-    'Identity', 'MatrixExpr', 'MatrixSymbol', 'ZeroMatrix', 'OneMatrix',
-    'matrix_symbols',
+    'Identity', 'MatrixExpr', 'MatrixSymbol', 'MatrixElement', 'ZeroMatrix',
+    'OneMatrix', 'matrix_symbols',
 
     'MatMul',
 
